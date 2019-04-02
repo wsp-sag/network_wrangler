@@ -1,0 +1,33 @@
+route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color
+3-110,0,3,U of M - Como Av - Energy Park Dr - Maryland Av,,3,http://www.metrotransit.org/route/3,,000000
+16-110,2,16,University Av - Midway,,3,http://www.metrotransit.org/route/16,,000000
+21-110,0,21,Uptown - Lake St - Midway - Selby  Av,,3,http://www.metrotransit.org/route/21,,000000
+53-110,0,53,Ltd Stop - Uptown - Lake St - Marshall Av,,3,http://www.metrotransit.org/route/53,,000000
+54-110,0,54,Ltd Stop - W 7 St - Airport - MOA - Maplewood Mall,,3,http://www.metrotransit.org/route/54,,000000
+61-110,0,61,E Hennepin Av - Larpenteur Av - Arcade St,,3,http://www.metrotransit.org/route/61,,000000
+62-110,0,62,Shoreview - Little Canada - Rice St Signal Hills,,3,http://www.metrotransit.org/route/62,,000000
+63-110,0,63,Raymond Sta - Grand Av - Sunray - McKnight Rd,,3,http://www.metrotransit.org/route/63,,000000
+64-110,0,64,Payne - Maryland - White Bear Av - Maplewood Mall,,3,http://www.metrotransit.org/route/64,,000000
+65-110,0,65,Dale St - Co Rd B - Rosedale,,3,http://www.metrotransit.org/route/65,,000000
+67-110,0,67,W Minnehaha Av - Raymond Sta - Franklin Av,,3,http://www.metrotransit.org/route/67,,000000
+68-110,0,68,Jackson St - Robert St - W St Paul - Inver Hills,,3,http://www.metrotransit.org/route/68,,000000
+70-110,0,70,St Clair Av - W 7th St - Burns Av - Sunray,,3,http://www.metrotransit.org/route/70,,000000
+71-110,0,71,Little Canada - Edgerton - Concord - Inver Hills,,3,http://www.metrotransit.org/route/71,,000000
+74-110,0,74,46th St - Randolph - W 7th St - E 7th St - Sunray,,3,http://www.metrotransit.org/route/74,,000000
+75-110,0,75,Stryker - Robert - Mendota Hts - Lake Cove Apts,,3,http://www.metrotransit.org/route/75,,000000
+94-110,0,94,Express - Mpls - St Paul,,3,http://www.metrotransit.org/route/94,,000000
+262-110,0,262,Ltd Stop - 95Av P&R - Shoreview  Rice - St Paul,,3,http://www.metrotransit.org/route/262,,000000
+265-110,0,265,Express - White Bear Lake - Maplewood - St Paul,,3,http://www.metrotransit.org/route/265,,000000
+275-110,0,275,Express - Forest Lake - Co Rd 14 P&R - St Paul,,3,http://www.metrotransit.org/route/275,,000000
+294-110,0,294,Express - Oakdale - Stillwater - St Paul,,3,http://www.metrotransit.org/route/294,,000000
+350-110,2,350,Ltd Stop - Sunray - McKnight - St Paul,,3,http://www.metrotransit.org/route/350,,000000
+351-110,0,351,Express - Woodbury - St Paul,,3,http://www.metrotransit.org/route/351,,000000
+353-110,0,353,Express - Woodbury - St Paul - Mpls,,3,http://www.metrotransit.org/route/353,,000000
+355-110,0,355,Express - Woodbury - Mpls,,3,http://www.metrotransit.org/route/355,,000000
+361-110,0,361,Express - Cottage Grove - St Paul,,3,http://www.metrotransit.org/route/361,,000000
+364-110,2,364,Express - Newport - Cottage Grove - St Paul,,3,http://www.metrotransit.org/route/364,,000000
+365-110,0,365,Express - Cottage Grove - Newport - Mpls,,3,http://www.metrotransit.org/route/365,,000000
+375-110,0,375,Express - Oakdale - Mpls,,3,http://www.metrotransit.org/route/375,,000000
+417-110,2,417,Mendota Heights - St Paul,,3,http://www.metrotransit.org/route/417,,000000
+452-110,0,452,Express -Mendota Heights - West St Paul - Mpls,,3,http://www.metrotransit.org/route/452,,000000
+860-110,0,860,Express - Coon Rapids - Northtown - St Paul,,3,http://www.metrotransit.org/route/860,,000000

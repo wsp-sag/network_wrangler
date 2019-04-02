@@ -1,0 +1,78 @@
+route_id,service_id,trip_id,trip_headsign,direction_id,block_id,shape_id,wheelchair_accessible
+21-110,MAR19-MVS-BUS-Weekday-01,14448602-MAR19-MVS-BUS-Weekday-01,Eastbound 21A  Selby-Lake / St Paul,0,1425,210005,1
+21-110,MAR19-MVS-BUS-Weekday-01,14448608-MAR19-MVS-BUS-Weekday-01,Eastbound 21A  Selby-Lake / St Paul,0,1426,210005,1
+21-110,MAR19-MVS-BUS-Weekday-01,14448609-MAR19-MVS-BUS-Weekday-01,Westbound 21  Selby-Lake/ Uptown,1,1418,210004,1
+21-110,MAR19-MVS-BUS-Weekday-01,14448612-MAR19-MVS-BUS-Weekday-01,Westbound 21  Selby-Lake/ Uptown,1,1418,210004,1
+70-110,MAR19-MVS-BUS-Weekday-01,14448942-MAR19-MVS-BUS-Weekday-01,Eastbound 70S  Burns Av / Sunray,0,1679,700004,1
+70-110,MAR19-MVS-BUS-Weekday-01,14448943-MAR19-MVS-BUS-Weekday-01,Westbound 70B  St. Clair Av / Highland,1,1679,700003,1
+70-110,MAR19-MVS-BUS-Weekday-01,14448945-MAR19-MVS-BUS-Weekday-01,Westbound 70  Downtown,1,1679,700001,1
+70-110,MAR19-MVS-BUS-Weekday-01,14448946-MAR19-MVS-BUS-Weekday-01,Eastbound 70S  Burns Av / Sunray,0,1679,700009,1
+67-110,MAR19-MVS-BUS-Weekday-01,14449001-MAR19-MVS-BUS-Weekday-01,Westbound 67C Minnehaha Av / Franklin-Hiaw,1,1656,670001,1
+67-110,MAR19-MVS-BUS-Weekday-01,14449008-MAR19-MVS-BUS-Weekday-01,Westbound 67C Minnehaha Av / Franklin-Hiaw,1,1657,670001,1
+67-110,MAR19-MVS-BUS-Weekday-01,14449035-MAR19-MVS-BUS-Weekday-01,Eastbound 67 Minnehaha Av / Dtwn St Paul,0,1657,670007,1
+67-110,MAR19-MVS-BUS-Weekday-01,14449038-MAR19-MVS-BUS-Weekday-01,Eastbound 67 Minnehaha Av / Dtwn St Paul,0,1659,670007,1
+16-110,MAR19-MVS-BUS-Weekday-01,14449219-MAR19-MVS-BUS-Weekday-01,Eastbound 16 University Av/Dwtn St Paul/UnionDepot,0,31501,160001,1
+16-110,MAR19-MVS-BUS-Weekday-01,14449220-MAR19-MVS-BUS-Weekday-01,Westbound 16 Fairview / University,1,31500,160002,1
+16-110,MAR19-MVS-BUS-Weekday-01,14449227-MAR19-MVS-BUS-Weekday-01,Eastbound 16 University Av/Dwtn St Paul/UnionDepot,0,31501,160001,1
+16-110,MAR19-MVS-BUS-Weekday-01,14449255-MAR19-MVS-BUS-Weekday-01,Westbound 16 Fairview / University,1,31500,160002,1
+71-110,MAR19-MVS-BUS-Weekday-01,14450423-MAR19-MVS-BUS-Weekday-01,Northbound 71W Arkwright / Sloan / Westminster,0,1692,710001,1
+71-110,MAR19-MVS-BUS-Weekday-01,14450424-MAR19-MVS-BUS-Weekday-01,Southbound 71A  Downtown / Chester St,1,1687,710005,1
+71-110,MAR19-MVS-BUS-Weekday-01,14450436-MAR19-MVS-BUS-Weekday-01,Northbound 71W Arkwright / Sloan / Westminster,0,1688,710004,1
+71-110,MAR19-MVS-BUS-Weekday-01,14450437-MAR19-MVS-BUS-Weekday-01,Southbound 71A  Downtown / Chester St,1,1603,710009,1
+61-110,MAR19-MVS-BUS-Weekday-01,14450770-MAR19-MVS-BUS-Weekday-01,Eastbound 61  Henn-Larp/Dwtn St Paul/Via Arcade,0,1590,610003,1
+61-110,MAR19-MVS-BUS-Weekday-01,14450775-MAR19-MVS-BUS-Weekday-01,Eastbound 61  Henn-Larp/Dwtn St Paul/Via Arcade,0,1590,610003,1
+61-110,MAR19-MVS-BUS-Weekday-01,14450800-MAR19-MVS-BUS-Weekday-01,Westbound 61  Henn-Larp / Dwtn Mpls / Via  Arcade,1,1589,610001,1
+61-110,MAR19-MVS-BUS-Weekday-01,14450807-MAR19-MVS-BUS-Weekday-01,Westbound 61  Henn-Larp / Dwtn Mpls / Via  Arcade,1,1589,610001,1
+54-110,MAR19-MVS-BUS-Weekday-01,14451077-MAR19-MVS-BUS-Weekday-01,Westbound 54  Ltd Stop / Mall  Amer / Via  Airport,1,1551,540008,1
+54-110,MAR19-MVS-BUS-Weekday-01,14451097-MAR19-MVS-BUS-Weekday-01,Eastbound 54M Ltd Stop/Mplwd Mall/Via Airport,0,1554,540001,1
+54-110,MAR19-MVS-BUS-Weekday-01,14451101-MAR19-MVS-BUS-Weekday-01,Westbound 54  Ltd Stop / Mall  Amer / Via  Airport,1,1544,540008,1
+54-110,MAR19-MVS-BUS-Weekday-01,14451129-MAR19-MVS-BUS-Weekday-01,Eastbound 54M Ltd Stop/Mplwd Mall/Via Airport,0,1546,540001,1
+860-110,MAR19-MVS-BUS-Weekday-01,14452192-MAR19-MVS-BUS-Weekday-01,Southbound 860  Express/St Paul/Northtown,1,2292,8600002,1
+361-110,MAR19-MVS-BUS-Weekday-01,14452438-MAR19-MVS-BUS-Weekday-01,Northbound 361  Express/ St Paul,0,1602,3610001,1
+361-110,MAR19-MVS-BUS-Weekday-01,14452439-MAR19-MVS-BUS-Weekday-01,Southbound 361  Express / Cottage  Grv P&R,1,1602,3610009,1
+364-110,MAR19-MVS-BUS-Weekday-01,14452448-MAR19-MVS-BUS-Weekday-01,Northbound 364 St Paul Park/ Newport/ St Paul,0,31281,3640006,1
+351-110,MAR19-MVS-BUS-Weekday-01,14452454-MAR19-MVS-BUS-Weekday-01,Westbound 351 Express / St Paul,1,1901,3510015,1
+351-110,MAR19-MVS-BUS-Weekday-01,14452455-MAR19-MVS-BUS-Weekday-01,Eastbound 351H Express/Woodbury/Hudson Rd,0,1604,3510016,1
+350-110,MAR19-MVS-BUS-Weekday-01,14452470-MAR19-MVS-BUS-Weekday-01,Westbound 350 Ltd Stop/ Mcknight/ Dt St Paul,1,31010,3500004,1
+355-110,MAR19-MVS-BUS-Weekday-01,14452545-MAR19-MVS-BUS-Weekday-01,Westbound 355  Express / Minneapolis,1,1907,3550001,1
+94-110,MAR19-MVS-BUS-Weekday-01,14452992-MAR19-MVS-BUS-Weekday-01,Westbound 94 Express / Downtown / Minneapolis,1,1028,940006,1
+94-110,MAR19-MVS-BUS-Weekday-01,14452993-MAR19-MVS-BUS-Weekday-01,Westbound 94 Express / Downtown / Minneapolis,1,1727,940002,1
+94-110,MAR19-MVS-BUS-Weekday-01,14453002-MAR19-MVS-BUS-Weekday-01,Eastbound 94D Express / Dwtn St Paul / Union Depot,0,1723,940003,1
+94-110,MAR19-MVS-BUS-Weekday-01,14453043-MAR19-MVS-BUS-Weekday-01,Eastbound 94D Express / Dwtn St Paul / Union Depot,0,1722,940003,1
+365-110,MAR19-MVS-BUS-Weekday-01,14453982-MAR19-MVS-BUS-Weekday-01,Northbound 365  Express / Minneapolis,0,1905,3650005,1
+65-110,MAR19-MVS-BUS-Weekday-01,14454266-MAR19-MVS-BUS-Weekday-01,NORTHbound 65  Dale St / Rosedale,0,1647,650010,1
+65-110,MAR19-MVS-BUS-Weekday-01,14454267-MAR19-MVS-BUS-Weekday-01,SOUTHbound 65 Dale and Grand,1,1648,650007,1
+65-110,MAR19-MVS-BUS-Weekday-01,14454269-MAR19-MVS-BUS-Weekday-01,SOUTHbound 65 Dale and Grand,1,1648,650007,1
+65-110,MAR19-MVS-BUS-Weekday-01,14454271-MAR19-MVS-BUS-Weekday-01,NORTHbound 65  Dale St / Rosedale,0,1649,650010,1
+265-110,MAR19-MVS-BUS-Weekday-01,14454370-MAR19-MVS-BUS-Weekday-01,Southbound 265  Express / St Paul,1,1031,2650002,1
+262-110,MAR19-MVS-BUS-Weekday-01,14454464-MAR19-MVS-BUS-Weekday-01,Southbound 262 Ltd Stop / DT ST Paul / Union Depot,1,1692,2620004,1
+375-110,MAR19-MVS-BUS-Weekday-01,14454679-MAR19-MVS-BUS-Weekday-01,Westbound 375  Express / Minneapolis,1,1856,3750001,1
+275-110,MAR19-MVS-BUS-Weekday-01,14454812-MAR19-MVS-BUS-Weekday-01,Southbound 275 Express / St Paul,1,1874,2750007,1
+75-110,MAR19-MVS-BUS-Weekday-01,14454921-MAR19-MVS-BUS-Weekday-01,Northbound 75  Downtown,0,1714,750002,1
+75-110,MAR19-MVS-BUS-Weekday-01,14454924-MAR19-MVS-BUS-Weekday-01,Southbound 75F  Stryker Av/Salem Green/Lake Cove,1,1714,750009,1
+75-110,MAR19-MVS-BUS-Weekday-01,14454936-MAR19-MVS-BUS-Weekday-01,Northbound 75  Downtown,0,1713,750002,1
+75-110,MAR19-MVS-BUS-Weekday-01,14454937-MAR19-MVS-BUS-Weekday-01,Southbound 75E Stryker Av / Salem Green,1,1713,750010,1
+62-110,MAR19-MVS-BUS-Weekday-01,14455077-MAR19-MVS-BUS-Weekday-01,Northbound 62A Rice /To Larpenteur / Albemarle,0,1605,620007,1
+62-110,MAR19-MVS-BUS-Weekday-01,14455078-MAR19-MVS-BUS-Weekday-01,Northbound 62A Rice /To Larpenteur / Albemarle,0,1604,620007,1
+62-110,MAR19-MVS-BUS-Weekday-01,14455105-MAR19-MVS-BUS-Weekday-01,Southbound 62 Downtown,1,1606,620004,1
+62-110,MAR19-MVS-BUS-Weekday-01,14455110-MAR19-MVS-BUS-Weekday-01,Southbound 62 Downtown,1,1605,620004,1
+53-110,MAR19-MVS-BUS-Weekday-01,14455398-MAR19-MVS-BUS-Weekday-01,Eastbound 53 Ltd Stop/Dtwn St.Paul/Lafayette,0,1538,530002,1
+53-110,MAR19-MVS-BUS-Weekday-01,14455405-MAR19-MVS-BUS-Weekday-01,Westbound 53  Ltd Stop / Uptown / Lake St,1,1441,530001,1
+294-110,MAR19-MVS-BUS-Weekday-01,14486945-MAR19-MVS-BUS-Weekday-01,Westbound 294  Express / St Paul,1,1702,2940013,1
+294-110,MAR19-MVS-BUS-Weekday-01,14486946-MAR19-MVS-BUS-Weekday-01,Eastbound 294 Express/St Crx P&R/Via 4 Front Tech,0,1895,2940008,1
+417-110,MAR19-MVS-BUS-Weekday-01,14489435-MAR19-MVS-BUS-Weekday-01,Northbound 417 Ltd Stop/ Dodd Rd/ St Paul,0,31290,4170006,1
+74-110,MAR19-MVS-BUS-Weekday-01,14498876-MAR19-MVS-BUS-Weekday-01,Eastbound 74S  E 7th St / Sunray,0,1699,740001,1
+74-110,MAR19-MVS-BUS-Weekday-01,14498881-MAR19-MVS-BUS-Weekday-01,Eastbound 74S  E 7th St / Sunray,0,1705,740001,1
+74-110,MAR19-MVS-BUS-Weekday-01,14498928-MAR19-MVS-BUS-Weekday-01,Westbound 74A  Randolph Av / 46St Station,1,1697,740010,1
+74-110,MAR19-MVS-BUS-Weekday-01,14498937-MAR19-MVS-BUS-Weekday-01,Westbound 74A  Randolph Av / 46St Station,1,1697,740010,1
+64-110,MAR19-MVS-BUS-Weekday-01,14499224-MAR19-MVS-BUS-Weekday-01,Eastbound 64N  Payne Av/Mplwd Mall/Via N St Paul,0,1627,640001,1
+64-110,MAR19-MVS-BUS-Weekday-01,14499235-MAR19-MVS-BUS-Weekday-01,Westbound 64  Downtown / Via N St Paul,1,1623,640003,1
+64-110,MAR19-MVS-BUS-Weekday-01,14499237-MAR19-MVS-BUS-Weekday-01,Westbound 64  Downtown / Via N St Paul,1,1623,640003,1
+64-110,MAR19-MVS-BUS-Weekday-01,14499261-MAR19-MVS-BUS-Weekday-01,Eastbound 64N  Payne Av/Mplwd Mall/Via N St Paul,0,1631,640001,1
+3-110,MAR19-MVS-BUS-Weekday-01,14499723-MAR19-MVS-BUS-Weekday-01,Eastbound 3B Como Av/St Paul - Depot/Via Front,0,1018,30044,1
+3-110,MAR19-MVS-BUS-Weekday-01,14499738-MAR19-MVS-BUS-Weekday-01,Eastbound 3B Como Av/St Paul - Depot/Via Front,0,1039,30044,1
+63-110,MAR19-MVS-BUS-Weekday-01,14502686-MAR19-MVS-BUS-Weekday-01,Eastbound 63K E 3rd St / Lower Afton / Via Sunray,0,1615,630003,1
+63-110,MAR19-MVS-BUS-Weekday-01,14502687-MAR19-MVS-BUS-Weekday-01,Westbound 63B Grand Ave/Westgate Sta,1,1609,630004,1
+63-110,MAR19-MVS-BUS-Weekday-01,14502688-MAR19-MVS-BUS-Weekday-01,Eastbound 63K E 3rd St / Lower Afton / Via Sunray,0,1609,630003,1
+63-110,MAR19-MVS-BUS-Weekday-01,14502698-MAR19-MVS-BUS-Weekday-01,Westbound 63B Grand Ave/Westgate Sta,1,1610,630004,1
+452-110,MAR19-MVS-BUS-Weekday-01,14504378-MAR19-MVS-BUS-Weekday-01,Westbound 452  Express / Minneapolis,1,1931,4520003,1

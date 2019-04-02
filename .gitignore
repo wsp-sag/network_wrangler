@@ -1,2 +1,55 @@
-/.project
-/.pydevproject
+# Compiled Source
+*.pyc
+
+# Temp and test cache
+.temp
+.pytest_cache
+*.bak
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# System Errata
+.DS_Store
+.DS_Store?
+
+# Packaging and Installing
+.Python
+env/
+build/
+wheels/
+lib64/
+var/
+pip-wheel-metadata/
+develop-eggs/
+dist/
+eggs/
+.eggs/
+*.egg
+*.egg-info/
+.installed.cfg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual Envs
+.env
+.venv
+venv/
+ENV/
+env/
+.python-version
+
+# IDE files
+.idea
+.spyderproject
+.spyproject
+.project
+.pydevproject
