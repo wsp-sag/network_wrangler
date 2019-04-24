@@ -1,8 +1,5 @@
-'''
-Created on Apr 2, 2019
-
-@author: chryssac
-'''
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import yaml
 
@@ -20,25 +17,23 @@ class ProjectCard(object):
         
         
     def read(self, path_to_card):
+        method_lookup = {'Roadway Attribute Change': self.roadway_attribute_change, 
+                         'New Roadway': self.new_roadway,
+                         'Transit Service Attribute Change': self.transit_attribute_change,
+                         'New Transit Dedicated Right of Way': self.new_transit_right_of_way,
+                         'Parallel Managed Lanes': self.parallel_managed_lanes}
+        
         with open (path_to_card, 'r') as card:
             try:
-                dict_card = yaml.safe_load(card)
-                print(dict_card)
+                dictionary_card = yaml.safe_load(card)
                 
-                if dict_card.get('Category') == 'Roadway Attribute Change':
-                    self.rdwy_attr_change(dict_card)
+                try:
+                    method_lookup[dictionary_card.get('Category')](dictionary_card)
+                except KeyError as e:
+                    print(e.message())
+                    raise NotImplementedError('Invalid Project Card Category') from e
                     
-                elif dict_card.get('Category') == 'New Roadway':
-                    self.new_rdwy(dict_card)
-                    
-                elif dict_card.get('Category') == 'Transit Service Attribute Change':
-                    self.trns_attr_change(dict_card)
-                    
-                elif dict_card.get('Category') == 'New Transit Dedicated Right of Way':
-                    self.new_trans(dict_card)
-                    
-                elif dict_card.get('Category') == 'Parallel Managed Lanes':
-                    self.paral_lanes(dict_card)
+                print(dictionary_card.get('Category'))
                 
                 
             except yaml.YAMLError as exc:
@@ -46,7 +41,7 @@ class ProjectCard(object):
     
     
     
-    def rdwy_attr_change(self, card):
+    def roadway_attribute_change(self, card):
         '''
         Reads a Roadway Attribute Change card.
         
@@ -58,7 +53,7 @@ class ProjectCard(object):
     
     
     
-    def new_rdwy(self, card):
+    def new_roadway(self, card):
         '''
         Reads a New Roadway card.
         
@@ -69,7 +64,7 @@ class ProjectCard(object):
         print(card.get('Category'))
     
     
-    def trns_attr_change(self, card):
+    def transit_attribute_change(self, card):
         '''
         Reads a Transit Service Attribute Change card.
         
@@ -80,7 +75,7 @@ class ProjectCard(object):
         print(card.get('Category'))
     
     
-    def new_trans(self, card):
+    def new_transit_right_of_way(self, card):
         '''
         Reads a New Transit Dedicated Right of Way card.
         
@@ -91,7 +86,7 @@ class ProjectCard(object):
         print(card.get('Category'))
     
     
-    def paral_lanes(self, card):
+    def parallel_managed_lanes(self, card):
         '''
         Reads a Parallel Managed Lanes card.
         
