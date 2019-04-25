@@ -8,9 +8,10 @@ import logging
 from ProjectCard import ProjectCard
 
 if __name__ == '__main__':
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger("WranglerLogger")
+    logger.setLevel(logging.DEBUG)
     
-    console_handler = logging.StreamHandler()
+    console_handler = logging.StreamHandler(sys.stdout)
     file_handler = logging.FileHandler('network_wrangler.log')
     
     file_handler.setLevel(logging.DEBUG)
@@ -24,11 +25,11 @@ if __name__ == '__main__':
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
     
-    logger.debug('debug')
-    logger.info('info')
-    logger.warning('warning')
-    logger.error('error')
-    logger.critical('critical')
+    #logger.debug('debug')
+    #logger.info('info')
+    #logger.warning('warning')
+    #logger.error('error')
+    #logger.critical('critical')
        
     #ProjectCard().read("../example/stpaul/project_cards/1_simple_roadway_attribute_change.yml")
     

@@ -32,8 +32,6 @@ class ProjectCard(object):
                 except KeyError as e:
                     print(e.message())
                     raise NotImplementedError('Invalid Project Card Category') from e
-                    
-                print(dictionary_card.get('Category'))
                 
                 
             except yaml.YAMLError as exc:
