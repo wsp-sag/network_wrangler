@@ -9,7 +9,7 @@ classifiers = ['Development Status :: 1 - Planning',
                'Programming Language :: Python :: 3.6',
                'Programming Language :: Python :: 3.7']
 
-with open('readme.txt') as f:
+with open('readme.md') as f:
     long_description = f.readlines()
 
 with open('requirements.txt') as f:
