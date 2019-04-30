@@ -10,7 +10,7 @@ classifiers = ['Development Status :: 1 - Planning',
                'Programming Language :: Python :: 3.7']
 
 with open('readme.md') as f:
-    long_description = f.readlines()
+    long_description = f.read()
 
 with open('requirements.txt') as f:
     requirements = f.readlines()
@@ -20,6 +20,7 @@ setup(name='network_wrangler',
       version='0.0.0',
       description='',
       long_description=long_description,
+      long_description_content_type='text/markdown',
       url='https://github.com/wsp-sag/network_wrangler',
       license='Apache 2',
       platforms='any',
