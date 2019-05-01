@@ -3,6 +3,8 @@
 
 import yaml
 
+from Logger import WranglerLogger
+
 class ProjectCard(object):
     '''
     Representation of a Project Card
@@ -13,10 +15,18 @@ class ProjectCard(object):
         '''
         Constructor
         '''
+        pass
         
         
         
     def read(self, path_to_card):
+        '''
+        Reads a Project card.
+        
+    args:
+        path_to_card (string): the path to the project card 
+        
+        '''
         method_lookup = {'Roadway Attribute Change': self.roadway_attribute_change, 
                          'New Roadway': self.new_roadway,
                          'Transit Service Attribute Change': self.transit_attribute_change,
@@ -29,11 +39,10 @@ class ProjectCard(object):
                 
                 try:
                     method_lookup[dictionary_card.get('Category')](dictionary_card)
-                except KeyError as e:
-                    print(e.message())
-                    raise NotImplementedError('Invalid Project Card Category') from e
                     
-                print(dictionary_card.get('Category'))
+                except KeyError as e:
+                    WranglerLogger.error(e.message())
+                    raise NotImplementedError('Invalid Project Card Category') from e
                 
                 
             except yaml.YAMLError as exc:
@@ -49,7 +58,7 @@ class ProjectCard(object):
         card (dictionary): the project card stored in a dictionary  
         
         '''
-        print(card.get('Category'))
+        WranglerLogger.info(card.get('Category'))
     
     
     
@@ -61,7 +70,7 @@ class ProjectCard(object):
         card (dictionary): the project card stored in a dictionary  
         
         '''
-        print(card.get('Category'))
+        WranglerLogger.info(card.get('Category'))
     
     
     def transit_attribute_change(self, card):
@@ -72,7 +81,7 @@ class ProjectCard(object):
         card (dictionary): the project card stored in a dictionary  
         
         '''
-        print(card.get('Category'))
+        WranglerLogger.info(card.get('Category'))
     
     
     def new_transit_right_of_way(self, card):
@@ -83,7 +92,7 @@ class ProjectCard(object):
         card (dictionary): the project card stored in a dictionary  
         
         '''
-        print(card.get('Category'))
+        WranglerLogger.info(card.get('Category'))
     
     
     def parallel_managed_lanes(self, card):
@@ -94,4 +103,4 @@ class ProjectCard(object):
         card (dictionary): the project card stored in a dictionary  
         
         '''
-        print(card.get('Category'))
+        WranglerLogger.info(card.get('Category'))
