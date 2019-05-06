@@ -23,7 +23,7 @@ class ProjectCard(object):
         '''
         Reads a Project card.
         
-    args:
+        args:
         path_to_card (string): the path to the project card 
         
         '''
@@ -54,7 +54,7 @@ class ProjectCard(object):
         '''
         Reads a Roadway Attribute Change card.
         
-    args:
+        args:
         card (dictionary): the project card stored in a dictionary  
         
         '''
@@ -66,7 +66,7 @@ class ProjectCard(object):
         '''
         Reads a New Roadway card.
         
-    args:
+        args:
         card (dictionary): the project card stored in a dictionary  
         
         '''
@@ -77,7 +77,7 @@ class ProjectCard(object):
         '''
         Reads a Transit Service Attribute Change card.
         
-    args:
+        args:
         card (dictionary): the project card stored in a dictionary  
         
         '''
@@ -88,7 +88,7 @@ class ProjectCard(object):
         '''
         Reads a New Transit Dedicated Right of Way card.
         
-    args:
+        args:
         card (dictionary): the project card stored in a dictionary  
         
         '''
@@ -99,7 +99,7 @@ class ProjectCard(object):
         '''
         Reads a Parallel Managed Lanes card.
         
-    args:
+        args:
         card (dictionary): the project card stored in a dictionary  
         
         '''
