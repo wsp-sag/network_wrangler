@@ -39,6 +39,12 @@ Note: if you are not part of the project team and want to contribute code back t
 
 Forthcoming...
 
+#### Common Installation Issues
+
+**Issue: `clang: warning: libstdc++ is deprecated; move to libc++ with a minimum deployment target of OS X 10.9 [-Wdeprecated]`**
+If you are using MacOS, you might need to update your [xcode command line tools and headers](https://developer.apple.com/downloads/) 
+
+
 ## Usage
 ```python
 import network_wrangler
