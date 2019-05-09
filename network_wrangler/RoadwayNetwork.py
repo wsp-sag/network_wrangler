@@ -9,6 +9,7 @@ import pandas as pd
 import geopandas as gpd
 
 from pandas.core.frame import DataFrame
+from geopandas.geodataframe import GeoDataFrame
 
 from Logger import WranglerLogger
 
@@ -19,7 +20,7 @@ class RoadwayNetwork(object):
     '''
 
 
-    def __init__(self, nodes: DataFrame, links: DataFrame, shapes: DataFrame):
+    def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
         '''
         Constructor
         '''
@@ -27,12 +28,12 @@ class RoadwayNetwork(object):
         if isinstance(nodes, DataFrame):
             self.nodes = nodes
         else:
-            WranglerLogger.error("Incompatible nodes type. Must provide a DataFrame.")
+            WranglerLogger.error("Incompatible nodes type. Must provide a GeoDataFrame.")
         
         if isinstance(links, DataFrame):  
             self.links = links
         else:
-            WranglerLogger.error("Incompatible links type. Must provide a GeoDataFrame.")
+            WranglerLogger.error("Incompatible links type. Must provide a DataFrame.")
         
         if isinstance(shapes, DataFrame): 
             self.shapes = shapes
