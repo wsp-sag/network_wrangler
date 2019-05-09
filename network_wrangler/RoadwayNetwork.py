@@ -41,23 +41,23 @@ class RoadwayNetwork(object):
     
     
     
-    def read(self, linkFile: str, nodeFile: str, shapeFile: str) -> RoadwayNetwork:
+    def read(self, link_file: str, node_file: str, shape_file: str) -> RoadwayNetwork:
         '''
         Reads a network from the roadway network standard
         
         args:
-        linkFile: full path to the link file
-        nodeFile: full path to the node file
-        shapeFile: full path to the shape file 
+        link_file: full path to the link file
+        node_file: full path to the node file
+        shape_file: full path to the shape file 
         '''
             
-        links_df = pd.read_json(linkFile)
-        nodes_df = gpd.read_file(nodeFile)
-        shapes_df = gpd.read_file(shapeFile)
+        links_df = pd.read_json(link_file)
+        nodes_df = gpd.read_file(node_file)
+        shapes_df = gpd.read_file(shape_file)
         
-        WranglerLogger.info('Read %s links from %s' % (links_df.size, linkFile))
-        WranglerLogger.info('Read %s nodes from %s' % (nodes_df.size, nodeFile))
-        WranglerLogger.info('Read %s shapes from %s' % (shapes_df.size, shapeFile))
+        WranglerLogger.info('Read %s links from %s' % (links_df.size, link_file))
+        WranglerLogger.info('Read %s nodes from %s' % (nodes_df.size, node_file))
+        WranglerLogger.info('Read %s shapes from %s' % (shapes_df.size, shape_file))
         
         roadway_network = RoadwayNetwork(nodes = nodes_df, links = links_df, shapes = shapes_df)
         return roadway_network
