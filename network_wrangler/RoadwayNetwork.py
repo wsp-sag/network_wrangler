@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
 import os
 
 import pandas as pd
 import geopandas as gpd
+
+from pandas.core.frame import DataFrame
 
 from Logger import WranglerLogger
 
@@ -15,17 +19,29 @@ class RoadwayNetwork(object):
     '''
 
 
-    def __init__(self, nodes, links, shapes):
+    def __init__(self, nodes: DataFrame, links: DataFrame, shapes: DataFrame):
         '''
         Constructor
         '''
         
-        #TODO: are these stored as data frames or an array of some sort?
-        self.nodes = nodes
-        self.links = links
-        self.shapes = shapes
+        if isinstance(nodes, DataFrame):
+            self.nodes = nodes
+        else:
+            WranglerLogger.error("Incompatible nodes type. Must provide a DataFrame.")
+        
+        if isinstance(links, DataFrame):  
+            self.links = links
+        else:
+            WranglerLogger.error("Incompatible links type. Must provide a GeoDataFrame.")
+        
+        if isinstance(shapes, DataFrame): 
+            self.shapes = shapes
+        else:
+            WranglerLogger.error("Incompatible shapes type. Must provide a GeoDataFrame.")
     
-    def read(self, linkFile: str, nodeFile: str, shapeFile: str):
+    
+    
+    def read(self, linkFile: str, nodeFile: str, shapeFile: str) -> RoadwayNetwork:
         '''
         Reads a network from the roadway network standard
         
@@ -46,7 +62,9 @@ class RoadwayNetwork(object):
         roadway_network = RoadwayNetwork(nodes = nodes_df, links = links_df, shapes = shapes_df)
         return roadway_network
     
-    def write(self, filename: str, path: str = '.'):
+    
+    
+    def write(self, filename: str, path: str = '.') -> None:
         '''
         Writes a network in the roadway network standard 
         
@@ -59,15 +77,11 @@ class RoadwayNetwork(object):
             WranglerLogger.debug("\nPath [%s] doesn't exist; creating." % path)
             os.mkdir(path)
            
-        #TODO: if we are storing the links, nodes and shapes as data frames this will need to change
-        links_file = open(os.path.join(path, filename + "_links.json"), 'w')
+        links_file = os.path.join(path, filename + "_links.json")
         self.links_df.to_json(path_or_buf = links_file, orient = 'records', lines = True)
-        links_file.close()
             
-        nodes_file = open(os.path.join(path, filename + "_nodes.geojson"), 'w')
+        nodes_file = os.path.join(path, filename + "_nodes.geojson")
         self.nodes_df.to_file(nodes_file, driver='GeoJSON')
-        nodes_file.close()
         
-        shapes_file = open(os.path.join(path, filename + "_shapes.geojson"), 'w')
+        shapes_file = os.path.join(path, filename + "_shapes.geojson")
         self.shapes_df.to_file(shapes_file, driver='GeoJSON')
-        shapes_file.close()
