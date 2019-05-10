@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-import os
+import os, sys
 
 import pandas as pd
 import geopandas as gpd
@@ -28,17 +28,23 @@ class RoadwayNetwork(object):
         if isinstance(nodes, DataFrame):
             self.nodes = nodes
         else:
-            WranglerLogger.error("Incompatible nodes type. Must provide a GeoDataFrame.")
+            error_message = "Incompatible nodes type. Must provide a GeoDataFrame."
+            WranglerLogger.error(error_message)
+            sys.exit(error_message)
         
         if isinstance(links, DataFrame):  
             self.links = links
         else:
-            WranglerLogger.error("Incompatible links type. Must provide a DataFrame.")
+            error_message = "Incompatible links type. Must provide a DataFrame."
+            WranglerLogger.error(error_message)
+            sys.exit(error_message)
         
         if isinstance(shapes, DataFrame): 
             self.shapes = shapes
         else:
-            WranglerLogger.error("Incompatible shapes type. Must provide a GeoDataFrame.")
+            error_message = "Incompatible shapes type. Must provide a GeoDataFrame."
+            WranglerLogger.error(error_message)
+            sys.exit(error_message)
     
     
     
