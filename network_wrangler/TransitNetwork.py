@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-import os
+import os, sys
 import partridge as ptg
 
 from Logger import WranglerLogger
@@ -29,6 +29,7 @@ class TransitNetwork(object):
             self.trips = feed.trips
         else:
             WranglerLogger.error("Incompatible feed type. Must provide a partridge Feed object.")
+            sys.exit("Incompatible feed type. Must provide a partridge Feed object.")
     
     
     def read(self, agency_file: str, frequencies_file: str, routes_file: str, 
