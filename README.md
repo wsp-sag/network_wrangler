@@ -37,12 +37,19 @@ Note: if you are not part of the project team and want to contribute code back t
 
 #### Using Docker
 
-Forthcoming...
+1. Install [Docker](https://docs.docker.com/install/)
+2. Clone git repository (see instructions above) *NOTE: this is easiest way right now since repo is private. When it is public we can clone right from github without having to muck around with logins or keys*
+3. I the cloned repository, open a terminal from the /docker folder  
+4. Build the container: `docker-compose build` , which will install all the dependencies as well as git and network wrangler
+5. Deploy the container:
+  * with its default command to launch a [jupyter notebook](https://jupyter.org/), found at http://127.0.0.1:8888: `docker-compose up`  
+  * with a bash prompt `docker-compose run wrangler /bin/bash`
+5. Exit container: `exit`
 
 #### Common Installation Issues
 
 **Issue: `clang: warning: libstdc++ is deprecated; move to libc++ with a minimum deployment target of OS X 10.9 [-Wdeprecated]`**
-If you are using MacOS, you might need to update your [xcode command line tools and headers](https://developer.apple.com/downloads/) 
+If you are using MacOS, you might need to update your [xcode command line tools and headers](https://developer.apple.com/downloads/)
 
 
 ## Usage

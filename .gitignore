@@ -5,6 +5,7 @@
 .temp
 .pytest_cache
 *.bak
+.cache
 
 # Logs
 *.log

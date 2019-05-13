@@ -1,0 +1,24 @@
+version: "3.2"
+
+services:
+  wrangler:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - 8888:8888
+    volumes:
+      - ./notebooks:/home/jovyan/work/notebooks
+
+
+# Build all the containers
+#     docker-compose build
+# Build a specific container
+#     docker-compose wrangler
+# To start up notebook server as at http://127.0.0.1:8888
+#     docker-compose up
+#
+# To start up a bash command line
+#     docker-compose run wrangler /bin/bash
+# To exit bash and shut downloads
+#     exit
