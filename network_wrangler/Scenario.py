@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import os
-import yaml
 
 from ProjectCard import ProjectCard
 
@@ -59,16 +58,12 @@ class Scenario(object):
         
         for file in os.listdir(folder):
             if file.endswith(".yml") or file.endswith(".yaml"):
-                with open (os.path.join(folder, file), 'r') as card:
-                    try:
-                        card_dict = yaml.safe_load(card)
-                        card_tags = card_dict.get('Tags')
-                        
-                        if not set(tags).isdisjoint(card_tags):
-                            #TODO validate project card.... 
-                            project_cards_list.append(ProjectCard())
-                            
-                    except yaml.YAMLError as exc:
-                        print(exc)
+                project_card = ProjectCard(os.path.join(folder, file))
+                
+                if project_card != None:
+                    card_tags = project_card.get_tags()
+                
+                if not set(tags).isdisjoint(card_tags):
+                    project_cards_list.append(project_card)
         
         return project_cards_list
