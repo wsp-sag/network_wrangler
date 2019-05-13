@@ -59,6 +59,8 @@ Containers:
 **Issue: `clang: warning: libstdc++ is deprecated; move to libc++ with a minimum deployment target of OS X 10.9 [-Wdeprecated]`**
 If you are using MacOS, you might need to update your [xcode command line tools and headers](https://developer.apple.com/downloads/)
 
+## Documentation
+Documentation can be built from the `/docs` folder using the command: `make html`
 
 ## Usage
 ```python
@@ -85,6 +87,8 @@ While Network Wrangler as written here is based on these concepts, the code is d
 ## Contributing
 Pull requests are welcome. Please open an issue first to discuss what you would like to change.
 Please make sure to update tests as appropriate.
+
+
 
 ## License
 [Apache-2.0](https://choosealicense.com/licenses/apache-2.0/)
