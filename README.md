@@ -39,12 +39,20 @@ Note: if you are not part of the project team and want to contribute code back t
 
 1. Install [Docker](https://docs.docker.com/install/)
 2. Clone git repository (see instructions above) *NOTE: this is easiest way right now since repo is private. When it is public we can clone right from github without having to muck around with logins or keys*
-3. I the cloned repository, open a terminal from the /docker folder  
-4. Build the container: `docker-compose build` , which will install all the dependencies as well as git and network wrangler
-5. Deploy the container:
-  * with its default command to launch a [jupyter notebook](https://jupyter.org/), found at http://127.0.0.1:8888: `docker-compose up`  
-  * with a bash prompt `docker-compose run wrangler /bin/bash`
-5. Exit container: `exit`
+3. From the cloned repository, open a terminal from the `/docker` folder and build and run the docker container corresponding to what you want to do by running `docker-compose run <container name> <entry point (optional)> --build`
+4. Command to exit container: `exit`
+
+Containers:
+ - `wrangler-jupyter` started by running `docker-compose run wrangler-jupyter --build` is appropriate for running and testing wrangler.
+   - Default action is to start [jupyter notebook](https://jupyter.org/) which can be found at http://127.0.0.1:8888
+   - Safe: It creates an empty folder to store jupyter notebooks within the container but wont overwrite the source files on your actual machine.
+   - Starting Bash: You can also start the container with a command line using `docker-compose run wrangler-jupyter /bin/bash --build`.  
+   - Doesn't install development dependencies (although they can be installed from within the container)
+ - `wrangler-ci` is a small image without extras meant for running tests and deploying to continuous integration server.
+   - default command is to run [pytest](https://docs.pytest.org/en/latest/).
+   - contains development dependencies so that it can run tests and build docs.
+ - `wrangler-dev` is the most powerful but dangerous container `docker-compose run wrangler-dev /bin/bash --build`
+   - Warning: It will synchronize code edited from the container to your wrangler clone.  This is great for developing within an IDE, but please take this into account.
 
 #### Common Installation Issues
 

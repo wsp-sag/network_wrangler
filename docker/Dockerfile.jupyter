@@ -1,4 +1,4 @@
-# docker build -t wrangler .
+# docker build -t wrangler-jupyter .
 # docker run -p 8888:8888 wrangler:latest
 
 FROM jupyter/base-notebook
