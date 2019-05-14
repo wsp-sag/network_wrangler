@@ -96,38 +96,38 @@ class TransitNetwork(object):
             WranglerLogger.debug("\nPath [%s] doesn't exist; creating." % path)
             os.mkdir(path)
             
-        else:
-            file = open(os.path.join(path, filename + "_agency.txt"), 'w');
-            for agency in self.agency:
-                file.write(str(agency)+"\n")
-            file.close()
+        
+        file = open(os.path.join(path, filename + "_agency.txt"), 'w');
+        for agency in self.agency:
+            file.write(str(agency)+"\n")
+        file.close()
                 
-            file = open(os.path.join(path, filename + "_frequencies.txt"), 'w');
-            for frequency in self.frequencies:
-                file.write(str(frequency)+"\n")
-            file.close()
+        file = open(os.path.join(path, filename + "_frequencies.txt"), 'w');
+        for frequency in self.frequencies:
+            file.write(str(frequency)+"\n")
+        file.close()
                     
-            file = open(os.path.join(path, filename + "_routes.txt"), 'w');
-            for route in self.routes:
-                file.write(str(route)+"\n")
-            file.close()
+        file = open(os.path.join(path, filename + "_routes.txt"), 'w');
+        for route in self.routes:
+            file.write(str(route)+"\n")
+        file.close()
                 
-            file = open(os.path.join(path, filename + "_shapes.txt"), 'w');
-            for shape in self.shapes:
-                file.write(str(shape)+"\n")
-            file.close()
+        file = open(os.path.join(path, filename + "_shapes.txt"), 'w');
+        for shape in self.shapes:
+            file.write(str(shape)+"\n")
+        file.close()
                 
-            file = open(os.path.join(path, filename + "_stops.txt"), 'w');
-            for stop in self.stops:
-                file.write(str(stop)+"\n")
-            file.close()
+        file = open(os.path.join(path, filename + "_stops.txt"), 'w');
+        for stop in self.stops:
+            file.write(str(stop)+"\n")
+        file.close()
                 
-            file = open(os.path.join(path, filename + "_transfers.txt"), 'w');
-            for transfer in self.transfers:
-                file.write(str(transfer)+"\n")
-            file.close()
+        file = open(os.path.join(path, filename + "_transfers.txt"), 'w');
+        for transfer in self.transfers:
+            file.write(str(transfer)+"\n")
+        file.close()
                 
-            file = open(os.path.join(path, filename + "_trips.txt"), 'w');
-            for trip in self.trips:
-                file.write(str(trip)+"\n")
-            file.close()
+        file = open(os.path.join(path, filename + "_trips.txt"), 'w');
+        for trip in self.trips:
+            file.write(str(trip)+"\n")
+        file.close()
