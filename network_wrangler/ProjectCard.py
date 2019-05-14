@@ -26,15 +26,14 @@ class ProjectCard(object):
             WranglerLogger.error(error_message)
             return None
         
-        elif not self.validate(filename):
+        if not self.validate(filename):
             return None
         
-        else:
-            with open (filename, 'r') as file:
-                try:
-                    self.dictionary = yaml.safe_load(file)
-                except yaml.YAMLError as exc:
-                    print(exc)
+        with open (filename, 'r') as file:
+            try:
+                self.dictionary = yaml.safe_load(file)
+            except yaml.YAMLError as exc:
+                print(exc)
     
     
     
@@ -55,8 +54,8 @@ class ProjectCard(object):
         '''
         if self.dictionary != None:
             return self.dictionary.get('Tags')
-        else:
-            return None
+        
+        return None
     
     
     
