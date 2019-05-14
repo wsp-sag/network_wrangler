@@ -25,30 +25,35 @@ class RoadwayNetwork(object):
         Constructor
         '''
         
-        if isinstance(nodes, DataFrame):
-            self.nodes = nodes
+        errors = []
+        
+        if isinstance(nodes, GeoDataFrame):
+            self.nodes_df = nodes
         else:
             error_message = "Incompatible nodes type. Must provide a GeoDataFrame."
             WranglerLogger.error(error_message)
-            sys.exit(error_message)
+            errors.append(error_message)
         
         if isinstance(links, DataFrame):  
-            self.links = links
+            self.links_df = links
         else:
             error_message = "Incompatible links type. Must provide a DataFrame."
             WranglerLogger.error(error_message)
-            sys.exit(error_message)
+            errors.append(error_message)
         
-        if isinstance(shapes, DataFrame): 
-            self.shapes = shapes
+        if isinstance(shapes, GeoDataFrame): 
+            self.shapes_df = shapes
         else:
             error_message = "Incompatible shapes type. Must provide a GeoDataFrame."
             WranglerLogger.error(error_message)
-            sys.exit(error_message)
+            errors.append(error_message)
+            
+        if len(errors) > 0:
+            sys.exit("RoadwayNetwork: Invalid constructor data type")
     
     
-    
-    def read(self, link_file: str, node_file: str, shape_file: str) -> RoadwayNetwork:
+    @staticmethod
+    def read(link_file: str, node_file: str, shape_file: str) -> RoadwayNetwork:
         '''
         Reads a network from the roadway network standard
         
@@ -84,11 +89,11 @@ class RoadwayNetwork(object):
             WranglerLogger.debug("\nPath [%s] doesn't exist; creating." % path)
             os.mkdir(path)
            
-        links_file = os.path.join(path, filename + "_links.json")
+        links_file = os.path.join(path, filename + "_link.json")
         self.links_df.to_json(path_or_buf = links_file, orient = 'records', lines = True)
             
-        nodes_file = os.path.join(path, filename + "_nodes.geojson")
+        nodes_file = os.path.join(path, filename + "_node.geojson")
         self.nodes_df.to_file(nodes_file, driver='GeoJSON')
         
-        shapes_file = os.path.join(path, filename + "_shapes.geojson")
+        shapes_file = os.path.join(path, filename + "_shape.geojson")
         self.shapes_df.to_file(shapes_file, driver='GeoJSON')
