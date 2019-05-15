@@ -1,0 +1,27 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -93.096598,
+                        44.95211199999999
+                    ],
+                    [
+                        -93.096005,
+                        44.95239499999999
+                    ]
+                ]
+            },
+            "properties": {
+                "id": "driveGeom797",
+                "fromIntersectionId": "driveNode143837",
+                "toIntersectionId": "driveNode151265",
+                "forwardReferenceId": "driveLink797"
+              }
+          }
+      ]
+  }

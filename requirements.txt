@@ -4,3 +4,4 @@ osmnx
 partridge
 pyy
 pyyaml
+geojson
