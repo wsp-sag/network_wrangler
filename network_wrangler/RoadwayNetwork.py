@@ -107,15 +107,12 @@ class RoadwayNetwork(object):
         nodes_file = os.path.join(path, filename + "_node.geojson")
         # geopandas wont let you write to geojson because
         # it uses fiona, which doesn't accept a list as one of the properties
-        # so need to convert to vanilla dataframe first
-
-        #pd.DataFrame(self.nodes_df).to_json(path_or_buf = nodes_file, orient = 'records', lines = True)
+        # so need to convert the df to geojson manually first
         property_columns = self.nodes_df.columns.values.tolist()
         property_columns.remove('geometry')
         nodes_geojson = point_df_to_geojson(self.nodes_df, property_columns )
         with open(nodes_file,'w') as f:
             json.dump(nodes_geojson, f)
-        #print("nodes_geojson",nodes_geojson)
 
         shapes_file = os.path.join(path, filename + "_shape.geojson")
         self.shapes_df.to_file(shapes_file, driver='GeoJSON')
