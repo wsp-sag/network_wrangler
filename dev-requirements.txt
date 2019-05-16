@@ -1,0 +1,5 @@
+pytest
+jupyter
+notebook
+sphinx
+sphinx_rtd_theme

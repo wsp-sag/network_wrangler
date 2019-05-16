@@ -1,0 +1,31 @@
+# docker build -t wrangler-dev .
+# docker run -p 8888:8888 wrangler-dev:latest
+
+FROM jupyter/base-notebook
+
+USER root
+
+# Install git
+RUN apt-get update \
+     && apt-get install -y git \
+     && apt-get install -y libspatialindex-dev # needed to install rtree via pip per https://github.com/Toblerity/rtree/issues/26
+
+# changing all files in docker image to be read/write/execute
+RUN fix-permissions .
+
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir --requirement /tmp/requirements.txt && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+
+COPY dev-requirements.txt /tmp/
+RUN pip install --no-cache-dir --requirement /tmp/dev-requirements.txt && \
+        fix-permissions $CONDA_DIR && \
+        fix-permissions /home/$NB_USER
+
+RUN fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+
+USER $NB_UID
+ENTRYPOINT ["tini", "-g", "--"]
+CMD ["start-notebook.sh","--NotebookApp.password=''","--NotebookApp.token=''"]
