@@ -3,6 +3,9 @@
 
 import yaml
 
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
+from jsonschema.exceptions import SchemaError
 from Logger import WranglerLogger
 
 class ProjectCard(object):
@@ -44,6 +47,14 @@ class ProjectCard(object):
         args:
         filename: the full path of the YML file
         '''
+        with open (filename, 'r') as instance:
+            try:
+                validate(instance, "../schemas/project_card.json")
+            except ValidationError as exc:
+                WranglerLogger.error(exc)
+            except SchemaError as exc:
+                WranglerLogger.error(exc)
+                    
         return True
     
     
