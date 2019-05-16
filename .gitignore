@@ -5,6 +5,7 @@
 .temp
 .pytest_cache
 *.bak
+.cache
 
 # Logs
 *.log
@@ -13,6 +14,9 @@
 .ipynb_checkpoints/
 profile_default/
 ipython_config.py
+
+# Built Documentation
+docs/_build/
 
 # System Errata
 .DS_Store
