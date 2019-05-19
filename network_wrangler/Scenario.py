@@ -12,7 +12,7 @@ class Scenario(object):
     Holds information about a scenario
     '''
 
-    def __init__(self, base_scenario: str, project_cards: [ProjectCard] = None):
+    def __init__(self, base_scenario: dict, project_cards: [ProjectCard] = None):
         '''
         Constructor
         
@@ -25,8 +25,7 @@ class Scenario(object):
         self.project_cards = project_cards
         
     
-    #TODO: what will the base_scenario field be used for?
-    def create_scenario(self, base_scenario: str, folder: str, tags: [str] = None) -> Scenario: 
+    def create_scenario(self, base_scenario: dict, folder: str, tags: [str] = None) -> Scenario: 
         '''
         Validates project cards with a specific tag from the specified folder and 
         creates a scenario object with the valid project card.

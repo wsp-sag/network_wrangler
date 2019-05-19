@@ -29,36 +29,25 @@ class ProjectCard(object):
             WranglerLogger.error(error_message)
             return None
         
-        if not self.validate(filename):
-            return None
-        
         with open (filename, 'r') as file:
+            #validate project card 
             try:
+                validate(file, "../schemas/project_card.json")
                 self.dictionary = yaml.safe_load(file)
-            except yaml.YAMLError as exc:
-                print(exc)
-    
-    
-    
-    def validate(self, filename: str) -> bool:
-        '''
-        Validates a project card.
-        
-        args:
-        filename: the full path of the YML file
-        '''
-        with open (filename, 'r') as instance:
-            try:
-                validate(instance, "../schemas/project_card.json")
+                
             except ValidationError as exc:
                 WranglerLogger.error(exc)
+            
             except SchemaError as exc:
                 WranglerLogger.error(exc)
-                    
-        return True
+            
+            except yaml.YAMLError as exc:
+                WranglerLogger.error(exc)
+                
+            finally:
+                return None
     
-    
-    
+       
     def get_tags(self):
         '''
         Returns the project card's 'Tags' field
@@ -82,22 +71,13 @@ class ProjectCard(object):
                          'Transit Service Attribute Change': self.transit_attribute_change,
                          'New Transit Dedicated Right of Way': self.new_transit_right_of_way,
                          'Parallel Managed Lanes': self.parallel_managed_lanes}
-
-        with open (path_to_card, 'r') as card:
-            try:
-                dictionary_card = yaml.safe_load(card)
-
-                try:
-                    method_lookup[dictionary_card.get('Category')](dictionary_card)
-
-                except KeyError as e:
-                    WranglerLogger.error(e.message())
-                    raise NotImplementedError('Invalid Project Card Category') from e
-
-
-            except yaml.YAMLError as exc:
-                print(exc)
-    
+        
+        try:
+            method_lookup[self.dictionary.get('Category')](self.dictionary)
+            
+        except KeyError as e:
+            WranglerLogger.error(e.message())
+            raise NotImplementedError('Invalid Project Card Category') from e
     
     
     def roadway_attribute_change(self, card: dict):
