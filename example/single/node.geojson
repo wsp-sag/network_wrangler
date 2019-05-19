@@ -1,0 +1,57 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [
+                -93.0965985,
+                44.952112199999995
+            ]
+        },
+        "properties": {
+            "osmNodeId": 954734870,
+            "isDriveNode": 1,
+            "isDedicatedTransitNode": 0,
+            "id": "driveNode143837",
+            "travelModelId": 143837,
+            "isBikeNode": 0,
+            "isPedNode": 0,
+            "outboundReferenceId": [
+                "driveLink797"
+            ],
+            "inboundReferenceId": [
+                "driveLink172689",
+                "driveLink184706"
+            ]
+        }
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [
+                -93.0960047,
+                44.95239540000001
+            ]
+        },
+        "properties": {
+            "osmNodeId": 1894068489,
+            "isDriveNode": 1,
+            "isDedicatedTransitNode": 0,
+            "id": "driveNode151265",
+            "travelModelId": 151265,
+            "isBikeNode": 0,
+            "isPedNode": 0,
+            "outboundReferenceId": [
+                "driveLink300740"
+            ],
+            "inboundReferenceId": [
+                "driveLink797",
+                "driveLink184705"
+            ]
+        }
+    }
+  ]
+}
