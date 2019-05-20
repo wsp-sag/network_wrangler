@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import yaml
+import json
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -29,11 +30,14 @@ class ProjectCard(object):
             WranglerLogger.error(error_message)
             return None
         
-        with open (filename, 'r') as file:
+        with open (filename, 'r') as card:
             #validate project card 
             try:
-                validate(file, "../schemas/project_card.json")
-                self.dictionary = yaml.safe_load(file)
+                with open("../schemas/project_card.json") as json_file:
+                    schema = json.load(json_file)
+                
+                validate(card, schema)
+                self.dictionary = yaml.safe_load(card)
                 
             except ValidationError as exc:
                 WranglerLogger.error(exc)
