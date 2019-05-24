@@ -7,7 +7,7 @@ import json
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
-from .Logger import WranglerLogger
+from Logger import WranglerLogger
 
 class ProjectCard(object):
     '''
@@ -29,14 +29,16 @@ class ProjectCard(object):
             error_message = "Incompatible file extension for Project Card. Must provide a YML file"
             WranglerLogger.error(error_message)
             return None
+        
         with open (filename, 'r') as card:
-            #validate project card
+            card_dict = yaml.safe_load(card)
+            
             try:
                 with open("../schemas/project_card.json") as json_file:
                     schema = json.load(json_file)
 
-                card_dict = yaml.safe_load(open(card,'r'))
-                validate(card_dict, schema))
+                #validate project card
+                validate(card_dict, schema)
                 self.dictionary = card_dict
 
             except ValidationError as exc:
@@ -47,9 +49,6 @@ class ProjectCard(object):
 
             except yaml.YAMLError as exc:
                 WranglerLogger.error(exc)
-
-            finally:
-                return None
 
 
     def get_tags(self):

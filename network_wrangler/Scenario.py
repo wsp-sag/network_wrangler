@@ -62,7 +62,7 @@ class Scenario(object):
                 if project_card != None:
                     card_tags = project_card.get_tags()
                 
-                if not set(tags).isdisjoint(card_tags):
-                    project_cards_list.append(project_card)
+                    if not set(tags).isdisjoint(card_tags):
+                        project_cards_list.append(project_card)
         
         return project_cards_list
