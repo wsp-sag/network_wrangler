@@ -7,7 +7,7 @@ import json
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
-from Logger import WranglerLogger
+from .Logger import WranglerLogger
 
 class ProjectCard(object):
     '''
@@ -24,15 +24,15 @@ class ProjectCard(object):
         '''
 
         self.dictionary = None
-        
+
         if not filename.endswith(".yml") and  not filename.endswith(".yaml"):
             error_message = "Incompatible file extension for Project Card. Must provide a YML file"
             WranglerLogger.error(error_message)
             return None
-        
+
         with open (filename, 'r') as card:
             card_dict = yaml.safe_load(card)
-            
+
             try:
                 with open("../schemas/project_card.json") as json_file:
                     schema = json.load(json_file)
