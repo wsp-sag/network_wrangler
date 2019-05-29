@@ -20,10 +20,11 @@ services:
     volumes:
       - type: bind
         source: ..
-        target: /home/jovyan/work/code
+        target: /home/jovyan/work
         bind:
           propagation: shared
-    command: pip install -e /home/jovyan/work/code
+    ports:
+      - 8888:8888
 
 # Build all the containers
 #     docker-compose build
