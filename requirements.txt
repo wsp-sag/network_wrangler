@@ -2,6 +2,6 @@ pandas
 geopandas
 osmnx
 partridge
-pyy
 pyyaml
 geojson
+jsonschema

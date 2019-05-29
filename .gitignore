@@ -57,3 +57,4 @@ env/
 .spyproject
 .project
 .pydevproject
+.settings
