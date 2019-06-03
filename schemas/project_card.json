@@ -1,0 +1,193 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "Project Card Schema",
+  "items": {
+    "$id": "#/items",
+    "type": "object",
+    "title": "The Items Schema",
+    "required": [
+      "Project",
+      "Category",
+      "Tags",
+      "Notes"
+    ],
+    "properties": {
+      "Project": {
+        "$id": "#/items/properties/Project",
+        "type": "string",
+        "title": "Project",
+        "default": "",
+        "examples": [
+          "6th St E Road Diet"
+        ],
+        "pattern": "^(.*)$"
+      },
+      "Category": {
+        "$id": "#/items/properties/Category",
+        "type": "string",
+        "title": "Project Category",
+        "default": "",
+        "examples": [
+          "Roadway Attribute Change"
+        ],
+        "pattern": "^(.*)$"
+      },
+      "Tags": {
+        "$id": "#/items/properties/Tags",
+        "type": "array",
+        "title": "Project Tags",
+        "items": {
+          "$id": "#/items/properties/Tags/items",
+          "type": "string",
+          "title": "The Items Schema",
+          "default": "",
+          "examples": [
+            "example"
+          ],
+          "pattern": "^(.*)$"
+        }
+      },
+      "Dependencies": {
+        "$id": "#/items/properties/Dependencies",
+        "type": "object",
+        "title": "Project Dependencies",
+        "properties": {
+          "Prerequisites": {
+            "$id": "#/items/properties/Dependencies/properties/Prerequisite",
+            "type": "array",
+            "title": "Prerequisites to Project",
+            "default": "",
+            "examples": [
+              "None"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "Corequisites": {
+            "$id": "#/items/properties/Dependencies/properties/Corequisites",
+            "type": "array",
+            "title": "Project Co-requisites",
+            "default": "",
+            "examples": [
+              "None"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "Conflicts": {
+            "$id": "#/items/properties/Dependencies/properties/Conflicts",
+            "type": "array",
+            "title": "Project Conflicts",
+            "default": "",
+            "examples": [
+              "None"
+            ],
+            "pattern": "^(.*)$"
+          }
+        }
+      },
+      "Road": {
+        "$id": "#/items/properties/Road",
+        "type": "object",
+        "title": "The Road Schema",
+        "required": [
+          "Name",
+          "A",
+          "B"
+        ],
+        "properties": {
+          "Name": {
+            "$id": "#/items/properties/Road/properties/Name",
+            "type": "string",
+            "title": "Road Name",
+            "default": "",
+            "examples": [
+              "id=driveLink88629"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "A": {
+            "$id": "#/items/properties/Road/properties/A",
+            "type": "string",
+            "title": "Road A Node",
+            "default": "",
+            "examples": [
+              "osmid=187854529"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "B": {
+            "$id": "#/items/properties/Road/properties/B",
+            "type": "string",
+            "title": "Roadway B Node",
+            "default": "",
+            "examples": [
+              "osmid=187899923"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "Intermediate_Intersections": {
+            "$id": "#/items/properties/Road/properties/Intermediate_Intersections",
+            "type": "array",
+            "title": "Array of intermediate Intersections",
+            "default": "",
+            "examples": [
+              "None"
+            ],
+            "pattern": "^(.*)$"
+          }
+        }
+      },
+      "Attribute": {
+        "$id": "#/items/properties/Attribute",
+        "type": "string",
+        "title": "Roadway Attribute",
+        "default": "",
+        "examples": [
+          "Lanes"
+        ],
+        "pattern": "^(.*)$"
+      },
+      "Change": {
+        "$id": "#/items/properties/Change",
+        "type": "object",
+        "title": "Roadway Change",
+        "required": [
+          "Existing",
+          "Build"
+        ],
+        "properties": {
+          "Existing": {
+            "$id": "#/items/properties/Change/properties/Existing",
+            "type": "integer",
+            "title": "Existing Attribute",
+            "default": 0,
+            "examples": [
+              3
+            ]
+          },
+          "Build": {
+            "$id": "#/items/properties/Change/properties/Build",
+            "type": "integer",
+            "title": "Build Attribute",
+            "default": 0,
+            "examples": [
+              2
+            ]
+          }
+        }
+      },
+      "Notes": {
+        "$id": "#/items/properties/Notes",
+        "type": "string",
+        "title": "Project Notes",
+        "default": "",
+        "examples": [
+          "Simple project example to do a road diet on 6th St E in front of MetCouncil"
+        ],
+        "pattern": "^(.*)$"
+      }
+    }
+  }
+}
