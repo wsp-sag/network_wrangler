@@ -6,7 +6,8 @@ from __future__ import annotations
 import os, sys
 import partridge as ptg
 
-from Logger import WranglerLogger
+from .Logger import WranglerLogger
+from partridge.config import geo_config
 from partridge.gtfs import Feed
 
 class TransitNetwork(object):
@@ -47,35 +48,24 @@ class TransitNetwork(object):
         transfers_file: the transfers file
         trips_file: the trips file
         path: the location of all the network standard files
-        '''
-        
-        
-        #TODO: not sure which column I should be passing for the second dictionary.
-        #I thought it might be the ID column but their examples are not consistent with that
-        #and their documentation is horrible.... Any suggestions?
-        view = {agency_file: {'service_id': None},
-                frequencies_file: {'service_id': None},
-                routes_file: {'service_id': None},
-                shapes_file: {'service_id': None},
-                stops_files: {'service_id': None},
-                transfers_file: {'service_id': None},
-                trips_file: {'service_id': None},
-                }
-        
+        '''     
         
         if not os.path.exists(path):
             WranglerLogger.debug("\nPath [%s] doesn't exist; creating." % path)
             os.mkdir(path)
             
-        #TODO: do we want load_feed or load_geo_feed?
-        feed = ptg.load_feed(path, view)
+        config = geo_config()
+        #using load_feed so we can feed a config to it
+        feed = ptg.load_feed(path, view = None, config = config)
         
+        
+        #TODO: the above seems to be reading trips, routes, frequencies and agencies. Shapes, stops and transfers are not read.
         WranglerLogger.info('Read %s agencies from %s' % (feed.agency.size, agency_file))
         WranglerLogger.info('Read %s frequencies from %s' % (feed.frequencies.size, frequencies_file))
         WranglerLogger.info('Read %s routes from %s' % (feed.routes.size, routes_file))
-        WranglerLogger.info('Read %s shapes from %s' % (feed.shapes.size, shapes_file))
-        WranglerLogger.info('Read %s stops from %s' % (feed.stops.size, stops_files))
-        WranglerLogger.info('Read %s transfers from %s' % (feed.transfers.size, transfers_file))
+        #WranglerLogger.info('Read %s shapes from %s' % (feed.shapes.size, shapes_file))
+        #WranglerLogger.info('Read %s stops from %s' % (feed.stops.size, stops_files))
+        #WranglerLogger.info('Read %s transfers from %s' % (feed.transfers.size, transfers_file))
         WranglerLogger.info('Read %s trips from %s' % (feed.trips.size, trips_file))
         
         transit_network = TransitNetwork(feed)
