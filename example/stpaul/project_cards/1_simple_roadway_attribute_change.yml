@@ -14,6 +14,6 @@ Road:
    Intermediate_Intersections: None
 Attribute: Lanes
 Change:
-   Existing: 3
-   Build: 2
+   Existing: 2
+   Build: 1
 Notes: Simple project example to do a road diet on 6th St E in front of MetCouncil
