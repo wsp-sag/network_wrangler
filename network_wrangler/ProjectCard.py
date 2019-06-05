@@ -67,7 +67,7 @@ class ProjectCard(object):
         Reads a Project card.
 
         args:
-        path_to_card (string): the path to the project card
+        path_to_card: the path to the project card
         '''
         method_lookup = {'Roadway Attribute Change': self.roadway_attribute_change,
                          'New Roadway': self.new_roadway,
@@ -88,7 +88,7 @@ class ProjectCard(object):
         Reads a Roadway Attribute Change card.
 
         args:
-        card (dictionary): the project card stored in a dictionary
+        card: the project card stored in a dictionary
         '''
         WranglerLogger.info(card.get('Category'))
 
@@ -99,7 +99,7 @@ class ProjectCard(object):
         Reads a New Roadway card.
 
         args:
-        card (dictionary): the project card stored in a dictionary
+        card: the project card stored in a dictionary
         '''
         WranglerLogger.info(card.get('Category'))
 
@@ -109,7 +109,7 @@ class ProjectCard(object):
         Reads a Transit Service Attribute Change card.
 
         args:
-        card (dictionary): the project card stored in a dictionary
+        card: the project card stored in a dictionary
         '''
         WranglerLogger.info(card.get('Category'))
 
@@ -119,7 +119,7 @@ class ProjectCard(object):
         Reads a New Transit Dedicated Right of Way card.
 
         args:
-        card (dictionary): the project card stored in a dictionary
+        card: the project card stored in a dictionary
         '''
         WranglerLogger.info(card.get('Category'))
 
@@ -129,6 +129,6 @@ class ProjectCard(object):
         Reads a Parallel Managed Lanes card.
 
         args:
-        card (dictionary): the project card stored in a dictionary
+        card: the project card stored in a dictionary
         '''
         WranglerLogger.info(card.get('Category'))
