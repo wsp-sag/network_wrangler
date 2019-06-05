@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os, sys
 
+import yaml
 import pandas as pd
 import geopandas as gpd
 
@@ -116,3 +117,42 @@ class RoadwayNetwork(object):
 
         shapes_file = os.path.join(path, filename + "_shape.geojson")
         self.shapes_df.to_file(shapes_file, driver='GeoJSON')
+
+
+
+    def apply_roadway_feauture_change(self, project_card: str) -> bool:
+        '''
+        Changes the road network according to the project card passed
+        
+        args:
+        project_card: the path to the project card
+        
+        returns:
+        bool: True if successful.
+        '''
+        #import pdb; pdb.set_trace()
+        with open(project_card, 'r') as card:
+            card_dict = yaml.safe_load(card)
+            
+            road_dict = card_dict.get("Road")            
+            name_str = road_dict.get(list(road_dict)[0])
+            id = name_str.split('=')[1]
+            
+            change_dict = card_dict.get("Change")
+            existing_value = change_dict.get(list(change_dict)[0])
+            build_value = change_dict.get(list(change_dict)[1])
+            
+            attribute = card_dict.get("Attribute")
+            
+            print(id)
+            print(attribute)
+            print(existing_value)
+            print(build_value)
+            
+            
+            #check existing value that it matches the attribute field in self.links_df
+            #TODO: how do i manipulate the data in the dataframe to apply the changes?
+            
+            self.links_df
+            
+        return True
