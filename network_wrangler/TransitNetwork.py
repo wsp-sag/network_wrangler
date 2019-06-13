@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import os, sys
+
 import networkx as nx
+import pandas as pd
 import partridge as ptg
 from partridge.config import geo_config, default_config
 from partridge.gtfs import Feed
@@ -25,16 +27,14 @@ class TransitNetwork(object):
     def __init__(self, feed_path: str = None):
         '''
         Constructor
-
-        Reads a network from the transit network standard
         '''
 
         self.config, self.feed  = TransitNetwork.read_feed(feed_path)
 
     @staticmethod
-    def validate_feed(feed: Feed, config: nx.DiGraph):
+    def validate_feed(feed: Feed, config: nx.DiGraph) -> Bool:
         '''
-        Since Partridge lazily loads the df, this will
+        Since Partridge lazily loads the df, load each file to make sure it actually works.
         '''
         try:
             for node in config.nodes.keys():
@@ -44,7 +44,10 @@ class TransitNetwork(object):
             return False
 
     @staticmethod
-    def read_feed(feed_path: str = None):
+    def read_feed(feed_path: str = None) -> Tuple[nx.DiGraph, Feed]:
+        '''
+        Read GTFS feed from folder and return a config and Partridge Feed object
+        '''
         config = geo_config()
         config.nodes['shapes.txt']['required_columns'] = config.nodes['shapes.txt']['required_columns']+('A','B','LINK_ID')
 
@@ -64,7 +67,7 @@ class TransitNetwork(object):
         WranglerLogger.info('Read %s agencies from %s' % (feed.agency.size, os.path.join(feed_path,"agency.txt")))
         WranglerLogger.info('Read %s frequencies from %s' % (feed.frequencies.size, os.path.join(feed_path,"frequencies.txt")))
         WranglerLogger.info('Read %s routes from %s' % (feed.routes.size, os.path.join(feed_path,"routes.txt")))
-        #WranglerLogger.info('Read %s shapes from %s' % (feed.shapes.size, os.path.join(feed_path,"shapes.txt")))
+        WranglerLogger.info('Read %s shapes from %s' % (feed.shapes.size, os.path.join(feed_path,"shapes.txt")))
         WranglerLogger.info('Read %s stops from %s' % (feed.stops.size, os.path.join(feed_path,"stops.txt")))
         WranglerLogger.info('Read %s transfers from %s' % (feed.transfers.size, os.path.join(feed_path,"transfers.txt")))
         WranglerLogger.info('Read %s trips from %s' % (feed.trips.size, os.path.join(feed_path,"transfers.txt")))
