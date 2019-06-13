@@ -29,6 +29,7 @@ author = 'Metropolitan Council'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx_autodoc_typehints',
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',

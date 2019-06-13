@@ -22,7 +22,7 @@ services:
         source: ..
         target: /home/jovyan/work
         bind:
-          propagation: shared
+          propagation: rshared
     ports:
       - 8888:8888
 
