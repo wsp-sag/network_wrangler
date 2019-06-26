@@ -8,7 +8,7 @@ Dependencies:
   Corequisite: None
   Conflicts: None
 Road:
-   Name: id=driveLink88629 # 6th St E
+   Name: osmid=223371529 # 6th St E
    A: osmid=187854529 # Jackson St
    B: osmid=187899923 # Robert St N
    Intermediate_Intersections: None
