@@ -7,12 +7,17 @@ import os, sys
 
 import yaml
 import pandas as pd
-import geopandas as gpd
-
-from pandas.core.frame import DataFrame
 import geojson
-from geopandas.geodataframe import GeoDataFrame
+import geopandas as gpd
 import json
+from pandas.core.frame import DataFrame
+
+from geopandas.geodataframe import GeoDataFrame
+
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
+from jsonschema.exceptions import SchemaError
+
 from shapely.geometry import Point
 
 from .Logger import WranglerLogger
@@ -28,32 +33,12 @@ class RoadwayNetwork(object):
         Constructor
         '''
 
-        errors = []
-
-        if isinstance(nodes, GeoDataFrame):
-            self.nodes_df = nodes
-        else:
-            error_message = "Incompatible nodes type. Must provide a GeoDataFrame."
-            WranglerLogger.error(error_message)
-            errors.append(error_message)
-
-        if isinstance(links, DataFrame):
-            self.links_df = links
-        else:
-            error_message = "Incompatible links type. Must provide a DataFrame."
-            WranglerLogger.error(error_message)
-            errors.append(error_message)
-
-        if isinstance(shapes, GeoDataFrame):
-            self.shapes_df = shapes
-        else:
-            error_message = "Incompatible shapes type. Must provide a GeoDataFrame."
-            WranglerLogger.error(error_message)
-            errors.append(error_message)
-
-        if len(errors) > 0:
+        if not validate_objects(nodes, links, shapes):
             sys.exit("RoadwayNetwork: Invalid constructor data type")
 
+        self.nodes_df  = nodes
+        self.links_df  = links
+        self.shapes_df = shapes
 
     @staticmethod
     def read(link_file: str, node_file: str, shape_file: str) -> RoadwayNetwork:
@@ -66,7 +51,16 @@ class RoadwayNetwork(object):
         shape_file: full path to the shape file
         '''
 
+        if not ( \
+            validate_node_schema(node_file) and \
+            validate_link_schema(link_file) and \
+            validate_shape_schema(shape_file) \
+            ):
+
+            sys.exit("RoadwayNetwork: Data doesn't conform to schema")
+
         links_df  = pd.read_json(link_file)
+        shapes_df = gpd.read_file(shape_file)
 
         # geopandas uses fiona OGR drivers, which doesn't let you have
         # a list as a property type. Therefore, must read in node_properties
@@ -80,13 +74,14 @@ class RoadwayNetwork(object):
 
         nodes_df = gpd.GeoDataFrame(node_properties, geometry=node_geometries)
 
-        shapes_df = gpd.read_file(shape_file)
+        ## todo: flatten json
 
         WranglerLogger.info('Read %s links from %s' % (links_df.size, link_file))
         WranglerLogger.info('Read %s nodes from %s' % (nodes_df.size, node_file))
         WranglerLogger.info('Read %s shapes from %s' % (shapes_df.size, shape_file))
 
         roadway_network = RoadwayNetwork(nodes = nodes_df, links = links_df, shapes = shapes_df)
+
         return roadway_network
 
     def write(self, filename: str, path: str = '.') -> None:
@@ -118,7 +113,125 @@ class RoadwayNetwork(object):
         shapes_file = os.path.join(path, filename + "_shape.geojson")
         self.shapes_df.to_file(shapes_file, driver='GeoJSON')
 
-    def apply_roadway_feauture_change(self, card_dict: dict) -> bool:
+    @staticmethod
+    def validate_objects(nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
+        '''
+        '''
+        errors = []
+
+        valid_instances = {
+            nodes: GeoDataFrame,
+            links: DataFrame,
+            shapes: GeoDataFrame,
+        }
+
+        for k,v in valid_instances.items():
+            if not isinstance(k,v):
+                error_message = "Incompatible nodes type. Must provide a GeoDataFrame."
+                WranglerLogger.error(error_message)
+                errors.append(error_message)
+
+        if errors: return False
+        return True
+
+    @staticmethod
+    def validate_node_schema(node_file, schema_location: str = '../schemas/roadway_network_node.json'):
+        '''
+        Validate roadway network data node schema and output a boolean
+        '''
+        with open(schema_location) as schema_json_file:
+            schema = json.load(schema_json_file)
+
+        with open(node_file) as node_json_file:
+            json_data = json.load(node_json_file)
+
+        try:
+            validate(json_data, schema)
+            return True
+
+        except ValidationError as exc:
+            WranglerLogger.error(exc)
+
+        except SchemaError as exc:
+            WranglerLogger.error(exc)
+
+        except yaml.YAMLError as exc:
+            WranglerLogger.error(exc)
+        return False
+
+    @staticmethod
+    def validate_link_schema(link_file, schema_location: str = '../schemas/roadway_network_link.json'):
+        '''
+        Validate roadway network data link schema and output a boolean
+        '''
+        with open(schema_location) as schema_json_file:
+            schema = json.load(schema_json_file)
+
+        with open(link_file) as link_json_file:
+            json_data = json.load(link_json_file)
+
+        try:
+            validate(json_data, schema)
+            return True
+
+        except ValidationError as exc:
+            WranglerLogger.error(exc)
+
+        except SchemaError as exc:
+            WranglerLogger.error(exc)
+
+        except yaml.YAMLError as exc:
+            WranglerLogger.error(exc)
+        return False
+
+    @staticmethod
+    def validate_shape_schema(shape_file, schema_location: str = '../schemas/roadway_network_shape.json'):
+        '''
+        Validate roadway network data shape schema and output a boolean
+        '''
+        with open(schema_location) as schema_json_file:
+            schema = json.load(schema_json_file)
+
+        with open(shape_file) as shape_json_file:
+            json_data = json.load(shape_json_file)
+
+        try:
+            validate(json_data, schema)
+            return True
+
+        except ValidationError as exc:
+            WranglerLogger.error(exc)
+
+        except SchemaError as exc:
+            WranglerLogger.error(exc)
+
+        except yaml.YAMLError as exc:
+            WranglerLogger.error(exc)
+        return False
+
+    def select_roadway_features(self, selection: list(str or dict)) -> RoadwayNetwork:
+        '''
+        Selects roadway features that satisfy selection criteria and
+        return another RoadwayNetwork object.
+
+        Example usage:
+           net.select_roadway_links(
+              selection = [ {
+                #   a match condition for the from node using osm,
+                #   shared streets, or model node number
+                'from': {'osmid': '1234'},
+                #   a match for the to-node..
+                'to': {'shstid': '4321'},
+                #   a regex or match for facility condition
+                #   could be # of lanes, facility type, etc.
+                'facility': {'name':'Main St'},
+                }, ... ])
+        '''
+        ##TODO just a placeholder
+
+        pass
+
+    def apply_roadway_feature_change(self, card_dict: dict) -> bool:
         '''
         Changes the road network according to the project card information passed
 
