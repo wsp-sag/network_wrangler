@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os, sys
 
+import yaml
 import pandas as pd
 import geopandas as gpd
 
@@ -116,3 +117,58 @@ class RoadwayNetwork(object):
 
         shapes_file = os.path.join(path, filename + "_shape.geojson")
         self.shapes_df.to_file(shapes_file, driver='GeoJSON')
+
+    def apply_roadway_feauture_change(self, card_dict: dict) -> bool:
+        '''
+        Changes the road network according to the project card information passed
+
+        args:
+        card_dict: dictionary with project card information
+
+        returns:
+        bool: True if successful.
+        '''
+
+        road_dict = card_dict.get("Road")
+        road_id = road_dict.get("Name").split("=")[1]
+
+        attribute = card_dict.get("Attribute").upper()
+        change_dict = card_dict.get("Change")
+        existing_value = change_dict.get("Existing")
+        build_value = change_dict.get("Build")
+
+        # identify the network link with same id as project card road id
+        # check if the attribute to be updated exists on the network links
+        # get the current attribute value for the link from the network
+        # check for current attribute value to be same as defined in the project card
+        # update the link attribute value
+
+        # TODO:
+        # change desired logger level for the different checks
+
+        found = False
+        for link in self.links_df['features']:
+            if link['id'] == road_id:
+                found = True
+
+                # if projetc card attribute to be updated is not found on the network link
+                if attribute not in link.keys():
+                    WranglerLogger.error('%s is not an valid network attribute!' % (attribute))
+                    return False
+                else:
+                    attr_value = link[attribute]
+
+                    # if network attribute value is not same as existing value info from project card
+                    # log it but still update the attribute
+                    if attr_value != existing_value:
+                        WranglerLogger.warn('Current value for %s is not same as existing value defined in the project card!' % (attribute))
+
+                    # update to build value
+                    link[attribute] = build_value
+                    break
+
+        # if link with project card id is not found in the network
+        if not found:
+            WranglerLogger.warn('Project card link with id %s not found in the network!'% (road_id))
+
+        return True
