@@ -1,50 +1,197 @@
 {
-    "type": "FeatureCollection",
-    "features": [
-    {
-        "COUNTY": 5,
-        "T_PRIORITY": 0.0,
-        "AREA": 4,
-        "HOV": 0.0,
-        "AADT": 0.0,
-        "AM_CNT": 0.0,
-        "MD_CNT": 0.0,
-        "PM_CNT": 0.0,
-        "NT_CNT": 0.0,
-        "DY_CNT": 0.0,
-        "ASGNGRP": 1.0,
-        "LANES": 5.0,
-        "CENTROID": 0,
-        "RC_NUM": 10.0,
-        "DISTANCE": 0.03502,
-        "T_MANTIME": 0.0,
-        "isDriveLink": 1,
-        "isDedicatedTransitLink": 0,
-        "id": "driveLink797",
-        "geometryId": "driveGeom797",
-        "BIKE": 0.0,
-        "isBikeLink": 0,
-        "isPedLink": 0,
-        "locationReferences": [
+   "type":"FeatureCollection",
+   "features":[
+      {
+         "id":"6a22969708104ae2497244f3d079381d",
+         "geometryId":"4a454269d65c6619a2d7e2026295a295",
+         "access":"",
+         "area":"",
+         "bridge":"",
+         "highway":"residential",
+         "junction":"",
+         "key":0.0,
+         "OSMlanes":0.0,
+         "length":80.935,
+         "maxspeed":"",
+         "name":"Arkwright Street,North Rivoli Street",
+         "oneway":"False",
+         "osmid":"18214905,18220565",
+         "ref":"",
+         "service":"",
+         "tunnel":"",
+         "u":"493882040",
+         "v":"187879468",
+         "width":"",
+         "LINK_ID":224,
+         "LANES":1,
+         "isTranLink":0,
+         "isDriveLink":1,
+         "isWalkLink":1,
+         "isBikeLink":1,
+         "locationReferences":[
             {
-                "sequence": 1,
-                "point": [
-                    -93.0965985,
-                    44.9521122
-                ],
-                "distanceToNextRef": 56.35922688,
-                "bearing": 0,
-                "intersectionId": "driveNode143837"
+               "sequence":1,
+               "point":[
+                  -93.0837695,
+                  44.963344
+               ],
+               "distanceToNextRef":80.9850385918,
+               "bearing":0,
+               "intersectionId":"4d0231aa0ebb779f142c2518703ee481"
             },
             {
-                "sequence": 2,
-                "point": [
-                    -93.0960047,
-                    44.9523954
-                ],
-                "intersectionId": "driveNode151265"
+               "sequence":2,
+               "point":[
+                  -93.0832419,
+                  44.9629432
+               ],
+               "intersectionId":"3654951b676940911fe5021b93c90cc5"
             }
-        ]
-    }
-    ]
+         ]
+      },
+      {
+         "id":"a2e58a2801f5994637dfdbab943c503a",
+         "geometryId":"b859990cf54470d9d9c1bd401a9c83f1",
+         "access":"",
+         "area":"",
+         "bridge":"",
+         "highway":"motorway",
+         "junction":"",
+         "key":0.0,
+         "OSMlanes":5.0,
+         "length":56.348,
+         "maxspeed":"55 mph",
+         "name":"",
+         "oneway":"True",
+         "osmid":"49696191",
+         "ref":"I 35E;I 94",
+         "service":"",
+         "tunnel":"",
+         "u":"954734870",
+         "v":"1894068489",
+         "width":"",
+         "LINK_ID":381163,
+         "LANES":5,
+         "isTranLink":0,
+         "isDriveLink":1,
+         "isWalkLink":0,
+         "isBikeLink":0,
+         "locationReferences":[
+            {
+               "sequence":1,
+               "point":[
+                  -93.0965985,
+                  44.9521122
+               ],
+               "distanceToNextRef":56.4237737799,
+               "bearing":0,
+               "intersectionId":"0751f5ce12472360fed0d0e80ceae35c"
+            },
+            {
+               "sequence":2,
+               "point":[
+                  -93.0960047,
+                  44.9523954
+               ],
+               "intersectionId":"5c9e5e0f2e6d67208f848f22a6d03700"
+            }
+         ]
+      },
+      {
+         "id":"a2e58a2801f5994637dfdbab943c503a",
+         "geometryId":"b859990cf54470d9d9c1bd401a9c83f1",
+         "access":"",
+         "area":"",
+         "bridge":"",
+         "highway":"motorway",
+         "junction":"",
+         "key":0.0,
+         "OSMlanes":5.0,
+         "length":56.348,
+         "maxspeed":"55 mph",
+         "name":"",
+         "oneway":"True",
+         "osmid":"49696191",
+         "ref":"I 35E;I 94",
+         "service":"",
+         "tunnel":"",
+         "u":"954734870",
+         "v":"1894068489",
+         "width":"",
+         "LINK_ID":381163,
+         "LANES":5,
+         "isTranLink":0,
+         "isDriveLink":1,
+         "isWalkLink":0,
+         "isBikeLink":0,
+         "locationReferences":[
+            {
+               "sequence":1,
+               "point":[
+                  -93.0965985,
+                  44.9521122
+               ],
+               "distanceToNextRef":56.4237737799,
+               "bearing":0,
+               "intersectionId":"0751f5ce12472360fed0d0e80ceae35c"
+            },
+            {
+               "sequence":2,
+               "point":[
+                  -93.0960047,
+                  44.9523954
+               ],
+               "intersectionId":"5c9e5e0f2e6d67208f848f22a6d03700"
+            }
+         ]
+      },
+      {
+         "id":"780b6a83285f9acdbf566951917206a7",
+         "geometryId":"1b4f9ef21802fb76361927a41ba25f8b",
+         "access":"",
+         "area":"",
+         "bridge":"yes",
+         "highway":"motorway",
+         "junction":"",
+         "key":0.0,
+         "OSMlanes":3.0,
+         "length":626.642,
+         "maxspeed":"",
+         "name":"",
+         "oneway":"True",
+         "osmid":"118479848,81924636,81924605",
+         "ref":"I 94",
+         "service":"",
+         "tunnel":"",
+         "u":"945523342",
+         "v":"954734870",
+         "width":"",
+         "LINK_ID":397646,
+         "LANES":3,
+         "isTranLink":0,
+         "isDriveLink":1,
+         "isWalkLink":0,
+         "isBikeLink":0,
+         "locationReferences":[
+            {
+               "sequence":1,
+               "point":[
+                  -93.1035758,
+                  44.9500749
+               ],
+               "distanceToNextRef":627.6677151698,
+               "bearing":0,
+               "intersectionId":"e81b4f1069134883f10f4ffe0b8fd19c"
+            },
+            {
+               "sequence":2,
+               "point":[
+                  -93.0965985,
+                  44.9521122
+               ],
+               "intersectionId":"0751f5ce12472360fed0d0e80ceae35c"
+            }
+         ]
+      }
+   ]
 }

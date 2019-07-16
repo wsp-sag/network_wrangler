@@ -1,0 +1,144 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": [
+    "type",
+    "features"
+  ],
+  "properties": {
+    "type": {
+      "$id": "#/properties/type",
+      "type": "string",
+      "title": "The Type Schema",
+      "default": "",
+      "examples": [
+        "FeatureCollection"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "features": {
+      "$id": "#/properties/features",
+      "type": "array",
+      "title": "The Features Schema",
+      "items": {
+        "$id": "#/properties/features/items",
+        "type": "object",
+        "title": "The Items Schema",
+        "required": [
+          "type",
+          "geometry",
+          "properties"
+        ],
+        "properties": {
+          "type": {
+            "$id": "#/properties/features/items/properties/type",
+            "type": "string",
+            "title": "The Type Schema",
+            "default": "",
+            "examples": [
+              "Feature"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "geometry": {
+            "$id": "#/properties/features/items/properties/geometry",
+            "type": "object",
+            "title": "The Geometry Schema",
+            "required": [
+              "type",
+              "coordinates"
+            ],
+            "properties": {
+              "type": {
+                "$id": "#/properties/features/items/properties/geometry/properties/type",
+                "type": "string",
+                "title": "The Type Schema",
+                "default": "",
+                "examples": [
+                  "LineString"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "coordinates": {
+                "$id": "#/properties/features/items/properties/geometry/properties/coordinates",
+                "type": "array",
+                "title": "The Coordinates Schema",
+                "items": {
+                  "$id": "#/properties/features/items/properties/geometry/properties/coordinates/items",
+                  "type": "array",
+                  "title": "The Items Schema",
+                  "items": {
+                    "$id": "#/properties/features/items/properties/geometry/properties/coordinates/items/items",
+                    "type": "number",
+                    "title": "The Items Schema",
+                    "default": 0.0,
+                    "examples": [
+                      -93.0837695,
+                      44.96334399999999
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "properties": {
+            "$id": "#/properties/features/items/properties/properties",
+            "type": "object",
+            "title": "The Properties Schema",
+            "required": [
+              "id",
+              "shstFromIntersectionId",
+              "shstToIntersectionId",
+              "forwardReferenceId"
+            ],
+            "properties": {
+              "id": {
+                "$id": "#/properties/features/items/properties/properties/properties/id",
+                "type": "string",
+                "title": "The Id Schema",
+                "default": "",
+                "examples": [
+                  "4a454269d65c6619a2d7e2026295a295"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "shstFromIntersectionId": {
+                "$id": "#/properties/features/items/properties/properties/properties/shstFromIntersectionId",
+                "type": "string",
+                "title": "The Shstfromintersectionid Schema",
+                "default": "",
+                "examples": [
+                  "4d0231aa0ebb779f142c2518703ee481"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "shstToIntersectionId": {
+                "$id": "#/properties/features/items/properties/properties/properties/shstToIntersectionId",
+                "type": "string",
+                "title": "The Shsttointersectionid Schema",
+                "default": "",
+                "examples": [
+                  "3654951b676940911fe5021b93c90cc5"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "forwardReferenceId": {
+                "$id": "#/properties/features/items/properties/properties/properties/forwardReferenceId",
+                "type": "string",
+                "title": "The Forwardreferenceid Schema",
+                "default": "",
+                "examples": [
+                  "6a22969708104ae2497244f3d079381d"
+                ],
+                "pattern": "^(.*)$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
