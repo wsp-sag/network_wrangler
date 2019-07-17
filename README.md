@@ -2,16 +2,23 @@
 
 Network Wrangler is a Python library for managing travel model network scenarios.
 
+## System Requirements
+Network Wrangler should be operating system agonistic and has been tested on Ubuntu and Mac OS.
+
+In order to assist in installation, its helpful to have either [miniconda](https://docs.conda.io/en/latest/miniconda.html), [anaconda](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/index.html#regular-installation) or [Docker CE](https://docs.docker.com/install/) installed.  If you don't have any of these already, we reommend starting with Miniconda for Python 3.7 as it has the smallest footprint. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications.
+
+Network Wrangler does require Python 3.6+.  If you have a different version of Python installed, `conda` will take care of installing it for you in the installation instructions below.
+
 ## Installation
-Network Wrangler uses Python 3.6 and above.  Requirements are stored in `requiements.txt` but are automatically installed when using `pip`.
+Network Wrangler uses Python 3.6 and above.  Requirements are stored in `requirements.txt` but are automatically installed when using `pip`.
 
-If you are managing multiple python versions, we suggest using [`virtualenv`](https://virtualenv.pypa.io/en/latest/) or [`conda`](https://conda.io/en/latest/) virtual environments.
+If you are managing multiple python versions, we suggest using [`virtualenv`](https://virtualenv.pypa.io/en/latest/) or [`conda`](https://conda.io/en/latest/) virtual environments. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications.
 
-Example using conda:
+Example using conda in the command line:
 
 ```bash
-conda create python=3.7 -n <my_network_wrangler_environment>
-source activate <my_network_wrangler_environment>
+conda create python=3.7 -n wrangler_env
+source activate wrangler_env
 pip install git+https://github.com/wsp-sag/network_wrangler.git@master#egg=network_wrangler
 ```
 
