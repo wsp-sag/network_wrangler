@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import os, sys
+import copy
 
 import yaml
 import pandas as pd
 import geojson
 import geopandas as gpd
 import json
+import numpy as np
 from pandas.core.frame import DataFrame
 
 from geopandas.geodataframe import GeoDataFrame
@@ -250,79 +252,53 @@ class RoadwayNetwork(object):
 
         return False
 
-    def select_roadway_features(self, selection: list(str or dict)) -> RoadwayNetwork:
+    def select_roadway_features(self, card_dict: dict) -> RoadwayNetwork:
         '''
         Selects roadway features that satisfy selection criteria and
-        return another RoadwayNetwork object.
-
-        Example usage:
-           net.select_roadway_links(
-              selection = [ {
-                #   a match condition for the from node using osm,
-                #   shared streets, or model node number
-                'from': {'osmid': '1234'},
-                #   a match for the to-node..
-                'to': {'shstid': '4321'},
-                #   a regex or match for facility condition
-                #   could be # of lanes, facility type, etc.
-                'facility': {'name':'Main St'},
-                }, ... ])
-        '''
-        ##TODO just a placeholder
-
-        pass
-
-    def apply_roadway_feature_change(self, card_dict: dict) -> bool:
-        '''
-        Changes the road network according to the project card information passed
+        return another RoadwayNetwork object with selected links flag
 
         args:
+        card_dict: dictionary with project card information
+        '''
+
+        roadway_network = copy.copy(self)
+
+        # create selection query
+        # TODO: loop over specified selection key/values to build a query
+        key, value = card_dict['Road']['Name'].split('=')
+        sel_query = key + ' == ' + '"' + value + '"'
+        #sel_query: 'osmid == "223371529"
+
+        sel_data = roadway_network.links_df.query(sel_query)
+        sel_indices = sel_data.index.tolist()
+
+        roadway_network.links_df['sel_links'] = np.where(roadway_network.links_df.index.isin(sel_indices), 1, 0)
+        return roadway_network
+
+    def apply_roadway_feature_change(net: RoadwayNetwork, card_dict: dict) -> bool:
+        '''
+        Changes the roadway attributes for the selected features based to the project card information passed
+
+        args:
+        net: RoadwayNetwork with selected links flag
         card_dict: dictionary with project card information
 
         returns:
         bool: True if successful.
         '''
 
-        road_dict = card_dict.get("Road")
-        road_id = road_dict.get("Name").split("=")[1]
+        # apply change - TODO: loop over attribute and build values
+        attribute = card_dict['Attribute'].upper()
+        existing_value = card_dict['Change']['Existing']
+        build_value = card_dict['Change']['Build']
 
-        attribute = card_dict.get("Attribute").upper()
-        change_dict = card_dict.get("Change")
-        existing_value = change_dict.get("Existing")
-        build_value = change_dict.get("Build")
-
-        # identify the network link with same id as project card road id
         # check if the attribute to be updated exists on the network links
-        # get the current attribute value for the link from the network
-        # check for current attribute value to be same as defined in the project card
-        # update the link attribute value
+        if attribute not in list(net.links_df.columns):
+            WranglerLogger.error('%s is not an valid network attribute!' % (attribute))
+            return False
+        else:
+            net.links_df[attribute] = np.where(net.links_df['sel_links'] == 1, build_value, net.links_df[attribute])
 
-        # TODO:
-        # change desired logger level for the different checks
-
-        found = False
-        for link in self.links_df['features']:
-            if link['id'] == road_id:
-                found = True
-
-                # if projetc card attribute to be updated is not found on the network link
-                if attribute not in link.keys():
-                    WranglerLogger.error('%s is not an valid network attribute!' % (attribute))
-                    return False
-                else:
-                    attr_value = link[attribute]
-
-                    # if network attribute value is not same as existing value info from project card
-                    # log it but still update the attribute
-                    if attr_value != existing_value:
-                        WranglerLogger.warn('Current value for %s is not same as existing value defined in the project card!' % (attribute))
-
-                    # update to build value
-                    link[attribute] = build_value
-                    break
-
-        # if link with project card id is not found in the network
-        if not found:
-            WranglerLogger.warn('Project card link with id %s not found in the network!'% (road_id))
+        net.links_df.drop(['sel_links'], axis = 1, inplace = True)
 
         return True
