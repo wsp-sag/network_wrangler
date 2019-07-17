@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import yaml
 import json
 
@@ -14,77 +15,74 @@ class ProjectCard(object):
     Representation of a Project Card
     '''
 
-
-    def __init__(self, filename: str):
+    def __init__(self, attribute_dictonary: dict):
         '''
         Constructor
 
         args:
-        filename: the full path to project card file in YML format
+        attribute_dictonary: a nested dictionary of attributes
         '''
+        self.__dict__.update(attribute_dictonary)
+        self.valid = False
 
-        self.dictionary = None
+        ##todo more unstructuring of project card yaml
 
-        if not filename.endswith(".yml") and  not filename.endswith(".yaml"):
-            error_message = "Incompatible file extension for Project Card. Must provide a YML file"
-            WranglerLogger.error(error_message)
-            return None
-
-        with open (filename, 'r') as card:
-            card_dict = yaml.safe_load(card)
-
-            try:
-                with open("../schemas/project_card.json") as json_file:
-                    schema = json.load(json_file)
-
-                #validate project card
-                validate(card_dict, schema)
-                self.dictionary = card_dict
-
-            except ValidationError as exc:
-                WranglerLogger.error(exc)
-
-            except SchemaError as exc:
-                WranglerLogger.error(exc)
-
-            except yaml.YAMLError as exc:
-                WranglerLogger.error(exc)
-
-
-    def get_tags(self):
+    @staticmethod
+    def read(path_to_card: str):
         '''
-        Returns the project card's 'Tags' field
-        '''
-        if self.dictionary != None:
-            return self.dictionary.get('Tags')
-
-        return None
-
-
-
-    def read(self, path_to_card: str):
-        '''
-        Reads a Project card.
+        Reads and validates a Project card
 
         args:
         path_to_card: the path to the project card
+
+        Returns a Project Card object
         '''
-        method_lookup = {'Roadway Attribute Change': self.roadway_attribute_change,
-                         'New Roadway': self.new_roadway,
-                         'Transit Service Attribute Change': self.transit_attribute_change,
-                         'New Transit Dedicated Right of Way': self.new_transit_right_of_way,
-                         'Parallel Managed Lanes': self.parallel_managed_lanes}
+
+        with open (path_to_card, 'r') as cardfile:
+            attribute_dictionary = yaml.safe_load(cardfile)
+            card = ProjectCard(attribute_dictionary)
+
+        card.valid = ProjectCard.validate_project_card_schema(path_to_card)
+
+        return card
+
+    @staticmethod
+    def validate_project_card_schema(card_file, card_schema_file: str = 'project_card.json') -> bool:
+        '''
+        Tests project card schema validity by evaluating if it conforms to the schemas
+        returns: boolean
+        '''
+        if not os.path.exists(card_schema_file):
+            base_path    = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),'schemas')
+            card_schema_file = os.path.join(base_path, card_schema_file)
+
+        with open(card_schema_file) as schema_json_file:
+            schema = json.load(schema_json_file)
+
+        with open (card_file, 'r') as card:
+            card_json = yaml.safe_load(card)
 
         try:
-            method_lookup[self.dictionary.get('Category')](self.dictionary)
+            validate(card_json, schema)
+            return True
 
-        except KeyError as e:
-            WranglerLogger.error(e.message())
-            raise NotImplementedError('Invalid Project Card Category') from e
+        except ValidationError as exc:
+            WranglerLogger.error("Failed Project Card validation: Validation Error")
+            WranglerLogger.error("Project Card File Loc:{}".format(node_file))
+            WranglerLogger.error("Project Card Schema Loc:{}".format(schema_location))
+            WranglerLogger.error(excmessage)
 
+        except SchemaError as exc:
+            WranglerLogger.error("Failed Project Card schema validation: Schema Error")
+            WranglerLogger.error("Project Card Schema Loc:{}".format(schema_location))
+            WranglerLogger.error(exc.message)
+
+        except yaml.YAMLError as exc:
+            WranglerLogger.error(exc.message)
 
     def roadway_attribute_change(self, card: dict):
         '''
+        Probably delete.
         Reads a Roadway Attribute Change card.
 
         args:
@@ -96,6 +94,7 @@ class ProjectCard(object):
 
     def new_roadway(self, card: dict):
         '''
+        Probably delete.
         Reads a New Roadway card.
 
         args:
@@ -106,6 +105,7 @@ class ProjectCard(object):
 
     def transit_attribute_change(self, card: dict):
         '''
+        Probably delete.
         Reads a Transit Service Attribute Change card.
 
         args:
@@ -116,6 +116,7 @@ class ProjectCard(object):
 
     def new_transit_right_of_way(self, card: dict):
         '''
+        Probably delete.
         Reads a New Transit Dedicated Right of Way card.
 
         args:
@@ -126,6 +127,7 @@ class ProjectCard(object):
 
     def parallel_managed_lanes(self, card: dict):
         '''
+        Probably delete.
         Reads a Parallel Managed Lanes card.
 
         args:
