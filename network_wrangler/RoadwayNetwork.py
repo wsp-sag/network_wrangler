@@ -41,7 +41,7 @@ class RoadwayNetwork(object):
         self.shapes_df = shapes
 
     @staticmethod
-    def read(link_file: str, node_file: str, shape_file: str) -> RoadwayNetwork:
+    def read(link_file: str, node_file: str, shape_file: str, fast: bool = False) -> RoadwayNetwork:
         '''
         Reads a network from the roadway network standard
         Validates that it conforms to the schema
@@ -50,15 +50,16 @@ class RoadwayNetwork(object):
         link_file: full path to the link file
         node_file: full path to the node file
         shape_file: full path to the shape file
+        fast: boolean that will skip validation to speed up read time
         '''
+        if not fast:
+            if not ( \
+                RoadwayNetwork.validate_node_schema(node_file) and \
+                RoadwayNetwork.validate_link_schema(link_file) and \
+                RoadwayNetwork.validate_shape_schema(shape_file) \
+                ):
 
-        if not ( \
-            RoadwayNetwork.validate_node_schema(node_file) and \
-            RoadwayNetwork.validate_link_schema(link_file) and \
-            RoadwayNetwork.validate_shape_schema(shape_file) \
-            ):
-
-            sys.exit("RoadwayNetwork: Data doesn't conform to schema")
+                sys.exit("RoadwayNetwork: Data doesn't conform to schema")
 
         with open(link_file) as f:
             link_json = json.load(f)
