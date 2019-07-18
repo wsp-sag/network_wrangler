@@ -3,6 +3,7 @@
 
 # Temp and test cache
 tests/temp/
+scratch/*
 .temp
 .pytest_cache
 *.bak
