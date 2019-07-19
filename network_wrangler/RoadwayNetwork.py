@@ -263,13 +263,31 @@ class RoadwayNetwork(object):
 
         roadway_network = copy.copy(self)
 
-        # create selection query
-        # TODO: loop over specified selection key/values to build a query
-        key, value = card_dict['Road']['Name'].split('=')
-        sel_query = key + ' == ' + '"' + value + '"'
-        #sel_query: 'osmid == "223371529"
+        # build selection query
+        sel_query = ''
+        count = 1
+        for d in card_dict['facility']['link']:
+            for key, value in d.items():
+                if isinstance(value, list):
+                    sel_query = sel_query + '('
+                    v = 1
+                    for i in value:   # building an OR query with each element in list
+                        sel_query = sel_query + key + '.str.contains("' + i + '")'
+                        if v!= len(value):
+                            sel_query = sel_query + ' or '
+                        v = v + 1
+                    sel_query = sel_query + ')'
+                else:
+                    sel_query = sel_query + key + ' == ' + '"' + str(value) + '"'
 
-        sel_data = roadway_network.links_df.query(sel_query)
+                if count != len(card_dict['facility']['link']):
+                    sel_query = sel_query + ' and '
+
+                count = count + 1
+
+        #print(sel_query)
+
+        sel_data = roadway_network.links_df.query(sel_query, engine='python')
         sel_indices = sel_data.index.tolist()
 
         roadway_network.links_df['sel_links'] = np.where(roadway_network.links_df.index.isin(sel_indices), 1, 0)

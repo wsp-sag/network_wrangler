@@ -18,7 +18,7 @@ def test_roadway_feature_change():
     net = RoadwayNetwork.read(link_file= link_file, node_file=node_file, shape_file=shape_file, fast=True)
 
     print("Reading project card ...")
-    project_card = os.path.join(os.getcwd(),'example','stpaul','project_cards','1_simple_roadway_attribute_change.yml')
+    project_card = os.path.join(os.getcwd(),'example','stpaul','project_cards','3_multiple_roadway_attribute_change.yml')
     project_card_dict = ProjectCard.read(project_card).__dict__
 
     print("Selecting Roadway Feaures ...")
@@ -48,7 +48,7 @@ def test_select_roadway_features():
     print(net.links_df.head())
 
     print("Reading project card ...")
-    project_card = os.path.join(os.getcwd(),'example','stpaul','project_cards','1_simple_roadway_attribute_change.yml')
+    project_card = os.path.join(os.getcwd(),'example','stpaul','project_cards','3_multiple_roadway_attribute_change.yml')
     project_card_dict = ProjectCard.read(project_card).__dict__
     print(project_card_dict)
 
