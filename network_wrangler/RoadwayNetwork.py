@@ -287,17 +287,21 @@ class RoadwayNetwork(object):
         bool: True if successful.
         '''
 
-        # apply change - TODO: loop over attribute and build values
-        attribute = card_dict['Attribute'].upper()
-        existing_value = card_dict['Change']['Existing']
-        build_value = card_dict['Change']['Build']
+        for d in card_dict['properties']:
+            for attribute, value in d.items():
+                if isinstance(value, list):
+                    existing_value = value[0]          # set to fail, if existing value is not same to start with
+                    build_value = value[1]             # account for -/+ sign later
+                else:
+                    build_value = value                # account for -/+ sign later
 
-        # check if the attribute to be updated exists on the network links
-        if attribute not in list(net.links_df.columns):
-            WranglerLogger.error('%s is not an valid network attribute!' % (attribute))
-            return False
-        else:
-            net.links_df[attribute] = np.where(net.links_df['sel_links'] == 1, build_value, net.links_df[attribute])
+                # check if the attribute to be updated exists on the network links
+                if attribute not in list(net.links_df.columns):
+                    WranglerLogger.error('%s is not an valid network attribute!' % (attribute))
+                    return False
+                else:
+                    net.links_df[attribute] = np.where(net.links_df['sel_links'] == 1, build_value, net.links_df[attribute])
+
 
         net.links_df.drop(['sel_links'], axis = 1, inplace = True)
 
