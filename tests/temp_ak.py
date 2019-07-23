@@ -2,6 +2,7 @@ import os
 import json
 from network_wrangler import RoadwayNetwork
 from network_wrangler import ProjectCard
+from network_wrangler import Scenario
 import yaml
 
 def test_roadway_feature_change():
@@ -42,5 +43,16 @@ def test_roadway_feature_change():
     project_link_after = next(item for item in net.links_df['features'] if item["id"] == road_id)
     print(project_link_after)
 
+def test_card_conflicts():
+    base_scenario = {}
+
+    card_directory = os.path.join(os.getcwd(),'example','stpaul','project_cards')
+
+    project_card_names = ['4_test_project_card', '5_test_project_card', '6_test_project_card']
+    scen = Scenario.Scenario.create_scenario(base_scenario = base_scenario, card_directory = card_directory, project_card_names = project_card_names)
+    scen.check_scenario_conflicts()
+
+
 if __name__ == "__main__":
-    test_roadway_feature_change()
+    #test_roadway_feature_change()
+    test_card_conflicts()
