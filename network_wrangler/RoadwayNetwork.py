@@ -252,9 +252,22 @@ class RoadwayNetwork(object):
 
         return False
 
-    def select_roadway_features(self, facility_dict: dict) -> RoadwayNetwork:
+    def select_roadway_features(self, selection: dict) -> RoadwayNetwork:
         '''
         Selects roadway features that satisfy selection criteria
+
+        Example usage:
+            net.select_roadway_features(
+              selection = [ {
+                #   a match condition for the from node using osm,
+                #   shared streets, or model node number
+                'from': {'osmid': '1234'},
+                #   a match for the to-node..
+                'to': {'shstid': '4321'},
+                #   a regex or match for facility condition
+                #   could be # of lanes, facility type, etc.
+                'facility': {'name':'Main St'},
+                }, ... ])
 
         args:
         card_dict: dictionary with facility information
@@ -263,7 +276,7 @@ class RoadwayNetwork(object):
         # build selection query
         sel_query = ''
         count = 1
-        for d in facility_dict['link']:
+        for d in selection['link']:
             for key, value in d.items():
                 if isinstance(value, list):
                     sel_query = sel_query + '('
@@ -277,7 +290,7 @@ class RoadwayNetwork(object):
                 else:
                     sel_query = sel_query + key + ' == ' + '"' + str(value) + '"'
 
-                if count != len(facility_dict['link']):
+                if count != len(selection['link']):
                     sel_query = sel_query + ' and '
 
                 count = count + 1
