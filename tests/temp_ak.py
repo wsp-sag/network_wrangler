@@ -49,7 +49,7 @@ def test_card_conflicts():
     card_directory = os.path.join(os.getcwd(),'example','stpaul','project_cards')
 
     project_card_names = ['4_test_project_card', '5_test_project_card', '6_test_project_card']
-    scen = Scenario.Scenario.create_scenario(base_scenario = base_scenario, card_directory = card_directory, project_card_names = project_card_names)
+    scen = Scenario.create_scenario(base_scenario = base_scenario, card_directory = card_directory, project_card_names = project_card_names)
     scen.check_scenario_conflicts()
 
 
