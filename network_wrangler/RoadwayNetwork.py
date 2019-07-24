@@ -252,21 +252,18 @@ class RoadwayNetwork(object):
 
         return False
 
-    def select_roadway_features(self, card_dict: dict) -> RoadwayNetwork:
+    def select_roadway_features(self, facility_dict: dict) -> RoadwayNetwork:
         '''
-        Selects roadway features that satisfy selection criteria and
-        return another RoadwayNetwork object with selected links flag
+        Selects roadway features that satisfy selection criteria
 
         args:
-        card_dict: dictionary with project card information
+        card_dict: dictionary with facility information
         '''
-
-        roadway_network = copy.copy(self)
 
         # build selection query
         sel_query = ''
         count = 1
-        for d in card_dict['facility']['link']:
+        for d in facility_dict['link']:
             for key, value in d.items():
                 if isinstance(value, list):
                     sel_query = sel_query + '('
@@ -280,32 +277,32 @@ class RoadwayNetwork(object):
                 else:
                     sel_query = sel_query + key + ' == ' + '"' + str(value) + '"'
 
-                if count != len(card_dict['facility']['link']):
+                if count != len(facility_dict['link']):
                     sel_query = sel_query + ' and '
 
                 count = count + 1
 
         #print(sel_query)
 
-        sel_data = roadway_network.links_df.query(sel_query, engine='python')
+        sel_data = self.links_df.query(sel_query, engine='python')
         sel_indices = sel_data.index.tolist()
+        self.links_df['sel_links'] = np.where(self.links_df.index.isin(sel_indices), 1, 0)
 
-        roadway_network.links_df['sel_links'] = np.where(roadway_network.links_df.index.isin(sel_indices), 1, 0)
-        return roadway_network
-
-    def apply_roadway_feature_change(net: RoadwayNetwork, card_dict: dict) -> bool:
+    def apply_roadway_feature_change(net: RoadwayNetwork, properties_dict: dict) -> bool:
         '''
-        Changes the roadway attributes for the selected features based to the project card information passed
+        Changes the roadway attributes for the selected features based on the project card information passed
 
         args:
         net: RoadwayNetwork with selected links flag
-        card_dict: dictionary with project card information
+        properties_dict: dictionary with roadway properties to change
 
         returns:
         bool: True if successful.
         '''
 
-        for d in card_dict['properties']:
+        roadway_network = copy.copy(net)
+        error = False
+        for d in properties_dict:
             for attribute, value in d.items():
                 if isinstance(value, list):
                     existing_value = value[0]          # set to fail, if existing value is not same to start with
@@ -314,13 +311,13 @@ class RoadwayNetwork(object):
                     build_value = value                # account for -/+ sign later
 
                 # check if the attribute to be updated exists on the network links
-                if attribute not in list(net.links_df.columns):
+                if attribute not in list(roadway_network.links_df.columns):
                     WranglerLogger.error('%s is not an valid network attribute!' % (attribute))
-                    return False
+                    error = True
                 else:
-                    net.links_df[attribute] = np.where(net.links_df['sel_links'] == 1, build_value, net.links_df[attribute])
+                    roadway_network.links_df[attribute] = np.where(roadway_network.links_df['sel_links'] == 1, build_value, roadway_network.links_df[attribute])
 
 
-        net.links_df.drop(['sel_links'], axis = 1, inplace = True)
+        roadway_network.links_df.drop(['sel_links'], axis = 1, inplace = True)
 
-        return True
+        return error, roadway_network
