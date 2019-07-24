@@ -12,7 +12,7 @@ class Scenario(object):
     Holds information about a scenario
     '''
 
-    def __init__(self, base_scenario: dict, project_cards: [ProjectCard] = None, prerequisite_dict: dict = None, corequisite_dict: dict = None, conflict_dict: dict = None):
+    def __init__(self, base_scenario: dict, project_cards: [ProjectCard] = None):
         '''
         Constructor
 
@@ -24,9 +24,14 @@ class Scenario(object):
         self.base_scenario = base_scenario
         self.project_cards = project_cards
 
-        self.prerequisites = prerequisite_dict
-        self.corequisites  = corequisite_dict
-        self.conflicts     = conflict_dict
+        self.prerequisites = {}
+        self.corequisites  = {}
+        self.conflicts     = {}
+
+        for card in self.project_cards:
+            self.prerequisites.update( {card.name : card.dependencies['prerequisite']} )
+            self.corequisites.update( {card.name : card.dependencies['corequisite']} )
+            self.conflicts.update( {card.name : card.dependencies['conflicts']} )
 
     @staticmethod
     def create_scenario(base_scenario: dict, card_directory: str = '', tags: [str] = None, project_cards_list = []) -> Scenario:
@@ -42,16 +47,7 @@ class Scenario(object):
         project_cards_list: list of project cards to be applied
         '''
 
-        prereq_dict   = {}
-        coreq_dict    = {}
-        conflict_dict = {}
-
-        for project_card in project_cards_list:
-            prereq_dict[project_card.name] = project_card.dependencies['prerequisite']
-            coreq_dict[project_card.name] = project_card.dependencies['corequisite']
-            conflict_dict[project_card.name] = project_card.dependencies['conflicts']
-
-        scenario = Scenario(base_scenario, project_cards = project_cards_list, prerequisite_dict = prereq_dict, corequisite_dict = coreq_dict, conflict_dict = conflict_dict)
+        scenario = Scenario(base_scenario, project_cards = project_cards_list)
 
         if card_directory:
             scenario.add_project_cards(card_directory, tags = tags)
