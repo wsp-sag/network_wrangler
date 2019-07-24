@@ -2,6 +2,7 @@ import os
 import json
 import pytest
 from network_wrangler import RoadwayNetwork
+from network_wrangler import ProjectCard
 import time
 
 
@@ -53,3 +54,49 @@ def test_roadway_read_write():
         #new_shape.replace('\r', '').replace('\n', '').replace(' ','')
     assert(og_shape==new_shape)
     '''
+
+@pytest.mark.ashish
+@pytest.mark.roadway
+def test_select_roadway_features():
+    dir = os.path.join(os.getcwd(),'example','stpaul')
+    shape_file = os.path.join(dir,"shape.geojson")
+    link_file = os.path.join(dir,"link.json")
+    node_file = os.path.join(dir,"node.geojson")
+
+    print("Reading network ...")
+    net = RoadwayNetwork.read(link_file= link_file, node_file=node_file, shape_file=shape_file, fast=True)
+
+    print("Reading project card ...")
+    project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards','3_multiple_roadway_attribute_change.yml')
+    project_card = ProjectCard.read(project_card_path)
+
+    print("Selecting roadway feaures ...")
+    net.select_roadway_features(project_card.facility)
+    print('Number of features selected', len(net.links_df[net.links_df['sel_links'] == 1]))
+
+@pytest.mark.ashish
+@pytest.mark.roadway
+def test_roadway_feature_change():
+    dir = os.path.join(os.getcwd(),'example','stpaul')
+    shape_file = os.path.join(dir,"shape.geojson")
+    link_file = os.path.join(dir,"link.json")
+    node_file = os.path.join(dir,"node.geojson")
+
+    print("Reading network ...")
+    net = RoadwayNetwork.read(link_file= link_file, node_file=node_file, shape_file=shape_file, fast=True)
+
+    print("Reading project card ...")
+    project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards','3_multiple_roadway_attribute_change.yml')
+    project_card = ProjectCard.read(project_card_path)
+
+    print("Selecting roadway feaures ...")
+    net.select_roadway_features(project_card.facility)
+
+    print("Applying project card ...")
+    error, revised_net = RoadwayNetwork.apply_roadway_feature_change(net, project_card.properties)
+
+    if not error:
+        print("Writing out revised network ...")
+        RoadwayNetwork.write(revised_net, filename = 'out', path = 'tests')
+    else:
+        print("Error in applying project card ...")
