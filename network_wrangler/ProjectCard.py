@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys
+import os
 import yaml
 import json
 
@@ -134,40 +134,3 @@ class ProjectCard(object):
         card: the project card stored in a dictionary
         '''
         WranglerLogger.info(card.get('Category'))
-
-    def get_tags(self):
-        '''
-        Get the project card tag.
-
-        '''
-
-        card_dict = self.__dict__
-        return card_dict['tags']
-
-    def get_dependency(self, dependency_name: str):
-        '''
-        Get the project card dependency.
-
-        args:
-        dependency_name: name of the dependency
-        '''
-
-        if dependency_name not in ['prerequisite', 'corequisite', 'conflicts']:
-            sys.exit('%s is not an valid dependency name!' % (dependency_name))
-
-        card_dict = self.__dict__
-        return card_dict['dependencies'][dependency_name]
-
-    def print_project_card_info(path_to_card: str):
-        '''
-        Print info of project card.
-
-        args:
-        path_to_card: the path to the project card
-        '''
-        
-        project_card = ProjectCard.read(path_to_card)
-        print('tags:', project_card.get_tags())
-        print('prerequisite:', project_card.get_dependency('prerequisite'))
-        print('corequisite:', project_card.get_dependency('corequisite'))
-        print('conflicts:', project_card.get_dependency('conflicts'))
