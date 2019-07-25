@@ -30,3 +30,23 @@ def link_df_to_json(df: pd.DataFrame, properties: list):
             feature[prop] = row[prop]
         json['features'].append(feature)
     return json
+
+
+def topological_sort(adjacency_list, visited_list):
+    '''
+    Topological sorting for Acyclic Directed Graph
+    '''
+
+    output_stack = []
+
+    def topology_sort_util(vertex):
+        if not visited_list[vertex]:
+            visited_list[vertex] = True
+            for neighbor in adjacency_list[vertex]:
+                topology_sort_util(neighbor)
+            output_stack.insert(0, vertex)
+
+    for vertex in visited_list:
+        topology_sort_util(vertex)
+
+    return output_stack
