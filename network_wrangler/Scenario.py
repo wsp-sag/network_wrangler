@@ -101,18 +101,21 @@ class Scenario(object):
 
         return True
 
-    def check_scenario_corequisites(self):
+    def check_scenario_requisites(self):
         '''
-        Checks if there are any missing corequisite projects in the scenario
-        Fail if the project A specifies that project B is a corequisite and project B is not included in the scenario
+        Checks if there are any missing pre- or co-requisite projects in the scenario
+        Fail if the project A specifies that project B is a pre- or co-requisite and project B is not included in the scenario
 
         Returns: boolean
         '''
 
         corequisite_dict = self.corequisites
+        prerequisite_dict = self.prerequisites
+
         scenario_projects = list(corequisite_dict.keys())
 
         error = False
+
         for project, coreq in corequisite_dict.items():
             if not coreq == 'None':
                 for name in coreq:
@@ -120,7 +123,14 @@ class Scenario(object):
                         WranglerLogger.error('Projects %s has %s as corequisite project which is missing for the scenario' % (project, name))
                         error = True
 
+        for project, prereq in prerequisite_dict.items():
+            if not prereq == 'None':
+                for name in prereq:
+                    if name not in scenario_projects:
+                        WranglerLogger.error('Projects %s has %s as prerequisite project which is missing for the scenario' % (project, name))
+                        error = True
+
         if error:
-            sys.exit('Missing corequisite project found for scenario!')
+            sys.exit('Missing pre- or co-requisite project found for scenario!')
 
         return True
