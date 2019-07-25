@@ -6,7 +6,7 @@ tags:
 dependencies:
   prerequisite: None
   corequisite: None
-  conflicts: ['4_test_project_card', '7_test_project_card']
+  conflicts: ['7_test_project_card']
 facility:
    link:
      - name: [6th, Sixth, sixth]

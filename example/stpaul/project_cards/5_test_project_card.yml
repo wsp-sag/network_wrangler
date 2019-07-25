@@ -5,7 +5,7 @@ tags:
    - ['example']
 dependencies:
   prerequisite: None
-  corequisite: ['8_test_corequisite_card']
+  corequisite: ['6_test_project_card']
   conflicts: None
 facility:
    link:

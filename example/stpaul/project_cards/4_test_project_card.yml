@@ -4,7 +4,7 @@ category: Roadway Attribute Change
 tags:
    - ['example']
 dependencies:
-  prerequisite: ['5_test_project_card']
+  prerequisite: ['5_test_project_card', '6_test_project_card']
   corequisite: None
   conflicts: None
 facility:
