@@ -6,6 +6,8 @@ import os, sys
 from .ProjectCard import ProjectCard
 from collections import OrderedDict
 from .Logger import WranglerLogger
+from collections import defaultdict
+from .Utils import topological_sort
 
 class Scenario(object):
     '''
@@ -77,7 +79,7 @@ class Scenario(object):
                         self.corequisites.update( {project_card.name : project_card.dependencies['corequisite']} )
                         self.conflicts.update( {project_card.name : project_card.dependencies['conflicts']} )
 
-    def check_scenario_conflicts(self):
+    def check_scenario_conflicts(self) -> bool:
         '''
         Checks if there are any conflicting projects in the scenario
         Fail if the project A specifies that project B is a conflict and project B is included in the scenario
@@ -86,7 +88,7 @@ class Scenario(object):
         '''
 
         conflict_dict = self.conflicts
-        scenario_projects = list(conflict_dict.keys())
+        scenario_projects = [p.name for p in self.project_cards]
 
         error = False
         for project, conflicts in conflict_dict.items():
@@ -101,7 +103,7 @@ class Scenario(object):
 
         return True
 
-    def check_scenario_requisites(self):
+    def check_scenario_requisites(self) -> bool:
         '''
         Checks if there are any missing pre- or co-requisite projects in the scenario
         Fail if the project A specifies that project B is a pre- or co-requisite and project B is not included in the scenario
@@ -112,7 +114,7 @@ class Scenario(object):
         corequisite_dict = self.corequisites
         prerequisite_dict = self.prerequisites
 
-        scenario_projects = list(corequisite_dict.keys())
+        scenario_projects = [p.name for p in self.project_cards]
 
         error = False
 
@@ -134,3 +136,35 @@ class Scenario(object):
             sys.exit('Missing pre- or co-requisite project found for scenario!')
 
         return True
+
+    def create_ordered_project_cards(self):
+        '''
+        create a list of project cards such that they are in order based on pre-requisites
+
+        Returns: ordered list of project cards to be applied to scenario
+        '''
+
+        scenario_projects = [p.name for p in self.project_cards]
+
+        # build prereq (adjacency) list for topological sort
+        adjacency_list = defaultdict(list)
+        visited_list = defaultdict()
+
+        for project in scenario_projects:
+            visited_list[project] = False
+            if not self.prerequisites[project] == "None":
+                for prereq in self.prerequisites[project]:
+                    if prereq in scenario_projects:         # this will always be true, else would have been flagged in missing prerequsite check, but just in case
+                        adjacency_list[prereq] = [project]
+
+        # sorted_project_names is topological sorted project card names (based on prerequsiite)
+        sorted_project_names = topological_sort(adjacency_list = adjacency_list, visited_list = visited_list)
+
+        # get the project card objects for the sorted project names
+        project_card_and_name_dict = {}
+        for project_card in self.project_cards:
+            project_card_and_name_dict[project_card.name] = project_card
+
+        sorted_project_cards = [project_card_and_name_dict[project_name] for project_name in sorted_project_names]
+
+        return sorted_project_cards
