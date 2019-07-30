@@ -11,14 +11,16 @@ To run with print statments, use `pytest -s -m scenario`
 
 @pytest.mark.scenario
 def test_project_card_read():
-
+    print("test_project_card_read: Testing project card is read into object dictionary")
     in_dir  = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),'example', 'stpaul','project_cards')
     in_file = os.path.join(in_dir,"1_simple_roadway_attribute_change.yml")
     project_card = ProjectCard.read(in_file)
     WranglerLogger.info(project_card.__dict__)
-    assert(project_card.Category == "Roadway Attribute Change")
+    print("---test_project_card_read()---\n",str(project_card),"\n---end test_project_card_read()---\n")
+    assert(project_card.category == "Roadway Attribute Change")
 
 @pytest.mark.ashish
+@pytest.mark.scenario
 def test_scenario_conflicts():
     base_scenario = {}
 
@@ -31,6 +33,7 @@ def test_scenario_conflicts():
     scen.check_scenario_conflicts()
 
 @pytest.mark.ashish
+@pytest.mark.scenario
 def test_scenario_requisites():
     base_scenario = {}
 
@@ -43,6 +46,7 @@ def test_scenario_requisites():
     scen.check_scenario_requisites()
 
 @pytest.mark.topo
+@pytest.mark.scenario
 def test_project_sort():
     base_scenario = {}
 

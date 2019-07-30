@@ -14,4 +14,4 @@ facility:
    B: osmid=187899923 # Robert St N
 properties:
   - LANES: [3,-1]  #changes number of lanes 3 to 2 (reduction of 1)
-Notes: Simple project example to do a road diet on 6th St E in front of MetCouncil
+notes: Simple project example to do a road diet on 6th St E in front of MetCouncil
