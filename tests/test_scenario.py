@@ -22,15 +22,17 @@ def test_project_card_read():
 @pytest.mark.ashish
 @pytest.mark.scenario
 def test_scenario_conflicts():
-    base_scenario = {}
 
     project_cards_list = []
     project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','4_test_project_card.yml')))
     project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','5_test_project_card.yml')))
     project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','6_test_project_card.yml')))
 
-    scen = Scenario.create_scenario(base_scenario = base_scenario, project_cards_list = project_cards_list)
-    scen.check_scenario_conflicts()
+    scen = Scenario.create_scenario(base_scenario = {}, project_cards_list = project_cards_list)
+    print("---test_scenario_conflicts()---\n",str(scen),"\n")
+    conflicts = scen.check_scenario_conflicts()
+    print("Conflicts: {}".format(conflicts))
+    print("---end test_scenario_conflicts()---\n")
 
 @pytest.mark.ashish
 @pytest.mark.scenario
@@ -43,9 +45,12 @@ def test_scenario_requisites():
     project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','6_test_project_card.yml')))
 
     scen = Scenario.create_scenario(base_scenario = base_scenario, project_cards_list = project_cards_list)
-    scen.check_scenario_requisites()
 
-@pytest.mark.topo
+    print("---test_scenario_requisites()---\n",str(scen),"\n")
+    requisites = scen.check_scenario_requisites()
+    print("Requisites: {}".format(requisites))
+    print("---end test_scenario_requisites()---\n")
+
 @pytest.mark.scenario
 def test_project_sort():
     base_scenario = {}

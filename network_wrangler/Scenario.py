@@ -56,6 +56,9 @@ class Scenario(object):
 
         return scenario
 
+    def __str__(self):
+        return "\n"
+
     def add_project_cards(self, folder: str, tags: [str] = []):
         '''
         Adds projects cards to the scenario.
@@ -78,6 +81,12 @@ class Scenario(object):
                         self.prerequisites.update( {project_card.name : project_card.dependencies['prerequisite']} )
                         self.corequisites.update( {project_card.name : project_card.dependencies['corequisite']} )
                         self.conflicts.update( {project_card.name : project_card.dependencies['conflicts']} )
+
+    def __str__(self):
+        projects = ["{}\n\tPrerequisites: {}\n\tCoRequisites: {}\n\tConflicts: {}".format(p.name, p.dependencies['prerequisite'],p.dependencies['corequisite'],p.dependencies['conflicts']) for p in self.project_cards]
+        s = ["Base Scenario: {}".format(self.base_scenario)]
+        s += projects
+        return '\n'.join(s)
 
     def check_scenario_conflicts(self) -> bool:
         '''
