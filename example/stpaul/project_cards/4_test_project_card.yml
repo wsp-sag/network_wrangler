@@ -1,10 +1,9 @@
-name: 4_test_project_card
-project: 6th Street Transitway
+name: 4th test project
 category: Roadway Attribute Change
 tags:
    - ['example']
 dependencies:
-  prerequisite: ['5_test_project_card', '6_test_project_card']
+  prerequisite: ['5th test project', '6th test project']
   corequisite: None
   conflicts: None
 facility:
