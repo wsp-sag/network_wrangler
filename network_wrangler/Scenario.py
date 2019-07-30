@@ -30,6 +30,12 @@ class Scenario(object):
         self.corequisites  = {}
         self.conflicts     = {}
 
+        self.requisite_checks_done = False
+        self.conflicts_checks_done = False
+
+        self.has_requisite_error = False
+        self.has_conflict_error = False
+
         for card in self.project_cards:
             self.prerequisites.update( {card.name : card.dependencies['prerequisite']} )
             self.corequisites.update( {card.name : card.dependencies['corequisite']} )
@@ -93,31 +99,30 @@ class Scenario(object):
         Checks if there are any conflicting projects in the scenario
         Fail if the project A specifies that project B is a conflict and project B is included in the scenario
 
-        Returns: boolean
+        Returns: boolean indicating if the check was successful or returned an error
         '''
 
         conflict_dict = self.conflicts
         scenario_projects = [p.name for p in self.project_cards]
 
-        error = False
         for project, conflicts in conflict_dict.items():
             if not conflicts == 'None':
                 for name in conflicts:
                     if name in scenario_projects:
+                        self.project_cards
                         WranglerLogger.error('Projects %s has %s as conflicting project' % (project, name))
-                        error = True
+                        self.has_conflict_error = True
 
-        if error:
-            sys.exit('Conflicting project found for scenario!')
+        self.conflicts_checks_done = True
 
-        return True
+        return self.has_conflict_error
 
     def check_scenario_requisites(self) -> bool:
         '''
         Checks if there are any missing pre- or co-requisite projects in the scenario
         Fail if the project A specifies that project B is a pre- or co-requisite and project B is not included in the scenario
 
-        Returns: boolean
+        Returns: boolean indicating if the checks were successful or returned an error
         '''
 
         corequisite_dict = self.corequisites
@@ -125,26 +130,23 @@ class Scenario(object):
 
         scenario_projects = [p.name for p in self.project_cards]
 
-        error = False
-
         for project, coreq in corequisite_dict.items():
             if not coreq == 'None':
                 for name in coreq:
                     if name not in scenario_projects:
                         WranglerLogger.error('Projects %s has %s as corequisite project which is missing for the scenario' % (project, name))
-                        error = True
+                        self.has_requisite_error = True
 
         for project, prereq in prerequisite_dict.items():
             if not prereq == 'None':
                 for name in prereq:
                     if name not in scenario_projects:
                         WranglerLogger.error('Projects %s has %s as prerequisite project which is missing for the scenario' % (project, name))
-                        error = True
+                        self.has_requisite_error = True
 
-        if error:
-            sys.exit('Missing pre- or co-requisite project found for scenario!')
+        self.requisite_checks_done = True
 
-        return True
+        return self.has_requisite_error
 
     def create_ordered_project_cards(self):
         '''
@@ -169,7 +171,7 @@ class Scenario(object):
         # sorted_project_names is topological sorted project card names (based on prerequsiite)
         sorted_project_names = topological_sort(adjacency_list = adjacency_list, visited_list = visited_list)
 
-        # get the project card objects for the sorted project names
+        # get the project card objects for these sorted project names
         project_card_and_name_dict = {}
         for project_card in self.project_cards:
             project_card_and_name_dict[project_card.name] = project_card

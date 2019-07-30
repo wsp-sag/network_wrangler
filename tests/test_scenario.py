@@ -29,9 +29,14 @@ def test_scenario_conflicts():
     project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','6_test_project_card.yml')))
 
     scen = Scenario.create_scenario(base_scenario = {}, project_cards_list = project_cards_list)
+
     print("---test_scenario_conflicts()---\n",str(scen),"\n")
-    conflicts = scen.check_scenario_conflicts()
-    print("Conflicts: {}".format(conflicts))
+    scen.check_scenario_conflicts()
+
+    if scen.has_conflict_error:
+        print('Conflicting project found for scenario!')
+
+    print('Conflict checks done:', scen.conflicts_checks_done)
     print("---end test_scenario_conflicts()---\n")
 
 @pytest.mark.ashish
@@ -47,10 +52,15 @@ def test_scenario_requisites():
     scen = Scenario.create_scenario(base_scenario = base_scenario, project_cards_list = project_cards_list)
 
     print("---test_scenario_requisites()---\n",str(scen),"\n")
-    requisites = scen.check_scenario_requisites()
-    print("Requisites: {}".format(requisites))
+
+    scen.check_scenario_requisites()
+    if scen.has_requisite_error:
+        print('Missing pre- or co-requisite projects found for scenario!')
+
+    print('Requisite checks done:', scen.requisite_checks_done)
     print("---end test_scenario_requisites()---\n")
 
+@pytest.mark.topo
 @pytest.mark.scenario
 def test_project_sort():
     base_scenario = {}
