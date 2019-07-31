@@ -5,24 +5,25 @@ from network_wrangler import RoadwayNetwork
 from network_wrangler import ProjectCard
 import time
 
-
 """
 Run just the tests labeled basic using `pytest -m roadway`
 To run with print statments, use `pytest -s -m roadway`
 """
 
-@pytest.mark.menow
-def test_roadway_change():
-    print("HI")
-    pass
+STPAUL_DIR = os.path.join(os.getcwd(),'example','stpaul')
+STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR,"shape.geojson")
+STPAUL_LINK_FILE = os.path.join(STPAUL_DIR,"link.json")
+STPAUL_NODE_FILE = os.path.join(STPAUL_DIR,"node.geojson")
+
+SMALL_DIR = os.path.join(os.getcwd(),'example','stpaul')
+SMALL_SHAPE_FILE = os.path.join(SMALL_DIR,"shape.geojson")
+SMALL_LINK_FILE = os.path.join(SMALL_DIR,"link.json")
+SMALL_NODE_FILE = os.path.join(SMALL_DIR,"node.geojson")
 
 @pytest.mark.basic
 @pytest.mark.roadway
-def test_roadway_read_write():
-    in_dir        = os.path.join(os.getcwd(),'example','stpaul')
-    in_shape_file = os.path.join(in_dir,"shape.geojson")
-    in_link_file  = os.path.join(in_dir,"link.json")
-    in_node_file  = os.path.join(in_dir,"node.geojson")
+def test_roadway_read_write(request):
+    print("\n--Starting:",request.node.name)
 
     out_path   = "scratch"
     out_prefix = "t_readwrite"
@@ -31,7 +32,7 @@ def test_roadway_read_write():
     out_link_file  = os.path.join(out_dir,out_prefix+"_"+"link.json")
     out_node_file  = os.path.join(out_dir,out_prefix+"_"+"node.geojson")
     time0 = time.time()
-    net = RoadwayNetwork.read(link_file= in_link_file, node_file=in_node_file, shape_file=in_shape_file, fast=True)
+    net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
     time1 = time.time()
     net.write(filename=out_prefix,path=out_path)
     time2 = time.time()
@@ -55,35 +56,96 @@ def test_roadway_read_write():
     assert(og_shape==new_shape)
     '''
 
-@pytest.mark.ashish
 @pytest.mark.roadway
-def test_select_roadway_features():
-    dir = os.path.join(os.getcwd(),'example','stpaul')
-    shape_file = os.path.join(dir,"shape.geojson")
-    link_file = os.path.join(dir,"link.json")
-    node_file = os.path.join(dir,"node.geojson")
+@pytest.mark.travis
+def test_quick_roadway_read_write(request):
+    print("\n--Starting:",request.node.name)
+
+    out_path   = "scratch"
+    out_prefix = "t_readwrite"
+    out_dir    = os.path.join(os.getcwd(),out_path)
+    out_shape_file = os.path.join(out_dir,out_prefix+"_"+"shape.geojson")
+    out_link_file  = os.path.join(out_dir,out_prefix+"_"+"link.json")
+    out_node_file  = os.path.join(out_dir,out_prefix+"_"+"node.geojson")
+    net = RoadwayNetwork.read(link_file= SMALL_LINK_FILE, node_file=SMALL_NODE_FILE, shape_file=SMALL_SHAPE_FILE, fast=True)
+    net.write(filename=out_prefix,path=out_path)
+    net_2 = RoadwayNetwork.read(link_file= out_link_file, node_file=out_node_file, shape_file=out_shape_file)
+    print("--Finished:",request.node.name)
+
+@pytest.mark.menow
+def test_select_roadway_features(request):
+    print("\n--Starting:",request.node.name)
+    net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
+
+    test_selections = { \
+    "1. simple": {
+     'link':[
+        {'name': ['6th','Sixth','sixth']}
+        ],
+     'A':{'osmid': '187899923'},
+     'B':{'osmid': '187865924'},
+    },
+    "2. other_direction": {
+     'link':[
+        {'name': ['6th','Sixth','sixth']}
+        ],
+     'B':{'osmid': '187899923'},
+     'A':{'osmid': '187865924'},
+    },
+    "3. link_only":{
+     'link':[
+        {'name': ['6th','Sixth','sixth']}
+        ],
+    },
+    "4. empty nodes":{
+     'link':[
+        {'name': ['6th','Sixth','sixth']}
+        ],
+     'A':{},
+     'B':{},
+    },
+    "5. nodes only":{
+     'A':{'osmid': '187899923'},
+     'B':{'osmid': '187865924'},
+    },
+    }
+
+    for i,sel in test_selections.items():
+        print("--->",i,"\n",sel)
+        sel_net = net.select_roadway_features(sel)
+        print("Features selected:",len(sel_net))
+        print(sel_net[['name','u','v']])
+
+    print("--Finished:",request.node.name)
+
+@pytest.mark.ashish
+@pytest.mark.menow
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_select_roadway_features_from_projectcard(request):
+    print("\n--Starting:",request.node.name)
 
     print("Reading network ...")
-    net = RoadwayNetwork.read(link_file= link_file, node_file=node_file, shape_file=shape_file, fast=True)
+    net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
 
     print("Reading project card ...")
     project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards','3_multiple_roadway_attribute_change.yml')
     project_card = ProjectCard.read(project_card_path)
 
-    print("Selecting roadway feaures ...")
+    print("Selecting roadway features ...")
+    print("Selection:\n",project_card.facility)
     net.select_roadway_features(project_card.facility)
     print('Number of features selected', len(net.links_df[net.links_df['sel_links'] == 1]))
+    print("--Finished:",request.node.name)
 
 @pytest.mark.ashish
 @pytest.mark.roadway
-def test_roadway_feature_change():
-    dir = os.path.join(os.getcwd(),'example','stpaul')
-    shape_file = os.path.join(dir,"shape.geojson")
-    link_file = os.path.join(dir,"link.json")
-    node_file = os.path.join(dir,"node.geojson")
+@pytest.mark.travis
+def test_roadway_feature_change(request):
+    print("\n--Starting:",request.node.name)
 
     print("Reading network ...")
-    net = RoadwayNetwork.read(link_file= link_file, node_file=node_file, shape_file=shape_file, fast=True)
+    net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
 
     print("Reading project card ...")
     project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards','3_multiple_roadway_attribute_change.yml')
@@ -100,3 +162,5 @@ def test_roadway_feature_change():
         RoadwayNetwork.write(revised_net, filename = 'out', path = 'tests')
     else:
         print("Error in applying project card ...")
+
+    print("--Finished:",request.node.name)
