@@ -27,6 +27,10 @@ class ProjectCard(object):
 
         ##todo more unstructuring of project card yaml
 
+    def __str__(self):
+        s = ["{}: {}".format(key,value) for key,value in self.__dict__.items()]
+        return "\n".join(s)
+
     @staticmethod
     def read(path_to_card: str):
         '''
@@ -40,6 +44,7 @@ class ProjectCard(object):
 
         with open (path_to_card, 'r') as cardfile:
             attribute_dictionary = yaml.safe_load(cardfile)
+            attribute_dictionary['file'] = path_to_card
             card = ProjectCard(attribute_dictionary)
 
         card.valid = ProjectCard.validate_project_card_schema(path_to_card)
