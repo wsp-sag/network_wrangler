@@ -300,6 +300,7 @@ class RoadwayNetwork(object):
         sel_data = self.links_df.query(sel_query, engine='python')
         sel_indices = sel_data.index.tolist()
         self.links_df['sel_links'] = np.where(self.links_df.index.isin(sel_indices), 1, 0)
+        return self.links_df[self.links_df['sel_links'] == 1]
 
     def apply_roadway_feature_change(net: RoadwayNetwork, properties_dict: dict) -> bool:
         '''

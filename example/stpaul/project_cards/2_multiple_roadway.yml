@@ -9,9 +9,11 @@ dependencies:
   conflicts: None
 facility:
    link:
-     - name=[%6th%,%Sixth%,%sixth%] #finds links where name contains 6th or Sixth...not a regex technically ;-)
-   A: osmid=187899923
-   B: osmid=187865924
+     - name: [6th,Sixth,sixth] #finds links where name contains 6th or Sixth...not a regex technically ;-)
+   A:
+     osmid: 187899923
+   B:
+     osmid: 187865924
 properties:
   - LANES: 2
   - isTranLink: 1
