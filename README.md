@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/wsp-sag/network_wrangler.svg?branch=master)](https://travis-ci.org/wsp-sag/network_wrangler)
+
 # network_wrangler
 
 Network Wrangler is a Python library for managing travel model network scenarios.
