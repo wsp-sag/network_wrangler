@@ -36,7 +36,7 @@ def test_scenario_conflicts():
     if scen.has_conflict_error:
         print('Conflicting project found for scenario!')
 
-    print('Conflict checks done:', scen.conflicts_checks_done)
+    print('Conflict checks done:', scen.conflicts_checked)
     print("---end test_scenario_conflicts()---\n")
 
 @pytest.mark.ashish
@@ -57,12 +57,12 @@ def test_scenario_requisites():
     if scen.has_requisite_error:
         print('Missing pre- or co-requisite projects found for scenario!')
 
-    print('Requisite checks done:', scen.requisite_checks_done)
+    print('Requisite checks done:', scen.requisites_checked)
     print("---end test_scenario_requisites()---\n")
 
-@pytest.mark.topo
 @pytest.mark.scenario
 def test_project_sort():
+    print("---test_project sort()---")
     base_scenario = {}
 
     project_cards_list = []
@@ -71,9 +71,13 @@ def test_project_sort():
     project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','6_test_project_card.yml')))
 
     scen = Scenario.create_scenario(base_scenario = base_scenario, project_cards_list = project_cards_list)
-
+    print("\n--Prerequisites:")
+    import pprint
+    pprint.pprint(scen.prerequisites)
+    print("\nUnordered Projects:",scen.project_names())
     scen.check_scenario_conflicts()
     scen.check_scenario_requisites()
 
-    sorted_projects_cards = scen.create_ordered_project_cards()
-    print([project_card.name for project_card in sorted_projects_cards])
+    scen.order_project_cards()
+    print("Ordered Projects:",scen.project_names())
+    print("---end test_project sort()---")

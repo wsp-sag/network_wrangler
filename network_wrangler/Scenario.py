@@ -19,22 +19,25 @@ class Scenario(object):
         Constructor
 
         args:
-        base_scenario: the base scenario
-        project_cards: this scenario's project cards
+        base_scenario: dict the base scenario
+        project_cards: list this scenario's project cards
         '''
 
         self.base_scenario = base_scenario
         self.project_cards = project_cards
+        self.ordered_project_cards = OrderedDict()
 
         self.prerequisites = {}
         self.corequisites  = {}
         self.conflicts     = {}
 
-        self.requisite_checks_done = False
-        self.conflicts_checks_done = False
+        self.requisites_checked = False
+        self.conflicts_checked  = False
 
         self.has_requisite_error = False
         self.has_conflict_error = False
+
+        self.prerequisites_sorted = False
 
         for card in self.project_cards:
             self.prerequisites.update( {card.name : card.dependencies['prerequisite']} )
@@ -74,6 +77,9 @@ class Scenario(object):
         folder: the folder location where the project cards will be
         tags: only project cards with these tags will be validated and added to the returning scenario
         '''
+        self.requisites_checked   = False
+        self.conflicts_checked    = False
+        self.prerequisites_sorted = False
 
         for file in os.listdir(folder):
             if file.endswith(".yml") or file.endswith(".yaml"):
@@ -94,6 +100,12 @@ class Scenario(object):
         s += projects
         return '\n'.join(s)
 
+    def project_names(self) -> list:
+        '''
+        Returns a list of project names
+        '''
+        return [project_card.name for project_card in self.project_cards]
+
     def check_scenario_conflicts(self) -> bool:
         '''
         Checks if there are any conflicting projects in the scenario
@@ -113,7 +125,7 @@ class Scenario(object):
                         WranglerLogger.error('Projects %s has %s as conflicting project' % (project, name))
                         self.has_conflict_error = True
 
-        self.conflicts_checks_done = True
+        self.conflicts_checked  = True
 
         return self.has_conflict_error
 
@@ -125,7 +137,7 @@ class Scenario(object):
         Returns: boolean indicating if the checks were successful or returned an error
         '''
 
-        corequisite_dict = self.corequisites
+        corequisite_dict  = self.corequisites
         prerequisite_dict = self.prerequisites
 
         scenario_projects = [p.name for p in self.project_cards]
@@ -144,18 +156,18 @@ class Scenario(object):
                         WranglerLogger.error('Projects %s has %s as prerequisite project which is missing for the scenario' % (project, name))
                         self.has_requisite_error = True
 
-        self.requisite_checks_done = True
+        self.requisites_checked = True
 
         return self.has_requisite_error
 
-    def create_ordered_project_cards(self):
+    def order_project_cards(self):
         '''
         create a list of project cards such that they are in order based on pre-requisites
 
         Returns: ordered list of project cards to be applied to scenario
         '''
 
-        scenario_projects = [p.name for p in self.project_cards]
+        scenario_projects = [p.name.lower() for p in self.project_cards]
 
         # build prereq (adjacency) list for topological sort
         adjacency_list = defaultdict(list)
@@ -163,10 +175,11 @@ class Scenario(object):
 
         for project in scenario_projects:
             visited_list[project] = False
-            if not self.prerequisites[project] == "None":
-                for prereq in self.prerequisites[project]:
-                    if prereq in scenario_projects:         # this will always be true, else would have been flagged in missing prerequsite check, but just in case
-                        adjacency_list[prereq] = [project]
+            if not self.prerequisites[project]:
+                continue
+            for prereq in self.prerequisites[project]:
+                if prereq.lower() in scenario_projects:         # this will always be true, else would have been flagged in missing prerequsite check, but just in case
+                    adjacency_list[prereq.lower()] = [project]
 
         # sorted_project_names is topological sorted project card names (based on prerequsiite)
         sorted_project_names = topological_sort(adjacency_list = adjacency_list, visited_list = visited_list)
@@ -174,8 +187,14 @@ class Scenario(object):
         # get the project card objects for these sorted project names
         project_card_and_name_dict = {}
         for project_card in self.project_cards:
-            project_card_and_name_dict[project_card.name] = project_card
+            project_card_and_name_dict[project_card.name.lower()] = project_card
 
         sorted_project_cards = [project_card_and_name_dict[project_name] for project_name in sorted_project_names]
+
+        assert(len(sorted_project_cards)==len(self.project_cards))
+
+        self.prerequisites_sorted  = True
+        self.ordered_project_cards = {project_name:project_card_and_name_dict[project_name] for project_name in sorted_project_names}
+        self.project_cards = sorted_project_cards
 
         return sorted_project_cards
