@@ -24,7 +24,7 @@ source activate wrangler_env
 pip install git+https://github.com/wsp-sag/network_wrangler.git@master#egg=network_wrangler
 ```
 
-#### From GitHub
+### From GitHub
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install Network Wrangler from the source on GitHub.
 
 ```bash
@@ -33,7 +33,7 @@ pip install git+https://github.com/wsp-sag/network_wrangler.git@master#egg=netwo
 
 Note: if you wanted to install from a specific tag/version number or branch, replace `@master` with `@<branchname>`  or `@tag`
 
-#### From Clone
+### From Clone
 If you are going to be working on Network Wrangler locally, you might want to clone it to your local machine and install it from the clone.  The -e will install it in [editable mode](https://pip.pypa.io/en/stable/reference/pip_install/?highlight=editable#editable-installs).
 
 This is also useful if you want to continue to update your Network Wrangler as it is developed on GitHub.
@@ -113,6 +113,7 @@ You can test that network wrangler was properly installed by running python from
 ```bash
 python
 import network_wrangler
+exit
 ```
 
 **6. [optional] run all the tests**
@@ -130,7 +131,7 @@ The `-m basic` flag runs only tests that are marked as "basic"
 
 Note: if you are not part of the project team and want to contribute code back to the project, please fork before you clone and then add the original repository to your upstream origin list per [these directions on github](https://help.github.com/en/articles/fork-a-repo).
 
-#### Using Docker
+### Using Docker
 
 1. Install [Docker](https://docs.docker.com/install/)
 2. Clone git repository (see instructions above) *NOTE: this is easiest way right now since repo is private. When it is public we can clone right from github without having to muck around with logins or keys*
@@ -149,7 +150,7 @@ Containers:
  - `wrangler-dev` is the most powerful but dangerous container `docker-compose run wrangler-dev /bin/bash --build`
    - Warning: It will synchronize code edited from the container to your wrangler clone.  This is great for developing within an IDE, but please take this into account.
 
-#### Common Installation Issues
+### Common Installation Issues
 
 **Issue: `clang: warning: libstdc++ is deprecated; move to libc++ with a minimum deployment target of OS X 10.9 [-Wdeprecated]`**
 If you are using MacOS, you might need to update your [xcode command line tools and headers](https://developer.apple.com/downloads/)
