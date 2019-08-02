@@ -2,6 +2,7 @@
 *.pyc
 
 # Temp and test cache
+scratch/*
 tests/temp/
 .temp
 .pytest_cache
