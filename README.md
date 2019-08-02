@@ -46,7 +46,7 @@ Create a new environment by typing the following commands into the command promp
 
 ```bash
 conda create python=3.7 -n wrangler_env
-source activate wrangler_env
+conda activate wrangler_env
 ```
 
 I chose `wrangler_env` as the name of my environment, but you could choose something else...just remember it so that you can access it later.
@@ -54,7 +54,7 @@ I chose `wrangler_env` as the name of my environment, but you could choose somet
 **NOTE** in order to get back to this "conda" environment (i.e. after you close this command prompt), you will need to access it from the command line by using the following command:
 
 ```bash
-source activate wrangler_env
+conda activate wrangler_env
 ```
 
 **3. "Clone" (aka download) network wrangler from Github on to your machine**
