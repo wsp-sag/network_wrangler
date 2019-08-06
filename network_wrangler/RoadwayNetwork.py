@@ -30,6 +30,9 @@ class RoadwayNetwork(object):
     Representation of a Roadway Network.
     '''
 
+    CRS = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+    NODE_FOREIGN_KEY = 'osmnodeid'
+
     def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
         '''
         Constructor
@@ -84,6 +87,9 @@ class RoadwayNetwork(object):
 
         nodes_df = gpd.GeoDataFrame(node_properties, geometry=node_geometries)
 
+        nodes_df.gdf_name = 'network_nodes'
+        nodes_df.set_index(RoadwayNetwork.NODE_FOREIGN_KEY, inplace = True)
+        nodes_df.crs = RoadwayNetwork.CRS
         ## todo: flatten json
 
         WranglerLogger.info('Read %s links from %s' % (links_df.size, link_file))
