@@ -20,6 +20,7 @@ SMALL_SHAPE_FILE = os.path.join(SMALL_DIR,"shape.geojson")
 SMALL_LINK_FILE = os.path.join(SMALL_DIR,"link.json")
 SMALL_NODE_FILE = os.path.join(SMALL_DIR,"node.geojson")
 
+
 @pytest.mark.basic
 @pytest.mark.roadway
 def test_roadway_read_write(request):
@@ -84,6 +85,7 @@ def test_select_roadway_features(request):
         ],
      'A':{'osmid': '187899923'},
      'B':{'osmid': '187865924'},
+     'answer': ['187899923', '187858777', '187923585', '187865924'],
     },
     "2. other_direction": {
      'link':[
@@ -116,10 +118,13 @@ def test_select_roadway_features(request):
         print("Features selected:",len(sel_net))
         print(sel_net[['name','u','v']])
 
+        if 'answer' in sel.keys():
+            print("Expected Answer:",sel['answer'])
+            #assert(sel_net.sp == sel['answer'])
+
     print("--Finished:",request.node.name)
 
 @pytest.mark.ashish
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_select_roadway_features_from_projectcard(request):

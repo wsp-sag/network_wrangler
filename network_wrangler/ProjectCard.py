@@ -85,6 +85,36 @@ class ProjectCard(object):
         except yaml.YAMLError as exc:
             WranglerLogger.error(exc.message)
 
+    @staticmethod
+    def build_link_selection_query(selection: dict):
+        sel_query = ''
+        count = 1
+        if 'link' not in selection.keys():
+            return sel_query
+
+        for d in selection['link']:
+            for key, value in d.items():
+                key = key.lower()
+                if isinstance(value, list):
+                    sel_query = sel_query + '('
+                    v = 1
+                    for i in value:   # building an OR query with each element in list
+                        if isinstance(i, str):
+                            sel_query = sel_query + key + '.str.contains("' + i + '")'
+                        else:
+                            sel_query = sel_query + key + '==' + str(i)
+                        if v!= len(value):
+                            sel_query = sel_query + ' or '
+                            v = v + 1
+                    sel_query = sel_query + ')'
+                else:
+                    sel_query = sel_query + key + ' == ' + '"' + str(value) + '"'
+
+                if count != len(selection['link']):
+                    sel_query = sel_query + ' and '
+                count = count + 1
+        return sel_query
+
     def roadway_attribute_change(self, card: dict):
         '''
         Probably delete.
