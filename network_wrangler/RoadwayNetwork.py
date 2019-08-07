@@ -325,7 +325,7 @@ class RoadwayNetwork(object):
         candidate_links = self.links_df.query(sel_query, engine='python')
 
         candidate_links['i'] = 1
-        node_list_osmnodeids = list(candidate_links['u']) + list(candidate_links['v'])
+        node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
 
         A_id, B_id = self.orig_dest_nodes_foreign_key(selection, self.nodes_df)
 
@@ -333,8 +333,8 @@ class RoadwayNetwork(object):
             '''
             add outbound and inbound reference IDs from existing nodes
             '''
-            node_list_osmnodeids = list(candidate_links['u']) + list(candidate_links['v'])
-            candidate_nodes = nodes[nodes[node_key].isin(node_list_osmnodeids)]
+            node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
+            candidate_nodes = nodes[nodes[RoadwayNetwork.NODE_FOREIGN_KEY].isin(node_list_foreign_keys)]
             links_id_to_add = list(candidate_nodes['outboundreferenceid']) + list(candidate_nodes['inboundreferenceid'])
             links_id_to_add = [item for sublist in links_id_to_add for item in sublist if item != '']
             for id in links_id_to_add:
@@ -347,13 +347,14 @@ class RoadwayNetwork(object):
 
         i = 0
         max_i = RoadwayNetwork.SEARCH_BREADTH
-        while A_id not in node_list_osmnodeids and B_id not in node_list_osmnodeids and i <= max_i:
-           candidate_links = add_breadth(candidate_links, net.nodes_df, net.links_df, i)
+        while A_id not in node_list_foreign_keys and B_id not in node_list_foreign_keys and i <= max_i:
            i += 1
+           candidate_links = add_breadth(candidate_links, net.nodes_df, net.links_df, i)
+
         candidate_links['weight'] = i+(i*RoadwayNetwork.SP_WEIGHT_FACTOR)
 
-        node_list_osmnodeids = list(candidate_links['u']) + list(candidate_links['v'])
-        candidate_nodes = net.nodes_df.loc[node_list_osmnodeids]
+        node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
+        candidate_nodes = net.nodes_df.loc[node_list_foreign_keys]
 
         G = ox_graph(candidate_nodes, candidate_links)
 
@@ -362,13 +363,13 @@ class RoadwayNetwork(object):
         except:
             i = RoadwayNetwork.SEARCH_BREADTH
             max_i = RoadwayNetwork.MAX_SEARCH_BREADTH
-            while A_id not in node_list_osmnodeids and B_id not in node_list_osmnodeids and i <= max_i:
+            while A_id not in node_list_foreign_keys and B_id not in node_list_foreign_keys and i <= max_i:
                candidate_links = add_breadth(candidate_links, net.nodes_df, net.links_df, i)
                i += 1
             candidate_links['weight'] = i+(i*RoadwayNetwork.SP_WEIGHT_FACTOR)
 
-            node_list_osmnodeids = list(candidate_links['u']) + list(candidate_links['v'])
-            candidate_nodes = net.nodes_df.loc[node_list_osmnodeids]
+            node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
+            candidate_nodes = net.nodes_df.loc[node_list_foreign_keys]
 
             G = ox_graph(candidate_nodes, candidate_links)
 
