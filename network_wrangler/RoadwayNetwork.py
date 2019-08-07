@@ -409,8 +409,7 @@ class RoadwayNetwork(object):
            i += 1
            candidate_links = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
 
-        candidate_links['weight'] = i+(i*RoadwayNetwork.SP_WEIGHT_FACTOR)
-
+        candidate_links['weight'] = candidate_links['i']+(candidate_links['i']*RoadwayNetwork.SP_WEIGHT_FACTOR)
         node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
         candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
 
@@ -422,9 +421,10 @@ class RoadwayNetwork(object):
             i = RoadwayNetwork.SEARCH_BREADTH
             max_i = RoadwayNetwork.MAX_SEARCH_BREADTH
             while A_id not in node_list_foreign_keys and B_id not in node_list_foreign_keys and i <= max_i:
-               candidate_links = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
                i += 1
-            candidate_links['weight'] = i+(i*RoadwayNetwork.SP_WEIGHT_FACTOR)
+               candidate_links = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
+
+            candidate_links['weight'] = candidate_links['i']+(candidate_links['i']*RoadwayNetwork.SP_WEIGHT_FACTOR)
 
             node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
             candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
