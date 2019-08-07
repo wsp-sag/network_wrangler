@@ -83,44 +83,37 @@ def test_select_roadway_features(request):
      'link':[
         {'name': ['6th','Sixth','sixth']}
         ],
-     'A':{'osmid': '187899923'},
-     'B':{'osmid': '187865924'},
+     'A':{'osmNodeId': '187899923'},
+     'B':{'osmNodeId': '187865924'},
      'answer': ['187899923', '187858777', '187923585', '187865924'],
     },
     "2. other_direction": {
      'link':[
         {'name': ['6th','Sixth','sixth']}
         ],
-     'B':{'osmid': '187899923'},
-     'A':{'osmid': '187865924'},
+     'B':{'osmNodeId': '187899923'},
+     'A':{'osmNodeId': '187865924'},
     },
-    "3. link_only":{
+    "3. farther": {
      'link':[
         {'name': ['6th','Sixth','sixth']}
         ],
+     'A':{'osmNodeId': '187899923'}, # start searching for segments at A
+     'B':{'osmNodeId': '187942339'}
     },
-    "4. empty nodes":{
-     'link':[
-        {'name': ['6th','Sixth','sixth']}
-        ],
-     'A':{},
-     'B':{},
-    },
-    "5. nodes only":{
-     'A':{'osmid': '187899923'},
-     'B':{'osmid': '187865924'},
-    },
+
     }
 
     for i,sel in test_selections.items():
         print("--->",i,"\n",sel)
-        sel_net = net.select_roadway_features(sel)
-        print("Features selected:",len(sel_net))
-        print(sel_net[['name','u','v']])
+        sel_links = net.select_roadway_features(sel)
+        print("Features selected:",len(sel_links))
+        sel_nodes = [str(sel['A']['osmNodeId'])]+sel_links['v'].tolist()
+        print("Nodes selected: ",sel_nodes)
 
         if 'answer' in sel.keys():
-            print("Expected Answer:",sel['answer'])
-            #assert(sel_net.sp == sel['answer'])
+            print("Expected Answer: ",sel['answer'])
+            assert(set(sel_nodes) == set(sel['answer']))
 
     print("--Finished:",request.node.name)
 

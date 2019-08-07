@@ -11,9 +11,10 @@ import pandas as pd
 import geojson
 import geopandas as gpd
 import json
+import networkx as nx
 import numpy as np
-from pandas.core.frame import DataFrame
 
+from pandas.core.frame import DataFrame
 from geopandas.geodataframe import GeoDataFrame
 
 from jsonschema import validate
@@ -26,7 +27,7 @@ from shapely.geometry import Point, LineString
 
 from .Logger import WranglerLogger
 from .Utils import point_df_to_geojson,link_df_to_json
-from .ProjectCard import build_link_selection_query
+from .ProjectCard import ProjectCard
 
 class RoadwayNetwork(object):
     '''
@@ -38,6 +39,7 @@ class RoadwayNetwork(object):
     SEARCH_BREADTH = 5
     MAX_SEARCH_BREADTH = 10
     SP_WEIGHT_FACTOR = 100
+    SELECTION_REQUIRES = ['A','B','link']
 
     def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
         '''
@@ -269,11 +271,42 @@ class RoadwayNetwork(object):
 
         return False
 
+    def validate_selection(self, selection:dict) -> Bool:
+        if not set(RoadwayNetwork.SELECTION_REQUIRES).issubset(selection):
+            err_msg = 'Project Card Selection requires: {}'.format(",".join(RoadwayNetwork.SELECTION_REQUIRES))
+            err_msg +=', but selection only contains: {}'.format(",".join(selection))
+            WranglerLogger.error(err_msg)
+            raise KeyError(err_msg)
 
-    def orig_dest_nodes_foreign_key(self,selection: dict, node_foreign_key=RoadwayNetwork.NODE_FOREIGN_KEY) -> tuple:
+        err = []
+
+        for d in selection['link']:
+            for k,v in d.items():
+                if k not in self.links_df.columns:
+                    err.append('{} specified in link selection but not an attribute in network\n'.format(k))
+        for k,v in selection['A'].items():
+            if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
+                err.append('{} specified in A node selection but not an attribute in network\n'.format(k))
+        for k,v in selection['B'].items():
+            if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
+                err.append('{} specified in B node selection but not an attribute in network\n'.format(k))
+        if err:
+            WranglerLogger.error("ERROR: Selection variables in project card not found in network")
+            WranglerLogger.error("\n".join(err))
+            WranglerLogger.error("--existing node columns:{}".format(" ".join(self.nodes_df.columns)))
+            WranglerLogger.error("--existing link columns:{}".format(" ".join(self.links_df.columns)))
+            raise ValueError()
+            return False
+        else:
+            return True
+
+    def orig_dest_nodes_foreign_key(self, selection: dict, node_foreign_key: str = '') -> tuple:
         '''
         returns the foreign key id for the AB nodes as a tuple
         '''
+
+        if not node_foreign_key:
+            node_foreign_key = RoadwayNetwork.NODE_FOREIGN_KEY
         if len(selection['A'])>1:
             raise ("Selection A node dictionary should be of length 1")
         if len(selection['B'])>1:
@@ -290,10 +323,31 @@ class RoadwayNetwork(object):
         return (A_id, B_id)
 
     @staticmethod
-    def ox_graph(self, nodes_df, links_df):
+    def ox_graph(nodes_df, links_df):
+        '''
+        create an osmnx-flavored network graph
 
-        graph_nodes = nodes_df.drop(['inboundreferenceid', 'outboundreferenceid'], axis=1)
+        osmnx doesn't like values that are arrays, so remove the variables
+        that have arrays.  osmnx also requires that certain variables
+        be filled in, so do that too.
+
+        Parameters
+        ----------
+        nodes_df : GeoDataFrame
+        link_df : GeoDataFrame
+
+        Returns
+        -------
+        networkx multidigraph
+        '''
+
+        try:
+            graph_nodes = nodes_df.drop(['inboundReferenceId', 'outboundReferenceId'], axis=1)
+        except:
+            graph_nodes = nodes_df
+
         graph_nodes.gdf_name = "network_nodes"
+
         G = ox.gdfs_to_graph(graph_nodes,links_df)
 
         return G
@@ -318,16 +372,20 @@ class RoadwayNetwork(object):
         args:
         card_dict: dictionary with facility information
         '''
-        if selection in self.selections:
-            return self.selections[selection]['links']
 
-        sel_query = build_link_selection_query(selection)
+        self.validate_selection(selection)
+
+        sel_query = ProjectCard.build_link_selection_query(selection)
+
+        if sel_query in self.selections:
+            # we have to use the string version of the query b/c dicts can't use dicts as keys
+            return self.selections[sel_query]['links']
         candidate_links = self.links_df.query(sel_query, engine='python')
 
         candidate_links['i'] = 1
         node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
 
-        A_id, B_id = self.orig_dest_nodes_foreign_key(selection, self.nodes_df)
+        A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
 
         def add_breadth(candidate_links, nodes, links, i):
             '''
@@ -349,14 +407,14 @@ class RoadwayNetwork(object):
         max_i = RoadwayNetwork.SEARCH_BREADTH
         while A_id not in node_list_foreign_keys and B_id not in node_list_foreign_keys and i <= max_i:
            i += 1
-           candidate_links = add_breadth(candidate_links, net.nodes_df, net.links_df, i)
+           candidate_links = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
 
         candidate_links['weight'] = i+(i*RoadwayNetwork.SP_WEIGHT_FACTOR)
 
         node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
-        candidate_nodes = net.nodes_df.loc[node_list_foreign_keys]
+        candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
 
-        G = ox_graph(candidate_nodes, candidate_links)
+        G = RoadwayNetwork.ox_graph(candidate_nodes, candidate_links)
 
         try:
             sp_route = nx.shortest_path(G, A_id, B_id, weight = 'weight')
@@ -364,19 +422,19 @@ class RoadwayNetwork(object):
             i = RoadwayNetwork.SEARCH_BREADTH
             max_i = RoadwayNetwork.MAX_SEARCH_BREADTH
             while A_id not in node_list_foreign_keys and B_id not in node_list_foreign_keys and i <= max_i:
-               candidate_links = add_breadth(candidate_links, net.nodes_df, net.links_df, i)
+               candidate_links = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
                i += 1
             candidate_links['weight'] = i+(i*RoadwayNetwork.SP_WEIGHT_FACTOR)
 
             node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
-            candidate_nodes = net.nodes_df.loc[node_list_foreign_keys]
+            candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
 
-            G = ox_graph(candidate_nodes, candidate_links)
+            G = RoadwayNetwork.ox_graph(candidate_nodes, candidate_links)
 
             sp_route = nx.shortest_path(G, A_id, B_id, weight = 'weight')
 
         sp_links = candidate_links[candidate_links['u'].isin(sp_route) & candidate_links['v'].isin(sp_route)]
-        self.selections[selection] = {'route':sp_route,'links':sp_links, 'graph':G}
+        self.selections[sel_query] = {'route':sp_route,'links':sp_links, 'graph':G}
 
         return sp_links
 

@@ -75,7 +75,7 @@ class ProjectCard(object):
             WranglerLogger.error("Failed Project Card validation: Validation Error")
             WranglerLogger.error("Project Card File Loc:{}".format(node_file))
             WranglerLogger.error("Project Card Schema Loc:{}".format(schema_location))
-            WranglerLogger.error(excmessage)
+            WranglerLogger.error(exc.message)
 
         except SchemaError as exc:
             WranglerLogger.error("Failed Project Card schema validation: Schema Error")
