@@ -377,15 +377,18 @@ class RoadwayNetwork(object):
 
         sel_query = ProjectCard.build_link_selection_query(selection)
 
-        if sel_query in self.selections:
+        A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
+        sel_key = (sel_query, A_id, B_id)
+
+        if sel_key in self.selections:
             # we have to use the string version of the query b/c dicts can't use dicts as keys
-            return self.selections[sel_query]['links']
+            return self.selections[sel_key]['links']
         candidate_links = self.links_df.query(sel_query, engine='python')
 
         candidate_links['i'] = 1
         node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
 
-        A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
+
 
         def add_breadth(candidate_links, nodes, links, i):
             '''
@@ -430,11 +433,13 @@ class RoadwayNetwork(object):
             candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
 
             G = RoadwayNetwork.ox_graph(candidate_nodes, candidate_links)
-
-            sp_route = nx.shortest_path(G, A_id, B_id, weight = 'weight')
+            try:
+                sp_route = nx.shortest_path(G, A_id, B_id, weight = 'weight')
+            except:
+                return (G, A_id, B_id)
 
         sp_links = candidate_links[candidate_links['u'].isin(sp_route) & candidate_links['v'].isin(sp_route)]
-        self.selections[sel_query] = {'route':sp_route,'links':sp_links, 'graph':G}
+        self.selections[sel_key] = {'route':sp_route,'links':sp_links, 'graph':G}
 
         return sp_links
 
