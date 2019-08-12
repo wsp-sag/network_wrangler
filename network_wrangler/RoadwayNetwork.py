@@ -352,6 +352,14 @@ class RoadwayNetwork(object):
 
         return G
 
+    def build_selection_key(self,selection_dict):
+        sel_query = ProjectCard.build_link_selection_query(selection_dict)
+
+        A_id, B_id = self.orig_dest_nodes_foreign_key(selection_dict)
+        sel_key = (sel_query, A_id, B_id)
+
+        return sel_key
+
     def select_roadway_features(self, selection: dict) -> RoadwayNetwork:
         '''
         Selects roadway features that satisfy selection criteria
@@ -381,67 +389,78 @@ class RoadwayNetwork(object):
         sel_key = (sel_query, A_id, B_id)
 
         if sel_key in self.selections:
-            # we have to use the string version of the query b/c dicts can't use dicts as keys
-            return self.selections[sel_key]['links']
-        candidate_links = self.links_df.query(sel_query, engine='python')
+            if 'route' in self.selections[sel_key]:
+                # we have to use the string version of the query b/c dicts can't use dicts as keys
+                return self.selections[sel_key]['route']
+        else:
+            self.selections[sel_key]={}
 
-        candidate_links['i'] = 1
+        self.selections[sel_key]['candidate_links'] = self.links_df.query(sel_query, engine='python')
+        candidate_links = self.selections[sel_key]['candidate_links'] #b/c too long to keep that way
+        candidate_links['i'] = 0
         node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
-
-
 
         def add_breadth(candidate_links, nodes, links, i):
             '''
             add outbound and inbound reference IDs from existing nodes
             '''
-            node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
-            candidate_nodes = nodes[nodes[RoadwayNetwork.NODE_FOREIGN_KEY].isin(node_list_foreign_keys)]
-            links_id_to_add = list(candidate_nodes['outboundreferenceid']) + list(candidate_nodes['inboundreferenceid'])
-            links_id_to_add = [item for sublist in links_id_to_add for item in sublist if item != '']
-            for id in links_id_to_add:
-                if id not in candidate_links['id'].tolist():
-                    link_to_add = links[links['id'] == id]
-                    link_to_add['i'] = i
-                    candidate_links.append(link_to_add)
+            print("-Adding Breadth-")
+            node_list_foreign_keys = list(set(list(candidate_links['u']) + list(candidate_links['v'])))
+            candidate_nodes = nodes.loc[node_list_foreign_keys]
+            print("Candidate Nodes: {}".format(len(candidate_nodes)))
+            links_id_to_add = list(
+                                  set(
+                                       sum(candidate_nodes['outboundReferenceId'].tolist(),[]) \
+                                       + sum(candidate_nodes['inboundReferenceId'].tolist(),[]) \
+                                      )\
+                                       - set(candidate_links['id'].tolist()) \
+                                       - set(['']) \
+                                    )
+            print("Link IDs to add: {}".format(len(links_id_to_add)))
+            #print("Links: ", links_id_to_add)
+            links_to_add = links[links.id.isin(links_id_to_add)]
+            print("Adding {} links.".format(links_to_add.shape[0]))
+            links_to_add['i'] = i
+            candidate_links = candidate_links.append(links_to_add)
+            node_list_foreign_keys = list(set(list(candidate_links['u']) + list(candidate_links['v'])))
 
-            return candidate_links
+            return candidate_links, node_list_foreign_keys
 
-        i = 0
-        max_i = RoadwayNetwork.SEARCH_BREADTH
-        while A_id not in node_list_foreign_keys and B_id not in node_list_foreign_keys and i <= max_i:
-           i += 1
-           candidate_links = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
-
-        candidate_links['weight'] = candidate_links['i']+(candidate_links['i']*RoadwayNetwork.SP_WEIGHT_FACTOR)
-        node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
-        candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
-
-        G = RoadwayNetwork.ox_graph(candidate_nodes, candidate_links)
-
-        try:
-            sp_route = nx.shortest_path(G, A_id, B_id, weight = 'weight')
-        except:
-            i = RoadwayNetwork.SEARCH_BREADTH
-            max_i = RoadwayNetwork.MAX_SEARCH_BREADTH
-            while A_id not in node_list_foreign_keys and B_id not in node_list_foreign_keys and i <= max_i:
-               i += 1
-               candidate_links = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
-
+        def shortest_path():
             candidate_links['weight'] = candidate_links['i']+(candidate_links['i']*RoadwayNetwork.SP_WEIGHT_FACTOR)
-
-            node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
-            candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
+            candidate_nodes = self.nodes_df.loc[list(candidate_links['u']) + list(candidate_links['v'])]
 
             G = RoadwayNetwork.ox_graph(candidate_nodes, candidate_links)
+
             try:
                 sp_route = nx.shortest_path(G, A_id, B_id, weight = 'weight')
+                self.selections[sel_key]['candidate_links'] = candidate_links
+                sp_links = candidate_links[candidate_links['u'].isin(sp_route) & candidate_links['v'].isin(sp_route)]
+                self.selections[sel_key] = {'route':sp_route,'links':sp_links, 'graph':G}
+                return True
             except:
-                return (G, A_id, B_id)
+                return False
 
-        sp_links = candidate_links[candidate_links['u'].isin(sp_route) & candidate_links['v'].isin(sp_route)]
-        self.selections[sel_key] = {'route':sp_route,'links':sp_links, 'graph':G}
+        i = 0
 
-        return sp_links
+        max_i = RoadwayNetwork.SEARCH_BREADTH
+        while A_id not in node_list_foreign_keys and B_id not in node_list_foreign_keys and i <= max_i:
+           print("Adding breadth, no shortest path. i:",i, " Max i:", max_i)
+           i += 1
+           candidate_links, node_list_foreign_keys = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
+
+        sp_found = shortest_path()
+        print("No shortest path found with {}, trying greater breadth until SP found".format(i))
+        while not sp_found and i <= RoadwayNetwork.MAX_SEARCH_BREADTH:
+            print("Adding breadth, with shortest path iteration. i:",i, " Max i:", max_i)
+            i += 1
+            candidate_links, node_list_foreign_keys = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
+            sp_found = shortest_path()
+
+        if sp_found:
+            return self.selections[sel_key]['route']
+        else:
+            return False
 
     def apply_roadway_feature_change(net: RoadwayNetwork, properties_dict: dict) -> bool:
         '''

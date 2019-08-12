@@ -87,14 +87,7 @@ def test_select_roadway_features(request):
      'B':{'osmNodeId': '187865924'},
      'answer': ['187899923', '187858777', '187923585', '187865924'],
     },
-    "2. other_direction": {
-     'link':[
-        {'name': ['6th','Sixth','sixth']}
-        ],
-     'B':{'osmNodeId': '187899923'},
-     'A':{'osmNodeId': '187865924'},
-    },
-    "3. farther": {
+    "2. farther": {
      'link':[
         {'name': ['6th','Sixth','sixth']}
         ],
@@ -106,14 +99,20 @@ def test_select_roadway_features(request):
 
     for i,sel in test_selections.items():
         print("--->",i,"\n",sel)
-        sel_links = net.select_roadway_features(sel)
-        print("Features selected:",len(sel_links))
-        sel_nodes = [str(sel['A']['osmNodeId'])]+sel_links['v'].tolist()
-        print("Nodes selected: ",sel_nodes)
+        path_found = False
+        sp_found = net.select_roadway_features(sel)
+        if not sp_found:
+            print("Couldn't find path from {} to {}".format(sel['A'],sel['B']))
+        else:
+            sel_key = net.build_selection_key(sel)
+            sel_links = net.selections[sel_key]['links']
+            print("Features selected:",len(sel_links))
+            sel_nodes = [str(sel['A']['osmNodeId'])]+sel_links['v'].tolist()
+            print("Nodes selected: ",sel_nodes)
 
-        if 'answer' in sel.keys():
-            print("Expected Answer: ",sel['answer'])
-            assert(set(sel_nodes) == set(sel['answer']))
+            if 'answer' in sel.keys():
+                print("Expected Answer: ",sel['answer'])
+                assert(set(sel_nodes) == set(sel['answer']))
 
     print("--Finished:",request.node.name)
 
