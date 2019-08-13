@@ -272,6 +272,20 @@ class RoadwayNetwork(object):
         return False
 
     def validate_selection(self, selection:dict) -> Bool:
+        """
+        Evaluate whetther the selection dictionary contains the
+        minimum required values.
+
+        Parameters
+        -----------
+        selection : dict
+            selection dictionary to be evaluated
+
+        Returns
+        -------
+        boolean value as to whether the selection dictonary is valid.
+
+        """
         if not set(RoadwayNetwork.SELECTION_REQUIRES).issubset(selection):
             err_msg = 'Project Card Selection requires: {}'.format(",".join(RoadwayNetwork.SELECTION_REQUIRES))
             err_msg +=', but selection only contains: {}'.format(",".join(selection))
@@ -302,7 +316,17 @@ class RoadwayNetwork(object):
 
     def orig_dest_nodes_foreign_key(self, selection: dict, node_foreign_key: str = '') -> tuple:
         '''
-        returns the foreign key id for the AB nodes as a tuple
+        Returns the foreign key id (whatever is used in the u and v
+        variables in the links file) for the AB nodes as a tuple.
+
+        Parameters
+        -----------
+        selection : dict
+            selection dictionary with A and B keys
+        node_foreign_key: str
+            variable name for whatever is used by the u and v variable
+            in the links_df file.  If nothing is specified, assume whatever
+            default is (usually osmNodeId)
         '''
 
         if not node_foreign_key:
@@ -360,7 +384,7 @@ class RoadwayNetwork(object):
 
         return sel_key
 
-    def select_roadway_features(self, selection: dict) -> RoadwayNetwork:
+    def select_roadway_features(self, selection: dict) -> GeoDataFrame:
         '''
         Selects roadway features that satisfy selection criteria
 
@@ -377,33 +401,74 @@ class RoadwayNetwork(object):
                 'facility': {'name':'Main St'},
                 }, ... ])
 
-        args:
-        card_dict: dictionary with facility information
+        Parameters
+        ------------
+        selection : dictionary
+            With keys for:
+             A - from node
+             B - to node
+             link - which includes at least a variable for `name`
+
+        Returns
+        -------
+        shortest path node route : list
+           list of foreign IDs of nodes in the selection route
         '''
 
         self.validate_selection(selection)
 
-        sel_query = ProjectCard.build_link_selection_query(selection)
+        # build a selection query based on the selection dictionary
+        sel_query = ProjectCard.build_link_selection_query(selection, mode = 'isDriveLink')
 
+        # create a unique key for the selection so that we can cache it
         A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
         sel_key = (sel_query, A_id, B_id)
 
+        # if this selection has been queried before, just return the
+        # previous search
         if sel_key in self.selections:
             if 'route' in self.selections[sel_key]:
-                # we have to use the string version of the query b/c dicts can't use dicts as keys
                 return self.selections[sel_key]['route']
         else:
             self.selections[sel_key]={}
 
+        # identify candidate links which match the initial query
+        # assign them as iteration = 0
+        # subsequent iterations that didn't match the query will be
+        # assigned a heigher weight in the shortest path
         self.selections[sel_key]['candidate_links'] = self.links_df.query(sel_query, engine='python')
         candidate_links = self.selections[sel_key]['candidate_links'] #b/c too long to keep that way
         candidate_links['i'] = 0
-        node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
 
         def _add_breadth(candidate_links, nodes, links, i):
-            '''
-            add outbound and inbound reference IDs from existing nodes
-            '''
+            """
+            Add outbound and inbound reference IDs to candidate links
+            from existing nodes
+
+            Parameters
+            -----------
+            candidate_links : GeoDataFrame
+                df with the links from the previous iteration that we
+                want to add on to
+
+            nodes : GeoDataFrame
+                df of all nodes in the full network
+
+            links : GeoDataFrame
+                df of all links in the full network
+
+            i : int
+                iteration of adding breadth
+
+            Returns
+            -------
+            candidate_links : GeoDataFrame
+                updated df with one more degree of added breadth
+
+            node_list_foreign_keys : list
+                list of foreign key ids for nodes in the updated candidate links
+                to test if the A and B nodes are in there.
+            """
             print("-Adding Breadth-")
             node_list_foreign_keys = list(set(list(candidate_links['u']) + list(candidate_links['v'])))
             candidate_nodes = nodes.loc[node_list_foreign_keys]
@@ -420,7 +485,7 @@ class RoadwayNetwork(object):
             #print("Links: ", links_id_to_add)
             links_to_add = links[links.id.isin(links_id_to_add)]
             print("Adding {} links.".format(links_to_add.shape[0]))
-            links_to_add['i'] = i
+            links[links.id.isin(links_id_to_add)]['i'] = i
             candidate_links = candidate_links.append(links_to_add)
             node_list_foreign_keys = list(set(list(candidate_links['u']) + list(candidate_links['v'])))
 
@@ -441,6 +506,9 @@ class RoadwayNetwork(object):
             except:
                 return False
 
+
+        # find the node ids for the candidate links
+        node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
         i = 0
 
         max_i = RoadwayNetwork.SEARCH_BREADTH
