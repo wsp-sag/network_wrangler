@@ -89,8 +89,10 @@ class ProjectCard(object):
     def build_link_selection_query(selection: dict, mode = 'isDriveLink', ignore = []):
         sel_query = '('
         count = 1
-        if 'link' not in selection.keys():
-            return sel_query
+
+        ## i think we can remove this b/c we are validating it ahead of time
+        # if 'link' not in selection.keys():
+        #    return sel_query
 
         for d in selection['link']:
             for key, value in d.items():
@@ -114,11 +116,11 @@ class ProjectCard(object):
                 if count != len(selection['link']):
                     sel_query = sel_query + ' and '
                 count = count + 1
-                
-            if count > 1:
-                sel_query = sel_query + ' and '
-            sel_query = sel_query + mode + ' == 1'
-            sel_query = sel_query + ')'
+
+        if count > (1 + len(ignore)):
+            sel_query = sel_query + ' and '
+        sel_query = sel_query + mode + ' == 1'
+        sel_query = sel_query + ')'
         return sel_query
 
     def roadway_attribute_change(self, card: dict):

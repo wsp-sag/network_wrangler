@@ -425,12 +425,14 @@ class RoadwayNetwork(object):
         sel_key = (sel_query, A_id, B_id)
 
         # if this selection has been queried before, just return the
-        # previous search
+        # previously selected links
+
         if sel_key in self.selections:
-            if 'route' in self.selections[sel_key]:
-                return self.selections[sel_key]['route']
+            if self.selections[sel_key]['selection_found']:
+                return self.selections[sel_key]['selected_links']
         else:
-            self.selections[sel_key]={}
+            self.selections[sel_key] = {}
+            self.selections[sel_key]['selection_found'] = False
 
         # identify candidate links which match the initial query
         # assign them as iteration = 0
@@ -518,7 +520,7 @@ class RoadwayNetwork(object):
            candidate_links, node_list_foreign_keys = _add_breadth(candidate_links, self.nodes_df, self.links_df, i)
 
         sp_found = _shortest_path()
-        print("No shortest path found with {}, trying greater breadth until SP found".format(i))
+        if not sp_found: print("No shortest path found with {}, trying greater breadth until SP found".format(i))
         while not sp_found and i <= RoadwayNetwork.MAX_SEARCH_BREADTH:
             print("Adding breadth, with shortest path iteration. i:",i, " Max i:", max_i)
             i += 1
@@ -527,10 +529,16 @@ class RoadwayNetwork(object):
 
         # reselect from the links in the shortest path, the ones with
         # the desired values....ignoring name.
-        sel_query = ProjectCard.build_link_selection_query(selection, mode = 'isDriveLink', ignore = ['name'])
-        self.selections[sel_key]['selected_links'] = self.links_df.query(sel_query, engine='python')
+
+        if len(selection['link'])>1:
+            resel_query = ProjectCard.build_link_selection_query(selection, mode = 'isDriveLink', ignore = ['name'])
+            print("Reselecting features:\n{}".format(resel_query))
+            self.selections[sel_key]['selected_links'] = self.selections[sel_key]['links'].query(resel_query, engine='python')
+        else:
+            self.selections[sel_key]['selected_links'] = self.selections[sel_key]['links']
 
         if sp_found:
+            self.selections[sel_key]['selection_found'] = True
             return self.selections[sel_key]['selected_links']
         else:
             return False

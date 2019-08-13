@@ -1,5 +1,6 @@
 import os
 import json
+from geopandas import GeoDataFrame
 import pytest
 from network_wrangler import RoadwayNetwork
 from network_wrangler import ProjectCard
@@ -94,25 +95,30 @@ def test_select_roadway_features(request):
      'A':{'osmNodeId': '187899923'}, # start searching for segments at A
      'B':{'osmNodeId': '187942339'}
     },
-
+    "3. multi-criteria": {
+     'link':[
+        {'name': ['6th','Sixth','sixth']},
+        {'LANES': [1,2]}
+        ],
+     'A':{'osmNodeId': '187899923'}, # start searching for segments at A
+     'B':{'osmNodeId': '187942339'}
+    }
     }
 
     for i,sel in test_selections.items():
         print("--->",i,"\n",sel)
         path_found = False
-        sp_found = net.select_roadway_features(sel)
-        if not sp_found:
+        selected_links = net.select_roadway_features(sel)
+        if not type(selected_links) == GeoDataFrame:
             print("Couldn't find path from {} to {}".format(sel['A'],sel['B']))
         else:
-            sel_key = net.build_selection_key(sel)
-            sel_links = net.selections[sel_key]['links']
-            print("Features selected:",len(sel_links))
-            sel_nodes = [str(sel['A']['osmNodeId'])]+sel_links['v'].tolist()
-            print("Nodes selected: ",sel_nodes)
+            print("Features selected:",len(selected_links))
+            selected_nodes = [str(sel['A']['osmNodeId'])]+selected_links['v'].tolist()
+            #print("Nodes selected: ",selected_nodes)
 
             if 'answer' in sel.keys():
                 print("Expected Answer: ",sel['answer'])
-                assert(set(sel_nodes) == set(sel['answer']))
+                assert(set(selected_nodes) == set(sel['answer']))
 
     print("--Finished:",request.node.name)
 
