@@ -86,7 +86,7 @@ class ProjectCard(object):
             WranglerLogger.error(exc.message)
 
     @staticmethod
-    def build_link_selection_query(selection: dict, mode = 'isDriveLink'):
+    def build_link_selection_query(selection: dict, mode = 'isDriveLink', ignore = []):
         sel_query = '('
         count = 1
         if 'link' not in selection.keys():
@@ -94,6 +94,8 @@ class ProjectCard(object):
 
         for d in selection['link']:
             for key, value in d.items():
+                if key in ignore:
+                    continue
                 if isinstance(value, list):
                     sel_query = sel_query + '('
                     v = 1
@@ -112,8 +114,10 @@ class ProjectCard(object):
                 if count != len(selection['link']):
                     sel_query = sel_query + ' and '
                 count = count + 1
-
-            sel_query = sel_query + ' and ' + mode + ' == 1'
+                
+            if count > 1:
+                sel_query = sel_query + ' and '
+            sel_query = sel_query + mode + ' == 1'
             sel_query = sel_query + ')'
         return sel_query
 

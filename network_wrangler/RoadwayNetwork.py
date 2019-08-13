@@ -525,8 +525,13 @@ class RoadwayNetwork(object):
             candidate_links, node_list_foreign_keys = _add_breadth(candidate_links, self.nodes_df, self.links_df, i)
             sp_found = _shortest_path()
 
+        # reselect from the links in the shortest path, the ones with
+        # the desired values....ignoring name.
+        sel_query = ProjectCard.build_link_selection_query(selection, mode = 'isDriveLink', ignore = ['name'])
+        self.selections[sel_key]['selected_links'] = self.links_df.query(sel_query, engine='python')
+
         if sp_found:
-            return self.selections[sel_key]['route']
+            return self.selections[sel_key]['selected_links']
         else:
             return False
 
