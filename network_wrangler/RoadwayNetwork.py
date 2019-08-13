@@ -400,7 +400,7 @@ class RoadwayNetwork(object):
         candidate_links['i'] = 0
         node_list_foreign_keys = list(candidate_links['u']) + list(candidate_links['v'])
 
-        def add_breadth(candidate_links, nodes, links, i):
+        def _add_breadth(candidate_links, nodes, links, i):
             '''
             add outbound and inbound reference IDs from existing nodes
             '''
@@ -426,8 +426,8 @@ class RoadwayNetwork(object):
 
             return candidate_links, node_list_foreign_keys
 
-        def shortest_path():
-            candidate_links['weight'] = candidate_links['i']+(candidate_links['i']*RoadwayNetwork.SP_WEIGHT_FACTOR)
+        def _shortest_path():
+            candidate_links['weight'] = 1+(candidate_links['i']*RoadwayNetwork.SP_WEIGHT_FACTOR)
             candidate_nodes = self.nodes_df.loc[list(candidate_links['u']) + list(candidate_links['v'])]
 
             G = RoadwayNetwork.ox_graph(candidate_nodes, candidate_links)
@@ -447,15 +447,15 @@ class RoadwayNetwork(object):
         while A_id not in node_list_foreign_keys and B_id not in node_list_foreign_keys and i <= max_i:
            print("Adding breadth, no shortest path. i:",i, " Max i:", max_i)
            i += 1
-           candidate_links, node_list_foreign_keys = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
+           candidate_links, node_list_foreign_keys = _add_breadth(candidate_links, self.nodes_df, self.links_df, i)
 
-        sp_found = shortest_path()
+        sp_found = _shortest_path()
         print("No shortest path found with {}, trying greater breadth until SP found".format(i))
         while not sp_found and i <= RoadwayNetwork.MAX_SEARCH_BREADTH:
             print("Adding breadth, with shortest path iteration. i:",i, " Max i:", max_i)
             i += 1
-            candidate_links, node_list_foreign_keys = add_breadth(candidate_links, self.nodes_df, self.links_df, i)
-            sp_found = shortest_path()
+            candidate_links, node_list_foreign_keys = _add_breadth(candidate_links, self.nodes_df, self.links_df, i)
+            sp_found = _shortest_path()
 
         if sp_found:
             return self.selections[sel_key]['route']
