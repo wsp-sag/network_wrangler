@@ -15,6 +15,7 @@ Objectives
    :maxdepth: 2
    :caption: Contents:
 
+   design
    autodoc
    contributing
 
