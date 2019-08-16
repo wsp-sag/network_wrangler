@@ -20,7 +20,6 @@ def test_project_card_read(request):
     assert(project_card.category == "Roadway Attribute Change")
     print("--Finished:",request.node.name)
 
-@pytest.mark.ashish
 @pytest.mark.scenario
 def test_scenario_conflicts(request):
 
@@ -39,7 +38,6 @@ def test_scenario_conflicts(request):
     print('Conflict checks done:', scen.conflicts_checked)
     print("--Finished:",request.node.name)
 
-@pytest.mark.ashish
 @pytest.mark.scenario
 def test_scenario_requisites(request):
     print("\n--Starting:",request.node.name)

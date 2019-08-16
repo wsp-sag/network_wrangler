@@ -7,14 +7,18 @@ dependencies:
   corequisite: None
   conflicts: None
 facility:
-   link:
-     - name: [6th, Sixth, sixth]
-   A:
-     osmid: 187854529 # Jackson St
-   B:
-     osmid: 187899923 # Robert St N
+  link:
+    - name: ['6th','Sixth','sixth']
+  A:
+    osmNodeId: '187899923'       # Jackson St
+  B:
+    osmNodeId: '187865924'       # Robert St N
 properties:
-  - LANES: 2
-  - isTranLink: 1
-  - isDriveLink: 0
+  LANES:
+    existing: 1
+    set: 2
+  isTranLink:
+    set: 1
+  isDriveLink:
+    set: 0
 notes: Transitions 6th St E to transitway

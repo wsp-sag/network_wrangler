@@ -5,6 +5,7 @@ import pytest
 from network_wrangler import RoadwayNetwork
 from network_wrangler import ProjectCard
 import time
+import numpy as np
 
 """
 Run just the tests labeled basic using `pytest -m roadway`
@@ -136,9 +137,15 @@ def test_select_roadway_features_from_projectcard(request):
     project_card = ProjectCard.read(project_card_path)
 
     print("Selecting roadway features ...")
-    print("Selection:\n",project_card.facility)
-    net.select_roadway_features(project_card.facility)
-    print('Number of features selected', len(net.links_df[net.links_df['sel_links'] == 1]))
+    sel = project_card.facility
+    print("Selection:\n",sel)
+    selected_links = net.select_roadway_features(sel)
+
+    if not type(selected_links) == GeoDataFrame:
+        print("Couldn't find path from {} to {}".format(sel['A'],sel['B']))
+    else:
+        print("Features selected:",len(selected_links))
+
     print("--Finished:",request.node.name)
 
 @pytest.mark.ashish
@@ -155,15 +162,27 @@ def test_roadway_feature_change(request):
     project_card = ProjectCard.read(project_card_path)
 
     print("Selecting roadway feaures ...")
-    net.select_roadway_features(project_card.facility)
+    sel = project_card.facility
+    print("Selection:\n",sel)
+    selected_links = net.select_roadway_features(sel)
 
-    print("Applying project card ...")
-    error, revised_net = RoadwayNetwork.apply_roadway_feature_change(net, project_card.properties)
-
-    if not error:
-        print("Writing out revised network ...")
-        RoadwayNetwork.write(revised_net, filename = 'out', path = 'tests')
+    if not type(selected_links) == GeoDataFrame:
+        print("Error in applying project card: Couldn't find path from {} to {}".format(sel['A'],sel['B']))
     else:
-        print("Error in applying project card ...")
+        selected_indices = selected_links.index.tolist()
+        net.links_df['selected_links'] = np.where(net.links_df.index.isin(selected_indices), 1, 0)
+
+        print("Applying project card ...")
+        prop = project_card.properties
+        print("Properties:\n",prop)
+        revised_net = net.apply_roadway_feature_change(prop)
+
+        columns_updated = [p for p in project_card.properties]
+
+        orig_links = net.links_df.loc[selected_indices, columns_updated]
+        print("Original Links:\n",orig_links)
+
+        new_links = revised_net.links_df.loc[selected_indices, columns_updated]
+        print("Updated Links:\n",new_links)
 
     print("--Finished:",request.node.name)

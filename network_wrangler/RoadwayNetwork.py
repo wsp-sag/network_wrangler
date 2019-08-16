@@ -543,36 +543,90 @@ class RoadwayNetwork(object):
         else:
             return False
 
-    def apply_roadway_feature_change(net: RoadwayNetwork, properties_dict: dict) -> bool:
+    def validate_properties(self, properties:dict) -> Bool:
+        """
+        Evaluate whether the properties dictionary contains the
+        attributes that exists on the network
+
+        Parameters
+        -----------
+        properties : dict
+            properties dictionary to be evaluated
+
+        Returns
+        -------
+        boolean value as to whether the properties dictonary is valid.
+
+        """
+        attr_err = []
+        req_err = []
+
+        for k, v in properties.items():
+            if k not in self.links_df.columns:
+                attr_err.append('{} specified as attribute to change but not an attribute in network\n'.format(k))
+
+            # either 'set' OR 'change' should be specified, not both
+            if 'set' in v.keys() and 'change' in v.keys():
+                req_err.append('Both Set and Change should not be specified for the attribute {}\n'.format(k))
+
+            # if 'change' is specified, then 'existing' is required
+            if 'change' in v.keys() and 'existing' not in v.keys():
+                req_err.append('Since "Change" is specified for attribute {}, "Existing" value is also required\n'.format(k))
+
+        if attr_err:
+            WranglerLogger.error("ERROR: Properties to change in project card not found in network")
+            WranglerLogger.error("\n".join(attr_err))
+            raise ValueError()
+            return False
+
+        if req_err:
+            WranglerLogger.error("ERROR: Properties not specified correctly in the project card")
+            WranglerLogger.error("\n".join(req_err))
+            raise ValueError()
+            return False
+
+        return True
+
+    def apply_roadway_feature_change(self, properties: dict) -> RoadwayNetwork:
         '''
         Changes the roadway attributes for the selected features based on the project card information passed
 
         args:
-        net: RoadwayNetwork with selected links flag
-        properties_dict: dictionary with roadway properties to change
+        properties: dictionary with roadway properties to change
 
         returns:
-        bool: True if successful.
+        updated roadway network
         '''
 
-        roadway_network = copy.copy(net)
-        error = False
-        for d in properties_dict:
-            for attribute, value in d.items():
-                if isinstance(value, list):
-                    existing_value = value[0]          # set to fail, if existing value is not same to start with
-                    build_value = value[1]             # account for -/+ sign later
-                else:
-                    build_value = value                # account for -/+ sign later
+        self.validate_properties(properties)
 
-                # check if the attribute to be updated exists on the network links
-                if attribute not in list(roadway_network.links_df.columns):
-                    WranglerLogger.error('%s is not an valid network attribute!' % (attribute))
-                    error = True
-                else:
-                    roadway_network.links_df[attribute] = np.where(roadway_network.links_df['sel_links'] == 1, build_value, roadway_network.links_df[attribute])
+        # if the input network does not have selected links flag
+        if 'selected_links' not in self.links_df.columns:
+            WranglerLogger.error("ERROR: selected_links flag not found in the network")
+            raise ValueError()
+            return False
 
+        # shallow (copy.copy(self)) doesn't work as it will still use the references to links_df etc from the original net
+        updated_network = copy.deepcopy(self)
 
-        roadway_network.links_df.drop(['sel_links'], axis = 1, inplace = True)
+        for attribute, values in properties.items():
+            existing_value = None
 
-        return error, roadway_network
+            if "existing" in values.keys():
+                existing_value = values['existing']
+                
+                # if existing value in project card is not same in the network
+                network_values = updated_network.links_df[updated_network.links_df['selected_links'] == 1][attribute].tolist()
+                if not set(network_values).issubset([existing_value]):
+                    WranglerLogger.warning("WARNING: Existing value defined for {} in project card does not match the value in the roadway network for the selected links".format(attribute))
+
+            if "set" in values.keys():
+                build_value =  values['set']
+            else:
+                build_value = values['existing'] + values['change']
+
+            updated_network.links_df[attribute] = np.where(updated_network.links_df['selected_links'] == 1, build_value, updated_network.links_df[attribute])
+
+        updated_network.links_df.drop(['selected_links'], axis = 1, inplace = True)
+
+        return updated_network
