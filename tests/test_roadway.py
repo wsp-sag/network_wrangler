@@ -187,9 +187,6 @@ def test_roadway_feature_change(request):
     print("Reading network ...")
     net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
 
-    print(net.links_df.dtypes)
-    print(net.nodes_df.dtypes)
-
     project_card_set = [
         (net, '1_simple_roadway_attribute_change.yml'),
         (net, '2_multiple_roadway.yml'),
