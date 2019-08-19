@@ -133,7 +133,11 @@ def test_select_roadway_features_from_projectcard(request):
     net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
 
     print("Reading project card ...")
-    project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards','3_multiple_roadway_attribute_change.yml')
+    #project_card_name = '1_simple_roadway_attribute_change.yml'
+    #project_card_name = '2_multiple_roadway.yml'
+    project_card_name = '3_multiple_roadway_attribute_change.yml'
+
+    project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards',project_card_name)
     project_card = ProjectCard.read(project_card_path)
 
     print("Selecting roadway features ...")
@@ -147,9 +151,6 @@ def test_select_roadway_features_from_projectcard(request):
         print("Features selected:",len(selected_links))
 
     print("--Finished:",request.node.name)
-
-
-
 
 def roadway_feature_change(net, project_card):
     print("Selecting roadway features ...")
@@ -176,8 +177,6 @@ def roadway_feature_change(net, project_card):
         new_links = revised_net.links_df.loc[selected_indices, columns_updated]
         print("Updated Links:\n",new_links)
 
-    print("--Finished:",request.node.name)
-
 @pytest.mark.ashish
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -188,9 +187,12 @@ def test_roadway_feature_change(request):
     print("Reading network ...")
     net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
 
+    print(net.links_df.dtypes)
+    print(net.nodes_df.dtypes)
+
     project_card_set = [
         (net, '1_simple_roadway_attribute_change.yml'),
-        (net, '3_multiple_roadway.yml'),
+        (net, '2_multiple_roadway.yml'),
         (net, '3_multiple_roadway_attribute_change.yml'),
     ]
 
@@ -200,3 +202,5 @@ def test_roadway_feature_change(request):
         project_card = ProjectCard.read(project_card_path)
 
         roadway_feature_change(my_net, project_card)
+
+    print("--Finished:",request.node.name)

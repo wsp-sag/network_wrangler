@@ -1,4 +1,3 @@
-
 project: 6th Street Transitway
 category: Roadway Attribute Change
 tags:
@@ -11,11 +10,14 @@ facility:
    link:
      name: [6th,Sixth,sixth] #finds links where name contains 6th or Sixth...not a regex technically ;-)
    A:
-     osmNodeId: 187899923
+     osmNodeId: '187899923'
    B:
-     osmNodeId: 187865924
+     osmNodeId: '187865924'
 properties:
-  - LANES: 2
-  - isTranLink: 1
-  - isDriveLink: 0
+  LANES:
+    set: 2
+  isTranLink:
+    set: 1
+  isDriveLink:
+    set: 0
 notes: Transitions 6th St E to transitway

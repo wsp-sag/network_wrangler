@@ -1,4 +1,3 @@
-
 project: 6th St E Road Diet
 category: Roadway Attribute Change
 tags:
@@ -11,9 +10,9 @@ facility:
    link:
      osmid: 223371529 # 6th St E
    A:
-     osmNodeId: 187854529 # Jackson St
+     osmNodeId: '187854529' # Jackson St
    B:
-     osmNodeId: 187899923 # Robert St N
+     osmNodeId: '187899923' # Robert St N
 properties:
   LANES:  #changes number of lanes 3 to 2 (reduction of 1)
     existing: 3

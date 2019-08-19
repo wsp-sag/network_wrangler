@@ -536,7 +536,7 @@ class RoadwayNetwork(object):
         # the desired values....ignoring name.
 
         if len(selection['link'])>1:
-            resel_query = ProjectCard.build_link_selection_query(selection, mode = 'isDriveLink', ignore = ['name'])
+            resel_query = ProjectCard.build_link_selection_query(selection, mode = modes_to_network_variables[search_mode], ignore = ['name'])
             print("Reselecting features:\n{}".format(resel_query))
             self.selections[sel_key]['selected_links'] = self.selections[sel_key]['links'].query(resel_query, engine='python')
         else:
