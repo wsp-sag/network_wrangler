@@ -10,8 +10,7 @@ mainline_facility:
    node_sequence:
      osmNodeId: ['187899923', '187858777', '187923585', '187865924']
 managed_lane_properties:
-  LANES:
-    set: 1
-  TOLL:
-    set: 1.5
+  ML_LANES: 1
+  ML_TOLL: 1.5
+  ML_FFS: 65
 notes: Placeholder for notes
