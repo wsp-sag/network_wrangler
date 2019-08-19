@@ -293,11 +293,9 @@ class RoadwayNetwork(object):
             raise KeyError(err_msg)
 
         err = []
-
-        for d in selection['link']:
-            for k,v in d.items():
-                if k not in self.links_df.columns:
-                    err.append('{} specified in link selection but not an attribute in network\n'.format(k))
+        for k,v in selection['link'].items():
+            if k not in self.links_df.columns:
+                err.append('{} specified in link selection but not an attribute in network\n'.format(k))
         for k,v in selection['A'].items():
             if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
                 err.append('{} specified in A node selection but not an attribute in network\n'.format(k))
@@ -384,7 +382,7 @@ class RoadwayNetwork(object):
 
         return sel_key
 
-    def select_roadway_features(self, selection: dict) -> GeoDataFrame:
+    def select_roadway_features(self, selection: dict, search_mode = 'drive') -> GeoDataFrame:
         '''
         Selects roadway features that satisfy selection criteria
 
@@ -418,7 +416,14 @@ class RoadwayNetwork(object):
         self.validate_selection(selection)
 
         # build a selection query based on the selection dictionary
-        sel_query = ProjectCard.build_link_selection_query(selection, mode = 'isDriveLink')
+        modes_to_network_variables = {
+            'drive': 'isDriveLink',
+            'transit': 'isTransitLink',
+            'walk': 'isWalkLink',
+            'bike': 'isBikeLink',
+        }
+
+        sel_query = ProjectCard.build_link_selection_query(selection, mode = modes_to_network_variables[search_mode])
 
         # create a unique key for the selection so that we can cache it
         A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
@@ -614,7 +619,7 @@ class RoadwayNetwork(object):
 
             if "existing" in values.keys():
                 existing_value = values['existing']
-                
+
                 # if existing value in project card is not same in the network
                 network_values = updated_network.links_df[updated_network.links_df['selected_links'] == 1][attribute].tolist()
                 if not set(network_values).issubset([existing_value]):

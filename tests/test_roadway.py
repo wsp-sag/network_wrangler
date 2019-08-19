@@ -75,7 +75,7 @@ def test_quick_roadway_read_write(request):
     net_2 = RoadwayNetwork.read(link_file= out_link_file, node_file=out_node_file, shape_file=out_shape_file)
     print("--Finished:",request.node.name)
 
-@pytest.mark.menow
+@pytest.mark.basic
 def test_select_roadway_features(request):
     print("\n--Starting:",request.node.name)
     net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
@@ -148,20 +148,11 @@ def test_select_roadway_features_from_projectcard(request):
 
     print("--Finished:",request.node.name)
 
-@pytest.mark.ashish
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_roadway_feature_change(request):
-    print("\n--Starting:",request.node.name)
 
-    print("Reading network ...")
-    net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
 
-    print("Reading project card ...")
-    project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards','3_multiple_roadway_attribute_change.yml')
-    project_card = ProjectCard.read(project_card_path)
 
-    print("Selecting roadway feaures ...")
+def roadway_feature_change(net, project_card):
+    print("Selecting roadway features ...")
     sel = project_card.facility
     print("Selection:\n",sel)
     selected_links = net.select_roadway_features(sel)
@@ -186,3 +177,26 @@ def test_roadway_feature_change(request):
         print("Updated Links:\n",new_links)
 
     print("--Finished:",request.node.name)
+
+@pytest.mark.ashish
+@pytest.mark.roadway
+@pytest.mark.travis
+@pytest.mark.menow
+def test_roadway_feature_change(request):
+    print("\n--Starting:",request.node.name)
+
+    print("Reading network ...")
+    net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
+
+    project_card_set = [
+        (net, '1_simple_roadway_attribute_change.yml'),
+        (net, '3_multiple_roadway.yml'),
+        (net, '3_multiple_roadway_attribute_change.yml'),
+    ]
+
+    for my_net, project_card_name in project_card_set:
+        project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards',project_card_name)
+        print("Reading project card from:\n {}".format(project_card_path))
+        project_card = ProjectCard.read(project_card_path)
+
+        roadway_feature_change(my_net, project_card)

@@ -94,28 +94,27 @@ class ProjectCard(object):
         # if 'link' not in selection.keys():
         #    return sel_query
 
-        for d in selection['link']:
-            for key, value in d.items():
-                if key in ignore:
-                    continue
-                if isinstance(value, list):
-                    sel_query = sel_query + '('
-                    v = 1
-                    for i in value:   # building an OR query with each element in list
-                        if isinstance(i, str):
-                            sel_query = sel_query + key + '.str.contains("' + i + '")'
-                        else:
-                            sel_query = sel_query + key + '==' + str(i)
-                        if v!= len(value):
-                            sel_query = sel_query + ' or '
-                            v = v + 1
-                    sel_query = sel_query + ')'
-                else:
-                    sel_query = sel_query + key + ' == ' + '"' + str(value) + '"'
+        for key, value in selection['link'].items():
+            if key in ignore:
+                continue
+            if isinstance(value, list):
+                sel_query = sel_query + '('
+                v = 1
+                for i in value:   # building an OR query with each element in list
+                    if isinstance(i, str):
+                        sel_query = sel_query + key + '.str.contains("' + i + '")'
+                    else:
+                        sel_query = sel_query + key + '==' + str(i)
+                    if v!= len(value):
+                        sel_query = sel_query + ' or '
+                        v = v + 1
+                sel_query = sel_query + ')'
+            else:
+                sel_query = sel_query + key + ' == ' + '"' + str(value) + '"'
 
-                if count != len(selection['link']):
-                    sel_query = sel_query + ' and '
-                count = count + 1
+            if count != len(selection['link']):
+                sel_query = sel_query + ' and '
+            count = count + 1
 
         if count > (1 + len(ignore)):
             sel_query = sel_query + ' and '
