@@ -1,0 +1,20 @@
+name: 5th test project
+category: Roadway Attribute Change
+tags:
+   - ['example']
+dependencies:
+  prerequisite: None
+  corequisite: ['6th test project']
+  conflicts: None
+facility:
+   link:
+     - name: [6th, Sixth, sixth]
+   A:
+     osmid: 187854529 # Jackson St
+   B:
+     osmid: 187899923 # Robert St N
+properties:
+  - LANES: 2
+  - isTranLink: 1
+  - isDriveLink: 0
+notes: Transitions 6th St E to transitway

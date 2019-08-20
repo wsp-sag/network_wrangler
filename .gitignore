@@ -4,10 +4,12 @@
 # Temp and test cache
 scratch/*
 tests/temp/
+scratch/*
 .temp
 .pytest_cache
 *.bak
 .cache
+tests/t_*
 
 # Logs
 *.log

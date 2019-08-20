@@ -1,19 +1,20 @@
-
-Project: 6th St E Road Diet
-Category: Roadway Attribute Change
-Tags:
+project: 6th St E Road Diet
+category: Roadway Attribute Change
+tags:
    - example
-Dependencies:
-  Prerequisite: None
-  Corequisite: None
-  Conflicts: None
-Road:
-   Name: osmid=223371529 # 6th St E
-   A: osmid=187854529 # Jackson St
-   B: osmid=187899923 # Robert St N
-   Intermediate_Intersections: None
-Attribute: Lanes
-Change:
-   Existing: 2
-   Build: 1
-Notes: Simple project example to do a road diet on 6th St E in front of MetCouncil
+dependencies:
+  prerequisite: None
+  corequisite: None
+  conflicts: None
+facility:
+   link:
+     osmid: 223371529 # 6th St E
+   A:
+     osmNodeId: '187854529' # Jackson St
+   B:
+     osmNodeId: '187899923' # Robert St N
+properties:
+  LANES:  #changes number of lanes 3 to 2 (reduction of 1)
+    existing: 3
+    change: -1
+notes: Simple project example to do a road diet on 6th St E in front of MetCouncil

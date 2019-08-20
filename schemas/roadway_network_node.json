@@ -1,0 +1,200 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": [
+    "type",
+    "features"
+  ],
+  "properties": {
+    "type": {
+      "$id": "#/properties/type",
+      "type": "string",
+      "title": "The Type Schema",
+      "default": "",
+      "examples": [
+        "FeatureCollection"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "features": {
+      "$id": "#/properties/features",
+      "type": "array",
+      "title": "The Features Schema",
+      "items": {
+        "$id": "#/properties/features/items",
+        "type": "object",
+        "title": "The Items Schema",
+        "required": [
+          "type",
+          "geometry",
+          "properties"
+        ],
+        "properties": {
+          "type": {
+            "$id": "#/properties/features/items/properties/type",
+            "type": "string",
+            "title": "The Type Schema",
+            "default": "",
+            "examples": [
+              "Feature"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "geometry": {
+            "$id": "#/properties/features/items/properties/geometry",
+            "type": "object",
+            "title": "The Geometry Schema",
+            "required": [
+              "type",
+              "coordinates"
+            ],
+            "properties": {
+              "type": {
+                "$id": "#/properties/features/items/properties/geometry/properties/type",
+                "type": "string",
+                "title": "The Type Schema",
+                "default": "",
+                "examples": [
+                  "Point"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "coordinates": {
+                "$id": "#/properties/features/items/properties/geometry/properties/coordinates",
+                "type": "array",
+                "title": "The Coordinates Schema",
+                "items": {
+                  "$id": "#/properties/features/items/properties/geometry/properties/coordinates/items",
+                  "type": "number",
+                  "title": "The Items Schema",
+                  "default": 0.0,
+                  "examples": [
+                    -93.0965985,
+                    44.952112199999995
+                  ]
+                }
+              }
+            }
+          },
+          "properties": {
+            "$id": "#/properties/features/items/properties/properties",
+            "type": "object",
+            "title": "The Properties Schema",
+            "required": [
+              "id",
+              "osmNodeId",
+              "travelModelId",
+              "isTranNode",
+              "isDriveNode",
+              "isWalkNode",
+              "isBikeNode",
+              "outboundReferenceId",
+              "inboundReferenceId"
+            ],
+            "properties": {
+              "id": {
+                "$id": "#/properties/features/items/properties/properties/properties/id",
+                "type": "string",
+                "title": "The Id Schema",
+                "default": "",
+                "examples": [
+                  "0751f5ce12472360fed0d0e80ceae35c"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "osmNodeId": {
+                "$id": "#/properties/features/items/properties/properties/properties/osmNodeId",
+                "type": "string",
+                "title": "The Osmnodeid Schema",
+                "default": "",
+                "examples": [
+                  "954734870"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "travelModelId": {
+                "$id": "#/properties/features/items/properties/properties/properties/travelModelId",
+                "type": "integer",
+                "title": "The Travelmodelid Schema",
+                "default": 0,
+                "examples": [
+                  3494
+                ]
+              },
+              "isTranNode": {
+                "$id": "#/properties/features/items/properties/properties/properties/isTranNode",
+                "type": "integer",
+                "title": "The Istrannode Schema",
+                "default": 0,
+                "examples": [
+                  0
+                ]
+              },
+              "isDriveNode": {
+                "$id": "#/properties/features/items/properties/properties/properties/isDriveNode",
+                "type": "integer",
+                "title": "The Isdrivenode Schema",
+                "default": 0,
+                "examples": [
+                  1
+                ]
+              },
+              "isWalkNode": {
+                "$id": "#/properties/features/items/properties/properties/properties/isWalkNode",
+                "type": "integer",
+                "title": "The Iswalknode Schema",
+                "default": 0,
+                "examples": [
+                  0
+                ]
+              },
+              "isBikeNode": {
+                "$id": "#/properties/features/items/properties/properties/properties/isBikeNode",
+                "type": "integer",
+                "title": "The Isbikenode Schema",
+                "default": 0,
+                "examples": [
+                  0
+                ]
+              },
+              "outboundReferenceId": {
+                "$id": "#/properties/features/items/properties/properties/properties/outboundReferenceId",
+                "type": "array",
+                "title": "The Outboundreferenceid Schema",
+                "items": {
+                  "$id": "#/properties/features/items/properties/properties/properties/outboundReferenceId/items",
+                  "type": "string",
+                  "title": "The Items Schema",
+                  "default": "",
+                  "examples": [
+                    "a2e58a2801f5994637dfdbab943c503a"
+                  ],
+                  "pattern": "^(.*)$"
+                }
+              },
+              "inboundReferenceId": {
+                "$id": "#/properties/features/items/properties/properties/properties/inboundReferenceId",
+                "type": "array",
+                "title": "The Inboundreferenceid Schema",
+                "items": {
+                  "$id": "#/properties/features/items/properties/properties/properties/inboundReferenceId/items",
+                  "type": "string",
+                  "title": "The Items Schema",
+                  "default": "",
+                  "examples": [
+                    "780b6a83285f9acdbf566951917206a7",
+                    "4801603326ffbfd06983baedff263b37"
+                  ],
+                  "pattern": "^(.*)$"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

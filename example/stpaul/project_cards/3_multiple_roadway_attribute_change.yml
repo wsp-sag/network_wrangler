@@ -1,0 +1,24 @@
+project: 6th Street Transitway
+category: Roadway Attribute Change
+tags:
+   - example
+dependencies:
+  prerequisite: None
+  corequisite: None
+  conflicts: None
+facility:
+  link:
+    name: ['6th','Sixth','sixth']
+  A:
+    osmNodeId: '187899923'       # Jackson St
+  B:
+    osmNodeId: '187865924'       # Robert St N
+properties:
+  LANES:
+    existing: 1
+    set: 2
+  isTranLink:
+    set: 1
+  isDriveLink:
+    set: 0
+notes: Transitions 6th St E to transitway

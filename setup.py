@@ -25,4 +25,5 @@ setup(name='network_wrangler',
       license='Apache 2',
       platforms='any',
       packages=['network_wrangler'],
+      include_package_data=True,
       install_requires=install_requires)

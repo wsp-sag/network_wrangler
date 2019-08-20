@@ -1,0 +1,14 @@
+include LICENSE
+include README.md
+include requirements.txt
+include dev-requirements.txt
+
+recursive-include example *
+recursive-include schemas *
+recursive-include tests *
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude tests/t_*
+
+recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
