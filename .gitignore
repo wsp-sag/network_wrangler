@@ -8,6 +8,7 @@ scratch/*
 .pytest_cache
 *.bak
 .cache
+tests/t_*
 
 # Logs
 *.log
