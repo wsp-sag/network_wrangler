@@ -139,7 +139,9 @@ class RoadwayNetwork(object):
         # so need to convert the df to geojson manually first
         property_columns = self.nodes_df.columns.values.tolist()
         property_columns.remove('geometry')
+        
         nodes_geojson = point_df_to_geojson(self.nodes_df, property_columns )
+
         with open(nodes_file,'w') as f:
             json.dump(nodes_geojson, f)
 
@@ -196,7 +198,7 @@ class RoadwayNetwork(object):
             WranglerLogger.error("Failed Node schema validation: Validation Error")
             WranglerLogger.error("Node File Loc:{}".format(node_file))
             WranglerLogger.error("Node Schema Loc:{}".format(schema_location))
-            WranglerLogger.error(excmessage)
+            WranglerLogger.error(exc.message)
 
         except SchemaError as exc:
             WranglerLogger.error("Failed Node schema validation: Schema Error")

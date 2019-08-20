@@ -17,27 +17,28 @@ STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR,"shape.geojson")
 STPAUL_LINK_FILE = os.path.join(STPAUL_DIR,"link.json")
 STPAUL_NODE_FILE = os.path.join(STPAUL_DIR,"node.geojson")
 
-SMALL_DIR = os.path.join(os.getcwd(),'example','stpaul')
+SMALL_DIR = os.path.join(os.getcwd(),'example','single')
 SMALL_SHAPE_FILE = os.path.join(SMALL_DIR,"shape.geojson")
 SMALL_LINK_FILE = os.path.join(SMALL_DIR,"link.json")
 SMALL_NODE_FILE = os.path.join(SMALL_DIR,"node.geojson")
 
+SCRATCH_DIR = os.path.join(os.getcwd(),"tests")
 
-@pytest.mark.basic
 @pytest.mark.roadway
 def test_roadway_read_write(request):
     print("\n--Starting:",request.node.name)
 
-    out_path   = "scratch"
     out_prefix = "t_readwrite"
-    out_dir    = os.path.join(os.getcwd(),out_path)
-    out_shape_file = os.path.join(out_dir,out_prefix+"_"+"shape.geojson")
-    out_link_file  = os.path.join(out_dir,out_prefix+"_"+"link.json")
-    out_node_file  = os.path.join(out_dir,out_prefix+"_"+"node.geojson")
+    out_shape_file = os.path.join(SCRATCH_DIR,out_prefix+"_"+"shape.geojson")
+    out_link_file  = os.path.join(SCRATCH_DIR,out_prefix+"_"+"link.json")
+    out_node_file  = os.path.join(SCRATCH_DIR,out_prefix+"_"+"node.geojson")
+
     time0 = time.time()
+
     net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
     time1 = time.time()
-    net.write(filename=out_prefix,path=out_path)
+    print("Writing to: {}".format(SCRATCH_DIR))
+    net.write(filename=out_prefix,path=SCRATCH_DIR)
     time2 = time.time()
     net_2 = RoadwayNetwork.read(link_file= out_link_file, node_file=out_node_file, shape_file=out_shape_file)
     time3 = time.time()
@@ -61,46 +62,42 @@ def test_roadway_read_write(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
+@pytest.mark.menow
 def test_quick_roadway_read_write(request):
     print("\n--Starting:",request.node.name)
 
-    out_path   = "scratch"
     out_prefix = "t_readwrite"
-    out_dir    = os.path.join(os.getcwd(),out_path)
-    out_shape_file = os.path.join(out_dir,out_prefix+"_"+"shape.geojson")
-    out_link_file  = os.path.join(out_dir,out_prefix+"_"+"link.json")
-    out_node_file  = os.path.join(out_dir,out_prefix+"_"+"node.geojson")
+    out_shape_file = os.path.join(SCRATCH_DIR,out_prefix+"_"+"shape.geojson")
+    out_link_file  = os.path.join(SCRATCH_DIR,out_prefix+"_"+"link.json")
+    out_node_file  = os.path.join(SCRATCH_DIR,out_prefix+"_"+"node.geojson")
     net = RoadwayNetwork.read(link_file= SMALL_LINK_FILE, node_file=SMALL_NODE_FILE, shape_file=SMALL_SHAPE_FILE, fast=True)
-    net.write(filename=out_prefix,path=out_path)
+    net.write(filename=out_prefix,path=SCRATCH_DIR)
     net_2 = RoadwayNetwork.read(link_file= out_link_file, node_file=out_node_file, shape_file=out_shape_file)
     print("--Finished:",request.node.name)
 
 @pytest.mark.basic
+@pytest.mark.roadway
 def test_select_roadway_features(request):
     print("\n--Starting:",request.node.name)
     net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
 
     test_selections = { \
     "1. simple": {
-     'link':[
-        {'name': ['6th','Sixth','sixth']}
-        ],
+     'link':{'name': ['6th','Sixth','sixth']},
      'A':{'osmNodeId': '187899923'},
      'B':{'osmNodeId': '187865924'},
      'answer': ['187899923', '187858777', '187923585', '187865924'],
     },
     "2. farther": {
-     'link':[
-        {'name': ['6th','Sixth','sixth']}
-        ],
+     'link':{'name': ['6th','Sixth','sixth']},
      'A':{'osmNodeId': '187899923'}, # start searching for segments at A
      'B':{'osmNodeId': '187942339'}
     },
     "3. multi-criteria": {
-     'link':[
-        {'name': ['6th','Sixth','sixth']},
-        {'LANES': [1,2]}
-        ],
+     'link':{
+        'name': ['6th','Sixth','sixth'],
+        'LANES': [1,2],
+        },
      'A':{'osmNodeId': '187899923'}, # start searching for segments at A
      'B':{'osmNodeId': '187942339'}
     }
@@ -180,7 +177,6 @@ def roadway_feature_change(net, project_card):
 @pytest.mark.ashish
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.menow
 def test_roadway_feature_change(request):
     print("\n--Starting:",request.node.name)
 

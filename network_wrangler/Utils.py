@@ -5,6 +5,7 @@ def point_df_to_geojson(df: pd.DataFrame, properties: list):
     Author: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/
     '''
+    from .RoadwayNetwork import RoadwayNetwork
     geojson = {'type':'FeatureCollection', 'features':[]}
     for _, row in df.iterrows():
         feature = {'type':'Feature',
@@ -12,6 +13,7 @@ def point_df_to_geojson(df: pd.DataFrame, properties: list):
                    'geometry':{'type':'Point',
                                'coordinates':[]}}
         feature['geometry']['coordinates'] = [row['geometry'].y,row['geometry'].x]
+        feature['properties'][RoadwayNetwork.NODE_FOREIGN_KEY] = row.name
         for prop in properties:
             feature['properties'][prop] = row[prop]
         geojson['features'].append(feature)
