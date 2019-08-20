@@ -4,7 +4,7 @@ include requirements.txt
 include dev-requirements.txt
 
 recursive-include example *
-recursive-include schema *
+recursive-include schemas *
 recursive-include tests *
 
 recursive-exclude * __pycache__
