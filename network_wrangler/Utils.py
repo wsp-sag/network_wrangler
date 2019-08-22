@@ -56,3 +56,11 @@ def topological_sort(adjacency_list, visited_list):
         topology_sort_util(vertex)
 
     return output_stack
+
+def make_slug(text, delimiter: str = '_'):
+    '''
+    makes a slug from text
+    '''
+    import re
+    text = re.sub('[,.;@#?!&$\']+', '', text.lower())
+    return re.sub('[\ ]+', delimiter, text)
