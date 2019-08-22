@@ -20,5 +20,4 @@ __all__ = [
     "link_df_to_json",
 ]
 
-if __name__ == "__main__":
-    setupLogging(logFileName="network_wrangler.log")
+setupLogging(logFileName="network_wrangler.log")
