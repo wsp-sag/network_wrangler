@@ -51,16 +51,18 @@ class ProjectCard(object):
         card.valid = ProjectCard.validate_project_card_schema(path_to_card)
 
         return card
-    def write(self, filename:str = None):
-        '''
+
+    def write(self, filename: str = None):
+        """
         Writes project card dictionary to YAML file
-        '''
-            if not filename:
-                from network_wrangler.Utils import make_slug
-                filename = make_slug(self.project)+".yml"
-            with open(filename, 'w') as outfile:
-                yaml.dump(self.__dict__, outfile, default_flow_style=False)
-                
+        """
+        if not filename:
+            from network_wrangler.Utils import make_slug
+
+            filename = make_slug(self.project) + ".yml"
+        with open(filename, "w") as outfile:
+            yaml.dump(self.__dict__, outfile, default_flow_style=False)
+
     @staticmethod
     def validate_project_card_schema(
         card_file, card_schema_file: str = "project_card.json"

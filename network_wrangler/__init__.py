@@ -18,7 +18,7 @@ __all__ = [
     "TransitNetwork",
     "Scenario",
     "link_df_to_json",
-    "make_slug"
+    "make_slug",
 ]
 
 setupLogging(logFileName="network_wrangler.log")
