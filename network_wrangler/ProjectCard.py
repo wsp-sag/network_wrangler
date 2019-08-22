@@ -127,6 +127,14 @@ class ProjectCard(object):
         sel_query = sel_query + ")"
         return sel_query
 
+    def write(self, filename:str = None):
+
+        if not filename:
+            from network_wrangler.Utils import make_slug
+            filename = make_slug(self.project)+".yml"
+        with open(filename, 'w') as outfile:
+            yaml.dump(self.__dict__, outfile, default_flow_style=False)
+
     def roadway_attribute_change(self, card: dict):
         """
         Probably delete.
