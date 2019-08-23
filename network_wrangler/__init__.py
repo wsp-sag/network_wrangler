@@ -7,7 +7,7 @@ from .ProjectCard import ProjectCard
 from .RoadwayNetwork import RoadwayNetwork
 from .TransitNetwork import TransitNetwork
 from .Scenario import Scenario
-from .Utils import point_df_to_geojson, link_df_to_json
+from .Utils import point_df_to_geojson, link_df_to_json, make_slug
 
 __all__ = [
     "WranglerLogger",
@@ -18,7 +18,7 @@ __all__ = [
     "TransitNetwork",
     "Scenario",
     "link_df_to_json",
+    "make_slug",
 ]
 
-if __name__ == "__main__":
-    setupLogging(logFileName="network_wrangler.log")
+setupLogging(logFileName="network_wrangler.log")
