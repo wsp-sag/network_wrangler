@@ -2,10 +2,10 @@ include LICENSE
 include README.md
 include requirements.txt
 include dev-requirements.txt
-include schemas/project_card.json
-include schemas/roadway_network_link.json
-include schemas/roadway_network_node.json
-include schemas/roadway_ntwork_shape.json
+include network_wrangler/schemas/project_card.json
+include network_wrangler/schemas/roadway_network_link.json
+include network_wrangler/schemas/roadway_network_node.json
+include network_wrangler/schemas/roadway_network_shape.json
 
 recursive-include example *
 recursive-include tests *
