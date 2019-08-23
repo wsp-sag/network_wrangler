@@ -1,0 +1,7 @@
+project: Blue Line Service Enhancement
+changes:
+  - type: Transit Service Attribute Change
+    id: ...
+    attributes:
+      headway_secs:
+        set: 900
