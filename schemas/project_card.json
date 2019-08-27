@@ -79,7 +79,8 @@
         },
         {
           "required": [
-            "trip"
+            "trip",
+            "times"
           ]
         }
       ],
@@ -157,11 +158,24 @@
             "route_id": {
               "type": "string"
             },
-            "start_time": {
-              "type": "string"
-            },
             "name": {
               "type": "string"
+            }
+          }
+        },
+        "times": {
+          "type": "array",
+          "title": "List of Start and End Times the Change Applies",
+          "items": {
+            "type": "object",
+            "required": ["start", "end"],
+            "properties": {
+              "start": {
+                "type": "string"
+              },
+              "end": {
+                "type": "string"
+              }
             }
           }
         }

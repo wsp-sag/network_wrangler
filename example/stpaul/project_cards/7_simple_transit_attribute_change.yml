@@ -9,6 +9,9 @@ dependencies:
 facility:
   trip:
     trip_id: 14940701-JUN19-MVS-BUS-Weekday-01
+  times:
+    - start: '07:00:00'
+      end: '23:00:00'
 properties:
   - property: headway_secs
     set: 900
