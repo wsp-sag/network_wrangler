@@ -3,9 +3,9 @@ category: Roadway Attribute Change
 tags:
    - example
 dependencies:
-  prerequisite: None
-  corequisite: None
-  conflicts: None
+  prerequisites: []
+  corequisites: []
+  conflicts: []
 facility:
   link:
     name: ['6th','Sixth','sixth']
@@ -14,11 +14,11 @@ facility:
   B:
     osmNodeId: '187865924'       # Robert St N
 properties:
-  LANES:
+  - property: LANES
     existing: 1
     set: 2
-  isTranLink:
+  - property: isTranLink
     set: 1
-  isDriveLink:
+  - property: isDriveLink
     set: 0
 notes: Transitions 6th St E to transitway

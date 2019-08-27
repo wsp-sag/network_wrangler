@@ -3,12 +3,12 @@ category: Transit Service Attribute Change
 tags:
    - example
 dependencies:
-  prerequisite: []
-  corequisite: []
+  prerequisites: []
+  corequisites: []
   conflicts: []
 facility:
   trip:
     name: 'Express'
 properties:
-  headway_secs:
+  - property: headway_secs
     change: -300

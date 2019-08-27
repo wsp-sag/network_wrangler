@@ -3,12 +3,12 @@ category: Transit Service Attribute Change
 tags:
    - example
 dependencies:
-  prerequisite: []
-  corequisite: []
+  prerequisites: []
+  corequisites: []
   conflicts: []
 facility:
   trip:
     trip_id: 14940701-JUN19-MVS-BUS-Weekday-01
 properties:
-  headway_secs:
+  - property: headway_secs
     set: 900

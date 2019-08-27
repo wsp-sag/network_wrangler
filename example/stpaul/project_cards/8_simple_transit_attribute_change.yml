@@ -3,13 +3,13 @@ category: Transit Service Attribute Change
 tags:
    - example
 dependencies:
-  prerequisite: []
-  corequisite: []
+  prerequisites: []
+  corequisites: []
   conflicts: []
 facility:
   trip:
     route_id: 21-111
     start_time: 07:00:00
 properties:
-  headway_secs:
+  - property: headway_secs
     set: 900

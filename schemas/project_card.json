@@ -1,193 +1,224 @@
 {
   "definitions": {},
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/root.json",
   "type": "object",
   "title": "Project Card Schema",
-  "items": {
-    "$id": "#/items",
-    "type": "object",
-    "title": "The Items Schema",
-    "required": [
-      "Project",
-      "Category",
-      "Tags",
-      "Notes"
-    ],
-    "properties": {
-      "Project": {
-        "$id": "#/items/properties/Project",
+  "required": [
+      "project",
+      "category",
+      "facility",
+      "properties"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "project": {
+      "type": "string",
+      "title": "Project Name",
+      "examples": [
+        "6th St E Road Diet"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Roadway Attribute Change",
+        "Transit Service Attribute Change"
+      ],
+      "title": "Project Category"
+    },
+    "tags": {
+      "type": "array",
+      "title": "Project Tags",
+      "items": {
         "type": "string",
-        "title": "Project",
-        "default": "",
         "examples": [
-          "6th St E Road Diet"
+          "vision2050"
         ],
-        "pattern": "^(.*)$"
-      },
-      "Category": {
-        "$id": "#/items/properties/Category",
-        "type": "string",
-        "title": "Project Category",
-        "default": "",
-        "examples": [
-          "Roadway Attribute Change"
-        ],
-        "pattern": "^(.*)$"
-      },
-      "Tags": {
-        "$id": "#/items/properties/Tags",
-        "type": "array",
-        "title": "Project Tags",
-        "items": {
-          "$id": "#/items/properties/Tags/items",
-          "type": "string",
-          "title": "The Items Schema",
-          "default": "",
+        "uniqueItems": true
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Project Dependencies",
+      "properties": {
+        "prerequisites": {
+          "type": "array",
+          "title": "Project Prerequisites",
           "examples": [
-            "example"
+            "7th St E Road Diet"
+          ]
+        },
+        "corequisites": {
+          "type": "array",
+          "title": "Project Co-requisites",
+          "examples": [
+            "7th St E Road Diet"
+          ]
+        },
+        "conflicts": {
+          "type": "array",
+          "title": "Project Conflicts",
+          "examples": [
+            "7th St E Road Diet"
+          ]
+        }
+      }
+    },
+    "facility": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Facility Selection",
+      "oneOf": [
+        {
+          "required": [
+            "link",
+            "A",
+            "B"
+          ]
+        },
+        {
+          "required": [
+            "trip"
+          ]
+        }
+      ],
+      "properties": {
+        "link": {
+          "type": "object",
+          "additionalProperties": false,
+          "title": "Road Name or Link ID",
+          "oneOf": [
+            {
+              "required": ["name"]
+            },
+            {
+              "required": ["osmid"]
+            }
           ],
-          "pattern": "^(.*)$"
-        }
-      },
-      "Dependencies": {
-        "$id": "#/items/properties/Dependencies",
-        "type": "object",
-        "title": "Project Dependencies",
-        "properties": {
-          "Prerequisites": {
-            "$id": "#/items/properties/Dependencies/properties/Prerequisite",
-            "type": "array",
-            "title": "Prerequisites to Project",
-            "default": "",
-            "examples": [
-              "None"
-            ],
-            "pattern": "^(.*)$"
-          },
-          "Corequisites": {
-            "$id": "#/items/properties/Dependencies/properties/Corequisites",
-            "type": "array",
-            "title": "Project Co-requisites",
-            "default": "",
-            "examples": [
-              "None"
-            ],
-            "pattern": "^(.*)$"
-          },
-          "Conflicts": {
-            "$id": "#/items/properties/Dependencies/properties/Conflicts",
-            "type": "array",
-            "title": "Project Conflicts",
-            "default": "",
-            "examples": [
-              "None"
-            ],
-            "pattern": "^(.*)$"
+          "properties": {
+            "name": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "osmid": {
+              "type": "string"
+            }
+          }
+        },
+        "A": {
+          "type": "object",
+          "additionalProperties": false,
+          "title": "Road A Node",
+          "properties": {
+            "osmNodeId": {
+              "type": "string"
+            }
+          }
+        },
+        "B": {
+          "type": "object",
+          "additionalProperties": false,
+          "title": "Roadway B Node",
+          "properties": {
+            "osmNodeId": {
+              "type": "string"
+            }
+          }
+        },
+        "trip": {
+          "type": "object",
+          "additionalProperties": false,
+          "title": "Route Name or Trip ID",
+          "oneOf": [
+            {
+              "required": ["trip_id"]
+            },
+            {
+              "required": ["route_id"]
+            },
+            {
+              "required": ["name"]
+            }
+          ],
+          "properties": {
+            "trip_id": {
+              "type": "string"
+            },
+            "route_id": {
+              "type": "string"
+            },
+            "start_time": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
           }
         }
-      },
-      "Road": {
-        "$id": "#/items/properties/Road",
+      }
+    },
+    "properties": {
+      "type": "array",
+      "title": "Properties to be Changed",
+      "items": {
         "type": "object",
-        "title": "The Road Schema",
-        "required": [
-          "Name",
-          "A",
-          "B"
-        ],
-        "properties": {
-          "Name": {
-            "$id": "#/items/properties/Road/properties/Name",
-            "type": "string",
-            "title": "Road Name",
-            "default": "",
-            "examples": [
-              "id=driveLink88629"
-            ],
-            "pattern": "^(.*)$"
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": ["property", "set"]
           },
-          "A": {
-            "$id": "#/items/properties/Road/properties/A",
-            "type": "string",
-            "title": "Road A Node",
-            "default": "",
-            "examples": [
-              "osmid=187854529"
-            ],
-            "pattern": "^(.*)$"
-          },
-          "B": {
-            "$id": "#/items/properties/Road/properties/B",
-            "type": "string",
-            "title": "Roadway B Node",
-            "default": "",
-            "examples": [
-              "osmid=187899923"
-            ],
-            "pattern": "^(.*)$"
-          },
-          "Intermediate_Intersections": {
-            "$id": "#/items/properties/Road/properties/Intermediate_Intersections",
-            "type": "array",
-            "title": "Array of intermediate Intersections",
-            "default": "",
-            "examples": [
-              "None"
-            ],
-            "pattern": "^(.*)$"
+          {
+            "required": ["property", "change"]
           }
-        }
-      },
-      "Attribute": {
-        "$id": "#/items/properties/Attribute",
-        "type": "string",
-        "title": "Roadway Attribute",
-        "default": "",
-        "examples": [
-          "Lanes"
-        ],
-        "pattern": "^(.*)$"
-      },
-      "Change": {
-        "$id": "#/items/properties/Change",
-        "type": "object",
-        "title": "Roadway Change",
-        "required": [
-          "Existing",
-          "Build"
         ],
         "properties": {
-          "Existing": {
-            "$id": "#/items/properties/Change/properties/Existing",
+          "property": {
+            "type": "string",
+            "title": "Property Name to Change (Case Sensitive)",
+            "examples": [
+              "headway_secs", "LANES"
+            ]
+          },
+          "existing": {
             "type": "integer",
-            "title": "Existing Attribute",
-            "default": 0,
+            "title": "Existing Property",
             "examples": [
               3
             ]
           },
-          "Build": {
-            "$id": "#/items/properties/Change/properties/Build",
+          "set": {
             "type": "integer",
-            "title": "Build Attribute",
-            "default": 0,
+            "title": "Set Property without Regard to Existing",
             "examples": [
               2
             ]
+          },
+          "change": {
+            "type": "integer",
+            "title": "Change Property Relative to Existing",
+            "examples": [
+              -1
+            ]
           }
         }
-      },
-      "Notes": {
-        "$id": "#/items/properties/Notes",
-        "type": "string",
-        "title": "Project Notes",
-        "default": "",
-        "examples": [
-          "Simple project example to do a road diet on 6th St E in front of MetCouncil"
-        ],
-        "pattern": "^(.*)$"
       }
+    },
+    "notes": {
+      "type": "string",
+      "title": "Project Notes",
+      "examples": [
+        "Simple project example to do a road diet on 6th St E in front of MetCouncil"
+      ]
     }
   }
 }

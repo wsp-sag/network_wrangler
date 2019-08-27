@@ -3,9 +3,9 @@ category: Roadway Attribute Change
 tags:
    - ['example']
 dependencies:
-  prerequisite: None
-  corequisite: ['6th test project']
-  conflicts: None
+  prerequisites: []
+  corequisites: ['6th test project']
+  conflicts: []
 facility:
    link:
      - name: [6th, Sixth, sixth]

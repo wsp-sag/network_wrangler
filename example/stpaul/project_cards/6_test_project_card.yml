@@ -3,8 +3,8 @@ category: Roadway Attribute Change
 tags:
    - ['example']
 dependencies:
-  prerequisite: None
-  corequisite: None
+  prerequisites: []
+  corequisites: []
   conflicts: ['7th test project']
 facility:
    link:
