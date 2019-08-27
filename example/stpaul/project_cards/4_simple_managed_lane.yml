@@ -1,0 +1,24 @@
+project: test managed lane project
+category: parallel managed lanes
+tags:
+   - example
+dependencies:
+  prerequisite: None
+  corequisite: None
+  conflicts: None
+facility:
+  link:
+    name: ['6th','Sixth','sixth']
+  A:
+    osmNodeId: '187899923'
+  B:
+    osmNodeId: '187865924'
+properties:
+  ML_LANES:
+    set: 1
+  ML_TOLL:
+    set: 1.5
+connectors:
+  ML_Access: 'all'
+  ML_Egress: 'all'
+notes: Placeholder for notes
