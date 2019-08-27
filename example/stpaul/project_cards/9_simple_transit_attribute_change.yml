@@ -1,0 +1,14 @@
+project: Improve Express Bus Frequency
+category: Transit Service Attribute Change
+tags:
+   - example
+dependencies:
+  prerequisite: []
+  corequisite: []
+  conflicts: []
+facility:
+  trip:
+    name: 'Express'
+properties:
+  headway_secs:
+    change: -300
