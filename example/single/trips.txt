@@ -1,0 +1,5 @@
+route_id,service_id,trip_id,trip_headsign,direction_id,block_id,shape_id,wheelchair_accessible,trip_destination,trip_short_name,trip_route_name,pub_dir_id,rm_block_id
+94-111,JUN19-MVS-BUS-Weekday-01,14946470-JUN19-MVS-BUS-Weekday-01,Westbound 94 Express / Downtown / Minneapolis,1,1028,940001,1.0,,,,,
+94-111,JUN19-MVS-BUS-Weekday-01,14946471-JUN19-MVS-BUS-Weekday-01,Westbound 94 Express / Downtown / Minneapolis,1,1670,940002,1.0,,,,,
+94-111,JUN19-MVS-BUS-Weekday-01,14946480-JUN19-MVS-BUS-Weekday-01,Eastbound 94D Express / Dwtn St Paul / Union Depot,0,1665,940004,1.0,,,,,
+94-111,JUN19-MVS-BUS-Weekday-01,14946521-JUN19-MVS-BUS-Weekday-01,Eastbound 94D Express / Dwtn St Paul / Union Depot,0,1664,940004,1.0,,,,,
