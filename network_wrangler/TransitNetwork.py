@@ -32,7 +32,7 @@ class TransitNetwork(object):
         Constructor
         """
 
-        self.config, self.feed = TransitNetwork.read_feed(feed_path)
+        self.config, self.feed = TransitNetwork.read(feed_path)
 
     @staticmethod
     def validate_feed(feed: Feed, config: nx.DiGraph) -> Bool:
@@ -52,7 +52,7 @@ class TransitNetwork(object):
             return False
 
     @staticmethod
-    def read_feed(feed_path: str = None) -> Tuple[nx.DiGraph, Feed]:
+    def read(feed_path: str, fast: bool = False) -> Tuple[nx.DiGraph, Feed]:
         """
         Read GTFS feed from folder and return a config and Partridge Feed object
         """
