@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
-import os, sys
+import os
+import sys
 
 import networkx as nx
 import pandas as pd
 import partridge as ptg
-from partridge.config import geo_config, default_config
+from partridge.config import geo_config
+from partridge.config import default_config
 from partridge.gtfs import Feed
 
 from .Logger import WranglerLogger
@@ -35,7 +37,12 @@ class TransitNetwork(object):
     @staticmethod
     def validate_feed(feed: Feed, config: nx.DiGraph) -> Bool:
         """
-        Since Partridge lazily loads the df, load each file to make sure it actually works.
+        Since Partridge lazily loads the df, load each file to make sure it
+        actually works.
+
+        Partridge uses a DiGraph from the networkx library to represent the
+        relationships between GTFS files. Each file is a 'node', and the
+        relationship between files are 'edges'.
         """
         try:
             for node in config.nodes.keys():
@@ -74,7 +81,7 @@ class TransitNetwork(object):
             feed = ptg.load_feed(feed_path, config=config)
             TransitNetwork.validate_feed(feed, config)
 
-        ## todo should be read in as a schema
+        # todo should be read in as a schema
         WranglerLogger.info(
             "Read %s agencies from %s"
             % (feed.agency.size, os.path.join(feed_path, "agency.txt"))
