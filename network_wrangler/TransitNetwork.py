@@ -91,8 +91,9 @@ class TransitNetwork(object):
         """
         Writes a network in the transit network standard
 
-        args:
-        outpath: the path were the output files will be saved
+        Parameters
+        ------------
+        outpath : str path were the output files will be saved
         """
 
         for node in self.config.nodes.keys():
@@ -100,3 +101,27 @@ class TransitNetwork(object):
             if not df.empty:
                 path = os.path.join(outpath, node)
                 df.to_csv(path, index=False)
+
+    def select_transit_features(self, selection: dict) -> pd.Series:
+        """
+        Selects transit features that satisfy selection criteria
+
+        Parameters
+        ------------
+        selection : dictionary
+            With keys for:
+             trip -
+
+        Returns
+        -------
+        trip identifiers : list
+           list of GTFS trip IDs in the selection
+        """
+        trips = self.feed.trips
+
+        if 'trip_id' in selection:
+            if type(selection['trip_id']) != list:
+                selection['trip_id'] = [selection['trip_id']]
+            trips = trips[trips.trip_id.isin(selection['trip_id'])]
+
+        return trips['trip_id']
