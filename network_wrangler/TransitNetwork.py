@@ -27,12 +27,14 @@ class TransitNetwork(object):
 
     """
 
-    def __init__(self, feed_path: str = None):
+    def __init__(self, feed: Feed = None, config: nx.DiGraph = None):
         """
         Constructor
         """
+        self.feed: Feed = feed
+        self.config: nx.DiGraph = config
 
-        self.config, self.feed = TransitNetwork.read(feed_path)
+        self.selections: dict = {}
 
     @staticmethod
     def validate_feed(feed: Feed, config: nx.DiGraph) -> Bool:
@@ -81,37 +83,9 @@ class TransitNetwork(object):
             feed = ptg.load_feed(feed_path, config=config)
             TransitNetwork.validate_feed(feed, config)
 
-        # todo should be read in as a schema
-        WranglerLogger.info(
-            "Read %s agencies from %s"
-            % (feed.agency.size, os.path.join(feed_path, "agency.txt"))
-        )
-        WranglerLogger.info(
-            "Read %s frequencies from %s"
-            % (feed.frequencies.size, os.path.join(feed_path, "frequencies.txt"))
-        )
-        WranglerLogger.info(
-            "Read %s routes from %s"
-            % (feed.routes.size, os.path.join(feed_path, "routes.txt"))
-        )
-        WranglerLogger.info(
-            "Read %s shapes from %s"
-            % (feed.shapes.size, os.path.join(feed_path, "shapes.txt"))
-        )
-        WranglerLogger.info(
-            "Read %s stops from %s"
-            % (feed.stops.size, os.path.join(feed_path, "stops.txt"))
-        )
-        WranglerLogger.info(
-            "Read %s transfers from %s"
-            % (feed.transfers.size, os.path.join(feed_path, "transfers.txt"))
-        )
-        WranglerLogger.info(
-            "Read %s trips from %s"
-            % (feed.trips.size, os.path.join(feed_path, "transfers.txt"))
-        )
+        transit_network = TransitNetwork(feed=feed, config=config)
 
-        return config, feed
+        return transit_network
 
     def write(self, outpath: str = ".") -> None:
         """
