@@ -7,11 +7,10 @@ dependencies:
   corequisites: []
   conflicts: []
 facility:
-  trip:
-    route_id: 21-111
-  times:
-    - start: '07:00:00'
-      end: '23:00:00'
+  route_id: 21-111
 properties:
   - property: headway_secs
     set: 900
+    times:
+      - start: '07:00:00'
+        end: '23:00:00'

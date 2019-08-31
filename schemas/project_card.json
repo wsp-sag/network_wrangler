@@ -79,8 +79,22 @@
         },
         {
           "required": [
-            "trip",
-            "times"
+            "trip_id"
+          ]
+        },
+        {
+          "required": [
+            "route_id"
+          ]
+        },
+        {
+          "required": [
+            "short_name"
+          ]
+        },
+        {
+          "required": [
+            "long_name"
           ]
         }
       ],
@@ -136,48 +150,17 @@
             }
           }
         },
-        "trip": {
-          "type": "object",
-          "additionalProperties": false,
-          "title": "Route Name or Trip ID",
-          "oneOf": [
-            {
-              "required": ["trip_id"]
-            },
-            {
-              "required": ["route_id"]
-            },
-            {
-              "required": ["name"]
-            }
-          ],
-          "properties": {
-            "trip_id": {
-              "type": "string"
-            },
-            "route_id": {
-              "type": "string"
-            },
-            "name": {
-              "type": "string"
-            }
-          }
+        "trip_id": {
+          "type": "string"
         },
-        "times": {
-          "type": "array",
-          "title": "List of Start and End Times the Change Applies",
-          "items": {
-            "type": "object",
-            "required": ["start", "end"],
-            "properties": {
-              "start": {
-                "type": "string"
-              },
-              "end": {
-                "type": "string"
-              }
-            }
-          }
+        "route_id": {
+          "type": "string"
+        },
+        "short_name": {
+          "type": "integer"
+        },
+        "long_name": {
+          "type": "string"
         }
       }
     },
@@ -223,6 +206,22 @@
             "examples": [
               -1
             ]
+          },
+          "times": {
+            "type": "array",
+            "title": "List of Start and End Times the Change Applies",
+            "items": {
+              "type": "object",
+              "required": ["start", "end"],
+              "properties": {
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }

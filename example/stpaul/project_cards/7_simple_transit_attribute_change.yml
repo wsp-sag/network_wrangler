@@ -7,11 +7,10 @@ dependencies:
   corequisites: []
   conflicts: []
 facility:
-  trip:
-    trip_id: 14940701-JUN19-MVS-BUS-Weekday-01
-  times:
-    - start: '07:00:00'
-      end: '23:00:00'
+  trip_id: 14940701-JUN19-MVS-BUS-Weekday-01
 properties:
   - property: headway_secs
     set: 900
+    times:
+      - start: '07:00:00'
+        end: '23:00:00'

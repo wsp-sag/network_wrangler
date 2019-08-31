@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import re
 import sys
 
 import networkx as nx
@@ -95,7 +96,6 @@ class TransitNetwork(object):
         ------------
         outpath : str path were the output files will be saved
         """
-
         for node in self.config.nodes.keys():
             df = self.feed.get(node)
             if not df.empty:
@@ -118,10 +118,39 @@ class TransitNetwork(object):
            list of GTFS trip IDs in the selection
         """
         trips = self.feed.trips
+        routes = self.feed.routes
+
+        for key in ['trip_id', 'route_id', 'short_name', 'long_name']:
+            if (selection.get(key) is not None and
+                    type(selection.get(key)) != list):
+                selection[key] = [selection[key]]
 
         if 'trip_id' in selection:
-            if type(selection['trip_id']) != list:
-                selection['trip_id'] = [selection['trip_id']]
             trips = trips[trips.trip_id.isin(selection['trip_id'])]
+
+        elif 'route_id' in selection:
+            trips = trips[trips.route_id.isin(selection['route_id'])]
+
+        elif 'short_name' in selection:
+            routes = routes[
+                routes.route_short_name.isin(selection['short_name'])
+            ]
+            trips = trips[trips.route_id.isin(routes['route_id'])]
+
+        elif 'long_name' in selection:
+            matches = []
+            for sel in selection['long_name']:
+                for long_name in routes['route_long_name']:
+                    x = re.search(sel, long_name)
+                    if x is not None:
+                        matches.append(long_name)
+
+            routes = routes[routes.route_long_name.isin(matches)]
+            trips = trips[trips.route_id.isin(routes['route_id'])]
+
+        else:
+            WranglerLogger.error(
+                'Selection not supported %s', selection.keys()
+            )
 
         return trips['trip_id']

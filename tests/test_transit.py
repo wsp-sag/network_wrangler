@@ -1,7 +1,8 @@
 import os
 import json
 import pytest
-from network_wrangler import TransitNetwork, setupLogging
+from network_wrangler import TransitNetwork
+from network_wrangler import ProjectCard
 
 
 """
@@ -53,6 +54,68 @@ def test_select_transit_features(request):
         print("--->", i, "\n", sel)
         selected_trips = net.select_transit_features(sel)
         assert(set(selected_trips) == set(sel['answer']))
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.transit
+@pytest.mark.travis
+def test_select_transit_features_from_projectcard(request):
+    print("\n--Starting:", request.node.name)
+    net = TransitNetwork.read(STPAUL_DIR)
+
+    test_selections = [
+        {
+            'file': '7_simple_transit_attribute_change.yml',
+            'answer': ['14940701-JUN19-MVS-BUS-Weekday-01']
+        },
+        {
+            'file': '8_simple_transit_attribute_change.yml',
+            'answer': [
+                '14944012-JUN19-MVS-BUS-Weekday-01',
+                '14944018-JUN19-MVS-BUS-Weekday-01',
+                '14944019-JUN19-MVS-BUS-Weekday-01',
+                '14944022-JUN19-MVS-BUS-Weekday-01'
+            ]
+        },
+        {
+            'file': '9_simple_transit_attribute_change.yml',
+            'answer': [
+                '14940701-JUN19-MVS-BUS-Weekday-01',
+                '14943414-JUN19-MVS-BUS-Weekday-01',
+                '14943415-JUN19-MVS-BUS-Weekday-01',
+                '14946111-JUN19-MVS-BUS-Weekday-01',
+                '14946257-JUN19-MVS-BUS-Weekday-01',
+                '14946470-JUN19-MVS-BUS-Weekday-01',
+                '14946471-JUN19-MVS-BUS-Weekday-01',
+                '14946480-JUN19-MVS-BUS-Weekday-01',
+                '14946521-JUN19-MVS-BUS-Weekday-01',
+                '14947182-JUN19-MVS-BUS-Weekday-01',
+                '14947504-JUN19-MVS-BUS-Weekday-01',
+                '14947734-JUN19-MVS-BUS-Weekday-01',
+                '14947755-JUN19-MVS-BUS-Weekday-01',
+                '14948170-JUN19-MVS-BUS-Weekday-01',
+                '14978409-JUN19-MVS-BUS-Weekday-01',
+                '14981028-JUN19-MVS-BUS-Weekday-01',
+                '14981029-JUN19-MVS-BUS-Weekday-01',
+                '14986383-JUN19-MVS-BUS-Weekday-01',
+                '14986385-JUN19-MVS-BUS-Weekday-01'
+            ]
+        }
+    ]
+
+    for i, test in enumerate(test_selections):
+        print("--->", i)
+        print("Reading project card", test['file'], "...")
+
+        project_card_path = os.path.join(
+            STPAUL_DIR, 'project_cards', test['file']
+        )
+        project_card = ProjectCard.read(project_card_path)
+        sel = project_card.facility
+
+        selected_trips = net.select_transit_features(sel)
+        assert(set(selected_trips) == set(test['answer']))
 
     print("--Finished:", request.node.name)
 
