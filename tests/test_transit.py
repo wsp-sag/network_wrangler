@@ -120,5 +120,33 @@ def test_select_transit_features_from_projectcard(request):
     print("--Finished:", request.node.name)
 
 
+@pytest.mark.transit
+@pytest.mark.travis
+def test_wrong_existing(request):
+    print("\n--Starting:", request.node.name)
+    net = TransitNetwork.read(STPAUL_DIR)
+
+    selected_trips = net.select_transit_features({
+        'trip_id': [
+            '14944018-JUN19-MVS-BUS-Weekday-01',
+            '14944012-JUN19-MVS-BUS-Weekday-01'
+        ]
+    })
+
+    with pytest.raises(Exception):
+        net = net.apply_transit_feature_change(
+            selected_trips,
+            [
+                {
+                    'property': 'headway_secs',
+                    'existing': 553,
+                    'set': 900
+                }
+            ]
+        )
+
+    print("--Finished:", request.node.name)
+
+
 if __name__ == '__main__':
     test_transit_read_write()

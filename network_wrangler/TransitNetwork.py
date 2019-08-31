@@ -3,9 +3,10 @@
 
 from __future__ import annotations
 
+import copy
 import os
 import re
-import sys
+from typing import Tuple, Union
 
 import networkx as nx
 import pandas as pd
@@ -38,7 +39,7 @@ class TransitNetwork(object):
         self.selections: dict = {}
 
     @staticmethod
-    def validate_feed(feed: Feed, config: nx.DiGraph) -> Bool:
+    def validate_feed(feed: Feed, config: nx.DiGraph) -> bool:
         """
         Since Partridge lazily loads the df, load each file to make sure it
         actually works.
@@ -109,8 +110,6 @@ class TransitNetwork(object):
         Parameters
         ------------
         selection : dictionary
-            With keys for:
-             trip -
 
         Returns
         -------
@@ -120,11 +119,13 @@ class TransitNetwork(object):
         trips = self.feed.trips
         routes = self.feed.routes
 
+        # Turn selection's values into lists if they are not already
         for key in ['trip_id', 'route_id', 'short_name', 'long_name']:
             if (selection.get(key) is not None and
                     type(selection.get(key)) != list):
                 selection[key] = [selection[key]]
 
+        # Based on the key in selection, filter trips
         if 'trip_id' in selection:
             trips = trips[trips.trip_id.isin(selection['trip_id'])]
 
@@ -153,4 +154,72 @@ class TransitNetwork(object):
                 'Selection not supported %s', selection.keys()
             )
 
+        # Return pandas.Series of trip_ids
         return trips['trip_id']
+
+    def apply_transit_feature_change(
+        self, trip_id: pd.Series, properties: dict
+    ) -> None:
+        """
+        Changes the transit attributes for the selected features based on the
+        project card information passed
+
+        Parameters
+        ------------
+        trip_id : pd.Series
+            all trip_ids to apply change to
+        properties : list of dictionarys
+            transit properties to change
+
+        Returns
+        -------
+        None
+        """
+        for i in properties:
+            if i['property'] in ['headway_secs']:
+                self.apply_transit_feature_change_frequency(trip_id, i)
+
+            # elif i['property'] in ['stops']:
+            #     self.apply_transit_feature_change_stops(trip_id, i)
+            #
+            # elif i['property'] in ['shapes']:
+            #     self.apply_transit_feature_change_shapes(trip_id, i)
+
+    def apply_transit_feature_change_frequency(
+        self, trip_id: pd.Series, properties: dict, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        freq = self.feed.frequencies
+
+        # Grab only those records matching trip_id (aka selection)
+        freq = freq[freq.trip_id.isin(trip_id)]
+
+        # Grab only those records matching start_time and end_time
+        if properties.get('times') is not None:
+            all_starts = [i['start'] for i in properties['times']]
+            freq = freq[freq.start_time.isin(all_starts)]
+            all_ends = [i['end'] for i in properties['times']]
+            freq = freq[freq.end_time.isin(all_ends)]
+
+        # Check all `existing` properties if given
+        if properties.get('existing') is not None:
+            if not all(freq.headway_secs == properties['existing']):
+                WranglerLogger.error(
+                    'Existing does not match for at least '
+                    '1 trip in:\n {}'.format(trip_id.to_string())
+                )
+                raise
+
+        # Calculate build value
+        if properties.get('set') is not None:
+            build_value = properties['set']
+        else:
+            build_value = freq.headway_secs[0] + properties['change']
+
+        # Update self or return a new object
+        q = self.feed.frequencies.trip_id.isin(freq.trip_id)
+        if in_place:
+            self.feed.frequencies.loc[q, properties['property']] = build_value
+        else:
+            updated_network = copy.deepcopy(self)
+            updated_network.loc[q, properties['property']] = build_value
+            return updated_network
