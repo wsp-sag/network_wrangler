@@ -1,5 +1,5 @@
 project: Improve Express Bus Frequency
-category: Transit Service Attribute Change
+category: Transit Service Property Change
 tags:
    - example
 dependencies:

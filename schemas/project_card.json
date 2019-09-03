@@ -21,8 +21,8 @@
     "category": {
       "type": "string",
       "enum": [
-        "Roadway Attribute Change",
-        "Transit Service Attribute Change"
+        "Roadway Property Change",
+        "Transit Service Property Change"
       ],
       "title": "Project Category"
     },
