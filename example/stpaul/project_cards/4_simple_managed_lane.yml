@@ -14,11 +14,21 @@ facility:
   B:
     osmNodeId: '187865924'
 properties:
-  ML_LANES:
-    set: 1
-  ML_TOLL:
-    set: 1.5
-connectors:
-  ML_Access: 'all'
-  ML_Egress: 'all'
+  - property: LANES
+    set: 3
+    tod:
+      - time: [7:00, 9:00]
+      - set: 2
+  - property: ML_LANES
+    set: 0
+    tod:
+      - time: [7:00, 9:00]
+      - set: 1
+  - property: ML_PRICE
+    set: 0
+    tod:
+      - time: [7:00, 9:00]
+      - set: 1.5
+  - property: ML_RESTRICTIONS
+    set: 'None'
 notes: Placeholder for notes
