@@ -211,7 +211,7 @@ def test_add_simple_managed_lane(request):
 
     print("Selecting roadway features ...")
     sel = project_card.facility
-    print("Selection:\n",sel)
+    print("\nSelection:",sel)
     selected_links = net.select_roadway_features(sel)
 
     if not type(selected_links) == GeoDataFrame:
@@ -220,24 +220,44 @@ def test_add_simple_managed_lane(request):
         selected_indices = selected_links.index.tolist()
 
         in_links = net.links_df.loc[selected_indices, :]
-        print("Original Links:\n",in_links)
+        print("\nOriginal Links:\n",in_links)
 
         net.links_df['selected_links'] = np.where(net.links_df.index.isin(selected_indices), 1, 0)
 
         print("Applying project card ...")
         prop = project_card.properties
-        print("Properties:\n",prop)
+        print("\nProperties:",prop)
         revised_net = net.add_roadway_attributes(prop)
 
-        conn = project_card.connectors
-        print("Connectors:\n",conn)
-        final_net = net.add_managed_lane_connectors(conn)
-
         if 'selected_links' in final_net.links_df.columns:
-            final_net.links_df.drop(['selected_links'], axis = 1, inplace = True)
+            revised_net.links_df.drop(['selected_links'], axis = 1, inplace = True)
 
-        out_links = final_net.links_df.loc[selected_indices, :]
+        out_links = revised_net.links_df.loc[selected_indices, :]
+        print("\nUpdated Links:\n",out_links)
 
-        print("Updated Links:\n",out_links)
+        revised_net.write(filename="test_ml", path=SCRATCH_DIR)
+
+    print("--Finished:",request.node.name)
+
+@pytest.mark.test_ak
+@pytest.mark.roadway
+def test_project_card(request):
+    print("\n--Starting:",request.node.name)
+
+    print("Reading project card ...")
+    project_card_name = '4_simple_managed_lane.yml'
+    project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards',project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+    print(project_card.properties)
+    prop_dict = {}
+    for p in project_card.properties:
+        attribute = p['property']
+        prop_dict[attribute] = {}
+        prop_dict[attribute]['default'] = p['set']
+        if 'tod' in p.keys():
+            for item in p['tod']:
+                prop_dict[attribute]['tod'] = {'time': item['time'], 'value': item['set']}
+
+    print(prop_dict)
 
     print("--Finished:",request.node.name)

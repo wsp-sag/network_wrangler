@@ -786,71 +786,35 @@ class RoadwayNetwork(object):
 
         updated_network = copy.deepcopy(self)
 
-        for attribute, values in properties.items():
+        for p in properties:
+            attribute = p['property']
 
-            if "existing" in values.keys():
-                WranglerLogger.warn("WARNING: Properties not specified correctly in the project card")
-                WranglerLogger.warn("'Existing' should not be defined for a new attribute to add!")
-
-            if "set" not in values.keys():
-                WranglerLogger.error("ERROR: Properties not specified correctly in the project card")
-                WranglerLogger.error("'Set' should be specified for the new attibutes!")
-                raise ValueError()
-                return False
+            if 'tod' in p.keys():
+                # in this case make the attr_value a dictonary
+                attr_value = {}
+                attr_value['default'] = p['set']
+                for item in p['tod']:
+                    attr_value['tod'] = {'time': item['time'], 'value': item['set']}
             else:
-                value = values["set"]
+                attr_value = p['set']
+            #print("\n", attribute, attr_dict)
 
-                if 'selected_links' in self.links_df.columns:
-                    # if the input network has a selected_links flags to indicate selection set
-                    updated_network.links_df[attribute] = np.where(
-                        updated_network.links_df['selected_links'] == 1,
-                        value,
-                        ""
-                    )
-                else:
-                    # else add the attribute to all the links
-                    updated_network.links_df[attribute] = value
+            # TODO: decide on connectors info when they are more specific
+            if attribute == 'ML_ACCESS' and attr_value == 'all':
+                attr_value = 1
 
-        return updated_network
+            if attribute == 'ML_EGRESS' and attr_value == 'all':
+                attr_value = 1
 
-    def add_managed_lane_connectors(self, connectors: dict) -> RoadwayNetwork:
-        """
-        Method to specifiy access/egress connectors to managed lane facility
-        Simple 'all' for now, update later for more detailed access/egress
-
-        args:
-        properties: dictionary with connectors information
-
-        returns:
-        new roadway network
-        """
-
-        updated_network = copy.deepcopy(self)
-
-        if "ML_Access" not in connectors.keys():
-            WranglerLogger.error("Access connectors not defined for managed lane facility")
-            raise ValueError()
-            return False
-
-        if "ML_Egress" not in connectors.keys():
-            WranglerLogger.error("Egress connectors not defined for managed lane facility")
-            raise ValueError()
-            return False
-
-        if connectors['ML_Access'] == 'all':
             if 'selected_links' in self.links_df.columns:
                 # if the input network has a selected_links flags to indicate selection set
-                updated_network.links_df['ML_Access'] = np.where(updated_network.links_df['selected_links'] == 1, 1, "")
+                updated_network.links_df[attribute] = np.where(
+                    updated_network.links_df['selected_links'] == 1,
+                    attr_value,
+                    ""
+                )
             else:
-                # else add the attribute to all the links
-                updated_network.links_df['ML_Access'] = 1
-
-        if connectors['ML_Egress'] == 'all':
-            if 'selected_links' in self.links_df.columns:
-                # if the input network has a selected_links flags to indicate selection set
-                updated_network.links_df['ML_Egress'] = np.where(updated_network.links_df['selected_links'] == 1, 1, "")
-            else:
-                # else add the attribute to all the links
-                updated_network.links_df['ML_Egress'] = 1
+                # else add/change the attribute for all the links
+                updated_network.links_df[attribute] = attr_value
 
         return updated_network
