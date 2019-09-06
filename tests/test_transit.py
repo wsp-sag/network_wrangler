@@ -94,7 +94,6 @@ def test_select_transit_features_from_projectcard(request):
                 '14947504-JUN19-MVS-BUS-Weekday-01',
                 '14947734-JUN19-MVS-BUS-Weekday-01',
                 '14947755-JUN19-MVS-BUS-Weekday-01',
-                '14948170-JUN19-MVS-BUS-Weekday-01',
                 '14978409-JUN19-MVS-BUS-Weekday-01',
                 '14981028-JUN19-MVS-BUS-Weekday-01',
                 '14981029-JUN19-MVS-BUS-Weekday-01',
