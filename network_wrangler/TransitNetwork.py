@@ -153,12 +153,13 @@ class TransitNetwork(object):
             WranglerLogger.error(
                 'Selection not supported %s', selection.keys()
             )
+            raise
 
         # Return pandas.Series of trip_ids
         return trips['trip_id']
 
     def apply_transit_feature_change(
-        self, trip_id: pd.Series, properties: dict
+        self, trip_ids: pd.Series, properties: dict
     ) -> None:
         """
         Changes the transit attributes for the selected features based on the
@@ -166,7 +167,7 @@ class TransitNetwork(object):
 
         Parameters
         ------------
-        trip_id : pd.Series
+        trip_ids : pd.Series
             all trip_ids to apply change to
         properties : list of dictionarys
             transit properties to change
@@ -177,21 +178,21 @@ class TransitNetwork(object):
         """
         for i in properties:
             if i['property'] in ['headway_secs']:
-                self.apply_transit_feature_change_frequency(trip_id, i)
+                self.apply_transit_feature_change_frequency(trip_ids, i)
 
             # elif i['property'] in ['stops']:
-            #     self.apply_transit_feature_change_stops(trip_id, i)
+            #     self.apply_transit_feature_change_stops(trip_ids, i)
             #
             # elif i['property'] in ['shapes']:
-            #     self.apply_transit_feature_change_shapes(trip_id, i)
+            #     self.apply_transit_feature_change_shapes(trip_ids, i)
 
     def apply_transit_feature_change_frequency(
-        self, trip_id: pd.Series, properties: dict, in_place: bool = True
+        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         freq = self.feed.frequencies
 
-        # Grab only those records matching trip_id (aka selection)
-        freq = freq[freq.trip_id.isin(trip_id)]
+        # Grab only those records matching trip_ids (aka selection)
+        freq = freq[freq.trip_id.isin(trip_ids)]
 
         # Grab only those records matching start_time and end_time
         if properties.get('times') is not None:
@@ -205,7 +206,7 @@ class TransitNetwork(object):
             if not all(freq.headway_secs == properties['existing']):
                 WranglerLogger.error(
                     'Existing does not match for at least '
-                    '1 trip in:\n {}'.format(trip_id.to_string())
+                    '1 trip in:\n {}'.format(trip_ids.to_string())
                 )
                 raise
 
