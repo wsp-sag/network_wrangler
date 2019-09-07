@@ -232,7 +232,7 @@ class TransitNetwork(object):
         if properties.get('set') is not None:
             build_value = properties['set']
         else:
-            build_value = freq.headway_secs[0] + properties['change']
+            build_value = [i + properties['change'] for i in freq.headway_secs]
 
         # Update self or return a new object
         q = self.feed.frequencies.trip_id.isin(freq['trip_id'])

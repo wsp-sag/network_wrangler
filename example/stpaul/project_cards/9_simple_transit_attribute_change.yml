@@ -10,4 +10,4 @@ facility:
   long_name: Express
 properties:
   - property: headway_secs
-    change: -300
+    set: 1800

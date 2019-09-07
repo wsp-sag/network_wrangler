@@ -11,4 +11,4 @@ facility:
   time: ['09:00', '15:00']
 properties:
   - property: headway_secs
-    set: 900
+    change: -300
