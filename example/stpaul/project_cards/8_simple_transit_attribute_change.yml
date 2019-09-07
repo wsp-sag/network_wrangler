@@ -8,9 +8,7 @@ dependencies:
   conflicts: []
 facility:
   route_id: 21-111
+  time: ['09:00', '15:00']
 properties:
   - property: headway_secs
     set: 900
-    times:
-      - start: '07:00:00'
-        end: '23:00:00'

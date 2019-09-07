@@ -73,9 +73,7 @@ def test_select_transit_features_from_projectcard(request):
             'file': '8_simple_transit_attribute_change.yml',
             'answer': [
                 '14944012-JUN19-MVS-BUS-Weekday-01',
-                '14944018-JUN19-MVS-BUS-Weekday-01',
-                '14944019-JUN19-MVS-BUS-Weekday-01',
-                '14944022-JUN19-MVS-BUS-Weekday-01'
+                '14944019-JUN19-MVS-BUS-Weekday-01'
             ]
         },
         {
@@ -133,7 +131,7 @@ def test_wrong_existing(request):
     })
 
     with pytest.raises(Exception):
-        net = net.apply_transit_feature_change(
+        net.apply_transit_feature_change(
             selected_trips,
             [
                 {
@@ -143,6 +141,43 @@ def test_wrong_existing(request):
                 }
             ]
         )
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.transit
+@pytest.mark.travis
+def test_zero_valid_facilities(request):
+    print("\n--Starting:", request.node.name)
+    net = TransitNetwork.read(STPAUL_DIR)
+
+    with pytest.raises(Exception):
+        net.select_transit_features({
+            'trip_id': [
+                '14941433-JUN19-MVS-BUS-Weekday-01'
+            ],
+            'time': [
+                '06:00:00',
+                '09:00:00'
+            ]
+        })
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.transit
+@pytest.mark.travis
+def test_invalid_selection_key(request):
+    print("\n--Starting:", request.node.name)
+    net = TransitNetwork.read(STPAUL_DIR)
+
+    with pytest.raises(Exception):
+        # trip_ids rather than trip_id should fail
+        net.select_transit_features({
+            'trip_ids': [
+                '14941433-JUN19-MVS-BUS-Weekday-01'
+            ]
+        })
 
     print("--Finished:", request.node.name)
 

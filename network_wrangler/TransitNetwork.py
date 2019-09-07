@@ -118,6 +118,7 @@ class TransitNetwork(object):
         """
         trips = self.feed.trips
         routes = self.feed.routes
+        freq = self.feed.frequencies
 
         # Turn selection's values into lists if they are not already
         for key in ['trip_id', 'route_id', 'short_name', 'long_name']:
@@ -153,7 +154,31 @@ class TransitNetwork(object):
             WranglerLogger.error(
                 'Selection not supported %s', selection.keys()
             )
-            raise
+            raise ValueError
+
+        # If a time key exists, filter trips using frequency table
+        if selection.get('time') is not None:
+            # If time is given without seconds, add 00
+            if len(selection['time'][0]) <= 5:
+                selection['time'] = [i + ':00' for i in selection['time']]
+
+            # Convert times to seconds from midnight (Partride's time storage)
+            for i, val in enumerate(selection['time']):
+                h, m, s = val.split(":")
+                selection['time'][i] = int(h) * 3600 + int(m) * 60 + int(s)
+
+            # Filter freq to trips in selection
+            freq = freq[freq.trip_id.isin(trips['trip_id'])]
+            freq = freq[freq.start_time == selection['time'][0]]
+            freq = freq[freq.end_time == selection['time'][1]]
+
+            # Filter trips table to those still in freq table
+            trips = trips[trips.trip_id.isin(freq['trip_id'])]
+
+        # Check that there is at least one trip in trips table or raise error
+        if len(trips) < 1:
+            WranglerLogger.error('Selection returned zero trips')
+            raise ValueError
 
         # Return pandas.Series of trip_ids
         return trips['trip_id']
@@ -194,13 +219,6 @@ class TransitNetwork(object):
         # Grab only those records matching trip_ids (aka selection)
         freq = freq[freq.trip_id.isin(trip_ids)]
 
-        # Grab only those records matching start_time and end_time
-        if properties.get('times') is not None:
-            all_starts = [i['start'] for i in properties['times']]
-            freq = freq[freq.start_time.isin(all_starts)]
-            all_ends = [i['end'] for i in properties['times']]
-            freq = freq[freq.end_time.isin(all_ends)]
-
         # Check all `existing` properties if given
         if properties.get('existing') is not None:
             if not all(freq.headway_secs == properties['existing']):
@@ -208,7 +226,7 @@ class TransitNetwork(object):
                     'Existing does not match for at least '
                     '1 trip in:\n {}'.format(trip_ids.to_string())
                 )
-                raise
+                raise ValueError
 
         # Calculate build value
         if properties.get('set') is not None:
@@ -217,7 +235,7 @@ class TransitNetwork(object):
             build_value = freq.headway_secs[0] + properties['change']
 
         # Update self or return a new object
-        q = self.feed.frequencies.trip_id.isin(freq.trip_id)
+        q = self.feed.frequencies.trip_id.isin(freq['trip_id'])
         if in_place:
             self.feed.frequencies.loc[q, properties['property']] = build_value
         else:
