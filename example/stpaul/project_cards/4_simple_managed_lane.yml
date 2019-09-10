@@ -26,11 +26,19 @@ properties:
         set: 1
   - property: ML_PRICE
     set: 0
-    tod:
-      - time: [7:00, 9:00]
-        set: 1.5
-  - property: ML_RESTRICTIONS
-    set: 'None'
+    group:
+      - category: ['sov']
+        tod:
+          - time: [7:00, 9:00]
+            set: 1.5
+          - time: [13:00, 16:00]
+            set: 2.5
+      - category: ['hov2']
+        tod:
+          - time: [7:00, 9:00]
+            set: 1.0
+          - time: [13:00, 16:00]
+            set: 2.0
   - property: ML_ACCESS
     set: 'all'
   - property: ML_EGRESS
