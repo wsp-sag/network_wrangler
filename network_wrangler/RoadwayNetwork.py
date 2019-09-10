@@ -677,27 +677,29 @@ class RoadwayNetwork(object):
         attr_err = []
         req_err = []
 
-        for k, v in properties.items():
-            if k not in self.links_df.columns:
+        for p in properties:
+            attribute = p['property']
+
+            if attribute not in self.links_df.columns:
                 attr_err.append(
                     "{} specified as attribute to change but not an attribute in network\n".format(
-                        k
+                        attribute
                     )
                 )
 
             # either 'set' OR 'change' should be specified, not both
-            if "set" in v.keys() and "change" in v.keys():
+            if "set" in p.keys() and "change" in p.keys():
                 req_err.append(
                     "Both Set and Change should not be specified for the attribute {}\n".format(
-                        k
+                        attribute
                     )
                 )
 
             # if 'change' is specified, then 'existing' is required
-            if "change" in v.keys() and "existing" not in v.keys():
+            if "change" in p.keys() and "existing" not in p.keys():
                 req_err.append(
                     'Since "Change" is specified for attribute {}, "Existing" value is also required\n'.format(
-                        k
+                        attribute
                     )
                 )
 
@@ -741,11 +743,13 @@ class RoadwayNetwork(object):
         # shallow (copy.copy(self)) doesn't work as it will still use the references to links_df etc from the original net
         updated_network = copy.deepcopy(self)
 
-        for attribute, values in properties.items():
+        for p in properties:
+            attribute = p['property']
+
             existing_value = None
 
-            if "existing" in values.keys():
-                existing_value = values["existing"]
+            if 'existing' in p.keys():
+                existing_value = p['existing']
 
                 # if existing value in project card is not same in the network
                 network_values = updated_network.links_df[
@@ -758,10 +762,10 @@ class RoadwayNetwork(object):
                         )
                     )
 
-            if "set" in values.keys():
-                build_value = values["set"]
+            if 'set' in p.keys():
+                build_value = p['set']
             else:
-                build_value = values["existing"] + values["change"]
+                build_value = p['existing'] + p['change']
 
             updated_network.links_df[attribute] = np.where(
                 updated_network.links_df["selected_links"] == 1,

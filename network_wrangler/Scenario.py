@@ -133,7 +133,7 @@ class Scenario(object):
         scenario_projects = [p.name for p in self.project_cards]
 
         for project, conflicts in conflict_dict.items():
-            if not conflicts == "None":
+            if conflicts:
                 for name in conflicts:
                     if name in scenario_projects:
                         self.project_cards
@@ -161,7 +161,7 @@ class Scenario(object):
         scenario_projects = [p.name for p in self.project_cards]
 
         for project, coreq in corequisite_dict.items():
-            if not coreq == "None":
+            if coreq:
                 for name in coreq:
                     if name not in scenario_projects:
                         WranglerLogger.error(
@@ -171,7 +171,7 @@ class Scenario(object):
                         self.has_requisite_error = True
 
         for project, prereq in prerequisite_dict.items():
-            if not prereq == "None":
+            if prereq:
                 for name in prereq:
                     if name not in scenario_projects:
                         WranglerLogger.error(

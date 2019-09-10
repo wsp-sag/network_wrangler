@@ -1,23 +1,23 @@
 project: 6th Street Transitway
 category: Roadway Attribute Change
 tags:
-   - example
+   - ['example']
 dependencies:
-  prerequisite: None
-  corequisite: None
-  conflicts: None
+  prerequisite: []
+  corequisite: []
+  conflicts: []
 facility:
-   link:
-     name: [6th,Sixth,sixth] #finds links where name contains 6th or Sixth...not a regex technically ;-)
-   A:
-     osmNodeId: '187899923'
-   B:
-     osmNodeId: '187865924'
+  link:
+    name: ['6th','Sixth','sixth'] #finds links where name contains 6th or Sixth...not a regex technically ;-)
+  A:
+    osmNodeId: '187899923'
+  B:
+    osmNodeId: '187865924'
 properties:
-  LANES:
+  - property: LANES
     set: 2
-  isTranLink:
+  - property: isTranLink
     set: 1
-  isDriveLink:
+  - property: isDriveLink
     set: 0
 notes: Transitions 6th St E to transitway

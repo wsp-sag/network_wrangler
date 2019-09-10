@@ -62,7 +62,6 @@ def test_roadway_read_write(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.menow
 def test_quick_roadway_read_write(request):
     print("\n--Starting:",request.node.name)
 
@@ -165,7 +164,7 @@ def roadway_feature_change(net, project_card):
         print("Properties:\n",prop)
         revised_net = net.apply_roadway_feature_change(prop)
 
-        columns_updated = [p for p in project_card.properties]
+        columns_updated = [p['property'] for p in project_card.properties]
 
         orig_links = net.links_df.loc[selected_indices, columns_updated]
         print("Original Links:\n",orig_links)
@@ -245,19 +244,9 @@ def test_project_card(request):
     print("\n--Starting:",request.node.name)
 
     print("Reading project card ...")
-    project_card_name = '4_simple_managed_lane.yml'
+    project_card_name = '1_simple_roadway_attribute_change.yml'
     project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards',project_card_name)
     project_card = ProjectCard.read(project_card_path)
-    print(project_card.properties)
-    prop_dict = {}
-    for p in project_card.properties:
-        attribute = p['property']
-        prop_dict[attribute] = {}
-        prop_dict[attribute]['default'] = p['set']
-        if 'tod' in p.keys():
-            for item in p['tod']:
-                prop_dict[attribute]['tod'] = {'time': item['time'], 'value': item['set']}
-
-    print(prop_dict)
+    print(project_card)
 
     print("--Finished:",request.node.name)

@@ -1,21 +1,20 @@
-project: 6th Street Transitway
+name: test project b
 category: Roadway Attribute Change
 tags:
    - ['example']
 dependencies:
   prerequisite: []
-  corequisite: []
+  corequisite: ['test project c']
   conflicts: []
 facility:
-  link:
-    name: ['6th','Sixth','sixth']
-  A:
-    osmNodeId: '187899923'       # Jackson St
-  B:
-    osmNodeId: '187865924'       # Robert St N
+   link:
+     - name: ['6th', 'Sixth', 'sixth']
+   A:
+     osmid: '187854529' # Jackson St
+   B:
+     osmid: '187899923' # Robert St N
 properties:
   - property: LANES
-    existing: 1
     set: 2
   - property: isTranLink
     set: 1
