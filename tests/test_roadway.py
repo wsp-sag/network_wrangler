@@ -121,6 +121,7 @@ def test_select_roadway_features(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
+@pytest.mark.menow
 def test_select_roadway_features_from_projectcard(request):
     print("\n--Starting:",request.node.name)
 

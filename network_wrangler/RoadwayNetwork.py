@@ -210,7 +210,8 @@ class RoadwayNetwork(object):
         """
         if not os.path.exists(schema_location):
             base_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "schemas"
+                os.path.dirname(os.path.realpath(__file__)),
+                "schemas"
             )
             schema_location = os.path.join(base_path, schema_location)
 
@@ -247,7 +248,8 @@ class RoadwayNetwork(object):
 
         if not os.path.exists(schema_location):
             base_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "schemas"
+                os.path.dirname(os.path.realpath(__file__)),
+                "schemas"
             )
             schema_location = os.path.join(base_path, schema_location)
 
@@ -284,7 +286,8 @@ class RoadwayNetwork(object):
 
         if not os.path.exists(schema_location):
             base_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "schemas"
+                os.path.dirname(os.path.realpath(__file__)),
+                "schemas"
             )
             schema_location = os.path.join(base_path, schema_location)
 
@@ -335,14 +338,15 @@ class RoadwayNetwork(object):
             raise KeyError(err_msg)
 
         err = []
-        for k, v in selection["link"].items():
+        for l in selection["link"]:
+          for k,v in l.items():
             if k not in self.links_df.columns:
                 err.append(
                     "{} specified in link selection but not an attribute in network\n".format(
                         k
                     )
                 )
-        for k, v in selection["A"].items():
+        for k,v in selection["A"].items():
             if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
                 err.append(
                     "{} specified in A node selection but not an attribute in network\n".format(

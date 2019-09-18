@@ -52,6 +52,17 @@ class ProjectCard(object):
 
         return card
 
+    def write(self, filename: str = None):
+        """
+        Writes project card dictionary to YAML file
+        """
+        if not filename:
+            from network_wrangler.Utils import make_slug
+
+            filename = make_slug(self.project) + ".yml"
+        with open(filename, "w") as outfile:
+            yaml.dump(self.__dict__, outfile, default_flow_style=False)
+
     @staticmethod
     def validate_project_card_schema(
         card_file, card_schema_file: str = "project_card.json"
@@ -62,7 +73,8 @@ class ProjectCard(object):
         """
         if not os.path.exists(card_schema_file):
             base_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "schemas"
+                os.path.dirname(os.path.realpath(__file__)),
+                "schemas",
             )
             card_schema_file = os.path.join(base_path, card_schema_file)
 
@@ -78,13 +90,13 @@ class ProjectCard(object):
 
         except ValidationError as exc:
             WranglerLogger.error("Failed Project Card validation: Validation Error")
-            WranglerLogger.error("Project Card File Loc:{}".format(node_file))
-            WranglerLogger.error("Project Card Schema Loc:{}".format(schema_location))
+            WranglerLogger.error("Project Card File Loc:{}".format(card_file))
+            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_file))
             WranglerLogger.error(exc.message)
 
         except SchemaError as exc:
             WranglerLogger.error("Failed Project Card schema validation: Schema Error")
-            WranglerLogger.error("Project Card Schema Loc:{}".format(schema_location))
+            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_file))
             WranglerLogger.error(exc.message)
 
         except yaml.YAMLError as exc:
@@ -99,27 +111,28 @@ class ProjectCard(object):
         # if 'link' not in selection.keys():
         #    return sel_query
 
-        for key, value in selection["link"].items():
-            if key in ignore:
-                continue
-            if isinstance(value, list):
-                sel_query = sel_query + "("
-                v = 1
-                for i in value:  # building an OR query with each element in list
-                    if isinstance(i, str):
-                        sel_query = sel_query + key + '.str.contains("' + i + '")'
-                    else:
-                        sel_query = sel_query + key + "==" + str(i)
-                    if v != len(value):
-                        sel_query = sel_query + " or "
-                        v = v + 1
-                sel_query = sel_query + ")"
-            else:
-                sel_query = sel_query + key + " == " + '"' + str(value) + '"'
+        for l in selection["link"]:
+            for key,value in l.items():
+                if key in ignore:
+                    continue
+                if isinstance(value, list):
+                    sel_query = sel_query + "("
+                    v = 1
+                    for i in value:  # building an OR query with each element in list
+                        if isinstance(i, str):
+                            sel_query = sel_query + key + '.str.contains("' + i + '")'
+                        else:
+                            sel_query = sel_query + key + "==" + str(i)
+                        if v != len(value):
+                            sel_query = sel_query + " or "
+                            v = v + 1
+                    sel_query = sel_query + ")"
+                else:
+                    sel_query = sel_query + key + " == " + '"' + str(value) + '"'
 
-            if count != len(selection["link"]):
-                sel_query = sel_query + " and "
-            count = count + 1
+                if count != len(selection["link"]):
+                    sel_query = sel_query + " and "
+                count = count + 1
 
         if count > (1 + len(ignore)):
             sel_query = sel_query + " and "

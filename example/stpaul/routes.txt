@@ -2,9 +2,6 @@ route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_
 3-111,0,3,U of M - Como Av - Energy Park Dr - Maryland Av,,3,http://www.metrotransit.org/route/3,,0
 16-111,2,16,University Av - Midway,,3,http://www.metrotransit.org/route/16,,0
 21-111,0,21,Uptown - Lake St - Midway - Selby  Av,,3,http://www.metrotransit.org/route/21,,0
-23-111,0,23,Uptown - 38th St - Highland Village,,3,http://www.metrotransit.org/route/23,,0
-30-111,2,30,Broadway Crosstown - Westgate Sta,,3,http://www.metrotransit.org/route/30,,0
-46-111,0,46,50St - 46St - 46St Sta - Highland Village,,3,http://www.metrotransit.org/route/46,,0
 53-111,0,53,Ltd Stop - Uptown - Lake St - Marshall Av,,3,http://www.metrotransit.org/route/53,,0
 54-111,0,54,Ltd Stop - W 7 St - Airport - MOA - Maplewood Mall,,3,http://www.metrotransit.org/route/54,,0
 61-111,0,61,E Hennepin Av - Larpenteur Av - Arcade St,,3,http://www.metrotransit.org/route/61,,0
@@ -18,17 +15,10 @@ route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_
 71-111,0,71,Little Canada - Edgerton - Concord - Inver Hills,,3,http://www.metrotransit.org/route/71,,0
 74-111,0,74,46th St - Randolph - W 7th St - E 7th St - Sunray,,3,http://www.metrotransit.org/route/74,,0
 75-111,0,75,Stryker - Robert - Mendota Hts - Lake Cove Apts,,3,http://www.metrotransit.org/route/75,,0
-80-111,2,80,Maplewood - White Bear Av - Sunray,,3,http://www.metrotransit.org/route/80,,0
 83-111,2,83,HarMar Target - Lexington Av,,3,http://www.metrotransit.org/route/83,,0
-84-111,2,84,Snelling - Highland Village - Sibley Plaza,,3,http://www.metrotransit.org/route/84,,0
-87-111,2,87,Rosedale - U of M St Paul - Cleveland - Highland,,3,http://www.metrotransit.org/route/87,,0
 94-111,0,94,Express - Mpls - St Paul,,3,http://www.metrotransit.org/route/94,,0
-121-111,11,121,U of M - Campus Connector,,3,http://www.metrotransit.org/route/121,,0
-134-111,0,134,Ltd Stop - Highland - Cleveland - Cretin - Mpls,,3,http://www.metrotransit.org/route/134,,0
-219-111,2,219,Maplewood - Century Av - Hadley Av - Sunray,,3,http://www.metrotransit.org/route/219,,0
 262-111,0,262,Ltd Stop - 95Av P&R - Shoreview  Rice - St Paul,,3,http://www.metrotransit.org/route/262,,0
 265-111,0,265,Express - White Bear Lake - Maplewood - St Paul,,3,http://www.metrotransit.org/route/265,,0
-272-111,0,272,Express - Maplewood - Roseville - U of M,,3,http://www.metrotransit.org/route/272,,0
 275-111,0,275,Express - Forest Lake - Co Rd 14 P&R - St Paul,,3,http://www.metrotransit.org/route/275,,0
 294-111,0,294,Express - Oakdale - Stillwater - St Paul,,3,http://www.metrotransit.org/route/294,,0
 350-111,2,350,Ltd Stop - Sunray - McKnight - St Paul,,3,http://www.metrotransit.org/route/350,,0
@@ -41,7 +31,6 @@ route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_
 417-111,2,417,Mendota Heights - St Paul,,3,http://www.metrotransit.org/route/417,,0
 452-111,0,452,Express -Mendota Heights - West St Paul - Mpls,,3,http://www.metrotransit.org/route/452,,0
 860-111,0,860,Express - Coon Rapids - Northtown - St Paul,,3,http://www.metrotransit.org/route/860,,0
-436-71,3,436,Eagan Hwy 55 Rev Comm,Local Peak-Only,3,http://www.mvta.com/bus_route_information_2.html?routeId=436,008641,FFFFFF
 480-71,3,480,Apple Valley/Burnsville-St Paul,Express Peak-Only,3,http://www.mvta.com/bus_route_information_2.html?routeId=480,ED2028,FFFFFF
 484-71,3,484,Eagan/Rosemount-St Paul,Express Peak-Only,3,http://www.mvta.com/bus_route_information_2.html?routeId=484,00AEEF,FFFFFF
 489-71,3,489,St Paul-Eagan Rev Comm,Local Peak-Only,3,http://www.mvta.com/bus_route_information_2.html?routeId=489,89564F,FFFFFF

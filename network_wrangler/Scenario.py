@@ -41,9 +41,8 @@ class Scenario(object):
         self.prerequisites_sorted = False
 
         for card in self.project_cards:
-            self.prerequisites.update({card.name: card.dependencies["prerequisite"]})
-            self.corequisites.update({card.name: card.dependencies["corequisite"]})
-            self.conflicts.update({card.name: card.dependencies["conflicts"]})
+            self.prerequisites.update({card.project: card.dependencies["prerequisites"]})
+            self.corequisites.update({card.project: card.dependencies["corequisites"]})
 
     @staticmethod
     def create_scenario(
@@ -95,20 +94,20 @@ class Scenario(object):
                         self.project_cards.append(project_card)
                         self.prerequisites.update(
                             {
-                                project_card.name: project_card.dependencies[
+                                project_card.project: project_card.dependencies[
                                     "prerequisite"
                                 ]
                             }
                         )
                         self.corequisites.update(
                             {
-                                project_card.name: project_card.dependencies[
+                                project_card.project: project_card.dependencies[
                                     "corequisite"
                                 ]
                             }
                         )
                         self.conflicts.update(
-                            {project_card.name: project_card.dependencies["conflicts"]}
+                            {project_card.project: project_card.dependencies["conflicts"]}
                         )
 
     def __str__(self):
@@ -119,7 +118,7 @@ class Scenario(object):
         """
         Returns a list of project names
         """
-        return [project_card.name for project_card in self.project_cards]
+        return [project_card.project for project_card in self.project_cards]
 
     def check_scenario_conflicts(self) -> bool:
         """
@@ -130,7 +129,7 @@ class Scenario(object):
         """
 
         conflict_dict = self.conflicts
-        scenario_projects = [p.name for p in self.project_cards]
+        scenario_projects = [p.project for p in self.project_cards]
 
         for project, conflicts in conflict_dict.items():
             if conflicts:
@@ -158,7 +157,7 @@ class Scenario(object):
         corequisite_dict = self.corequisites
         prerequisite_dict = self.prerequisites
 
-        scenario_projects = [p.name for p in self.project_cards]
+        scenario_projects = [p.project for p in self.project_cards]
 
         for project, coreq in corequisite_dict.items():
             if coreq:
@@ -191,7 +190,7 @@ class Scenario(object):
         Returns: ordered list of project cards to be applied to scenario
         """
 
-        scenario_projects = [p.name.lower() for p in self.project_cards]
+        scenario_projects = [p.project.lower() for p in self.project_cards]
 
         # build prereq (adjacency) list for topological sort
         adjacency_list = defaultdict(list)
@@ -215,7 +214,7 @@ class Scenario(object):
         # get the project card objects for these sorted project names
         project_card_and_name_dict = {}
         for project_card in self.project_cards:
-            project_card_and_name_dict[project_card.name.lower()] = project_card
+            project_card_and_name_dict[project_card.project.lower()] = project_card
 
         sorted_project_cards = [
             project_card_and_name_dict[project_name]

@@ -9,6 +9,9 @@ Run just the tests labeled scenario using `pytest -v -m scenario`
 To run with print statments, use `pytest -s -m scenario`
 """
 
+STPAUL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),'example','stpaul')
+SCRATCH_DIR = os.path.dirname(os.path.realpath(__file__))
+
 @pytest.mark.scenario
 def test_project_card_read(request):
     print("\n--Starting:",request.node.name)
@@ -17,8 +20,21 @@ def test_project_card_read(request):
     project_card = ProjectCard.read(in_file)
     WranglerLogger.info(project_card)
     print(str(project_card))
-    assert(project_card.category == "Roadway Attribute Change")
+    assert(project_card.category == "Roadway Property Change")
     print("--Finished:",request.node.name)
+
+@pytest.mark.menow
+@pytest.mark.scenario
+def test_project_card_write(request):
+    print("\n--Starting:",request.node.name)
+    in_dir  = os.path.join(STPAUL_DIR,'project_cards')
+    in_file = os.path.join(in_dir,"1_simple_roadway_attribute_change.yml")
+    outfile = os.path.join(SCRATCH_DIR,"t_simple_roadway_attribute_change.yml")
+    project_card = ProjectCard.read(in_file)
+    project_card.write(outfile)
+    test_card = ProjectCard.read(in_file)
+    for k,v in project_card.__dict__.items():
+        assert(v == test_card.__dict__[k])
 
 @pytest.mark.scenario
 def test_scenario_conflicts(request):
