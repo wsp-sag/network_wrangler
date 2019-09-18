@@ -18,6 +18,7 @@ from partridge.gtfs import Feed
 from .Logger import WranglerLogger
 from .Utils import parse_time_spans
 
+
 class TransitNetwork(object):
     """
     Representation of a Transit Network.
@@ -121,60 +122,55 @@ class TransitNetwork(object):
         freq = self.feed.frequencies
 
         # Turn selection's values into lists if they are not already
-        for key in ['trip_id', 'route_id', 'short_name', 'long_name']:
-            if (selection.get(key) is not None and
-                    type(selection.get(key)) != list):
+        for key in ["trip_id", "route_id", "short_name", "long_name"]:
+            if selection.get(key) is not None and type(selection.get(key)) != list:
                 selection[key] = [selection[key]]
 
         # Based on the key in selection, filter trips
-        if 'trip_id' in selection:
-            trips = trips[trips.trip_id.isin(selection['trip_id'])]
+        if "trip_id" in selection:
+            trips = trips[trips.trip_id.isin(selection["trip_id"])]
 
-        elif 'route_id' in selection:
-            trips = trips[trips.route_id.isin(selection['route_id'])]
+        elif "route_id" in selection:
+            trips = trips[trips.route_id.isin(selection["route_id"])]
 
-        elif 'short_name' in selection:
-            routes = routes[
-                routes.route_short_name.isin(selection['short_name'])
-            ]
-            trips = trips[trips.route_id.isin(routes['route_id'])]
+        elif "short_name" in selection:
+            routes = routes[routes.route_short_name.isin(selection["short_name"])]
+            trips = trips[trips.route_id.isin(routes["route_id"])]
 
-        elif 'long_name' in selection:
+        elif "long_name" in selection:
             matches = []
-            for sel in selection['long_name']:
-                for long_name in routes['route_long_name']:
+            for sel in selection["long_name"]:
+                for long_name in routes["route_long_name"]:
                     x = re.search(sel, long_name)
                     if x is not None:
                         matches.append(long_name)
 
             routes = routes[routes.route_long_name.isin(matches)]
-            trips = trips[trips.route_id.isin(routes['route_id'])]
+            trips = trips[trips.route_id.isin(routes["route_id"])]
 
         else:
-            WranglerLogger.error(
-                'Selection not supported %s', selection.keys()
-            )
+            WranglerLogger.error("Selection not supported %s", selection.keys())
             raise ValueError
 
         # If a time key exists, filter trips using frequency table
-        if selection.get('time') is not None:
-            selection['time'] = parse_time_spans(selection['time'])
+        if selection.get("time") is not None:
+            selection["time"] = parse_time_spans(selection["time"])
 
             # Filter freq to trips in selection
-            freq = freq[freq.trip_id.isin(trips['trip_id'])]
-            freq = freq[freq.start_time == selection['time'][0]]
-            freq = freq[freq.end_time == selection['time'][1]]
+            freq = freq[freq.trip_id.isin(trips["trip_id"])]
+            freq = freq[freq.start_time == selection["time"][0]]
+            freq = freq[freq.end_time == selection["time"][1]]
 
             # Filter trips table to those still in freq table
-            trips = trips[trips.trip_id.isin(freq['trip_id'])]
+            trips = trips[trips.trip_id.isin(freq["trip_id"])]
 
         # Check that there is at least one trip in trips table or raise error
         if len(trips) < 1:
-            WranglerLogger.error('Selection returned zero trips')
+            WranglerLogger.error("Selection returned zero trips")
             raise ValueError
 
         # Return pandas.Series of trip_ids
-        return trips['trip_id']
+        return trips["trip_id"]
 
     def apply_transit_feature_change(
         self, trip_ids: pd.Series, properties: dict
@@ -195,7 +191,7 @@ class TransitNetwork(object):
         None
         """
         for i in properties:
-            if i['property'] in ['headway_secs']:
+            if i["property"] in ["headway_secs"]:
                 self.apply_transit_feature_change_frequency(trip_ids, i)
 
             # elif i['property'] in ['stops']:
@@ -213,25 +209,25 @@ class TransitNetwork(object):
         freq = freq[freq.trip_id.isin(trip_ids)]
 
         # Check all `existing` properties if given
-        if properties.get('existing') is not None:
-            if not all(freq.headway_secs == properties['existing']):
+        if properties.get("existing") is not None:
+            if not all(freq.headway_secs == properties["existing"]):
                 WranglerLogger.error(
-                    'Existing does not match for at least '
-                    '1 trip in:\n {}'.format(trip_ids.to_string())
+                    "Existing does not match for at least "
+                    "1 trip in:\n {}".format(trip_ids.to_string())
                 )
                 raise ValueError
 
         # Calculate build value
-        if properties.get('set') is not None:
-            build_value = properties['set']
+        if properties.get("set") is not None:
+            build_value = properties["set"]
         else:
-            build_value = [i + properties['change'] for i in freq.headway_secs]
+            build_value = [i + properties["change"] for i in freq.headway_secs]
 
         # Update self or return a new object
-        q = self.feed.frequencies.trip_id.isin(freq['trip_id'])
+        q = self.feed.frequencies.trip_id.isin(freq["trip_id"])
         if in_place:
-            self.feed.frequencies.loc[q, properties['property']] = build_value
+            self.feed.frequencies.loc[q, properties["property"]] = build_value
         else:
             updated_network = copy.deepcopy(self)
-            updated_network.loc[q, properties['property']] = build_value
+            updated_network.loc[q, properties["property"]] = build_value
             return updated_network

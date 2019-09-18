@@ -1,6 +1,7 @@
 import pandas as pd
 from .Logger import WranglerLogger
 
+
 def point_df_to_geojson(df: pd.DataFrame, properties: list):
     """
     Author: Geoff Boeing:
@@ -67,6 +68,7 @@ def make_slug(text, delimiter: str = "_"):
     text = re.sub("[,.;@#?!&$']+", "", text.lower())
     return re.sub("[\ ]+", delimiter, text)
 
+
 def parse_time_spans(times):
     """
     parse time spans into tuples of seconds from midnight
@@ -83,19 +85,17 @@ def parse_time_spans(times):
     try:
         start_time, end_time = times
     except:
-        WranglerLogger.error(
-            "ERROR: times should be a tuple or list of two strings"
-        )
+        WranglerLogger.error("ERROR: times should be a tuple or list of two strings")
         raise ValueError()
 
-    start_time=start_time.strip()
-    end_time=end_time.strip()
+    start_time = start_time.strip()
+    end_time = end_time.strip()
 
     # If time is given without seconds, add 00
     if len(start_time) <= 5:
-        start_time += ':00'
+        start_time += ":00"
     if len(end_time) <= 5:
-        end_time += ':00'
+        end_time += ":00"
 
     # Convert times to seconds from midnight (Partride's time storage)
     h0, m0, s0 = start_time.split(":")
