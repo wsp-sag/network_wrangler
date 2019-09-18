@@ -5,7 +5,8 @@ tags:
 dependencies:
   prerequisites: []
   corequisites: []
-  conflicts: ['7th test project']
+  conflicts:
+    - '7th test project'
 facility:
    link:
      - name:

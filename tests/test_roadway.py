@@ -74,6 +74,7 @@ def test_quick_roadway_read_write(request):
     net_2 = RoadwayNetwork.read(link_file= out_link_file, node_file=out_node_file, shape_file=out_shape_file)
     print("--Finished:",request.node.name)
 
+@pytest.mark.menow
 @pytest.mark.basic
 @pytest.mark.roadway
 def test_select_roadway_features(request):
@@ -82,21 +83,21 @@ def test_select_roadway_features(request):
 
     test_selections = { \
     "1. simple": {
-     'link':{'name': ['6th','Sixth','sixth']},
+     'link':[{'name': ['6th','Sixth','sixth']}],
      'A':{'osmNodeId': '187899923'},
      'B':{'osmNodeId': '187865924'},
      'answer': ['187899923', '187858777', '187923585', '187865924'],
     },
     "2. farther": {
-     'link':{'name': ['6th','Sixth','sixth']},
+     'link':[{'name': ['6th','Sixth','sixth']}],
      'A':{'osmNodeId': '187899923'}, # start searching for segments at A
      'B':{'osmNodeId': '187942339'}
     },
     "3. multi-criteria": {
-     'link':{
-        'name': ['6th','Sixth','sixth'],
-        'LANES': [1,2],
-        },
+     'link':[
+        {'name': ['6th','Sixth','sixth']},
+        {'LANES': [1,2]},
+        ],
      'A':{'osmNodeId': '187899923'}, # start searching for segments at A
      'B':{'osmNodeId': '187942339'}
     }

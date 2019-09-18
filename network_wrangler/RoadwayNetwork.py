@@ -353,7 +353,8 @@ class RoadwayNetwork(object):
                         k
                     )
                 )
-        for k, v in selection["B"].items():
+        for k,v in selection["B"].items():
+            print("l3",k,v)
             if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
                 err.append(
                     "{} specified in B node selection but not an attribute in network\n".format(

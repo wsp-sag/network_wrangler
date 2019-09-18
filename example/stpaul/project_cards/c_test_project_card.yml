@@ -1,14 +1,18 @@
-name: test project c
-category: Roadway Attribute Change
+project: test project c
+category: Roadway Property Change
 tags:
    - ['example']
 dependencies:
-  prerequisite: []
-  corequisite: []
-  conflicts: ['test project x']
+  prerequisites: []
+  corequisites: []
+  conflicts:
+    - 'test project x'
 facility:
    link:
-     - name: ['6th', 'Sixth', 'sixth']
+     - name:
+       - '6th'
+       - 'Sixth'
+       - 'sixth'
    A:
      osmid: '187854529' # Jackson St
    B:

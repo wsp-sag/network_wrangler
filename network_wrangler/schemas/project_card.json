@@ -22,7 +22,8 @@
       "type": "string",
       "enum": [
         "Roadway Property Change",
-        "Transit Service Property Change"
+        "Transit Service Property Change",
+        "Parallel Managed Lanes"
       ],
       "title": "Project Category"
     },

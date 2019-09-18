@@ -23,7 +23,6 @@ def test_project_card_read(request):
     assert(project_card.category == "Roadway Property Change")
     print("--Finished:",request.node.name)
 
-@pytest.mark.menow
 @pytest.mark.scenario
 def test_project_card_write(request):
     print("\n--Starting:",request.node.name)
