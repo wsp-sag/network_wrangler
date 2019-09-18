@@ -16,7 +16,7 @@ from partridge.config import default_config
 from partridge.gtfs import Feed
 
 from .Logger import WranglerLogger
-
+from .Utils import parse_time_spans
 
 class TransitNetwork(object):
     """
@@ -158,14 +158,7 @@ class TransitNetwork(object):
 
         # If a time key exists, filter trips using frequency table
         if selection.get('time') is not None:
-            # If time is given without seconds, add 00
-            if len(selection['time'][0]) <= 5:
-                selection['time'] = [i + ':00' for i in selection['time']]
-
-            # Convert times to seconds from midnight (Partride's time storage)
-            for i, val in enumerate(selection['time']):
-                h, m, s = val.split(":")
-                selection['time'][i] = int(h) * 3600 + int(m) * 60 + int(s)
+            selection['time'] = parse_time_spans(selection['time'])
 
             # Filter freq to trips in selection
             freq = freq[freq.trip_id.isin(trips['trip_id'])]
