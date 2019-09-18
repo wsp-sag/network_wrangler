@@ -20,9 +20,9 @@ def test_project_card_read(request):
     project_card = ProjectCard.read(in_file)
     WranglerLogger.info(project_card.__dict__)
     print(str(project_card))
-    assert(project_card.category == "Roadway Attribute Change")
+    assert(project_card.category == "Roadway Property Change")
     print("--Finished:",request.node.name)
-    
+
 @pytest.mark.menow
 @pytest.mark.scenario
 def test_project_card_write(request):

@@ -338,21 +338,23 @@ class RoadwayNetwork(object):
             raise KeyError(err_msg)
 
         err = []
-        for k, v in selection["link"].items():
+        for l in selection["link"]:
+          for k,v in l.items():
             if k not in self.links_df.columns:
                 err.append(
                     "{} specified in link selection but not an attribute in network\n".format(
                         k
                     )
                 )
-        for k, v in selection["A"].items():
+        for k,v in selection["A"].items():
             if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
                 err.append(
                     "{} specified in A node selection but not an attribute in network\n".format(
                         k
                     )
                 )
-        for k, v in selection["B"].items():
+        for k,v in selection["B"].items():
+            print("l3",k,v)
             if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
                 err.append(
                     "{} specified in B node selection but not an attribute in network\n".format(

@@ -1,18 +1,21 @@
-name: 4th test project
-category: Roadway Attribute Change
+project: 4th test project
+category: Roadway Property Change
 tags:
-   - ['example']
+   - 'example'
 dependencies:
-  prerequisite: ['5th test project', '6th test project']
-  corequisite: None
-  conflicts: None
+  prerequisites: ['5th test project', '6th test project']
+  corequisites: []
+  conflicts: []
 facility:
    link:
-     - name: [6th, Sixth, sixth]
+     - name:
+        - '6th'
+        - 'Sixth'
+        - 'sixth'
    A:
-     osmid: 187854529 # Jackson St
+     osmNodeId: 187854529 # Jackson St
    B:
-     osmid: 187899923 # Robert St N
+     osmNodeId: 187899923 # Robert St N
 properties:
   - LANES: 2
   - isTranLink: 1
