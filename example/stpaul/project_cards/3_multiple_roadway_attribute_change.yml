@@ -1,14 +1,17 @@
 project: 6th Street Transitway
 category: Roadway Property Change
 tags:
-   - example
+   - 'example'
 dependencies:
   prerequisites: []
   corequisites: []
   conflicts: []
 facility:
   link:
-    name: ['6th','Sixth','sixth']
+     - name:
+        - '6th'
+        - 'Sixth'
+        - 'sixth'
   A:
     osmNodeId: '187899923'       # Jackson St
   B:

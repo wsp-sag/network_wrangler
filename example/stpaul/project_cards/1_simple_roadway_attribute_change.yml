@@ -1,14 +1,15 @@
 project: 6th St E Road Diet
 category: Roadway Property Change
 tags:
-   - example
+   - 'example'
 dependencies:
   prerequisites: []
   corequisites: []
   conflicts: []
 facility:
    link:
-     osmid: '223371529' # 6th St E
+     - osmid:
+        - '223371529' # 6th St E
    A:
      osmNodeId: '187854529' # Jackson St
    B:
