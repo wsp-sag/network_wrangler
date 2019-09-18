@@ -210,7 +210,8 @@ class RoadwayNetwork(object):
         """
         if not os.path.exists(schema_location):
             base_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "schemas"
+                os.path.dirname(os.path.realpath(__file__)),
+                "schemas"
             )
             schema_location = os.path.join(base_path, schema_location)
 
@@ -247,7 +248,8 @@ class RoadwayNetwork(object):
 
         if not os.path.exists(schema_location):
             base_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "schemas"
+                os.path.dirname(os.path.realpath(__file__)),
+                "schemas"
             )
             schema_location = os.path.join(base_path, schema_location)
 
@@ -284,7 +286,8 @@ class RoadwayNetwork(object):
 
         if not os.path.exists(schema_location):
             base_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "schemas"
+                os.path.dirname(os.path.realpath(__file__)),
+                "schemas"
             )
             schema_location = os.path.join(base_path, schema_location)
 
