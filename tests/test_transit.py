@@ -27,7 +27,7 @@ def test_transit_read_write(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.basic
+@pytest.mark.travis
 @pytest.mark.transit
 def test_select_transit_features(request):
     print("\n--Starting:", request.node.name)
@@ -47,7 +47,12 @@ def test_select_transit_features(request):
                 '14940701-JUN19-MVS-BUS-Weekday-01',
                 '14940975-JUN19-MVS-BUS-Weekday-01'
             ]
-        }
+        },
+        "3. route_id": {
+            'route_id': '365-111',
+            'answer': ['14947182-JUN19-MVS-BUS-Weekday-01']
+        },
+
     }
 
     for i, sel in test_selections.items():

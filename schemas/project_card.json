@@ -100,7 +100,7 @@
       ],
       "properties": {
         "link": {
-          "type": "object",
+          "type": "array",
           "additionalProperties": false,
           "title": "Road Name or Link ID",
           "oneOf": [
