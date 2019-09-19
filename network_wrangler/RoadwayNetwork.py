@@ -26,7 +26,7 @@ import osmnx as ox
 from shapely.geometry import Point, LineString
 
 from .Logger import WranglerLogger
-from .Utils import point_df_to_geojson, link_df_to_json
+from .Utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .ProjectCard import ProjectCard
 
 
@@ -795,22 +795,36 @@ class RoadwayNetwork(object):
         for p in properties:
             attribute = p['property']
 
-            if 'tod' in p.keys():
-                # in this case make the attr_value a dictonary
+            if 'group' in p.keys():
                 attr_value = {}
                 attr_value['default'] = p['set']
-                for item in p['tod']:
-                    attr_value['tod'] = {'time': item['time'], 'value': item['set']}
-            else:
-                attr_value = p['set']
-            #print("\n", attribute, attr_dict)
+                attr_value['timeofday'] = []
+                for g in p['group']:
+                    category = g['category']
+                    for tod in g['timeofday']:
+                        attr_value['timeofday'].append({'category': category, 'time': parse_time_spans(tod['time']), 'value': tod['set']})
 
-            # TODO: decide on connectors info when they are more specific
+            elif 'timeofday' in p.keys():
+                attr_value = {}
+                attr_value['default'] = p['set']
+                attr_value['timeofday'] = []
+                for tod in p['timeofday']:
+                    attr_value['timeofday'].append({'time': parse_time_spans(tod['time']), 'value': tod['set']})
+
+            elif 'set' in p.keys():
+                attr_value = p['set']
+
+            else:
+                attr_value = ""
+
+            # TODO: decide on connectors info when they are more specific in project card
             if attribute == 'ML_ACCESS' and attr_value == 'all':
                 attr_value = 1
 
             if attribute == 'ML_EGRESS' and attr_value == 'all':
                 attr_value = 1
+
+            #print(attr_value)
 
             if 'selected_links' in self.links_df.columns:
                 # if the input network has a selected_links flags to indicate selection set

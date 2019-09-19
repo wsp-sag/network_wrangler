@@ -6,6 +6,10 @@ from network_wrangler import RoadwayNetwork
 from network_wrangler import ProjectCard
 import time
 import numpy as np
+import pandas as pd
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 50000)
 
 """
 Run just the tests labeled basic using `pytest -m roadway`
@@ -22,7 +26,7 @@ SMALL_SHAPE_FILE = os.path.join(SMALL_DIR,"shape.geojson")
 SMALL_LINK_FILE = os.path.join(SMALL_DIR,"link.json")
 SMALL_NODE_FILE = os.path.join(SMALL_DIR,"node.geojson")
 
-SCRATCH_DIR = os.path.join(os.getcwd(),"tests")
+SCRATCH_DIR = os.path.join(os.getcwd(),"scratch")
 
 @pytest.mark.roadway
 def test_roadway_read_write(request):
@@ -197,16 +201,17 @@ def test_roadway_feature_change(request):
 
     print("--Finished:",request.node.name)
 
-@pytest.mark.ashishk
+@pytest.mark.managed
 @pytest.mark.roadway
-def test_add_simple_managed_lane(request):
+def test_add_managed_lane(request):
     print("\n--Starting:",request.node.name)
 
     print("Reading network ...")
     net = RoadwayNetwork.read(link_file= STPAUL_LINK_FILE, node_file=STPAUL_NODE_FILE, shape_file=STPAUL_SHAPE_FILE, fast=True)
 
     print("Reading project card ...")
-    project_card_name = '4_simple_managed_lane.yml'
+    #project_card_name = '4_simple_managed_lane.yml'
+    project_card_name = '5_managed_lane.yml'
     project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards',project_card_name)
     project_card = ProjectCard.read(project_card_path)
 
@@ -220,21 +225,25 @@ def test_add_simple_managed_lane(request):
     else:
         selected_indices = selected_links.index.tolist()
 
-        in_links = net.links_df.loc[selected_indices, :]
-        print("\nOriginal Links:\n",in_links)
+        prop = project_card.properties
+        columns_updated = [p['property'] for p in prop]
 
         net.links_df['selected_links'] = np.where(net.links_df.index.isin(selected_indices), 1, 0)
 
         print("Applying project card ...")
-        prop = project_card.properties
         print("\nProperties:",prop)
         revised_net = net.add_roadway_attributes(prop)
 
-        if 'selected_links' in final_net.links_df.columns:
+        if 'selected_links' in revised_net.links_df.columns:
             revised_net.links_df.drop(['selected_links'], axis = 1, inplace = True)
 
-        out_links = revised_net.links_df.loc[selected_indices, :]
-        print("\nUpdated Links:\n",out_links)
+        in_links = net.links_df.loc[selected_indices, columns_updated]
+        print("\nOriginal Links:\n", in_links)
+
+        out_links = revised_net.links_df.loc[selected_indices, columns_updated]
+        print("\nRevised Links:\n", out_links)
+
+        revised_net.links_df.loc[selected_indices, :].to_csv(os.path.join(SCRATCH_DIR, "ml_out_links.csv"), index=False)
 
         revised_net.write(filename="test_ml", path=SCRATCH_DIR)
 
@@ -246,7 +255,7 @@ def test_project_card(request):
     print("\n--Starting:",request.node.name)
 
     print("Reading project card ...")
-    project_card_name = '1_simple_roadway_attribute_change.yml'
+    project_card_name = '5_managed_lane.yml'
     project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards',project_card_name)
     project_card = ProjectCard.read(project_card_path)
     print(project_card)
