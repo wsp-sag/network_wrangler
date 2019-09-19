@@ -41,7 +41,9 @@ class Scenario(object):
         self.prerequisites_sorted = False
 
         for card in self.project_cards:
-            self.prerequisites.update({card.project: card.dependencies["prerequisites"]})
+            self.prerequisites.update(
+                {card.project: card.dependencies["prerequisites"]}
+            )
             self.corequisites.update({card.project: card.dependencies["corequisites"]})
 
     @staticmethod
@@ -107,7 +109,11 @@ class Scenario(object):
                             }
                         )
                         self.conflicts.update(
-                            {project_card.project: project_card.dependencies["conflicts"]}
+                            {
+                                project_card.project: project_card.dependencies[
+                                    "conflicts"
+                                ]
+                            }
                         )
 
     def __str__(self):

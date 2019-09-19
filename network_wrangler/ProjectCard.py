@@ -73,8 +73,7 @@ class ProjectCard(object):
         """
         if not os.path.exists(card_schema_file):
             base_path = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "schemas",
+                os.path.dirname(os.path.realpath(__file__)), "schemas"
             )
             card_schema_file = os.path.join(base_path, card_schema_file)
 
@@ -112,7 +111,7 @@ class ProjectCard(object):
         #    return sel_query
 
         for l in selection["link"]:
-            for key,value in l.items():
+            for key, value in l.items():
                 if key in ignore:
                     continue
                 if isinstance(value, list):
