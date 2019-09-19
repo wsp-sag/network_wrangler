@@ -20,27 +20,31 @@ properties:
   - property: LANES
     set: 3
     timeofday:
-      - time: [7:00, 9:00]
+      - time: ['7:00', '9:00']
+        set: 2
+      - time: ['16:00', '19:00']
         set: 2
   - property: ML_LANES
     set: 0
     timeofday:
-      - time: [7:00, 9:00]
+      - time: ['7:00', '9:00']
+        set: 1
+      - time: ['16:00', '19:00']
         set: 1
   - property: ML_PRICE
     set: 0
     group:
       - category: ['sov']
         timeofday:
-          - time: [7:00, 9:00]
+          - time: ['7:00', '9:00']
             set: 1.5
-          - time: [13:00, 16:00]
+          - time: ['16:00', '19:00']
             set: 2.5
       - category: ['hov2']
         timeofday:
-          - time: [7:00, 9:00]
+          - time: ['7:00', '9:00']
             set: 1.0
-          - time: [13:00, 16:00]
+          - time: ['16:00', '19:00']
             set: 2.0
   - property: ML_ACCESS
     set: 'all'
