@@ -41,8 +41,9 @@ class RoadwayNetwork(object):
     OPTIONAL_FIELDS = [  # field name, default value
         ("ML_LANES", 0),
         ("ML_PRICE", 0),
-        ("ML_ACCESS", False),
-        ("ML_EGRESS", True),
+        ("ML_ACCESS", 0),
+        ("ML_EGRESS", 0),
+        ("PROJECTS",""),
     ]
 
     SEARCH_BREADTH = 5
@@ -762,16 +763,13 @@ class RoadwayNetwork(object):
         for p in properties:
             attribute = p["property"]
 
-            existing_value = None
-
-            if "existing" in p.keys():
-                existing_value = p["existing"]
-
-                # if existing value in project card is not same in the network
+            # if project card specifies an existing value in the network
+            #   check and see if the existing value in the network matches
+            if p.get("existing"):
                 network_values = updated_network.links_df[
                     updated_network.links_df["selected_links"] == 1
                 ][attribute].tolist()
-                if not set(network_values).issubset([existing_value]):
+                if not set(network_values).issubset([p.get("existing")]):
                     WranglerLogger.warning(
                         "WARNING: Existing value defined for {} in project card does not match the value in the roadway network for the selected links".format(
                             attribute
