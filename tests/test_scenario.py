@@ -96,3 +96,17 @@ def test_project_sort(request):
     scen.order_project_cards()
     print("Ordered Projects:",scen.project_names())
     print("--Finished:",request.node.name)
+
+@pytest.mark.test_ak
+@pytest.mark.roadway
+@pytest.mark.scenario
+def test_managed_lane_project_card(request):
+    print("\n--Starting:",request.node.name)
+
+    print("Reading project card ...")
+    project_card_name = '5_managed_lane.yml'
+    project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards',project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+    print(project_card)
+
+    print("--Finished:",request.node.name)

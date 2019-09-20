@@ -180,6 +180,7 @@ def roadway_feature_change(net, project_card):
 
 @pytest.mark.roadway
 @pytest.mark.travis
+@pytest.mark.menow
 def test_roadway_feature_change(request):
     print("\n--Starting:",request.node.name)
 
@@ -190,6 +191,8 @@ def test_roadway_feature_change(request):
         (net, '1_simple_roadway_attribute_change.yml'),
         (net, '2_multiple_roadway.yml'),
         (net, '3_multiple_roadway_attribute_change.yml'),
+        (net, '4_simple_managed_lane.yml'),
+        (net, '5_managed_lane.yml'),
     ]
 
     for my_net, project_card_name in project_card_set:
@@ -203,6 +206,7 @@ def test_roadway_feature_change(request):
 
 @pytest.mark.managed
 @pytest.mark.roadway
+@pytest.mark.travis
 def test_add_managed_lane(request):
     print("\n--Starting:",request.node.name)
 
@@ -246,18 +250,5 @@ def test_add_managed_lane(request):
         revised_net.links_df.loc[selected_indices, :].to_csv(os.path.join(SCRATCH_DIR, "ml_out_links.csv"), index=False)
 
         revised_net.write(filename="test_ml", path=SCRATCH_DIR)
-
-    print("--Finished:",request.node.name)
-
-@pytest.mark.test_ak
-@pytest.mark.roadway
-def test_project_card(request):
-    print("\n--Starting:",request.node.name)
-
-    print("Reading project card ...")
-    project_card_name = '5_managed_lane.yml'
-    project_card_path = os.path.join(os.getcwd(),'example','stpaul','project_cards',project_card_name)
-    project_card = ProjectCard.read(project_card_path)
-    print(project_card)
 
     print("--Finished:",request.node.name)

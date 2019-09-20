@@ -1,14 +1,17 @@
 project: test managed lane project
 category: Parallel Managed Lanes
 tags:
-   - ['example']
+   - 'example'
 dependencies:
   prerequisites: None
   corequisites: None
   conflicts: None
 facility:
   link:
-    name: ['6th','Sixth','sixth']
+    - name:
+      - '6th'
+      - 'Sixth'
+      - 'sixth'
   A:
     osmNodeId: '187899923'
   B:
