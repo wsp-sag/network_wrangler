@@ -19,7 +19,7 @@ __all__ = [
     "Scenario",
     "link_df_to_json",
     "make_slug",
-    "parse_time_spans"
+    "parse_time_spans",
 ]
 
 setupLogging(logFileName="network_wrangler.log")

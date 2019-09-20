@@ -36,10 +36,19 @@ class RoadwayNetwork(object):
     """
 
     CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+
     NODE_FOREIGN_KEY = "osmNodeId"
+    OPTIONAL_FIELDS = [  # field name, default value
+        ("ML_LANES", 0),
+        ("ML_PRICE", 0),
+        ("ML_ACCESS", False),
+        ("ML_EGRESS", True),
+    ]
+
     SEARCH_BREADTH = 5
     MAX_SEARCH_BREADTH = 10
     SP_WEIGHT_FACTOR = 100
+
     SELECTION_REQUIRES = ["A", "B", "link"]
 
     def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
@@ -53,6 +62,11 @@ class RoadwayNetwork(object):
         self.nodes_df = nodes
         self.links_df = links
         self.shapes_df = shapes
+
+        # Add non-required fields if they aren't there.
+        for field, default_value in RoadwayNetwork.OPTIONAL_FIELDS:
+            if field not in self.links_df.columns:
+                self.links_df[field] = default_value
 
         self.selections = {}
 
@@ -680,7 +694,7 @@ class RoadwayNetwork(object):
         req_err = []
 
         for p in properties:
-            attribute = p['property']
+            attribute = p["property"]
 
             if attribute not in self.links_df.columns:
                 attr_err.append(
@@ -746,12 +760,12 @@ class RoadwayNetwork(object):
         updated_network = copy.deepcopy(self)
 
         for p in properties:
-            attribute = p['property']
+            attribute = p["property"]
 
             existing_value = None
 
-            if 'existing' in p.keys():
-                existing_value = p['existing']
+            if "existing" in p.keys():
+                existing_value = p["existing"]
 
                 # if existing value in project card is not same in the network
                 network_values = updated_network.links_df[
@@ -764,10 +778,10 @@ class RoadwayNetwork(object):
                         )
                     )
 
-            if 'set' in p.keys():
-                build_value = p['set']
+            if "set" in p.keys():
+                build_value = p["set"]
             else:
-                build_value = p['existing'] + p['change']
+                build_value = p["existing"] + p["change"]
 
             updated_network.links_df[attribute] = np.where(
                 updated_network.links_df["selected_links"] == 1,
@@ -793,45 +807,51 @@ class RoadwayNetwork(object):
         updated_network = copy.deepcopy(self)
 
         for p in properties:
-            attribute = p['property']
+            attribute = p["property"]
 
-            if 'group' in p.keys():
+            if "group" in p.keys():
                 attr_value = {}
-                attr_value['default'] = p['set']
-                attr_value['timeofday'] = []
-                for g in p['group']:
-                    category = g['category']
-                    for tod in g['timeofday']:
-                        attr_value['timeofday'].append({'category': category, 'time': parse_time_spans(tod['time']), 'value': tod['set']})
+                attr_value["default"] = p["set"]
+                attr_value["timeofday"] = []
+                for g in p["group"]:
+                    category = g["category"]
+                    for tod in g["timeofday"]:
+                        attr_value["timeofday"].append(
+                            {
+                                "category": category,
+                                "time": parse_time_spans(tod["time"]),
+                                "value": tod["set"],
+                            }
+                        )
 
-            elif 'timeofday' in p.keys():
+            elif "timeofday" in p.keys():
                 attr_value = {}
-                attr_value['default'] = p['set']
-                attr_value['timeofday'] = []
-                for tod in p['timeofday']:
-                    attr_value['timeofday'].append({'time': parse_time_spans(tod['time']), 'value': tod['set']})
+                attr_value["default"] = p["set"]
+                attr_value["timeofday"] = []
+                for tod in p["timeofday"]:
+                    attr_value["timeofday"].append(
+                        {"time": parse_time_spans(tod["time"]), "value": tod["set"]}
+                    )
 
-            elif 'set' in p.keys():
-                attr_value = p['set']
+            elif "set" in p.keys():
+                attr_value = p["set"]
 
             else:
                 attr_value = ""
 
             # TODO: decide on connectors info when they are more specific in project card
-            if attribute == 'ML_ACCESS' and attr_value == 'all':
+            if attribute == "ML_ACCESS" and attr_value == "all":
                 attr_value = 1
 
-            if attribute == 'ML_EGRESS' and attr_value == 'all':
+            if attribute == "ML_EGRESS" and attr_value == "all":
                 attr_value = 1
 
-            #print(attr_value)
+            # print(attr_value)
 
-            if 'selected_links' in self.links_df.columns:
+            if "selected_links" in self.links_df.columns:
                 # if the input network has a selected_links flags to indicate selection set
                 updated_network.links_df[attribute] = np.where(
-                    updated_network.links_df['selected_links'] == 1,
-                    attr_value,
-                    ""
+                    updated_network.links_df["selected_links"] == 1, attr_value, ""
                 )
             else:
                 # else add/change the attribute for all the links
