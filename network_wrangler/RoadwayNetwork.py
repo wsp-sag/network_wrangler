@@ -777,15 +777,17 @@ class RoadwayNetwork(object):
                     )
 
             if "set" in p.keys():
-                build_value = p["set"]
+                updated_network.links_df[attribute] = np.where(
+                    updated_network.links_df["selected_links"] == 1,
+                    p["set"],
+                    updated_network.links_df[attribute],
+                )
             else:
-                build_value = p["existing"] + p["change"]
-
-            updated_network.links_df[attribute] = np.where(
-                updated_network.links_df["selected_links"] == 1,
-                build_value,
-                updated_network.links_df[attribute],
-            )
+                updated_network.links_df[attribute] = np.where(
+                    updated_network.links_df["selected_links"] == 1,
+                    updated_network.links_df[attribute] + p["change"],
+                    updated_network.links_df[attribute],
+                )
 
         updated_network.links_df.drop(["selected_links"], axis=1, inplace=True)
 
