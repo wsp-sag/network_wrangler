@@ -8,14 +8,11 @@ dependencies:
   conflicts: None
 facility:
   link:
-     - name:
-        - '6th'
-        - 'Sixth'
-        - 'sixth'
+    []
   A:
-    osmNodeId: '187899923'
+    osmNodeId: '961117623'
   B:
-    osmNodeId: '187865924'
+    osmNodeId: '2564047368'
 properties:
   - property: LANES
     set: 3
