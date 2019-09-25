@@ -8,7 +8,8 @@ dependencies:
   conflicts: None
 facility:
   link:
-    []
+    - name:
+      - 'I 35E'
   A:
     osmNodeId: '961117623'
   B:

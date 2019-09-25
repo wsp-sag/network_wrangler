@@ -125,6 +125,11 @@ def test_select_roadway_features(request):
             "A": {"osmNodeId": "187899923"},  # start searching for segments at A
             "B": {"osmNodeId": "187942339"},
         },
+        "4. reference": {
+            "name": [{"name": ["I 35E"]}],
+            "A": {"osmNodeId": "961117623"},  # start searching for segments at A
+            "B": {"osmNodeId": "2564047368"},
+        },
     }
 
     for i, sel in test_selections.items():
@@ -147,7 +152,6 @@ def test_select_roadway_features(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.menow
 def test_select_roadway_features_from_projectcard(request):
     print("\n--Starting:", request.node.name)
 
