@@ -96,7 +96,7 @@ def test_quick_roadway_read_write(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.menow
+@pytest.mark.ashishk
 @pytest.mark.basic
 @pytest.mark.roadway
 def test_select_roadway_features(request):
@@ -126,7 +126,7 @@ def test_select_roadway_features(request):
             "B": {"osmNodeId": "187942339"},
         },
         "4. reference": {
-            "name": [{"name": ["I 35E"]}],
+            "link": [{"name": ["I 35E"]}],
             "A": {"osmNodeId": "961117623"},  # start searching for segments at A
             "B": {"osmNodeId": "2564047368"},
         },

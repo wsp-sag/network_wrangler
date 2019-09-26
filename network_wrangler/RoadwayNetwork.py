@@ -366,7 +366,6 @@ class RoadwayNetwork(object):
                     )
                 )
         for k, v in selection["B"].items():
-            print("l3", k, v)
             if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
                 err.append(
                     "{} specified in B node selection but not an attribute in network\n".format(
@@ -532,13 +531,34 @@ class RoadwayNetwork(object):
         # assign them as iteration = 0
         # subsequent iterations that didn't match the query will be
         # assigned a heigher weight in the shortest path
-        self.selections[sel_key]["candidate_links"] = self.links_df.query(
-            sel_query, engine="python"
-        )
-        candidate_links = self.selections[sel_key][
-            "candidate_links"
-        ]  # b/c too long to keep that way
-        candidate_links["i"] = 0
+        try:
+            self.selections[sel_key]["candidate_links"] = self.links_df.query(
+                sel_query, engine="python"
+            )
+            candidate_links = self.selections[sel_key][
+                "candidate_links"
+            ]  # b/c too long to keep that way
+            candidate_links["i"] = 0
+
+            if len(candidate_links.index) == 0:
+                raise Exception("search query did not return anything")
+        except:
+            selection_has_name_key = any("name" in d for d in selection["link"])
+
+            # if the query doesn't come back with something from 'name'
+            # try it again with 'ref' instead
+            if selection_has_name_key:
+                sel_query = sel_query.replace("name", "ref")
+
+                self.selections[sel_key]["candidate_links"] = self.links_df.query(
+                    sel_query, engine="python"
+                )
+                candidate_links = self.selections[sel_key][
+                    "candidate_links"
+                ]  # b/c too long to keep that way
+                candidate_links["i"] = 0
+            else:
+                return False
 
         def _add_breadth(candidate_links, nodes, links, i):
             """
