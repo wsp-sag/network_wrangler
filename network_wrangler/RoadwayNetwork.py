@@ -26,7 +26,7 @@ import osmnx as ox
 from shapely.geometry import Point, LineString
 
 from .Logger import WranglerLogger
-from .Utils import point_df_to_geojson, link_df_to_json
+from .Utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .ProjectCard import ProjectCard
 
 
@@ -36,10 +36,20 @@ class RoadwayNetwork(object):
     """
 
     CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+
     NODE_FOREIGN_KEY = "osmNodeId"
+    OPTIONAL_FIELDS = [  # field name, default value
+        ("ML_LANES", 0),
+        ("ML_PRICE", 0),
+        ("ML_ACCESS", 0),
+        ("ML_EGRESS", 0),
+        ("PROJECTS",""),
+    ]
+
     SEARCH_BREADTH = 5
     MAX_SEARCH_BREADTH = 10
     SP_WEIGHT_FACTOR = 100
+
     SELECTION_REQUIRES = ["A", "B", "link"]
 
     def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
@@ -53,6 +63,11 @@ class RoadwayNetwork(object):
         self.nodes_df = nodes
         self.links_df = links
         self.shapes_df = shapes
+
+        # Add non-required fields if they aren't there.
+        for field, default_value in RoadwayNetwork.OPTIONAL_FIELDS:
+            if field not in self.links_df.columns:
+                self.links_df[field] = default_value
 
         self.selections = {}
 
@@ -351,7 +366,6 @@ class RoadwayNetwork(object):
                     )
                 )
         for k, v in selection["B"].items():
-            print("l3", k, v)
             if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
                 err.append(
                     "{} specified in B node selection but not an attribute in network\n".format(
@@ -517,13 +531,34 @@ class RoadwayNetwork(object):
         # assign them as iteration = 0
         # subsequent iterations that didn't match the query will be
         # assigned a heigher weight in the shortest path
-        self.selections[sel_key]["candidate_links"] = self.links_df.query(
-            sel_query, engine="python"
-        )
-        candidate_links = self.selections[sel_key][
-            "candidate_links"
-        ]  # b/c too long to keep that way
-        candidate_links["i"] = 0
+        try:
+            self.selections[sel_key]["candidate_links"] = self.links_df.query(
+                sel_query, engine="python"
+            )
+            candidate_links = self.selections[sel_key][
+                "candidate_links"
+            ]  # b/c too long to keep that way
+            candidate_links["i"] = 0
+
+            if len(candidate_links.index) == 0:
+                raise Exception("search query did not return anything")
+        except:
+            selection_has_name_key = any("name" in d for d in selection["link"])
+
+            # if the query doesn't come back with something from 'name'
+            # try it again with 'ref' instead
+            if selection_has_name_key:
+                sel_query = sel_query.replace("name", "ref")
+
+                self.selections[sel_key]["candidate_links"] = self.links_df.query(
+                    sel_query, engine="python"
+                )
+                candidate_links = self.selections[sel_key][
+                    "candidate_links"
+                ]  # b/c too long to keep that way
+                candidate_links["i"] = 0
+            else:
+                return False
 
         def _add_breadth(candidate_links, nodes, links, i):
             """
@@ -679,27 +714,29 @@ class RoadwayNetwork(object):
         attr_err = []
         req_err = []
 
-        for k, v in properties.items():
-            if k not in self.links_df.columns:
+        for p in properties:
+            attribute = p["property"]
+
+            if attribute not in self.links_df.columns:
                 attr_err.append(
                     "{} specified as attribute to change but not an attribute in network\n".format(
-                        k
+                        attribute
                     )
                 )
 
             # either 'set' OR 'change' should be specified, not both
-            if "set" in v.keys() and "change" in v.keys():
+            if "set" in p.keys() and "change" in p.keys():
                 req_err.append(
                     "Both Set and Change should not be specified for the attribute {}\n".format(
-                        k
+                        attribute
                     )
                 )
 
             # if 'change' is specified, then 'existing' is required
-            if "change" in v.keys() and "existing" not in v.keys():
+            if "change" in p.keys() and "existing" not in p.keys():
                 req_err.append(
                     'Since "Change" is specified for attribute {}, "Existing" value is also required\n'.format(
-                        k
+                        attribute
                     )
                 )
 
@@ -743,34 +780,101 @@ class RoadwayNetwork(object):
         # shallow (copy.copy(self)) doesn't work as it will still use the references to links_df etc from the original net
         updated_network = copy.deepcopy(self)
 
-        for attribute, values in properties.items():
-            existing_value = None
+        for p in properties:
+            attribute = p["property"]
 
-            if "existing" in values.keys():
-                existing_value = values["existing"]
-
-                # if existing value in project card is not same in the network
+            # if project card specifies an existing value in the network
+            #   check and see if the existing value in the network matches
+            if p.get("existing"):
                 network_values = updated_network.links_df[
                     updated_network.links_df["selected_links"] == 1
                 ][attribute].tolist()
-                if not set(network_values).issubset([existing_value]):
+                if not set(network_values).issubset([p.get("existing")]):
                     WranglerLogger.warning(
                         "WARNING: Existing value defined for {} in project card does not match the value in the roadway network for the selected links".format(
                             attribute
                         )
                     )
 
-            if "set" in values.keys():
-                build_value = values["set"]
+            if "set" in p.keys():
+                updated_network.links_df[attribute] = np.where(
+                    updated_network.links_df["selected_links"] == 1,
+                    p["set"],
+                    updated_network.links_df[attribute],
+                )
             else:
-                build_value = values["existing"] + values["change"]
-
-            updated_network.links_df[attribute] = np.where(
-                updated_network.links_df["selected_links"] == 1,
-                build_value,
-                updated_network.links_df[attribute],
-            )
+                updated_network.links_df[attribute] = np.where(
+                    updated_network.links_df["selected_links"] == 1,
+                    updated_network.links_df[attribute] + p["change"],
+                    updated_network.links_df[attribute],
+                )
 
         updated_network.links_df.drop(["selected_links"], axis=1, inplace=True)
+
+        return updated_network
+
+    def add_roadway_attributes(self, properties: dict) -> RoadwayNetwork:
+        """
+        Add the new attributes to the roadway network
+
+        args:
+        properties: dictionary with roadway properties to add
+
+        returns:
+        new roadway network
+        """
+
+        updated_network = copy.deepcopy(self)
+
+        for p in properties:
+            attribute = p["property"]
+
+            if "group" in p.keys():
+                attr_value = {}
+                attr_value["default"] = p["set"]
+                attr_value["timeofday"] = []
+                for g in p["group"]:
+                    category = g["category"]
+                    for tod in g["timeofday"]:
+                        attr_value["timeofday"].append(
+                            {
+                                "category": category,
+                                "time": parse_time_spans(tod["time"]),
+                                "value": tod["set"],
+                            }
+                        )
+
+            elif "timeofday" in p.keys():
+                attr_value = {}
+                attr_value["default"] = p["set"]
+                attr_value["timeofday"] = []
+                for tod in p["timeofday"]:
+                    attr_value["timeofday"].append(
+                        {"time": parse_time_spans(tod["time"]), "value": tod["set"]}
+                    )
+
+            elif "set" in p.keys():
+                attr_value = p["set"]
+
+            else:
+                attr_value = ""
+
+            # TODO: decide on connectors info when they are more specific in project card
+            if attribute == "ML_ACCESS" and attr_value == "all":
+                attr_value = 1
+
+            if attribute == "ML_EGRESS" and attr_value == "all":
+                attr_value = 1
+
+            # print(attr_value)
+
+            if "selected_links" in self.links_df.columns:
+                # if the input network has a selected_links flags to indicate selection set
+                updated_network.links_df[attribute] = np.where(
+                    updated_network.links_df["selected_links"] == 1, attr_value, ""
+                )
+            else:
+                # else add/change the attribute for all the links
+                updated_network.links_df[attribute] = attr_value
 
         return updated_network

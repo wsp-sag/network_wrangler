@@ -9,91 +9,216 @@ Run just the tests labeled scenario using `pytest -v -m scenario`
 To run with print statments, use `pytest -s -m scenario`
 """
 
-STPAUL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),'example','stpaul')
+STPAUL_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "example", "stpaul"
+)
 SCRATCH_DIR = os.path.dirname(os.path.realpath(__file__))
+
 
 @pytest.mark.scenario
 def test_project_card_read(request):
-    print("\n--Starting:",request.node.name)
-    in_dir  = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),'example', 'stpaul','project_cards')
-    in_file = os.path.join(in_dir,"1_simple_roadway_attribute_change.yml")
+    print("\n--Starting:", request.node.name)
+    in_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+        "example",
+        "stpaul",
+        "project_cards",
+    )
+    in_file = os.path.join(in_dir, "1_simple_roadway_attribute_change.yml")
     project_card = ProjectCard.read(in_file)
-    WranglerLogger.info(project_card.__dict__)
+    WranglerLogger.info(project_card)
     print(str(project_card))
-    assert(project_card.category == "Roadway Property Change")
-    print("--Finished:",request.node.name)
+    assert project_card.category == "Roadway Property Change"
+    print("--Finished:", request.node.name)
 
-@pytest.mark.menow
+
 @pytest.mark.scenario
 def test_project_card_write(request):
-    print("\n--Starting:",request.node.name)
-    in_dir  = os.path.join(STPAUL_DIR,'project_cards')
-    in_file = os.path.join(in_dir,"1_simple_roadway_attribute_change.yml")
-    outfile = os.path.join(SCRATCH_DIR,"t_simple_roadway_attribute_change.yml")
+    print("\n--Starting:", request.node.name)
+    in_dir = os.path.join(STPAUL_DIR, "project_cards")
+    in_file = os.path.join(in_dir, "1_simple_roadway_attribute_change.yml")
+    outfile = os.path.join(SCRATCH_DIR, "t_simple_roadway_attribute_change.yml")
     project_card = ProjectCard.read(in_file)
     project_card.write(outfile)
     test_card = ProjectCard.read(in_file)
-    for k,v in project_card.__dict__.items():
-        assert(v == test_card.__dict__[k])
+    for k, v in project_card.__dict__.items():
+        assert v == test_card.__dict__[k]
+
 
 @pytest.mark.scenario
 def test_scenario_conflicts(request):
 
     project_cards_list = []
-    project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','4_test_project_card.yml')))
-    project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','5_test_project_card.yml')))
-    project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','6_test_project_card.yml')))
+    project_cards_list.append(
+        ProjectCard.read(
+            os.path.join(
+                os.getcwd(),
+                "example",
+                "stpaul",
+                "project_cards",
+                "a_test_project_card.yml",
+            )
+        )
+    )
+    project_cards_list.append(
+        ProjectCard.read(
+            os.path.join(
+                os.getcwd(),
+                "example",
+                "stpaul",
+                "project_cards",
+                "b_test_project_card.yml",
+            )
+        )
+    )
+    project_cards_list.append(
+        ProjectCard.read(
+            os.path.join(
+                os.getcwd(),
+                "example",
+                "stpaul",
+                "project_cards",
+                "c_test_project_card.yml",
+            )
+        )
+    )
 
-    scen = Scenario.create_scenario(base_scenario = {}, project_cards_list = project_cards_list)
+    scen = Scenario.create_scenario(
+        base_scenario={}, project_cards_list=project_cards_list
+    )
 
-    print(str(scen))
+    print(str(scen), "\n")
+
     scen.check_scenario_conflicts()
     if scen.has_conflict_error:
-        print('Conflicting project found for scenario!')
+        print("Conflicting project found for scenario!")
 
-    print('Conflict checks done:', scen.conflicts_checked)
-    print("--Finished:",request.node.name)
+    print("Conflict checks done:", scen.conflicts_checked)
+    print("--Finished:", request.node.name)
+
 
 @pytest.mark.scenario
 def test_scenario_requisites(request):
-    print("\n--Starting:",request.node.name)
+    print("\n--Starting:", request.node.name)
     base_scenario = {}
 
     project_cards_list = []
-    project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','4_test_project_card.yml')))
-    project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','5_test_project_card.yml')))
-    project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','6_test_project_card.yml')))
+    project_cards_list.append(
+        ProjectCard.read(
+            os.path.join(
+                os.getcwd(),
+                "example",
+                "stpaul",
+                "project_cards",
+                "a_test_project_card.yml",
+            )
+        )
+    )
+    project_cards_list.append(
+        ProjectCard.read(
+            os.path.join(
+                os.getcwd(),
+                "example",
+                "stpaul",
+                "project_cards",
+                "b_test_project_card.yml",
+            )
+        )
+    )
+    project_cards_list.append(
+        ProjectCard.read(
+            os.path.join(
+                os.getcwd(),
+                "example",
+                "stpaul",
+                "project_cards",
+                "c_test_project_card.yml",
+            )
+        )
+    )
 
-    scen = Scenario.create_scenario(base_scenario = base_scenario, project_cards_list = project_cards_list)
+    scen = Scenario.create_scenario(
+        base_scenario=base_scenario, project_cards_list=project_cards_list
+    )
 
-
-    print(str(scen),"\n")
+    print(str(scen), "\n")
 
     scen.check_scenario_requisites()
     if scen.has_requisite_error:
-        print('Missing pre- or co-requisite projects found for scenario!')
+        print("Missing pre- or co-requisite projects found for scenario!")
 
-    print('Requisite checks done:', scen.requisites_checked)
-    print("--Finished:",request.node.name)
+    print("Requisite checks done:", scen.requisites_checked)
+    print("--Finished:", request.node.name)
+
 
 @pytest.mark.scenario
 def test_project_sort(request):
-    print("\n--Starting:",request.node.name)
+    print("\n--Starting:", request.node.name)
     base_scenario = {}
 
     project_cards_list = []
-    project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','4_test_project_card.yml')))
-    project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','5_test_project_card.yml')))
-    project_cards_list.append(ProjectCard.read(os.path.join(os.getcwd(),'example','stpaul','project_cards','6_test_project_card.yml')))
+    project_cards_list.append(
+        ProjectCard.read(
+            os.path.join(
+                os.getcwd(),
+                "example",
+                "stpaul",
+                "project_cards",
+                "a_test_project_card.yml",
+            )
+        )
+    )
+    project_cards_list.append(
+        ProjectCard.read(
+            os.path.join(
+                os.getcwd(),
+                "example",
+                "stpaul",
+                "project_cards",
+                "b_test_project_card.yml",
+            )
+        )
+    )
+    project_cards_list.append(
+        ProjectCard.read(
+            os.path.join(
+                os.getcwd(),
+                "example",
+                "stpaul",
+                "project_cards",
+                "c_test_project_card.yml",
+            )
+        )
+    )
 
-    scen = Scenario.create_scenario(base_scenario = base_scenario, project_cards_list = project_cards_list)
+    scen = Scenario.create_scenario(
+        base_scenario=base_scenario, project_cards_list=project_cards_list
+    )
     print("\n> Prerequisites:")
     import pprint
+
     pprint.pprint(scen.prerequisites)
-    print("\nUnordered Projects:",scen.project_names())
+    print("\nUnordered Projects:", scen.project_names())
     scen.check_scenario_conflicts()
     scen.check_scenario_requisites()
 
     scen.order_project_cards()
-    print("Ordered Projects:",scen.project_names())
-    print("--Finished:",request.node.name)
+    print("Ordered Projects:", scen.project_names())
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.test_ak
+@pytest.mark.roadway
+@pytest.mark.scenario
+def test_managed_lane_project_card(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading project card ...")
+    project_card_name = "5_managed_lane.yml"
+    project_card_path = os.path.join(
+        os.getcwd(), "example", "stpaul", "project_cards", project_card_name
+    )
+    project_card = ProjectCard.read(project_card_path)
+    print(project_card)
+
+    print("--Finished:", request.node.name)

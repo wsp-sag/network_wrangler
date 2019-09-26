@@ -10,7 +10,7 @@ scratch/*
 *.bak
 .cache
 tests/t_*
-
+tests/*.txt
 # Logs
 *.log
 
