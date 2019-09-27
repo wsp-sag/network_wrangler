@@ -313,3 +313,26 @@ def test_add_managed_lane(request):
         revised_net.write(filename="test_ml", path=SCRATCH_DIR)
 
     print("--Finished:", request.node.name)
+
+@pytest.mark.queryb
+def test_query_builder(request):
+    selection = {
+        'link':[
+            {'name': ['6th', 'Sixth', 'sixth']}, #find streets that have one of the various forms of 6th
+            {'LANES': [1,2]}, # only select links that are either 1 or 2 lanes
+            {'isBikeLink': [1]}, # only select links that are marked for biking
+            ],
+        'A':{'osmNodeId': '187899923'}, # start searching for segments at A
+        'B':{'osmNodeId': '187865924'}, # end at B
+    }
+    sel_query = ProjectCard.build_link_selection_query(
+        selection
+    )
+    print("\nsel_query:\n", sel_query)
+
+    resel_query = ProjectCard.build_link_selection_query(
+        selection, ignore=["name"]
+    )
+    print("\nresel_query:\n", resel_query)
+
+    print("--Finished:", request.node.name)

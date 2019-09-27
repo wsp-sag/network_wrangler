@@ -113,7 +113,9 @@ class ProjectCard(object):
         for l in selection["link"]:
             for key, value in l.items():
                 if key in ignore:
+                    count = count + 1
                     continue
+
                 if isinstance(value, list):
                     sel_query = sel_query + "("
                     v = 1
