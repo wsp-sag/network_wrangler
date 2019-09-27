@@ -167,6 +167,14 @@ Try installing shapely on its own from the Anaconda cloud
 ```bash
 conda install shapely
 ```
+## Quickstart
+
+To get a feel for the API and using project cards, please refer to the "Wrangler Quickstart" jupyter notebook.
+
+To start the notebook, open a command line in the network_wrangler top-level directory and type:
+
+`jupyter notebook`
+
 
 ## Documentation
 Documentation can be built from the `/docs` folder using the command: `make html`
