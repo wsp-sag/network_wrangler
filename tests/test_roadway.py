@@ -96,7 +96,6 @@ def test_quick_roadway_read_write(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.ashishk
 @pytest.mark.basic
 @pytest.mark.roadway
 def test_select_roadway_features(request):
@@ -134,18 +133,14 @@ def test_select_roadway_features(request):
 
     for i, sel in test_selections.items():
         print("--->", i, "\n", sel)
-        path_found = False
-        selected_links = net.select_roadway_features(sel)
-        if not type(selected_links) == GeoDataFrame:
-            print("Couldn't find path from {} to {}".format(sel["A"], sel["B"]))
-        else:
-            print("Features selected:", len(selected_links))
-            selected_nodes = [str(sel["A"]["osmNodeId"])] + selected_links["v"].tolist()
-            # print("Nodes selected: ",selected_nodes)
+        selected_link_indices = net.select_roadway_features(sel)
+        print("Features selected:", len(selected_link_indices))
 
-            if "answer" in sel.keys():
-                print("Expected Answer: ", sel["answer"])
-                assert set(selected_nodes) == set(sel["answer"])
+        if "answer" in sel.keys():
+            selected_nodes = [str(sel["A"]["osmNodeId"])] + net.links_df.loc[selected_link_indices, "v"].tolist()
+            #print("Nodes selected: ",selected_nodes)
+            #print("Expected Answer: ", sel["answer"])
+            assert set(selected_nodes) == set(sel["answer"])
 
     print("--Finished:", request.node.name)
 
@@ -164,64 +159,22 @@ def test_select_roadway_features_from_projectcard(request):
     )
 
     print("Reading project card ...")
-    # project_card_name = '1_simple_roadway_attribute_change.yml'
-    # project_card_name = '2_multiple_roadway.yml'
     project_card_name = "3_multiple_roadway_attribute_change.yml"
 
-    project_card_path = os.path.join(
-        os.getcwd(), "example", "stpaul", "project_cards", project_card_name
-    )
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path)
 
     print("Selecting roadway features ...")
     sel = project_card.facility
-    print("Selection:\n", sel)
-    selected_links = net.select_roadway_features(sel)
-
-    if not type(selected_links) == GeoDataFrame:
-        print("Couldn't find path from {} to {}".format(sel["A"], sel["B"]))
-    else:
-        print("Features selected:", len(selected_links))
+    selected_link_indices = net.select_roadway_features(sel)
+    print("Features selected:", len(selected_link_indices))
 
     print("--Finished:", request.node.name)
 
 
-def roadway_feature_change(net, project_card):
-    print("Selecting roadway features ...")
-    sel = project_card.facility
-    print("Selection:\n", sel)
-    selected_links = net.select_roadway_features(sel)
-
-    if not type(selected_links) == GeoDataFrame:
-        print(
-            "Error in applying project card: Couldn't find path from {} to {}".format(
-                sel["A"], sel["B"]
-            )
-        )
-    else:
-        selected_indices = selected_links.index.tolist()
-        net.links_df["selected_links"] = np.where(
-            net.links_df.index.isin(selected_indices), 1, 0
-        )
-
-        print("Applying project card ...")
-        prop = project_card.properties
-        print("Properties:\n", prop)
-        revised_net = net.apply_roadway_feature_change(prop)
-
-        columns_updated = [p["property"] for p in project_card.properties]
-
-        orig_links = net.links_df.loc[selected_indices, columns_updated]
-        print("Original Links:\n", orig_links)
-
-        new_links = revised_net.links_df.loc[selected_indices, columns_updated]
-        print("Updated Links:\n", new_links)
-
-
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.menow
-def test_roadway_feature_change(request):
+def test_apply_roadway_feature_change(request):
     print("\n--Starting:", request.node.name)
 
     print("Reading network ...")
@@ -236,21 +189,29 @@ def test_roadway_feature_change(request):
         (net, "1_simple_roadway_attribute_change.yml"),
         (net, "2_multiple_roadway.yml"),
         (net, "3_multiple_roadway_attribute_change.yml"),
-        (net, "4_simple_managed_lane.yml"),
-        (net, "5_managed_lane.yml"),
     ]
 
     for my_net, project_card_name in project_card_set:
-        project_card_path = os.path.join(
-            os.getcwd(), "example", "stpaul", "project_cards", project_card_name
-        )
-        print("Reading project card from:\n {}".format(project_card_path))
+        print("Reading project card", project_card_name, "...")
+        project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
         project_card = ProjectCard.read(project_card_path)
 
-        roadway_feature_change(my_net, project_card)
+        print("Selecting roadway features ...")
+        selected_link_indices = my_net.select_roadway_features(project_card.facility)
+
+        attributes_to_update = [p["property"] for p in project_card.properties]
+        orig_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
+        print("Original Links:\n", orig_links)
+
+        my_net.apply_roadway_feature_change(
+            my_net.select_roadway_features(project_card.facility),
+            project_card.properties
+        )
+
+        rev_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
+        print("Revised Links:\n", rev_links)
 
     print("--Finished:", request.node.name)
-
 
 @pytest.mark.managed
 @pytest.mark.roadway
@@ -267,49 +228,25 @@ def test_add_managed_lane(request):
     )
 
     print("Reading project card ...")
-    # project_card_name = '4_simple_managed_lane.yml'
     project_card_name = "5_managed_lane.yml"
-    project_card_path = os.path.join(
-        os.getcwd(), "example", "stpaul", "project_cards", project_card_name
-    )
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path)
 
     print("Selecting roadway features ...")
-    sel = project_card.facility
-    print("\nSelection:", sel)
-    selected_links = net.select_roadway_features(sel)
+    selected_link_indices = net.select_roadway_features(project_card.facility)
 
-    if not type(selected_links) == GeoDataFrame:
-        print(
-            "Couldn't find mainline facility from {} to {}".format(sel["A"], sel["B"])
-        )
-    else:
-        selected_indices = selected_links.index.tolist()
+    attributes_to_update = [p["property"] for p in project_card.properties]
+    orig_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    print("Original Links:\n", orig_links)
 
-        prop = project_card.properties
-        columns_updated = [p["property"] for p in prop]
+    net.apply_managed_lane_feature_change(
+        net.select_roadway_features(project_card.facility),
+        project_card.properties
+    )
 
-        net.links_df["selected_links"] = np.where(
-            net.links_df.index.isin(selected_indices), 1, 0
-        )
+    rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    print("Revised Links:\n", rev_links)
 
-        print("Applying project card ...")
-        print("\nProperties:", prop)
-        revised_net = net.add_roadway_attributes(prop)
-
-        if "selected_links" in revised_net.links_df.columns:
-            revised_net.links_df.drop(["selected_links"], axis=1, inplace=True)
-
-        in_links = net.links_df.loc[selected_indices, columns_updated]
-        print("\nOriginal Links:\n", in_links)
-
-        out_links = revised_net.links_df.loc[selected_indices, columns_updated]
-        print("\nRevised Links:\n", out_links)
-
-        revised_net.links_df.loc[selected_indices, :].to_csv(
-            os.path.join(SCRATCH_DIR, "ml_out_links.csv"), index=False
-        )
-
-        revised_net.write(filename="test_ml", path=SCRATCH_DIR)
+    net.write(filename="test_ml", path=SCRATCH_DIR)
 
     print("--Finished:", request.node.name)
