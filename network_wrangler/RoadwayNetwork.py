@@ -698,68 +698,6 @@ class RoadwayNetwork(object):
             raise ValueError
 
 
-    def validate_properties(self, properties: dict) -> Bool:
-        """
-        Evaluate whether the properties dictionary contains the
-        attributes that exists on the network
-
-        Parameters
-        -----------
-        properties : dict
-            properties dictionary to be evaluated
-
-        Returns
-        -------
-        boolean value as to whether the properties dictonary is valid.
-
-        """
-        attr_err = []
-        req_err = []
-
-        for p in properties:
-            attribute = p["property"]
-
-            if attribute not in self.links_df.columns:
-                attr_err.append(
-                    "{} specified as attribute to change but not an attribute in network\n".format(
-                        attribute
-                    )
-                )
-
-            # either 'set' OR 'change' should be specified, not both
-            if "set" in p.keys() and "change" in p.keys():
-                req_err.append(
-                    "Both Set and Change should not be specified for the attribute {}\n".format(
-                        attribute
-                    )
-                )
-
-            # if 'change' is specified, then 'existing' is required
-            if "change" in p.keys() and "existing" not in p.keys():
-                req_err.append(
-                    'Since "Change" is specified for attribute {}, "Existing" value is also required\n'.format(
-                        attribute
-                    )
-                )
-
-        if attr_err:
-            WranglerLogger.error(
-                "ERROR: Properties to change in project card not found in network"
-            )
-            WranglerLogger.error("\n".join(attr_err))
-            raise ValueError()
-            return False
-
-        if req_err:
-            WranglerLogger.error(
-                "ERROR: Properties not specified correctly in the project card"
-            )
-            WranglerLogger.error("\n".join(req_err))
-            raise ValueError()
-            return False
-
-        return True
-
     def apply_roadway_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
         ) -> Union(None, RoadwayNetwork):
@@ -775,8 +713,6 @@ class RoadwayNetwork(object):
         in_place: boolean
             update self or return a new roadway network object
         """
-
-        #self.validate_properties(properties)
 
         for i, p in enumerate(properties):
             attribute = p["property"]
@@ -864,10 +800,6 @@ class RoadwayNetwork(object):
             if attribute == "ML_EGRESS" and attr_value == "all":
                 attr_value = 1
 
-            #print(attr_value)
-                # updated_network.links_df[attribute] = np.where(
-                #     updated_network.links_df["selected_links"] == 1, attr_value, ""
-                # )
             if in_place:
                 self.links_df.loc[link_idx, attribute] = attr_value
             else:
