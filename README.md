@@ -86,6 +86,7 @@ Some packages are very finicky and don't like being installed from their version
 ```bash
 conda install shapely
 conda install rtree
+conda install Fiona
 ```
 
 
