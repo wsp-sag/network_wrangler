@@ -1,0 +1,378 @@
+changes:
+- category: Roadway Deletion
+  facility:
+    A:
+      N:
+      - 83809
+      - 55960
+      - 55968
+      - 31791
+      - 55968
+      - 31791
+      - 76606
+      - 70662
+      - 83809
+      - 65718
+    B:
+      N:
+      - 65725
+      - 55968
+      - 55960
+      - 55968
+      - 31791
+      - 76606
+      - 31791
+      - 31791
+      - 76606
+      - 83809
+    link:
+      LINK_ID:
+      - 400522
+      - 119588
+      - 119603
+      - 61312
+      - 119601
+      - 61313
+      - 166735
+      - 153591
+      - 182587
+      - 142533
+- category: New Roadway
+  links:
+  - properties:
+      A: 65718
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 7
+      B: 354386
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.09831
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 142533
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 10
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  - properties:
+      A: 354386
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 7
+      B: 354387
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.14744
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 142533
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 10
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  - properties:
+      A: 354387
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 7
+      B: 354388
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.57787
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 142533
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 10
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  - properties:
+      A: 354388
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 7
+      B: 354389
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.14667
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 142533
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 10
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  - properties:
+      A: 354389
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 7
+      B: 55960
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.08827
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 142533
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 10
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  - properties:
+      A: 55960
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 7
+      B: 354390
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.0829
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 142533
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 10
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  - properties:
+      A: 354390
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 7
+      B: 354391
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.13203
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 142533
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 10
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  - properties:
+      A: 354391
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 7
+      B: 55968
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.09322
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 142533
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 10
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  - properties:
+      A: 55968
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 7
+      B: 76606
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.30391
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 142533
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 10
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  nodes:
+  - ISBIKENODE: 1
+    ISDRIVENODE: 1
+    ISTRANNODE: 0
+    ISWALKNODE: 1
+    N: 354386
+    X: -93.17178
+    Y: 44.96917
+  - ISBIKENODE: 0
+    ISDRIVENODE: 0
+    ISTRANNODE: 0
+    ISWALKNODE: 0
+    N: 354387
+    X: -93.17424
+    Y: 44.96912
+  - ISBIKENODE: 0
+    ISDRIVENODE: 0
+    ISTRANNODE: 0
+    ISWALKNODE: 0
+    N: 354388
+    X: -93.18389
+    Y: 44.96898
+  - ISBIKENODE: 1
+    ISDRIVENODE: 1
+    ISTRANNODE: 0
+    ISWALKNODE: 1
+    N: 354389
+    X: -93.18588
+    Y: 44.96755
+  - ISBIKENODE: 1
+    ISDRIVENODE: 1
+    ISTRANNODE: 0
+    ISWALKNODE: 1
+    N: 354390
+    X: -93.18562
+    Y: 44.96746
+  - ISBIKENODE: 1
+    ISDRIVENODE: 1
+    ISTRANNODE: 0
+    ISWALKNODE: 1
+    N: 354391
+    X: -93.18384
+    Y: 44.96876
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 76606
+    B:
+      N:
+      - 83809
+    link:
+      LINK_ID:
+      - 166734
+  properties:
+  - property: LINK_ID
+    set: 142533
+  - property: AADT
+    set: 0
+  - property: AM_CNT
+    set: 0
+  - property: MD_CNT
+    set: 0
+  - property: PM_CNT
+    set: 0
+  - property: NT_CNT
+    set: 0
+  - property: DY_CNT
+    set: 0
+  - property: ASGNGRP
+    set: 7
+  - property: RC_NUM
+    set: 10
+  - property: BIKE
+    set: 3
+  - property: ISWALKLINK
+    set: 1
+  - property: ISBIKELINK
+    set: 1
+  - property: DISTANCE
+    set: 0.32302
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 83809
+    B:
+      N:
+      - 65718
+    link:
+      LINK_ID:
+      - 182586
+  properties:
+  - property: LINK_ID
+    set: 142533
+  - property: ASGNGRP
+    set: 7
+  - property: RC_NUM
+    set: 10
+  - property: DISTANCE
+    set: 0.10162
+project: TO DO User Define
+valid: false

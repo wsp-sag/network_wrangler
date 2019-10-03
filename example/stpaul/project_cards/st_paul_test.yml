@@ -1,0 +1,121 @@
+changes:
+- category: Roadway Deletion
+  facility:
+    A:
+      N:
+      - 3261
+    B:
+      N:
+      - 131209
+    link:
+      LINK_ID:
+      - 281
+- category: New Roadway
+  links:
+  - properties:
+      A: 3230
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 5
+      B: 3262
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.10462
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 999998
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 40
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  - properties:
+      A: 3262
+      AADT: 0
+      AM_CNT: 0
+      AREA: 4
+      ASGNGRP: 5
+      B: 3230
+      BIKE: 3
+      CENTROID: 0
+      COUNTY: 5
+      DISTANCE: 0.10462
+      DY_CNT: 0
+      HOV: 0
+      ISBIKELINK: 1
+      ISDRIVELINK: 1
+      ISTRANACCE: 0
+      ISTRANLINK: 0
+      ISWALKLINK: 1
+      LANES: 1
+      LINK_ID: 999997
+      MD_CNT: 0
+      NT_CNT: 0
+      PM_CNT: 0
+      RC_NUM: 40
+      T_MANTIME: 0.0
+      T_PRIORITY: 0
+  nodes:
+  - ISBIKENODE: 0
+    ISDRIVENODE: 1
+    ISTRANNODE: 0
+    ISWALKNODE: 0
+    N: 354388
+    X: -93.18389
+    Y: 44.96898
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 3261
+      - 3261
+    B:
+      N:
+      - 3262
+      - 68075
+    link:
+      LINK_ID:
+      - 280
+      - 282
+  properties:
+  - property: ASGNGRP
+    set: 5
+  - property: RC_NUM
+    set: 40
+  - property: BIKE
+    set: 3
+  - property: ISWALKLINK
+    set: 1
+  - property: ISBIKELINK
+    set: 1
+  - property: DISTANCE
+    set: 10.0
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 3230
+    B:
+      N:
+      - 52771
+    link:
+      LINK_ID:
+      - 224
+  properties:
+  - property: ASGNGRP
+    set: 5
+  - property: RC_NUM
+    set: 40
+  - property: DISTANCE
+    set: 0.10462
+project: TO DO User Define
+valid: false

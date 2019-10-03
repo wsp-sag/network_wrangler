@@ -1,0 +1,364 @@
+changes:
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 74451
+      - 114692
+    B:
+      N:
+      - 114692
+      - 74451
+    link:
+      LINK_ID:
+      - 162144
+      - 255919
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0252
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 9753
+      - 25336
+    B:
+      N:
+      - 25336
+      - 9753
+    link:
+      LINK_ID:
+      - 12436
+      - 46729
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0624
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 117201
+      - 162885
+    B:
+      N:
+      - 162885
+      - 117201
+    link:
+      LINK_ID:
+      - 261737
+      - 362456
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0629
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 11215
+      - 162885
+    B:
+      N:
+      - 162885
+      - 11215
+    link:
+      LINK_ID:
+      - 15165
+      - 362457
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0632
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 5586
+      - 9753
+    B:
+      N:
+      - 9753
+      - 5586
+    link:
+      LINK_ID:
+      - 4382
+      - 12437
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0645
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 88788
+      - 119366
+    B:
+      N:
+      - 119366
+      - 88788
+    link:
+      LINK_ID:
+      - 194599
+      - 266919
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0646
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 25336
+      - 119278
+    B:
+      N:
+      - 119278
+      - 25336
+    link:
+      LINK_ID:
+      - 46728
+      - 266699
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0657
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 88788
+      - 112328
+    B:
+      N:
+      - 112328
+      - 88788
+    link:
+      LINK_ID:
+      - 194598
+      - 250497
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0666
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 10831
+      - 74451
+    B:
+      N:
+      - 74451
+      - 10831
+    link:
+      LINK_ID:
+      - 14469
+      - 162145
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0667
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 13462
+      - 122908
+    B:
+      N:
+      - 122908
+      - 13462
+    link:
+      LINK_ID:
+      - 19643
+      - 275129
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0679
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 5586
+      - 110020
+    B:
+      N:
+      - 110020
+      - 5586
+    link:
+      LINK_ID:
+      - 4380
+      - 245424
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0686
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 110020
+      - 115069
+    B:
+      N:
+      - 115069
+      - 110020
+    link:
+      LINK_ID:
+      - 245426
+      - 256795
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0703
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 10831
+      - 11215
+    B:
+      N:
+      - 11215
+      - 10831
+    link:
+      LINK_ID:
+      - 14468
+      - 15166
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0711
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 112328
+      - 115069
+    B:
+      N:
+      - 115069
+      - 112328
+    link:
+      LINK_ID:
+      - 250496
+      - 256796
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0841
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 114692
+      - 119278
+    B:
+      N:
+      - 119278
+      - 114692
+    link:
+      LINK_ID:
+      - 255921
+      - 266698
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0843
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 119145
+      - 119366
+    B:
+      N:
+      - 119366
+      - 119145
+    link:
+      LINK_ID:
+      - 266377
+      - 266920
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.0873
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 13462
+      - 13574
+    B:
+      N:
+      - 13574
+      - 13462
+    link:
+      LINK_ID:
+      - 19645
+      - 19899
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.1083
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 119145
+      - 122908
+    B:
+      N:
+      - 122908
+      - 119145
+    link:
+      LINK_ID:
+      - 266376
+      - 275130
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.1349
+- category: Roadway Attribute Change
+  facility:
+    A:
+      N:
+      - 13574
+      - 124453
+    B:
+      N:
+      - 124453
+      - 13574
+    link:
+      LINK_ID:
+      - 19900
+      - 278842
+  properties:
+  - property: LANES
+    set: 3
+  - property: DISTANCE
+    set: 0.2706
+project: TO DO User Define
+valid: false
