@@ -26,7 +26,12 @@ import osmnx as ox
 from shapely.geometry import Point, LineString
 
 from .Logger import WranglerLogger
-from .Utils import point_df_to_geojson, link_df_to_json, parse_time_spans
+from .Utils import (
+    point_df_to_geojson,
+    link_df_to_json,
+    parse_time_spans,
+    get_null_value_after_sniffing_type,
+)
 from .ProjectCard import ProjectCard
 
 
@@ -38,13 +43,6 @@ class RoadwayNetwork(object):
     CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
 
     NODE_FOREIGN_KEY = "osmNodeId"
-    OPTIONAL_FIELDS = [  # field name, default value
-        ("ML_LANES", 0),
-        ("ML_PRICE", 0),
-        ("ML_ACCESS", 0),
-        ("ML_EGRESS", 0),
-        ("PROJECTS",""),
-    ]
 
     SEARCH_BREADTH = 5
     MAX_SEARCH_BREADTH = 10
@@ -65,9 +63,9 @@ class RoadwayNetwork(object):
         self.shapes_df = shapes
 
         # Add non-required fields if they aren't there.
-        for field, default_value in RoadwayNetwork.OPTIONAL_FIELDS:
-            if field not in self.links_df.columns:
-                self.links_df[field] = default_value
+        # for field, default_value in RoadwayNetwork.OPTIONAL_FIELDS:
+        #    if field not in self.links_df.columns:
+        #        self.links_df[field] = default_value
 
         self.selections = {}
 
@@ -679,7 +677,9 @@ class RoadwayNetwork(object):
             # the desired values....ignoring name.
             if len(selection["link"]) > 1:
                 resel_query = ProjectCard.build_link_selection_query(
-                    selection, mode=modes_to_network_variables[search_mode], ignore=["name"]
+                    selection,
+                    mode=modes_to_network_variables[search_mode],
+                    ignore=["name"],
                 )
                 print("Reselecting features:\n{}".format(resel_query))
                 self.selections[sel_key]["selected_links"] = self.selections[sel_key][
@@ -697,10 +697,91 @@ class RoadwayNetwork(object):
             WranglerLogger.error("Couldn't find path from {} to {}".format(A_id, B_id))
             raise ValueError
 
+    def validate_and_update_properties(
+        self,
+        properties: dict,
+        ignore_existing: bool = False,
+        require_existing_for_change: bool = False,
+    ) -> Bool:
+        """
+        If there are change or existing commands, make sure that that
+        property exists in the network. If there is a set command,
+        add that property to network if it isn't there.
+
+        Parameters
+        -----------
+        properties : dict
+            properties dictionary to be evaluated
+        ignore_existing: bool
+            If True, will only warn about properties that specify an "existing"
+            value.  If False, will fail.
+        Returns
+        -------
+        boolean value as to whether the properties dictonary is valid.
+        """
+
+        fields_to_add = []
+        validation_error_message = []
+
+        for p in properties:
+            if p["property"] not in self.links_df.columns:
+                if p.get("change"):
+                    validation_error_message.append(
+                        '"Change" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
+                            p["property"]
+                        )
+                    )
+
+                if p.get("existing") and not ignore_existing:
+                    validation_error_message.append(
+                        '"Existing" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
+                            p["property"]
+                        )
+                    )
+                elif p.get("existing"):
+                    WranglerLogger.warning(
+                        '"Existing" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
+                            p["property"]
+                        )
+                    )
+
+                if p.get("set"):
+                    default_val = get_null_value_after_sniffing_type(
+                        p["set"]
+                    )
+
+                    fields_to_add.append((p["property"], default_val))
+                    WranglerLogger.info(
+                        "Adding {} as a property to the network as set by the project card\n".format(
+                            p["property"]
+                        )
+                    )
+
+            if p.get("change") and not p.get("existing"):
+                if require_existing_for_change:
+                    validation_error_message.append(
+                        '"Change" is specified for attribute {}, but there isn\'t a value for existing.\nTo proceed, run with the setting require_existing_for_change=False'.format(
+                            p["property"]
+                        )
+                    )
+                else:
+                    WranglerLogger.warning(
+                        '"Change" is specified for attribute {}, but there isn\'t a value for existing.\n'.format(
+                            p["property"]
+                        )
+                    )
+
+        if validation_error_message:
+            WranglerLogger.error(" ".join(validation_error_message))
+            raise ValueError()
+
+        # Add additional fields if they aren't there.
+        for field, default_value in fields_to_add:
+            self.links_df[field] = default_value
 
     def apply_roadway_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
-        ) -> Union(None, RoadwayNetwork):
+    ) -> Union(None, RoadwayNetwork):
         """
         Changes the roadway attributes for the selected features based on the
         project card information passed
@@ -713,6 +794,11 @@ class RoadwayNetwork(object):
         in_place: boolean
             update self or return a new roadway network object
         """
+
+        # check if there are change or existing commands that that property
+        #   exists in the network
+        # if there is a set command, add that property to network
+        self.validate_and_update_properties(properties)
 
         for i, p in enumerate(properties):
             attribute = p["property"]
@@ -732,7 +818,9 @@ class RoadwayNetwork(object):
                 if "set" in p.keys():
                     self.links_df.loc[link_idx, attribute] = p["set"]
                 else:
-                    self.links_df.loc[link_idx, attribute] = self.links_df.loc[link_idx, attribute] + p["change"]
+                    self.links_df.loc[link_idx, attribute] = (
+                        self.links_df.loc[link_idx, attribute] + p["change"]
+                    )
             else:
                 if i == 0:
                     updated_network = copy.deepcopy(self)
@@ -740,15 +828,16 @@ class RoadwayNetwork(object):
                 if "set" in p.keys():
                     updated_network.links_df.loc[link_idx, attribute] = p["set"]
                 else:
-                    updated_network.links_df.loc[link_idx, attribute] = updated_network.links_df.loc[link_idx, attribute] + p["change"]
+                    updated_network.links_df.loc[link_idx, attribute] = (
+                        updated_network.links_df.loc[link_idx, attribute] + p["change"]
+                    )
 
                 if i == len(properties) - 1:
                     return updated_network
 
-
     def apply_managed_lane_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
-        ) -> Union(None, RoadwayNetwork):
+    ) -> Union(None, RoadwayNetwork):
         """
         Apply the managed lane feature changes to the roadway network
 

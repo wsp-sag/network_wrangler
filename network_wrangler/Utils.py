@@ -105,3 +105,25 @@ def parse_time_spans(times):
     end_time_sec = int(h1) * 3600 + int(m1) * 60 + int(s1)
 
     return (start_time_sec, end_time_sec)
+
+
+def get_null_value_after_sniffing_type(example_data):
+    '''
+    Sniffs example text data value (single value) and returns a null value of same type.
+
+    For example, if it receives "3.2", it will return 0.0 as a float type.
+    '''
+    from ast import literal_eval
+
+    try:
+        t = type(literal_eval(example_data.strip()))
+        print("TTT:", t)
+        if t == int:
+            return 0
+        if t == float:
+            return 0.0
+        if t == bool:
+            return False
+    except:
+        # wont work for text, so assume blank as default_value
+        return ""
