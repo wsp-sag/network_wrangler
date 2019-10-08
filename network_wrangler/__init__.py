@@ -12,7 +12,6 @@ from .Utils import (
     link_df_to_json,
     make_slug,
     parse_time_spans,
-    get_null_value_after_sniffing_type,
 )
 
 __all__ = [
@@ -25,8 +24,7 @@ __all__ = [
     "Scenario",
     "link_df_to_json",
     "make_slug",
-    "parse_time_spans",
-    "get_null_value_after_sniffing_type",
+    "parse_time_spans"
 ]
 
 setupLogging(logFileName="network_wrangler.log")

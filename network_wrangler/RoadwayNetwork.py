@@ -30,7 +30,6 @@ from .Utils import (
     point_df_to_geojson,
     link_df_to_json,
     parse_time_spans,
-    get_null_value_after_sniffing_type,
 )
 from .ProjectCard import ProjectCard
 
@@ -702,11 +701,10 @@ class RoadwayNetwork(object):
         properties: dict,
         ignore_existing: bool = False,
         require_existing_for_change: bool = False,
-    ) -> Bool:
+    ) -> bool:
         """
         If there are change or existing commands, make sure that that
-        property exists in the network. If there is a set command,
-        add that property to network if it isn't there.
+        property exists in the network.
 
         Parameters
         -----------
@@ -715,12 +713,14 @@ class RoadwayNetwork(object):
         ignore_existing: bool
             If True, will only warn about properties that specify an "existing"
             value.  If False, will fail.
+        require_existing_for_change: bool
+            If True, will fail if there isn't a specified value in the
+            project card for existing when a change is specified.
         Returns
         -------
         boolean value as to whether the properties dictonary is valid.
         """
 
-        fields_to_add = []
         validation_error_message = []
 
         for p in properties:
@@ -745,18 +745,6 @@ class RoadwayNetwork(object):
                         )
                     )
 
-                if p.get("set"):
-                    default_val = get_null_value_after_sniffing_type(
-                        p["set"]
-                    )
-
-                    fields_to_add.append((p["property"], default_val))
-                    WranglerLogger.info(
-                        "Adding {} as a property to the network as set by the project card\n".format(
-                            p["property"]
-                        )
-                    )
-
             if p.get("change") and not p.get("existing"):
                 if require_existing_for_change:
                     validation_error_message.append(
@@ -774,10 +762,6 @@ class RoadwayNetwork(object):
         if validation_error_message:
             WranglerLogger.error(" ".join(validation_error_message))
             raise ValueError()
-
-        # Add additional fields if they aren't there.
-        for field, default_value in fields_to_add:
-            self.links_df[field] = default_value
 
     def apply_roadway_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True

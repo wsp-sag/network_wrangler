@@ -137,9 +137,11 @@ def test_select_roadway_features(request):
         print("Features selected:", len(selected_link_indices))
 
         if "answer" in sel.keys():
-            selected_nodes = [str(sel["A"]["osmNodeId"])] + net.links_df.loc[selected_link_indices, "v"].tolist()
-            #print("Nodes selected: ",selected_nodes)
-            #print("Expected Answer: ", sel["answer"])
+            selected_nodes = [str(sel["A"]["osmNodeId"])] + net.links_df.loc[
+                selected_link_indices, "v"
+            ].tolist()
+            # print("Nodes selected: ",selected_nodes)
+            # print("Expected Answer: ", sel["answer"])
             assert set(selected_nodes) == set(sel["answer"])
 
     print("--Finished:", request.node.name)
@@ -174,6 +176,7 @@ def test_select_roadway_features_from_projectcard(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
+@pytest.mark.menow
 def test_apply_roadway_feature_change(request):
     print("\n--Starting:", request.node.name)
 
@@ -205,13 +208,14 @@ def test_apply_roadway_feature_change(request):
 
         my_net.apply_roadway_feature_change(
             my_net.select_roadway_features(project_card.facility),
-            project_card.properties
+            project_card.properties,
         )
 
         rev_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
         print("Revised Links:\n", rev_links)
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.managed
 @pytest.mark.roadway
@@ -240,8 +244,7 @@ def test_add_managed_lane(request):
     print("Original Links:\n", orig_links)
 
     net.apply_managed_lane_feature_change(
-        net.select_roadway_features(project_card.facility),
-        project_card.properties
+        net.select_roadway_features(project_card.facility), project_card.properties
     )
 
     rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
@@ -249,4 +252,68 @@ def test_add_managed_lane(request):
 
     net.write(filename="test_ml", path=SCRATCH_DIR)
 
+    print("--Finished:", request.node.name)
+
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_add_adhoc_field(request):
+    """
+    Makes sure new fields can be added in the API and be saved and read in again.
+    """
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5] )
+
+    assert(net.links_df["my_ad_hoc_field"][0]==22.5)
+
+@pytest.mark.roadway
+@pytest.mark.travis
+@pytest.mark.menow
+def test_add_adhoc_field_from_card(request):
+    """
+    Makes sure new fields can be added from a project card and that
+    they will be the right type.
+    """
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    project_card_name = 'new_fields_project_card.yml'
+
+    print("Reading project card", project_card_name, "...")
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+
+    print("Selecting roadway features ...")
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+
+    attributes_to_update = [p["property"] for p in project_card.properties]
+
+    net.apply_roadway_feature_change(
+        net.select_roadway_features(project_card.facility),
+        project_card.properties,
+    )
+
+    rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    rev_types = [ (a, net.links_df[a].dtypes) for a in attributes_to_update]
+    #rev_types = net.links_df[[attributes_to_update]].dtypes
+    print("Revised Links:\n", rev_links,"\nNew Property Types:\n", rev_types)
+
+    assert(net.links_df.loc[selected_link_indices[0],"my_ad_hoc_field_float"]==1.1)
+    assert(net.links_df.loc[selected_link_indices[0],"my_ad_hoc_field_integer"]==2)
+    assert(net.links_df.loc[selected_link_indices[0],"my_ad_hoc_field_string"]=="three")
     print("--Finished:", request.node.name)

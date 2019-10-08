@@ -52,16 +52,3 @@ null_val_type_list = [
     ("Howdy", ""),
     ("False", False)
 ]
-
-@pytest.mark.travis
-@pytest.mark.parametrize("null_val_type", null_val_type_list)
-def test_null_value_after_sniffing_type(request, null_val_type):
-    print("\n--Starting:", request.node.name)
-    input, expected_output =  null_val_type
-
-    from network_wrangler.Utils import get_null_value_after_sniffing_type
-
-    output = get_null_value_after_sniffing_type(input)
-    print("input:{}, Output: {}, Expected Output {}".format(input, output, expected_output))
-
-    assert(output==expected_output)
