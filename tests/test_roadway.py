@@ -256,6 +256,7 @@ def test_add_managed_lane(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
+@pytest.mark.menow
 def test_add_adhoc_field(request):
     """
     Makes sure new fields can be added in the API and be saved and read in again.
@@ -269,6 +270,7 @@ def test_add_adhoc_field(request):
         shape_file=STPAUL_SHAPE_FILE,
         fast=True,
     )
+    net.links_df["my_ad_hoc_field"] = 22.5
 
     print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5] )
 
@@ -276,7 +278,6 @@ def test_add_adhoc_field(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.menow
 def test_add_adhoc_field_from_card(request):
     """
     Makes sure new fields can be added from a project card and that
