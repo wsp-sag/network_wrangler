@@ -6,7 +6,7 @@ dependencies:
   prerequisites: []
   corequisites: []
   conflicts: []
-properties:
+links:
   - A: 36622
     B: 125892
     isBikeLink: 1
@@ -23,4 +23,5 @@ properties:
     isWalkLink: 0
     LANES: 1
     LINK_ID: 407042
+nodes:
 notes: Simple project card to add new roadway
