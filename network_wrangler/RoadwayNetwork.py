@@ -788,6 +788,11 @@ class RoadwayNetwork(object):
                     self.select_roadway_features(project_dictionary["facility"]),
                     project_dictionary["properties"],
                 )
+            elif project_dictionary["category"].lower() == "add new roadway":
+                self.add_new_roadway_feature(
+                    project_dictionary["links"],
+                    project_dictionary.get("nodes",None),
+                )
             else:
                 raise (BaseException)
 
