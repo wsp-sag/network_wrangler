@@ -26,11 +26,7 @@ import osmnx as ox
 from shapely.geometry import Point, LineString
 
 from .Logger import WranglerLogger
-from .Utils import (
-    point_df_to_geojson,
-    link_df_to_json,
-    parse_time_spans,
-)
+from .Utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .ProjectCard import ProjectCard
 
 
@@ -762,6 +758,44 @@ class RoadwayNetwork(object):
         if validation_error_message:
             WranglerLogger.error(" ".join(validation_error_message))
             raise ValueError()
+
+    def apply(self, project_card_dictionary: dict):
+        """
+        Wrapper method to apply a project to a roadway network.
+
+        args
+        ------
+        project_card_dictionary: dict
+          a dictionary of the project card object
+
+        """
+
+        WranglerLogger.info(
+            "Applying Project to Roadway Network: {}".format(
+                project_card_dictionary["project"]
+            )
+        )
+
+        def _apply_individual_change(project_dictionary: dict):
+
+            if project_dictionary["category"].lower() == "roadway property change":
+                self.apply_roadway_feature_change(
+                    self.select_roadway_features(project_dictionary["facility"]),
+                    project_dictionary["properties"],
+                )
+            elif project_dictionary["category"].lower() == "parallel managed lanes":
+                self.apply_managed_lane_feature_change(
+                    self.select_roadway_features(project_dictionary["facility"]),
+                    project_dictionary["properties"],
+                )
+            else:
+                raise (BaseException)
+
+        if project_card_dictionary.get("changes"):
+            for project_dictionary in project_card_dictionary["changes"]:
+                _apply_individual_change(project_dictionary)
+        else:
+            _apply_individual_change(project_card_dictionary)
 
     def apply_roadway_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True

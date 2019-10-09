@@ -253,6 +253,7 @@ def test_add_managed_lane(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_adhoc_field(request):
@@ -270,9 +271,10 @@ def test_add_adhoc_field(request):
     )
     net.links_df["my_ad_hoc_field"] = 22.5
 
-    print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5] )
+    print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5])
 
-    assert(net.links_df["my_ad_hoc_field"][0]==22.5)
+    assert net.links_df["my_ad_hoc_field"][0] == 22.5
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -291,7 +293,7 @@ def test_add_adhoc_field_from_card(request):
         fast=True,
     )
 
-    project_card_name = 'new_fields_project_card.yml'
+    project_card_name = "new_fields_project_card.yml"
 
     print("Reading project card", project_card_name, "...")
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
@@ -303,23 +305,24 @@ def test_add_adhoc_field_from_card(request):
     attributes_to_update = [p["property"] for p in project_card.properties]
 
     net.apply_roadway_feature_change(
-        net.select_roadway_features(project_card.facility),
-        project_card.properties,
+        net.select_roadway_features(project_card.facility), project_card.properties
     )
 
     rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
-    rev_types = [ (a, net.links_df[a].dtypes) for a in attributes_to_update]
-    #rev_types = net.links_df[[attributes_to_update]].dtypes
-    print("Revised Links:\n", rev_links,"\nNew Property Types:\n", rev_types)
+    rev_types = [(a, net.links_df[a].dtypes) for a in attributes_to_update]
+    # rev_types = net.links_df[[attributes_to_update]].dtypes
+    print("Revised Links:\n", rev_links, "\nNew Property Types:\n", rev_types)
 
-    assert(net.links_df.loc[selected_link_indices[0],"my_ad_hoc_field_float"]==1.1)
-    assert(net.links_df.loc[selected_link_indices[0],"my_ad_hoc_field_integer"]==2)
-    assert(net.links_df.loc[selected_link_indices[0],"my_ad_hoc_field_string"]=="three")
+    assert net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_float"] == 1.1
+    assert net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_integer"] == 2
+    assert (
+        net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_string"] == "three"
+    )
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.menow
 def test_bad_properties_statements(request):
     """
     Makes sure new fields can be added from a project card and that
@@ -335,15 +338,19 @@ def test_bad_properties_statements(request):
         fast=True,
     )
 
-    ok_properties_change = [ {"property": "LANES", "change": 1}]
-    bad_properties_change = [ {"property": "my_random_var", "change": 1}]
-    bad_properties_existing =  [ {"property": "my_random_var", "existing": 1}]
+    ok_properties_change = [{"property": "LANES", "change": 1}]
+    bad_properties_change = [{"property": "my_random_var", "change": 1}]
+    bad_properties_existing = [{"property": "my_random_var", "existing": 1}]
 
     with pytest.raises(ValueError):
         net.validate_and_update_properties(bad_properties_change)
 
     with pytest.raises(ValueError):
-        net.validate_and_update_properties(ok_properties_change, require_existing_for_change=True)
+        net.validate_and_update_properties(
+            ok_properties_change, require_existing_for_change=True
+        )
 
     with pytest.raises(ValueError):
-        net.validate_and_update_properties(bad_properties_existing, ignore_existing=False)
+        net.validate_and_update_properties(
+            bad_properties_existing, ignore_existing=False
+        )

@@ -104,6 +104,45 @@ class TransitNetwork(object):
                 path = os.path.join(outpath, node)
                 df.to_csv(path, index=False)
 
+    def apply(self, project_card_dictionary: dict):
+        """
+        Wrapper method to apply a project to a transit network.
+
+        args
+        ------
+        project_card_dictionary: dict
+          a dictionary of the project card object
+
+        """
+        WranglerLogger.info(
+            "Applying Project to Transit Network: {}".format(
+                project_card_dictionary["project"]
+            )
+        )
+
+        def _apply_individual_change(project_dictionary: dict):
+            if (
+                project_dictionary["category"].lower()
+                == "transit service property change"
+            ):
+                self.apply_transit_feature_change(
+                    self.select_transit_features(project_dictionary["facility"]),
+                    project_dictionary["properties"],
+                )
+            elif project_dictionary["category"].lower() == "parallel managed lanes":
+                WranglerLogger.warning(
+                    "Parallel Managed Lanes not implemented yet in Transit"
+                )
+                ##TODO
+            else:
+                raise (BaseException)
+
+        if project_card_dictionary.get("changes"):
+            for project_dictionary in project_card_dictionary["changes"]:
+                _apply_individual_change(project_dictionary)
+        else:
+            _apply_individual_change(project_card_dictionary)
+
     def select_transit_features(self, selection: dict) -> pd.Series:
         """
         Selects transit features that satisfy selection criteria

@@ -24,7 +24,22 @@ class Scenario(object):
         project_cards: list this scenario's project cards
         """
 
+        self.road_net = None
+        self.transit_net = None
+
         self.base_scenario = base_scenario
+
+        # if the base scenario had roadway or transit networks, use them as the basis.
+        if base_scenario.get("road_net"):
+            self.road_net = base_scenario["road_net"]
+        if base_scenario.get("transit_net"):
+            self.transit_net = base_scenario["transit_net"]
+
+        # if the base scenario had applied projects, add them to the list of applied
+        self.applied_projects = []
+        if base_scenario.get("applied_projects"):
+            self.applied_projects = base_scenario["applied_projects"]
+
         self.project_cards = project_cards
         self.ordered_project_cards = OrderedDict()
 
@@ -41,14 +56,21 @@ class Scenario(object):
         self.prerequisites_sorted = False
 
         for card in self.project_cards:
-            self.prerequisites.update(
-                {card.project: card.dependencies["prerequisites"]}
-            )
-            self.corequisites.update({card.project: card.dependencies["corequisites"]})
+            if not card.__dict__.get("dependencies"):
+                continue
+
+            if card.dependencies.get("prerequisites"):
+                self.prerequisites.update(
+                    {card.project: card.dependencies["prerequisites"]}
+                )
+            if card.dependencies.get("corequisites"):
+                self.corequisites.update(
+                    {card.project: card.dependencies["corequisites"]}
+                )
 
     @staticmethod
     def create_scenario(
-        base_scenario: dict,
+        base_scenario: dict = {},
         card_directory: str = "",
         tags: [str] = None,
         project_cards_list=[],
@@ -58,11 +80,16 @@ class Scenario(object):
         list of user specified project cards and
         creates a scenario object with the valid project card.
 
-        args:
-        base_scenario: the base scenario
-        tags: only project cards with these tags will be read/validated
-        folder: the folder location where the project cards will be
-        project_cards_list: list of project cards to be applied
+        args
+        -----
+        base_scenario:
+          object dictionary for the base scenario (i.e. my_base_scenario.__dict__)
+        tags:
+          only project cards with these tags will be read/validated
+        folder:
+          the folder location where the project cards will be
+        project_cards_list:
+          list of project cards to be applied
         """
 
         scenario = Scenario(base_scenario, project_cards=project_cards_list)
@@ -204,7 +231,7 @@ class Scenario(object):
 
         for project in scenario_projects:
             visited_list[project] = False
-            if not self.prerequisites[project]:
+            if not self.prerequisites.get(project):
                 continue
             for prereq in self.prerequisites[project]:
                 if (
@@ -237,3 +264,45 @@ class Scenario(object):
         self.project_cards = sorted_project_cards
 
         return sorted_project_cards
+
+    def apply_all_projects(self):
+
+        # Get everything in order
+
+        if not self.requisites_checked:
+            self.check_scenario_requisites()
+        if not self.conflicts_checked:
+            self.check_scenario_conflicts()
+        if not self.prerequisites_sorted:
+            self.order_project_cards()
+
+        def _apply_each_project(_p):
+
+            if _p["category"] in ProjectCard.ROADWAY_CATEGORIES:
+                if not self.road_net:
+                    raise ("Missing Roadway Network")
+                self.road_net.apply(_p)
+            if _p["category"] in ProjectCard.TRANSIT_CATEGORIES:
+                if not self.transit_net:
+                    raise ("Missing Transit Network")
+                self.transit_net.apply(_p)
+            if (
+                _p["category"] in ProjectCard.SECONDARY_TRANSIT_CATEGORIES
+                and self.transit_net
+            ):
+                self.transit_net.apply(_p)
+
+        # Make sure you have the right networks for the type of projects
+        # Then apply projects
+        for p in self.project_cards:
+            WranglerLogger.info("Applying {}".format(p.project))
+            if not p.__dict__.get("changes"):
+                _apply_each_project(p.__dict__)
+
+            # for complex project cards
+            else:
+                part = 1
+                for pc in p.changes:
+                    pc["project"] = p.project + " – Part " + str(part)
+                    part += 1
+                    _apply_each_project(pc)

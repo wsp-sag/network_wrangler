@@ -1,6 +1,8 @@
 import os
 import pytest
 from network_wrangler import ProjectCard
+from network_wrangler import RoadwayNetwork
+from network_wrangler import TransitNetwork
 from network_wrangler import Scenario
 from network_wrangler.Logger import WranglerLogger
 
@@ -13,6 +15,10 @@ STPAUL_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "example", "stpaul"
 )
 SCRATCH_DIR = os.path.dirname(os.path.realpath(__file__))
+
+STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
+STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
+STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
 
 
 @pytest.mark.scenario
@@ -207,7 +213,7 @@ def test_project_sort(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.test_ak
+@pytest.mark.ashish
 @pytest.mark.roadway
 @pytest.mark.scenario
 def test_managed_lane_project_card(request):
@@ -223,25 +229,62 @@ def test_managed_lane_project_card(request):
 
     print("--Finished:", request.node.name)
 
-@pytest.mark.queryb
+
+@pytest.mark.travis
 def test_query_builder(request):
     selection = {
-        'link':[
-            {'name': ['6th', 'Sixth', 'sixth']}, #find streets that have one of the various forms of 6th
-            {'LANES': [1,2]}, # only select links that are either 1 or 2 lanes
-            {'isBikeLink': [1]}, # only select links that are marked for biking
-            ],
-        'A':{'osmNodeId': '187899923'}, # start searching for segments at A
-        'B':{'osmNodeId': '187865924'}, # end at B
+        "link": [
+            {
+                "name": ["6th", "Sixth", "sixth"]
+            },  # find streets that have one of the various forms of 6th
+            {"LANES": [1, 2]},  # only select links that are either 1 or 2 lanes
+            {"isBikeLink": [1]},  # only select links that are marked for biking
+        ],
+        "A": {"osmNodeId": "187899923"},  # start searching for segments at A
+        "B": {"osmNodeId": "187865924"},  # end at B
     }
-    sel_query = ProjectCard.build_link_selection_query(
-        selection
-    )
+    sel_query = ProjectCard.build_link_selection_query(selection)
     print("\nsel_query:\n", sel_query)
 
-    resel_query = ProjectCard.build_link_selection_query(
-        selection, ignore=["name"]
-    )
+    resel_query = ProjectCard.build_link_selection_query(selection, ignore=["name"])
     print("\nresel_query:\n", resel_query)
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.scenario
+@pytest.mark.travis
+@pytest.mark.menow
+def test_apply_wrapper(request):
+    print("\n--Starting:", request.node.name)
+
+    card_filenames = [
+        "4_simple_managed_lane.yml",
+        "7_simple_transit_attribute_change.yml",
+        "multiple_changes.yml",
+    ]
+
+    project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
+
+    project_cards_list = [
+        ProjectCard.read(os.path.join(project_card_directory, filename), validate=False)
+        for filename in card_filenames
+    ]
+
+    base_scenario = {
+        "road_net": RoadwayNetwork.read(
+            link_file=STPAUL_LINK_FILE,
+            node_file=STPAUL_NODE_FILE,
+            shape_file=STPAUL_SHAPE_FILE,
+            fast=True,
+        ),
+        "transit_net": TransitNetwork.read(STPAUL_DIR),
+    }
+
+    my_scenario = Scenario.create_scenario(
+        base_scenario=base_scenario, project_cards_list=project_cards_list
+    )
+
+    my_scenario.apply_all_projects()
 
     print("--Finished:", request.node.name)
