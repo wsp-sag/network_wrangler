@@ -176,7 +176,6 @@ def test_select_roadway_features_from_projectcard(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.menow
 def test_apply_roadway_feature_change(request):
     print("\n--Starting:", request.node.name)
 
@@ -269,6 +268,7 @@ def test_add_adhoc_field(request):
         shape_file=STPAUL_SHAPE_FILE,
         fast=True,
     )
+    net.links_df["my_ad_hoc_field"] = 22.5
 
     print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5] )
 
@@ -276,7 +276,6 @@ def test_add_adhoc_field(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.menow
 def test_add_adhoc_field_from_card(request):
     """
     Makes sure new fields can be added from a project card and that
@@ -318,6 +317,39 @@ def test_add_adhoc_field_from_card(request):
     assert(net.links_df.loc[selected_link_indices[0],"my_ad_hoc_field_string"]=="three")
     print("--Finished:", request.node.name)
 
+@pytest.mark.roadway
+@pytest.mark.travis
+@pytest.mark.menow
+def test_bad_properties_statements(request):
+    """
+    Makes sure new fields can be added from a project card and that
+    they will be the right type.
+    """
+
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    ok_properties_change = [ {"property": "LANES", "change": 1}]
+    bad_properties_change = [ {"property": "my_random_var", "change": 1}]
+    bad_properties_existing =  [ {"property": "my_random_var", "existing": 1}]
+
+    with pytest.raises(ValueError):
+        net.validate_properties(bad_properties_change)
+
+    with pytest.raises(ValueError):
+        net.validate_properties(ok_properties_change, require_existing_for_change=True)
+
+    with pytest.raises(ValueError):
+        net.validate_properties(bad_properties_existing, ignore_existing=False)
+
+    print("--Finished:", request.node.name)
 
 @pytest.mark.test_ak
 def test_add_roadway_project_card(request):
