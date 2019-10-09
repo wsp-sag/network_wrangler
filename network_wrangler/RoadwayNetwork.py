@@ -692,7 +692,7 @@ class RoadwayNetwork(object):
             WranglerLogger.error("Couldn't find path from {} to {}".format(A_id, B_id))
             raise ValueError
 
-    def validate_and_update_properties(
+    def validate_properties(
         self,
         properties: dict,
         ignore_existing: bool = False,
@@ -816,7 +816,7 @@ class RoadwayNetwork(object):
         # check if there are change or existing commands that that property
         #   exists in the network
         # if there is a set command, add that property to network
-        self.validate_and_update_properties(properties)
+        self.validate_properties(properties)
 
         for i, p in enumerate(properties):
             attribute = p["property"]
@@ -917,3 +917,43 @@ class RoadwayNetwork(object):
 
                 if i == len(properties) - 1:
                     return updated_network
+
+    def add_new_roadway_feature(self, links: dict, nodes: dict) -> None:
+        """
+        add the new roadway links defined in the project card
+
+        args:
+        links : dict
+            list of dictionaries
+        nodes : dict
+            list of dictionaries
+        """
+
+        # TODO:
+        # validate links dictonary
+
+        link_df_columns = self.links_df.columns
+
+        if links is not None:
+            for link in links:
+                new_link_to_add = {}
+                for property in link_df_columns:
+                    if property in link.keys():
+                        if(self.links_df[property].dtype == np.float64):
+                            value = pd.to_numeric(
+                                link[property], downcast='float'
+                            )
+                        elif(self.links_df[property].dtype == np.int64):
+                            value = pd.to_numeric(
+                                link[property], downcast='integer'
+                            )
+                        else:
+                            value = str(link[property])
+                    else:
+                        value = ""
+
+                    new_link_to_add[property] = value
+
+                self.links_df = self.links_df.append(
+                    new_link_to_add, ignore_index=True
+                )

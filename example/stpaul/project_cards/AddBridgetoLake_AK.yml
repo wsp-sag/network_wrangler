@@ -7,21 +7,20 @@ dependencies:
   corequisites: []
   conflicts: []
 links:
-  - A: 36622
-    B: 125892
+  - u: 36622
+    v: 125892
     isBikeLink: 1
     isDriveLink: 1
     isTranLink: 0
     isWalkLink: 0
     LANES: 1
     LINK_ID: 404982
-  - A: 125892
-    B: 36622
+  - u: 125892
+    v: 36622
     isBikeLink: 1
     isDriveLink: 1
     isTranLink: 0
     isWalkLink: 0
     LANES: 1
     LINK_ID: 407042
-nodes:
 notes: Simple project card to add new roadway
