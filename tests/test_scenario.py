@@ -213,7 +213,6 @@ def test_project_sort(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.ashish
 @pytest.mark.roadway
 @pytest.mark.scenario
 def test_managed_lane_project_card(request):

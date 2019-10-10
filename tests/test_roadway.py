@@ -354,44 +354,38 @@ def test_bad_properties_statements(request):
 
     print("--Finished:", request.node.name)
 
-@pytest.mark.test_ak
+@pytest.mark.ashish
 @pytest.mark.travis
 @pytest.mark.roadway
-def test_add_roadway_project_card(request):
+def test_add_delete_roadway_project_card(request):
     print("\n--Starting:", request.node.name)
 
     print("Reading network ...")
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
 
-    project_card_name = "AddBridgetoLake_AK.yml"
-    print("Reading project card", project_card_name, "...")
-    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path)
 
-    orig_link_count = len(net.links_df)
-    orig_node_count = len(net.nodes_df)
-    print("Original Link Count: ", orig_link_count)
-    print("Original Node Count: ", orig_node_count)
+    project_cards_list = [
+        "10_simple_roadway_add_change.yml",
+        "11_multiple_roadway_add_and_delete_change.yml",
+    ]
 
-    net.add_new_roadway_feature(
-        project_card.__dict__.get("links"),
-        project_card.__dict__.get("nodes")
-    )
+    for card_name in project_cards_list:
+        print("Applying project card - ", card_name, "...")
+        project_card_path = os.path.join(STPAUL_DIR, "project_cards", card_name)
+        project_card = ProjectCard.read(project_card_path, validate = False)
 
-    rev_link_count = len(net.links_df)
-    rev_node_count = len(net.nodes_df)
-    print("Revised Link Count: ", rev_link_count)
-    print("Revised Node Count: ", rev_node_count)
+        net = RoadwayNetwork.read(
+            link_file=STPAUL_LINK_FILE,
+            node_file=STPAUL_NODE_FILE,
+            shape_file=STPAUL_SHAPE_FILE,
+            fast=True,
+        )
 
-    if project_card.__dict__.get("links") is not None:
-        assert(rev_link_count - orig_link_count == len(project_card.links))
+        print("Original Link Count: ", len(net.links_df))
+        print("Original Node Count: ", len(net.nodes_df))
 
-    if project_card.__dict__.get("nodes") is not None:
-        assert(rev_node_count - orig_node_count == len(project_card.nodes))
+        net.apply(project_card.__dict__)
+
+        print("Revised Link Count: ", len(net.links_df))
+        print("Revised Node Count: ", len(net.nodes_df))
 
     print("--Finished:", request.node.name)

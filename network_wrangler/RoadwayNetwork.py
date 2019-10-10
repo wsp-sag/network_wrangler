@@ -789,9 +789,14 @@ class RoadwayNetwork(object):
                     project_dictionary["properties"],
                 )
             elif project_dictionary["category"].lower() == "add new roadway":
-                self.add_new_roadway_feature(
-                    project_dictionary["links"],
-                    project_dictionary.get("nodes",None),
+                self.add_new_roadway_feature_change(
+                    project_dictionary.get("links"),
+                    project_dictionary.get("nodes"),
+                )
+            elif project_dictionary["category"].lower() == "roadway deletion":
+                self.delete_roadway_feature_change(
+                    project_dictionary.get("links"),
+                    project_dictionary.get("nodes"),
                 )
             else:
                 raise (BaseException)
@@ -923,9 +928,9 @@ class RoadwayNetwork(object):
                 if i == len(properties) - 1:
                     return updated_network
 
-    def add_new_roadway_feature(self, links: dict, nodes: dict) -> None:
+    def add_new_roadway_feature_change(self, links: dict, nodes: dict) -> None:
         """
-        add the new roadway links defined in the project card
+        add the new roadway features defined in the project card
 
         args:
         links : dict
@@ -937,28 +942,57 @@ class RoadwayNetwork(object):
         # TODO:
         # validate links dictonary
 
-        link_df_columns = self.links_df.columns
+        # CHECKS:
+        # check if new link LINK_ID already exists?
+        # check if u and v nodes are already present or not?
+
+        def _add_dict_to_df(df, new_dict):
+            df_column_names = df.columns
+            new_row_to_add = {}
+
+            for property in df_column_names:
+                if property in new_dict.keys():
+                    if(df[property].dtype == np.float64):
+                        value = pd.to_numeric(
+                            new_dict[property], downcast='float'
+                        )
+                    elif(df[property].dtype == np.int64):
+                        value = pd.to_numeric(
+                            new_dict[property], downcast='integer'
+                        )
+                    else:
+                        value = str(new_dict[property])
+                else:
+                    value = ""
+
+                new_row_to_add[property] = value
+
+            out_df = df.append(new_row_to_add, ignore_index=True)
+            return(out_df)
+
+        if nodes is not None:
+            for node in nodes:
+                self.nodes_df = _add_dict_to_df(self.nodes_df, node)
 
         if links is not None:
             for link in links:
-                new_link_to_add = {}
-                for property in link_df_columns:
-                    if property in link.keys():
-                        if(self.links_df[property].dtype == np.float64):
-                            value = pd.to_numeric(
-                                link[property], downcast='float'
-                            )
-                        elif(self.links_df[property].dtype == np.int64):
-                            value = pd.to_numeric(
-                                link[property], downcast='integer'
-                            )
-                        else:
-                            value = str(link[property])
-                    else:
-                        value = ""
+                self.links_df = _add_dict_to_df(self.links_df, link)
 
-                    new_link_to_add[property] = value
+    def delete_roadway_feature_change(self, links: dict, nodes: dict) -> None:
+        """
+        delete the roadway features defined in the project card
 
-                self.links_df = self.links_df.append(
-                    new_link_to_add, ignore_index=True
-                )
+        args:
+        links : dict
+            list of dictionaries
+        nodes : dict
+            list of dictionaries
+        """
+
+        if links is not None:
+            for k, v in links.items():
+                self.links_df = self.links_df[~self.links_df[k].isin(v)]
+
+        if nodes is not None:
+            for k, v in nodes.items():
+                self.nodes_df = self.nodes_df[~self.nodes_df[k].isin(v)]

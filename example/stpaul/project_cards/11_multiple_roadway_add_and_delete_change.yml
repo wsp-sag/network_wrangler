@@ -1,0 +1,53 @@
+project: test multiple add and delete
+tags:
+  - 'add and delete roadway'
+changes:
+  - category: Roadway Deletion
+    links:
+      LINK_ID:
+        - 2171
+        - 25856
+        - 383747
+        - 383790
+    nodes:
+      travelModelId:
+        - 16214
+        - 4336
+        - 12590
+        - 12655
+        - 13931
+        - 14248
+  - category: Add New Roadway
+    links:
+      - u: 354386
+        v: 16214
+        isBikeLink: 1
+        isDriveLink: 1
+        isTranLink: 0
+        isWalkLink: 0
+        LANES: 1
+        LINK_ID: 2171
+      - u: 16214
+        v: 354386
+        isBikeLink: 1
+        isDriveLink: 1
+        isTranLink: 0
+        isWalkLink: 0
+        LANES: 1
+        LINK_ID: 25856
+    nodes:
+      - ISBIKENODE: 1
+        ISDRIVENODE: 1
+        ISTRANNODE: 0
+        ISWALKNODE: 1
+        N: 354386
+        X: -93.14412
+        Y: 44.87497
+      - ISBIKENODE: 1
+        ISDRIVENODE: 1
+        ISTRANNODE: 0
+        ISWALKNODE: 1
+        N: 354387
+        X: -93.14189
+        Y: 44.87644
+notes: project card with multiple category of add and delete changes
