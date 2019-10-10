@@ -355,8 +355,6 @@ def test_bad_properties_statements(request):
     print("--Finished:", request.node.name)
 
 @pytest.mark.ashish
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_add_delete_roadway_project_card(request):
     print("\n--Starting:", request.node.name)
 
@@ -380,12 +378,71 @@ def test_add_delete_roadway_project_card(request):
             fast=True,
         )
 
-        print("Original Link Count: ", len(net.links_df))
-        print("Original Node Count: ", len(net.nodes_df))
+        orig_links_count = len(net.links_df)
+        orig_nodes_count = len(net.nodes_df)
 
         net.apply(project_card.__dict__)
 
-        print("Revised Link Count: ", len(net.links_df))
-        print("Revised Node Count: ", len(net.nodes_df))
+        rev_links_count = len(net.links_df)
+        rev_nodes_count = len(net.nodes_df)
+
+        def _count_add_or_delete_features(project_card_dictionary):
+            _links_added = 0
+            _nodes_added = 0
+            _links_deleted = 0
+            _nodes_deleted = 0
+
+            if project_card_dictionary["category"].lower() == "add new roadway":
+                if project_card_dictionary.get("links") is not None:
+                    _links_added = len(project_card_dictionary["links"])
+                if project_card_dictionary.get("nodes") is not None:
+                    _nodes_added = len(project_card_dictionary["nodes"])
+
+            if project_card_dictionary["category"].lower() == "roadway deletion":
+                if project_card_dictionary.get("links") is not None:
+                    print("links", project_card_dictionary["links"])
+                    _links_deleted = sum(
+                        len(project_card_dictionary["links"][key])
+                        for key in project_card_dictionary["links"]
+                    )
+                if project_card_dictionary.get("nodes") is not None:
+                    print("nodes", project_card_dictionary["nodes"])
+                    _nodes_deleted = sum(
+                        len(project_card_dictionary["nodes"][key])
+                        for key in project_card_dictionary["nodes"]
+                    )
+
+            return {"links_added": _links_added,
+                    "nodes_added": _nodes_added,
+                    "links_deleted": _links_deleted,
+                    "nodes_deleted": _nodes_deleted}
+
+        project_card_dictionary = project_card.__dict__
+
+        links_added = 0
+        links_deleted = 0
+        nodes_added = 0
+        nodes_deleted = 0
+
+        if not project_card_dictionary.get("changes"):
+            count_info = _count_add_or_delete_features(project_card_dictionary)
+            links_added = count_info["links_added"]
+            links_deleted = count_info["links_deleted"]
+            nodes_added = count_info["nodes_added"]
+            nodes_deleted = count_info["nodes_deleted"]
+        else:
+            for project_dictionary in project_card_dictionary["changes"]:
+                count_info = _count_add_or_delete_features(project_dictionary)
+                links_added += count_info["links_added"]
+                links_deleted += count_info["links_deleted"]
+                nodes_added += count_info["nodes_added"]
+                nodes_deleted += count_info["nodes_deleted"]
+
+        # If project card specifies links/nodes to be deleted but the specified
+        # links/nodes doesn't exist in the network,
+        # test woulnd't pass, since, the count (obtained from project card)
+        # won't match the actual deleted links/nodes
+        assert(rev_links_count - orig_links_count == links_added - links_deleted)
+        assert(rev_nodes_count - orig_nodes_count == nodes_added - nodes_deleted)
 
     print("--Finished:", request.node.name)
