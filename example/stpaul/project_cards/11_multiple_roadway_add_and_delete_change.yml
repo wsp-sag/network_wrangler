@@ -36,18 +36,18 @@ changes:
         LANES: 1
         LINK_ID: 25856
     nodes:
-      - ISBIKENODE: 1
-        ISDRIVENODE: 1
-        ISTRANNODE: 0
-        ISWALKNODE: 1
-        N: 354386
+      - isBikeNode: 1
+        isDriveNode: 1
+        isTranNode: 0
+        isWalkNode: 1
+        travelModelId: 354386
         X: -93.14412
         Y: 44.87497
-      - ISBIKENODE: 1
-        ISDRIVENODE: 1
-        ISTRANNODE: 0
-        ISWALKNODE: 1
-        N: 354387
+      - isBikeNode: 1
+        isDriveNode: 1
+        isTranNode: 0
+        isWalkNode: 1
+        travelModelId: 354387
         X: -93.14189
         Y: 44.87644
 notes: project card with multiple category of add and delete changes

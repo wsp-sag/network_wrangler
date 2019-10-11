@@ -950,6 +950,7 @@ class RoadwayNetwork(object):
             df_column_names = df.columns
             new_row_to_add = {}
 
+            # add the fields from project card that are in the network
             for property in df_column_names:
                 if property in new_dict.keys():
                     if(df[property].dtype == np.float64):
@@ -966,6 +967,11 @@ class RoadwayNetwork(object):
                     value = ""
 
                 new_row_to_add[property] = value
+
+            # add the fields from project card that are NOT in the network
+            for key, value in new_dict.items():
+                if key not in df_column_names:
+                    new_row_to_add[key] = new_dict[key]
 
             out_df = df.append(new_row_to_add, ignore_index=True)
             return(out_df)
