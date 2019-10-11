@@ -253,7 +253,6 @@ def test_query_builder(request):
 
 @pytest.mark.scenario
 @pytest.mark.travis
-@pytest.mark.menow
 def test_apply_wrapper(request):
     print("\n--Starting:", request.node.name)
 
@@ -261,7 +260,7 @@ def test_apply_wrapper(request):
         "4_simple_managed_lane.yml",
         "7_simple_transit_attribute_change.yml",
         "multiple_changes.yml",
-        "AddBridgetoLake_AK.yml",
+        "AddBridgetoLake.yml",
     ]
 
     project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
