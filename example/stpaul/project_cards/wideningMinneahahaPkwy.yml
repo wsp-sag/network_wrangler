@@ -2,30 +2,11 @@ changes:
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
-      - 74451
-      - 114692
-    B:
-      N:
-      - 114692
-      - 74451
-    link:
-      LINK_ID:
-      - 162144
-      - 255919
-  properties:
-  - property: LANES
-    set: 3
-  - property: DISTANCE
-    set: 0.0252
-- category: Roadway Attribute Change
-  facility:
-    A:
-      N:
+      travelModelId:
       - 9753
       - 25336
     B:
-      N:
+      travelModelId:
       - 25336
       - 9753
     link:
@@ -33,18 +14,20 @@ changes:
       - 12436
       - 46729
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 100.443968062
+    property: DISTANCE
     set: 0.0624
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 117201
       - 162885
     B:
-      N:
+      travelModelId:
       - 162885
       - 117201
     link:
@@ -52,18 +35,20 @@ changes:
       - 261737
       - 362456
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 101.2658510917
+    property: DISTANCE
     set: 0.0629
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 11215
       - 162885
     B:
-      N:
+      travelModelId:
       - 162885
       - 11215
     link:
@@ -71,18 +56,20 @@ changes:
       - 15165
       - 362457
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 101.7312126277
+    property: DISTANCE
     set: 0.0632
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 5586
       - 9753
     B:
-      N:
+      travelModelId:
       - 9753
       - 5586
     link:
@@ -90,18 +77,20 @@ changes:
       - 4382
       - 12437
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 103.8313402833
+    property: DISTANCE
     set: 0.0645
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 88788
       - 119366
     B:
-      N:
+      travelModelId:
       - 119366
       - 88788
     link:
@@ -109,18 +98,20 @@ changes:
       - 194599
       - 266919
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 103.9640963694
+    property: DISTANCE
     set: 0.0646
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 25336
       - 119278
     B:
-      N:
+      travelModelId:
       - 119278
       - 25336
     link:
@@ -128,18 +119,20 @@ changes:
       - 46728
       - 266699
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 105.7470515865
+    property: DISTANCE
     set: 0.0657
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 88788
       - 112328
     B:
-      N:
+      travelModelId:
       - 112328
       - 88788
     link:
@@ -147,18 +140,20 @@ changes:
       - 194598
       - 250497
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 107.2099902198
+    property: DISTANCE
     set: 0.0666
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 10831
       - 74451
     B:
-      N:
+      travelModelId:
       - 74451
       - 10831
     link:
@@ -166,18 +161,20 @@ changes:
       - 14469
       - 162145
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 107.2845372853
+    property: DISTANCE
     set: 0.0667
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 13462
       - 122908
     B:
-      N:
+      travelModelId:
       - 122908
       - 13462
     link:
@@ -185,18 +182,20 @@ changes:
       - 19643
       - 275129
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 109.2424377972
+    property: DISTANCE
     set: 0.0679
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 5586
       - 110020
     B:
-      N:
+      travelModelId:
       - 110020
       - 5586
     link:
@@ -204,18 +203,20 @@ changes:
       - 4380
       - 245424
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 110.338188047
+    property: DISTANCE
     set: 0.0686
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 110020
       - 115069
     B:
-      N:
+      travelModelId:
       - 115069
       - 110020
     link:
@@ -223,18 +224,20 @@ changes:
       - 245426
       - 256795
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 113.1314965212
+    property: DISTANCE
     set: 0.0703
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 10831
       - 11215
     B:
-      N:
+      travelModelId:
       - 11215
       - 10831
     link:
@@ -242,18 +245,20 @@ changes:
       - 14468
       - 15166
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 114.3734864618
+    property: DISTANCE
     set: 0.0711
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 112328
       - 115069
     B:
-      N:
+      travelModelId:
       - 115069
       - 112328
     link:
@@ -261,18 +266,20 @@ changes:
       - 250496
       - 256796
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 135.3888101844
+    property: DISTANCE
     set: 0.0841
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 114692
       - 119278
     B:
-      N:
+      travelModelId:
       - 119278
       - 114692
     link:
@@ -280,18 +287,20 @@ changes:
       - 255921
       - 266698
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 135.736243212
+    property: DISTANCE
     set: 0.0843
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 119145
       - 119366
     B:
-      N:
+      travelModelId:
       - 119366
       - 119145
     link:
@@ -299,18 +308,20 @@ changes:
       - 266377
       - 266920
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 140.4174507756
+    property: DISTANCE
     set: 0.0873
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 13462
       - 13574
     B:
-      N:
+      travelModelId:
       - 13574
       - 13462
     link:
@@ -318,18 +329,20 @@ changes:
       - 19645
       - 19899
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 174.3289459933
+    property: DISTANCE
     set: 0.1083
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
       - 119145
       - 122908
     B:
-      N:
+      travelModelId:
       - 122908
       - 119145
     link:
@@ -337,18 +350,41 @@ changes:
       - 266376
       - 275130
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 217.1065262385
+    property: DISTANCE
     set: 0.1349
 - category: Roadway Attribute Change
   facility:
     A:
-      N:
+      travelModelId:
+      - 74451
+      - 114692
+    B:
+      travelModelId:
+      - 114692
+      - 74451
+    link:
+      LINK_ID:
+      - 162144
+      - 255919
+  properties:
+  - existing: 1
+    property: LANES
+    set: 3
+  - existing: 40.5870616256
+    property: DISTANCE
+    set: 0.0252
+- category: Roadway Attribute Change
+  facility:
+    A:
+      travelModelId:
       - 13574
       - 124453
     B:
-      N:
+      travelModelId:
       - 124453
       - 13574
     link:
@@ -356,9 +392,11 @@ changes:
       - 19900
       - 278842
   properties:
-  - property: LANES
+  - existing: 1
+    property: LANES
     set: 3
-  - property: DISTANCE
+  - existing: 435.4190155093
+    property: DISTANCE
     set: 0.2706
 project: TO DO User Define
 valid: false
