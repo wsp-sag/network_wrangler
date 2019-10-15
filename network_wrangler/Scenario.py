@@ -30,9 +30,9 @@ class Scenario(object):
         self.base_scenario = base_scenario
 
         # if the base scenario had roadway or transit networks, use them as the basis.
-        if base_scenario.get("road_net"):
+        if base_scenario.__dict__.get("road_net"):
             self.road_net = base_scenario["road_net"]
-        if base_scenario.get("transit_net"):
+        if base_scenario.__dict__.get("transit_net"):
             self.transit_net = base_scenario["transit_net"]
 
         # if the base scenario had applied projects, add them to the list of applied
