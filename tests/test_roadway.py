@@ -96,7 +96,6 @@ def test_quick_roadway_read_write(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.ashishk
 @pytest.mark.basic
 @pytest.mark.roadway
 def test_select_roadway_features(request):
@@ -134,18 +133,16 @@ def test_select_roadway_features(request):
 
     for i, sel in test_selections.items():
         print("--->", i, "\n", sel)
-        path_found = False
-        selected_links = net.select_roadway_features(sel)
-        if not type(selected_links) == GeoDataFrame:
-            print("Couldn't find path from {} to {}".format(sel["A"], sel["B"]))
-        else:
-            print("Features selected:", len(selected_links))
-            selected_nodes = [str(sel["A"]["osmNodeId"])] + selected_links["v"].tolist()
-            # print("Nodes selected: ",selected_nodes)
+        selected_link_indices = net.select_roadway_features(sel)
+        print("Features selected:", len(selected_link_indices))
 
-            if "answer" in sel.keys():
-                print("Expected Answer: ", sel["answer"])
-                assert set(selected_nodes) == set(sel["answer"])
+        if "answer" in sel.keys():
+            selected_nodes = [str(sel["A"]["osmNodeId"])] + net.links_df.loc[
+                selected_link_indices, "v"
+            ].tolist()
+            # print("Nodes selected: ",selected_nodes)
+            # print("Expected Answer: ", sel["answer"])
+            assert set(selected_nodes) == set(sel["answer"])
 
     print("--Finished:", request.node.name)
 
@@ -164,64 +161,22 @@ def test_select_roadway_features_from_projectcard(request):
     )
 
     print("Reading project card ...")
-    # project_card_name = '1_simple_roadway_attribute_change.yml'
-    # project_card_name = '2_multiple_roadway.yml'
     project_card_name = "3_multiple_roadway_attribute_change.yml"
 
-    project_card_path = os.path.join(
-        os.getcwd(), "example", "stpaul", "project_cards", project_card_name
-    )
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path)
 
     print("Selecting roadway features ...")
     sel = project_card.facility
-    print("Selection:\n", sel)
-    selected_links = net.select_roadway_features(sel)
-
-    if not type(selected_links) == GeoDataFrame:
-        print("Couldn't find path from {} to {}".format(sel["A"], sel["B"]))
-    else:
-        print("Features selected:", len(selected_links))
+    selected_link_indices = net.select_roadway_features(sel)
+    print("Features selected:", len(selected_link_indices))
 
     print("--Finished:", request.node.name)
 
 
-def roadway_feature_change(net, project_card):
-    print("Selecting roadway features ...")
-    sel = project_card.facility
-    print("Selection:\n", sel)
-    selected_links = net.select_roadway_features(sel)
-
-    if not type(selected_links) == GeoDataFrame:
-        print(
-            "Error in applying project card: Couldn't find path from {} to {}".format(
-                sel["A"], sel["B"]
-            )
-        )
-    else:
-        selected_indices = selected_links.index.tolist()
-        net.links_df["selected_links"] = np.where(
-            net.links_df.index.isin(selected_indices), 1, 0
-        )
-
-        print("Applying project card ...")
-        prop = project_card.properties
-        print("Properties:\n", prop)
-        revised_net = net.apply_roadway_feature_change(prop)
-
-        columns_updated = [p["property"] for p in project_card.properties]
-
-        orig_links = net.links_df.loc[selected_indices, columns_updated]
-        print("Original Links:\n", orig_links)
-
-        new_links = revised_net.links_df.loc[selected_indices, columns_updated]
-        print("Updated Links:\n", new_links)
-
-
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.menow
-def test_roadway_feature_change(request):
+def test_apply_roadway_feature_change(request):
     print("\n--Starting:", request.node.name)
 
     print("Reading network ...")
@@ -236,18 +191,27 @@ def test_roadway_feature_change(request):
         (net, "1_simple_roadway_attribute_change.yml"),
         (net, "2_multiple_roadway.yml"),
         (net, "3_multiple_roadway_attribute_change.yml"),
-        (net, "4_simple_managed_lane.yml"),
-        (net, "5_managed_lane.yml"),
     ]
 
     for my_net, project_card_name in project_card_set:
-        project_card_path = os.path.join(
-            os.getcwd(), "example", "stpaul", "project_cards", project_card_name
-        )
-        print("Reading project card from:\n {}".format(project_card_path))
+        print("Reading project card", project_card_name, "...")
+        project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
         project_card = ProjectCard.read(project_card_path)
 
-        roadway_feature_change(my_net, project_card)
+        print("Selecting roadway features ...")
+        selected_link_indices = my_net.select_roadway_features(project_card.facility)
+
+        attributes_to_update = [p["property"] for p in project_card.properties]
+        orig_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
+        print("Original Links:\n", orig_links)
+
+        my_net.apply_roadway_feature_change(
+            my_net.select_roadway_features(project_card.facility),
+            project_card.properties,
+        )
+
+        rev_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
+        print("Revised Links:\n", rev_links)
 
     print("--Finished:", request.node.name)
 
@@ -267,49 +231,263 @@ def test_add_managed_lane(request):
     )
 
     print("Reading project card ...")
-    # project_card_name = '4_simple_managed_lane.yml'
     project_card_name = "5_managed_lane.yml"
-    project_card_path = os.path.join(
-        os.getcwd(), "example", "stpaul", "project_cards", project_card_name
-    )
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path)
 
     print("Selecting roadway features ...")
-    sel = project_card.facility
-    print("\nSelection:", sel)
-    selected_links = net.select_roadway_features(sel)
+    selected_link_indices = net.select_roadway_features(project_card.facility)
 
-    if not type(selected_links) == GeoDataFrame:
-        print(
-            "Couldn't find mainline facility from {} to {}".format(sel["A"], sel["B"])
+    attributes_to_update = [p["property"] for p in project_card.properties]
+    orig_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    print("Original Links:\n", orig_links)
+
+    net.apply_managed_lane_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    print("Revised Links:\n", rev_links)
+
+    net.write(filename="test_ml", path=SCRATCH_DIR)
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_add_adhoc_field(request):
+    """
+    Makes sure new fields can be added in the API and be saved and read in again.
+    """
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+    net.links_df["my_ad_hoc_field"] = 22.5
+
+    print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5])
+
+    assert net.links_df["my_ad_hoc_field"][0] == 22.5
+
+
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_add_adhoc_field_from_card(request):
+    """
+    Makes sure new fields can be added from a project card and that
+    they will be the right type.
+    """
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    project_card_name = "new_fields_project_card.yml"
+
+    print("Reading project card", project_card_name, "...")
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+
+    print("Selecting roadway features ...")
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+
+    attributes_to_update = [p["property"] for p in project_card.properties]
+
+    net.apply_roadway_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    rev_types = [(a, net.links_df[a].dtypes) for a in attributes_to_update]
+    # rev_types = net.links_df[[attributes_to_update]].dtypes
+    print("Revised Links:\n", rev_links, "\nNew Property Types:\n", rev_types)
+
+    assert net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_float"] == 1.1
+    assert net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_integer"] == 2
+    assert (
+        net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_string"] == "three"
+    )
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_bad_properties_statements(request):
+    """
+    Makes sure new fields can be added from a project card and that
+    they will be the right type.
+    """
+
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    ok_properties_change = [{"property": "LANES", "change": 1}]
+    bad_properties_change = [{"property": "my_random_var", "change": 1}]
+    bad_properties_existing = [{"property": "my_random_var", "existing": 1}]
+
+    with pytest.raises(ValueError):
+        net.validate_properties(bad_properties_change)
+
+    with pytest.raises(ValueError):
+        net.validate_properties(ok_properties_change, require_existing_for_change=True)
+
+    with pytest.raises(ValueError):
+        net.validate_properties(bad_properties_existing, ignore_existing=False)
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.ashish
+@pytest.mark.travis
+@pytest.mark.menow
+def test_add_delete_roadway_project_card(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+
+    project_cards_list = [
+        "10_simple_roadway_add_change.yml",
+        "11_multiple_roadway_add_and_delete_change.yml",
+    ]
+
+    for card_name in project_cards_list:
+        print("Applying project card - ", card_name, "...")
+        project_card_path = os.path.join(STPAUL_DIR, "project_cards", card_name)
+        project_card = ProjectCard.read(project_card_path, validate=False)
+
+        net = RoadwayNetwork.read(
+            link_file=STPAUL_LINK_FILE,
+            node_file=STPAUL_NODE_FILE,
+            shape_file=STPAUL_SHAPE_FILE,
+            fast=True,
         )
-    else:
-        selected_indices = selected_links.index.tolist()
 
-        prop = project_card.properties
-        columns_updated = [p["property"] for p in prop]
+        orig_links_count = len(net.links_df)
+        orig_nodes_count = len(net.nodes_df)
 
-        net.links_df["selected_links"] = np.where(
-            net.links_df.index.isin(selected_indices), 1, 0
-        )
+        missing_nodes = []
+        missing_links = []
 
-        print("Applying project card ...")
-        print("\nProperties:", prop)
-        revised_net = net.add_roadway_attributes(prop)
+        project_card_dictionary = project_card.__dict__
 
-        if "selected_links" in revised_net.links_df.columns:
-            revised_net.links_df.drop(["selected_links"], axis=1, inplace=True)
+        def _get_missing_nodes(project_card_dictionary):
+            if project_card_dictionary[
+                "category"
+            ].lower() == "roadway deletion" and project_card_dictionary.get("nodes"):
+                for key, val in project_card_dictionary["nodes"].items():
+                    return [v for v in val if v not in net.nodes_df[key].tolist()]
 
-        in_links = net.links_df.loc[selected_indices, columns_updated]
-        print("\nOriginal Links:\n", in_links)
+        def _get_missing_links(project_card_dictionary):
+            if project_card_dictionary[
+                "category"
+            ].lower() == "roadway deletion" and project_card_dictionary.get("links"):
+                for key, val in project_card_dictionary["links"].items():
+                    return [v for v in val if v not in net.links_df[key].tolist()]
 
-        out_links = revised_net.links_df.loc[selected_indices, columns_updated]
-        print("\nRevised Links:\n", out_links)
+        # count nodes that are in original network that should be deleted
+        if not project_card_dictionary.get("changes"):
+            m_n = _get_missing_nodes(project_card_dictionary)
+            if m_n: missing_nodes+=m_n
 
-        revised_net.links_df.loc[selected_indices, :].to_csv(
-            os.path.join(SCRATCH_DIR, "ml_out_links.csv"), index=False
-        )
+            m_l = _get_missing_links(project_card_dictionary)
+            if m_l: missing_links+=m_l
+        else:
+            for project_dictionary in project_card_dictionary["changes"]:
+                m_n = _get_missing_nodes(project_dictionary)
+                if m_n: missing_nodes+=m_n
 
-        revised_net.write(filename="test_ml", path=SCRATCH_DIR)
+                m_l = _get_missing_links(project_dictionary)
+                if m_l: missing_links+=m_l
+
+        net.apply(project_card.__dict__)
+
+        rev_links_count = len(net.links_df)
+        rev_nodes_count = len(net.nodes_df)
+
+        def _count_add_or_delete_features(project_card_dictionary):
+            _links_added = 0
+            _nodes_added = 0
+            _links_deleted = 0
+            _nodes_deleted = 0
+
+            if project_card_dictionary["category"].lower() == "add new roadway":
+                if project_card_dictionary.get("links") is not None:
+                    _links_added = len(project_card_dictionary["links"])
+                if project_card_dictionary.get("nodes") is not None:
+                    _nodes_added = len(project_card_dictionary["nodes"])
+
+            if project_card_dictionary["category"].lower() == "roadway deletion":
+                if project_card_dictionary.get("links") is not None:
+                    print("links", project_card_dictionary["links"])
+                    _links_deleted = sum(
+                        len(project_card_dictionary["links"][key])
+                        for key in project_card_dictionary["links"]
+                    )
+                if project_card_dictionary.get("nodes"):
+                    print("nodes", project_card_dictionary["nodes"])
+                    _nodes_deleted = sum(
+                        len(project_card_dictionary["nodes"][key])
+                        for key in project_card_dictionary["nodes"]
+                    )
+                    print("nodes_deleted:", _nodes_deleted)
+                    print("NODES:", project_card_dictionary["nodes"])
+
+            return {
+                "links_added": _links_added,
+                "nodes_added": _nodes_added,
+                "links_deleted": _links_deleted,
+                "nodes_deleted": _nodes_deleted,
+            }
+
+        links_added = 0
+        links_deleted = 0
+        nodes_added = 0
+        nodes_deleted = 0
+
+        if not project_card_dictionary.get("changes"):
+            count_info = _count_add_or_delete_features(project_card_dictionary)
+            links_added = count_info["links_added"]
+            links_deleted = count_info["links_deleted"]
+            nodes_added = count_info["nodes_added"]
+            nodes_deleted = count_info["nodes_deleted"]
+        else:
+            for project_dictionary in project_card_dictionary["changes"]:
+                count_info = _count_add_or_delete_features(project_dictionary)
+                links_added += count_info["links_added"]
+                links_deleted += count_info["links_deleted"]
+                nodes_added += count_info["nodes_added"]
+                nodes_deleted += count_info["nodes_deleted"]
+
+        num_missing_nodes = len(set(missing_nodes))
+        print("MISSING NODES:",num_missing_nodes)
+
+        num_missing_links = len(set(missing_links))
+        print("MISSING LINKS:",num_missing_links)
+
+        net_links_network = rev_links_count - orig_links_count
+        net_links_project_card = links_added - links_deleted + num_missing_links
+
+        net_nodes_network = rev_nodes_count - orig_nodes_count
+        net_nodes_project_card = nodes_added - nodes_deleted + num_missing_nodes
+        assert net_links_network == net_links_project_card
+        assert net_nodes_network == net_nodes_project_card
 
     print("--Finished:", request.node.name)

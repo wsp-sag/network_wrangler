@@ -45,3 +45,6 @@ def test_time_convert(request):
     from pandas.testing import assert_series_equal
 
     assert_series_equal(df["time"], df["time_results"], check_names=False)
+
+
+null_val_type_list = [("1", 0), ("3.2", 0.0), ("Howdy", ""), ("False", False)]

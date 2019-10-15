@@ -38,13 +38,6 @@ class RoadwayNetwork(object):
     CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
 
     NODE_FOREIGN_KEY = "osmNodeId"
-    OPTIONAL_FIELDS = [  # field name, default value
-        ("ML_LANES", 0),
-        ("ML_PRICE", 0),
-        ("ML_ACCESS", 0),
-        ("ML_EGRESS", 0),
-        ("PROJECTS",""),
-    ]
 
     SEARCH_BREADTH = 5
     MAX_SEARCH_BREADTH = 10
@@ -65,9 +58,9 @@ class RoadwayNetwork(object):
         self.shapes_df = shapes
 
         # Add non-required fields if they aren't there.
-        for field, default_value in RoadwayNetwork.OPTIONAL_FIELDS:
-            if field not in self.links_df.columns:
-                self.links_df[field] = default_value
+        # for field, default_value in RoadwayNetwork.OPTIONAL_FIELDS:
+        #    if field not in self.links_df.columns:
+        #        self.links_df[field] = default_value
 
         self.selections = {}
 
@@ -522,7 +515,7 @@ class RoadwayNetwork(object):
 
         if sel_key in self.selections:
             if self.selections[sel_key]["selection_found"]:
-                return self.selections[sel_key]["selected_links"]
+                return self.selections[sel_key]["selected_links"].index.tolist()
         else:
             self.selections[sel_key] = {}
             self.selections[sel_key]["selection_found"] = False
@@ -674,157 +667,213 @@ class RoadwayNetwork(object):
             )
             sp_found = _shortest_path()
 
-        # reselect from the links in the shortest path, the ones with
-        # the desired values....ignoring name.
-
-        if len(selection["link"]) > 1:
-            resel_query = ProjectCard.build_link_selection_query(
-                selection, mode=modes_to_network_variables[search_mode], ignore=["name"]
-            )
-            print("Reselecting features:\n{}".format(resel_query))
-            self.selections[sel_key]["selected_links"] = self.selections[sel_key][
-                "links"
-            ].query(resel_query, engine="python")
-        else:
-            self.selections[sel_key]["selected_links"] = self.selections[sel_key][
-                "links"
-            ]
-
         if sp_found:
-            self.selections[sel_key]["selection_found"] = True
-            return self.selections[sel_key]["selected_links"]
-        else:
-            return False
+            # reselect from the links in the shortest path, the ones with
+            # the desired values....ignoring name.
+            if len(selection["link"]) > 1:
+                resel_query = ProjectCard.build_link_selection_query(
+                    selection,
+                    mode=modes_to_network_variables[search_mode],
+                    ignore=["name"],
+                )
+                print("Reselecting features:\n{}".format(resel_query))
+                self.selections[sel_key]["selected_links"] = self.selections[sel_key][
+                    "links"
+                ].query(resel_query, engine="python")
+            else:
+                self.selections[sel_key]["selected_links"] = self.selections[sel_key][
+                    "links"
+                ]
 
-    def validate_properties(self, properties: dict) -> Bool:
+            self.selections[sel_key]["selection_found"] = True
+            # Return pandas.Series of links_ids
+            return self.selections[sel_key]["selected_links"].index.tolist()
+        else:
+            WranglerLogger.error("Couldn't find path from {} to {}".format(A_id, B_id))
+            raise ValueError
+
+    def validate_properties(
+        self,
+        properties: dict,
+        ignore_existing: bool = False,
+        require_existing_for_change: bool = False,
+    ) -> bool:
         """
-        Evaluate whether the properties dictionary contains the
-        attributes that exists on the network
+        If there are change or existing commands, make sure that that
+        property exists in the network.
 
         Parameters
         -----------
         properties : dict
             properties dictionary to be evaluated
-
+        ignore_existing: bool
+            If True, will only warn about properties that specify an "existing"
+            value.  If False, will fail.
+        require_existing_for_change: bool
+            If True, will fail if there isn't a specified value in the
+            project card for existing when a change is specified.
         Returns
         -------
         boolean value as to whether the properties dictonary is valid.
-
         """
-        attr_err = []
-        req_err = []
+
+        validation_error_message = []
 
         for p in properties:
-            attribute = p["property"]
-
-            if attribute not in self.links_df.columns:
-                attr_err.append(
-                    "{} specified as attribute to change but not an attribute in network\n".format(
-                        attribute
+            if p["property"] not in self.links_df.columns:
+                if p.get("change"):
+                    validation_error_message.append(
+                        '"Change" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
+                            p["property"]
+                        )
                     )
-                )
 
-            # either 'set' OR 'change' should be specified, not both
-            if "set" in p.keys() and "change" in p.keys():
-                req_err.append(
-                    "Both Set and Change should not be specified for the attribute {}\n".format(
-                        attribute
+                if p.get("existing") and not ignore_existing:
+                    validation_error_message.append(
+                        '"Existing" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
+                            p["property"]
+                        )
                     )
-                )
-
-            # if 'change' is specified, then 'existing' is required
-            if "change" in p.keys() and "existing" not in p.keys():
-                req_err.append(
-                    'Since "Change" is specified for attribute {}, "Existing" value is also required\n'.format(
-                        attribute
+                elif p.get("existing"):
+                    WranglerLogger.warning(
+                        '"Existing" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
+                            p["property"]
+                        )
                     )
-                )
 
-        if attr_err:
-            WranglerLogger.error(
-                "ERROR: Properties to change in project card not found in network"
-            )
-            WranglerLogger.error("\n".join(attr_err))
+            if p.get("change") and not p.get("existing"):
+                if require_existing_for_change:
+                    validation_error_message.append(
+                        '"Change" is specified for attribute {}, but there isn\'t a value for existing.\nTo proceed, run with the setting require_existing_for_change=False'.format(
+                            p["property"]
+                        )
+                    )
+                else:
+                    WranglerLogger.warning(
+                        '"Change" is specified for attribute {}, but there isn\'t a value for existing.\n'.format(
+                            p["property"]
+                        )
+                    )
+
+        if validation_error_message:
+            WranglerLogger.error(" ".join(validation_error_message))
             raise ValueError()
-            return False
 
-        if req_err:
-            WranglerLogger.error(
-                "ERROR: Properties not specified correctly in the project card"
-            )
-            WranglerLogger.error("\n".join(req_err))
-            raise ValueError()
-            return False
-
-        return True
-
-    def apply_roadway_feature_change(self, properties: dict) -> RoadwayNetwork:
+    def apply(self, project_card_dictionary: dict):
         """
-        Changes the roadway attributes for the selected features based on the project card information passed
+        Wrapper method to apply a project to a roadway network.
+
+        args
+        ------
+        project_card_dictionary: dict
+          a dictionary of the project card object
+
+        """
+
+        WranglerLogger.info(
+            "Applying Project to Roadway Network: {}".format(
+                project_card_dictionary["project"]
+            )
+        )
+
+        def _apply_individual_change(project_dictionary: dict):
+
+            if project_dictionary["category"].lower() == "roadway property change":
+                self.apply_roadway_feature_change(
+                    self.select_roadway_features(project_dictionary["facility"]),
+                    project_dictionary["properties"],
+                )
+            elif project_dictionary["category"].lower() == "parallel managed lanes":
+                self.apply_managed_lane_feature_change(
+                    self.select_roadway_features(project_dictionary["facility"]),
+                    project_dictionary["properties"],
+                )
+            elif project_dictionary["category"].lower() == "add new roadway":
+                self.add_new_roadway_feature_change(
+                    project_dictionary.get("links"), project_dictionary.get("nodes")
+                )
+            elif project_dictionary["category"].lower() == "roadway deletion":
+                self.delete_roadway_feature_change(
+                    project_dictionary.get("links"), project_dictionary.get("nodes")
+                )
+            else:
+                raise (BaseException)
+
+        if project_card_dictionary.get("changes"):
+            for project_dictionary in project_card_dictionary["changes"]:
+                _apply_individual_change(project_dictionary)
+        else:
+            _apply_individual_change(project_card_dictionary)
+
+    def apply_roadway_feature_change(
+        self, link_idx: list, properties: dict, in_place: bool = True
+    ) -> Union(None, RoadwayNetwork):
+        """
+        Changes the roadway attributes for the selected features based on the
+        project card information passed
 
         args:
-        properties: dictionary with roadway properties to change
-
-        returns:
-        updated roadway network
+        link_idx : list
+            lndices of all links to apply change to
+        properties : list of dictionarys
+            roadway properties to change
+        in_place: boolean
+            update self or return a new roadway network object
         """
 
+        # check if there are change or existing commands that that property
+        #   exists in the network
+        # if there is a set command, add that property to network
         self.validate_properties(properties)
 
-        # if the input network does not have selected links flag
-        if "selected_links" not in self.links_df.columns:
-            WranglerLogger.error("ERROR: selected_links flag not found in the network")
-            raise ValueError()
-            return False
-
-        # shallow (copy.copy(self)) doesn't work as it will still use the references to links_df etc from the original net
-        updated_network = copy.deepcopy(self)
-
-        for p in properties:
+        for i, p in enumerate(properties):
             attribute = p["property"]
 
             # if project card specifies an existing value in the network
             #   check and see if the existing value in the network matches
             if p.get("existing"):
-                network_values = updated_network.links_df[
-                    updated_network.links_df["selected_links"] == 1
-                ][attribute].tolist()
+                network_values = self.links_df.loc[link_idx, attribute].tolist()
                 if not set(network_values).issubset([p.get("existing")]):
                     WranglerLogger.warning(
-                        "WARNING: Existing value defined for {} in project card does not match the value in the roadway network for the selected links".format(
-                            attribute
-                        )
+                        "Existing value defined for {} in project card does "
+                        "not match the value in the roadway network for the "
+                        "selected links".format(attribute)
                     )
 
-            if "set" in p.keys():
-                updated_network.links_df[attribute] = np.where(
-                    updated_network.links_df["selected_links"] == 1,
-                    p["set"],
-                    updated_network.links_df[attribute],
-                )
+            if in_place:
+                if "set" in p.keys():
+                    self.links_df.loc[link_idx, attribute] = p["set"]
+                else:
+                    self.links_df.loc[link_idx, attribute] = (
+                        self.links_df.loc[link_idx, attribute] + p["change"]
+                    )
             else:
-                updated_network.links_df[attribute] = np.where(
-                    updated_network.links_df["selected_links"] == 1,
-                    updated_network.links_df[attribute] + p["change"],
-                    updated_network.links_df[attribute],
-                )
+                if i == 0:
+                    updated_network = copy.deepcopy(self)
 
-        updated_network.links_df.drop(["selected_links"], axis=1, inplace=True)
+                if "set" in p.keys():
+                    updated_network.links_df.loc[link_idx, attribute] = p["set"]
+                else:
+                    updated_network.links_df.loc[link_idx, attribute] = (
+                        updated_network.links_df.loc[link_idx, attribute] + p["change"]
+                    )
 
-        return updated_network
+                if i == len(properties) - 1:
+                    return updated_network
 
-    def add_roadway_attributes(self, properties: dict) -> RoadwayNetwork:
+    def apply_managed_lane_feature_change(
+        self, link_idx: list, properties: dict, in_place: bool = True
+    ) -> Union(None, RoadwayNetwork):
         """
-        Add the new attributes to the roadway network
+        Apply the managed lane feature changes to the roadway network
 
-        args:
-        properties: dictionary with roadway properties to add
-
-        returns:
-        new roadway network
+        link_idx : list
+            lndices of all links to apply change to
+        properties : list of dictionarys
+            roadway properties to change
+        in_place: boolean
+            update self or return a new roadway network object
         """
-
-        updated_network = copy.deepcopy(self)
 
         for p in properties:
             attribute = p["property"]
@@ -866,15 +915,84 @@ class RoadwayNetwork(object):
             if attribute == "ML_EGRESS" and attr_value == "all":
                 attr_value = 1
 
-            # print(attr_value)
-
-            if "selected_links" in self.links_df.columns:
-                # if the input network has a selected_links flags to indicate selection set
-                updated_network.links_df[attribute] = np.where(
-                    updated_network.links_df["selected_links"] == 1, attr_value, ""
-                )
+            if in_place:
+                self.links_df.loc[link_idx, attribute] = attr_value
             else:
-                # else add/change the attribute for all the links
-                updated_network.links_df[attribute] = attr_value
+                if i == 0:
+                    updated_network = copy.deepcopy(self)
 
-        return updated_network
+                updated_network.links_df.loc[link_idx, attribute] = attr_value
+
+                if i == len(properties) - 1:
+                    return updated_network
+
+    def add_new_roadway_feature_change(self, links: dict, nodes: dict) -> None:
+        """
+        add the new roadway features defined in the project card
+
+        args:
+        links : dict
+            list of dictionaries
+        nodes : dict
+            list of dictionaries
+        """
+
+        # TODO:
+        # validate links dictonary
+
+        # CHECKS:
+        # check if new link LINK_ID already exists?
+        # check if u and v nodes are already present or not?
+
+        def _add_dict_to_df(df, new_dict):
+            df_column_names = df.columns
+            new_row_to_add = {}
+
+            # add the fields from project card that are in the network
+            for property in df_column_names:
+                if property in new_dict.keys():
+                    if df[property].dtype == np.float64:
+                        value = pd.to_numeric(new_dict[property], downcast="float")
+                    elif df[property].dtype == np.int64:
+                        value = pd.to_numeric(new_dict[property], downcast="integer")
+                    else:
+                        value = str(new_dict[property])
+                else:
+                    value = ""
+
+                new_row_to_add[property] = value
+
+            # add the fields from project card that are NOT in the network
+            for key, value in new_dict.items():
+                if key not in df_column_names:
+                    new_row_to_add[key] = new_dict[key]
+
+            out_df = df.append(new_row_to_add, ignore_index=True)
+            return out_df
+
+        if nodes is not None:
+            for node in nodes:
+                self.nodes_df = _add_dict_to_df(self.nodes_df, node)
+
+        if links is not None:
+            for link in links:
+                self.links_df = _add_dict_to_df(self.links_df, link)
+
+    def delete_roadway_feature_change(self, links: dict, nodes: dict) -> None:
+        """
+        delete the roadway features defined in the project card
+
+        args:
+        links : dict
+            list of dictionaries
+        nodes : dict
+            list of dictionaries
+        """
+
+        if links is not None:
+            for k, v in links.items():
+                self.links_df = self.links_df[~self.links_df[k].isin(v)]
+
+        if nodes is not None:
+            for k, v in nodes.items():
+                self.nodes_df = self.nodes_df[~self.nodes_df[k].isin(v)]

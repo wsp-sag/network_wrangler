@@ -16,6 +16,19 @@ class ProjectCard(object):
     Representation of a Project Card
     """
 
+    TRANSIT_CATEGORIES = ["Transit Service Property Change"]
+
+    # categories that may affect transit, but only as a secondary
+    # effect of changeing roadways
+    SECONDARY_TRANSIT_CATEGORIES = ["Roadway Deletion", "Parallel Managed Lanes"]
+
+    ROADWAY_CATEGORIES = [
+        "Roadway Property Change",
+        "Roadway Deletion",
+        "Parallel Managed Lanes",
+        "Add New Roadway",
+    ]
+
     def __init__(self, attribute_dictonary: dict):
         """
         Constructor
@@ -33,7 +46,7 @@ class ProjectCard(object):
         return "\n".join(s)
 
     @staticmethod
-    def read(path_to_card: str):
+    def read(path_to_card: str, validate: bool = True):
         """
         Reads and validates a Project card
 
@@ -48,7 +61,9 @@ class ProjectCard(object):
             attribute_dictionary["file"] = path_to_card
             card = ProjectCard(attribute_dictionary)
 
-        card.valid = ProjectCard.validate_project_card_schema(path_to_card)
+        card.valid = False
+        if validate:
+            card.valid = ProjectCard.validate_project_card_schema(path_to_card)
 
         return card
 
@@ -113,7 +128,9 @@ class ProjectCard(object):
         for l in selection["link"]:
             for key, value in l.items():
                 if key in ignore:
+                    count = count + 1
                     continue
+
                 if isinstance(value, list):
                     sel_query = sel_query + "("
                     v = 1
