@@ -790,13 +790,11 @@ class RoadwayNetwork(object):
                 )
             elif project_dictionary["category"].lower() == "add new roadway":
                 self.add_new_roadway_feature_change(
-                    project_dictionary.get("links"),
-                    project_dictionary.get("nodes"),
+                    project_dictionary.get("links"), project_dictionary.get("nodes")
                 )
             elif project_dictionary["category"].lower() == "roadway deletion":
                 self.delete_roadway_feature_change(
-                    project_dictionary.get("links"),
-                    project_dictionary.get("nodes"),
+                    project_dictionary.get("links"), project_dictionary.get("nodes")
                 )
             else:
                 raise (BaseException)
@@ -953,14 +951,10 @@ class RoadwayNetwork(object):
             # add the fields from project card that are in the network
             for property in df_column_names:
                 if property in new_dict.keys():
-                    if(df[property].dtype == np.float64):
-                        value = pd.to_numeric(
-                            new_dict[property], downcast='float'
-                        )
-                    elif(df[property].dtype == np.int64):
-                        value = pd.to_numeric(
-                            new_dict[property], downcast='integer'
-                        )
+                    if df[property].dtype == np.float64:
+                        value = pd.to_numeric(new_dict[property], downcast="float")
+                    elif df[property].dtype == np.int64:
+                        value = pd.to_numeric(new_dict[property], downcast="integer")
                     else:
                         value = str(new_dict[property])
                 else:
@@ -974,7 +968,7 @@ class RoadwayNetwork(object):
                     new_row_to_add[key] = new_dict[key]
 
             out_df = df.append(new_row_to_add, ignore_index=True)
-            return(out_df)
+            return out_df
 
         if nodes is not None:
             for node in nodes:
