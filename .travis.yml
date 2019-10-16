@@ -11,3 +11,16 @@ install:
   - pip install .
 script:
   - pytest -m travis
+
+after_success:
+  - if [ "$TRAVIS_BRANCH" == "master" ] && [ $TRAVIS_PYTHON_VERSION == 2.6 ];
+    then sh bin/build_docs.sh;
+    fi
+deploy:
+  provider: pages
+  skip_cleanup: true
+  local_dir: docs/_build/html
+  github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+  keep_history: true
+  on:
+    branch: develop # will change to master when we have it figured out
