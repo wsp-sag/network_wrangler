@@ -13,7 +13,8 @@ script:
   - pytest -m travis
 
 after_success:
-  - sh bin/build_docs.sh
+  - cd docs; make html
+  - touch _build/html/.nojekyll
 
 deploy:
   provider: pages
