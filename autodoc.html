@@ -322,7 +322,7 @@ link_idx : list</p>
 
 <dl class="method">
 <dt id="network_wrangler.RoadwayNetwork.delete_roadway_feature_change">
-<code class="sig-name descname">delete_roadway_feature_change</code><span class="sig-paren">(</span><em class="sig-param">links</em>, <em class="sig-param">nodes</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.delete_roadway_feature_change" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">delete_roadway_feature_change</code><span class="sig-paren">(</span><em class="sig-param">links</em>, <em class="sig-param">nodes</em>, <em class="sig-param">ignore_missing=True</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.delete_roadway_feature_change" title="Permalink to this definition">¶</a></dt>
 <dd><p>delete the roadway features defined in the project card</p>
 <p>args:
 links : dict</p>
@@ -331,6 +331,10 @@ links : dict</p>
 </div></blockquote>
 <dl class="simple">
 <dt>nodes<span class="classifier">dict</span></dt><dd><p>list of dictionaries</p>
+</dd>
+<dt>ignore_missing: bool</dt><dd><p>If True, will only warn about links/nodes that are missing from
+network but specified to “delete” in project card
+If False, will fail.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
