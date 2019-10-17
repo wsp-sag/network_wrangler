@@ -978,7 +978,12 @@ class RoadwayNetwork(object):
             for link in links:
                 self.links_df = _add_dict_to_df(self.links_df, link)
 
-    def delete_roadway_feature_change(self, links: dict, nodes: dict) -> None:
+    def delete_roadway_feature_change(
+        self,
+        links: dict,
+        nodes: dict,
+        ignore_missing = True
+    ) -> None:
         """
         delete the roadway features defined in the project card
 
@@ -987,12 +992,38 @@ class RoadwayNetwork(object):
             list of dictionaries
         nodes : dict
             list of dictionaries
+        ignore_missing: bool
+            If True, will only warn about links/nodes that are missing from
+            network but specified to "delete" in project card
+            If False, will fail.
         """
 
+        missing_error_message = []
+
         if links is not None:
-            for k, v in links.items():
-                self.links_df = self.links_df[~self.links_df[k].isin(v)]
+            for key, val in links.items():
+                missing_links = [v for v in val if v not in self.links_df[key].tolist()]
+                if missing_links:
+                    message = "Links attribute {} with values as {} does not exist in the network\n".format(key, missing_links)
+                    if ignore_missing:
+                        WranglerLogger.warning(message)
+                    else:
+                        missing_error_message.append(message)
+
+                self.links_df = self.links_df[~self.links_df[key].isin(val)]
 
         if nodes is not None:
-            for k, v in nodes.items():
-                self.nodes_df = self.nodes_df[~self.nodes_df[k].isin(v)]
+            for key, val in nodes.items():
+                missing_nodes = [v for v in val if v not in self.nodes_df[key].tolist()]
+                if missing_nodes:
+                    message = "Nodes attribute {} with values as {} does not exist in the network\n".format(key, missing_links)
+                    if ignore_missing:
+                        WranglerLogger.warning(message)
+                    else:
+                        missing_error_message.append(message)
+
+                self.nodes_df = self.nodes_df[~self.nodes_df[key].isin(val)]
+
+        if missing_error_message:
+            WranglerLogger.error(" ".join(missing_error_message))
+            raise ValueError()
