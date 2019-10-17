@@ -13,9 +13,8 @@ script:
   - pytest -m travis
 
 after_success:
-  - if [ "$TRAVIS_BRANCH" == "master" ] && [ $TRAVIS_PYTHON_VERSION == 2.6 ];
-    then sh bin/build_docs.sh;
-    fi
+  - sh bin/build_docs.sh
+
 deploy:
   provider: pages
   skip_cleanup: true
