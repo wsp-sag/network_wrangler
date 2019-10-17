@@ -1,0 +1,791 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Wrangler Classes and Functions &mdash; Network Wrangler  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="contributing.html" />
+    <link rel="prev" title="Design" href="design.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Network Wrangler
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Wrangler Classes and Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Network Wrangler</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Wrangler Classes and Functions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/autodoc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-network_wrangler">
+<span id="wrangler-classes-and-functions"></span><h1>Wrangler Classes and Functions<a class="headerlink" href="#module-network_wrangler" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="network_wrangler.setupLogging">
+<code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">setupLogging</code><span class="sig-paren">(</span><em class="sig-param">level=None</em>, <em class="sig-param">logFileName=None</em>, <em class="sig-param">logToConsole=False</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.setupLogging" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Sets up the Wrangler Logger</p>
+</div></blockquote>
+<dl class="simple">
+<dt>args:</dt><dd><p>level (int): the level of logging that will be recorded 
+logFileName (string): the name of the log file that will get created
+logToConsole(boolean): if True, logging will go to the console</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="network_wrangler.ProjectCard">
+<em class="property">class </em><code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">ProjectCard</code><span class="sig-paren">(</span><em class="sig-param">attribute_dictonary</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.ProjectCard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation of a Project Card</p>
+<dl class="method">
+<dt id="network_wrangler.ProjectCard.new_roadway">
+<code class="sig-name descname">new_roadway</code><span class="sig-paren">(</span><em class="sig-param">card</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.ProjectCard.new_roadway" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probably delete.
+Reads a New Roadway card.</p>
+<p>args:
+card: the project card stored in a dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.ProjectCard.new_transit_right_of_way">
+<code class="sig-name descname">new_transit_right_of_way</code><span class="sig-paren">(</span><em class="sig-param">card</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.ProjectCard.new_transit_right_of_way" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probably delete.
+Reads a New Transit Dedicated Right of Way card.</p>
+<p>args:
+card: the project card stored in a dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.ProjectCard.parallel_managed_lanes">
+<code class="sig-name descname">parallel_managed_lanes</code><span class="sig-paren">(</span><em class="sig-param">card</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.ProjectCard.parallel_managed_lanes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probably delete.
+Reads a Parallel Managed Lanes card.</p>
+<p>args:
+card: the project card stored in a dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.ProjectCard.read">
+<em class="property">static </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">path_to_card</em>, <em class="sig-param">validate=True</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.ProjectCard.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads and validates a Project card</p>
+<p>args:
+path_to_card: the path to the project card</p>
+<p>Returns a Project Card object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.ProjectCard.roadway_attribute_change">
+<code class="sig-name descname">roadway_attribute_change</code><span class="sig-paren">(</span><em class="sig-param">card</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.ProjectCard.roadway_attribute_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probably delete.
+Reads a Roadway Attribute Change card.</p>
+<p>args:
+card: the project card stored in a dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.ProjectCard.transit_attribute_change">
+<code class="sig-name descname">transit_attribute_change</code><span class="sig-paren">(</span><em class="sig-param">card</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.ProjectCard.transit_attribute_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probably delete.
+Reads a Transit Service Attribute Change card.</p>
+<p>args:
+card: the project card stored in a dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.ProjectCard.validate_project_card_schema">
+<em class="property">static </em><code class="sig-name descname">validate_project_card_schema</code><span class="sig-paren">(</span><em class="sig-param">card_file</em>, <em class="sig-param">card_schema_file='project_card.json'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.ProjectCard.validate_project_card_schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests project card schema validity by evaluating if it conforms to the schemas
+returns: boolean</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.ProjectCard.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.ProjectCard.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes project card dictionary to YAML file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="network_wrangler.RoadwayNetwork">
+<em class="property">class </em><code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">RoadwayNetwork</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">links</em>, <em class="sig-param">shapes</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation of a Roadway Network.</p>
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.add_new_roadway_feature_change">
+<code class="sig-name descname">add_new_roadway_feature_change</code><span class="sig-paren">(</span><em class="sig-param">links</em>, <em class="sig-param">nodes</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.add_new_roadway_feature_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>add the new roadway features defined in the project card</p>
+<p>args:
+links : dict</p>
+<blockquote>
+<div><p>list of dictionaries</p>
+</div></blockquote>
+<dl class="simple">
+<dt>nodes<span class="classifier">dict</span></dt><dd><p>list of dictionaries</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">project_card_dictionary</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper method to apply a project to a roadway network.</p>
+<dl class="simple">
+<dt>project_card_dictionary: dict</dt><dd><p>a dictionary of the project card object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.apply_managed_lane_feature_change">
+<code class="sig-name descname">apply_managed_lane_feature_change</code><span class="sig-paren">(</span><em class="sig-param">link_idx</em>, <em class="sig-param">properties</em>, <em class="sig-param">in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.apply_managed_lane_feature_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the managed lane feature changes to the roadway network</p>
+<dl class="simple">
+<dt>link_idx<span class="classifier">list</span></dt><dd><p>lndices of all links to apply change to</p>
+</dd>
+<dt>properties<span class="classifier">list of dictionarys</span></dt><dd><p>roadway properties to change</p>
+</dd>
+<dt>in_place: boolean</dt><dd><p>update self or return a new roadway network object</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Union(None, <a class="reference internal" href="#network_wrangler.RoadwayNetwork" title="network_wrangler.RoadwayNetwork">RoadwayNetwork</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.apply_roadway_feature_change">
+<code class="sig-name descname">apply_roadway_feature_change</code><span class="sig-paren">(</span><em class="sig-param">link_idx</em>, <em class="sig-param">properties</em>, <em class="sig-param">in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.apply_roadway_feature_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes the roadway attributes for the selected features based on the
+project card information passed</p>
+<p>args:
+link_idx : list</p>
+<blockquote>
+<div><p>lndices of all links to apply change to</p>
+</div></blockquote>
+<dl class="simple">
+<dt>properties<span class="classifier">list of dictionarys</span></dt><dd><p>roadway properties to change</p>
+</dd>
+<dt>in_place: boolean</dt><dd><p>update self or return a new roadway network object</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Union(None, <a class="reference internal" href="#network_wrangler.RoadwayNetwork" title="network_wrangler.RoadwayNetwork">RoadwayNetwork</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.delete_roadway_feature_change">
+<code class="sig-name descname">delete_roadway_feature_change</code><span class="sig-paren">(</span><em class="sig-param">links</em>, <em class="sig-param">nodes</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.delete_roadway_feature_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>delete the roadway features defined in the project card</p>
+<p>args:
+links : dict</p>
+<blockquote>
+<div><p>list of dictionaries</p>
+</div></blockquote>
+<dl class="simple">
+<dt>nodes<span class="classifier">dict</span></dt><dd><p>list of dictionaries</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.orig_dest_nodes_foreign_key">
+<code class="sig-name descname">orig_dest_nodes_foreign_key</code><span class="sig-paren">(</span><em class="sig-param">selection</em>, <em class="sig-param">node_foreign_key=''</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.orig_dest_nodes_foreign_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the foreign key id (whatever is used in the u and v
+variables in the links file) for the AB nodes as a tuple.</p>
+<dl class="simple">
+<dt>selection<span class="classifier">dict</span></dt><dd><p>selection dictionary with A and B keys</p>
+</dd>
+<dt>node_foreign_key: str</dt><dd><p>variable name for whatever is used by the u and v variable
+in the links_df file.  If nothing is specified, assume whatever
+default is (usually osmNodeId)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.ox_graph">
+<em class="property">static </em><code class="sig-name descname">ox_graph</code><span class="sig-paren">(</span><em class="sig-param">nodes_df</em>, <em class="sig-param">links_df</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.ox_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>create an osmnx-flavored network graph</p>
+<p>osmnx doesn’t like values that are arrays, so remove the variables
+that have arrays.  osmnx also requires that certain variables
+be filled in, so do that too.</p>
+<p>nodes_df : GeoDataFrame
+link_df : GeoDataFrame</p>
+<p>networkx multidigraph</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.read">
+<em class="property">static </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">link_file</em>, <em class="sig-param">node_file</em>, <em class="sig-param">shape_file</em>, <em class="sig-param">fast=False</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a network from the roadway network standard
+Validates that it conforms to the schema</p>
+<p>args:
+link_file: full path to the link file
+node_file: full path to the node file
+shape_file: full path to the shape file
+fast: boolean that will skip validation to speed up read time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">RoadwayNetwork</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.select_roadway_features">
+<code class="sig-name descname">select_roadway_features</code><span class="sig-paren">(</span><em class="sig-param">selection</em>, <em class="sig-param">search_mode='drive'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.select_roadway_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects roadway features that satisfy selection criteria</p>
+<dl class="simple">
+<dt>Example usage:</dt><dd><dl class="simple">
+<dt>net.select_roadway_features(</dt><dd><dl class="simple">
+<dt>selection = [ {</dt><dd><p>#   a match condition for the from node using osm,
+#   shared streets, or model node number
+‘from’: {‘osmid’: ‘1234’},
+#   a match for the to-node..
+‘to’: {‘shstid’: ‘4321’},
+#   a regex or match for facility condition
+#   could be # of lanes, facility type, etc.
+‘facility’: {‘name’:’Main St’},
+}, … ])</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="simple">
+<dt>selection<span class="classifier">dictionary</span></dt><dd><dl class="simple">
+<dt>With keys for:</dt><dd><p>A - from node
+B - to node
+link - which includes at least a variable for <cite>name</cite></p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="simple">
+<dt>shortest path node route<span class="classifier">list</span></dt><dd><p>list of foreign IDs of nodes in the selection route</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">GeoDataFrame</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.validate_link_schema">
+<em class="property">static </em><code class="sig-name descname">validate_link_schema</code><span class="sig-paren">(</span><em class="sig-param">link_file</em>, <em class="sig-param">schema_location='roadway_network_link.json'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.validate_link_schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate roadway network data link schema and output a boolean</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.validate_node_schema">
+<em class="property">static </em><code class="sig-name descname">validate_node_schema</code><span class="sig-paren">(</span><em class="sig-param">node_file</em>, <em class="sig-param">schema_location='roadway_network_node.json'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.validate_node_schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate roadway network data node schema and output a boolean</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.validate_object_types">
+<em class="property">static </em><code class="sig-name descname">validate_object_types</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">links</em>, <em class="sig-param">shapes</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.validate_object_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines if the roadway network is being built with the right object types.
+Returns: boolean</p>
+<p>Does not validate schemas.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.validate_properties">
+<code class="sig-name descname">validate_properties</code><span class="sig-paren">(</span><em class="sig-param">properties</em>, <em class="sig-param">ignore_existing=False</em>, <em class="sig-param">require_existing_for_change=False</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.validate_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>If there are change or existing commands, make sure that that
+property exists in the network.</p>
+<dl class="simple">
+<dt>properties<span class="classifier">dict</span></dt><dd><p>properties dictionary to be evaluated</p>
+</dd>
+<dt>ignore_existing: bool</dt><dd><p>If True, will only warn about properties that specify an “existing”
+value.  If False, will fail.</p>
+</dd>
+<dt>require_existing_for_change: bool</dt><dd><p>If True, will fail if there isn’t a specified value in the
+project card for existing when a change is specified.</p>
+</dd>
+</dl>
+<p>boolean value as to whether the properties dictonary is valid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.validate_selection">
+<code class="sig-name descname">validate_selection</code><span class="sig-paren">(</span><em class="sig-param">selection</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.validate_selection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate whetther the selection dictionary contains the
+minimum required values.</p>
+<dl class="simple">
+<dt>selection<span class="classifier">dict</span></dt><dd><p>selection dictionary to be evaluated</p>
+</dd>
+</dl>
+<p>boolean value as to whether the selection dictonary is valid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.validate_shape_schema">
+<em class="property">static </em><code class="sig-name descname">validate_shape_schema</code><span class="sig-paren">(</span><em class="sig-param">shape_file</em>, <em class="sig-param">schema_location='roadway_network_shape.json'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.validate_shape_schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate roadway network data shape schema and output a boolean</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">path='.'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a network in the roadway network standard</p>
+<p>args:
+path: the path were the output will be saved
+filename: the name prefix of the roadway files that will be generated</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="network_wrangler.point_df_to_geojson">
+<code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">point_df_to_geojson</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">properties</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.point_df_to_geojson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Author: Geoff Boeing:
+<a class="reference external" href="https://geoffboeing.com/2015/10/exporting-python-data-geojson/">https://geoffboeing.com/2015/10/exporting-python-data-geojson/</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="network_wrangler.TransitNetwork">
+<em class="property">class </em><code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">TransitNetwork</code><span class="sig-paren">(</span><em class="sig-param">feed=None</em>, <em class="sig-param">config=None</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation of a Transit Network.</p>
+<dl class="simple">
+<dt>Usage:</dt><dd><p>import network_wrangler as wr
+stpaul = r’/home/jovyan/work/example/stpaul’
+tc=wr.TransitNetwork.read(path=stpaul)</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="network_wrangler.TransitNetwork.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">project_card_dictionary</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper method to apply a project to a transit network.</p>
+<dl class="simple">
+<dt>project_card_dictionary: dict</dt><dd><p>a dictionary of the project card object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.TransitNetwork.apply_transit_feature_change">
+<code class="sig-name descname">apply_transit_feature_change</code><span class="sig-paren">(</span><em class="sig-param">trip_ids</em>, <em class="sig-param">properties</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.apply_transit_feature_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes the transit attributes for the selected features based on the
+project card information passed</p>
+<dl class="simple">
+<dt>trip_ids<span class="classifier">pd.Series</span></dt><dd><p>all trip_ids to apply change to</p>
+</dd>
+<dt>properties<span class="classifier">list of dictionarys</span></dt><dd><p>transit properties to change</p>
+</dd>
+</dl>
+<p>None</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.TransitNetwork.read">
+<em class="property">static </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">feed_path</em>, <em class="sig-param">fast=False</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read GTFS feed from folder and return a config and Partridge Feed object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DiGraph</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Feed</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.TransitNetwork.select_transit_features">
+<code class="sig-name descname">select_transit_features</code><span class="sig-paren">(</span><em class="sig-param">selection</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.select_transit_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects transit features that satisfy selection criteria</p>
+<p>selection : dictionary</p>
+<dl class="simple">
+<dt>trip identifiers<span class="classifier">list</span></dt><dd><p>list of GTFS trip IDs in the selection</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.TransitNetwork.validate_feed">
+<em class="property">static </em><code class="sig-name descname">validate_feed</code><span class="sig-paren">(</span><em class="sig-param">feed</em>, <em class="sig-param">config</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.validate_feed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Since Partridge lazily loads the df, load each file to make sure it
+actually works.</p>
+<p>Partridge uses a DiGraph from the networkx library to represent the
+relationships between GTFS files. Each file is a ‘node’, and the
+relationship between files are ‘edges’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.TransitNetwork.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">outpath='.'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a network in the transit network standard</p>
+<p>outpath : str path were the output files will be saved</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="network_wrangler.Scenario">
+<em class="property">class </em><code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">Scenario</code><span class="sig-paren">(</span><em class="sig-param">base_scenario</em>, <em class="sig-param">project_cards=None</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds information about a scenario</p>
+<dl class="method">
+<dt id="network_wrangler.Scenario.add_project_cards_from_directory">
+<code class="sig-name descname">add_project_cards_from_directory</code><span class="sig-paren">(</span><em class="sig-param">folder</em>, <em class="sig-param">glob_search=''</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario.add_project_cards_from_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds projects cards to the scenario.
+A folder is provided to look for project cards and if applicable, a glob-style search.</p>
+<p>i.e. glob_search = ‘road*.yml’</p>
+<p>args:
+folder: the folder location where the project cards will be
+glob_search: <a class="reference external" href="https://docs.python.org/2/library/glob.html">https://docs.python.org/2/library/glob.html</a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.Scenario.add_project_cards_from_tags">
+<code class="sig-name descname">add_project_cards_from_tags</code><span class="sig-paren">(</span><em class="sig-param">folder</em>, <em class="sig-param">tags=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario.add_project_cards_from_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds projects cards to the scenario.
+A folder is provided to look for project cards that have a matching tag that is passed to the method.</p>
+<p>args:
+folder: the folder location where the project cards will be
+tags: only project cards with these tags will be validated and added to the returning scenario</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.Scenario.check_scenario_conflicts">
+<code class="sig-name descname">check_scenario_conflicts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario.check_scenario_conflicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if there are any conflicting projects in the scenario
+Fail if the project A specifies that project B is a conflict and project B is included in the scenario</p>
+<p>Returns: boolean indicating if the check was successful or returned an error</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.Scenario.check_scenario_requisites">
+<code class="sig-name descname">check_scenario_requisites</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario.check_scenario_requisites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if there are any missing pre- or co-requisite projects in the scenario
+Fail if the project A specifies that project B is a pre- or co-requisite and project B is not included in the scenario</p>
+<p>Returns: boolean indicating if the checks were successful or returned an error</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.Scenario.create_scenario">
+<em class="property">static </em><code class="sig-name descname">create_scenario</code><span class="sig-paren">(</span><em class="sig-param">base_scenario={}</em>, <em class="sig-param">card_directory=''</em>, <em class="sig-param">tags=None</em>, <em class="sig-param">project_cards_list=[]</em>, <em class="sig-param">glob_search=''</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario.create_scenario" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates project cards with a specific tag from the specified folder or
+list of user specified project cards and
+creates a scenario object with the valid project card.</p>
+<dl class="simple">
+<dt>base_scenario:</dt><dd><p>object dictionary for the base scenario (i.e. my_base_scenario.__dict__)</p>
+</dd>
+<dt>tags:</dt><dd><p>only project cards with these tags will be read/validated</p>
+</dd>
+<dt>folder:</dt><dd><p>the folder location where the project cards will be</p>
+</dd>
+<dt>project_cards_list:</dt><dd><p>list of project cards to be applied</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.Scenario.get_project_names">
+<code class="sig-name descname">get_project_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario.get_project_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of project names</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.Scenario.order_project_cards">
+<code class="sig-name descname">order_project_cards</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario.order_project_cards" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a list of project cards such that they are in order based on pre-requisites</p>
+<p>Returns: ordered list of project cards to be applied to scenario</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="network_wrangler.link_df_to_json">
+<code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">link_df_to_json</code><span class="sig-paren">(</span><em class="sig-param">df</em>, <em class="sig-param">properties</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.link_df_to_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modified from: Geoff Boeing:
+<a class="reference external" href="https://geoffboeing.com/2015/10/exporting-python-data-geojson/">https://geoffboeing.com/2015/10/exporting-python-data-geojson/</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="network_wrangler.make_slug">
+<code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">make_slug</code><span class="sig-paren">(</span><em class="sig-param">text</em>, <em class="sig-param">delimiter='_'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.make_slug" title="Permalink to this definition">¶</a></dt>
+<dd><p>makes a slug from text</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="network_wrangler.parse_time_spans">
+<code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">parse_time_spans</code><span class="sig-paren">(</span><em class="sig-param">times</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.parse_time_spans" title="Permalink to this definition">¶</a></dt>
+<dd><p>parse time spans into tuples of seconds from midnight
+can also be used as an apply function for a pandas series
+Parameters
+———–
+times: tuple(string)</p>
+<dl class="simple">
+<dt>tuple(integer)</dt><dd><p>time span as seconds from midnight</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">ProjectCard</code><span class="sig-paren">(</span><em class="sig-param">attribute_dictonary</em><span class="sig-paren">)</span></dt>
+<dd><p>Representation of a Project Card</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="design.html" class="btn btn-neutral float-left" title="Design" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Metropolitan Council
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
