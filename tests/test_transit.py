@@ -21,7 +21,7 @@ def test_transit_read_write(request):
     transit_net = TransitNetwork.read(feed_path=STPAUL_DIR)
     print("Transit Net Directory:", STPAUL_DIR)
 
-    transit_net.write(outpath=SCRATCH_DIR)
+    transit_net.write(path=SCRATCH_DIR)
     print("Transit Write Directory:", SCRATCH_DIR)
 
     print("--Finished:", request.node.name)

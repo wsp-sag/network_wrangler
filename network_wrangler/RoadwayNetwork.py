@@ -151,14 +151,21 @@ class RoadwayNetwork(object):
             WranglerLogger.debug("\nPath [%s] doesn't exist; creating." % path)
             os.mkdir(path)
 
-        links_file = os.path.join(path, filename + "_link.json")
+        if filename:
+            links_file = os.path.join(path, filename + "_" + "link.json")
+            nodes_file = os.path.join(path, filename + "_" + "node.geojson")
+            shapes_file = os.path.join(path, filename + "_" + "shape.geojson")
+        else:
+            links_file = os.path.join(path, "link.json")
+            nodes_file = os.path.join(path, "node.geojson")
+            shapes_file = os.path.join(path, "shape.geojson")
+
         link_property_columns = self.links_df.columns.values.tolist()
         link_property_columns.remove("geometry")
         links_json = link_df_to_json(self.links_df, link_property_columns)
         with open(links_file, "w") as f:
             json.dump(links_json, f)
 
-        nodes_file = os.path.join(path, filename + "_node.geojson")
         # geopandas wont let you write to geojson because
         # it uses fiona, which doesn't accept a list as one of the properties
         # so need to convert the df to geojson manually first
@@ -170,7 +177,6 @@ class RoadwayNetwork(object):
         with open(nodes_file, "w") as f:
             json.dump(nodes_geojson, f)
 
-        shapes_file = os.path.join(path, filename + "_shape.geojson")
         self.shapes_df.to_file(shapes_file, driver="GeoJSON")
 
     @staticmethod
