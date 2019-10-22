@@ -90,12 +90,12 @@
         },
         {
           "required": [
-            "short_name"
+            "route_short_name"
           ]
         },
         {
           "required": [
-            "long_name"
+            "route_long_name"
           ]
         }
       ],
@@ -157,10 +157,10 @@
         "route_id": {
           "type": "string"
         },
-        "short_name": {
+        "route_short_name": {
           "type": "integer"
         },
-        "long_name": {
+        "route_long_name": {
           "type": "string"
         },
         "time": {

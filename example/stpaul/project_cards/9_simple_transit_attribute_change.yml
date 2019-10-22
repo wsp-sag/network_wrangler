@@ -7,7 +7,7 @@ dependencies:
   corequisites: []
   conflicts: []
 facility:
-  long_name: Express
+  route_long_name: Express
 properties:
   - property: headway_secs
     set: 1800

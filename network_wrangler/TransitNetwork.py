@@ -166,7 +166,7 @@ class TransitNetwork(object):
         freq = self.feed.frequencies
 
         # Turn selection's values into lists if they are not already
-        for key in ["trip_id", "route_id", "short_name", "long_name"]:
+        for key in ["trip_id", "route_id", "route_short_name", "route_long_name"]:
             if selection.get(key) is not None and type(selection.get(key)) != list:
                 selection[key] = [selection[key]]
 
@@ -177,17 +177,17 @@ class TransitNetwork(object):
         elif "route_id" in selection:
             trips = trips[trips.route_id.isin(selection["route_id"])]
 
-        elif "short_name" in selection:
-            routes = routes[routes.route_short_name.isin(selection["short_name"])]
+        elif "route_short_name" in selection:
+            routes = routes[routes.route_short_name.isin(selection["route_short_name"])]
             trips = trips[trips.route_id.isin(routes["route_id"])]
 
-        elif "long_name" in selection:
+        elif "route_long_name" in selection:
             matches = []
-            for sel in selection["long_name"]:
-                for long_name in routes["route_long_name"]:
-                    x = re.search(sel, long_name)
+            for sel in selection["route_long_name"]:
+                for route_long_name in routes["route_long_name"]:
+                    x = re.search(sel, route_long_name)
                     if x is not None:
-                        matches.append(long_name)
+                        matches.append(route_long_name)
 
             routes = routes[routes.route_long_name.isin(matches)]
             trips = trips[trips.route_id.isin(routes["route_id"])]
