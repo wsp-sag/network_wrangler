@@ -96,7 +96,7 @@ def test_quick_roadway_read_write(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.basic
+@pytest.mark.search
 @pytest.mark.roadway
 def test_select_roadway_features(request):
     print("\n--Starting:", request.node.name)
@@ -128,6 +128,11 @@ def test_select_roadway_features(request):
             "link": [{"name": ["I 35E"]}],
             "A": {"osmNodeId": "961117623"},  # start searching for segments at A
             "B": {"osmNodeId": "2564047368"},
+        },
+        "5. unique-identifier": {
+            "link": [{"name": ["6th", "Sixth", "sixth"]}, {"LINK_ID": [134574]}, {"LANES": [1, 2]}],
+            "A": {"osmNodeId": "187899923"},  # start searching for segments at A
+            "B": {"osmNodeId": "187942339"},
         },
     }
 
@@ -491,3 +496,18 @@ def test_add_delete_roadway_project_card(request):
         assert net_nodes_network == net_nodes_project_card
 
     print("--Finished:", request.node.name)
+
+@pytest.mark.export
+def test_export_network_to_csv(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    net.links_df.to_csv(os.path.join(SCRATCH_DIR, "links_df.csv"), index=False)
+    net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "nodes_df.csv"), index=False)

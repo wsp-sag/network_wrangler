@@ -45,6 +45,8 @@ class RoadwayNetwork(object):
 
     SELECTION_REQUIRES = ["A", "B", "link"]
 
+    UNIQUE_ROADWAY_IDENTIFIERS = ["LINK_ID"]
+
     def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
         """
         Constructor
@@ -458,7 +460,10 @@ class RoadwayNetwork(object):
         return G
 
     def build_selection_key(self, selection_dict):
-        sel_query = ProjectCard.build_link_selection_query(selection_dict)
+        sel_query = ProjectCard.build_link_selection_query(
+            selection=selection_dict,
+            unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS
+        )
 
         A_id, B_id = self.orig_dest_nodes_foreign_key(selection_dict)
         sel_key = (sel_query, A_id, B_id)
@@ -508,8 +513,13 @@ class RoadwayNetwork(object):
             "bike": "isBikeLink",
         }
 
+        selection_keys = [k for l in selection["link"] for k, v in l.items()]
+        unique_identifer_in_selection = set(RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS).issubset(selection_keys)
+
         sel_query = ProjectCard.build_link_selection_query(
-            selection, mode=modes_to_network_variables[search_mode]
+            selection=selection,
+            unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS,
+            mode=modes_to_network_variables[search_mode]
         )
 
         # create a unique key for the selection so that we can cache it
@@ -531,6 +541,7 @@ class RoadwayNetwork(object):
         # subsequent iterations that didn't match the query will be
         # assigned a heigher weight in the shortest path
         try:
+            #print("Selecting features:\n{}".format(sel_query))
             self.selections[sel_key]["candidate_links"] = self.links_df.query(
                 sel_query, engine="python"
             )
@@ -640,63 +651,74 @@ class RoadwayNetwork(object):
             except:
                 return False
 
-        # find the node ids for the candidate links
-        node_list_foreign_keys = list(candidate_links["u"]) + list(candidate_links["v"])
-        i = 0
+        if not unique_identifer_in_selection:
+            # find the node ids for the candidate links
+            node_list_foreign_keys = list(candidate_links["u"]) + list(candidate_links["v"])
+            i = 0
 
-        max_i = RoadwayNetwork.SEARCH_BREADTH
-        while (
-            A_id not in node_list_foreign_keys
-            and B_id not in node_list_foreign_keys
-            and i <= max_i
-        ):
-            print("Adding breadth, no shortest path. i:", i, " Max i:", max_i)
-            i += 1
-            candidate_links, node_list_foreign_keys = _add_breadth(
-                candidate_links, self.nodes_df, self.links_df, i
-            )
-
-        sp_found = _shortest_path()
-        if not sp_found:
-            print(
-                "No shortest path found with {}, trying greater breadth until SP found".format(
-                    i
+            max_i = RoadwayNetwork.SEARCH_BREADTH
+            while (
+                A_id not in node_list_foreign_keys
+                and B_id not in node_list_foreign_keys
+                and i <= max_i
+            ):
+                print("Adding breadth, no shortest path. i:", i, " Max i:", max_i)
+                i += 1
+                candidate_links, node_list_foreign_keys = _add_breadth(
+                    candidate_links, self.nodes_df, self.links_df, i
                 )
-            )
-        while not sp_found and i <= RoadwayNetwork.MAX_SEARCH_BREADTH:
-            print(
-                "Adding breadth, with shortest path iteration. i:", i, " Max i:", max_i
-            )
-            i += 1
-            candidate_links, node_list_foreign_keys = _add_breadth(
-                candidate_links, self.nodes_df, self.links_df, i
-            )
+
             sp_found = _shortest_path()
-
-        if sp_found:
-            # reselect from the links in the shortest path, the ones with
-            # the desired values....ignoring name.
-            if len(selection["link"]) > 1:
-                resel_query = ProjectCard.build_link_selection_query(
-                    selection,
-                    mode=modes_to_network_variables[search_mode],
-                    ignore=["name"],
+            if not sp_found:
+                print(
+                    "No shortest path found with {}, trying greater breadth until SP found".format(
+                        i
+                    )
                 )
-                print("Reselecting features:\n{}".format(resel_query))
-                self.selections[sel_key]["selected_links"] = self.selections[sel_key][
-                    "links"
-                ].query(resel_query, engine="python")
-            else:
-                self.selections[sel_key]["selected_links"] = self.selections[sel_key][
-                    "links"
-                ]
+            while not sp_found and i <= RoadwayNetwork.MAX_SEARCH_BREADTH:
+                print(
+                    "Adding breadth, with shortest path iteration. i:", i, " Max i:", max_i
+                )
+                i += 1
+                candidate_links, node_list_foreign_keys = _add_breadth(
+                    candidate_links, self.nodes_df, self.links_df, i
+                )
+                sp_found = _shortest_path()
 
-            self.selections[sel_key]["selection_found"] = True
-            # Return pandas.Series of links_ids
-            return self.selections[sel_key]["selected_links"].index.tolist()
+            if sp_found:
+                # reselect from the links in the shortest path, the ones with
+                # the desired values....ignoring name.
+                if len(selection["link"]) > 1:
+                    resel_query = ProjectCard.build_link_selection_query(
+                        selection=selection,
+                        unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS,
+                        mode=modes_to_network_variables[search_mode],
+                        ignore=["name"],
+                    )
+                    print("Reselecting features:\n{}".format(resel_query))
+                    self.selections[sel_key]["selected_links"] = self.selections[sel_key][
+                        "links"
+                    ].query(resel_query, engine="python")
+                else:
+                    self.selections[sel_key]["selected_links"] = self.selections[sel_key][
+                        "links"
+                    ]
+
+                self.selections[sel_key]["selection_found"] = True
+                # Return pandas.Series of links_ids
+                return self.selections[sel_key]["selected_links"].index.tolist()
+            else:
+                WranglerLogger.error("Couldn't find path from {} to {}".format(A_id, B_id))
+                raise ValueError
         else:
-            WranglerLogger.error("Couldn't find path from {} to {}".format(A_id, B_id))
-            raise ValueError
+            # unique identifier exists and no need to go through big search
+            self.selections[sel_key]["selected_links"] = self.selections[sel_key][
+                "candidate_links"
+            ]
+            self.selections[sel_key]["selection_found"] = True
+
+            return self.selections[sel_key]["selected_links"].index.tolist()
+
 
     def validate_properties(
         self,
