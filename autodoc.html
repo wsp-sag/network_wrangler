@@ -503,7 +503,7 @@ minimum required values.</p>
 
 <dl class="method">
 <dt id="network_wrangler.RoadwayNetwork.write">
-<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">path='.'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">path='.'</em>, <em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes a network in the roadway network standard</p>
 <p>args:
 path: the path were the output will be saved
@@ -607,9 +607,10 @@ relationship between files are ‘edges’.</p>
 
 <dl class="method">
 <dt id="network_wrangler.TransitNetwork.write">
-<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">outpath='.'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">path='.'</em>, <em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes a network in the transit network standard</p>
-<p>outpath : str path were the output files will be saved</p>
+<p>path: the path were the output will be saved
+filename: the name prefix of the transit files that will be generated</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
