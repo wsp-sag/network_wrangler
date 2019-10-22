@@ -74,10 +74,25 @@ def test_select_transit_features_from_projectcard(request):
             "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
         },
         {
+            "file": "7a_multi_transit_attribute_change.yml",
+            "answer": [
+                "14940701-JUN19-MVS-BUS-Weekday-01",
+                "14940963-JUN19-MVS-BUS-Weekday-01"
+            ],
+        },
+        {
             "file": "8_simple_transit_attribute_change.yml",
             "answer": [
                 "14944012-JUN19-MVS-BUS-Weekday-01",
                 "14944019-JUN19-MVS-BUS-Weekday-01",
+            ],
+        },
+        {
+            "file": "8a_multi_transit_attribute_change.yml",
+            "answer": [
+                "14944012-JUN19-MVS-BUS-Weekday-01",
+                "14944019-JUN19-MVS-BUS-Weekday-01",
+                "14948218-JUN19-MVS-BUS-Weekday-01"  # additional for 53-111
             ],
         },
         {
@@ -103,6 +118,37 @@ def test_select_transit_features_from_projectcard(request):
                 "14986385-JUN19-MVS-BUS-Weekday-01",
             ],
         },
+        {
+            "file": "9a_multi_transit_attribute_change.yml",
+            "answer": [
+                "14940701-JUN19-MVS-BUS-Weekday-01",
+                "14943414-JUN19-MVS-BUS-Weekday-01",
+                "14943415-JUN19-MVS-BUS-Weekday-01",
+                "14946111-JUN19-MVS-BUS-Weekday-01",
+                "14946257-JUN19-MVS-BUS-Weekday-01",
+                "14946470-JUN19-MVS-BUS-Weekday-01",
+                "14946471-JUN19-MVS-BUS-Weekday-01",
+                "14946480-JUN19-MVS-BUS-Weekday-01",
+                "14946521-JUN19-MVS-BUS-Weekday-01",
+                "14947182-JUN19-MVS-BUS-Weekday-01",
+                "14947504-JUN19-MVS-BUS-Weekday-01",
+                "14947734-JUN19-MVS-BUS-Weekday-01",
+                "14947755-JUN19-MVS-BUS-Weekday-01",
+                "14978409-JUN19-MVS-BUS-Weekday-01",
+                "14981028-JUN19-MVS-BUS-Weekday-01",
+                "14981029-JUN19-MVS-BUS-Weekday-01",
+                "14986383-JUN19-MVS-BUS-Weekday-01",
+                "14986385-JUN19-MVS-BUS-Weekday-01",
+                "14948211-JUN19-MVS-BUS-Weekday-01",  # add below for Ltd Stop
+                "14948218-JUN19-MVS-BUS-Weekday-01",
+                "14945380-JUN19-MVS-BUS-Weekday-01",
+                "14945400-JUN19-MVS-BUS-Weekday-01",
+                "14945404-JUN19-MVS-BUS-Weekday-01",
+                "14945432-JUN19-MVS-BUS-Weekday-01",
+                "14947598-JUN19-MVS-BUS-Weekday-01",
+                "14946199-JUN19-MVS-BUS-Weekday-01"
+            ],
+        }
     ]
 
     for i, test in enumerate(test_selections):
