@@ -3,7 +3,8 @@
 
 from __future__ import annotations
 
-import os, sys
+import os
+import sys
 import copy
 
 import yaml
@@ -45,7 +46,7 @@ class RoadwayNetwork(object):
 
     SELECTION_REQUIRES = ["A", "B", "link"]
 
-    def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
+    def __init__(self, nodes: GeoDataFrame, links: GeoDataFrame, shapes: GeoDataFrame):
         """
         Constructor
         """
@@ -126,7 +127,7 @@ class RoadwayNetwork(object):
         nodes_df.crs = RoadwayNetwork.CRS
         nodes_df["x"] = nodes_df["geometry"].apply(lambda g: g.x)
         nodes_df["y"] = nodes_df["geometry"].apply(lambda g: g.y)
-        ## todo: flatten json
+        # todo: flatten json
 
         WranglerLogger.info("Read %s links from %s" % (links_df.size, link_file))
         WranglerLogger.info("Read %s nodes from %s" % (nodes_df.size, node_file))
@@ -175,7 +176,7 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def validate_object_types(
-        nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame
+        nodes: GeoDataFrame, links: GeoDataFrame, shapes: GeoDataFrame
     ):
         """
         Determines if the roadway network is being built with the right object types.
