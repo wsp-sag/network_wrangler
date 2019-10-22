@@ -90,7 +90,7 @@ class TransitNetwork(object):
 
         return transit_network
 
-    def write(self, filename: str, path: str = ".") -> None:
+    def write(self, filename: str = "", path: str = ".") -> None:
         """
         Writes a network in the transit network standard
 
@@ -138,7 +138,7 @@ class TransitNetwork(object):
                 WranglerLogger.warning(
                     "Parallel Managed Lanes not implemented yet in Transit"
                 )
-                ##TODO
+                # TODO
             else:
                 raise (BaseException)
 
