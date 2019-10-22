@@ -1,0 +1,13 @@
+project: Bus Reroute
+category: Transit Route Change
+tags:
+   - existing_plus_committed
+dependencies:
+  prerequisites: []
+  corequisites: []
+  conflicts: []
+facility:
+  trip_id: 14944022-JUN19-MVS-BUS-Weekday-01
+routing:
+  - existing: [337079, 15113, 185177]
+    set: [337079, 15113]
