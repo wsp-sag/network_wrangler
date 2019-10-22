@@ -138,7 +138,7 @@ class RoadwayNetwork(object):
 
         return roadway_network
 
-    def write(self, filename: str, path: str = ".") -> None:
+    def write(self, path: str = ".", filename: str = None) -> None:
         """
         Writes a network in the roadway network standard
 
