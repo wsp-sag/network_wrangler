@@ -166,7 +166,7 @@ class Scenario(object):
             for file in os.listdir(folder):
                 if not file.endswith(".yml") or file.endswith(".yaml"):
                     continue
-                else: add_project_card_from_file(file)
+                else: self.add_project_card_from_file(os.path.join(folder, file))
 
 
 
