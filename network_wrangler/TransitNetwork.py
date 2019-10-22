@@ -166,8 +166,8 @@ class TransitNetwork(object):
         freq = self.feed.frequencies
 
         # Turn selection's values into lists if they are not already
-        for key in ["trip_id", "route_id", "route_short_name", "route_long_name"]:
-            if selection.get(key) is not None and type(selection.get(key)) != list:
+        for key in selection.keys():
+            if type(selection[key]) != list:
                 selection[key] = [selection[key]]
 
         # Based on the key in selection, filter trips
@@ -207,6 +207,21 @@ class TransitNetwork(object):
 
             # Filter trips table to those still in freq table
             trips = trips[trips.trip_id.isin(freq["trip_id"])]
+
+        # If any other key exists, filter routes or trips accordingly
+        for key in selection.keys():
+            if key not in [
+                "trip_id", "route_id", "route_short_name", "route_long_name",
+                "time"
+            ]:
+                if key in trips:
+                    trips = trips[trips[key].isin(selection[key])]
+                elif key in routes:
+                    routes = routes[routes[key].isin(selection[key])]
+                    trips = trips[trips.route_id.isin(routes["route_id"])]
+                else:
+                    WranglerLogger.error("Selection not supported %s", key)
+                    raise ValueError
 
         # Check that there is at least one trip in trips table or raise error
         if len(trips) < 1:
