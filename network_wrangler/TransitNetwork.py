@@ -90,19 +90,24 @@ class TransitNetwork(object):
 
         return transit_network
 
-    def write(self, outpath: str = ".") -> None:
+    def write(self, filename: str, path: str = ".") -> None:
         """
         Writes a network in the transit network standard
 
         Parameters
         ------------
-        outpath : str path were the output files will be saved
+        path: the path were the output will be saved
+        filename: the name prefix of the transit files that will be generated
         """
         for node in self.config.nodes.keys():
             df = self.feed.get(node)
             if not df.empty:
-                path = os.path.join(outpath, node)
-                df.to_csv(path, index=False)
+                if filename:
+                    outpath = os.path.join(path, filename + "_" + node)
+                else:
+                    outpath = os.path.join(path, node)
+
+                df.to_csv(outpath, index=False)
 
     def apply(self, project_card_dictionary: dict):
         """
