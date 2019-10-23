@@ -1,4 +1,6 @@
 import os
+import sys
+import subprocess
 import pytest
 from network_wrangler import ProjectCard
 from network_wrangler import RoadwayNetwork
@@ -337,5 +339,26 @@ def test_apply_wrapper(request):
     )
 
     my_scenario.apply_all_projects()
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.scenario_building
+def test_scenario_building_from_script(request):
+    print("\n--Starting:", request.node.name)
+
+    config_file = os.path.join(os.getcwd(),"example","config_1.yml")
+    #config_file = os.path.join(os.getcwd(),"example","config_2.yml")
+    script_to_run = os.path.join(os.getcwd(),"scripts","build_scenario.py")
+
+    # replace backward slash with forward slash
+    config_file = config_file.replace(os.sep, '/')
+    script_to_run = script_to_run.replace(os.sep, '/')
+
+    #print(config_file)
+    #print(script_to_run)
+
+    p = subprocess.Popen([sys.executable,script_to_run,config_file])
+    p.communicate() # wait for the subprocess call to finish
 
     print("--Finished:", request.node.name)
