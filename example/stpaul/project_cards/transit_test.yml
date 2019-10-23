@@ -1,0 +1,162 @@
+changes:
+- category: Transit Service Property Change
+  facility:
+    direction_id: 1
+    route_id: 452-111
+    time:
+    - 06:00:00
+    - 09:00:00
+  properties:
+  - change: -1800.0
+    property: headway_secs
+- category: Transit Service Property Change
+  facility:
+    direction_id: 1
+    route_id: 134-111
+    time:
+    - 06:00:00
+    - 09:00:00
+  properties:
+  - change: 1800.0
+    property: headway_secs
+- category: Transit Service Property Change
+  facility:
+    direction_id: 0
+    route_id: 921-111
+    time:
+    - 09:00:00
+    - '15:00:00'
+  properties:
+  - change: -300.0
+    property: headway_secs
+- category: Roadway Deletion
+  links:
+    LINK_ID:
+    - 281
+    - 477533
+- category: New Roadway
+  links:
+  - A: 3230
+    AADT: 0
+    AM_CNT: 0
+    B: 3262
+    BIKE: 3
+    DISTANCE: 0.10462
+    DY_CNT: 0
+    HOV: 0
+    LANES: 1
+    LINK_ID: 999998
+    MD_CNT: 0
+    NT_CNT: 0
+    PM_CNT: 0
+    RC_NUM: 40
+    T_MANTIME: 0.0
+    T_PRIORITY: 0
+    isBikeLink: 1
+    isDriveLink: 1
+    isTranAcce: 0
+    isTranLink: 0
+    isWalkLink: 1
+  - A: 3262
+    AADT: 0
+    AM_CNT: 0
+    B: 3230
+    BIKE: 3
+    DISTANCE: 0.10462
+    DY_CNT: 0
+    HOV: 0
+    LANES: 1
+    LINK_ID: 999997
+    MD_CNT: 0
+    NT_CNT: 0
+    PM_CNT: 0
+    RC_NUM: 40
+    T_MANTIME: 0.0
+    T_PRIORITY: 0
+    isBikeLink: 1
+    isDriveLink: 1
+    isTranAcce: 0
+    isTranLink: 0
+    isWalkLink: 1
+  nodes:
+  - X: -93.18389
+    Y: 44.96898
+    isBikeNode: 0
+    isDriveNode: 1
+    isTranNode: 0
+    isWalkNode: 0
+    travelModelId: 354388
+- category: Roadway Attribute Change
+  facility:
+    A:
+      travelModelId:
+      - 3261
+    B:
+      travelModelId:
+      - 3262
+    link:
+      LINK_ID:
+      - 280
+  properties:
+  - existing: 20
+    property: RC_NUM
+    set: 40
+  - existing: 0
+    property: BIKE
+    set: 3
+  - existing: 0
+    property: isWalkLink
+    set: 1
+  - existing: 0
+    property: isBikeLink
+    set: 1
+  - existing: 112.8086679896
+    property: DISTANCE
+    set: 10.0
+- category: Roadway Attribute Change
+  facility:
+    A:
+      travelModelId:
+      - 3261
+    B:
+      travelModelId:
+      - 68075
+    link:
+      LINK_ID:
+      - 282
+  properties:
+  - existing: 20
+    property: RC_NUM
+    set: 40
+  - existing: 0
+    property: BIKE
+    set: 3
+  - existing: 0
+    property: isWalkLink
+    set: 1
+  - existing: 0
+    property: isBikeLink
+    set: 1
+  - existing: 124.4480595018
+    property: DISTANCE
+    set: 10.0
+- category: Roadway Attribute Change
+  facility:
+    A:
+      travelModelId:
+      - 3230
+    B:
+      travelModelId:
+      - 52771
+    link:
+      LINK_ID:
+      - 224
+  properties:
+  - existing: 30
+    property: RC_NUM
+    set: 40
+  - existing: 80.9850385918
+    property: DISTANCE
+    set: 0.10462
+project: USER TO define
+valid: false
