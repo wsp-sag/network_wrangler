@@ -278,8 +278,8 @@ def test_query_builder(request):
     )
     answer = '((LANES==1 or LANES==2) and '\
         '(isBikeLink==1) and isDriveLink==1)'
-    print("\nsel_query:\n", sel_query)
-    #assert(sel_query == answer)
+    #print("\nsel_query:\n", sel_query)
+    assert(sel_query == answer)
 
     selection_3 = {
         "link": [
@@ -299,8 +299,8 @@ def test_query_builder(request):
         unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS
     )
     answer = '((LINK_ID==134574))'
-    print("\nsel_query:\n", sel_query)
-    #assert(sel_query == answer)
+    #print("\nsel_query:\n", sel_query)
+    assert(sel_query == answer)
 
     print("--Finished:", request.node.name)
 
