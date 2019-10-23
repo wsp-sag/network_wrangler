@@ -9,24 +9,6 @@ warnings.filterwarnings("ignore")
 import yaml
 import sys
 
-def create_base_scenario(base_dir, base_shape, base_link, base_node, validate):
-    base_network_shape_file = os.path.join(base_dir,base_shape)
-    base_network_link_file = os.path.join(base_dir,base_link)
-    base_network_node_file = os.path.join(base_dir,base_node)
-
-    road_net = RoadwayNetwork.read(
-        link_file=base_network_link_file,
-        node_file=base_network_node_file,
-        shape_file=base_network_shape_file,
-        fast=not validate
-    )
-
-    transit_net = TransitNetwork.read(base_dir)
-
-    base_scenario = {"road_net": road_net, "transit_net": transit_net}
-
-    return base_scenario
-
 if __name__ == '__main__':
 
     args = sys.argv
@@ -64,11 +46,11 @@ if __name__ == '__main__':
         project_cards_filenames = []
 
     # Create Base Network
-    base_scenario = create_base_scenario(
+    base_scenario = Scenario.create_base_scenario(
         base_dir=base_network_dir,
-        base_shape=base_shape_name,
-        base_link=base_link_name,
-        base_node=base_node_name,
+        base_shape_name=base_shape_name,
+        base_link_name=base_link_name,
+        base_node_name=base_node_name,
         validate=validate_base_network
     )
 
