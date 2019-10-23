@@ -8,6 +8,8 @@ from collections import OrderedDict
 from .Logger import WranglerLogger
 from collections import defaultdict
 from .Utils import topological_sort
+from .RoadwayNetwork import RoadwayNetwork
+from .TransitNetwork import TransitNetwork
 
 
 class Scenario(object):
@@ -67,6 +69,45 @@ class Scenario(object):
                 self.corequisites.update(
                     {card.project: card.dependencies["corequisites"]}
                 )
+
+    @staticmethod
+    def create_base_scenario(
+        base_dir: str,
+        base_shape_name: str,
+        base_link_name: str,
+        base_node_name: str,
+        validate: bool = True
+    ) -> Scenario:
+        """
+        args
+        -----
+        base_dir:
+          path to the base scenario network files
+        base_shape_name:
+          filename of the base network shape
+        base_link_name:
+          filename of the base network link
+        base_node_name:
+          filename of the base network node
+        validate:
+          boolean indicating whether to validate the base network or not
+        """
+        base_network_shape_file = os.path.join(base_dir,base_shape_name)
+        base_network_link_file = os.path.join(base_dir,base_link_name)
+        base_network_node_file = os.path.join(base_dir,base_node_name)
+
+        road_net = RoadwayNetwork.read(
+            link_file=base_network_link_file,
+            node_file=base_network_node_file,
+            shape_file=base_network_shape_file,
+            fast=not validate
+        )
+
+        transit_net = TransitNetwork.read(base_dir)
+
+        base_scenario = {"road_net": road_net, "transit_net": transit_net}
+
+        return base_scenario
 
     @staticmethod
     def create_scenario(

@@ -90,7 +90,7 @@ class TransitNetwork(object):
 
         return transit_network
 
-    def write(self, filename: str = "", path: str = ".") -> None:
+    def write(self, path: str = ".", filename: str = None) -> None:
         """
         Writes a network in the transit network standard
 
