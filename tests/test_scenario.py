@@ -52,15 +52,14 @@ def test_project_card_write(request):
 
 
 @pytest.mark.scenario
+@pytest.mark.travis
 def test_scenario_conflicts(request):
 
     project_cards_list = []
     project_cards_list.append(
         ProjectCard.read(
             os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
+                STPAUL_DIR,
                 "project_cards",
                 "a_test_project_card.yml",
             )
@@ -69,9 +68,7 @@ def test_scenario_conflicts(request):
     project_cards_list.append(
         ProjectCard.read(
             os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
+                STPAUL_DIR,
                 "project_cards",
                 "b_test_project_card.yml",
             )
@@ -80,9 +77,7 @@ def test_scenario_conflicts(request):
     project_cards_list.append(
         ProjectCard.read(
             os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
+                STPAUL_DIR,
                 "project_cards",
                 "c_test_project_card.yml",
             )
@@ -104,6 +99,7 @@ def test_scenario_conflicts(request):
 
 
 @pytest.mark.scenario
+@pytest.mark.travis
 def test_scenario_requisites(request):
     print("\n--Starting:", request.node.name)
     base_scenario = {}
@@ -112,9 +108,7 @@ def test_scenario_requisites(request):
     project_cards_list.append(
         ProjectCard.read(
             os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
+                STPAUL_DIR,
                 "project_cards",
                 "a_test_project_card.yml",
             )
@@ -123,9 +117,7 @@ def test_scenario_requisites(request):
     project_cards_list.append(
         ProjectCard.read(
             os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
+                STPAUL_DIR,
                 "project_cards",
                 "b_test_project_card.yml",
             )
@@ -134,9 +126,7 @@ def test_scenario_requisites(request):
     project_cards_list.append(
         ProjectCard.read(
             os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
+                STPAUL_DIR,
                 "project_cards",
                 "c_test_project_card.yml",
             )
@@ -158,6 +148,7 @@ def test_scenario_requisites(request):
 
 
 @pytest.mark.scenario
+@pytest.mark.travis
 def test_project_sort(request):
     print("\n--Starting:", request.node.name)
     base_scenario = {}
@@ -166,9 +157,7 @@ def test_project_sort(request):
     project_cards_list.append(
         ProjectCard.read(
             os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
+                STPAUL_DIR,
                 "project_cards",
                 "a_test_project_card.yml",
             )
@@ -177,9 +166,7 @@ def test_project_sort(request):
     project_cards_list.append(
         ProjectCard.read(
             os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
+                STPAUL_DIR,
                 "project_cards",
                 "b_test_project_card.yml",
             )
@@ -188,9 +175,7 @@ def test_project_sort(request):
     project_cards_list.append(
         ProjectCard.read(
             os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
+                STPAUL_DIR,
                 "project_cards",
                 "c_test_project_card.yml",
             )
@@ -204,17 +189,18 @@ def test_project_sort(request):
     import pprint
 
     pprint.pprint(scen.prerequisites)
-    print("\nUnordered Projects:", scen.project_names())
+    print("\nUnordered Projects:", scen.get_project_names())
     scen.check_scenario_conflicts()
     scen.check_scenario_requisites()
 
     scen.order_project_cards()
-    print("Ordered Projects:", scen.project_names())
+    print("Ordered Projects:", scen.get_project_names())
     print("--Finished:", request.node.name)
 
 
 @pytest.mark.roadway
 @pytest.mark.scenario
+@pytest.mark.travis
 def test_managed_lane_project_card(request):
     print("\n--Starting:", request.node.name)
 
