@@ -119,7 +119,7 @@ class ProjectCard(object):
     @staticmethod
     def build_link_selection_query(
         selection: dict,
-        unique_identifiers: [],
+        unique_link_identifiers: [],
         mode="isDriveLink",
         ignore=[],
     ):
@@ -127,8 +127,8 @@ class ProjectCard(object):
         count = 0
 
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        unique_identifer_exist = set(unique_identifiers).issubset(selection_keys)
-        num_unique_identifiers = len(set(unique_identifiers).intersection(selection_keys))
+        unique_link_identifer_exist = set(unique_link_identifiers).issubset(selection_keys)
+        num_unique_link_identifiers = len(set(unique_link_identifiers).intersection(selection_keys))
 
         for l in selection["link"]:
             for key, value in l.items():
@@ -136,7 +136,7 @@ class ProjectCard(object):
                 if key in ignore:
                     continue
 
-                if unique_identifer_exist and key not in unique_identifiers:
+                if unique_link_identifer_exist and key not in unique_link_identifiers:
                     continue
 
                 count = count + 1
@@ -156,13 +156,13 @@ class ProjectCard(object):
                 else:
                     sel_query = sel_query + key + " == " + '"' + str(value) + '"'
 
-                if not unique_identifer_exist and count != (len(selection["link"])-len(ignore)):
+                if not unique_link_identifer_exist and count != (len(selection["link"])-len(ignore)):
                     sel_query = sel_query + " and "
 
-                if unique_identifer_exist and count != num_unique_identifiers:
+                if unique_link_identifer_exist and count != num_unique_link_identifiers:
                     sel_query = sel_query + " and "
 
-        if not unique_identifer_exist:
+        if not unique_link_identifer_exist:
             if count > 0:
                 sel_query = sel_query + " and "
             sel_query = sel_query + mode + " == 1"

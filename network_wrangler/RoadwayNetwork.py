@@ -45,7 +45,8 @@ class RoadwayNetwork(object):
 
     SELECTION_REQUIRES = ["A", "B", "link"]
 
-    UNIQUE_ROADWAY_IDENTIFIERS = ["LINK_ID"]
+    UNIQUE_LINK_IDENTIFIERS = ["LINK_ID", "ShStReferenceId"]
+    UNIQUE_NODE_IDENTIFIERS = ["node_id", "osm", "ShSt"]
 
     def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
         """
@@ -462,7 +463,7 @@ class RoadwayNetwork(object):
     def build_selection_key(self, selection_dict):
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection_dict,
-            unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS
+            unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS
         )
 
         A_id, B_id = self.orig_dest_nodes_foreign_key(selection_dict)
@@ -514,11 +515,11 @@ class RoadwayNetwork(object):
         }
 
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        unique_identifer_in_selection = set(RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS).issubset(selection_keys)
+        unique_link_identifer_in_selection = set(RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS).issubset(selection_keys)
 
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection,
-            unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS,
+            unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS,
             mode=modes_to_network_variables[search_mode]
         )
 
@@ -651,7 +652,7 @@ class RoadwayNetwork(object):
             except:
                 return False
 
-        if not unique_identifer_in_selection:
+        if not unique_link_identifer_in_selection:
             # find the node ids for the candidate links
             node_list_foreign_keys = list(candidate_links["u"]) + list(candidate_links["v"])
             i = 0
@@ -691,7 +692,7 @@ class RoadwayNetwork(object):
                 if len(selection["link"]) > 1:
                     resel_query = ProjectCard.build_link_selection_query(
                         selection=selection,
-                        unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS,
+                        unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS,
                         mode=modes_to_network_variables[search_mode],
                         ignore=["name"],
                     )

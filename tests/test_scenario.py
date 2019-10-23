@@ -229,23 +229,23 @@ def test_query_builder(request):
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_1,
-        unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS
+        unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS
     )
     answer = '((name.str.contains("6th") or '\
         'name.str.contains("Sixth") or '\
         'name.str.contains("sixth")) and '\
         'isDriveLink==1)'
-    print("\nsel_query:\n", sel_query)
-    #assert(sel_query == answer)
+    #print("\nsel_query:\n", sel_query)
+    assert(sel_query == answer)
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_1,
-        unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS,
+        unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS,
         ignore=["name"]
     )
     answer = '(isDriveLink==1)'
-    print("\nsel_query:\n", sel_query)
-    #assert(sel_query == answer)
+    #print("\nsel_query:\n", sel_query)
+    assert(sel_query == answer)
 
     selection_2 = {
         "link": [
@@ -261,19 +261,19 @@ def test_query_builder(request):
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_2,
-        unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS
+        unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS
     )
     answer = '((name.str.contains("6th") or '\
         'name.str.contains("Sixth") or '\
         'name.str.contains("sixth")) and '\
         '(LANES==1 or LANES==2) and '\
         '(isBikeLink==1) and isDriveLink==1)'
-    print("\nsel_query:\n", sel_query)
-    #assert(sel_query == answer)
+    #print("\nsel_query:\n", sel_query)
+    assert(sel_query == answer)
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_2,
-        unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS,
+        unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS,
         ignore=["name"]
     )
     answer = '((LANES==1 or LANES==2) and '\
@@ -296,7 +296,7 @@ def test_query_builder(request):
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_3,
-        unique_identifiers=RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS
+        unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS
     )
     answer = '((LINK_ID==134574))'
     #print("\nsel_query:\n", sel_query)
