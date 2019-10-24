@@ -127,8 +127,8 @@ class ProjectCard(object):
         count = 0
 
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        unique_link_identifer_exist = set(unique_link_identifiers).issubset(selection_keys)
         num_unique_link_identifiers = len(set(unique_link_identifiers).intersection(selection_keys))
+        unique_link_identifer_exist = num_unique_link_identifiers > 0
 
         for l in selection["link"]:
             for key, value in l.items():
@@ -154,7 +154,7 @@ class ProjectCard(object):
                             v = v + 1
                     sel_query = sel_query + ")"
                 else:
-                    sel_query = sel_query + key + " == " + '"' + str(value) + '"'
+                    sel_query = sel_query + key + "==" + '"' + str(value) + '"'
 
                 if not unique_link_identifer_exist and count != (len(selection["link"])-len(ignore)):
                     sel_query = sel_query + " and "
@@ -165,7 +165,7 @@ class ProjectCard(object):
         if not unique_link_identifer_exist:
             if count > 0:
                 sel_query = sel_query + " and "
-            sel_query = sel_query + mode + " == 1"
+            sel_query = sel_query + mode + "==1"
 
         sel_query = sel_query + ")"
 
