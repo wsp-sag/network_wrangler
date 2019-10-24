@@ -46,7 +46,7 @@ class RoadwayNetwork(object):
     SELECTION_REQUIRES = ["A", "B", "link"]
 
     UNIQUE_LINK_IDENTIFIERS = ["LINK_ID", "ShStReferenceId"]
-    UNIQUE_NODE_IDENTIFIERS = ["node_id", "osm", "ShSt"]
+    UNIQUE_NODE_IDENTIFIERS = ["travelModelId"]
 
     def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
         """
