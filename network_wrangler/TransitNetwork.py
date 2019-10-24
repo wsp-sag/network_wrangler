@@ -11,7 +11,6 @@ from typing import Tuple, Union
 import networkx as nx
 import pandas as pd
 import partridge as ptg
-from partridge.config import geo_config
 from partridge.config import default_config
 from partridge.gtfs import Feed
 
@@ -61,30 +60,10 @@ class TransitNetwork(object):
         """
         Read GTFS feed from folder and return a config and Partridge Feed object
         """
-        config = geo_config()
-        config.nodes["shapes.txt"]["required_columns"] = config.nodes["shapes.txt"][
-            "required_columns"
-        ] + ("A", "B", "LINK_ID")
+        config = default_config()
+        feed = ptg.load_feed(feed_path, config=config)
 
-        try:
-            feed = ptg.load_feed(feed_path, config=config)
-            TransitNetwork.validate_feed(feed, config)
-
-        except KeyError:
-            config = default_config()
-            config.nodes["shapes.txt"]["required_columns"] = (
-                "shape_id",
-                "A",
-                "B",
-                "LINK_ID",
-            )
-
-            WranglerLogger.warning(
-                "Reducing data requirements for shapes.txt to:",
-                config.nodes["shapes.txt"]["required_columns"],
-            )
-            feed = ptg.load_feed(feed_path, config=config)
-            TransitNetwork.validate_feed(feed, config)
+        TransitNetwork.validate_feed(feed, config)
 
         transit_network = TransitNetwork(feed=feed, config=config)
 
