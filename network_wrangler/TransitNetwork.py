@@ -69,10 +69,38 @@ class TransitNetwork(object):
 
         return transit_network
 
-    def set_graph(self, road_net: RoadwayNetwork) -> None:
+    def set_graph(self, road_net: RoadwayNetwork,
+                  graph_shapes: bool = True, graph_stops: bool = True
+                  ) -> None:
         self.graph: nx.MultiDiGraph = RoadwayNetwork.ox_graph(
             road_net.nodes_df, road_net.links_df
         )
+        if graph_shapes:
+            self.graph_shapes()
+        if graph_stops:
+            self.graph_stops()
+
+    def graph_shapes(self) -> None:
+        existing_shapes = self.feed.shapes
+        graphed_shapes = pd.DataFrame()
+
+        # for shape_id in shapes:
+        # TODO traverse point by point, mapping shortest path on graph,
+        # then append to a list
+        # return total list of all link ids
+        # rebuild rows in shapes dataframe and add to graphed_shapes
+        # TODO Make graphed_shapes a GeoDataFrame
+
+        self.feed.shapes = graphed_shapes
+
+    def graph_stops(self) -> None:
+        existing_stops = self.feed.stops
+        graphed_stops = pd.DataFrame()
+
+        # for stop_id in stops:
+        # TODO
+
+        self.feed.stops = graphed_stops
 
     def write(self, path: str = ".", filename: str = None) -> None:
         """
@@ -235,15 +263,37 @@ class TransitNetwork(object):
         """
         for i in properties:
             if i["property"] in ["headway_secs"]:
-                self.apply_transit_feature_change_frequency(trip_ids, i)
+                self.apply_transit_feature_change_frequencies(trip_ids, i)
 
-            # elif i['property'] in ['stops']:
-            #     self.apply_transit_feature_change_stops(trip_ids, i)
-            #
-            # elif i['property'] in ['shapes']:
-            #     self.apply_transit_feature_change_shapes(trip_ids, i)
+            elif i['property'] in ['shapes']:
+                self.apply_transit_feature_change_shapes(trip_ids, i)
 
-    def apply_transit_feature_change_frequency(
+            elif i['property'] in ['stops']:
+                self.apply_transit_feature_change_stops(trip_ids, i)
+
+    def apply_transit_feature_change_shape(
+        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        shapes = self.feed.shapes
+        trips = self.feed.trips
+
+        # Grab only those records matching trip_ids (aka selection)
+        shape_ids = trips[trips.trip_id.isin(trip_ids)].shape_id
+
+        # With shapes true to roadway network graph, replace matching rows of
+        # shapes with new ones
+        if in_place:
+            # TODO Make update to shapes
+            self.feed.shapes = shapes
+        else:
+            updated_network = copy.deepcopy(self)
+            # TODO Make update to updated_network.feed.shapes
+            return updated_network
+
+    def apply_transit_feature_change_shape() -> Union(None, TransitNetwork):
+        # TODO
+
+    def apply_transit_feature_change_frequencies(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         freq = self.feed.frequencies
