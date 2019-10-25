@@ -16,6 +16,7 @@ from partridge.gtfs import Feed
 
 from .Logger import WranglerLogger
 from .Utils import parse_time_spans
+from .RoadwayNetwork import RoadwayNetwork
 
 
 class TransitNetwork(object):
@@ -35,8 +36,7 @@ class TransitNetwork(object):
         """
         self.feed: Feed = feed
         self.config: nx.DiGraph = config
-
-        self.selections: dict = {}
+        self.graph: nx.MultiDiGraph = None
 
     @staticmethod
     def validate_feed(feed: Feed, config: nx.DiGraph) -> bool:
@@ -68,6 +68,11 @@ class TransitNetwork(object):
         transit_network = TransitNetwork(feed=feed, config=config)
 
         return transit_network
+
+    def set_graph(self, road_net: RoadwayNetwork) -> None:
+        self.graph: nx.MultiDiGraph = RoadwayNetwork.ox_graph(
+            road_net.nodes_df, road_net.links_df
+        )
 
     def write(self, path: str = ".", filename: str = None) -> None:
         """
