@@ -1,5 +1,5 @@
 project: Bus Reroute
-category: Transit Route Change
+category: Transit Service Property Change
 tags:
    - existing_plus_committed
 dependencies:
@@ -8,6 +8,6 @@ dependencies:
   conflicts: []
 facility:
   trip_id: 14944022-JUN19-MVS-BUS-Weekday-01
-routing:
-  - existing: [337079, 15113, 185177]
-    set: [337079, 185177]
+properties:
+  - property: shapes
+    set: 1800

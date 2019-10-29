@@ -29,6 +29,14 @@ class TransitNetwork(object):
       tc=wr.TransitNetwork.read(path=stpaul)
 
     """
+    # PK = primary key, FK = foreign key
+    PK_LINK_ID = "LINK_ID"
+    PK_NODE_ID = "N"
+
+    PK_ROAD_NET_LINK_ID = "LINK_ID"
+    PK_ROAD_NET_NODE_ID = "travelModelId"
+
+    FK_ROAD_NODE_ID_IN_LINKS_DF = "A"
 
     def __init__(self, feed: Feed = None, config: nx.DiGraph = None):
         """
@@ -36,6 +44,7 @@ class TransitNetwork(object):
         """
         self.feed: Feed = feed
         self.config: nx.DiGraph = config
+        self.road_net: RoadwayNetwork = None
         self.graph: nx.MultiDiGraph = None
 
     @staticmethod
@@ -72,15 +81,16 @@ class TransitNetwork(object):
     def set_graph(self, road_net: RoadwayNetwork,
                   graph_shapes: bool = True, graph_stops: bool = True
                   ) -> None:
+        self.road_net: RoadwayNetwork = road_net
         self.graph: nx.MultiDiGraph = RoadwayNetwork.ox_graph(
             road_net.nodes_df, road_net.links_df
         )
         if graph_shapes:
-            self.graph_shapes()
+            self._graph_shapes()
         if graph_stops:
-            self.graph_stops()
+            self._graph_stops()
 
-    def graph_shapes(self) -> None:
+    def _graph_shapes(self) -> None:
         existing_shapes = self.feed.shapes
         graphed_shapes = pd.DataFrame()
 
@@ -93,7 +103,7 @@ class TransitNetwork(object):
 
         self.feed.shapes = graphed_shapes
 
-    def graph_stops(self) -> None:
+    def _graph_stops(self) -> None:
         existing_stops = self.feed.stops
         graphed_stops = pd.DataFrame()
 
@@ -271,7 +281,7 @@ class TransitNetwork(object):
             elif i['property'] in ['stops']:
                 self.apply_transit_feature_change_stops(trip_ids, i)
 
-    def apply_transit_feature_change_shape(
+    def apply_transit_feature_change_shapes(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         shapes = self.feed.shapes
@@ -279,6 +289,17 @@ class TransitNetwork(object):
 
         # Grab only those records matching trip_ids (aka selection)
         shape_ids = trips[trips.trip_id.isin(trip_ids)].shape_id
+
+        # Convert the node IDs in properties to link IDs with lineStrings
+        links = self.road_net.links_df
+        links = links[links[FK_ROAD_NODE_ID_IN_LINKS_DF].isin(properties['set'])]
+
+        # If 'existing' is specified, replace only that segment
+        # TODO
+
+        # Replace
+        for shape_id in shape_ids:
+            shapes = shapes[shapes.shape_id == shape_id)].UNIQUE_
 
         # With shapes true to roadway network graph, replace matching rows of
         # shapes with new ones
@@ -290,7 +311,7 @@ class TransitNetwork(object):
             # TODO Make update to updated_network.feed.shapes
             return updated_network
 
-    def apply_transit_feature_change_shape() -> Union(None, TransitNetwork):
+    def apply_transit_feature_change_stops() -> Union(None, TransitNetwork):
         # TODO
 
     def apply_transit_feature_change_frequencies(
