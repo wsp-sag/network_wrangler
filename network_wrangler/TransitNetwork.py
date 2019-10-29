@@ -292,24 +292,49 @@ class TransitNetwork(object):
 
         # Convert the node IDs in properties to link IDs with lineStrings
         links = self.road_net.links_df
-        links = links[links[FK_ROAD_NODE_ID_IN_LINKS_DF].isin(properties['set'])]
+        link_ids = links[links[FK_ROAD_NODE_ID_IN_LINKS_DF].isin(properties['set'])]
 
         # If 'existing' is specified, replace only that segment
         # TODO
 
         # Replace
         for shape_id in shape_ids:
-            shapes = shapes[shapes.shape_id == shape_id)].UNIQUE_
+            # Pop the rows that match shape_id
+            this_shape = shapes[shapes.shape_id == shape_id]
+            shapes[shapes.shape_id != shape_id]
 
-        # With shapes true to roadway network graph, replace matching rows of
-        # shapes with new ones
+            # Match sure they are ordered by shape_pt_sequence
+            this_shape = this_shape.sort_values(by=['shape_pt_sequence'])
+
+            # Grab list of link IDs and simplify to unique list
+            all_existing_link_ids = this_shape[PK_LINK_ID].unique()
+
+            # Create a new DataFrame
+            this_shape = pd.DataFrame({
+                PK_LINK_ID: all_existing_link_ids
+            })
+
+            # Join on linestring for each link
+            this_shape.merge(
+                self.road_net.links_df[[PK_ROAD_NET_LINK_ID, 'geometry']],
+                how='left',
+                left_on=PK_LINK_ID, right_on=PK_ROAD_NET_LINK_ID,
+            )
+
+            # Convert GeoDataFrame into DataFrame by exploding each point w/ ID
+            # TODO
+
+            # Add shape_id to all rows and point sequence
+            # TODO
+
+            # Add rows back into shapes
+            shapes = pd.concat([shapes, this_shape])
+
+        # Replace self if in_place, else return
         if in_place:
-            # TODO Make update to shapes
             self.feed.shapes = shapes
         else:
-            updated_network = copy.deepcopy(self)
-            # TODO Make update to updated_network.feed.shapes
-            return updated_network
+            return shapes
 
     def apply_transit_feature_change_stops() -> Union(None, TransitNetwork):
         # TODO
