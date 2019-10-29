@@ -59,7 +59,7 @@
         "properties": {
           "id": {
             "$id": "#/properties/features/items/properties/id",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Id Schema",
             "default": "",
             "examples": [
@@ -69,7 +69,7 @@
           },
           "geometryId": {
             "$id": "#/properties/features/items/properties/geometryId",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Geometryid Schema",
             "default": "",
             "examples": [
@@ -79,7 +79,7 @@
           },
           "access": {
             "$id": "#/properties/features/items/properties/access",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Access Schema",
             "default": "",
             "examples": [
@@ -89,7 +89,7 @@
           },
           "area": {
             "$id": "#/properties/features/items/properties/area",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Area Schema",
             "default": "",
             "examples": [
@@ -99,7 +99,7 @@
           },
           "bridge": {
             "$id": "#/properties/features/items/properties/bridge",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Bridge Schema",
             "default": "",
             "examples": [
@@ -109,7 +109,7 @@
           },
           "highway": {
             "$id": "#/properties/features/items/properties/highway",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Highway Schema",
             "default": "",
             "examples": [
@@ -119,7 +119,7 @@
           },
           "junction": {
             "$id": "#/properties/features/items/properties/junction",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Junction Schema",
             "default": "",
             "examples": [
@@ -129,7 +129,7 @@
           },
           "key": {
             "$id": "#/properties/features/items/properties/key",
-            "type": "integer",
+            "type": ["number", "null"],
             "title": "The Key Schema",
             "default": 0,
             "examples": [
@@ -138,7 +138,7 @@
           },
           "OSMlanes": {
             "$id": "#/properties/features/items/properties/OSMlanes",
-            "type": "integer",
+            "type": ["number", "null"],
             "title": "The Osmlanes Schema",
             "default": 0,
             "examples": [
@@ -147,7 +147,7 @@
           },
           "length": {
             "$id": "#/properties/features/items/properties/length",
-            "type": "number",
+            "type": ["number", "null"],
             "title": "The Length Schema",
             "default": 0.0,
             "examples": [
@@ -156,7 +156,7 @@
           },
           "maxspeed": {
             "$id": "#/properties/features/items/properties/maxspeed",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Maxspeed Schema",
             "default": "",
             "examples": [
@@ -166,7 +166,7 @@
           },
           "name": {
             "$id": "#/properties/features/items/properties/name",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Name Schema",
             "default": "",
             "examples": [
@@ -176,7 +176,7 @@
           },
           "oneway": {
             "$id": "#/properties/features/items/properties/oneway",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Oneway Schema",
             "default": "",
             "examples": [
@@ -186,7 +186,7 @@
           },
           "osmid": {
             "$id": "#/properties/features/items/properties/osmid",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Osmid Schema",
             "default": "",
             "examples": [
@@ -196,7 +196,7 @@
           },
           "ref": {
             "$id": "#/properties/features/items/properties/ref",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Ref Schema",
             "default": "",
             "examples": [
@@ -206,7 +206,7 @@
           },
           "service": {
             "$id": "#/properties/features/items/properties/service",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Service Schema",
             "default": "",
             "examples": [
@@ -216,7 +216,7 @@
           },
           "tunnel": {
             "$id": "#/properties/features/items/properties/tunnel",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Tunnel Schema",
             "default": "",
             "examples": [
@@ -246,7 +246,7 @@
           },
           "width": {
             "$id": "#/properties/features/items/properties/width",
-            "type": "string",
+            "type": ["string", "null"],
             "title": "The Width Schema",
             "default": "",
             "examples": [
@@ -366,7 +366,7 @@
                 },
                 "intersectionId": {
                   "$id": "#/properties/features/items/properties/locationReferences/items/properties/intersectionId",
-                  "type": "string",
+                  "type": ["string", "null"],
                   "title": "The Intersectionid Schema",
                   "default": "",
                   "examples": [
