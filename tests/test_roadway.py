@@ -17,20 +17,26 @@ Run just the tests labeled basic using `pytest -m roadway`
 To run with print statments, use `pytest -s -m roadway`
 """
 
-STPAUL_DIR = os.path.join(os.getcwd(), "example", "stpaul")
+STPAUL_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "example", "stpaul"
+)
 STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
 STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
 STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
 
-SMALL_DIR = os.path.join(os.getcwd(), "example", "single")
+SMALL_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "example", "single"
+)
 SMALL_SHAPE_FILE = os.path.join(SMALL_DIR, "shape.geojson")
 SMALL_LINK_FILE = os.path.join(SMALL_DIR, "link.json")
 SMALL_NODE_FILE = os.path.join(SMALL_DIR, "node.geojson")
 
-SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
+SCRATCH_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 @pytest.mark.roadway
+@pytest.mark.travis
+@pytest.mark.menow
 def test_roadway_read_write(request):
     print("\n--Starting:", request.node.name)
 
@@ -42,9 +48,9 @@ def test_roadway_read_write(request):
     time0 = time.time()
 
     net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
+        link_file=SMALL_LINK_FILE,
+        node_file=SMALL_NODE_FILE,
+        shape_file=SMALL_SHAPE_FILE,
         fast=True,
     )
     time1 = time.time()
@@ -362,7 +368,6 @@ def test_bad_properties_statements(request):
 
 @pytest.mark.ashish
 @pytest.mark.travis
-@pytest.mark.menow
 def test_add_delete_roadway_project_card(request):
     print("\n--Starting:", request.node.name)
 

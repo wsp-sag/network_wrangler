@@ -36,6 +36,7 @@ class RoadwayNetwork(object):
     """
 
     CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+    EPSG = 4326
 
     NODE_FOREIGN_KEY = "osmNodeId"
 
@@ -104,8 +105,10 @@ class RoadwayNetwork(object):
             for g in link_json["features"]
         ]
         links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
+        links_df.crs = RoadwayNetwork.CRS
 
         shapes_df = gpd.read_file(shape_file)
+        shapes_df.crs = RoadwayNetwork.CRS
 
         # geopandas uses fiona OGR drivers, which doesn't let you have
         # a list as a property type. Therefore, must read in node_properties
