@@ -345,6 +345,23 @@ If False, will fail.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.get_property_by_time_period_and_group">
+<code class="sig-name descname">get_property_by_time_period_and_group</code><span class="sig-paren">(</span><em class="sig-param">property</em>, <em class="sig-param">time_period=None</em>, <em class="sig-param">category=None</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.get_property_by_time_period_and_group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a series for the properties with a specific group or time period.</p>
+<dl class="simple">
+<dt>property: str</dt><dd><p>the variable that you want from network</p>
+</dd>
+<dt>time_period: list(str)</dt><dd><p>the time period that you are querying for
+i.e. [‘16:00’, ‘19:00’]</p>
+</dd>
+<dt>category: str (Optional)</dt><dd><p>the group category
+i.e. “sov”</p>
+</dd>
+</dl>
+<p>pandas series</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="network_wrangler.RoadwayNetwork.orig_dest_nodes_foreign_key">
 <code class="sig-name descname">orig_dest_nodes_foreign_key</code><span class="sig-paren">(</span><em class="sig-param">selection</em>, <em class="sig-param">node_foreign_key=''</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.orig_dest_nodes_foreign_key" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the foreign key id (whatever is used in the u and v
