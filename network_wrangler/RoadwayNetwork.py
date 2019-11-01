@@ -1071,9 +1071,14 @@ class RoadwayNetwork(object):
         time_period: list(str)
           the time period that you are querying for
           i.e. ['16:00', '19:00']
-        category: str (Optional)
+        category: str or list(str)(Optional)
           the group category
           i.e. "sov"
+
+          or
+
+          list of group categories in order of search, i.e.
+          ["hov3","hov2"]
 
         returns
         --------
@@ -1088,9 +1093,10 @@ class RoadwayNetwork(object):
                 raise ValueError("Shouldn't have a category group without time spans")
 
             if not category:
-                category = "default"
-            else:
-                category =  category.lower()
+                category = ["default"]
+            elif isinstance(category, str):
+                category = [category]
+            search_cats =  [c.lower() for c in category]
 
             # simple case
             if type(v) in (int, float):
@@ -1112,16 +1118,18 @@ class RoadwayNetwork(object):
                     if (tg["time"][0]>= time_spans[0]) and (tg["time"][1]<= time_spans[1]):
                         if tg.get("category"):
                             categories+=(tg["category"])
-                            if category in tg["category"]:
-                                #print("RETURNING:",time_spans,category, tg["value"])
-                                return tg["value"]
+                            for c in search_cats:
+                                print("CAT:", c, tg["category"])
+                                if c in tg["category"]:
+                                    print("RETURNING:",time_spans,category, tg["value"])
+                                    return tg["value"]
                         else:
-                            #print("RETURNING:",time_spans,category,tg["value"])
+                            print("RETURNING:",time_spans,category,tg["value"])
                             return tg["value"]
 
                 WranglerLogger.info("\nCouldn't find time period for {}, returning default".format(str(time_spans)))
                 if v.get("default"):
-                    #print("RETURNING:",time_spans, v["default"])
+                    print("RETURNING:",time_spans, v["default"])
                     return v["default"]
                 else:
                     WranglerLogger.error("\nCan't find default; must specify a category in {}".format(str(categories)))
