@@ -503,6 +503,8 @@ def test_add_delete_roadway_project_card(request):
     print("--Finished:", request.node.name)
 
 @pytest.mark.export
+@pytest.mark.highway
+@pytest.mark.travis
 def test_export_network_to_csv(request):
     print("\n--Starting:", request.node.name)
 
@@ -516,3 +518,43 @@ def test_export_network_to_csv(request):
 
     net.links_df.to_csv(os.path.join(SCRATCH_DIR, "links_df.csv"), index=False)
     net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "nodes_df.csv"), index=False)
+
+
+
+variable_queries = [
+    {"v":"LANES",'category': None, "time_period": ['7:00', '9:00']},
+    {"v":"ML_PRICE", 'category': "sov", 'time_period': ['7:00', '9:00']}
+]
+@pytest.mark.parametrize("variable_query", variable_queries)
+
+@pytest.mark.highway
+@pytest.mark.menow
+def test_query_roadway_property_by_time_group(request, variable_query):
+    print("\n--Starting:", request.node.name)
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+    print("Applying project card...")
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", "5_managed_lane.yml")
+    project_card = ProjectCard.read(project_card_path, validate=False)
+    net.apply_managed_lane_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+    print("Querying Attribute...")
+    v_series = net.get_property_by_time_period_and_group(
+        variable_query['v'],
+        category = variable_query['category'],
+        time_period = variable_query['time_period'],
+    )
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+    print("QUERY:\n",variable_query)
+    print("CALCULATED:\n",v_series.loc[selected_link_indices])
+    print("ORIGINAL:\n",net.links_df.loc[selected_link_indices,variable_query['v']])
+
+
+
+
+    ## todo make test make sure the values are correct.

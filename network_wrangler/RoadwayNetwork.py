@@ -1059,3 +1059,75 @@ class RoadwayNetwork(object):
         if missing_error_message:
             WranglerLogger.error(" ".join(missing_error_message))
             raise ValueError()
+
+    def get_property_by_time_period_and_group(self, property, time_period = None, category=None):
+        '''
+        Return a series for the properties with a specific group or time period.
+
+        args
+        ------
+        property: str
+          the variable that you want from network
+        time_period: list(str)
+          the time period that you are querying for
+          i.e. ['16:00', '19:00']
+        category: str (Optional)
+          the group category
+          i.e. "sov"
+
+        returns
+        --------
+        pandas series
+        '''
+
+
+        def _get_property(v, time_spans = None, category = None):
+
+            if category and not time_spans:
+                WranglerLogger.error("\nShouldn't have a category group without time spans")
+                raise ValueError("Shouldn't have a category group without time spans")
+
+            if not category:
+                category = "default"
+            else:
+                category =  category.lower()
+
+            # simple case
+            if type(v) in (int, float):
+                return v
+
+            #print("VARIABLE:",v)
+
+            # if no time or group specified, but it is a complex link situation
+            if not time_spans:
+                if v.get("default"):
+                    return v["default"]
+                else:
+                    WranglerLogger.error("\nVariable {} is more complex in network than query".format(v))
+                    raise ValueError("Variable {} is more complex in network than query".format(v))
+
+            if v.get("timeofday"):
+                categories = []
+                for tg in v["timeofday"]:
+                    if (tg["time"][0]>= time_spans[0]) and (tg["time"][1]<= time_spans[1]):
+                        if tg.get("category"):
+                            categories+=(tg["category"])
+                            if category in tg["category"]:
+                                #print("RETURNING:",time_spans,category, tg["value"])
+                                return tg["value"]
+                        else:
+                            #print("RETURNING:",time_spans,category,tg["value"])
+                            return tg["value"]
+
+                WranglerLogger.info("\nCouldn't find time period for {}, returning default".format(str(time_spans)))
+                if v.get("default"):
+                    #print("RETURNING:",time_spans, v["default"])
+                    return v["default"]
+                else:
+                    WranglerLogger.error("\nCan't find default; must specify a category in {}".format(str(categories)))
+                    raise ValueError("Can't find default, must specify a category in: {}".format(str(categories)))
+
+
+        time_spans = parse_time_spans(time_period)
+
+        return self.links_df[property].apply(_get_property,time_spans = time_spans, category=category)
