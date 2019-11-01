@@ -348,14 +348,17 @@ If False, will fail.</p>
 <dt id="network_wrangler.RoadwayNetwork.get_property_by_time_period_and_group">
 <code class="sig-name descname">get_property_by_time_period_and_group</code><span class="sig-paren">(</span><em class="sig-param">property</em>, <em class="sig-param">time_period=None</em>, <em class="sig-param">category=None</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.get_property_by_time_period_and_group" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a series for the properties with a specific group or time period.</p>
-<dl class="simple">
+<dl>
 <dt>property: str</dt><dd><p>the variable that you want from network</p>
 </dd>
 <dt>time_period: list(str)</dt><dd><p>the time period that you are querying for
 i.e. [‘16:00’, ‘19:00’]</p>
 </dd>
-<dt>category: str (Optional)</dt><dd><p>the group category
+<dt>category: str or list(str)(Optional)</dt><dd><p>the group category
 i.e. “sov”</p>
+<p>or</p>
+<p>list of group categories in order of search, i.e.
+[“hov3”,”hov2”]</p>
 </dd>
 </dl>
 <p>pandas series</p>
