@@ -86,7 +86,7 @@ class TransitNetwork(object):
 
     def _graph_shapes(self) -> None:
         existing_shapes = self.feed.shapes
-        graphed_shapes = pd.DataFrame()
+        # graphed_shapes = pd.DataFrame()
 
         # for shape_id in shapes:
         # TODO traverse point by point, mapping shortest path on graph,
@@ -95,16 +95,16 @@ class TransitNetwork(object):
         # rebuild rows in shapes dataframe and add to graphed_shapes
         # make graphed_shapes a GeoDataFrame
 
-        self.feed.shapes = graphed_shapes
+        # self.feed.shapes = graphed_shapes
 
     def _graph_stops(self) -> None:
         existing_stops = self.feed.stops
-        graphed_stops = pd.DataFrame()
+        # graphed_stops = pd.DataFrame()
 
         # for stop_id in stops:
         # TODO
 
-        self.feed.stops = graphed_stops
+        # self.feed.stops = graphed_stops
 
     def write(self, path: str = ".", filename: str = None) -> None:
         """
