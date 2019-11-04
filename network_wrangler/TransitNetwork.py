@@ -269,13 +269,10 @@ class TransitNetwork(object):
             if i["property"] in ["headway_secs"]:
                 self.apply_transit_feature_change_frequencies(trip_ids, i)
 
-            elif i['property'] in ['shapes']:
-                self.apply_transit_feature_change_shapes(trip_ids, i)
+            elif i["property"] in ["routing"]:
+                self.apply_transit_feature_change_routing(trip_ids, i)
 
-            elif i['property'] in ['stops']:
-                self.apply_transit_feature_change_stops(trip_ids, i)
-
-    def apply_transit_feature_change_shapes(
+    def apply_transit_feature_change_routing(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         shapes = self.feed.shapes
@@ -284,13 +281,6 @@ class TransitNetwork(object):
         # Grab only those records matching trip_ids (aka selection)
         shape_ids = trips[trips.trip_id.isin(trip_ids)].shape_id
 
-        # Convert the node IDs in properties to link IDs with lineStrings
-        links = self.road_net.links_df
-        link_ids = links[links[FK_ROAD_NODE_ID_IN_LINKS_DF].isin(properties['set'])]
-
-        # If 'existing' is specified, replace only that segment
-        # TODO
-
         # Replace
         for shape_id in shape_ids:
             # Pop the rows that match shape_id
@@ -298,10 +288,20 @@ class TransitNetwork(object):
             shapes[shapes.shape_id != shape_id]
 
             # Match sure they are ordered by shape_pt_sequence
-            this_shape = this_shape.sort_values(by=['shape_pt_sequence'])
+            this_shape = this_shape.sort_values(by=["shape_pt_sequence"])
 
-            # Grab list of link IDs and simplify to unique list
-            all_existing_link_ids = this_shape[PK_LINK_ID].unique()
+            # Grab list of node IDs
+            all_existing_link_ids = this_shape[PK_NODE_ID]
+
+            # If "existing" is specified, replace only that segment
+            # Else, replace the whole thing
+            if properties.get("existing") is not None:
+                # Match list
+                # TODO
+                # Sub in new node segment
+                all_existing_link_ids = properties["set"]
+            else:
+                all_existing_link_ids = properties["set"]
 
             # Create a new DataFrame
             this_shape = pd.DataFrame({
@@ -310,8 +310,8 @@ class TransitNetwork(object):
 
             # Join on linestring for each link
             this_shape.merge(
-                self.road_net.links_df[[PK_ROAD_NET_LINK_ID, 'geometry']],
-                how='left',
+                self.road_net.links_df[[PK_ROAD_NET_LINK_ID, "geometry"]],
+                how="left",
                 left_on=PK_LINK_ID, right_on=PK_ROAD_NET_LINK_ID,
             )
 
@@ -324,14 +324,13 @@ class TransitNetwork(object):
             # Add rows back into shapes
             shapes = pd.concat([shapes, this_shape])
 
+        # TODO If shape change impacts stops, make those changes too?
+
         # Replace self if in_place, else return
         if in_place:
             self.feed.shapes = shapes
         else:
             return shapes
-
-    def apply_transit_feature_change_stops() -> Union(None, TransitNetwork):
-        # TODO
 
     def apply_transit_feature_change_frequencies(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
