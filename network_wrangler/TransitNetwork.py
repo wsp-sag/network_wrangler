@@ -73,7 +73,7 @@ class TransitNetwork(object):
         return transit_network
 
     def set_graph(self, road_net: RoadwayNetwork,
-                  graph_shapes: bool = True, graph_stops: bool = True
+                  graph_shapes: bool = False, graph_stops: bool = False
                   ) -> None:
         self.road_net: RoadwayNetwork = road_net
         self.graph: nx.MultiDiGraph = RoadwayNetwork.ox_graph(
@@ -93,7 +93,7 @@ class TransitNetwork(object):
         # then append to a list
         # return total list of all link ids
         # rebuild rows in shapes dataframe and add to graphed_shapes
-        # TODO Make graphed_shapes a GeoDataFrame
+        # make graphed_shapes a GeoDataFrame
 
         self.feed.shapes = graphed_shapes
 
