@@ -9,5 +9,6 @@ dependencies:
 facility:
   trip_id: 14944022-JUN19-MVS-BUS-Weekday-01
 properties:
-  - property: shapes
-    set: 1800
+  - property: routing
+    existing: [-1930, -1931, 1932]
+    set: [-1930, 1931, 1932]
