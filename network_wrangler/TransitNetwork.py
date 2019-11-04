@@ -30,13 +30,7 @@ class TransitNetwork(object):
 
     """
     # PK = primary key, FK = foreign key
-    PK_LINK_ID = "LINK_ID"
-    PK_NODE_ID = "N"
-
-    PK_ROAD_NET_LINK_ID = "LINK_ID"
-    PK_ROAD_NET_NODE_ID = "travelModelId"
-
-    FK_ROAD_NODE_ID_IN_LINKS_DF = "A"
+    PK_NODE_ID = "shape_model_node_id"
 
     def __init__(self, feed: Feed = None, config: nx.DiGraph = None):
         """
