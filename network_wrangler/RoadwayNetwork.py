@@ -38,7 +38,7 @@ class RoadwayNetwork(object):
     CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
     EPSG = 4326
 
-    NODE_FOREIGN_KEY = "osmNodeId"
+    NODE_FOREIGN_KEY = "osm_node_id"
 
     SEARCH_BREADTH = 5
     MAX_SEARCH_BREADTH = 10
@@ -46,7 +46,7 @@ class RoadwayNetwork(object):
 
     SELECTION_REQUIRES = ["A", "B", "link"]
 
-    UNIQUE_LINK_IDENTIFIERS = ["LINK_ID", "ShStReferenceId"]
+    UNIQUE_model_link_idENTIFIERS = ["model_link_id", "ShStReferenceId"]
     UNIQUE_NODE_IDENTIFIERS = ["travelModelId"]
 
     def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
@@ -94,7 +94,7 @@ class RoadwayNetwork(object):
         with open(link_file) as f:
             link_json = json.load(f)
 
-        link_properties = pd.DataFrame(link_json["features"])
+        link_properties = pd.DataFrame(link_json)
         link_geometries = [
             LineString(
                 [
@@ -102,7 +102,7 @@ class RoadwayNetwork(object):
                     g["locationReferences"][1]["point"],
                 ]
             )
-            for g in link_json["features"]
+            for g in link_json
         ]
         links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
         links_df.crs = RoadwayNetwork.CRS
@@ -407,7 +407,7 @@ class RoadwayNetwork(object):
         node_foreign_key: str
             variable name for whatever is used by the u and v variable
             in the links_df file.  If nothing is specified, assume whatever
-            default is (usually osmNodeId)
+            default is (usually osm_node_id)
         """
 
         if not node_foreign_key:
@@ -466,7 +466,7 @@ class RoadwayNetwork(object):
     def build_selection_key(self, selection_dict):
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection_dict,
-            unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS
+            unique_model_link_identifiers=RoadwayNetwork.UNIQUE_model_link_idENTIFIERS
         )
 
         A_id, B_id = self.orig_dest_nodes_foreign_key(selection_dict)
@@ -485,7 +485,7 @@ class RoadwayNetwork(object):
               selection = [ {
                 #   a match condition for the from node using osm,
                 #   shared streets, or model node number
-                'from': {'osmid': '1234'},
+                'from': {'osm_model_link_id': '1234'},
                 #   a match for the to-node..
                 'to': {'shstid': '4321'},
                 #   a regex or match for facility condition
@@ -511,18 +511,18 @@ class RoadwayNetwork(object):
 
         # build a selection query based on the selection dictionary
         modes_to_network_variables = {
-            "drive": "isDriveLink",
+            "drive": "drive_access",
             "transit": "isTransitLink",
-            "walk": "isWalkLink",
-            "bike": "isBikeLink",
+            "walk": "walk_access",
+            "bike": "bike_access",
         }
 
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        unique_link_identifer_in_selection = set(RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS).issubset(selection_keys)
+        unique_model_link_identifer_in_selection = set(RoadwayNetwork.UNIQUE_model_link_idENTIFIERS).issubset(selection_keys)
 
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection,
-            unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS,
+            unique_model_link_identifiers=RoadwayNetwork.UNIQUE_model_link_idENTIFIERS,
             mode=modes_to_network_variables[search_mode]
         )
 
@@ -655,7 +655,7 @@ class RoadwayNetwork(object):
             except:
                 return False
 
-        if not unique_link_identifer_in_selection:
+        if not unique_model_link_identifer_in_selection:
             # find the node ids for the candidate links
             node_list_foreign_keys = list(candidate_links["u"]) + list(candidate_links["v"])
             i = 0
@@ -695,7 +695,7 @@ class RoadwayNetwork(object):
                 if len(selection["link"]) > 1:
                     resel_query = ProjectCard.build_link_selection_query(
                         selection=selection,
-                        unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS,
+                        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_model_link_idENTIFIERS,
                         mode=modes_to_network_variables[search_mode],
                         ignore=["name"],
                     )
@@ -838,14 +838,14 @@ class RoadwayNetwork(object):
             _apply_individual_change(project_card_dictionary)
 
     def apply_roadway_feature_change(
-        self, link_idx: list, properties: dict, in_place: bool = True
+        self, model_link_idx: list, properties: dict, in_place: bool = True
     ) -> Union(None, RoadwayNetwork):
         """
         Changes the roadway attributes for the selected features based on the
         project card information passed
 
         args:
-        link_idx : list
+        model_link_idx : list
             lndices of all links to apply change to
         properties : list of dictionarys
             roadway properties to change
@@ -864,7 +864,7 @@ class RoadwayNetwork(object):
             # if project card specifies an existing value in the network
             #   check and see if the existing value in the network matches
             if p.get("existing"):
-                network_values = self.links_df.loc[link_idx, attribute].tolist()
+                network_values = self.links_df.loc[model_link_idx, attribute].tolist()
                 if not set(network_values).issubset([p.get("existing")]):
                     WranglerLogger.warning(
                         "Existing value defined for {} in project card does "
@@ -874,32 +874,32 @@ class RoadwayNetwork(object):
 
             if in_place:
                 if "set" in p.keys():
-                    self.links_df.loc[link_idx, attribute] = p["set"]
+                    self.links_df.loc[model_link_idx, attribute] = p["set"]
                 else:
-                    self.links_df.loc[link_idx, attribute] = (
-                        self.links_df.loc[link_idx, attribute] + p["change"]
+                    self.links_df.loc[model_link_idx, attribute] = (
+                        self.links_df.loc[model_link_idx, attribute] + p["change"]
                     )
             else:
                 if i == 0:
                     updated_network = copy.deepcopy(self)
 
                 if "set" in p.keys():
-                    updated_network.links_df.loc[link_idx, attribute] = p["set"]
+                    updated_network.links_df.loc[model_link_idx, attribute] = p["set"]
                 else:
-                    updated_network.links_df.loc[link_idx, attribute] = (
-                        updated_network.links_df.loc[link_idx, attribute] + p["change"]
+                    updated_network.links_df.loc[model_link_idx, attribute] = (
+                        updated_network.links_df.loc[model_link_idx, attribute] + p["change"]
                     )
 
                 if i == len(properties) - 1:
                     return updated_network
 
     def apply_managed_lane_feature_change(
-        self, link_idx: list, properties: dict, in_place: bool = True
+        self, model_link_idx: list, properties: dict, in_place: bool = True
     ) -> Union(None, RoadwayNetwork):
         """
         Apply the managed lane feature changes to the roadway network
 
-        link_idx : list
+        model_link_idx : list
             lndices of all links to apply change to
         properties : list of dictionarys
             roadway properties to change
@@ -948,12 +948,12 @@ class RoadwayNetwork(object):
                 attr_value = 1
 
             if in_place:
-                self.links_df.loc[link_idx, attribute] = attr_value
+                self.links_df.loc[model_link_idx, attribute] = attr_value
             else:
                 if i == 0:
                     updated_network = copy.deepcopy(self)
 
-                updated_network.links_df.loc[link_idx, attribute] = attr_value
+                updated_network.links_df.loc[model_link_idx, attribute] = attr_value
 
                 if i == len(properties) - 1:
                     return updated_network
@@ -973,7 +973,7 @@ class RoadwayNetwork(object):
         # validate links dictonary
 
         # CHECKS:
-        # check if new link LINK_ID already exists?
+        # check if new link model_link_id already exists?
         # check if u and v nodes are already present or not?
 
         def _add_dict_to_df(df, new_dict):

@@ -8,14 +8,14 @@ dependencies:
   conflicts: []
 facility:
    link:
-     - osmid:
+     - osm_link_id:
         - '223371529' # 6th St E
    A:
-     osmNodeId: '187854529' # Jackson St
+     osm_node_id: '187854529' # Jackson St
    B:
-     osmNodeId: '187899923' # Robert St N
+     osm_node_id: '187899923' # Robert St N
 properties:
-  - property: LANES  #changes number of lanes 3 to 2 (reduction of 1)
+  - property: lanes  #changes number of lanes 3 to 2 (reduction of 1)
     existing: 3
     change: -1
 notes: Simple project example to do a road diet on 6th St E in front of MetCouncil

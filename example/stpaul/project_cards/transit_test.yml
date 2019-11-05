@@ -31,60 +31,58 @@ changes:
     property: headway_secs
 - category: Roadway Deletion
   links:
-    LINK_ID:
+    model_link_id:
     - 281
     - 477533
 - category: New Roadway
   links:
   - A: 3230
     AADT: 0
-    AM_CNT: 0
+    count_AM: 0
     B: 3262
-    BIKE: 3
-    DISTANCE: 0.10462
-    DY_CNT: 0
+    bike_facility: 3
+    distance: 0.10462
+    count_daily: 0
     HOV: 0
-    LANES: 1
-    LINK_ID: 999998
-    MD_CNT: 0
-    NT_CNT: 0
-    PM_CNT: 0
-    RC_NUM: 40
-    T_MANTIME: 0.0
-    T_PRIORITY: 0
-    isBikeLink: 1
-    isDriveLink: 1
-    isTranAcce: 0
-    isTranLink: 0
-    isWalkLink: 1
+    lanes: 1
+    model_link_id: 999998
+    count_MD: 0
+    count_NT: 0
+    count_PM: 0
+    roadway_class: 40
+    traveltime_assert: 0.0
+    transit_priority: 0
+    bike_access: 1
+    drive_access: 1
+    transit_access: 0
+    walk_access: 1
   - A: 3262
     AADT: 0
-    AM_CNT: 0
+    count_AM: 0
     B: 3230
-    BIKE: 3
-    DISTANCE: 0.10462
-    DY_CNT: 0
-    HOV: 0
-    LANES: 1
-    LINK_ID: 999997
-    MD_CNT: 0
-    NT_CNT: 0
-    PM_CNT: 0
-    RC_NUM: 40
-    T_MANTIME: 0.0
-    T_PRIORITY: 0
-    isBikeLink: 1
-    isDriveLink: 1
-    isTranAcce: 0
-    isTranLink: 0
-    isWalkLink: 1
+    bike_facility: 3
+    distance: 0.10462
+    count_daily: 0
+    access: 0
+    lanes: 1
+    model_link_id: 999997
+    count_MD: 0
+    count_NT: 0
+    count_PM: 0
+    roadway_class: 40
+    traveltime_assert: 0.0
+    transit_priority: 0
+    bike_access: 1
+    drive_access: 1
+    transit_access: 0
+    walk_access: 1
   nodes:
   - X: -93.18389
     Y: 44.96898
-    isBikeNode: 0
-    isDriveNode: 1
-    isTranNode: 0
-    isWalkNode: 0
+    bike_node: 0
+    drive_node: 1
+    transit_node: 0
+    walk_node: 0
     travelModelId: 354388
 - category: Roadway Attribute Change
   facility:
@@ -95,23 +93,23 @@ changes:
       travelModelId:
       - 3262
     link:
-      LINK_ID:
+      model_link_id:
       - 280
   properties:
   - existing: 20
-    property: RC_NUM
+    property: roadway_class
     set: 40
   - existing: 0
-    property: BIKE
+    property: bike_facility
     set: 3
   - existing: 0
-    property: isWalkLink
+    property: walk_access
     set: 1
   - existing: 0
-    property: isBikeLink
+    property: bike_access
     set: 1
   - existing: 112.8086679896
-    property: DISTANCE
+    property: distance
     set: 10.0
 - category: Roadway Attribute Change
   facility:
@@ -122,23 +120,23 @@ changes:
       travelModelId:
       - 68075
     link:
-      LINK_ID:
+      model_link_id:
       - 282
   properties:
   - existing: 20
-    property: RC_NUM
+    property: roadway_class
     set: 40
   - existing: 0
-    property: BIKE
+    property: bike_facility
     set: 3
   - existing: 0
-    property: isWalkLink
+    property: walk_access
     set: 1
   - existing: 0
-    property: isBikeLink
+    property: bike_access
     set: 1
   - existing: 124.4480595018
-    property: DISTANCE
+    property: distance
     set: 10.0
 - category: Roadway Attribute Change
   facility:
@@ -149,14 +147,14 @@ changes:
       travelModelId:
       - 52771
     link:
-      LINK_ID:
+      model_link_id:
       - 224
   properties:
   - existing: 30
-    property: RC_NUM
+    property: roadway_class
     set: 40
   - existing: 80.9850385918
-    property: DISTANCE
+    property: distance
     set: 0.10462
 project: USER TO define
 valid: false

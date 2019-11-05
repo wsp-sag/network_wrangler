@@ -116,29 +116,29 @@ def test_select_roadway_features(request):
     test_selections = {
         "1. simple": {
             "link": [{"name": ["6th", "Sixth", "sixth"]}],
-            "A": {"osmNodeId": "187899923"},
-            "B": {"osmNodeId": "187865924"},
+            "A": {"osm_node_id": "187899923"},
+            "B": {"osm_node_id": "187865924"},
             "answer": ["187899923", "187858777", "187923585", "187865924"],
         },
         "2. farther": {
             "link": [{"name": ["6th", "Sixth", "sixth"]}],
-            "A": {"osmNodeId": "187899923"},  # start searching for segments at A
-            "B": {"osmNodeId": "187942339"},
+            "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+            "B": {"osm_node_id": "187942339"},
         },
         "3. multi-criteria": {
-            "link": [{"name": ["6th", "Sixth", "sixth"]}, {"LANES": [1, 2]}],
-            "A": {"osmNodeId": "187899923"},  # start searching for segments at A
-            "B": {"osmNodeId": "187942339"},
+            "link": [{"name": ["6th", "Sixth", "sixth"]}, {"lanes": [1, 2]}],
+            "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+            "B": {"osm_node_id": "187942339"},
         },
         "4. reference": {
             "link": [{"name": ["I 35E"]}],
-            "A": {"osmNodeId": "961117623"},  # start searching for segments at A
-            "B": {"osmNodeId": "2564047368"},
+            "A": {"osm_node_id": "961117623"},  # start searching for segments at A
+            "B": {"osm_node_id": "2564047368"},
         },
         "5. unique-identifier": {
-            "link": [{"name": ["6th", "Sixth", "sixth"]}, {"LINK_ID": [134574]}, {"LANES": [1, 2]}],
-            "A": {"osmNodeId": "187899923"},  # start searching for segments at A
-            "B": {"osmNodeId": "187942339"},
+            "link": [{"name": ["6th", "Sixth", "sixth"]}, {"LINK_ID": [134574]}, {"lanes": [1, 2]}],
+            "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+            "B": {"osm_node_id": "187942339"},
         },
     }
 
@@ -148,7 +148,7 @@ def test_select_roadway_features(request):
         print("Features selected:", len(selected_link_indices))
 
         if "answer" in sel.keys():
-            selected_nodes = [str(sel["A"]["osmNodeId"])] + net.links_df.loc[
+            selected_nodes = [str(sel["A"]["osm_node_id"])] + net.links_df.loc[
                 selected_link_indices, "v"
             ].tolist()
             # print("Nodes selected: ",selected_nodes)
@@ -350,7 +350,7 @@ def test_bad_properties_statements(request):
         fast=True,
     )
 
-    ok_properties_change = [{"property": "LANES", "change": 1}]
+    ok_properties_change = [{"property": "lanes", "change": 1}]
     bad_properties_change = [{"property": "my_random_var", "change": 1}]
     bad_properties_existing = [{"property": "my_random_var", "existing": 1}]
 
@@ -522,7 +522,7 @@ def test_export_network_to_csv(request):
 
 
 variable_queries = [
-    {"v":"LANES",'category': None, "time_period": ['7:00', '9:00']},
+    {"v":"lanes",'category': None, "time_period": ['7:00', '9:00']},
     {"v":"ML_PRICE", 'category': "sov", 'time_period': ['7:00', '9:00']},
     {"v":"ML_PRICE", 'category': ["hov3","hov2"], 'time_period': ['7:00', '9:00']}
 ]

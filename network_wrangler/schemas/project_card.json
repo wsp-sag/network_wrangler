@@ -23,7 +23,7 @@
       "enum": [
         "Roadway Property Change",
         "Transit Service Property Change",
-        "Parallel Managed Lanes"
+        "Parallel Managed lanes"
       ],
       "title": "Project Category"
     },
@@ -109,7 +109,7 @@
               "required": ["name"]
             },
             {
-              "required": ["osmid"]
+              "required": ["osm_link_id"]
             }
           ],
           "properties": {
@@ -126,7 +126,7 @@
                 }
               ]
             },
-            "osmid": {
+            "osm_link_id": {
               "type": "string"
             }
           }
@@ -136,7 +136,7 @@
           "additionalProperties": false,
           "title": "Road A Node",
           "properties": {
-            "osmNodeId": {
+            "osm_node_id": {
               "type": "string"
             }
           }
@@ -146,7 +146,7 @@
           "additionalProperties": false,
           "title": "Roadway B Node",
           "properties": {
-            "osmNodeId": {
+            "osm_node_id": {
               "type": "string"
             }
           }
@@ -200,7 +200,7 @@
             "type": "string",
             "title": "Property Name to Change (Case Sensitive)",
             "examples": [
-              "headway_secs", "LANES"
+              "headway_secs", "lanes"
             ]
           },
           "existing": {

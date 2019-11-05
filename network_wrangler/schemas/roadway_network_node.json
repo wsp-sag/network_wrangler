@@ -85,12 +85,12 @@
             "title": "The Properties Schema",
             "required": [
               "id",
-              "osmNodeId",
+              "osm_node_id",
               "travelModelId",
-              "isTranNode",
-              "isDriveNode",
-              "isWalkNode",
-              "isBikeNode",
+              "transit_node",
+              "drive_node",
+              "walk_node",
+              "bike_node",
               "outboundReferenceId",
               "inboundReferenceId"
             ],
@@ -105,10 +105,10 @@
                 ],
                 "pattern": "^(.*)$"
               },
-              "osmNodeId": {
-                "$id": "#/properties/features/items/properties/properties/properties/osmNodeId",
+              "osm_node_id": {
+                "$id": "#/properties/features/items/properties/properties/properties/osm_node_id",
                 "type": "string",
-                "title": "The Osmnodeid Schema",
+                "title": "The osm_node_id Schema",
                 "default": "",
                 "examples": [
                   "954734870"
@@ -124,8 +124,8 @@
                   3494
                 ]
               },
-              "isTranNode": {
-                "$id": "#/properties/features/items/properties/properties/properties/isTranNode",
+              "transit_node": {
+                "$id": "#/properties/features/items/properties/properties/properties/transit_node",
                 "type": "integer",
                 "title": "The Istrannode Schema",
                 "default": 0,
@@ -133,8 +133,8 @@
                   0
                 ]
               },
-              "isDriveNode": {
-                "$id": "#/properties/features/items/properties/properties/properties/isDriveNode",
+              "drive_node": {
+                "$id": "#/properties/features/items/properties/properties/properties/drive_node",
                 "type": "integer",
                 "title": "The Isdrivenode Schema",
                 "default": 0,
@@ -142,8 +142,8 @@
                   1
                 ]
               },
-              "isWalkNode": {
-                "$id": "#/properties/features/items/properties/properties/properties/isWalkNode",
+              "walk_node": {
+                "$id": "#/properties/features/items/properties/properties/properties/walk_node",
                 "type": "integer",
                 "title": "The Iswalknode Schema",
                 "default": 0,
@@ -151,8 +151,8 @@
                   0
                 ]
               },
-              "isBikeNode": {
-                "$id": "#/properties/features/items/properties/properties/properties/isBikeNode",
+              "bike_node": {
+                "$id": "#/properties/features/items/properties/properties/properties/bike_node",
                 "type": "integer",
                 "title": "The Isbikenode Schema",
                 "default": 0,

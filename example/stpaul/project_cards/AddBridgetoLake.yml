@@ -3,45 +3,43 @@ changes:
   links:
   - A: 36622
     AADT: 1800
-    AM_CNT: 450
+    count_AM: 450
     B: 125892
-    BIKE: 0
-    DISTANCE: 0.8016
-    DY_CNT: 1800
-    HOV: 0
-    LANES: 1
-    LINK_ID: 404982
-    MD_CNT: 450
-    NT_CNT: 450
-    PM_CNT: 450
-    RC_NUM: 30
-    T_MANTIME: 0.0
-    T_PRIORITY: 0
-    isBikeLink: 1
-    isDriveLink: 1
-    isTranAcce: 0
-    isTranLink: 0
-    isWalkLink: 0
+    bike_facility: 0
+    distance: 0.8016
+    count_daily: 1800
+    access: 0
+    lanes: 1
+    model_link_id: 404982
+    count_md: 450
+    count_nt: 450
+    count_pm: 450
+    roadway_class: 30
+    traveltime_assert: 0.0
+    transit_priority: 0
+    bike_access: 1
+    drive_access: 1
+    transit_access: 0
+    walk_access: 0
   - A: 125892
     AADT: 0
-    AM_CNT: 0
+    count_am: 0
     B: 36622
-    BIKE: 0
-    DISTANCE: 0.8016
-    DY_CNT: 0
-    HOV: 0
-    LANES: 1
-    LINK_ID: 407042
-    MD_CNT: 0
-    NT_CNT: 0
-    PM_CNT: 0
-    RC_NUM: 50
-    T_MANTIME: 0.0
-    T_PRIORITY: 0
-    isBikeLink: 1
-    isDriveLink: 1
-    isTranAcce: 0
-    isTranLink: 0
-    isWalkLink: 0
+    bike_facility: 0
+    distance: 0.8016
+    count_daily: 0
+    access: 0
+    lanes: 1
+    model_link_id: 407042
+    count_MD: 0
+    count_NT: 0
+    count_PN: 0
+    roadway_class: 50
+    traveltime_assert: 0.0
+    transit_priority: 0
+    bike_access: 1
+    drive_access: 1
+    transit_access: 0
+    walk_access: 0
 project: TO DO User Define
 valid: false

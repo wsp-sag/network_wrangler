@@ -12,12 +12,12 @@
           },
           "properties": {
               "id": "0751f5ce12472360fed0d0e80ceae35c",
-              "osmNodeId": "954734870",
+              "osm_node_id": "954734870",
               "travelModelId": 3494,
-              "isTranNode": 0,
-              "isDriveNode": 1,
-              "isWalkNode": 0,
-              "isBikeNode": 0,
+              "transit_node": 0,
+              "drive_node": 1,
+              "walk_node": 0,
+              "bike_node": 0,
               "outboundReferenceId": [
                   "a2e58a2801f5994637dfdbab943c503a"
               ],
@@ -38,12 +38,12 @@
           },
           "properties": {
               "id": "5c9e5e0f2e6d67208f848f22a6d03700",
-              "osmNodeId": "1894068489",
+              "osm_node_id": "1894068489",
               "travelModelId": 121739,
-              "isTranNode": 0,
-              "isDriveNode": 1,
-              "isWalkNode": 0,
-              "isBikeNode": 0,
+              "transit_node": 0,
+              "drive_node": 1,
+              "walk_node": 0,
+              "bike_node": 0,
               "outboundReferenceId": [
                   "0a9b7767fbaf5658e8543150333f99bf"
               ],
@@ -64,12 +64,12 @@
         },
         "properties": {
             "id": "4d0231aa0ebb779f142c2518703ee481",
-            "osmNodeId": "493882040",
+            "osm_node_id": "493882040",
             "travelModelId": 3230,
-            "isTranNode": 0,
-            "isDriveNode": 1,
-            "isWalkNode": 1,
-            "isBikeNode": 1,
+            "transit_node": 0,
+            "drive_node": 1,
+            "walk_node": 1,
+            "bike_node": 1,
             "outboundReferenceId": [
                 "6a22969708104ae2497244f3d079381d"
             ],
@@ -89,12 +89,12 @@
         },
         "properties": {
             "id": "3654951b676940911fe5021b93c90cc5",
-            "osmNodeId": "187879468",
+            "osm_node_id": "187879468",
             "travelModelId": 52771,
-            "isTranNode": 0,
-            "isDriveNode": 1,
-            "isWalkNode": 1,
-            "isBikeNode": 1,
+            "transit_node": 0,
+            "drive_node": 1,
+            "walk_node": 1,
+            "bike_node": 1,
             "outboundReferenceId": [
                 "d252ddc3b6a8b4f29a8e05ce1ba8c587",
                 "bfc504a9a8004eadd9d688acb5f4a713",

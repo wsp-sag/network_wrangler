@@ -136,7 +136,7 @@ class TransitNetwork(object):
                 )
             elif project_dictionary["category"].lower() == "parallel managed lanes":
                 WranglerLogger.warning(
-                    "Parallel Managed Lanes not implemented yet in Transit"
+                    "Parallel Managed lanes not implemented yet in Transit"
                 )
                 ##TODO
             else:

@@ -4,13 +4,13 @@ tags:
 changes:
   - category: Roadway Deletion
     links:
-      LINK_ID:
+      model_link_id:
         - 2171
         - 25856
         - 383747
         - 383790
     nodes:
-      travelModelId:
+      model_node_id:
         - 16214
         - 4336
         - 12590
@@ -21,33 +21,33 @@ changes:
     links:
       - u: 354386
         v: 16214
-        isBikeLink: 1
-        isDriveLink: 1
-        isTranLink: 0
-        isWalkLink: 0
-        LANES: 1
-        LINK_ID: 2171
+        bike_access: 1
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+        lanes: 1
+        model_link_id: 2171
       - u: 16214
         v: 354386
-        isBikeLink: 1
-        isDriveLink: 1
-        isTranLink: 0
-        isWalkLink: 0
-        LANES: 1
-        LINK_ID: 25856
+        bike_access: 1
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+        lanes: 1
+        model_link_id: 25856
     nodes:
-      - isBikeNode: 1
-        isDriveNode: 1
-        isTranNode: 0
-        isWalkNode: 1
-        travelModelId: 354386
+      - bike_node: 1
+        drive_node: 1
+        transit_node: 0
+        walk_node: 1
+        model_node_id: 354386
         X: -93.14412
         Y: 44.87497
-      - isBikeNode: 1
-        isDriveNode: 1
-        isTranNode: 0
-        isWalkNode: 1
-        travelModelId: 354387
+      - bike_node: 1
+        drive_node: 1
+        transit_node: 0
+        walk_node: 1
+        model_node_id: 354387
         X: -93.14189
         Y: 44.87644
 notes: project card with multiple category of add and delete changes
