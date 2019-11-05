@@ -9,6 +9,7 @@ import re
 from typing import Tuple, Union
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 import partridge as ptg
 from partridge.config import default_config
@@ -30,7 +31,8 @@ class TransitNetwork(object):
 
     """
     # PK = primary key, FK = foreign key
-    PK_NODE_ID = "shape_model_node_id"
+    FK_SHAPES = "shape_model_node_id"
+    FK_STOPS = "model_node_id"
 
     def __init__(self, feed: Feed = None, config: nx.DiGraph = None):
         """
@@ -276,61 +278,145 @@ class TransitNetwork(object):
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         shapes = self.feed.shapes
+        stop_times = self.feed.stop_times
+        stops = self.feed.stops
         trips = self.feed.trips
 
-        # Grab only those records matching trip_ids (aka selection)
-        shape_ids = trips[trips.trip_id.isin(trip_ids)].shape_id
+        # A negative sign in "set" indicates a traversed node without a stop
+        # If any positive numbers, stops have changed
+        stops_change = False
+        if any(x > 0 for x in properties["set"]):
+            # Simplify "set" and "existing" to only stops
+            properties["set_stops"] = [
+                str(i) for i in properties["set"] if i > 0
+            ]
+            if properties.get("existing") is not None:
+                properties["existing_stops"] = [
+                    str(i) for i in properties["existing"] if i > 0
+                ]
+            stops_change = True
 
-        # Replace
+        # Convert ints to objects
+        properties["set_shapes"] = [str(abs(i)) for i in properties["set"]]
+        properties["existing_shapes"] = [
+            str(abs(i)) for i in properties["existing"]
+        ]
+
+        # Replace shapes records
+        shape_ids = trips[trips.trip_id.isin(trip_ids)].shape_id
         for shape_id in shape_ids:
             # Pop the rows that match shape_id
             this_shape = shapes[shapes.shape_id == shape_id]
-            shapes[shapes.shape_id != shape_id]
 
-            # Match sure they are ordered by shape_pt_sequence
+            # Make sure they are ordered by shape_pt_sequence
             this_shape = this_shape.sort_values(by=["shape_pt_sequence"])
 
-            # Grab list of node IDs
-            all_existing_link_ids = this_shape[PK_NODE_ID]
+            # Build a pd.DataFrame of new shape records
+            new_shape_rows = pd.DataFrame({
+                "shape_id": shape_id,
+                "shape_pt_lat": None,  # FIXME Populate from self.road_net?
+                "shape_pt_lon": None,  # FIXME
+                "shape_osm_node_id": None,  # FIXME
+                "shape_pt_sequence": None,
+                FK_SHAPES: properties["set_shapes"]
+            })
 
             # If "existing" is specified, replace only that segment
             # Else, replace the whole thing
             if properties.get("existing") is not None:
                 # Match list
-                # TODO
-                # Sub in new node segment
-                all_existing_link_ids = properties["set"]
+                nodes = this_shape[FK_SHAPES].tolist()
+                index_replacement_starts = nodes.index(
+                    properties["existing_shapes"][0]
+                )
+                index_replacement_ends = nodes.index(
+                    properties["existing_shapes"][-1]
+                )
+                this_shape = pd.concat([
+                    this_shape.iloc[:index_replacement_starts-1],
+                    new_shape_rows,
+                    this_shape.iloc[index_replacement_ends+1:]
+                ], sort=False, ignore_index=True)
             else:
-                all_existing_link_ids = properties["set"]
+                this_shape = new_shape_rows
 
-            # Create a new DataFrame
-            this_shape = pd.DataFrame({
-                PK_LINK_ID: all_existing_link_ids
-            })
-
-            # Join on linestring for each link
-            this_shape.merge(
-                self.road_net.links_df[[PK_ROAD_NET_LINK_ID, "geometry"]],
-                how="left",
-                left_on=PK_LINK_ID, right_on=PK_ROAD_NET_LINK_ID,
-            )
-
-            # Convert GeoDataFrame into DataFrame by exploding each point w/ ID
-            # TODO
-
-            # Add shape_id to all rows and point sequence
-            # TODO
+            # Renumber shape_pt_sequence
+            this_shape["shape_pt_sequence"] = np.arange(len(this_shape))
 
             # Add rows back into shapes
-            shapes = pd.concat([shapes, this_shape])
+            shapes = pd.concat([
+                shapes[shapes.shape_id != shape_id],
+                this_shape
+            ], ignore_index=True)
 
-        # TODO If shape change impacts stops, make those changes too?
+        # Replace stop_times and stops records (if required)
+        if stops_change:
+            # If node IDs in properties["set_stops"] are not already
+            # in stops.txt, create a new stop_id for them in stops
+            if any(x not in stops[FK_STOPS] for x in properties["set_stops"]):
+                # FIXME
+                WranglerLogger.error(
+                    "Node ID is used that does not have an existing stop.")
+                raise ValueError
+
+            # Loop through all the trip_ids
+            for trip_id in trip_ids:
+                # Pop the rows that match trip_id
+                this_stoptime = stop_times[stop_times.trip_id == trip_id]
+                stop_times = stop_times[stop_times.trip_id != trip_id]
+
+                this_stops = stops[stops.stop_id.isin(this_stoptime.stop_id)]
+                stops = stops[~stops.stop_id.isin(this_stoptime.stop_id)]
+
+                # Make sure the stop_times are ordered by stop_sequence
+                this_stoptime = this_stoptime.sort_values(by=["stop_sequence"])
+
+                # Merge on node IDs from stops.txt to stop_times.txt
+                this_stoptime = this_stoptime.merge(
+                    this_stops[["stop_id", FK_STOPS]],
+                    how="left",
+                    left_on="stop_id", right_on="stop_id"
+                )
+
+                # If "existing_stops" is specified, replace only that segment
+                # Else, replace the whole thing
+                if properties.get("existing_stops") is not None:
+                    # Match list
+                    # TODO
+                    # Sub in new node segment
+                    this_routing = properties["set_stops"]
+                else:
+                    this_routing = properties["set_stops"]
+
+                # Grab list of stop IDs (both stops and stop_times use stop_id)
+                this_routing = this_stoptime["stop_id"]
+
+                # Create a new DataFrame
+                this_stoptime = pd.DataFrame({
+                    "trip_id": trip_id,
+                    FK_SHAPES: this_routing
+                })
+
+                # Convert GeoDataFrame into DataFrame by exploding each point w/ ID
+                # TODO
+
+                # Add shape_id to all rows and point sequence
+                # TODO
+
+                # Add rows back into shapes
+                stop_times = pd.concat([stop_times, this_stoptime])
 
         # Replace self if in_place, else return
         if in_place:
             self.feed.shapes = shapes
+            self.feed.stops = stops
+            self.feed.stop_times = stop_times
         else:
-            return shapes
+            updated_network = copy.deepcopy(self)
+            updated_network.feed.shapes = shapes
+            updated_network.feed.stops = stops
+            updated_network.feed.stop_times = stop_times
+            return updated_network
 
     def apply_transit_feature_change_frequencies(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True

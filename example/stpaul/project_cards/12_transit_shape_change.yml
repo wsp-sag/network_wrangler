@@ -10,5 +10,5 @@ facility:
   trip_id: 14944022-JUN19-MVS-BUS-Weekday-01
 properties:
   - property: routing
-    existing: [-1930, -1931, 1932]
-    set: [-1930, 1931, 1932]
+    existing: [139930, -138453, -47332, -19881, -15923, -147715, 33005]
+    set: [139930]
