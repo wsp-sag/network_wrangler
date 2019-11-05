@@ -204,14 +204,34 @@
             ]
           },
           "existing": {
-            "type": "integer",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            ],
             "title": "Existing Property",
             "examples": [
               3
             ]
           },
           "set": {
-            "type": "integer",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            ],
             "title": "Set Property without Regard to Existing",
             "examples": [
               2
