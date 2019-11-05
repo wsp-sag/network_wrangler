@@ -282,7 +282,6 @@ class TransitNetwork(object):
         shapes = self.feed.shapes
         stop_times = self.feed.stop_times
         stops = self.feed.stops
-        trips = self.feed.trips
 
         # A negative sign in "set" indicates a traversed node without a stop
         # If any positive numbers, stops have changed
@@ -305,7 +304,9 @@ class TransitNetwork(object):
         ]
 
         # Replace shapes records
-        shape_ids = trips[trips.trip_id.isin(trip_ids)].shape_id
+        shape_ids = self.feed.trips[
+            self.feed.trips.trip_id.isin(trip_ids)
+        ].shape_id
         for shape_id in shape_ids:
             # Pop the rows that match shape_id
             this_shape = shapes[shapes.shape_id == shape_id]
@@ -423,12 +424,12 @@ class TransitNetwork(object):
         # Replace self if in_place, else return
         if in_place:
             self.feed.shapes = shapes
-            #self.feed.stops = stops
+            self.feed.stops = stops
             self.feed.stop_times = stop_times
         else:
             updated_network = copy.deepcopy(self)
             updated_network.feed.shapes = shapes
-            #updated_network.feed.stops = stops
+            updated_network.feed.stops = stops
             updated_network.feed.stop_times = stop_times
             return updated_network
 
