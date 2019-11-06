@@ -84,9 +84,8 @@
             "type": "object",
             "title": "The Properties Schema",
             "required": [
-              "id",
+              "shstRefId",
               "osm_node_id",
-              "travelModelId",
               "transit_node",
               "drive_node",
               "walk_node",
@@ -115,7 +114,7 @@
                 ],
                 "pattern": "^(.*)$"
               },
-              "travelModelId": {
+              "model_node_id": {
                 "$id": "#/properties/features/items/properties/properties/properties/travelModelId",
                 "type": "integer",
                 "title": "The Travelmodelid Schema",
