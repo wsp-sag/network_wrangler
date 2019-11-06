@@ -3,9 +3,9 @@ category: Parallel Managed lanes
 tags:
    - 'example'
 dependencies:
-  prerequisites: None
-  corequisites: None
-  conflicts: None
+  prerequisites: []
+  corequisites: []
+  conflicts: []
 facility:
   link:
     - name:
