@@ -11,9 +11,9 @@
               ]
           },
           "properties": {
-              "id": "0751f5ce12472360fed0d0e80ceae35c",
+              "shstRefId": "0751f5ce12472360fed0d0e80ceae35c",
               "osm_node_id": "954734870",
-              "travelModelId": 3494,
+              "model_node_id": 3494,
               "transit_node": 0,
               "drive_node": 1,
               "walk_node": 0,
@@ -37,9 +37,9 @@
               ]
           },
           "properties": {
-              "id": "5c9e5e0f2e6d67208f848f22a6d03700",
+              "shstRefId": "5c9e5e0f2e6d67208f848f22a6d03700",
               "osm_node_id": "1894068489",
-              "travelModelId": 121739,
+              "model_node_id": 121739,
               "transit_node": 0,
               "drive_node": 1,
               "walk_node": 0,
@@ -63,9 +63,9 @@
             ]
         },
         "properties": {
-            "id": "4d0231aa0ebb779f142c2518703ee481",
+            "shstRefId": "4d0231aa0ebb779f142c2518703ee481",
             "osm_node_id": "493882040",
-            "travelModelId": 3230,
+            "model_node_id": 3230,
             "transit_node": 0,
             "drive_node": 1,
             "walk_node": 1,
@@ -88,9 +88,9 @@
             ]
         },
         "properties": {
-            "id": "3654951b676940911fe5021b93c90cc5",
+            "shstRefId": "3654951b676940911fe5021b93c90cc5",
             "osm_node_id": "187879468",
-            "travelModelId": 52771,
+            "model_node_id": 52771,
             "transit_node": 0,
             "drive_node": 1,
             "walk_node": 1,
