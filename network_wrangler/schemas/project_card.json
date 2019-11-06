@@ -110,6 +110,9 @@
             },
             {
               "required": ["osm_link_id"]
+            },
+            {
+              "required": ["model_link_id"]
             }
           ],
           "properties": {
