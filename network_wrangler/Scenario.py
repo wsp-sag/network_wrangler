@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-import os, sys, glob
+import os
+import sys
+import glob
 from .ProjectCard import ProjectCard
 from collections import OrderedDict
 from .Logger import WranglerLogger
@@ -92,9 +94,9 @@ class Scenario(object):
         validate:
           boolean indicating whether to validate the base network or not
         """
-        base_network_shape_file = os.path.join(base_dir,base_shape_name)
-        base_network_link_file = os.path.join(base_dir,base_link_name)
-        base_network_node_file = os.path.join(base_dir,base_node_name)
+        base_network_shape_file = os.path.join(base_dir, base_shape_name)
+        base_network_link_file = os.path.join(base_dir, base_link_name)
+        base_network_node_file = os.path.join(base_dir, base_node_name)
 
         road_net = RoadwayNetwork.read(
             link_file=base_network_link_file,
@@ -104,6 +106,7 @@ class Scenario(object):
         )
 
         transit_net = TransitNetwork.read(base_dir)
+        transit_net.set_roadnet(road_net)
 
         base_scenario = {"road_net": road_net, "transit_net": transit_net}
 
@@ -115,7 +118,7 @@ class Scenario(object):
         card_directory: str = "",
         tags: [str] = None,
         project_cards_list=[],
-        glob_search = '',
+        glob_search='',
     ) -> Scenario:
         """
         Validates project cards with a specific tag from the specified folder or
@@ -182,8 +185,7 @@ class Scenario(object):
                 }
             )
 
-
-    def add_project_cards_from_directory(self, folder: str, glob_search = ''):
+    def add_project_cards_from_directory(self, folder: str, glob_search=''):
         """
         Adds projects cards to the scenario.
         A folder is provided to look for project cards and if applicable, a glob-style search.
@@ -202,14 +204,14 @@ class Scenario(object):
             for file in glob.iglob(os.path.join(folder, glob_search)):
                 if not file.endswith(".yml") or file.endswith(".yaml"):
                     continue
-                else: self.add_project_card_from_file(file)
+                else:
+                    self.add_project_card_from_file(file)
         else:
             for file in os.listdir(folder):
                 if not file.endswith(".yml") or file.endswith(".yaml"):
                     continue
-                else: self.add_project_card_from_file(os.path.join(folder, file))
-
-
+                else:
+                    self.add_project_card_from_file(os.path.join(folder, file))
 
     def add_project_cards_from_tags(self, folder: str, tags: [str] = []):
         """
@@ -366,7 +368,7 @@ class Scenario(object):
             for project_name in sorted_project_names
         ]
 
-        ## TODO
+        # TODO
         #assert len(sorted_project_cards) == len(self.project_cards)
 
         self.prerequisites_sorted = True

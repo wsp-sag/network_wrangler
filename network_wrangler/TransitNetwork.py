@@ -74,9 +74,9 @@ class TransitNetwork(object):
 
         return transit_network
 
-    def set_graph(self, road_net: RoadwayNetwork,
-                  graph_shapes: bool = False, graph_stops: bool = False
-                  ) -> None:
+    def set_roadnet(self, road_net: RoadwayNetwork,
+                    graph_shapes: bool = False, graph_stops: bool = False
+                    ) -> None:
         self.road_net: RoadwayNetwork = road_net
         self.graph: nx.MultiDiGraph = RoadwayNetwork.ox_graph(
             road_net.nodes_df, road_net.links_df
