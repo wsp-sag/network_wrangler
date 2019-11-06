@@ -39,6 +39,7 @@ class RoadwayNetwork(object):
     EPSG = 4326
 
     NODE_FOREIGN_KEY = "osm_node_id"
+    LINK_FOREIGN_KEY = ("u","v")
 
     SEARCH_BREADTH = 5
     MAX_SEARCH_BREADTH = 10
@@ -46,8 +47,8 @@ class RoadwayNetwork(object):
 
     SELECTION_REQUIRES = ["A", "B", "link"]
 
-    UNIQUE_model_link_idENTIFIERS = ["model_link_id", "ShStReferenceId"]
-    UNIQUE_NODE_IDENTIFIERS = ["travelModelId"]
+    UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id", "ShStReferenceId"]
+    UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
 
     def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
         """
