@@ -71,8 +71,9 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def read(
-        link_file: str, node_file: str, shape_file: str, fast: bool = False
+        link_file: str, node_file: str, shape_file: str, fast: bool = True
     ) -> RoadwayNetwork:
+        ##TODO turn off fast=True as default
         """
         Reads a network from the roadway network standard
         Validates that it conforms to the schema
@@ -562,7 +563,7 @@ class RoadwayNetwork(object):
 
             # if the query doesn't come back with something from 'name'
             # try it again with 'ref' instead
-            if selection_has_name_key:
+            if selection_has_name_key and "ref" in self.links_df.columns:
                 sel_query = sel_query.replace("name", "ref")
 
                 self.selections[sel_key]["candidate_links"] = self.links_df.query(

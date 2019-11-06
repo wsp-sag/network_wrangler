@@ -28,27 +28,19 @@
         "type": "object",
         "title": "The Items Schema",
         "required": [
-          "id",
-          "geometryId",
+          "shstRefId",
+          "shstGeometryId",
           "access",
           "area",
-          "bridge",
           "highway",
-          "junction",
-          "key",
-          "OSMlanes",
-          "length",
+          "lanes",
+          "distance",
           "maxspeed",
           "name",
           "oneway",
           "osm_link_id",
-          "ref",
-          "service",
-          "tunnel",
           "u",
           "v",
-          "width",
-          "LINK_ID",
           "lanes",
           "transit_access",
           "drive_access",
@@ -57,20 +49,20 @@
           "locationReferences"
         ],
         "properties": {
-          "id": {
-            "$id": "#/properties/features/items/properties/id",
+          "shstRefId": {
+            "$id": "#/properties/features/items/properties/shstRefId",
             "type": ["string", "null"],
-            "title": "The Id Schema",
+            "title": "The shstRefId Schema",
             "default": "",
             "examples": [
               "6a22969708104ae2497244f3d079381d"
             ],
             "pattern": "^(.*)$"
           },
-          "geometryId": {
-            "$id": "#/properties/features/items/properties/geometryId",
+          "shstGeometryId": {
+            "$id": "#/properties/features/items/properties/shstGeometryId",
             "type": ["string", "null"],
-            "title": "The Geometryid Schema",
+            "title": "The shstGeometryId Schema",
             "default": "",
             "examples": [
               "4a454269d65c6619a2d7e2026295a295"
@@ -136,8 +128,8 @@
               0
             ]
           },
-          "OSMlanes": {
-            "$id": "#/properties/features/items/properties/OSMlanes",
+          "lanes": {
+            "$id": "#/properties/features/items/properties/]lanes",
             "type": ["number", "null"],
             "title": "The Osmlanes Schema",
             "default": 0,
@@ -145,8 +137,8 @@
               0
             ]
           },
-          "length": {
-            "$id": "#/properties/features/items/properties/length",
+          "distance": {
+            "$id": "#/properties/features/items/properties/distance",
             "type": ["number", "null"],
             "title": "The Length Schema",
             "default": 0.0,
@@ -254,22 +246,13 @@
             ],
             "pattern": "^(.*)$"
           },
-          "LINK_ID": {
-            "$id": "#/properties/features/items/properties/LINK_ID",
+          "model_link_id": {
+            "$id": "#/properties/features/items/properties/model_link_id",
             "type": "integer",
             "title": "The Link_id Schema",
             "default": 0,
             "examples": [
               224
-            ]
-          },
-          "lanes": {
-            "$id": "#/properties/features/items/properties/lanes",
-            "type": "integer",
-            "title": "The lanes Schema",
-            "default": 0,
-            "examples": [
-              1
             ]
           },
           "transit_access": {
