@@ -467,7 +467,7 @@ class RoadwayNetwork(object):
     def build_selection_key(self, selection_dict):
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection_dict,
-            unique_model_link_identifiers=RoadwayNetwork.UNIQUE_model_link_idENTIFIERS
+            unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS
         )
 
         A_id, B_id = self.orig_dest_nodes_foreign_key(selection_dict)
@@ -519,11 +519,11 @@ class RoadwayNetwork(object):
         }
 
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        unique_model_link_identifer_in_selection = set(RoadwayNetwork.UNIQUE_model_link_idENTIFIERS).issubset(selection_keys)
+        unique_model_link_identifer_in_selection = set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).issubset(selection_keys)
 
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection,
-            unique_model_link_identifiers=RoadwayNetwork.UNIQUE_model_link_idENTIFIERS,
+            unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
             mode=modes_to_network_variables[search_mode]
         )
 
@@ -696,7 +696,7 @@ class RoadwayNetwork(object):
                 if len(selection["link"]) > 1:
                     resel_query = ProjectCard.build_link_selection_query(
                         selection=selection,
-                        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_model_link_idENTIFIERS,
+                        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
                         mode=modes_to_network_variables[search_mode],
                         ignore=["name"],
                     )
