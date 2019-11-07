@@ -130,7 +130,11 @@ class RoadwayNetwork(object):
 
         nodes_df.gdf_name = "network_nodes"
 
-        nodes_df.set_index(RoadwayNetwork.NODE_FOREIGN_KEY, inplace=True)
+        # set a copy of the  foreign key to be the index so that the
+        # variable itself remains queryiable
+        nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY+"_idx"]=nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY]
+        nodes_df.set_index(RoadwayNetwork.NODE_FOREIGN_KEY+"_idx", inplace=True)
+
         nodes_df.crs = RoadwayNetwork.CRS
         nodes_df["x"] = nodes_df["geometry"].apply(lambda g: g.x)
         nodes_df["y"] = nodes_df["geometry"].apply(lambda g: g.y)
@@ -451,7 +455,7 @@ class RoadwayNetwork(object):
         -------
         networkx multidigraph
         """
-
+        WranglerLogger.debug("starting ox_graph()")
         try:
             graph_nodes = nodes_df.drop(
                 ["inboundReferenceId", "outboundReferenceId"], axis=1
@@ -460,9 +464,18 @@ class RoadwayNetwork(object):
             graph_nodes = nodes_df
 
         graph_nodes.gdf_name = "network_nodes"
+        WranglerLogger.debug("GRAPH NODES: {}".format(graph_nodes.columns))
+        graph_nodes['id'] = graph_nodes['osm_node_id']
 
-        G = ox.gdfs_to_graph(graph_nodes, links_df)
+        graph_links = links_df.copy()
+        graph_links['id'] = graph_links['osm_link_id']
+        graph_links['key'] = str(graph_links['osm_link_id'])+"_"+str(graph_links['model_link_id'])
 
+        WranglerLogger.debug("starting ox.gdfs_to_graph()")
+
+        G = ox.gdfs_to_graph(graph_nodes, graph_links)
+
+        WranglerLogger.debug("finished ox.gdfs_to_graph()")
         return G
 
     def build_selection_key(self, selection_dict):
@@ -508,33 +521,33 @@ class RoadwayNetwork(object):
         shortest path node route : list
            list of foreign IDs of nodes in the selection route
         """
-
+        WranglerLogger.debug("validating selection")
         self.validate_selection(selection)
 
         # build a selection query based on the selection dictionary
         modes_to_network_variables = {
             "drive": "drive_access",
-            "transit": "isTransitLink",
+            "transit": "transit_access",
             "walk": "walk_access",
             "bike": "bike_access",
         }
 
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        unique_model_link_identifer_in_selection = set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).issubset(selection_keys)
-
+        unique_model_link_identifer_in_selection = bool(set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(set(selection_keys)))
+        
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection,
             unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
             mode=modes_to_network_variables[search_mode]
         )
-
+        WranglerLogger.debug("Selection Query: {}".format(sel_query))
         # create a unique key for the selection so that we can cache it
         A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
         sel_key = (sel_query, A_id, B_id)
+        WranglerLogger.debug("Selection Key: {}".format(sel_key))
 
         # if this selection has been queried before, just return the
         # previously selected links
-
         if sel_key in self.selections:
             if self.selections[sel_key]["selection_found"]:
                 return self.selections[sel_key]["selected_links"].index.tolist()
@@ -546,35 +559,54 @@ class RoadwayNetwork(object):
         # assign them as iteration = 0
         # subsequent iterations that didn't match the query will be
         # assigned a heigher weight in the shortest path
-        try:
-            #print("Selecting features:\n{}".format(sel_query))
+        WranglerLogger.debug("Selecting features:\n{}".format(sel_query))
+        self.selections[sel_key]["candidate_links"] = self.links_df.query(
+            sel_query, engine="python"
+        )
+        WranglerLogger.debug("Completed query")
+        candidate_links = self.selections[sel_key][
+            "candidate_links"
+        ]  # b/c too long to keep that way
+
+        candidate_links["i"] = 0
+
+        if len(candidate_links.index) == 0 and unique_model_link_identifer_in_selection:
+            msg = "No links found based on unique link identifiers.\nSelection Failed."
+            WranglerLogger.error(msg)
+            raise Exception(msg)
+
+        if len(candidate_links.index) == 0:
+            WranglerLogger.info("No candidate links in initial search.\nRetrying query using 'ref' instead of 'name'")
+            # if the query doesn't come back with something from 'name'
+            # try it again with 'ref' instead
+            selection_has_name_key = any("name" in d for d in selection["link"])
+
+            if not selection_has_name_key:
+                msg = "Not able to complete search using 'ref' instead of 'name' because 'name' not in search."
+                WranglerLogger.error(msg)
+                raise Exception(msg)
+
+            if not "ref" in self.links_df.columns:
+                msg = "Not able to complete search using 'ref' because 'ref' not in network."
+                WranglerLogger.error(msg)
+                raise Exception(msg)
+
+            WranglerLogger.debug("Trying selection query replacing 'name' with 'ref'")
+            sel_query = sel_query.replace("name", "ref")
+
             self.selections[sel_key]["candidate_links"] = self.links_df.query(
                 sel_query, engine="python"
             )
             candidate_links = self.selections[sel_key][
                 "candidate_links"
-            ]  # b/c too long to keep that way
+            ]
+
             candidate_links["i"] = 0
 
             if len(candidate_links.index) == 0:
-                raise Exception("search query did not return anything")
-        except:
-            selection_has_name_key = any("name" in d for d in selection["link"])
-
-            # if the query doesn't come back with something from 'name'
-            # try it again with 'ref' instead
-            if selection_has_name_key and "ref" in self.links_df.columns:
-                sel_query = sel_query.replace("name", "ref")
-
-                self.selections[sel_key]["candidate_links"] = self.links_df.query(
-                    sel_query, engine="python"
-                )
-                candidate_links = self.selections[sel_key][
-                    "candidate_links"
-                ]  # b/c too long to keep that way
-                candidate_links["i"] = 0
-            else:
-                return False
+                msg = "No candidate links in search using either 'name' or 'ref' in query.\nSelection Failed."
+                WranglerLogger.error(msg)
+                raise Exception(msg)
 
         def _add_breadth(candidate_links, nodes, links, i):
             """
@@ -605,25 +637,27 @@ class RoadwayNetwork(object):
                 list of foreign key ids for nodes in the updated candidate links
                 to test if the A and B nodes are in there.
             """
-            print("-Adding Breadth-")
+            WranglerLogger.debug("-Adding Breadth-")
             node_list_foreign_keys = list(
                 set(list(candidate_links["u"]) + list(candidate_links["v"]))
             )
             candidate_nodes = nodes.loc[node_list_foreign_keys]
-            print("Candidate Nodes: {}".format(len(candidate_nodes)))
-            links_id_to_add = list(
+            WranglerLogger.debug("Candidate Nodes: {}".format(len(candidate_nodes)))
+            links_shstRefId_to_add = list(
                 set(
                     sum(candidate_nodes["outboundReferenceId"].tolist(), [])
                     + sum(candidate_nodes["inboundReferenceId"].tolist(), [])
                 )
-                - set(candidate_links["id"].tolist())
+                - set(candidate_links["shstRefId"].tolist())
                 - set([""])
             )
-            print("Link IDs to add: {}".format(len(links_id_to_add)))
+            ##TODO make unique ID for links in the settings
+            #print("Link IDs to add: {}".format(links_shstRefId_to_add))
             # print("Links: ", links_id_to_add)
-            links_to_add = links[links.id.isin(links_id_to_add)]
-            print("Adding {} links.".format(links_to_add.shape[0]))
-            links[links.id.isin(links_id_to_add)]["i"] = i
+            links_to_add = links[links.shstRefId.isin(links_shstRefId_to_add)]
+            #print("Adding Links:",links_to_add)
+            WranglerLogger.debug("Adding {} links.".format(links_to_add.shape[0]))
+            links[links.model_link_id.isin(links_shstRefId_to_add)]["i"] = i
             candidate_links = candidate_links.append(links_to_add)
             node_list_foreign_keys = list(
                 set(list(candidate_links["u"]) + list(candidate_links["v"]))
@@ -632,16 +666,18 @@ class RoadwayNetwork(object):
             return candidate_links, node_list_foreign_keys
 
         def _shortest_path():
+            WranglerLogger.debug("_shortest_path(): calculating shortest path from graph")
             candidate_links["weight"] = 1 + (
                 candidate_links["i"] * RoadwayNetwork.SP_WEIGHT_FACTOR
             )
             candidate_nodes = self.nodes_df.loc[
                 list(candidate_links["u"]) + list(candidate_links["v"])
             ]
-
+            WranglerLogger.debug("creating network graph")
             G = RoadwayNetwork.ox_graph(candidate_nodes, candidate_links)
 
             try:
+                WranglerLogger.debug("calculating NX shortest path")
                 sp_route = nx.shortest_path(G, A_id, B_id, weight="weight")
                 self.selections[sel_key]["candidate_links"] = candidate_links
                 sp_links = candidate_links[
@@ -659,31 +695,34 @@ class RoadwayNetwork(object):
 
         if not unique_model_link_identifer_in_selection:
             # find the node ids for the candidate links
+            WranglerLogger.debug("Not a unique ID selection, conduct search")
             node_list_foreign_keys = list(candidate_links["u"]) + list(candidate_links["v"])
+            WranglerLogger.debug("Foreign key list: {}".format(node_list_foreign_keys))
             i = 0
 
             max_i = RoadwayNetwork.SEARCH_BREADTH
+
             while (
                 A_id not in node_list_foreign_keys
                 and B_id not in node_list_foreign_keys
                 and i <= max_i
             ):
-                print("Adding breadth, no shortest path. i:", i, " Max i:", max_i)
+                WranglerLogger.debug("Adding breadth, no shortest path. i: {}, Max i: {}".format(i, max_i))
                 i += 1
                 candidate_links, node_list_foreign_keys = _add_breadth(
                     candidate_links, self.nodes_df, self.links_df, i
                 )
-
+            WranglerLogger.debug("calculating shortest path from graph")
             sp_found = _shortest_path()
             if not sp_found:
-                print(
+                WranglerLogger.info(
                     "No shortest path found with {}, trying greater breadth until SP found".format(
                         i
                     )
                 )
             while not sp_found and i <= RoadwayNetwork.MAX_SEARCH_BREADTH:
-                print(
-                    "Adding breadth, with shortest path iteration. i:", i, " Max i:", max_i
+                WranglerLogger.debug(
+                    "Adding breadth, with shortest path iteration. i: {} Max i: {}".format(i, max_i)
                 )
                 i += 1
                 candidate_links, node_list_foreign_keys = _add_breadth(
@@ -701,7 +740,7 @@ class RoadwayNetwork(object):
                         mode=modes_to_network_variables[search_mode],
                         ignore=["name"],
                     )
-                    print("Reselecting features:\n{}".format(resel_query))
+                    WranglerLogger.info("Reselecting features:\n{}".format(resel_query))
                     self.selections[sel_key]["selected_links"] = self.selections[sel_key][
                         "links"
                     ].query(resel_query, engine="python")
