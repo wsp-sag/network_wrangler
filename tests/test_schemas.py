@@ -28,7 +28,7 @@ def test_roadway_link_schema():
 
 @pytest.mark.travis
 def test_project_card_schema():
-    schema_filename = os.path.join(SCHEMA_DIR, "project_card_elo.json")
+    schema_filename = os.path.join(SCHEMA_DIR, "project_card.json")
     card_file = os.path.join(STPAUL_PC_DIR, "1_simple_roadway_attribute_change.yml")
 
     with open(schema_filename) as schema_json_file:
