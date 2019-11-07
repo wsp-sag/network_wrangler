@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 import partridge as ptg
 from partridge.config import default_config
-from partridge.gtfs import Feed
 
 from .Logger import WranglerLogger
 from .Utils import parse_time_spans
@@ -34,17 +33,17 @@ class TransitNetwork(object):
     FK_SHAPES = "shape_model_node_id"
     FK_STOPS = "model_node_id"
 
-    def __init__(self, feed: Feed = None, config: nx.DiGraph = None):
+    def __init__(self, feed: DotDict = None, config: nx.DiGraph = None):
         """
         Constructor
         """
-        self.feed: Feed = feed
+        self.feed: DotDict = feed
         self.config: nx.DiGraph = config
         self.road_net: RoadwayNetwork = None
         self.graph: nx.MultiDiGraph = None
 
     @staticmethod
-    def validate_feed(feed: Feed, config: nx.DiGraph) -> bool:
+    def validate_feed(feed: DotDict, config: nx.DiGraph) -> bool:
         """
         Since Partridge lazily loads the df, load each file to make sure it
         actually works.
@@ -61,16 +60,22 @@ class TransitNetwork(object):
             return False
 
     @staticmethod
-    def read(feed_path: str, fast: bool = False) -> Tuple[nx.DiGraph, Feed]:
+    def read(feed_path: str, fast: bool = False) -> TransitNetwork:
         """
-        Read GTFS feed from folder and return a config and Partridge Feed object
+        Read GTFS feed from folder and TransitNetwork object
         """
         config = default_config()
         feed = ptg.load_feed(feed_path, config=config)
 
         TransitNetwork.validate_feed(feed, config)
 
-        transit_network = TransitNetwork(feed=feed, config=config)
+        # Read in each feed so we can write over them
+        new_feed = DotDict()
+        for node in config.nodes.keys():
+            # Load (initiate Partridge's lazy load)
+            new_feed[node.replace(".txt", "")] = feed.get(node)
+
+        transit_network = TransitNetwork(feed=new_feed, config=config)
 
         return transit_network
 
@@ -336,7 +341,7 @@ class TransitNetwork(object):
                     properties["existing_shapes"][-1]
                 )
                 this_shape = pd.concat([
-                    this_shape.iloc[:index_replacement_starts-1],
+                    this_shape.iloc[:index_replacement_starts],
                     new_shape_rows,
                     this_shape.iloc[index_replacement_ends+1:]
                 ], sort=False, ignore_index=True)
@@ -356,7 +361,10 @@ class TransitNetwork(object):
         if stops_change:
             # If node IDs in properties["set_stops"] are not already
             # in stops.txt, create a new stop_id for them in stops
-            if any(x not in stops[TransitNetwork.FK_STOPS] for x in properties["set_stops"]):
+            if any(
+                x not in stops[TransitNetwork.FK_STOPS].tolist() for
+                x in properties["set_stops"]
+            ):
                 # FIXME
                 WranglerLogger.error(
                     "Node ID is used that does not have an existing stop.")
@@ -367,10 +375,17 @@ class TransitNetwork(object):
                 # Pop the rows that match trip_id
                 this_stoptime = stop_times[stop_times.trip_id == trip_id]
 
+                # Merge on node IDs using stop_id (one node ID per stop_id)
+                this_stoptime = this_stoptime.merge(
+                    stops[["stop_id", TransitNetwork.FK_STOPS]],
+                    how="left",
+                    on="stop_id"
+                )
+
                 # Make sure the stop_times are ordered by stop_sequence
                 this_stoptime = this_stoptime.sort_values(by=["stop_sequence"])
 
-                # Build a pd.DataFrame of new shape records
+                # Build a pd.DataFrame of new shape records from properties
                 new_stoptime_rows = pd.DataFrame({
                     "trip_id": trip_id,
                     "arrival_time": None,
@@ -382,18 +397,18 @@ class TransitNetwork(object):
                     "stop_is_skipped": None,
                     TransitNetwork.FK_STOPS: properties["set_stops"]
                 })
-                # Merge on stop_id
+
+                # Merge on stop_id using node IDs (many stop_id per node ID)
                 new_stoptime_rows = new_stoptime_rows.merge(
                     stops[["stop_id", TransitNetwork.FK_STOPS]],
                     how="left",
-                    left_on=TransitNetwork.FK_STOPS,
-                    right_on=TransitNetwork.FK_STOPS
-                )
+                    on=TransitNetwork.FK_STOPS
+                ).groupby([TransitNetwork.FK_STOPS]).head(1)  # pick first
 
                 # If "existing" is specified, replace only that segment
                 # Else, replace the whole thing
                 if properties.get("existing") is not None:
-                    # Match list
+                    # Match list (remember stops are passed in with node IDs)
                     nodes = this_stoptime[TransitNetwork.FK_STOPS].tolist()
                     index_replacement_starts = nodes.index(
                         properties["existing_stops"][0]
@@ -402,7 +417,7 @@ class TransitNetwork(object):
                         properties["existing_stops"][-1]
                     )
                     this_stoptime = pd.concat([
-                        this_stoptime.iloc[:index_replacement_starts-1],
+                        this_stoptime.iloc[:index_replacement_starts],
                         new_stoptime_rows,
                         this_stoptime.iloc[index_replacement_ends+1:]
                     ], sort=False, ignore_index=True)
@@ -410,7 +425,7 @@ class TransitNetwork(object):
                     this_stoptime = new_stoptime_rows
 
                 # Remove node ID
-                del new_stoptime_rows[TransitNetwork.FK_STOPS]
+                del this_stoptime[TransitNetwork.FK_STOPS]
 
                 # Renumber stop_sequence
                 this_stoptime["stop_sequence"] = np.arange(len(this_stoptime))
@@ -464,3 +479,13 @@ class TransitNetwork(object):
             updated_network = copy.deepcopy(self)
             updated_network.loc[q, properties["property"]] = build_value
             return updated_network
+
+
+class DotDict(dict):
+    """
+    dot.notation access to dictionary attributes
+    Source: https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary
+    """
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
