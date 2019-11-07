@@ -33,6 +33,14 @@ SMALL_NODE_FILE = os.path.join(SMALL_DIR, "node.geojson")
 
 SCRATCH_DIR = os.path.dirname(os.path.realpath(__file__))
 
+def _read_stpaul_net():
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+    return net
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -101,7 +109,9 @@ def test_quick_roadway_read_write(request):
     print("--Finished:", request.node.name)
 
 
-SELECTIONS = [ { \
+@pytest.mark.parametrize(
+    "selection",
+    [ { \
         "link": [{"name": ["6th", "Sixth", "sixth"]}],
         "A": {"osm_node_id": "187899923"},
         "B": {"osm_node_id": "187865924"},
@@ -124,24 +134,15 @@ SELECTIONS = [ { \
     },
     {
         "link": [{"name": ["6th", "Sixth", "sixth"]}, {"model_link_id": [2846,2918]}, {"lanes": [1, 2]}],
-    },
-]
-@pytest.mark.parametrize("selection", SELECTIONS)
-
-
-@pytest.mark.parametrize("net", [RoadwayNetwork.read(
-    link_file=STPAUL_LINK_FILE,
-    node_file=STPAUL_NODE_FILE,
-    shape_file=STPAUL_SHAPE_FILE,
-    fast=True,
-)])
+    }]
+)
 
 @pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_select_roadway_features(request, net, selection):
+def test_select_roadway_features(request, selection):
     print("\n--Starting:", request.node.name)
-
+    net = _read_stpaul_net()
     print("--->", selection)
     net.select_roadway_features(selection)
 
@@ -164,9 +165,9 @@ def test_select_roadway_features(request, net, selection):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_select_roadway_features_from_projectcard(request, net):
+def test_select_roadway_features_from_projectcard(request):
     print("\n--Starting:", request.node.name)
-
+    net = _read_stpaul_net()
     print("Reading project card ...")
     project_card_name = "3_multiple_roadway_attribute_change.yml"
 
@@ -191,9 +192,9 @@ def test_select_roadway_features_from_projectcard(request, net):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_apply_roadway_feature_change(request, net, apply_feature_change_project_card):
+def test_apply_roadway_feature_change(request, apply_feature_change_project_card):
     print("\n--Starting:", request.node.name)
-
+    my_net = _read_stpaul_net()
     print("Reading project card", apply_feature_change_project_card, "...")
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", apply_feature_change_project_card)
     project_card = ProjectCard.read(project_card_path)
@@ -218,9 +219,9 @@ def test_apply_roadway_feature_change(request, net, apply_feature_change_project
 
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_add_managed_lane(request, net):
+def test_add_managed_lane(request):
     print("\n--Starting:", request.node.name)
-
+    net = _read_stpaul_net()
     print("Reading project card ...")
     project_card_name = "5_managed_lane.yml"
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
@@ -247,12 +248,12 @@ def test_add_managed_lane(request, net):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_add_adhoc_field(request, net):
+def test_add_adhoc_field(request):
     """
     Makes sure new fields can be added in the API and be saved and read in again.
     """
     print("\n--Starting:", request.node.name)
-
+    net = _read_stpaul_net()
     net.links_df["my_ad_hoc_field"] = 22.5
 
     print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5])
@@ -262,13 +263,13 @@ def test_add_adhoc_field(request, net):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_add_adhoc_field_from_card(request, net):
+def test_add_adhoc_field_from_card(request):
     """
     Makes sure new fields can be added from a project card and that
     they will be the right type.
     """
     print("\n--Starting:", request.node.name)
-
+    net = _read_stpaul_net()
     project_card_name = "new_fields_project_card.yml"
 
     print("Reading project card", project_card_name, "...")
@@ -299,14 +300,14 @@ def test_add_adhoc_field_from_card(request, net):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_bad_properties_statements(request, net):
+def test_bad_properties_statements(request):
     """
     Makes sure new fields can be added from a project card and that
     they will be the right type.
     """
 
     print("\n--Starting:", request.node.name)
-
+    net = _read_stpaul_net()
     ok_properties_change = [{"property": "lanes", "change": 1}]
     bad_properties_change = [{"property": "my_random_var", "change": 1}]
     bad_properties_existing = [{"property": "my_random_var", "existing": 1}]
@@ -326,11 +327,11 @@ def test_bad_properties_statements(request, net):
 
 @pytest.mark.travis
 @pytest.mark.roadway
-def test_add_delete_roadway_project_card(request, net):
+def test_add_delete_roadway_project_card(request):
     print("\n--Starting:", request.node.name)
 
     print("Reading network ...")
-
+    net = _read_stpaul_net()
     project_cards_list = [
         "10_simple_roadway_add_change.yml",
         "11_multiple_roadway_add_and_delete_change.yml",
@@ -453,16 +454,13 @@ def test_add_delete_roadway_project_card(request, net):
 
     print("--Finished:", request.node.name)
 
-@pytest.mark.export
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_export_network_to_csv(request, net):
+def test_export_network_to_csv(request):
     print("\n--Starting:", request.node.name)
-
+    net = _read_stpaul_net()
     net.links_df.to_csv(os.path.join(SCRATCH_DIR, "links_df.csv"), index=False)
     net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "nodes_df.csv"), index=False)
-
-
 
 variable_queries = [
     {"v":"lanes",'category': None, "time_period": ['7:00', '9:00']},
@@ -474,12 +472,7 @@ variable_queries = [
 @pytest.mark.roadway
 def test_query_roadway_property_by_time_group(request, variable_query):
     print("\n--Starting:", request.node.name)
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
+    net = _read_stpaul_net()
     print("Applying project card...")
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", "5_managed_lane.yml")
     project_card = ProjectCard.read(project_card_path, validate=False)
@@ -487,17 +480,16 @@ def test_query_roadway_property_by_time_group(request, variable_query):
         net.select_roadway_features(project_card.facility), project_card.properties
     )
     print("Querying Attribute...")
+    print("QUERY:\n",variable_query)
     v_series = net.get_property_by_time_period_and_group(
         variable_query['v'],
         category = variable_query['category'],
         time_period = variable_query['time_period'],
     )
     selected_link_indices = net.select_roadway_features(project_card.facility)
-    print("QUERY:\n",variable_query)
+
     print("CALCULATED:\n",v_series.loc[selected_link_indices])
     print("ORIGINAL:\n",net.links_df.loc[selected_link_indices,variable_query['v']])
-
-
 
 
     ## todo make test make sure the values are correct.

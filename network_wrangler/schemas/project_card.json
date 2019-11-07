@@ -73,7 +73,7 @@
       "oneOf": [
         {
           "required": [
-            "link",
+            "link"
           ]
         },
         {

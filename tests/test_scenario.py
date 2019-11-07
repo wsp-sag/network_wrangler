@@ -229,7 +229,7 @@ def test_query_builder(request):
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_1,
-        unique_link_identifiers=RoadwayNetwork.UNIQUE_LINK_IDENTIFIERS
+        unique_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS
     )
     answer = '((name.str.contains("6th") or '\
         'name.str.contains("Sixth") or '\

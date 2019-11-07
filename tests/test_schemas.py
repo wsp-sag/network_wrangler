@@ -13,7 +13,6 @@ SMALL_EX_DIR = os.path.join(os.getcwd(), "example", "single")
 
 STPAUL_PC_DIR = os.path.join(os.getcwd(), "example", "stpaul", "project_cards")
 
-@pytest.mark.menow
 @pytest.mark.travis
 def test_roadway_link_schema():
     schema_filename = os.path.join(SCHEMA_DIR, "roadway_network_link.json")
