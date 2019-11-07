@@ -123,9 +123,7 @@ SELECTIONS = [ { \
         "B": {"osm_node_id": "2564047368"},
     },
     {
-        "link": [{"name": ["6th", "Sixth", "sixth"]}, {"model_link_id": [134574]}, {"lanes": [1, 2]}],
-        "A": {"osm_node_id": "187899923"},  # start searching for segments at A
-        "B": {"osm_node_id": "187942339"},
+        "link": [{"name": ["6th", "Sixth", "sixth"]}, {"model_link_id": [2846,2918]}, {"lanes": [1, 2]}],
     },
 ]
 @pytest.mark.parametrize("selection", SELECTIONS)

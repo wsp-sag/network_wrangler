@@ -45,7 +45,7 @@ class RoadwayNetwork(object):
     MAX_SEARCH_BREADTH = 10
     SP_WEIGHT_FACTOR = 100
 
-    SELECTION_REQUIRES = ["A", "B", "link"]
+    SELECTION_REQUIRES = ["link"]
 
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id", "ShStReferenceId"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
@@ -369,20 +369,24 @@ class RoadwayNetwork(object):
                             k
                         )
                     )
-        for k, v in selection["A"].items():
-            if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
-                err.append(
-                    "{} specified in A node selection but not an attribute in network\n".format(
-                        k
+        selection_keys = [k for l in selection["link"] for k, v in l.items()]
+        unique_link_id = bool(set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(set(selection_keys)))
+
+        if not unique_link_id:
+            for k, v in selection["A"].items():
+                if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
+                    err.append(
+                        "{} specified in A node selection but not an attribute in network\n".format(
+                            k
+                        )
                     )
-                )
-        for k, v in selection["B"].items():
-            if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
-                err.append(
-                    "{} specified in B node selection but not an attribute in network\n".format(
-                        k
+            for k, v in selection["B"].items():
+                if k not in self.nodes_df.columns and k != RoadwayNetwork.NODE_FOREIGN_KEY:
+                    err.append(
+                        "{} specified in B node selection but not an attribute in network\n".format(
+                            k
+                        )
                     )
-                )
         if err:
             WranglerLogger.error(
                 "ERROR: Selection variables in project card not found in network"
@@ -478,16 +482,24 @@ class RoadwayNetwork(object):
         WranglerLogger.debug("finished ox.gdfs_to_graph()")
         return G
 
+    @staticmethod
+    def selection_has_unique_link_id(selection_dict):
+        selection_keys = [k for l in selection_dict["link"] for k, v in l.items()]
+        return bool(set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(set(selection_keys)))
+
+
     def build_selection_key(self, selection_dict):
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection_dict,
             unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS
         )
 
-        A_id, B_id = self.orig_dest_nodes_foreign_key(selection_dict)
-        sel_key = (sel_query, A_id, B_id)
+        if RoadwayNetwork.selection_has_unique_link_id(selection_dict):
+            return (sel_query)
 
-        return sel_key
+        A_id, B_id = self.orig_dest_nodes_foreign_key(selection_dict)
+        return (sel_query, A_id, B_id)
+
 
     def select_roadway_features(
         self, selection: dict, search_mode="drive"
@@ -524,6 +536,30 @@ class RoadwayNetwork(object):
         WranglerLogger.debug("validating selection")
         self.validate_selection(selection)
 
+        # create a unique key for the selection so that we can cache it
+        sel_key = self.build_selection_key(selection)
+        WranglerLogger.debug("Selection Key: {}".format(sel_key))
+
+        # if this selection has been queried before, just return the
+        # previously selected links
+        if sel_key in self.selections:
+            if self.selections[sel_key]["selection_found"]:
+                return self.selections[sel_key]["selected_links"].index.tolist()
+            else:
+                msg = "Selection previously queried but no selection found"
+                WranglerLogger.error(msg)
+                raise Exception(msg)
+        self.selections[sel_key] = {}
+        self.selections[sel_key]["selection_found"] = False
+
+        unique_model_link_identifer_in_selection = RoadwayNetwork.selection_has_unique_link_id(selection)
+        if not unique_model_link_identifer_in_selection:
+            A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
+        # identify candidate links which match the initial query
+        # assign them as iteration = 0
+        # subsequent iterations that didn't match the query will be
+        # assigned a heigher weight in the shortest path
+        WranglerLogger.debug("Building selection query")
         # build a selection query based on the selection dictionary
         modes_to_network_variables = {
             "drive": "drive_access",
@@ -532,34 +568,13 @@ class RoadwayNetwork(object):
             "bike": "bike_access",
         }
 
-        selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        unique_model_link_identifer_in_selection = bool(set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(set(selection_keys)))
-        
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection,
             unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
             mode=modes_to_network_variables[search_mode]
         )
-        WranglerLogger.debug("Selection Query: {}".format(sel_query))
-        # create a unique key for the selection so that we can cache it
-        A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
-        sel_key = (sel_query, A_id, B_id)
-        WranglerLogger.debug("Selection Key: {}".format(sel_key))
-
-        # if this selection has been queried before, just return the
-        # previously selected links
-        if sel_key in self.selections:
-            if self.selections[sel_key]["selection_found"]:
-                return self.selections[sel_key]["selected_links"].index.tolist()
-        else:
-            self.selections[sel_key] = {}
-            self.selections[sel_key]["selection_found"] = False
-
-        # identify candidate links which match the initial query
-        # assign them as iteration = 0
-        # subsequent iterations that didn't match the query will be
-        # assigned a heigher weight in the shortest path
         WranglerLogger.debug("Selecting features:\n{}".format(sel_query))
+
         self.selections[sel_key]["candidate_links"] = self.links_df.query(
             sel_query, engine="python"
         )
