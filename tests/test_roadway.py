@@ -464,8 +464,8 @@ def test_export_network_to_csv(request):
 
 variable_queries = [
     {"v":"lanes",'category': None, "time_period": ['7:00', '9:00']},
-    {"v":"ML_PRICE", 'category': "sov", 'time_period': ['7:00', '9:00']},
-    {"v":"ML_PRICE", 'category': ["hov3","hov2"], 'time_period': ['7:00', '9:00']}
+    {"v":"ML_price", 'category': "sov", 'time_period': ['7:00', '9:00']},
+    {"v":"ML_price", 'category': ["hov3","hov2"], 'time_period': ['7:00', '9:00']}
 ]
 @pytest.mark.parametrize("variable_query", variable_queries)
 
