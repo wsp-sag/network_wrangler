@@ -155,13 +155,32 @@ class TransitNetwork(object):
             ):
                 self.apply_transit_feature_change(
                     self.select_transit_features(project_dictionary["facility"]),
-                    project_dictionary["properties"],
+                    project_dictionary["properties"]
                 )
-            elif project_dictionary["category"].lower() == "parallel managed lanes":
-                WranglerLogger.warning(
-                    "Parallel Managed Lanes not implemented yet in Transit"
+            elif (
+                project_dictionary["category"].lower()
+                == "parallel managed lanes"
+            ):
+                # Grab the list of nodes in the facility from road_net
+                # It should be cached because managed lane projects are
+                # processed by RoadwayNetwork first via
+                # Scenario.apply_all_projects
+                try:
+                    managed_lane_nodes = self.road_net.selections(
+                        self.road_net.build_selection_key(
+                            project_dictionary["facility"]
+                        )
+                    )["route"]
+                except ValueError:
+                    WranglerLogger.error(
+                        "RoadwayNetwork not set yet, see TransitNetwork.set_roadnet()"
+                    )
+
+                # Reroute any transit using these nodes
+                self.apply_transit_managed_lane(
+                    self.select_transit_features_by_nodes(managed_lane_nodes),
+                    managed_lane_nodes
                 )
-                # TODO
             else:
                 raise (BaseException)
 
@@ -313,12 +332,12 @@ class TransitNetwork(object):
         """
         for i in properties:
             if i["property"] in ["headway_secs"]:
-                self.apply_transit_feature_change_frequencies(trip_ids, i, in_place)
+                self._apply_transit_feature_change_frequencies(trip_ids, i, in_place)
 
             elif i["property"] in ["routing"]:
-                self.apply_transit_feature_change_routing(trip_ids, i, in_place)
+                self._apply_transit_feature_change_routing(trip_ids, i, in_place)
 
-    def apply_transit_feature_change_routing(
+    def _apply_transit_feature_change_routing(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         shapes = self.feed.shapes
@@ -486,7 +505,7 @@ class TransitNetwork(object):
             updated_network.feed.stop_times = stop_times
             return updated_network
 
-    def apply_transit_feature_change_frequencies(
+    def _apply_transit_feature_change_frequencies(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         freq = self.feed.frequencies
@@ -517,6 +536,18 @@ class TransitNetwork(object):
             updated_network = copy.deepcopy(self)
             updated_network.loc[q, properties["property"]] = build_value
             return updated_network
+
+    def apply_transit_managed_lane(
+        self, trip_ids: pd.Series, node_ids: list, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        self._apply_transit_feature_change_routing(
+            trip_ids=trip_ids,
+            properties={
+                "existing": node_ids,
+                "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids)
+            },
+            in_place=in_place
+        )
 
 
 class DotDict(dict):
