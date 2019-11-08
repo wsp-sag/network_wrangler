@@ -431,6 +431,10 @@ class RoadwayNetwork(object):
         return (A_id, B_id)
 
     @staticmethod
+    def get_managed_lane_node_ids(nodes_list):
+        return [x + RoadwayNetwork.MANAGED_LANES_SCALAR for x in nodes_list]
+
+    @staticmethod
     def ox_graph(nodes_df, links_df):
         """
         create an osmnx-flavored network graph
