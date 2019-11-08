@@ -540,6 +540,12 @@ class TransitNetwork(object):
     def apply_transit_managed_lane(
         self, trip_ids: pd.Series, node_ids: list, in_place: bool = True
     ) -> Union(None, TransitNetwork):
+        # Traversed nodes without a stop should be negative integers
+        all_stops = self.feed.stops[TransitNetwork.FK_STOPS].tolist()
+        node_ids = [
+            int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids
+        ]
+
         self._apply_transit_feature_change_routing(
             trip_ids=trip_ids,
             properties={

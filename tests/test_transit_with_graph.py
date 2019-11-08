@@ -137,7 +137,6 @@ def test_wo_existing(request):
 
 
 @pytest.mark.transit_with_graph
-@pytest.mark.transit_node_selection
 @pytest.mark.travis
 def test_select_transit_features_by_nodes(request):
     print("\n--Starting:", request.node.name)
