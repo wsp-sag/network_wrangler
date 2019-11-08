@@ -9,18 +9,18 @@ dependencies:
 links:
   - u: 36622
     v: 125892
-    isBikeLink: 1
-    isDriveLink: 1
-    isTranLink: 0
-    isWalkLink: 0
-    LANES: 1
-    LINK_ID: 404982
+    bike_access: 1
+    drive_access: 1
+    transit_access: 0
+    walk_access: 0
+    lanes: 1
+    model_link_id: 404982
   - u: 125892
     v: 36622
-    isBikeLink: 1
-    isDriveLink: 1
-    isTranLink: 0
-    isWalkLink: 0
-    LANES: 1
-    LINK_ID: 407042
+    bike_access: 1
+    drive_access: 1
+    transit_access: 0
+    walk_access: 0
+    lanes: 1
+    model_link_id: 407042
 notes: Simple project card to add new roadway
