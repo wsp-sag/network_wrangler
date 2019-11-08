@@ -84,3 +84,53 @@ def test_project_card(request):
     assert result_tail == answer_tail
 
     print("--Finished:", request.node.name)
+
+
+@pytest.mark.transit_with_graph
+@pytest.mark.travis
+def test_wo_existing(request):
+    print("\n--Starting:", request.node.name)
+
+    transit_net = TransitNetwork.read(STPAUL_DIR)
+
+    # A new node ID (not in stops.txt) should fail right now
+    with pytest.raises(Exception):
+        transit_net.apply_transit_feature_change(
+            trip_ids=transit_net.select_transit_features(
+                {"trip_id": ["14940975-JUN19-MVS-BUS-Weekday-01"]}
+            ),
+            properties=[
+                {
+                    "property": "routing",
+                    "set": [1]
+                }
+            ]
+        )
+
+    transit_net.apply_transit_feature_change(
+        trip_ids=transit_net.select_transit_features(
+            {"trip_id": ["14940975-JUN19-MVS-BUS-Weekday-01"]}
+        ),
+        properties=[
+            {
+                "property": "routing",
+                "set": [75318]
+            }
+        ]
+    )
+
+    # Shapes
+    result = transit_net.feed.shapes[
+        transit_net.feed.shapes["shape_id"] == "630010"
+    ]["shape_model_node_id"].tolist()
+    answer = ["75318"]
+    assert result == answer
+
+    # Stops
+    result = transit_net.feed.stop_times[
+        transit_net.feed.stop_times["trip_id"] == "14940975-JUN19-MVS-BUS-Weekday-01"
+    ]["stop_id"].tolist()
+    answer = ["2609"]  # first matching stop_id in stops.txt
+    assert result == answer
+
+    print("--Finished:", request.node.name)

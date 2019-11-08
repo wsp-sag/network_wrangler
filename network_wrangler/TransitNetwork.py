@@ -255,7 +255,7 @@ class TransitNetwork(object):
         return trips["trip_id"]
 
     def apply_transit_feature_change(
-        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
+        self, trip_ids: pd.Series, properties: list, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         """
         Changes the transit attributes for the selected features based on the
@@ -265,7 +265,7 @@ class TransitNetwork(object):
         ------------
         trip_ids : pd.Series
             all trip_ids to apply change to
-        properties : list of dictionarys
+        properties : list of dictionaries
             transit properties to change
         in_place : bool
             whether to apply changes in place or return a new network
@@ -304,9 +304,10 @@ class TransitNetwork(object):
 
         # Convert ints to objects
         properties["set_shapes"] = [str(abs(i)) for i in properties["set"]]
-        properties["existing_shapes"] = [
-            str(abs(i)) for i in properties["existing"]
-        ]
+        if properties.get("existing") is not None:
+            properties["existing_shapes"] = [
+                str(abs(i)) for i in properties["existing"]
+            ]
 
         # Replace shapes records
         shape_ids = self.feed.trips[
