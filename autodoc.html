@@ -321,6 +321,21 @@ link_idx : list</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.create_dummy_connector_links">
+<code class="sig-name descname">create_dummy_connector_links</code><span class="sig-paren">(</span><em class="sig-param">ml_df</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.create_dummy_connector_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>create dummy connector links between the general purpose and managed lanes</p>
+<p>args:
+gp_df : GeoDataFrame</p>
+<blockquote>
+<div><p>dataframe of general purpose links (where managed lane also exists)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>ml_df<span class="classifier">GeoDataFrame</span></dt><dd><p>dataframe of corresponding managed lane links</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="network_wrangler.RoadwayNetwork.create_managed_lane_network">
 <code class="sig-name descname">create_managed_lane_network</code><span class="sig-paren">(</span><em class="sig-param">in_place=False</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.create_managed_lane_network" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a roadway network with managed lanes links separated out</p>
