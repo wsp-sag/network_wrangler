@@ -27,6 +27,7 @@ from shapely.geometry import Point, LineString
 
 from .Logger import WranglerLogger
 from .Utils import point_df_to_geojson, link_df_to_json, parse_time_spans
+from .Utils import offset_lat_lon, haversine_distance
 from .ProjectCard import ProjectCard
 
 
@@ -44,11 +45,20 @@ class RoadwayNetwork(object):
     SEARCH_BREADTH = 5
     MAX_SEARCH_BREADTH = 10
     SP_WEIGHT_FACTOR = 100
+    MANAGED_LANES_NODE_ID_SCALAR = 500000
+    MANAGED_LANES_LINK_ID_SCALAR = 1000000
 
     SELECTION_REQUIRES = ["link"]
 
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id", "ShStReferenceId"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
+
+    MANAGED_LANES_REQUIRED_ATTRIBUTES = ["A", "B", "LINK_ID", "geometry", "locationReferences"]
+
+    KEEP_SAME_ATTRIBUTES_ML_AND_GP = ["DISTANCE", "isBikeLink", "isDriveLink",
+        "isTranAcce", "isTranLink", "isWalkLink", "maxspeed", "name", "oneway",
+        "ref", "highway", "length"
+    ]
 
     def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
         """
@@ -963,6 +973,10 @@ class RoadwayNetwork(object):
             update self or return a new roadway network object
         """
 
+        # flag ML links
+        self.links_df['ML'] = 0
+        self.links_df.loc[link_idx, 'ML'] = 1
+
         for p in properties:
             attribute = p["property"]
 
@@ -1195,3 +1209,181 @@ class RoadwayNetwork(object):
         time_spans = parse_time_spans(time_period)
 
         return self.links_df[property].apply(_get_property,time_spans = time_spans, category=category)
+
+    def create_managed_lane_network(self, in_place = False) -> RoadwayNetwork:
+        """
+        Create a roadway network with managed lanes links separated out
+
+        args
+        ------
+        in_place: boolean
+            update self or return a new roadway network object
+
+        returns
+        --------
+        Roadway Network
+        """
+
+        link_attributes = self.links_df.columns.values.tolist()
+        ml_attributes = [i for i in link_attributes if i.startswith('ML_')]
+
+        non_ml_links_df = self.links_df[self.links_df["ML"]==0]
+        non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis = 1)
+
+        ml_links_df = self.links_df[self.links_df["ML"]==1]
+        gp_links_df = ml_links_df.drop(ml_attributes, axis = 1)
+
+        for attr in link_attributes:
+            if attr in ml_attributes and attr not in ["ML_ACCESS", "ML_EGRESS"]:
+                gp_attr = attr.split("_")[1]
+                ml_links_df[gp_attr] = ml_links_df[attr]
+
+            if attr not in RoadwayNetwork.KEEP_SAME_ATTRIBUTES_ML_AND_GP and attr not in RoadwayNetwork.MANAGED_LANES_REQUIRED_ATTRIBUTES:
+                ml_links_df[attr] = ""
+
+        def _update_location_reference(location_reference: list):
+            out_location_reference = copy.deepcopy(location_reference)
+            out_location_reference[0]["point"] = offset_lat_lon(out_location_reference[0]["point"])
+            out_location_reference[1]["point"] = offset_lat_lon(out_location_reference[1]["point"])
+            return(out_location_reference)
+
+        def _get_line_string(location_reference: list):
+            return(
+                LineString(
+                    [
+                        location_reference[0]["point"],
+                        location_reference[1]["point"]
+                    ]
+                )
+            )
+
+        ml_links_df["A"] = ml_links_df["A"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
+        ml_links_df["B"] = ml_links_df["B"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
+        ml_links_df["LINK_ID"] = ml_links_df["LINK_ID"] + RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR
+
+        ml_links_df["locationReferences"] = ml_links_df["locationReferences"].apply(
+            lambda x : _update_location_reference(x)
+        )
+        ml_links_df["geometry"] = ml_links_df["locationReferences"].apply(
+            lambda x : _get_line_string(x)
+        )
+
+        ml_links_df =  ml_links_df.drop(ml_attributes, axis = 1)
+
+        gp_ml_links_df = pd.concat([gp_links_df, ml_links_df.add_prefix('ML_')], axis=1, join='inner')
+        access_links_df = pd.DataFrame(columns=gp_links_df.columns.values.tolist())
+        egress_links_df = pd.DataFrame(columns=gp_links_df.columns.values.tolist())
+
+        def _create_connector_references(ref_1: list, ref_2: list, type: str):
+            if type == "access":
+                out_location_reference = [
+                    {'sequence': 1, 'point': ref_1[0]["point"]},
+                    {'sequence': 2, 'point': ref_2[0]["point"]}
+                ]
+
+            if type == "egress":
+                out_location_reference = [
+                    {'sequence': 1, 'point': ref_2[1]["point"]},
+                    {'sequence': 2, 'point': ref_1[1]["point"]}
+                ]
+
+            return(out_location_reference)
+
+        for index, row in gp_ml_links_df.iterrows():
+            access_row = {}
+            access_row["A"] = row["A"]
+            access_row["B"] = row["ML_A"]
+            access_row["LANES"] = 1
+            access_row["LINK_ID"] = row["LINK_ID"] + row["ML_LINK_ID"] + 1
+            access_row["isDriveLink"] = row["isDriveLink"]
+            access_row["locationReferences"] = _create_connector_references(
+                row["locationReferences"], row["ML_locationReferences"], "access"
+            )
+            access_row["DISTANCE"] = haversine_distance(
+                access_row["locationReferences"][0]["point"],
+                access_row["locationReferences"][1]["point"],
+            )
+            access_row["geometry"] = _get_line_string(access_row["locationReferences"])
+            access_row["highway"] = "ml_access"
+            access_row["oneway"] = row["oneway"]
+            access_row["name"] = row["name"]
+            access_row["ref"] = row["ref"]
+
+            access_links_df = access_links_df.append(access_row, ignore_index=True)
+
+            egress_row = {}
+            egress_row["A"] = row["ML_B"]
+            egress_row["B"] = row["B"]
+            egress_row["LANES"] = 1
+            egress_row["LINK_ID"] = row["LINK_ID"] + row["ML_LINK_ID"] + 2
+            egress_row["isDriveLink"] = row["isDriveLink"]
+            egress_row["locationReferences"] = _create_connector_references(
+                row["locationReferences"], row["ML_locationReferences"], "egress"
+            )
+            egress_row["DISTANCE"] = haversine_distance(
+                egress_row["locationReferences"][0]["point"],
+                egress_row["locationReferences"][1]["point"],
+            )
+            egress_row["geometry"] = _get_line_string(egress_row["locationReferences"])
+            egress_row["highway"] = "ml_egress"
+            egress_row["oneway"] = row["oneway"]
+            egress_row["name"] = row["name"]
+            egress_row["ref"] = row["ref"]
+
+            egress_links_df = egress_links_df.append(egress_row, ignore_index=True)
+
+
+        new_links_df = gp_links_df.append(ml_links_df)
+        new_links_df = new_links_df.append(access_links_df)
+        new_links_df = new_links_df.append(egress_links_df)
+        new_links_df = new_links_df.append(non_ml_links_df)
+        new_links_df = new_links_df.drop('ML', axis = 1)
+
+        #only the ml_links_df has the new nodes added_a_nodes
+        added_a_nodes = ml_links_df["A"]
+        added_b_nodes = ml_links_df["B"]
+
+        new_nodes_df = self.nodes_df
+
+        for a_node in added_a_nodes:
+            new_nodes_df = new_nodes_df.append(
+                {"travelModelId": a_node,
+                 "geometry": Point(new_links_df[new_links_df["A"]==a_node].iloc[0]["locationReferences"][0]["point"]),
+                 "isDriveNode": 1
+                },
+                ignore_index=True
+            )
+
+        for b_node in added_b_nodes:
+            if b_node not in new_nodes_df["travelModelId"].tolist():
+                new_nodes_df = new_nodes_df.append(
+                    {"travelModelId": b_node,
+                     "geometry": Point(new_links_df[new_links_df["B"]==b_node].iloc[0]["locationReferences"][1]["point"]),
+                     "isDriveNode": 1
+                    },
+                    ignore_index=True
+                )
+
+        new_nodes_df["x"] = new_nodes_df["geometry"].apply(lambda g: g.x)
+        new_nodes_df["y"] = new_nodes_df["geometry"].apply(lambda g: g.y)
+
+        new_shapes_df = self.shapes_df
+
+        # managed lanes, access and egress connectors are new geometry
+        for index, row in ml_links_df.iterrows():
+            new_shapes_df = new_shapes_df.append({"geometry": row["geometry"]}, ignore_index=True)
+        for index, row in access_links_df.iterrows():
+            new_shapes_df = new_shapes_df.append({"geometry": row["geometry"]}, ignore_index=True)
+        for index, row in egress_links_df.iterrows():
+            new_shapes_df = new_shapes_df.append({"geometry": row["geometry"]}, ignore_index=True)
+
+        if in_place:
+            self.links_df = new_links_df
+            self.nodes_df = new_nodes_df
+            self.shapes_df = new_shapes_df
+        else:
+            out_network = copy.deepcopy(self)
+            out_network.links_df = new_links_df
+            out_network.nodes_df = new_nodes_df
+            out_network.shapes_df = new_shapes_df
+            return out_network
