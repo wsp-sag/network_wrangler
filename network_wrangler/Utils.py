@@ -30,13 +30,13 @@ def link_df_to_json(df: pd.DataFrame, properties: list):
     Modified from: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/
     """
-    df['distance'].fillna(0)
-    json = []
+
+    json = {"type": "FeatureCollection", "features": []}
     for _, row in df.iterrows():
         feature = {}
         for prop in properties:
             feature[prop] = row[prop]
-        json.append(feature)
+        json["features"].append(feature)
     return json
 
 

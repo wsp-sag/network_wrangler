@@ -20,12 +20,12 @@ class ProjectCard(object):
 
     # categories that may affect transit, but only as a secondary
     # effect of changeing roadways
-    SECONDARY_TRANSIT_CATEGORIES = ["Roadway Deletion", "Parallel Managed lanes"]
+    SECONDARY_TRANSIT_CATEGORIES = ["Roadway Deletion", "Parallel Managed Lanes"]
 
     ROADWAY_CATEGORIES = [
         "Roadway Property Change",
         "Roadway Deletion",
-        "Parallel Managed lanes",
+        "Parallel Managed Lanes",
         "Add New Roadway",
     ]
 
@@ -119,16 +119,16 @@ class ProjectCard(object):
     @staticmethod
     def build_link_selection_query(
         selection: dict,
-        unique_model_link_identifiers: [],
-        mode="drive_access",
+        unique_link_identifiers: [],
+        mode="isDriveLink",
         ignore=[],
     ):
         sel_query = "("
         count = 0
 
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        num_unique_model_link_identifiers = len(set(unique_model_link_identifiers).intersection(selection_keys))
-        unique_model_link_identifer_exist = num_unique_model_link_identifiers > 0
+        num_unique_link_identifiers = len(set(unique_link_identifiers).intersection(selection_keys))
+        unique_link_identifer_exist = num_unique_link_identifiers > 0
 
         for l in selection["link"]:
             for key, value in l.items():
@@ -136,7 +136,7 @@ class ProjectCard(object):
                 if key in ignore:
                     continue
 
-                if unique_model_link_identifer_exist and key not in unique_model_link_identifiers:
+                if unique_link_identifer_exist and key not in unique_link_identifiers:
                     continue
 
                 count = count + 1
@@ -156,13 +156,13 @@ class ProjectCard(object):
                 else:
                     sel_query = sel_query + key + "==" + '"' + str(value) + '"'
 
-                if not unique_model_link_identifer_exist and count != (len(selection["link"])-len(ignore)):
+                if not unique_link_identifer_exist and count != (len(selection["link"])-len(ignore)):
                     sel_query = sel_query + " and "
 
-                if unique_model_link_identifer_exist and count != num_unique_model_link_identifiers:
+                if unique_link_identifer_exist and count != num_unique_link_identifiers:
                     sel_query = sel_query + " and "
 
-        if not unique_model_link_identifer_exist:
+        if not unique_link_identifer_exist:
             if count > 0:
                 sel_query = sel_query + " and "
             sel_query = sel_query + mode + "==1"
@@ -214,7 +214,7 @@ class ProjectCard(object):
     def parallel_managed_lanes(self, card: dict):
         """
         Probably delete.
-        Reads a Parallel Managed lanes card.
+        Reads a Parallel Managed Lanes card.
 
         args:
         card: the project card stored in a dictionary
