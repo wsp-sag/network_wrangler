@@ -7,9 +7,9 @@ facility:
         - 'Sixth'
         - 'sixth'
   A:
-    osmNodeId: '187899923'       # Jackson St
+    osm_node_id: '187899923'       # Jackson St
   B:
-    osmNodeId: '187865924'       # Robert St N
+    osm_node_id: '187865924'       # Robert St N
 properties:
   - property: 'my_ad_hoc_field_float'
     set: 1.1

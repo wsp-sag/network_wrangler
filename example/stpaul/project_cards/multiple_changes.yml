@@ -10,11 +10,11 @@ changes:
             - 'Sixth'
             - 'sixth' #finds links where name contains 6th or Sixth...not a regex technically ;-)
        A:
-         osmNodeId: '187899923'
+         osm_node_id: '187899923'
        B:
-         osmNodeId: '187865924'
+         osm_node_id: '187865924'
     properties:
-      - property: LANES
+      - property: lanes
         set: 1
   - category: Roadway Property Change
     facility:
@@ -22,10 +22,10 @@ changes:
          - name:
             - '5th'
        A:
-         osmNodeId: '187899922'
+         osm_node_id: '187899922'
        B:
-         osmNodeId: '187867603'
+         osm_node_id: '187867603'
     properties:
-      - property: LANES
+      - property: lanes
         set: 1
 notes: a simple test for multiple changes in same project card

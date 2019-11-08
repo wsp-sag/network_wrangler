@@ -161,3 +161,30 @@ def test_select_transit_features_by_nodes(request):
     ])
 
     print("--Finished:", request.node.name)
+
+
+@pytest.mark.transit_with_graph
+@pytest.mark.travis
+def test_select_transit_features_by_nodes(request):
+    print("\n--Starting:", request.node.name)
+
+    transit_net = TransitNetwork.read(STPAUL_DIR)
+
+    # Any nodes
+    trip_ids = transit_net.select_transit_features_by_nodes(
+        node_ids=["29636", "29666"]
+    )
+    assert set(trip_ids) == set([
+        "14940701-JUN19-MVS-BUS-Weekday-01",
+        "14942968-JUN19-MVS-BUS-Weekday-01"
+    ])
+
+    # All nodes
+    trip_ids = transit_net.select_transit_features_by_nodes(
+        node_ids=["29636", "29666"], require_all=True
+    )
+    assert set(trip_ids) == set([
+        "14940701-JUN19-MVS-BUS-Weekday-01"
+    ])
+
+    print("--Finished:", request.node.name)

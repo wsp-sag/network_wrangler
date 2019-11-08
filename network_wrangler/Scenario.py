@@ -74,16 +74,16 @@ class Scenario(object):
 
     @staticmethod
     def create_base_scenario(
-        base_dir: str,
         base_shape_name: str,
         base_link_name: str,
         base_node_name: str,
+        base_dir: str = '',
         validate: bool = True
     ) -> Scenario:
         """
         args
         -----
-        base_dir:
+        base_dir: optional
           path to the base scenario network files
         base_shape_name:
           filename of the base network shape
@@ -94,9 +94,14 @@ class Scenario(object):
         validate:
           boolean indicating whether to validate the base network or not
         """
-        base_network_shape_file = os.path.join(base_dir, base_shape_name)
-        base_network_link_file = os.path.join(base_dir, base_link_name)
-        base_network_node_file = os.path.join(base_dir, base_node_name)
+        if base_dir:
+            base_network_shape_file = os.path.join(base_dir,base_shape_name)
+            base_network_link_file = os.path.join(base_dir,base_link_name)
+            base_network_node_file = os.path.join(base_dir,base_node_name)
+        else:
+            base_network_shape_file = base_shape_name
+            base_network_link_file = base_link_name
+            base_network_node_file = base_node_name
 
         road_net = RoadwayNetwork.read(
             link_file=base_network_link_file,

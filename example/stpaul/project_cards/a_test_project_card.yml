@@ -15,14 +15,14 @@ facility:
         - 'Sixth'
         - 'sixth'
    A:
-     osmid: '187854529' # Jackson St
+     osm_link_id: '187854529' # Jackson St
    B:
-     osmid: '187899923' # Robert St N
+     osm_link_id: '187899923' # Robert St N
 properties:
-  - property: LANES
+  - property: lanes
     set: 2
-  - property: isTranLink
+  - property: transit_access
     set: 1
-  - property: isDriveLink
+  - property: drive_access
     set: 0
 notes: Transitions 6th St E to transitway

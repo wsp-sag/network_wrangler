@@ -1,0 +1,274 @@
+{
+	"definitions": {
+		"name": {
+			"title": "Name or list of possible names",
+			"oneOf": [{
+					"type": "string"
+				},
+				{
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				}
+			]
+		},
+		"notes": {
+			"type": "string",
+			"title": "Project Notes",
+			"examples": [
+				"Simple project example to do a road diet on 6th St E in front of MetCouncil"
+			]
+		},
+		"category": {
+			"type": "string",
+			"enum": [
+				"Roadway Property Change",
+				"Transit Service Property Change",
+				"Parallel Managed lanes",
+				"Add New Roadway"
+			],
+			"title": "Project Category"
+		},
+		"dependencies": {
+			"type": "object",
+			"additionalProperties": false,
+			"title": "Project Dependencies",
+			"properties": {
+				"prerequisites": {
+					"type": "array",
+					"title": "Project Prerequisites",
+					"examples": [
+						"7th St E Road Diet"
+					]
+				},
+				"corequisites": {
+					"type": "array",
+					"title": "Project Co-requisites",
+					"examples": [
+						"7th St E Road Diet"
+					]
+				},
+				"conflicts": {
+					"type": "array",
+					"title": "Project Conflicts",
+					"examples": [
+						"7th St E Road Diet"
+					]
+				}
+			}
+		},
+		"project": {
+			"type": "string",
+			"title": "Project Name",
+			"examples": [
+				"6th St E Road Diet"
+			]
+		},
+		"tags": {
+			"type": "array",
+			"title": "Project Tags",
+			"items": {
+				"type": "string",
+				"examples": [
+					"vision2050"
+				],
+				"uniqueItems": true
+			}
+		},
+		"osm_link_id": {
+			"title": "Open Street Map Way ID",
+			"type": "string"
+		},
+		"link": {
+			"type": "array",
+			"additionalProperties": false,
+			"title": "Road Name or Link ID",
+			"oneOf": [{
+					"required": ["name"]
+				},
+				{
+					"required": ["osm_link_id"]
+				}
+			]
+		},
+		"facility": {
+			"type": "object",
+			"additionalProperties": false,
+			"title": "Facility Selection",
+			"oneOf": [{
+					"required": [
+						"link",
+						"A",
+						"B"
+					]
+				},
+				{
+					"required": [
+						"trip_id"
+					]
+				},
+				{
+					"required": [
+						"route_id"
+					]
+				},
+				{
+					"required": [
+						"short_name"
+					]
+				},
+				{
+					"required": [
+						"long_name"
+					]
+				}
+			]
+		},
+		"roadnode": {
+			"type": "object",
+			"additionalProperties": false,
+			"title": "roadway network node",
+			"properties": {
+				"osm_node_id": {
+					"type": "string"
+				}
+			}
+		},
+		"A": {
+			"type": "object",
+			"additionalProperties": false,
+			"title": "Road A Node",
+			"properties": {
+				"osm_node_id": {
+					"type": "string"
+				}
+			}
+		},
+		"B": {
+			"type": "object",
+			"additionalProperties": false,
+			"title": "Roadway B Node",
+			"properties": {
+				"osm_node_id": {
+					"type": "string"
+				}
+			}
+		},
+		"trip_id": {
+			"type": "string"
+		},
+		"route_id": {
+			"type": "string"
+		},
+		"short_name": {
+			"type": "integer"
+		},
+		"long_name": {
+			"type": "string"
+		},
+		"time": {
+			"type": "array",
+			"items": {
+				"type": "string",
+				"oneof": [{
+						"pattern": "^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+					},
+					{
+						"pattern": "^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$"
+					}
+				]
+			},
+			"minItems": 2,
+			"maxItems": 2
+		},
+		"roadway_property_change": {
+			"type": "object",
+			"title": "Roadway Property Change",
+			"allOf": [{
+					"$ref": "#/definitions/facility"
+				},
+				{
+					"$ref": "#/definitions/properties"
+				}
+			]
+		},
+		"properties": {
+			"type": "array",
+			"title": "Properties to be Changed",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"oneOf": [{
+						"required": ["property", "set"]
+					},
+					{
+						"required": ["property", "change"]
+					}
+				],
+				"properties": {
+					"property": {
+						"type": "string",
+						"title": "Property Name to Change (Case Sensitive)",
+						"examples": [
+							"headway_secs", "lanes"
+						]
+					},
+					"existing": {
+						"type": "integer",
+						"title": "Existing Property",
+						"examples": [
+							3
+						]
+					},
+					"set": {
+						"type": "integer",
+						"title": "Set Property without Regard to Existing",
+						"examples": [
+							2
+						]
+					},
+					"change": {
+						"type": "integer",
+						"title": "Change Property Relative to Existing",
+						"examples": [
+							-1
+						]
+					}
+				}
+			}
+		},
+		"changes": {
+			"type": "array",
+			"title": "List of changes to be made in a composite project card",
+			"oneOf": [{
+				"allOf": [{
+						"$ref": "#/definitions/roadway_property_change"
+					},
+					{
+						"$ref": "#/definitions/category"
+					}
+				]
+			}]
+		}
+	},
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"title": "Project Card Schema",
+	"properties": {
+		"$ref": "#/definitions/project",
+		"oneOf": [{
+				"$ref": "#/definitions/changes"
+			},
+			{
+				"allOf": [{
+						"$ref": "#/definitions/roadway_property_change"
+					},
+					{
+						"$ref": "#/definitions/category"
+					}
+				]
+			}
+		]
+	}
+}
