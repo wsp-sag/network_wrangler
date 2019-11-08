@@ -28,41 +28,49 @@
         "type": "object",
         "title": "The Items Schema",
         "required": [
-          "shstRefId",
-          "shstGeometryId",
+          "id",
+          "geometryId",
           "access",
           "area",
+          "bridge",
           "highway",
-          "lanes",
-          "distance",
+          "junction",
+          "key",
+          "OSMlanes",
+          "length",
           "maxspeed",
           "name",
           "oneway",
-          "osm_link_id",
+          "osmid",
+          "ref",
+          "service",
+          "tunnel",
           "u",
           "v",
-          "lanes",
-          "transit_access",
-          "drive_access",
-          "walk_access",
-          "bike_access",
+          "width",
+          "LINK_ID",
+          "LANES",
+          "isTranLink",
+          "isDriveLink",
+          "isWalkLink",
+          "isBikeLink",
           "locationReferences"
         ],
         "properties": {
-          "shstRefId": {
-            "$id": "#/properties/features/items/properties/shstRefId",
+          "id": {
+            "$id": "#/properties/features/items/properties/id",
             "type": ["string", "null"],
-            "title": "The shstRefId Schema",
+            "title": "The Id Schema",
             "default": "",
             "examples": [
               "6a22969708104ae2497244f3d079381d"
             ],
             "pattern": "^(.*)$"
           },
-          "shstGeometryId": {
-            "$id": "#/properties/features/items/properties/shstGeometryId",
+          "geometryId": {
+            "$id": "#/properties/features/items/properties/geometryId",
             "type": ["string", "null"],
-            "title": "The shstGeometryId Schema",
+            "title": "The Geometryid Schema",
             "default": "",
             "examples": [
               "4a454269d65c6619a2d7e2026295a295"
@@ -128,8 +136,8 @@
               0
             ]
           },
-          "lanes": {
-            "$id": "#/properties/features/items/properties/]lanes",
+          "OSMlanes": {
+            "$id": "#/properties/features/items/properties/OSMlanes",
             "type": ["number", "null"],
             "title": "The Osmlanes Schema",
             "default": 0,
@@ -137,8 +145,8 @@
               0
             ]
           },
-          "distance": {
-            "$id": "#/properties/features/items/properties/distance",
+          "length": {
+            "$id": "#/properties/features/items/properties/length",
             "type": ["number", "null"],
             "title": "The Length Schema",
             "default": 0.0,
@@ -176,10 +184,10 @@
             ],
             "pattern": "^(.*)$"
           },
-          "osm_link_id": {
-            "$id": "#/properties/features/items/properties/osm_link_id",
+          "osmid": {
+            "$id": "#/properties/features/items/properties/osmid",
             "type": ["string", "null"],
-            "title": "The osm_link_id Schema",
+            "title": "The Osmid Schema",
             "default": "",
             "examples": [
               "18214905,18220565"
@@ -246,8 +254,8 @@
             ],
             "pattern": "^(.*)$"
           },
-          "model_link_id": {
-            "$id": "#/properties/features/items/properties/model_link_id",
+          "LINK_ID": {
+            "$id": "#/properties/features/items/properties/LINK_ID",
             "type": "integer",
             "title": "The Link_id Schema",
             "default": 0,
@@ -255,37 +263,46 @@
               224
             ]
           },
-          "transit_access": {
-            "$id": "#/properties/features/items/properties/transit_access",
+          "LANES": {
+            "$id": "#/properties/features/items/properties/LANES",
             "type": "integer",
-            "title": "The transit_access Schema",
+            "title": "The Lanes Schema",
+            "default": 0,
+            "examples": [
+              1
+            ]
+          },
+          "isTranLink": {
+            "$id": "#/properties/features/items/properties/isTranLink",
+            "type": "integer",
+            "title": "The Istranlink Schema",
             "default": 0,
             "examples": [
               0
             ]
           },
-          "drive_access": {
-            "$id": "#/properties/features/items/properties/drive_access",
+          "isDriveLink": {
+            "$id": "#/properties/features/items/properties/isDriveLink",
             "type": "integer",
-            "title": "The drive_access Schema",
+            "title": "The Isdrivelink Schema",
             "default": 0,
             "examples": [
               1
             ]
           },
-          "walk_access": {
-            "$id": "#/properties/features/items/properties/walk_access",
+          "isWalkLink": {
+            "$id": "#/properties/features/items/properties/isWalkLink",
             "type": "integer",
-            "title": "The walk_access Schema",
+            "title": "The Iswalklink Schema",
             "default": 0,
             "examples": [
               1
             ]
           },
-          "bike_access": {
-            "$id": "#/properties/features/items/properties/bike_access",
+          "isBikeLink": {
+            "$id": "#/properties/features/items/properties/isBikeLink",
             "type": "integer",
-            "title": "The bike_access Schema",
+            "title": "The Isbikelink Schema",
             "default": 0,
             "examples": [
               1

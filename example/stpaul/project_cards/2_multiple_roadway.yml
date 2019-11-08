@@ -13,14 +13,14 @@ facility:
         - 'Sixth'
         - 'sixth' #finds links where name contains 6th or Sixth...not a regex technically ;-)
    A:
-     osm_node_id: '187899923'
+     osmNodeId: '187899923'
    B:
-     osm_node_id: '187865924'
+     osmNodeId: '187865924'
 properties:
-  - property: lanes
+  - property: LANES
     set: 2
-  - property: transit_access
+  - property: isTranLink
     set: 1
-  - property: drive_access
+  - property: isDriveLink
     set: 0
 notes: Transitions 6th St E to transitway
