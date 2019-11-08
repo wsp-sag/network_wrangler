@@ -52,7 +52,7 @@ class RoadwayNetwork(object):
     UNIQUE_LINK_IDENTIFIERS = ["LINK_ID", "ShStReferenceId"]
     UNIQUE_NODE_IDENTIFIERS = ["travelModelId"]
 
-    MANAGED_LANES_REQUIRED_ATTRIBUTES = ["A", "B", "LINK_ID", "geometry", "locationReferences"]
+    MANAGED_LANES_REQUIRED_ATTRIBUTES = ["A", "B", "LINK_ID", "locationReferences"]
 
     KEEP_SAME_ATTRIBUTES_ML_AND_GP = ["DISTANCE", "isBikeLink", "isDriveLink",
         "isTranAcce", "isTranLink", "isWalkLink", "maxspeed", "name", "oneway",
@@ -1154,6 +1154,79 @@ class RoadwayNetwork(object):
 
         return self.links_df[property].apply(_get_property,time_spans = time_spans, category=category)
 
+
+    def create_dummy_connector_links(gp_df: GeoDataFrame, ml_df: GeoDataFrame):
+        """
+        create dummy connector links between the general purpose and managed lanes
+
+        args:
+        gp_df : GeoDataFrame
+            dataframe of general purpose links (where managed lane also exists)
+        ml_df : GeoDataFrame
+            dataframe of corresponding managed lane links
+        """
+
+        gp_ml_links_df = pd.concat([gp_df, gp_df.add_prefix('ML_')], axis=1, join='inner')
+
+        access_df = pd.DataFrame(columns=gp_df.columns.values.tolist())
+        egress_df = pd.DataFrame(columns=gp_df.columns.values.tolist())
+
+        def _get_connector_references(ref_1: list, ref_2: list, type: str):
+            if type == "access":
+                out_location_reference = [
+                    {'sequence': 1, 'point': ref_1[0]["point"]},
+                    {'sequence': 2, 'point': ref_2[0]["point"]}
+                ]
+
+            if type == "egress":
+                out_location_reference = [
+                    {'sequence': 1, 'point': ref_2[1]["point"]},
+                    {'sequence': 2, 'point': ref_1[1]["point"]}
+                ]
+            return(out_location_reference)
+
+        for index, row in gp_ml_links_df.iterrows():
+            access_row = {}
+            access_row["A"] = row["A"]
+            access_row["B"] = row["ML_A"]
+            access_row["LANES"] = 1
+            access_row["LINK_ID"] = row["LINK_ID"] + row["ML_LINK_ID"] + 1
+            access_row["isDriveLink"] = row["isDriveLink"]
+            access_row["locationReferences"] = _get_connector_references(
+                row["locationReferences"], row["ML_locationReferences"], "access"
+            )
+            access_row["DISTANCE"] = haversine_distance(
+                access_row["locationReferences"][0]["point"],
+                access_row["locationReferences"][1]["point"],
+            )
+            access_row["highway"] = "ml_access"
+            access_row["oneway"] = row["oneway"]
+            access_row["name"] = row["name"]
+            access_row["ref"] = row["ref"]
+            access_df = access_df.append(access_row, ignore_index=True)
+
+            egress_row = {}
+            egress_row["A"] = row["ML_B"]
+            egress_row["B"] = row["B"]
+            egress_row["LANES"] = 1
+            egress_row["LINK_ID"] = row["LINK_ID"] + row["ML_LINK_ID"] + 2
+            egress_row["isDriveLink"] = row["isDriveLink"]
+            egress_row["locationReferences"] = _get_connector_references(
+                row["locationReferences"], row["ML_locationReferences"], "egress"
+            )
+            egress_row["DISTANCE"] = haversine_distance(
+                egress_row["locationReferences"][0]["point"],
+                egress_row["locationReferences"][1]["point"],
+            )
+            egress_row["highway"] = "ml_egress"
+            egress_row["oneway"] = row["oneway"]
+            egress_row["name"] = row["name"]
+            egress_row["ref"] = row["ref"]
+            egress_df = egress_df.append(egress_row, ignore_index=True)
+
+        return(access_df, egress_df)
+
+
     def create_managed_lane_network(self, in_place = False) -> RoadwayNetwork:
         """
         Create a roadway network with managed lanes links separated out
@@ -1185,6 +1258,8 @@ class RoadwayNetwork(object):
             if attr not in RoadwayNetwork.KEEP_SAME_ATTRIBUTES_ML_AND_GP and attr not in RoadwayNetwork.MANAGED_LANES_REQUIRED_ATTRIBUTES:
                 ml_links_df[attr] = ""
 
+        ml_links_df =  ml_links_df.drop(ml_attributes, axis = 1)
+
         def _update_location_reference(location_reference: list):
             out_location_reference = copy.deepcopy(location_reference)
             out_location_reference[0]["point"] = offset_lat_lon(out_location_reference[0]["point"])
@@ -1204,78 +1279,13 @@ class RoadwayNetwork(object):
         ml_links_df["A"] = ml_links_df["A"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
         ml_links_df["B"] = ml_links_df["B"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
         ml_links_df["LINK_ID"] = ml_links_df["LINK_ID"] + RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR
-
         ml_links_df["locationReferences"] = ml_links_df["locationReferences"].apply(
             lambda x : _update_location_reference(x)
         )
-        ml_links_df["geometry"] = ml_links_df["locationReferences"].apply(
-            lambda x : _get_line_string(x)
+
+        access_links_df, egress_links_df = RoadwayNetwork.create_dummy_connector_links(
+            gp_links_df, ml_links_df
         )
-
-        ml_links_df =  ml_links_df.drop(ml_attributes, axis = 1)
-
-        gp_ml_links_df = pd.concat([gp_links_df, ml_links_df.add_prefix('ML_')], axis=1, join='inner')
-        access_links_df = pd.DataFrame(columns=gp_links_df.columns.values.tolist())
-        egress_links_df = pd.DataFrame(columns=gp_links_df.columns.values.tolist())
-
-        def _create_connector_references(ref_1: list, ref_2: list, type: str):
-            if type == "access":
-                out_location_reference = [
-                    {'sequence': 1, 'point': ref_1[0]["point"]},
-                    {'sequence': 2, 'point': ref_2[0]["point"]}
-                ]
-
-            if type == "egress":
-                out_location_reference = [
-                    {'sequence': 1, 'point': ref_2[1]["point"]},
-                    {'sequence': 2, 'point': ref_1[1]["point"]}
-                ]
-
-            return(out_location_reference)
-
-        for index, row in gp_ml_links_df.iterrows():
-            access_row = {}
-            access_row["A"] = row["A"]
-            access_row["B"] = row["ML_A"]
-            access_row["LANES"] = 1
-            access_row["LINK_ID"] = row["LINK_ID"] + row["ML_LINK_ID"] + 1
-            access_row["isDriveLink"] = row["isDriveLink"]
-            access_row["locationReferences"] = _create_connector_references(
-                row["locationReferences"], row["ML_locationReferences"], "access"
-            )
-            access_row["DISTANCE"] = haversine_distance(
-                access_row["locationReferences"][0]["point"],
-                access_row["locationReferences"][1]["point"],
-            )
-            access_row["geometry"] = _get_line_string(access_row["locationReferences"])
-            access_row["highway"] = "ml_access"
-            access_row["oneway"] = row["oneway"]
-            access_row["name"] = row["name"]
-            access_row["ref"] = row["ref"]
-
-            access_links_df = access_links_df.append(access_row, ignore_index=True)
-
-            egress_row = {}
-            egress_row["A"] = row["ML_B"]
-            egress_row["B"] = row["B"]
-            egress_row["LANES"] = 1
-            egress_row["LINK_ID"] = row["LINK_ID"] + row["ML_LINK_ID"] + 2
-            egress_row["isDriveLink"] = row["isDriveLink"]
-            egress_row["locationReferences"] = _create_connector_references(
-                row["locationReferences"], row["ML_locationReferences"], "egress"
-            )
-            egress_row["DISTANCE"] = haversine_distance(
-                egress_row["locationReferences"][0]["point"],
-                egress_row["locationReferences"][1]["point"],
-            )
-            egress_row["geometry"] = _get_line_string(egress_row["locationReferences"])
-            egress_row["highway"] = "ml_egress"
-            egress_row["oneway"] = row["oneway"]
-            egress_row["name"] = row["name"]
-            egress_row["ref"] = row["ref"]
-
-            egress_links_df = egress_links_df.append(egress_row, ignore_index=True)
-
 
         new_links_df = gp_links_df.append(ml_links_df)
         new_links_df = new_links_df.append(access_links_df)
@@ -1283,7 +1293,11 @@ class RoadwayNetwork(object):
         new_links_df = new_links_df.append(non_ml_links_df)
         new_links_df = new_links_df.drop('ML', axis = 1)
 
-        #only the ml_links_df has the new nodes added_a_nodes
+        new_links_df["geometry"] = new_links_df["locationReferences"].apply(
+            lambda x : _get_line_string(x)
+        )
+
+        #only the ml_links_df has the new nodes added
         added_a_nodes = ml_links_df["A"]
         added_b_nodes = ml_links_df["B"]
 
