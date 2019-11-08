@@ -14,9 +14,9 @@ STPAUL_DIR = os.path.join(os.getcwd(), "example", "stpaul")
 SCRATCH_DIR = os.path.join(os.getcwd(), "tests")
 
 
-@pytest.mark.transit_with_graph
+@pytest.mark.transit_with_roadnet
 @pytest.mark.travis
-def test_set_graph(request):
+def test_set_roadnet(request):
     print("\n--Starting:", request.node.name)
 
     road_net = RoadwayNetwork.read(
@@ -31,7 +31,7 @@ def test_set_graph(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit_with_graph
+@pytest.mark.transit_with_roadnet
 @pytest.mark.travis
 def test_project_card(request):
     print("\n--Starting:", request.node.name)
@@ -86,7 +86,7 @@ def test_project_card(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit_with_graph
+@pytest.mark.transit_with_roadnet
 @pytest.mark.travis
 def test_wo_existing(request):
     print("\n--Starting:", request.node.name)
@@ -136,7 +136,7 @@ def test_wo_existing(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit_with_graph
+@pytest.mark.transit_with_roadnet
 @pytest.mark.travis
 def test_select_transit_features_by_nodes(request):
     print("\n--Starting:", request.node.name)
@@ -163,7 +163,7 @@ def test_select_transit_features_by_nodes(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit_with_graph
+@pytest.mark.transit_with_roadnet
 @pytest.mark.travis
 def test_select_transit_features_by_nodes(request):
     print("\n--Starting:", request.node.name)
