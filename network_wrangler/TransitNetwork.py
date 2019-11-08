@@ -254,6 +254,43 @@ class TransitNetwork(object):
         # Return pandas.Series of trip_ids
         return trips["trip_id"]
 
+    def select_transit_features_by_nodes(
+        self, node_ids: list, require_all: bool = False
+    ) -> pd.Series:
+        """
+        Selects transit features that use any one of a list of node_ids
+
+        Parameters
+        ------------
+        node_ids : list (generally coming from nx.shortest_path)
+        require_all : bool if True, the returned trip_ids must traverse all of
+          the nodes (default = False)
+
+        Returns
+        -------
+        trip identifiers : list
+           list of GTFS trip IDs in the selection
+        """
+        # If require_all, the returned trip_ids must traverse all of the nodes
+        # Else, filter any shapes that use any one of the nodes in node_ids
+        if require_all:
+            shape_ids = (
+                self.feed.shapes
+                .groupby('shape_id')
+                .filter(lambda x: all(
+                    i in x[TransitNetwork.FK_SHAPES].tolist() for i in node_ids
+                ))
+            ).shape_id.drop_duplicates()
+        else:
+            shape_ids = self.feed.shapes[
+                self.feed.shapes[TransitNetwork.FK_SHAPES].isin(node_ids)
+            ].shape_id.drop_duplicates()
+
+        # Return pandas.Series of trip_ids
+        return self.feed.trips[
+            self.feed.trips.shape_id.isin(shape_ids)
+        ].trip_id
+
     def apply_transit_feature_change(
         self, trip_ids: pd.Series, properties: list, in_place: bool = True
     ) -> Union(None, TransitNetwork):
