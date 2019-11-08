@@ -48,6 +48,8 @@ class RoadwayNetwork(object):
 
     UNIQUE_ROADWAY_IDENTIFIERS = ["LINK_ID"]
 
+    MANAGED_LANES_SCALAR = 500000
+
     def __init__(self, nodes: GeoDataFrame, links: GeoDataFrame, shapes: GeoDataFrame):
         """
         Constructor
@@ -515,7 +517,8 @@ class RoadwayNetwork(object):
         }
 
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        unique_identifer_in_selection = set(RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS).issubset(selection_keys)
+        unique_identifer_in_selection = set(
+            RoadwayNetwork.UNIQUE_ROADWAY_IDENTIFIERS).issubset(selection_keys)
 
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection,
@@ -719,7 +722,6 @@ class RoadwayNetwork(object):
             self.selections[sel_key]["selection_found"] = True
 
             return self.selections[sel_key]["selected_links"].index.tolist()
-
 
     def validate_properties(
         self,
@@ -1011,7 +1013,7 @@ class RoadwayNetwork(object):
         self,
         links: dict,
         nodes: dict,
-        ignore_missing = True
+        ignore_missing=True
     ) -> None:
         """
         delete the roadway features defined in the project card
@@ -1033,7 +1035,8 @@ class RoadwayNetwork(object):
             for key, val in links.items():
                 missing_links = [v for v in val if v not in self.links_df[key].tolist()]
                 if missing_links:
-                    message = "Links attribute {} with values as {} does not exist in the network\n".format(key, missing_links)
+                    message = "Links attribute {} with values as {} does not exist in the network\n".format(
+                        key, missing_links)
                     if ignore_missing:
                         WranglerLogger.warning(message)
                     else:
@@ -1045,7 +1048,8 @@ class RoadwayNetwork(object):
             for key, val in nodes.items():
                 missing_nodes = [v for v in val if v not in self.nodes_df[key].tolist()]
                 if missing_nodes:
-                    message = "Nodes attribute {} with values as {} does not exist in the network\n".format(key, missing_links)
+                    message = "Nodes attribute {} with values as {} does not exist in the network\n".format(
+                        key, missing_links)
                     if ignore_missing:
                         WranglerLogger.warning(message)
                     else:
