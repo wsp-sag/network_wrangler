@@ -19,8 +19,11 @@ class ProjectCard(object):
     TRANSIT_CATEGORIES = ["Transit Service Property Change"]
 
     # categories that may affect transit, but only as a secondary
-    # effect of changeing roadways
-    SECONDARY_TRANSIT_CATEGORIES = ["Roadway Deletion", "Parallel Managed lanes"]
+    # effect of changing roadways
+    SECONDARY_TRANSIT_CATEGORIES = [
+        "Roadway Deletion",
+        "Parallel Managed Lanes"
+    ]
 
     ROADWAY_CATEGORIES = [
         "Roadway Property Change",
@@ -39,7 +42,7 @@ class ProjectCard(object):
         self.__dict__.update(attribute_dictonary)
         self.valid = False
 
-        ##todo more unstructuring of project card yaml
+        # todo more unstructuring of project card yaml
 
     def __str__(self):
         s = ["{}: {}".format(key, value) for key, value in self.__dict__.items()]

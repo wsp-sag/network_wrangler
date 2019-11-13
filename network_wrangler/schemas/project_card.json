@@ -88,12 +88,12 @@
         },
         {
           "required": [
-            "short_name"
+            "route_short_name"
           ]
         },
         {
           "required": [
-            "long_name"
+            "route_long_name"
           ]
         }
       ],
@@ -158,10 +158,10 @@
         "route_id": {
           "type": "string"
         },
-        "short_name": {
+        "route_short_name": {
           "type": "integer"
         },
-        "long_name": {
+        "route_long_name": {
           "type": "string"
         },
         "time": {
@@ -205,14 +205,34 @@
             ]
           },
           "existing": {
-            "type": "integer",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            ],
             "title": "Existing Property",
             "examples": [
               3
             ]
           },
           "set": {
-            "type": "integer",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            ],
             "title": "Set Property without Regard to Existing",
             "examples": [
               2

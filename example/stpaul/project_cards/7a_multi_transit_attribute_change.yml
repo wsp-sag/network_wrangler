@@ -1,4 +1,4 @@
-project: Improve Express Bus Frequency
+project: Blue Line Service Enhancement
 category: Transit Service Property Change
 tags:
    - example
@@ -7,7 +7,8 @@ dependencies:
   corequisites: []
   conflicts: []
 facility:
-  route_long_name: Express
+  trip_id: ['14940701-JUN19-MVS-BUS-Weekday-01', '14940963-JUN19-MVS-BUS-Weekday-01']
+  time: ['06:00:00', '09:00:00']
 properties:
   - property: headway_secs
-    set: 1800
+    set: 900

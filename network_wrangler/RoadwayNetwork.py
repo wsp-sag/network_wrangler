@@ -3,7 +3,8 @@
 
 from __future__ import annotations
 
-import os, sys
+import os
+import sys
 import copy
 
 import yaml
@@ -37,7 +38,6 @@ class RoadwayNetwork(object):
     """
 
     CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
-    EPSG = 4326
 
     NODE_FOREIGN_KEY = "osm_node_id"
     LINK_FOREIGN_KEY = ("u","v")
@@ -53,14 +53,16 @@ class RoadwayNetwork(object):
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id", "ShStReferenceId"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
 
-    MANAGED_LANES_REQUIRED_ATTRIBUTES = ["A", "B", "LINK_ID", "locationReferences"]
+    MANAGED_LANES_REQUIRED_ATTRIBUTES = ["A", "B", "model_link_id", "locationReferences"]
 
-    KEEP_SAME_ATTRIBUTES_ML_AND_GP = ["DISTANCE", "isBikeLink", "isDriveLink",
-        "isTranAcce", "isTranLink", "isWalkLink", "maxspeed", "name", "oneway",
+    KEEP_SAME_ATTRIBUTES_ML_AND_GP = ["distance", "bike_access", "drive_access",
+        "transit_access", "walk_access", "maxspeed", "name", "oneway",
         "ref", "highway", "length"
     ]
 
-    def __init__(self, nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame):
+    MANAGED_LANES_SCALAR = 500000
+
+    def __init__(self, nodes: GeoDataFrame, links: GeoDataFrame, shapes: GeoDataFrame):
         """
         Constructor
         """
@@ -117,10 +119,8 @@ class RoadwayNetwork(object):
             for g in link_json
         ]
         links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
-        links_df.crs = RoadwayNetwork.CRS
 
         shapes_df = gpd.read_file(shape_file)
-        shapes_df.crs = RoadwayNetwork.CRS
 
         # geopandas uses fiona OGR drivers, which doesn't let you have
         # a list as a property type. Therefore, must read in node_properties
@@ -148,7 +148,7 @@ class RoadwayNetwork(object):
         nodes_df.crs = RoadwayNetwork.CRS
         nodes_df["x"] = nodes_df["geometry"].apply(lambda g: g.x)
         nodes_df["y"] = nodes_df["geometry"].apply(lambda g: g.y)
-        ## todo: flatten json
+        # todo: flatten json
 
         WranglerLogger.info("Read %s links from %s" % (links_df.size, link_file))
         WranglerLogger.info("Read %s nodes from %s" % (nodes_df.size, node_file))
@@ -203,7 +203,7 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def validate_object_types(
-        nodes: GeoDataFrame, links: DataFrame, shapes: GeoDataFrame
+        nodes: GeoDataFrame, links: GeoDataFrame, shapes: GeoDataFrame
     ):
         """
         Determines if the roadway network is being built with the right object types.
@@ -450,6 +450,10 @@ class RoadwayNetwork(object):
             ].values[0]
 
         return (A_id, B_id)
+
+    @staticmethod
+    def get_managed_lane_node_ids(nodes_list):
+        return [x + RoadwayNetwork.MANAGED_LANES_SCALAR for x in nodes_list]
 
     @staticmethod
     def ox_graph(nodes_df, links_df):
@@ -789,7 +793,6 @@ class RoadwayNetwork(object):
 
             return self.selections[sel_key]["selected_links"].index.tolist()
 
-
     def validate_properties(
         self,
         properties: dict,
@@ -1084,7 +1087,7 @@ class RoadwayNetwork(object):
         self,
         links: dict,
         nodes: dict,
-        ignore_missing = True
+        ignore_missing=True
     ) -> None:
         """
         delete the roadway features defined in the project card
@@ -1106,7 +1109,8 @@ class RoadwayNetwork(object):
             for key, val in links.items():
                 missing_links = [v for v in val if v not in self.links_df[key].tolist()]
                 if missing_links:
-                    message = "Links attribute {} with values as {} does not exist in the network\n".format(key, missing_links)
+                    message = "Links attribute {} with values as {} does not exist in the network\n".format(
+                        key, missing_links)
                     if ignore_missing:
                         WranglerLogger.warning(message)
                     else:
@@ -1118,7 +1122,8 @@ class RoadwayNetwork(object):
             for key, val in nodes.items():
                 missing_nodes = [v for v in val if v not in self.nodes_df[key].tolist()]
                 if missing_nodes:
-                    message = "Nodes attribute {} with values as {} does not exist in the network\n".format(key, missing_links)
+                    message = "Nodes attribute {} with values as {} does not exist in the network\n".format(
+                        key, missing_links)
                     if ignore_missing:
                         WranglerLogger.warning(message)
                     else:
@@ -1245,13 +1250,14 @@ class RoadwayNetwork(object):
             access_row = {}
             access_row["A"] = row["A"]
             access_row["B"] = row["ML_A"]
-            access_row["LANES"] = 1
-            access_row["LINK_ID"] = row["LINK_ID"] + row["ML_LINK_ID"] + 1
-            access_row["isDriveLink"] = row["isDriveLink"]
+            access_row["lanes"] = 1
+            access_row["model_link_id"] = row["model_link_id"] + row["ML_model_link_id"] + 1
+            access_row["access"] = row["ML_access"]
+            access_row["drive_access"] = row["drive_access"]
             access_row["locationReferences"] = _get_connector_references(
                 row["locationReferences"], row["ML_locationReferences"], "access"
             )
-            access_row["DISTANCE"] = haversine_distance(
+            access_row["distance"] = haversine_distance(
                 access_row["locationReferences"][0]["point"],
                 access_row["locationReferences"][1]["point"],
             )
@@ -1264,13 +1270,14 @@ class RoadwayNetwork(object):
             egress_row = {}
             egress_row["A"] = row["ML_B"]
             egress_row["B"] = row["B"]
-            egress_row["LANES"] = 1
-            egress_row["LINK_ID"] = row["LINK_ID"] + row["ML_LINK_ID"] + 2
-            egress_row["isDriveLink"] = row["isDriveLink"]
+            egress_row["lanes"] = 1
+            egress_row["model_link_id"] = row["model_link_id"] + row["ML_model_link_id"] + 2
+            egress_row["access"] = row["ML_access"]
+            egress_row["drive_access"] = row["drive_access"]
             egress_row["locationReferences"] = _get_connector_references(
                 row["locationReferences"], row["ML_locationReferences"], "egress"
             )
-            egress_row["DISTANCE"] = haversine_distance(
+            egress_row["distance"] = haversine_distance(
                 egress_row["locationReferences"][0]["point"],
                 egress_row["locationReferences"][1]["point"],
             )
@@ -1334,7 +1341,7 @@ class RoadwayNetwork(object):
 
         ml_links_df["A"] = ml_links_df["A"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
         ml_links_df["B"] = ml_links_df["B"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
-        ml_links_df["LINK_ID"] = ml_links_df["LINK_ID"] + RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR
+        ml_links_df["model_link_id"] = ml_links_df["model_link_id"] + RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR
         ml_links_df["locationReferences"] = ml_links_df["locationReferences"].apply(
             lambda x : _update_location_reference(x)
         )
@@ -1361,9 +1368,9 @@ class RoadwayNetwork(object):
 
         for a_node in added_a_nodes:
             new_nodes_df = new_nodes_df.append(
-                {"travelModelId": a_node,
+                {"model_node_id": a_node,
                  "geometry": Point(new_links_df[new_links_df["A"]==a_node].iloc[0]["locationReferences"][0]["point"]),
-                 "isDriveNode": 1
+                 "drive_node": 1
                 },
                 ignore_index=True
             )
@@ -1371,9 +1378,9 @@ class RoadwayNetwork(object):
         for b_node in added_b_nodes:
             if b_node not in new_nodes_df["travelModelId"].tolist():
                 new_nodes_df = new_nodes_df.append(
-                    {"travelModelId": b_node,
+                    {"model_node_id": b_node,
                      "geometry": Point(new_links_df[new_links_df["B"]==b_node].iloc[0]["locationReferences"][1]["point"]),
-                     "isDriveNode": 1
+                     "drive_node": 1
                     },
                     ignore_index=True
                 )

@@ -7,7 +7,7 @@ dependencies:
   corequisites: []
   conflicts: []
 facility:
-  route_long_name: Express
+  route_long_name: [Express, 'Ltd Stop']
 properties:
   - property: headway_secs
     set: 1800
