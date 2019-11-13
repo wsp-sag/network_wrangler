@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence,shape_osm_node_id,shape_model_node_id
-=======
 shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence,shape_osm_link_id,shape_model_node_id
->>>>>>> develop
 4520004,44.8655259,-93.13223909999999,1,1977347010,81615
 4520004,44.8654215,-93.1319051,2,1977346948,81582
 4520004,44.865402,-93.1316061,3,1977346942,81579

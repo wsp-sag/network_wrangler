@@ -109,14 +109,13 @@ def parse_time_spans(times):
 
         return (start_time_sec, end_time_sec)
 
-<<<<<<< HEAD
     elif isinstance(start_time, int) and isinstance(end_time, int):
         return times
 
     else:
         WranglerLogger.error("ERROR: times should be ints or strings")
         raise ValueError()
-=======
+
     return (start_time_sec, end_time_sec)
 
 def offset_lat_lon(lon_lat_point: list, offset_meters = 100):
@@ -149,4 +148,3 @@ def haversine_distance(origin: list, destination: list):
     d = radius * c
 
     return d
->>>>>>> develop
