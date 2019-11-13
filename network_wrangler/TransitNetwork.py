@@ -54,18 +54,24 @@ class TransitNetwork(object):
         relationships between GTFS files. Each file is a 'node', and the
         relationship between files are 'edges'.
         """
-
-        files_not_valid =  []
+        updated_config = copy.deepcopy(config)
+        files_not_found =  []
         for node in config.nodes.keys():
-            try:
-                feed.get(node)
-            except:
+
+            n = feed.get(node)
+            if n.shape[0] == 0:
+                WranglerLogger.info("Removing {} from transit network config because file not found".format(node))
+                updated_config.remove_node(node)
                 if node in TransitNetwork.REQUIRED_FILES:
-                    files_not_valid.append(node)
-        if files_not_valid:
-            raise AttributeError("Required files not found or valid: {}".format(','.join(files_not_valid)))
+                    files_not_found.append(node)
+
+        if files_not_found:
+            msg = "Required files not found or valid: {}".format(','.join(files_not_found))
+            WranglerLogger.error(msg)
+            raise AttributeError(msg)
             return False
-        return True
+
+        return updated_config
 
     @staticmethod
     def read(feed_path: str, fast: bool = False) -> TransitNetwork:
@@ -74,17 +80,15 @@ class TransitNetwork(object):
         """
         config = default_config()
         feed = ptg.load_feed(feed_path, config=config)
-
-        TransitNetwork.validate_feed(feed, config)
+        updated_config = TransitNetwork.validate_feed(feed, config)
 
         # Read in each feed so we can write over them
         new_feed = DotDict()
-        for node in config.nodes.keys():
+        for node in updated_config.nodes.keys():
             # Load (initiate Partridge's lazy load)
             new_feed[node.replace(".txt", "")] = feed.get(node)
 
-        transit_network = TransitNetwork(feed=new_feed, config=config)
-
+        transit_network = TransitNetwork(feed=new_feed, config=updated_config)
         return transit_network
 
     def set_roadnet(self, road_net: RoadwayNetwork,
@@ -130,13 +134,16 @@ class TransitNetwork(object):
         path: the path were the output will be saved
         filename: the name prefix of the transit files that will be generated
         """
+        WranglerLogger.info("Writing transit to directory: {}".format(path))
         for node in self.config.nodes.keys():
-            df = self.feed.get(node)
+
+            df = self.feed.get(node.replace(".txt", ""))
             if not df.empty:
                 if filename:
                     outpath = os.path.join(path, filename + "_" + node)
                 else:
                     outpath = os.path.join(path, node)
+                WranglerLogger.debug("Writing file: {}".format(outpath))
 
                 df.to_csv(outpath, index=False)
 
