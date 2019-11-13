@@ -192,7 +192,7 @@ card: the project card stored in a dictionary</p>
 <dt id="network_wrangler.ProjectCard.parallel_managed_lanes">
 <code class="sig-name descname">parallel_managed_lanes</code><span class="sig-paren">(</span><em class="sig-param">card</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.ProjectCard.parallel_managed_lanes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Probably delete.
-Reads a Parallel Managed Lanes card.</p>
+Reads a Parallel Managed lanes card.</p>
 <p>args:
 card: the project card stored in a dictionary</p>
 </dd></dl>
@@ -405,7 +405,7 @@ variables in the links file) for the AB nodes as a tuple.</p>
 </dd>
 <dt>node_foreign_key: str</dt><dd><p>variable name for whatever is used by the u and v variable
 in the links_df file.  If nothing is specified, assume whatever
-default is (usually osmNodeId)</p>
+default is (usually osm_node_id)</p>
 </dd>
 </dl>
 <dl class="field-list simple">
@@ -429,7 +429,7 @@ link_df : GeoDataFrame</p>
 
 <dl class="method">
 <dt id="network_wrangler.RoadwayNetwork.read">
-<em class="property">static </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">link_file</em>, <em class="sig-param">node_file</em>, <em class="sig-param">shape_file</em>, <em class="sig-param">fast=False</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.read" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">link_file</em>, <em class="sig-param">node_file</em>, <em class="sig-param">shape_file</em>, <em class="sig-param">fast=True</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads a network from the roadway network standard
 Validates that it conforms to the schema</p>
 <p>args:
@@ -453,7 +453,7 @@ fast: boolean that will skip validation to speed up read time</p>
 <dt>net.select_roadway_features(</dt><dd><dl class="simple">
 <dt>selection = [ {</dt><dd><p>#   a match condition for the from node using osm,
 #   shared streets, or model node number
-‘from’: {‘osmid’: ‘1234’},
+‘from’: {‘osm_model_link_id’: ‘1234’},
 #   a match for the to-node..
 ‘to’: {‘shstid’: ‘4321’},
 #   a regex or match for facility condition
