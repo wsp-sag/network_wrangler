@@ -597,30 +597,27 @@ tc=wr.TransitNetwork.read(path=stpaul)</p>
 
 <dl class="method">
 <dt id="network_wrangler.TransitNetwork.apply_transit_feature_change">
-<code class="sig-name descname">apply_transit_feature_change</code><span class="sig-paren">(</span><em class="sig-param">trip_ids</em>, <em class="sig-param">properties</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.apply_transit_feature_change" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">apply_transit_feature_change</code><span class="sig-paren">(</span><em class="sig-param">trip_ids</em>, <em class="sig-param">properties</em>, <em class="sig-param">in_place=True</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.apply_transit_feature_change" title="Permalink to this definition">¶</a></dt>
 <dd><p>Changes the transit attributes for the selected features based on the
 project card information passed</p>
 <dl class="simple">
 <dt>trip_ids<span class="classifier">pd.Series</span></dt><dd><p>all trip_ids to apply change to</p>
 </dd>
-<dt>properties<span class="classifier">list of dictionarys</span></dt><dd><p>transit properties to change</p>
+<dt>properties<span class="classifier">list of dictionaries</span></dt><dd><p>transit properties to change</p>
+</dd>
+<dt>in_place<span class="classifier">bool</span></dt><dd><p>whether to apply changes in place or return a new network</p>
 </dd>
 </dl>
 <p>None</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="network_wrangler.TransitNetwork.read">
 <em class="property">static </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">feed_path</em>, <em class="sig-param">fast=False</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read GTFS feed from folder and return a config and Partridge Feed object</p>
+<dd><p>Read GTFS feed from folder and TransitNetwork object</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DiGraph</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Feed</span></code>]</p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TransitNetwork</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -630,6 +627,26 @@ project card information passed</p>
 <code class="sig-name descname">select_transit_features</code><span class="sig-paren">(</span><em class="sig-param">selection</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.select_transit_features" title="Permalink to this definition">¶</a></dt>
 <dd><p>Selects transit features that satisfy selection criteria</p>
 <p>selection : dictionary</p>
+<dl class="simple">
+<dt>trip identifiers<span class="classifier">list</span></dt><dd><p>list of GTFS trip IDs in the selection</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.TransitNetwork.select_transit_features_by_nodes">
+<code class="sig-name descname">select_transit_features_by_nodes</code><span class="sig-paren">(</span><em class="sig-param">node_ids</em>, <em class="sig-param">require_all=False</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.select_transit_features_by_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects transit features that use any one of a list of node_ids</p>
+<p>node_ids : list (generally coming from nx.shortest_path)
+require_all : bool if True, the returned trip_ids must traverse all of</p>
+<blockquote>
+<div><p>the nodes (default = False)</p>
+</div></blockquote>
 <dl class="simple">
 <dt>trip identifiers<span class="classifier">list</span></dt><dd><p>list of GTFS trip IDs in the selection</p>
 </dd>
@@ -802,7 +819,7 @@ creates a scenario object with the valid project card.</p>
 can also be used as an apply function for a pandas series
 Parameters
 ———–
-times: tuple(string)</p>
+times: tuple(string) or tuple(int) or list(string) or list(int)</p>
 <dl class="simple">
 <dt>tuple(integer)</dt><dd><p>time span as seconds from midnight</p>
 </dd>
