@@ -7,6 +7,8 @@ from network_wrangler import ProjectCard
 import time
 import numpy as np
 import pandas as pd
+from network_wrangler import offset_lat_lon
+from network_wrangler import haversine_distance
 
 pd.set_option("display.max_rows", 500)
 pd.set_option("display.max_columns", 500)
@@ -31,7 +33,18 @@ SMALL_SHAPE_FILE = os.path.join(SMALL_DIR, "shape.geojson")
 SMALL_LINK_FILE = os.path.join(SMALL_DIR, "link.json")
 SMALL_NODE_FILE = os.path.join(SMALL_DIR, "node.geojson")
 
-SCRATCH_DIR = os.path.dirname(os.path.realpath(__file__))
+def _read_stpaul_net():
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+    return net
+
+SCRATCH_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "scratch"
+)
 
 def _read_stpaul_net():
     net = RoadwayNetwork.read(
@@ -137,7 +150,6 @@ def test_quick_roadway_read_write(request):
     }]
 )
 
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_select_roadway_features(request, selection):
@@ -216,7 +228,7 @@ def test_apply_roadway_feature_change(request, apply_feature_change_project_card
 
     print("--Finished:", request.node.name)
 
-
+@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_managed_lane(request):
@@ -322,8 +334,6 @@ def test_bad_properties_statements(request):
         net.validate_properties(bad_properties_existing, ignore_existing=False)
 
     print("--Finished:", request.node.name)
-
-
 
 @pytest.mark.travis
 @pytest.mark.roadway
@@ -492,4 +502,59 @@ def test_query_roadway_property_by_time_group(request, variable_query):
     print("ORIGINAL:\n",net.links_df.loc[selected_link_indices,variable_query['v']])
 
 
+
     ## todo make test make sure the values are correct.
+
+@pytest.mark.highway
+@pytest.mark.ashishk
+def test_write_model_net(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    print("Reading project card ...")
+    project_card_name = "5_managed_lane.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+
+    net.apply(project_card.__dict__)
+    net.links_df.to_csv(os.path.join(SCRATCH_DIR, "in_ml_links.csv"), index=False)
+    net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "in_ml_nodes.csv"), index=False)
+    net.shapes_df.to_csv(os.path.join(SCRATCH_DIR, "in_ml_shape.csv"), index=False)
+
+    ml_net = net.create_managed_lane_network(in_place=False)
+    ml_net.links_df.to_csv(os.path.join(SCRATCH_DIR, "out_ml_links.csv"), index=False)
+    ml_net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "out_ml_nodes.csv"), index=False)
+    ml_net.shapes_df.to_csv(os.path.join(SCRATCH_DIR, "out_ml_shape.csv"), index=False)
+
+    print("--Finished:", request.node.name)
+
+@pytest.mark.offset
+def test_lat_lon_offset(request):
+    print("\n--Starting:", request.node.name)
+
+    in_lat_lon = [-93.0903549, 44.961085]
+    print(in_lat_lon)
+
+    new_lat_lon = offset_lat_lon(in_lat_lon)
+    print(new_lat_lon)
+
+    print("--Finished:", request.node.name)
+
+@pytest.mark.get_dist
+def test_get_distance_bw_lat_lon(request):
+    print("\n--Starting:", request.node.name)
+
+    start = [-93.0889873, 44.966861]
+    end = [-93.08844310000001, 44.9717832]
+    dist = haversine_distance(start, end)
+    print(dist)
+
+    print("--Finished:", request.node.name)

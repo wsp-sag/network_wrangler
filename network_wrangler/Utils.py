@@ -1,6 +1,7 @@
 import pandas as pd
 from .Logger import WranglerLogger
-
+import math
+import copy
 
 def point_df_to_geojson(df: pd.DataFrame, properties: list):
     """
@@ -108,9 +109,44 @@ def parse_time_spans(times):
 
         return (start_time_sec, end_time_sec)
 
+<<<<<<< HEAD
     elif isinstance(start_time, int) and isinstance(end_time, int):
         return times
 
     else:
         WranglerLogger.error("ERROR: times should be ints or strings")
         raise ValueError()
+=======
+    return (start_time_sec, end_time_sec)
+
+def offset_lat_lon(lon_lat_point: list, offset_meters = 100):
+    in_lon = lon_lat_point[0]
+    in_lat = lon_lat_point[1]
+
+    # Earth's radius
+    radius = 6378137
+
+    # offset in radians
+    offset_lat_radians = offset_meters/radius
+    offset_lon_radians = offset_meters/(radius * math.cos(math.pi * in_lat/180))
+
+    # offset lat lon
+    latO = in_lat + offset_lat_radians * 180/math.pi
+    lonO = in_lon + offset_lon_radians * 180/math.pi
+
+    return([lonO, latO])
+
+def haversine_distance(origin: list, destination: list):
+    lon1, lat1 = origin
+    lon2, lat2 = destination
+    radius = 6378137 # meter
+
+    dlat = math.radians(lat2-lat1)
+    dlon = math.radians(lon2-lon1)
+    a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) \
+        * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    d = radius * c
+
+    return d
+>>>>>>> develop
