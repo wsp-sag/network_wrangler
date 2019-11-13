@@ -904,14 +904,14 @@ class RoadwayNetwork(object):
             _apply_individual_change(project_card_dictionary)
 
     def apply_roadway_feature_change(
-        self, model_link_idx: list, properties: dict, in_place: bool = True
+        self, link_idx: list, properties: dict, in_place: bool = True
     ) -> Union(None, RoadwayNetwork):
         """
         Changes the roadway attributes for the selected features based on the
         project card information passed
 
         args:
-        model_link_idx : list
+        link_idx : list
             lndices of all links to apply change to
         properties : list of dictionarys
             roadway properties to change
@@ -930,7 +930,7 @@ class RoadwayNetwork(object):
             # if project card specifies an existing value in the network
             #   check and see if the existing value in the network matches
             if p.get("existing"):
-                network_values = self.links_df.loc[model_link_idx, attribute].tolist()
+                network_values = self.links_df.loc[link_idx, attribute].tolist()
                 if not set(network_values).issubset([p.get("existing")]):
                     WranglerLogger.warning(
                         "Existing value defined for {} in project card does "
@@ -940,32 +940,32 @@ class RoadwayNetwork(object):
 
             if in_place:
                 if "set" in p.keys():
-                    self.links_df.loc[model_link_idx, attribute] = p["set"]
+                    self.links_df.loc[link_idx, attribute] = p["set"]
                 else:
-                    self.links_df.loc[model_link_idx, attribute] = (
-                        self.links_df.loc[model_link_idx, attribute] + p["change"]
+                    self.links_df.loc[link_idx, attribute] = (
+                        self.links_df.loc[link_idx, attribute] + p["change"]
                     )
             else:
                 if i == 0:
                     updated_network = copy.deepcopy(self)
 
                 if "set" in p.keys():
-                    updated_network.links_df.loc[model_link_idx, attribute] = p["set"]
+                    updated_network.links_df.loc[link_idx, attribute] = p["set"]
                 else:
-                    updated_network.links_df.loc[model_link_idx, attribute] = (
-                        updated_network.links_df.loc[model_link_idx, attribute] + p["change"]
+                    updated_network.links_df.loc[link_idx, attribute] = (
+                        updated_network.links_df.loc[link_idx, attribute] + p["change"]
                     )
 
                 if i == len(properties) - 1:
                     return updated_network
 
     def apply_managed_lane_feature_change(
-        self, model_link_idx: list, properties: dict, in_place: bool = True
+        self, link_idx: list, properties: dict, in_place: bool = True
     ) -> Union(None, RoadwayNetwork):
         """
         Apply the managed lane feature changes to the roadway network
 
-        model_link_idx : list
+        link_idx : list
             lndices of all links to apply change to
         properties : list of dictionarys
             roadway properties to change
@@ -1018,12 +1018,12 @@ class RoadwayNetwork(object):
                 attr_value = 1
 
             if in_place:
-                self.links_df.loc[model_link_idx, attribute] = attr_value
+                self.links_df.loc[link_idx, attribute] = attr_value
             else:
                 if i == 0:
                     updated_network = copy.deepcopy(self)
 
-                updated_network.links_df.loc[model_link_idx, attribute] = attr_value
+                updated_network.links_df.loc[link_idx, attribute] = attr_value
 
                 if i == len(properties) - 1:
                     return updated_network

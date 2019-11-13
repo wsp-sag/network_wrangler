@@ -142,7 +142,6 @@ def test_quick_roadway_read_write(request):
     }]
 )
 
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_select_roadway_features(request, selection):
@@ -221,7 +220,7 @@ def test_apply_roadway_feature_change(request, apply_feature_change_project_card
 
     print("--Finished:", request.node.name)
 
-
+@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_managed_lane(request):
@@ -551,4 +550,3 @@ def test_get_distance_bw_lat_lon(request):
     print(dist)
 
     print("--Finished:", request.node.name)
-
