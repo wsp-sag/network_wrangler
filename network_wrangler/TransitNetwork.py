@@ -33,6 +33,8 @@ class TransitNetwork(object):
     FK_SHAPES = "shape_model_node_id"
     FK_STOPS = "model_node_id"
 
+    REQUIRED_FILES = ["agency.txt","frequencies.txt","routes.txt","shapes.txt","stop_times.txt","stops.txt","transfers.txt","trips.txt"]
+
     def __init__(self, feed: DotDict = None, config: nx.DiGraph = None):
         """
         Constructor
@@ -52,12 +54,18 @@ class TransitNetwork(object):
         relationships between GTFS files. Each file is a 'node', and the
         relationship between files are 'edges'.
         """
-        try:
-            for node in config.nodes.keys():
+
+        files_not_valid =  []
+        for node in config.nodes.keys():
+            try:
                 feed.get(node)
-            return True
-        except AttributeError:
+            except:
+                if node in TransitNetwork.REQUIRED_FILES:
+                    files_not_valid.append(node)
+        if files_not_valid:
+            raise AttributeError("Required files not found or valid: {}".format(','.join(files_not_valid)))
             return False
+        return True
 
     @staticmethod
     def read(feed_path: str, fast: bool = False) -> TransitNetwork:
