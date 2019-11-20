@@ -97,6 +97,28 @@ class RoadwayNetwork(object):
         shape_file: full path to the shape file
         fast: boolean that will skip validation to speed up read time
         """
+
+        WranglerLogger.info("Reading from following files:\n-{}\n-{}\n-{}.".format(link_file, node_file, shape_file))
+
+        """
+        Validate Input
+        """
+
+        if not os.path.exist(link_file):
+            msg = "Link file doesn't exist at: {}".format(link_file)
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
+        if not os.path.exist(node_file):
+            msg = "Link file doesn't exist at: {}".format(link_file)
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
+        if not os.path.exist(shape_file):
+            msg = "Link file doesn't exist at: {}".format(link_file)
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
         if not fast:
             if not (
                 RoadwayNetwork.validate_node_schema(node_file)
@@ -270,9 +292,9 @@ class RoadwayNetwork(object):
             WranglerLogger.error(exc.message)
 
         except SchemaError as exc:
-            WranglerLogger.error("Failed Node schema validation: Schema Error")
+            WranglerLogger.error("Invalid Node Schema")
             WranglerLogger.error("Node Schema Loc:{}".format(schema_location))
-            WranglerLogger.error(exc.message)
+            WranglerLogger.error(json.dumps(exc.message, indent=2))
 
         return False
 
@@ -307,9 +329,9 @@ class RoadwayNetwork(object):
             WranglerLogger.error(exc.message)
 
         except SchemaError as exc:
-            WranglerLogger.error("Failed Link schema validation: Schema Error")
+            WranglerLogger.error("Invalid Link Schema")
             WranglerLogger.error("Link Schema Loc: {}".format(schema_location))
-            WranglerLogger.error(exc.message)
+            WranglerLogger.error(json.dumps(exc.message, indent=2))
 
         return False
 
@@ -344,9 +366,9 @@ class RoadwayNetwork(object):
             WranglerLogger.error(exc.message)
 
         except SchemaError as exc:
-            WranglerLogger.error("Failed Shape schema validation: Schema Error")
+            WranglerLogger.error("Invalid Shape Schema")
             WranglerLogger.error("Shape Schema Loc: {}".format(schema_location))
-            WranglerLogger.error(exc.message)
+            WranglerLogger.error(json.dumps(exc.message, indent=2))
 
         return False
 

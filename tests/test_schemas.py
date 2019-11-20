@@ -10,10 +10,12 @@ SCHEMA_DIR = os.path.join(
     "schemas",
 )
 SMALL_EX_DIR = os.path.join(os.getcwd(), "example", "single")
+STPAUL_EX_DIR = os.path.join(os.getcwd(), "example", "stpaul")
 
 STPAUL_PC_DIR = os.path.join(os.getcwd(), "example", "stpaul", "project_cards")
 
 @pytest.mark.schema
+@pytest.mark.roadschema
 def test_roadway_link_schema():
     schema_filename = os.path.join(SCHEMA_DIR, "roadway_network_link.json")
     link_file = os.path.join(SMALL_EX_DIR, "link.json")
