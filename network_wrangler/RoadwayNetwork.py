@@ -104,17 +104,17 @@ class RoadwayNetwork(object):
         Validate Input
         """
 
-        if not os.path.exist(link_file):
+        if not os.path.exists(link_file):
             msg = "Link file doesn't exist at: {}".format(link_file)
             WranglerLogger.error(msg)
             raise ValueError(msg)
 
-        if not os.path.exist(node_file):
+        if not os.path.exists(node_file):
             msg = "Link file doesn't exist at: {}".format(link_file)
             WranglerLogger.error(msg)
             raise ValueError(msg)
 
-        if not os.path.exist(shape_file):
+        if not os.path.exists(shape_file):
             msg = "Link file doesn't exist at: {}".format(link_file)
             WranglerLogger.error(msg)
             raise ValueError(msg)
