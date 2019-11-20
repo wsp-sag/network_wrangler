@@ -9,7 +9,7 @@
     "type": "object",
     "title": "The Items Schema",
     "required": [
-      "shstRefId",
+      "shstReferenceId",
       "shstGeometryId",
       "access",
       "highway",
@@ -28,10 +28,10 @@
       "locationReferences"
     ],
     "properties": {
-      "shstRefId": {
-        "$id": "#/items/properties/shstRefId",
+      "shstReferenceId": {
+        "$id": "#/items/properties/shstReferenceId",
         "type": "string",
-        "title": "The Shstrefid Schema",
+        "title": "The Shstreferenceid Schema",
         "default": "",
         "examples": [
           "6a22969708104ae2497244f3d079381d"

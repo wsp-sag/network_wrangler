@@ -143,6 +143,8 @@ class Scenario(object):
         glob_search:
 
         """
+        WranglerLogger.info("Creating Scenario")
+        
         if project_cards_list:
             WranglerLogger.debug("Adding project cards from List.\n{}".format(",".join([p.project for p in project_cards_list])))
         scenario = Scenario(base_scenario, project_cards=project_cards_list)
