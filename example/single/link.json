@@ -1,6 +1,6 @@
 [
       {
-         "shstRefId":"6a22969708104ae2497244f3d079381d",
+         "shstReferenceId":"6a22969708104ae2497244f3d079381d",
          "shstGeometryId":"4a454269d65c6619a2d7e2026295a295",
          "access":"",
          "area":"",
@@ -47,7 +47,7 @@
          ]
       },
       {
-         "shstRefId":"a2e58a2801f5994637dfdbab943c503a",
+         "shstReferenceId":"a2e58a2801f5994637dfdbab943c503a",
          "shstGeometryId":"b859990cf54470d9d9c1bd401a9c83f1",
          "access":"",
          "area":"",
@@ -95,7 +95,7 @@
          ]
       },
       {
-         "shstRefId":"a2e58a2801f5994637dfdbab943c503a",
+         "shstReferenceId":"a2e58a2801f5994637dfdbab943c503a",
          "shstGeometryId":"b859990cf54470d9d9c1bd401a9c83f1",
          "access":"",
          "area":"",
@@ -142,7 +142,7 @@
          ]
       },
       {
-         "shstRefId":"780b6a83285f9acdbf566951917206a7",
+         "shstReferenceId":"780b6a83285f9acdbf566951917206a7",
          "shstGeometryId":"1b4f9ef21802fb76361927a41ba25f8b",
          "access":"",
          "area":"",

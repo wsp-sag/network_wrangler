@@ -702,13 +702,13 @@ class RoadwayNetwork(object):
                     sum(candidate_nodes["outboundReferenceId"].tolist(), [])
                     + sum(candidate_nodes["inboundReferenceId"].tolist(), [])
                 )
-                - set(candidate_links["shstRefId"].tolist())
+                - set(candidate_links["shstReferenceId"].tolist())
                 - set([""])
             )
             ##TODO make unique ID for links in the settings
             #print("Link IDs to add: {}".format(links_shstRefId_to_add))
             # print("Links: ", links_id_to_add)
-            links_to_add = links[links.shstRefId.isin(links_shstRefId_to_add)]
+            links_to_add = links[links.shstReferenceId.isin(links_shstRefId_to_add)]
             #print("Adding Links:",links_to_add)
             WranglerLogger.debug("Adding {} links.".format(links_to_add.shape[0]))
             links[links.model_link_id.isin(links_shstRefId_to_add)]["i"] = i
