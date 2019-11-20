@@ -84,7 +84,7 @@
             "type": "object",
             "title": "The Properties Schema",
             "required": [
-              "shstRefId",
+              "shstReferenceId",
               "osm_node_id",
               "transit_node",
               "drive_node",
@@ -95,9 +95,9 @@
             ],
             "properties": {
               "id": {
-                "$id": "#/properties/features/items/properties/properties/properties/id",
+                "$id": "#/properties/features/items/properties/properties/properties/shstReferenceId",
                 "type": "string",
-                "title": "The Id Schema",
+                "title": "The shstReferenceId Schema",
                 "default": "",
                 "examples": [
                   "0751f5ce12472360fed0d0e80ceae35c"
