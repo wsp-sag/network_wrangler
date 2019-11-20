@@ -140,13 +140,18 @@ class Scenario(object):
           the folder location where the project cards will be
         project_cards_list:
           list of project cards to be applied
-        """
+        glob_search:
 
+        """
+        if project_cards_list:
+            WranglerLogger.debug("Adding project cards from List.\n{}".format(",".join([p.project for p in project_cards_list])))
         scenario = Scenario(base_scenario, project_cards=project_cards_list)
 
         if card_directory and tags:
-            scenario.add_project_cards_from_tags(card_directory, tags=tags)
+            WranglerLogger.debug("Adding project cards from directory and tags.\nDir: {}\nTags: {}".format(card_directory, ",".join(tags)))
+            scenario.add_project_cards_from_tags(card_directory, tags=tags, glob_search = glob_search)
         elif card_directory:
+            WranglerLogger.debug("Adding project cards from directory.\nDir: {}".format(card_directory))
             scenario.add_project_cards_from_directory(card_directory, glob_search=glob_search)
         return scenario
 
@@ -154,7 +159,7 @@ class Scenario(object):
         self.requisites_checked = False
         self.conflicts_checked = False
         self.prerequisites_sorted = False
-
+        WranglerLogger.debug("Adding project cards from file: {}".format(project_card_file))
         project_card = ProjectCard.read(project_card_file)
 
         if project_card == None:
@@ -206,6 +211,7 @@ class Scenario(object):
         self.prerequisites_sorted = False
 
         if glob_search:
+            WranglerLogger.debug("Adding project cards using glob search: {}".format(glob_search))
             for file in glob.iglob(os.path.join(folder, glob_search)):
                 if not file.endswith(".yml") or file.endswith(".yaml"):
                     continue
@@ -218,7 +224,7 @@ class Scenario(object):
                 else:
                     self.add_project_card_from_file(os.path.join(folder, file))
 
-    def add_project_cards_from_tags(self, folder: str, tags: [str] = []):
+    def add_project_cards_from_tags(self, folder: str, tags: [str] = [], glob_search = ''):
         """
         Adds projects cards to the scenario.
         A folder is provided to look for project cards that have a matching tag that is passed to the method.
@@ -230,8 +236,17 @@ class Scenario(object):
         self.requisites_checked = False
         self.conflicts_checked = False
         self.prerequisites_sorted = False
+        if glob_search:
+            WranglerLogger.debug("Adding project cards using \n-tags: {} and \nglob search: {}".format(tags, glob_search))
+            for file in glob.iglob(os.path.join(folder, glob_search)):
+                _add_card_from_file_based_on_tag(file)
+        else:
+            WranglerLogger.debug("Adding project cards using \n-tags: {}".format(tags))
+            for file in os.listdir(folder):
 
-        for file in os.listdir(folder):
+                _add_card_from_file_based_on_tag(file)
+
+        def _add_card_from_file_based_on_tag(file):
             if file.endswith(".yml") or file.endswith(".yaml"):
                 project_card = ProjectCard.read(os.path.join(folder, file))
 
@@ -239,6 +254,7 @@ class Scenario(object):
                     card_tags = project_card.tags
 
                     if not set(tags).isdisjoint(card_tags):
+                        WranglerLogger.debug("Adding project card: {}\n based tags: {}".format(file, card_tags))
                         self.project_cards.append(project_card)
                         self.prerequisites.update(
                             {
