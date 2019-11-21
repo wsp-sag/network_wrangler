@@ -14,7 +14,7 @@ To run with print statments, use `pytest -s -m scenario`
 """
 
 STPAUL_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "example", "stpaul"
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "examples", "stpaul"
 )
 SCRATCH_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -28,7 +28,7 @@ def test_project_card_read(request):
     print("\n--Starting:", request.node.name)
     in_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
-        "example",
+        "examples",
         "stpaul",
         "project_cards",
     )
@@ -209,7 +209,7 @@ def test_managed_lane_project_card(request):
     print("Reading project card ...")
     project_card_name = "5_managed_lane.yml"
     project_card_path = os.path.join(
-        os.getcwd(), "example", "stpaul", "project_cards", project_card_name
+        os.getcwd(), "examples", "stpaul", "project_cards", project_card_name
     )
     project_card = ProjectCard.read(project_card_path)
     print(project_card)
@@ -347,7 +347,7 @@ def test_apply_wrapper(request):
 def test_scenario_building_from_script(request):
     print("\n--Starting:", request.node.name)
 
-    config_file = os.path.join(os.getcwd(),"example","config_1.yml")
+    config_file = os.path.join(os.getcwd(),"examples","config_1.yml")
     #config_file = os.path.join(os.getcwd(),"example","config_2.yml")
     script_to_run = os.path.join(os.getcwd(),"scripts","build_scenario.py")
 

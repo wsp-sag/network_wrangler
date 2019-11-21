@@ -9,10 +9,10 @@ SCHEMA_DIR = os.path.join(
     "network_wrangler",
     "schemas",
 )
-SMALL_EX_DIR = os.path.join(os.getcwd(), "example", "single")
-STPAUL_EX_DIR = os.path.join(os.getcwd(), "example", "stpaul")
+SMALL_EX_DIR = os.path.join(os.getcwd(), "examples", "single")
+STPAUL_EX_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 
-STPAUL_PC_DIR = os.path.join(os.getcwd(), "example", "stpaul", "project_cards")
+STPAUL_PC_DIR = os.path.join(os.getcwd(), "example"s, "stpaul", "project_cards")
 
 @pytest.mark.schema
 @pytest.mark.roadschema

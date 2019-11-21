@@ -144,7 +144,7 @@ class Scenario(object):
 
         """
         WranglerLogger.info("Creating Scenario")
-        
+
         if project_cards_list:
             WranglerLogger.debug("Adding project cards from List.\n{}".format(",".join([p.project for p in project_cards_list])))
         scenario = Scenario(base_scenario, project_cards=project_cards_list)
@@ -208,6 +208,12 @@ class Scenario(object):
         folder: the folder location where the project cards will be
         glob_search: https://docs.python.org/2/library/glob.html
         """
+
+        if not os.path.exists(folder):
+            msg = "Cannot find specified directory to add project cards: {}".format(folder)
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
         self.requisites_checked = False
         self.conflicts_checked = False
         self.prerequisites_sorted = False

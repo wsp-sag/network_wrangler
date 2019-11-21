@@ -10,7 +10,7 @@ from network_wrangler import ProjectCard
 Run just the tests labeled transit using `pytest -v -m transit`
 """
 
-STPAUL_DIR = os.path.join(os.getcwd(), "example", "stpaul")
+STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 SCRATCH_DIR = os.path.join(os.getcwd(), "tests")
 
 

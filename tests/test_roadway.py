@@ -20,14 +20,14 @@ To run with print statments, use `pytest -s -m roadway`
 """
 
 STPAUL_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "example", "stpaul"
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "examples", "stpaul"
 )
 STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
 STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
 STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
 
 SMALL_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "example", "single"
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "examples", "single"
 )
 SMALL_SHAPE_FILE = os.path.join(SMALL_DIR, "shape.geojson")
 SMALL_LINK_FILE = os.path.join(SMALL_DIR, "link.json")

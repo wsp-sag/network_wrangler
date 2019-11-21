@@ -19,6 +19,8 @@
       "osm_link_id",
       "u",
       "v",
+      "A",
+      "B",
       "model_link_id",
       "lanes",
       "transit_access",
