@@ -15,9 +15,9 @@ facility:
         - 'Sixth'
         - 'sixth'
    A:
-     osm_link_id: '187854529' # Jackson St
+     osm_node_id: '187854529' # Jackson St
    B:
-     osm_link_id: '187899923' # Robert St N
+     osm_node_id: '187899923' # Robert St N
 properties:
   - property: lanes
     set: 2

@@ -2,11 +2,11 @@ changes:
 - category: Roadway Attribute Change
   facility:
     A:
-      travelModelId:
+      model_node_id:
       - 9753
       - 25336
     B:
-      travelModelId:
+      model_node_id:
       - 25336
       - 9753
     link:

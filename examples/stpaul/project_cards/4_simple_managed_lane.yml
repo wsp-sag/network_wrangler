@@ -18,17 +18,17 @@ properties:
   - property: lanes
     set: 3
     timeofday:
-      - time: ['7:00', '9:00']
+      - time: ['6:00', '9:00']
         set: 2
   - property: ML_lanes
     set: 0
     timeofday:
-      - time: ['7:00', '9:00']
+      - time: ['6:00', '9:00']
         set: 1
   - property: ML_price
     set: 0
     timeofday:
-      - time: ['7:00', '9:00']
+      - time: ['6:00', '9:00']
         set: 1.5
   - property: ML_access
     set: 'all'
