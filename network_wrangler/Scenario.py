@@ -124,6 +124,7 @@ class Scenario(object):
         tags: [str] = None,
         project_cards_list=[],
         glob_search='',
+        validate_project_cards = True,
     ) -> Scenario:
         """
         Validates project cards with a specific tag from the specified folder or
@@ -151,27 +152,42 @@ class Scenario(object):
 
         if card_directory and tags:
             WranglerLogger.debug("Adding project cards from directory and tags.\nDir: {}\nTags: {}".format(card_directory, ",".join(tags)))
-            scenario.add_project_cards_from_tags(card_directory, tags=tags, glob_search = glob_search)
+            scenario.add_project_cards_from_tags(card_directory, tags=tags, glob_search = glob_search, validate=validate_project_cards)
         elif card_directory:
             WranglerLogger.debug("Adding project cards from directory.\nDir: {}".format(card_directory))
-            scenario.add_project_cards_from_directory(card_directory, glob_search=glob_search)
+            scenario.add_project_cards_from_directory(card_directory, glob_search=glob_search, validate=validate_project_cards)
         return scenario
 
-    def add_project_card_from_file(self, project_card_file):
+    def add_project_card_from_file(self, project_card_file: str, validate: bool = True, tags: list = []):
+
+        WranglerLogger.debug("Trying to add project card from file: {}".format(project_card_file))
+        project_card = ProjectCard.read(project_card_file, validate = validate)
+
+        if project_card == None:
+            msg = "project card not read: {}".format(project_card_file)
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
+        if tags and set(tags).isdisjoint(project_card.tags):
+            WranglerLogger.debug("Project card tags: {} don't match search tags: {}".format(",".join(project_card.tags),",".join(tags)))
+            return
+
+        if project_card.project in self.get_project_names():
+            msg = "project card with name '{}' already in Scenario. Project names must be unique".format(project_card.project)
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
         self.requisites_checked = False
         self.conflicts_checked = False
         self.prerequisites_sorted = False
-        WranglerLogger.debug("Adding project cards from file: {}".format(project_card_file))
-        project_card = ProjectCard.read(project_card_file)
 
-        if project_card == None:
-            return
-
+        WranglerLogger.debug("Adding project card to scenario: {}".format(project_card.project))
         self.project_cards.append(project_card)
 
         if not project_card.__dict__.get('dependencies'):
             return
 
+        WranglerLogger.debug("Adding project card dependencies")
         if project_card.dependencies.get('prerequisites'):
             self.prerequisites.update(
                 {
@@ -197,7 +213,7 @@ class Scenario(object):
                 }
             )
 
-    def add_project_cards_from_directory(self, folder: str, glob_search=''):
+    def add_project_cards_from_directory(self, folder: str, glob_search='', validate = True):
         """
         Adds projects cards to the scenario.
         A folder is provided to look for project cards and if applicable, a glob-style search.
@@ -214,25 +230,21 @@ class Scenario(object):
             WranglerLogger.error(msg)
             raise ValueError(msg)
 
-        self.requisites_checked = False
-        self.conflicts_checked = False
-        self.prerequisites_sorted = False
-
         if glob_search:
             WranglerLogger.debug("Adding project cards using glob search: {}".format(glob_search))
             for file in glob.iglob(os.path.join(folder, glob_search)):
                 if not file.endswith(".yml") or file.endswith(".yaml"):
                     continue
                 else:
-                    self.add_project_card_from_file(file)
+                    self.add_project_card_from_file(file, validate=validate)
         else:
             for file in os.listdir(folder):
                 if not file.endswith(".yml") or file.endswith(".yaml"):
                     continue
                 else:
-                    self.add_project_card_from_file(os.path.join(folder, file))
+                    self.add_project_card_from_file(os.path.join(folder, file), validate = validate)
 
-    def add_project_cards_from_tags(self, folder: str, tags: [str] = [], glob_search = ''):
+    def add_project_cards_from_tags(self, folder: str, tags: [str] = [], glob_search = '', validate = True):
         """
         Adds projects cards to the scenario.
         A folder is provided to look for project cards that have a matching tag that is passed to the method.
@@ -241,50 +253,16 @@ class Scenario(object):
         folder: the folder location where the project cards will be
         tags: only project cards with these tags will be validated and added to the returning scenario
         """
-        self.requisites_checked = False
-        self.conflicts_checked = False
-        self.prerequisites_sorted = False
+
         if glob_search:
             WranglerLogger.debug("Adding project cards using \n-tags: {} and \nglob search: {}".format(tags, glob_search))
             for file in glob.iglob(os.path.join(folder, glob_search)):
-                _add_card_from_file_based_on_tag(file)
+                self.add_project_card_from_file(file, tags=tags, validate = validate)
         else:
             WranglerLogger.debug("Adding project cards using \n-tags: {}".format(tags))
             for file in os.listdir(folder):
 
-                _add_card_from_file_based_on_tag(file)
-
-        def _add_card_from_file_based_on_tag(file):
-            if file.endswith(".yml") or file.endswith(".yaml"):
-                project_card = ProjectCard.read(os.path.join(folder, file))
-
-                if project_card != None:
-                    card_tags = project_card.tags
-
-                    if not set(tags).isdisjoint(card_tags):
-                        WranglerLogger.debug("Adding project card: {}\n based tags: {}".format(file, card_tags))
-                        self.project_cards.append(project_card)
-                        self.prerequisites.update(
-                            {
-                                project_card.project: project_card.dependencies[
-                                    "prerequisites"
-                                ]
-                            }
-                        )
-                        self.corequisites.update(
-                            {
-                                project_card.project: project_card.dependencies[
-                                    "corequisites"
-                                ]
-                            }
-                        )
-                        self.conflicts.update(
-                            {
-                                project_card.project: project_card.dependencies[
-                                    "conflicts"
-                                ]
-                            }
-                        )
+                self.add_project_card_from_file(file, tags=tags, validate = validate)
 
     def __str__(self):
         s = ["{}: {}".format(key, value) for key, value in self.__dict__.items()]
@@ -397,15 +375,23 @@ class Scenario(object):
             for project_name in sorted_project_names
         ]
 
-        # TODO
-        #assert len(sorted_project_cards) == len(self.project_cards)
+        try:
+            assert len(sorted_project_cards) == len(self.project_cards)
+        except:
+            msg = "Sorted project cards ({}) are not of same number as unsorted ({}).".format(len(sorted_project_cards),len(self.project_cards))
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
 
         self.prerequisites_sorted = True
         self.ordered_project_cards = {
             project_name: project_card_and_name_dict[project_name]
             for project_name in sorted_project_names
         }
+
+        WranglerLogger.debug("Ordered Project Cards: {}".format(self.ordered_project_cards))
         self.project_cards = sorted_project_cards
+
+        WranglerLogger.debug("Project Cards: {}".format(self.project_cards))
 
         return sorted_project_cards
 
