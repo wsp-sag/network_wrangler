@@ -3,6 +3,7 @@ from .Logger import WranglerLogger
 import math
 import copy
 
+
 def point_df_to_geojson(df: pd.DataFrame, properties: list):
     """
     Author: Geoff Boeing:
@@ -17,7 +18,7 @@ def point_df_to_geojson(df: pd.DataFrame, properties: list):
             "properties": {},
             "geometry": {"type": "Point", "coordinates": []},
         }
-        feature["geometry"]["coordinates"] = [row["geometry"].y, row["geometry"].x]
+        feature["geometry"]["coordinates"] = [row["geometry"].x, row["geometry"].y]
         feature["properties"][RoadwayNetwork.NODE_FOREIGN_KEY] = row.name
         for prop in properties:
             feature["properties"][prop] = row[prop]
@@ -30,7 +31,7 @@ def link_df_to_json(df: pd.DataFrame, properties: list):
     Modified from: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/
     """
-    df['distance'].fillna(0)
+    df["distance"].fillna(0)
     json = []
     for _, row in df.iterrows():
         feature = {}
@@ -118,7 +119,8 @@ def parse_time_spans(times):
 
     return (start_time_sec, end_time_sec)
 
-def offset_lat_lon(lon_lat_point: list, offset_meters = 100):
+
+def offset_lat_lon(lon_lat_point: list, offset_meters=100):
     in_lon = lon_lat_point[0]
     in_lat = lon_lat_point[1]
 
@@ -126,25 +128,27 @@ def offset_lat_lon(lon_lat_point: list, offset_meters = 100):
     radius = 6378137
 
     # offset in radians
-    offset_lat_radians = offset_meters/radius
-    offset_lon_radians = offset_meters/(radius * math.cos(math.pi * in_lat/180))
+    offset_lat_radians = offset_meters / radius
+    offset_lon_radians = offset_meters / (radius * math.cos(math.pi * in_lat / 180))
 
     # offset lat lon
-    latO = in_lat + offset_lat_radians * 180/math.pi
-    lonO = in_lon + offset_lon_radians * 180/math.pi
+    latO = in_lat + offset_lat_radians * 180 / math.pi
+    lonO = in_lon + offset_lon_radians * 180 / math.pi
 
-    return([lonO, latO])
+    return [lonO, latO]
+
 
 def haversine_distance(origin: list, destination: list):
     lon1, lat1 = origin
     lon2, lat2 = destination
-    radius = 6378137 # meter
+    radius = 6378137  # meter
 
-    dlat = math.radians(lat2-lat1)
-    dlon = math.radians(lon2-lon1)
-    a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) \
-        * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) * math.sin(dlat / 2) + math.cos(
+        math.radians(lat1)
+    ) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) * math.sin(dlon / 2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     d = radius * c
 
     return d
