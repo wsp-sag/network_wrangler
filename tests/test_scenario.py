@@ -60,29 +60,17 @@ def test_scenario_conflicts(request):
     project_cards_list = []
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                STPAUL_DIR,
-                "project_cards",
-                "a_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "a_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                STPAUL_DIR,
-                "project_cards",
-                "b_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "b_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                STPAUL_DIR,
-                "project_cards",
-                "c_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "c_test_project_card.yml")
         )
     )
 
@@ -109,29 +97,17 @@ def test_scenario_requisites(request):
     project_cards_list = []
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                STPAUL_DIR,
-                "project_cards",
-                "a_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "a_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                STPAUL_DIR,
-                "project_cards",
-                "b_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "b_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                STPAUL_DIR,
-                "project_cards",
-                "c_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "c_test_project_card.yml")
         )
     )
 
@@ -158,29 +134,17 @@ def test_project_sort(request):
     project_cards_list = []
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                STPAUL_DIR,
-                "project_cards",
-                "a_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "a_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                STPAUL_DIR,
-                "project_cards",
-                "b_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "b_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                STPAUL_DIR,
-                "project_cards",
-                "c_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "c_test_project_card.yml")
         )
     )
 
@@ -216,36 +180,37 @@ def test_managed_lane_project_card(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.unique_ids
 @pytest.mark.travis
 def test_query_builder(request):
     selection_1 = {
-        "link": [
-            {"name": ["6th", "Sixth", "sixth"]}
-        ],
+        "link": [{"name": ["6th", "Sixth", "sixth"]}],
         "A": {"osm_node_id": "187899923"},  # start searching for segments at A
         "B": {"osm_node_id": "187865924"},  # end at B
     }
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_1,
-        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS
+        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
     )
-    answer = '((name.str.contains("6th") or '\
-        'name.str.contains("Sixth") or '\
-        'name.str.contains("sixth")) and '\
-        'drive_access==1)'
-    #print("\nsel_query:\n", sel_query)
-    assert(sel_query == answer)
+    answer = (
+        '((name.str.contains("6th") or '
+        'name.str.contains("Sixth") or '
+        'name.str.contains("sixth")) and '
+        "drive_access==1)"
+    )
+    # print("\nsel_query:\n", sel_query)
+    assert sel_query == answer
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_1,
         unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-        ignore=["name"]
+        ignore=["name"],
     )
-    answer = '(drive_access==1)'
-    #print("\nsel_query:\n", sel_query)
-    assert(sel_query == answer)
+    answer = "(drive_access==1)"
+    # print("\nsel_query:\n", sel_query)
+    assert sel_query == answer
 
     selection_2 = {
         "link": [
@@ -261,25 +226,26 @@ def test_query_builder(request):
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_2,
-        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS
+        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
     )
-    answer = '((name.str.contains("6th") or '\
-        'name.str.contains("Sixth") or '\
-        'name.str.contains("sixth")) and '\
-        '(lanes==1 or lanes==2) and '\
-        '(bike_access==1) and drive_access==1)'
-    #print("\nsel_query:\n", sel_query)
-    assert(sel_query == answer)
+    answer = (
+        '((name.str.contains("6th") or '
+        'name.str.contains("Sixth") or '
+        'name.str.contains("sixth")) and '
+        "(lanes==1 or lanes==2) and "
+        "(bike_access==1) and drive_access==1)"
+    )
+    # print("\nsel_query:\n", sel_query)
+    assert sel_query == answer
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_2,
         unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-        ignore=["name"]
+        ignore=["name"],
     )
-    answer = '((lanes==1 or lanes==2) and '\
-        '(bike_access==1) and drive_access==1)'
-    #print("\nsel_query:\n", sel_query)
-    assert(sel_query == answer)
+    answer = "((lanes==1 or lanes==2) and " "(bike_access==1) and drive_access==1)"
+    # print("\nsel_query:\n", sel_query)
+    assert sel_query == answer
 
     selection_3 = {
         "link": [
@@ -296,11 +262,11 @@ def test_query_builder(request):
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection_3,
-        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS
+        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
     )
-    answer = '((model_link_id==134574))'
-    #print("\nsel_query:\n", sel_query)
-    assert(sel_query == answer)
+    answer = "((model_link_id==134574))"
+    # print("\nsel_query:\n", sel_query)
+    assert sel_query == answer
 
     print("--Finished:", request.node.name)
 
@@ -347,18 +313,18 @@ def test_apply_wrapper(request):
 def test_scenario_building_from_script(request):
     print("\n--Starting:", request.node.name)
 
-    config_file = os.path.join(os.getcwd(),"examples","config_1.yml")
-    #config_file = os.path.join(os.getcwd(),"example","config_2.yml")
-    script_to_run = os.path.join(os.getcwd(),"scripts","build_scenario.py")
+    config_file = os.path.join(os.getcwd(), "examples", "config_1.yml")
+    # config_file = os.path.join(os.getcwd(),"example","config_2.yml")
+    script_to_run = os.path.join(os.getcwd(), "scripts", "build_scenario.py")
 
     # replace backward slash with forward slash
-    config_file = config_file.replace(os.sep, '/')
-    script_to_run = script_to_run.replace(os.sep, '/')
+    config_file = config_file.replace(os.sep, "/")
+    script_to_run = script_to_run.replace(os.sep, "/")
 
-    #print(config_file)
-    #print(script_to_run)
+    # print(config_file)
+    # print(script_to_run)
 
-    p = subprocess.Popen([sys.executable,script_to_run,config_file])
-    p.communicate() # wait for the subprocess call to finish
+    p = subprocess.Popen([sys.executable, script_to_run, config_file])
+    p.communicate()  # wait for the subprocess call to finish
 
     print("--Finished:", request.node.name)

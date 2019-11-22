@@ -78,14 +78,14 @@ def test_select_transit_features_from_projectcard(request):
             "file": "7a_multi_transit_attribute_change.yml",
             "answer": [
                 "14940701-JUN19-MVS-BUS-Weekday-01",
-                "14940963-JUN19-MVS-BUS-Weekday-01"
+                "14940963-JUN19-MVS-BUS-Weekday-01",
             ],
         },
         {
             "file": "8_simple_transit_attribute_change.yml",
             "answer": [
                 "14944012-JUN19-MVS-BUS-Weekday-01",
-                "14944019-JUN19-MVS-BUS-Weekday-01"
+                "14944019-JUN19-MVS-BUS-Weekday-01",
             ],
         },
         {
@@ -93,7 +93,7 @@ def test_select_transit_features_from_projectcard(request):
             "answer": [
                 "14944012-JUN19-MVS-BUS-Weekday-01",
                 "14944019-JUN19-MVS-BUS-Weekday-01",
-                "14948218-JUN19-MVS-BUS-Weekday-01"  # additional for 53-111
+                "14948218-JUN19-MVS-BUS-Weekday-01",  # additional for 53-111
             ],
         },
         {
@@ -116,7 +116,7 @@ def test_select_transit_features_from_projectcard(request):
                 "14981028-JUN19-MVS-BUS-Weekday-01",
                 "14981029-JUN19-MVS-BUS-Weekday-01",
                 "14986383-JUN19-MVS-BUS-Weekday-01",
-                "14986385-JUN19-MVS-BUS-Weekday-01"
+                "14986385-JUN19-MVS-BUS-Weekday-01",
             ],
         },
         {
@@ -147,9 +147,9 @@ def test_select_transit_features_from_projectcard(request):
                 "14945404-JUN19-MVS-BUS-Weekday-01",
                 "14945432-JUN19-MVS-BUS-Weekday-01",
                 "14947598-JUN19-MVS-BUS-Weekday-01",
-                "14946199-JUN19-MVS-BUS-Weekday-01"
+                "14946199-JUN19-MVS-BUS-Weekday-01",
             ],
-        }
+        },
     ]
 
     for i, test in enumerate(test_selections):
@@ -304,28 +304,23 @@ def test_invalid_optional_selection_variable(request):
 
     with pytest.raises(Exception):
         # `wheelchair` rather than `wheelchair_accessible`
-        net.select_transit_features({
-            "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
-            "wheelchair": "0"
-        })
+        net.select_transit_features(
+            {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01", "wheelchair": "0"}
+        )
 
     with pytest.raises(Exception):
         # Missing trip_id, route_id, route_short_name, or route_long_name
         net.select_transit_features({"wheelchair_accessible": "0"})
 
     # Correct trip variable
-    sel = net.select_transit_features({
-        "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
-        "wheelchair_accessible": "1"
-    })
-    assert set(sel) == set(['14940701-JUN19-MVS-BUS-Weekday-01'])
+    sel = net.select_transit_features(
+        {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01", "wheelchair_accessible": "1"}
+    )
+    assert set(sel) == set(["14940701-JUN19-MVS-BUS-Weekday-01"])
 
     # Correct route variable
-    sel = net.select_transit_features({
-        "route_long_name": "Express",
-        "agency_id": "2"
-    })
-    assert set(sel) == set(['14978409-JUN19-MVS-BUS-Weekday-01'])
+    sel = net.select_transit_features({"route_long_name": "Express", "agency_id": "2"})
+    assert set(sel) == set(["14978409-JUN19-MVS-BUS-Weekday-01"])
 
     print("--Finished:", request.node.name)
 

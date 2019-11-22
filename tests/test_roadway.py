@@ -33,6 +33,7 @@ SMALL_SHAPE_FILE = os.path.join(SMALL_DIR, "shape.geojson")
 SMALL_LINK_FILE = os.path.join(SMALL_DIR, "link.json")
 SMALL_NODE_FILE = os.path.join(SMALL_DIR, "node.geojson")
 
+
 def _read_stpaul_net():
     net = RoadwayNetwork.read(
         link_file=STPAUL_LINK_FILE,
@@ -41,11 +42,13 @@ def _read_stpaul_net():
         fast=True,
     )
     return net
+
 
 SCRATCH_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "scratch"
 )
 
+
 def _read_stpaul_net():
     net = RoadwayNetwork.read(
         link_file=STPAUL_LINK_FILE,
@@ -54,6 +57,7 @@ def _read_stpaul_net():
         fast=True,
     )
     return net
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -124,32 +128,37 @@ def test_quick_roadway_read_write(request):
 
 @pytest.mark.parametrize(
     "selection",
-    [ { \
-        "link": [{"name": ["6th", "Sixth", "sixth"]}],
-        "A": {"osm_node_id": "187899923"},
-        "B": {"osm_node_id": "187865924"},
-        "answer": ["187899923", "187858777", "187923585", "187865924"],
-    },
-    {
-        "link": [{"name": ["6th", "Sixth", "sixth"]}],
-        "A": {"osm_node_id": "187899923"},  # start searching for segments at A
-        "B": {"osm_node_id": "187942339"},
-    },
-    {
-        "link": [{"name": ["6th", "Sixth", "sixth"]}, {"lanes": [1, 2]}],
-        "A": {"osm_node_id": "187899923"},  # start searching for segments at A
-        "B": {"osm_node_id": "187942339"},
-    },
-    {
-        "link": [{"name": ["I 35E"]}],
-        "A": {"osm_node_id": "961117623"},  # start searching for segments at A
-        "B": {"osm_node_id": "2564047368"},
-    },
-    {
-        "link": [{"name": ["6th", "Sixth", "sixth"]}, {"model_link_id": [2846,2918]}, {"lanes": [1, 2]}],
-    }]
+    [
+        {
+            "link": [{"name": ["6th", "Sixth", "sixth"]}],
+            "A": {"osm_node_id": "187899923"},
+            "B": {"osm_node_id": "187865924"},
+            "answer": ["187899923", "187858777", "187923585", "187865924"],
+        },
+        {
+            "link": [{"name": ["6th", "Sixth", "sixth"]}],
+            "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+            "B": {"osm_node_id": "187942339"},
+        },
+        {
+            "link": [{"name": ["6th", "Sixth", "sixth"]}, {"lanes": [1, 2]}],
+            "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+            "B": {"osm_node_id": "187942339"},
+        },
+        {
+            "link": [{"name": ["I 35E"]}],
+            "A": {"osm_node_id": "961117623"},  # start searching for segments at A
+            "B": {"osm_node_id": "2564047368"},
+        },
+        {
+            "link": [
+                {"name": ["6th", "Sixth", "sixth"]},
+                {"model_link_id": [2846, 2918]},
+                {"lanes": [1, 2]},
+            ]
+        },
+    ],
 )
-
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_select_roadway_features(request, selection):
@@ -197,18 +206,20 @@ def test_select_roadway_features_from_projectcard(request):
 @pytest.mark.parametrize(
     "apply_feature_change_project_card",
     [
-    "1_simple_roadway_attribute_change.yml",
-    "2_multiple_roadway.yml",
-    "3_multiple_roadway_attribute_change.yml"
-    ])
-
+        "1_simple_roadway_attribute_change.yml",
+        "2_multiple_roadway.yml",
+        "3_multiple_roadway_attribute_change.yml",
+    ],
+)
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_apply_roadway_feature_change(request, apply_feature_change_project_card):
     print("\n--Starting:", request.node.name)
     my_net = _read_stpaul_net()
     print("Reading project card", apply_feature_change_project_card, "...")
-    project_card_path = os.path.join(STPAUL_DIR, "project_cards", apply_feature_change_project_card)
+    project_card_path = os.path.join(
+        STPAUL_DIR, "project_cards", apply_feature_change_project_card
+    )
     project_card = ProjectCard.read(project_card_path)
 
     print("Selecting roadway features ...")
@@ -219,14 +230,14 @@ def test_apply_roadway_feature_change(request, apply_feature_change_project_card
     print("Original Links:\n", orig_links)
 
     my_net.apply_roadway_feature_change(
-        my_net.select_roadway_features(project_card.facility),
-        project_card.properties,
+        my_net.select_roadway_features(project_card.facility), project_card.properties
     )
 
     rev_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
     print("Revised Links:\n", rev_links)
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.menow
 @pytest.mark.roadway
@@ -335,6 +346,7 @@ def test_bad_properties_statements(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.travis
 @pytest.mark.roadway
 def test_add_delete_roadway_project_card(request):
@@ -377,17 +389,21 @@ def test_add_delete_roadway_project_card(request):
         # count nodes that are in original network that should be deleted
         if not project_card_dictionary.get("changes"):
             m_n = _get_missing_nodes(project_card_dictionary)
-            if m_n: missing_nodes+=m_n
+            if m_n:
+                missing_nodes += m_n
 
             m_l = _get_missing_links(project_card_dictionary)
-            if m_l: missing_links+=m_l
+            if m_l:
+                missing_links += m_l
         else:
             for project_dictionary in project_card_dictionary["changes"]:
                 m_n = _get_missing_nodes(project_dictionary)
-                if m_n: missing_nodes+=m_n
+                if m_n:
+                    missing_nodes += m_n
 
                 m_l = _get_missing_links(project_dictionary)
-                if m_l: missing_links+=m_l
+                if m_l:
+                    missing_links += m_l
 
         net.apply(project_card.__dict__)
 
@@ -449,10 +465,10 @@ def test_add_delete_roadway_project_card(request):
                 nodes_deleted += count_info["nodes_deleted"]
 
         num_missing_nodes = len(set(missing_nodes))
-        print("MISSING NODES:",num_missing_nodes)
+        print("MISSING NODES:", num_missing_nodes)
 
         num_missing_links = len(set(missing_links))
-        print("MISSING LINKS:",num_missing_links)
+        print("MISSING LINKS:", num_missing_links)
 
         net_links_network = rev_links_count - orig_links_count
         net_links_project_card = links_added - links_deleted + num_missing_links
@@ -464,6 +480,7 @@ def test_add_delete_roadway_project_card(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_export_network_to_csv(request):
@@ -472,13 +489,15 @@ def test_export_network_to_csv(request):
     net.links_df.to_csv(os.path.join(SCRATCH_DIR, "links_df.csv"), index=False)
     net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "nodes_df.csv"), index=False)
 
-variable_queries = [
-    {"v":"lanes",'category': None, "time_period": ['7:00', '9:00']},
-    {"v":"ML_price", 'category': "sov", 'time_period': ['7:00', '9:00']},
-    {"v":"ML_price", 'category': ["hov3","hov2"], 'time_period': ['7:00', '9:00']}
-]
-@pytest.mark.parametrize("variable_query", variable_queries)
 
+variable_queries = [
+    {"v": "lanes", "category": None, "time_period": ["7:00", "9:00"]},
+    {"v": "ML_price", "category": "sov", "time_period": ["7:00", "9:00"]},
+    {"v": "ML_price", "category": ["hov3", "hov2"], "time_period": ["7:00", "9:00"]},
+]
+
+
+@pytest.mark.parametrize("variable_query", variable_queries)
 @pytest.mark.roadway
 def test_query_roadway_property_by_time_group(request, variable_query):
     print("\n--Starting:", request.node.name)
@@ -490,20 +509,19 @@ def test_query_roadway_property_by_time_group(request, variable_query):
         net.select_roadway_features(project_card.facility), project_card.properties
     )
     print("Querying Attribute...")
-    print("QUERY:\n",variable_query)
+    print("QUERY:\n", variable_query)
     v_series = net.get_property_by_time_period_and_group(
-        variable_query['v'],
-        category = variable_query['category'],
-        time_period = variable_query['time_period'],
+        variable_query["v"],
+        category=variable_query["category"],
+        time_period=variable_query["time_period"],
     )
     selected_link_indices = net.select_roadway_features(project_card.facility)
 
-    print("CALCULATED:\n",v_series.loc[selected_link_indices])
-    print("ORIGINAL:\n",net.links_df.loc[selected_link_indices,variable_query['v']])
-
-
+    print("CALCULATED:\n", v_series.loc[selected_link_indices])
+    print("ORIGINAL:\n", net.links_df.loc[selected_link_indices, variable_query["v"]])
 
     ## todo make test make sure the values are correct.
+
 
 @pytest.mark.highway
 @pytest.mark.ashishk
@@ -536,6 +554,7 @@ def test_write_model_net(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.offset
 def test_lat_lon_offset(request):
     print("\n--Starting:", request.node.name)
@@ -547,6 +566,7 @@ def test_lat_lon_offset(request):
     print(new_lat_lon)
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.get_dist
 def test_get_distance_bw_lat_lon(request):

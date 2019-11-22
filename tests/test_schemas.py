@@ -14,6 +14,7 @@ STPAUL_EX_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 
 STPAUL_PC_DIR = os.path.join(os.getcwd(), "examples", "stpaul", "project_cards")
 
+
 @pytest.mark.schema
 @pytest.mark.roadschema
 def test_roadway_link_schema():
@@ -27,6 +28,7 @@ def test_roadway_link_schema():
         link_json = yaml.safe_load(links)
 
     validate(link_json, schema)
+
 
 @pytest.mark.schema
 def test_project_card_schema():

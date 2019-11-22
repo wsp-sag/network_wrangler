@@ -22,7 +22,7 @@ __all__ = [
     "make_slug",
     "parse_time_spans",
     "offset_lat_lon",
-    "haversine_distance"
+    "haversine_distance",
 ]
 
 setupLogging(logFileName="network_wrangler.log")

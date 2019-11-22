@@ -5,11 +5,12 @@ from network_wrangler import TransitNetwork
 from network_wrangler import ProjectCard
 from network_wrangler import Scenario
 import warnings
+
 warnings.filterwarnings("ignore")
 import yaml
 import sys
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     args = sys.argv
 
@@ -19,7 +20,9 @@ if __name__ == '__main__':
     config_file = args[1]
 
     if not os.path.exists(config_file):
-        raise FileNotFoundError("Specified config file does not exists - {}".format(config_file))
+        raise FileNotFoundError(
+            "Specified config file does not exists - {}".format(config_file)
+        )
 
     with open(config_file, "r") as config:
         config_dict = yaml.safe_load(config)
@@ -51,7 +54,7 @@ if __name__ == '__main__':
         base_shape_name=base_shape_name,
         base_link_name=base_link_name,
         base_node_name=base_node_name,
-        validate=validate_base_network
+        validate=validate_base_network,
     )
 
     # Create Scenaro Network
@@ -65,7 +68,7 @@ if __name__ == '__main__':
         card_directory=card_directory,
         tags=project_tags,
         project_cards_list=project_cards_list,
-        glob_search = glob_search
+        glob_search=glob_search,
     )
 
     print("Applying these projects to the base scenario ...")

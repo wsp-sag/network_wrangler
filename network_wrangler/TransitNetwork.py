@@ -29,11 +29,21 @@ class TransitNetwork(object):
       tc=wr.TransitNetwork.read(path=stpaul)
 
     """
+
     # PK = primary key, FK = foreign key
     FK_SHAPES = "shape_model_node_id"
     FK_STOPS = "model_node_id"
 
-    REQUIRED_FILES = ["agency.txt","frequencies.txt","routes.txt","shapes.txt","stop_times.txt","stops.txt","transfers.txt","trips.txt"]
+    REQUIRED_FILES = [
+        "agency.txt",
+        "frequencies.txt",
+        "routes.txt",
+        "shapes.txt",
+        "stop_times.txt",
+        "stops.txt",
+        "transfers.txt",
+        "trips.txt",
+    ]
 
     def __init__(self, feed: DotDict = None, config: nx.DiGraph = None):
         """
@@ -55,18 +65,24 @@ class TransitNetwork(object):
         relationship between files are 'edges'.
         """
         updated_config = copy.deepcopy(config)
-        files_not_found =  []
+        files_not_found = []
         for node in config.nodes.keys():
 
             n = feed.get(node)
             if n.shape[0] == 0:
-                WranglerLogger.info("Removing {} from transit network config because file not found".format(node))
+                WranglerLogger.info(
+                    "Removing {} from transit network config because file not found".format(
+                        node
+                    )
+                )
                 updated_config.remove_node(node)
                 if node in TransitNetwork.REQUIRED_FILES:
                     files_not_found.append(node)
 
         if files_not_found:
-            msg = "Required files not found or valid: {}".format(','.join(files_not_found))
+            msg = "Required files not found or valid: {}".format(
+                ",".join(files_not_found)
+            )
             WranglerLogger.error(msg)
             raise AttributeError(msg)
             return False
@@ -91,9 +107,12 @@ class TransitNetwork(object):
         transit_network = TransitNetwork(feed=new_feed, config=updated_config)
         return transit_network
 
-    def set_roadnet(self, road_net: RoadwayNetwork,
-                    graph_shapes: bool = False, graph_stops: bool = False
-                    ) -> None:
+    def set_roadnet(
+        self,
+        road_net: RoadwayNetwork,
+        graph_shapes: bool = False,
+        graph_stops: bool = False,
+    ) -> None:
         self.road_net: RoadwayNetwork = road_net
         self.graph: nx.MultiDiGraph = RoadwayNetwork.ox_graph(
             road_net.nodes_df, road_net.links_df
@@ -170,12 +189,9 @@ class TransitNetwork(object):
             ):
                 self.apply_transit_feature_change(
                     self.select_transit_features(project_dictionary["facility"]),
-                    project_dictionary["properties"]
+                    project_dictionary["properties"],
                 )
-            elif (
-                project_dictionary["category"].lower()
-                == "parallel managed lanes"
-            ):
+            elif project_dictionary["category"].lower() == "parallel managed lanes":
                 # Grab the list of nodes in the facility from road_net
                 # It should be cached because managed lane projects are
                 # processed by RoadwayNetwork first via
@@ -194,7 +210,7 @@ class TransitNetwork(object):
                 # Reroute any transit using these nodes
                 self.apply_transit_managed_lane(
                     self.select_transit_features_by_nodes(managed_lane_nodes),
-                    managed_lane_nodes
+                    managed_lane_nodes,
                 )
             else:
                 raise (BaseException)
@@ -268,8 +284,11 @@ class TransitNetwork(object):
         # If any other key exists, filter routes or trips accordingly
         for key in selection.keys():
             if key not in [
-                "trip_id", "route_id", "route_short_name", "route_long_name",
-                "time"
+                "trip_id",
+                "route_id",
+                "route_short_name",
+                "route_long_name",
+                "time",
             ]:
                 if key in trips:
                     trips = trips[trips[key].isin(selection[key])]
@@ -309,11 +328,11 @@ class TransitNetwork(object):
         # Else, filter any shapes that use any one of the nodes in node_ids
         if require_all:
             shape_ids = (
-                self.feed.shapes
-                .groupby('shape_id')
-                .filter(lambda x: all(
-                    i in x[TransitNetwork.FK_SHAPES].tolist() for i in node_ids
-                ))
+                self.feed.shapes.groupby("shape_id").filter(
+                    lambda x: all(
+                        i in x[TransitNetwork.FK_SHAPES].tolist() for i in node_ids
+                    )
+                )
             ).shape_id.drop_duplicates()
         else:
             shape_ids = self.feed.shapes[
@@ -321,9 +340,7 @@ class TransitNetwork(object):
             ].shape_id.drop_duplicates()
 
         # Return pandas.Series of trip_ids
-        return self.feed.trips[
-            self.feed.trips.shape_id.isin(shape_ids)
-        ].trip_id
+        return self.feed.trips[self.feed.trips.shape_id.isin(shape_ids)].trip_id
 
     def apply_transit_feature_change(
         self, trip_ids: pd.Series, properties: list, in_place: bool = True
@@ -364,9 +381,7 @@ class TransitNetwork(object):
         stops_change = False
         if any(x > 0 for x in properties["set"]):
             # Simplify "set" and "existing" to only stops
-            properties["set_stops"] = [
-                str(i) for i in properties["set"] if i > 0
-            ]
+            properties["set_stops"] = [str(i) for i in properties["set"] if i > 0]
             if properties.get("existing") is not None:
                 properties["existing_stops"] = [
                     str(i) for i in properties["existing"] if i > 0
@@ -381,9 +396,7 @@ class TransitNetwork(object):
             ]
 
         # Replace shapes records
-        shape_ids = self.feed.trips[
-            self.feed.trips.trip_id.isin(trip_ids)
-        ].shape_id
+        shape_ids = self.feed.trips[self.feed.trips.trip_id.isin(trip_ids)].shape_id
         for shape_id in shape_ids:
             # Pop the rows that match shape_id
             this_shape = shapes[shapes.shape_id == shape_id]
@@ -392,31 +405,33 @@ class TransitNetwork(object):
             this_shape = this_shape.sort_values(by=["shape_pt_sequence"])
 
             # Build a pd.DataFrame of new shape records
-            new_shape_rows = pd.DataFrame({
-                "shape_id": shape_id,
-                "shape_pt_lat": None,  # FIXME Populate from self.road_net?
-                "shape_pt_lon": None,  # FIXME
-                "shape_osm_node_id": None,  # FIXME
-                "shape_pt_sequence": None,
-                TransitNetwork.FK_SHAPES: properties["set_shapes"]
-            })
+            new_shape_rows = pd.DataFrame(
+                {
+                    "shape_id": shape_id,
+                    "shape_pt_lat": None,  # FIXME Populate from self.road_net?
+                    "shape_pt_lon": None,  # FIXME
+                    "shape_osm_node_id": None,  # FIXME
+                    "shape_pt_sequence": None,
+                    TransitNetwork.FK_SHAPES: properties["set_shapes"],
+                }
+            )
 
             # If "existing" is specified, replace only that segment
             # Else, replace the whole thing
             if properties.get("existing") is not None:
                 # Match list
                 nodes = this_shape[TransitNetwork.FK_SHAPES].tolist()
-                index_replacement_starts = nodes.index(
-                    properties["existing_shapes"][0]
+                index_replacement_starts = nodes.index(properties["existing_shapes"][0])
+                index_replacement_ends = nodes.index(properties["existing_shapes"][-1])
+                this_shape = pd.concat(
+                    [
+                        this_shape.iloc[:index_replacement_starts],
+                        new_shape_rows,
+                        this_shape.iloc[index_replacement_ends + 1 :],
+                    ],
+                    sort=False,
+                    ignore_index=True,
                 )
-                index_replacement_ends = nodes.index(
-                    properties["existing_shapes"][-1]
-                )
-                this_shape = pd.concat([
-                    this_shape.iloc[:index_replacement_starts],
-                    new_shape_rows,
-                    this_shape.iloc[index_replacement_ends+1:]
-                ], sort=False, ignore_index=True)
             else:
                 this_shape = new_shape_rows
 
@@ -424,22 +439,22 @@ class TransitNetwork(object):
             this_shape["shape_pt_sequence"] = np.arange(len(this_shape))
 
             # Add rows back into shapes
-            shapes = pd.concat([
-                shapes[shapes.shape_id != shape_id],
-                this_shape
-            ], ignore_index=True)
+            shapes = pd.concat(
+                [shapes[shapes.shape_id != shape_id], this_shape], ignore_index=True
+            )
 
         # Replace stop_times and stops records (if required)
         if stops_change:
             # If node IDs in properties["set_stops"] are not already
             # in stops.txt, create a new stop_id for them in stops
             if any(
-                x not in stops[TransitNetwork.FK_STOPS].tolist() for
-                x in properties["set_stops"]
+                x not in stops[TransitNetwork.FK_STOPS].tolist()
+                for x in properties["set_stops"]
             ):
                 # FIXME
                 WranglerLogger.error(
-                    "Node ID is used that does not have an existing stop.")
+                    "Node ID is used that does not have an existing stop."
+                )
                 raise ValueError
 
             # Loop through all the trip_ids
@@ -451,31 +466,37 @@ class TransitNetwork(object):
                 this_stoptime = this_stoptime.merge(
                     stops[["stop_id", TransitNetwork.FK_STOPS]],
                     how="left",
-                    on="stop_id"
+                    on="stop_id",
                 )
 
                 # Make sure the stop_times are ordered by stop_sequence
                 this_stoptime = this_stoptime.sort_values(by=["stop_sequence"])
 
                 # Build a pd.DataFrame of new shape records from properties
-                new_stoptime_rows = pd.DataFrame({
-                    "trip_id": trip_id,
-                    "arrival_time": None,
-                    "departure_time": None,
-                    "pickup_type": None,
-                    "drop_off_type": None,
-                    "stop_distance": None,
-                    "timepoint": None,
-                    "stop_is_skipped": None,
-                    TransitNetwork.FK_STOPS: properties["set_stops"]
-                })
+                new_stoptime_rows = pd.DataFrame(
+                    {
+                        "trip_id": trip_id,
+                        "arrival_time": None,
+                        "departure_time": None,
+                        "pickup_type": None,
+                        "drop_off_type": None,
+                        "stop_distance": None,
+                        "timepoint": None,
+                        "stop_is_skipped": None,
+                        TransitNetwork.FK_STOPS: properties["set_stops"],
+                    }
+                )
 
                 # Merge on stop_id using node IDs (many stop_id per node ID)
-                new_stoptime_rows = new_stoptime_rows.merge(
-                    stops[["stop_id", TransitNetwork.FK_STOPS]],
-                    how="left",
-                    on=TransitNetwork.FK_STOPS
-                ).groupby([TransitNetwork.FK_STOPS]).head(1)  # pick first
+                new_stoptime_rows = (
+                    new_stoptime_rows.merge(
+                        stops[["stop_id", TransitNetwork.FK_STOPS]],
+                        how="left",
+                        on=TransitNetwork.FK_STOPS,
+                    )
+                    .groupby([TransitNetwork.FK_STOPS])
+                    .head(1)
+                )  # pick first
 
                 # If "existing" is specified, replace only that segment
                 # Else, replace the whole thing
@@ -488,11 +509,15 @@ class TransitNetwork(object):
                     index_replacement_ends = nodes.index(
                         properties["existing_stops"][-1]
                     )
-                    this_stoptime = pd.concat([
-                        this_stoptime.iloc[:index_replacement_starts],
-                        new_stoptime_rows,
-                        this_stoptime.iloc[index_replacement_ends+1:]
-                    ], sort=False, ignore_index=True)
+                    this_stoptime = pd.concat(
+                        [
+                            this_stoptime.iloc[:index_replacement_starts],
+                            new_stoptime_rows,
+                            this_stoptime.iloc[index_replacement_ends + 1 :],
+                        ],
+                        sort=False,
+                        ignore_index=True,
+                    )
                 else:
                     this_stoptime = new_stoptime_rows
 
@@ -503,10 +528,10 @@ class TransitNetwork(object):
                 this_stoptime["stop_sequence"] = np.arange(len(this_stoptime))
 
                 # Add rows back into stoptime
-                stop_times = pd.concat([
-                    stop_times[stop_times.trip_id != trip_id],
-                    this_stoptime
-                ], ignore_index=True)
+                stop_times = pd.concat(
+                    [stop_times[stop_times.trip_id != trip_id], this_stoptime],
+                    ignore_index=True,
+                )
 
         # Replace self if in_place, else return
         if in_place:
@@ -557,17 +582,15 @@ class TransitNetwork(object):
     ) -> Union(None, TransitNetwork):
         # Traversed nodes without a stop should be negative integers
         all_stops = self.feed.stops[TransitNetwork.FK_STOPS].tolist()
-        node_ids = [
-            int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids
-        ]
+        node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
 
         self._apply_transit_feature_change_routing(
             trip_ids=trip_ids,
             properties={
                 "existing": node_ids,
-                "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids)
+                "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids),
             },
-            in_place=in_place
+            in_place=in_place,
         )
 
 
@@ -576,6 +599,7 @@ class DotDict(dict):
     dot.notation access to dictionary attributes
     Source: https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary
     """
+
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
