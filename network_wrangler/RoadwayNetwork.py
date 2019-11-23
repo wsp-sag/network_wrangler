@@ -40,8 +40,8 @@ class RoadwayNetwork(object):
     CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
     EPSG = 4326
 
-    NODE_FOREIGN_KEY = "osm_node_id"
-    LINK_FOREIGN_KEY = ("u", "v")
+    NODE_FOREIGN_KEY = "model_node_id"
+    LINK_FOREIGN_KEY = ["A", "B"]
 
     SEARCH_BREADTH = 5
     MAX_SEARCH_BREADTH = 10
@@ -51,7 +51,7 @@ class RoadwayNetwork(object):
 
     SELECTION_REQUIRES = ["link"]
 
-    UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id", "ShStReferenceId"]
+    UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
 
     MANAGED_LANES_REQUIRED_ATTRIBUTES = [
@@ -93,7 +93,8 @@ class RoadwayNetwork(object):
         # for field, default_value in RoadwayNetwork.OPTIONAL_FIELDS:
         #    if field not in self.links_df.columns:
         #        self.links_df[field] = default_value
-
+        if not self.validate_uniqueness():
+            raise ValueError("IDs in network not unique")
         self.selections = {}
 
     @staticmethod
@@ -246,6 +247,49 @@ class RoadwayNetwork(object):
             json.dump(nodes_geojson, f)
 
         self.shapes_df.to_file(shapes_file, driver="GeoJSON")
+
+    def validate_uniqueness(self) -> Bool:
+        """
+        Confirms that the unique identifiers are met.
+        """
+        valid = True
+        for c in RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS:
+            if c not in self.links_df.columns:
+                valid = False
+                msg = "Network doesn't contain unique link identifier: {}".format(c)
+                WranglerLogger.error(msg)
+            if not self.links_df[c].is_unique:
+                valid = False
+                msg = "Unique identifier {} is not unique in network links".format(c)
+                WranglerLogger.error(msg)
+        for c in RoadwayNetwork.LINK_FOREIGN_KEY:
+            if c not in self.links_df.columns:
+                valid = False
+                msg = "Network doesn't contain link foreign key identifier: {}".format(RoadwayNetwork.LINK_FOREIGN_KEY[0])
+                WranglerLogger.error(msg)
+        link_foreign_key = self.links_df[RoadwayNetwork.LINK_FOREIGN_KEY].apply(lambda x: '-'.join(x.map(str)), axis=1)
+        if not link_foreign_key.is_unique:
+                valid = False
+                msg = "Foreign key: {} is not unique in network links".format(RoadwayNetwork.LINK_FOREIGN_KEY)
+                WranglerLogger.error(msg)
+        for c in RoadwayNetwork.UNIQUE_NODE_IDENTIFIERS:
+            if c not in self.nodes_df.columns:
+                valid = False
+                msg = "Network doesn't contain unique node identifier: {}".format(c)
+                WranglerLogger.error(msg)
+            if not self.nodes_df[c].is_unique:
+                valid = False
+                msg = "Unique identifier {} is not unique in network nodes".format(c)
+                WranglerLogger.error(msg)
+        if RoadwayNetwork.NODE_FOREIGN_KEY not in self.nodes_df.columns:
+            valid = False
+            msg = "Network doesn't contain node foreign key identifier: {}".format(RoadwayNetwork.NODE_FOREIGN_KEY)
+            WranglerLogger.error(msg)
+        elif not self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY].is_unique:
+                valid = False
+                msg = "Foreign key: {} is not unique in network nodes".format(RoadwayNetwork.NODE_FOREIGN_KEY)
+                WranglerLogger.error(msg)
+        return valid
 
     @staticmethod
     def validate_object_types(
@@ -667,7 +711,7 @@ class RoadwayNetwork(object):
             raise Exception(msg)
 
         if len(candidate_links.index) == 0:
-            WranglerLogger.info(
+            WranglerLogger.debug(
                 "No candidate links in initial search.\nRetrying query using 'ref' instead of 'name'"
             )
             # if the query doesn't come back with something from 'name'
