@@ -9,7 +9,6 @@
       "facility",
       "properties"
   ],
-  "additionalProperties": false,
   "properties": {
     "project": {
       "type": "string",
@@ -68,7 +67,6 @@
     },
     "facility": {
       "type": "object",
-      "additionalProperties": false,
       "title": "Facility Selection",
       "oneOf": [
         {
@@ -100,7 +98,6 @@
       "properties": {
         "link": {
           "type": "array",
-          "additionalProperties": false,
           "title": "Road Name or Link ID",
           "oneOf": [
             {
@@ -139,6 +136,9 @@
           "properties": {
             "osm_node_id": {
               "type": "string"
+            },
+            "model_node_id": {
+              "type": "string"
             }
           }
         },
@@ -148,6 +148,9 @@
           "title": "Roadway B Node",
           "properties": {
             "osm_node_id": {
+              "type": "string"
+            },
+            "model_node_id": {
               "type": "string"
             }
           }
@@ -187,7 +190,6 @@
       "title": "Properties to be Changed",
       "items": {
         "type": "object",
-        "additionalProperties": false,
         "oneOf": [
           {
             "required": ["property", "set"]
