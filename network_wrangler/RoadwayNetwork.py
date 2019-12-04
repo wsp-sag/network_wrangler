@@ -51,6 +51,8 @@ class RoadwayNetwork(object):
 
     SELECTION_REQUIRES = ["link"]
 
+    UNIQUE_LINK_KEY = "model_link_id"
+    UNIQUE_NODE_KEY = "model_node_id"
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
 
@@ -265,7 +267,7 @@ class RoadwayNetwork(object):
         for c in RoadwayNetwork.LINK_FOREIGN_KEY:
             if c not in self.links_df.columns:
                 valid = False
-                msg = "Network doesn't contain link foreign key identifier: {}".format(RoadwayNetwork.LINK_FOREIGN_KEY[0])
+                msg = "Network doesn't contain link foreign key identifier: {}".format(c)
                 WranglerLogger.error(msg)
         link_foreign_key = self.links_df[RoadwayNetwork.LINK_FOREIGN_KEY].apply(lambda x: '-'.join(x.map(str)), axis=1)
         if not link_foreign_key.is_unique:
@@ -583,13 +585,15 @@ class RoadwayNetwork(object):
 
         graph_nodes.gdf_name = "network_nodes"
         WranglerLogger.debug("GRAPH NODES: {}".format(graph_nodes.columns))
-        graph_nodes["id"] = graph_nodes["osm_node_id"]
+        graph_nodes["id"] = graph_nodes[RoadwayNetwork.NODE_FOREIGN_KEY]
 
         graph_links = links_df.copy()
-        graph_links["id"] = graph_links["osm_link_id"]
-        graph_links["key"] = (
-            str(graph_links["osm_link_id"]) + "_" + str(graph_links["model_link_id"])
-        )
+
+        #have to change this over into u,v b/c this is what osm-nx is expecting
+        graph_links["u"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[0]]
+        graph_links["v"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[1]]
+        graph_links["id"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
+        graph_links["key"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
 
@@ -620,7 +624,7 @@ class RoadwayNetwork(object):
         return (sel_query, A_id, B_id)
 
     def select_roadway_features(
-        self, selection: dict, search_mode="drive"
+        self, selection: dict, search_mode="drive", force_search=False
     ) -> GeoDataFrame:
         """
         Selects roadway features that satisfy selection criteria
@@ -660,7 +664,7 @@ class RoadwayNetwork(object):
 
         # if this selection has been queried before, just return the
         # previously selected links
-        if sel_key in self.selections:
+        if sel_key in self.selections and not force_search:
             if self.selections[sel_key]["selection_found"]:
                 return self.selections[sel_key]["selected_links"].index.tolist()
             else:
@@ -773,8 +777,11 @@ class RoadwayNetwork(object):
                 to test if the A and B nodes are in there.
             """
             WranglerLogger.debug("-Adding Breadth-")
+
+
             node_list_foreign_keys = list(
-                set(list(candidate_links["u"]) + list(candidate_links["v"]))
+                set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(candidate_links[fk])])
+                #set(list(candidate_links["u"]) + list(candidate_links["v"]))
             )
             candidate_nodes = nodes.loc[node_list_foreign_keys]
             WranglerLogger.debug("Candidate Nodes: {}".format(len(candidate_nodes)))
@@ -795,7 +802,8 @@ class RoadwayNetwork(object):
             links[links.model_link_id.isin(links_shstRefId_to_add)]["i"] = i
             candidate_links = candidate_links.append(links_to_add)
             node_list_foreign_keys = list(
-                set(list(candidate_links["u"]) + list(candidate_links["v"]))
+                set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(candidate_links[fk])])
+                #set(list(candidate_links["u"]) + list(candidate_links["v"]))
             )
 
             return candidate_links, node_list_foreign_keys
@@ -807,34 +815,43 @@ class RoadwayNetwork(object):
             candidate_links["weight"] = 1 + (
                 candidate_links["i"] * RoadwayNetwork.SP_WEIGHT_FACTOR
             )
-            candidate_nodes = self.nodes_df.loc[
-                list(candidate_links["u"]) + list(candidate_links["v"])
-            ]
+
+            node_list_foreign_keys = list(
+                set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(candidate_links[fk])])
+                #set(list(candidate_links["u"]) + list(candidate_links["v"]))
+            )
+
+            candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
+
             WranglerLogger.debug("creating network graph")
             G = RoadwayNetwork.ox_graph(candidate_nodes, candidate_links)
+            self.selections[sel_key]["graph"] = G
+            self.selections[sel_key]["candidate_links"] = candidate_links
 
             try:
-                WranglerLogger.debug("calculating NX shortest path")
+                WranglerLogger.debug("Calculating NX shortest path from A_id: {} to B_id: {}".format(A_id, B_id))
                 sp_route = nx.shortest_path(G, A_id, B_id, weight="weight")
-                self.selections[sel_key]["candidate_links"] = candidate_links
-                sp_links = candidate_links[
-                    candidate_links["u"].isin(sp_route)
-                    & candidate_links["v"].isin(sp_route)
-                ]
-                self.selections[sel_key] = {
-                    "route": sp_route,
-                    "links": sp_links,
-                    "graph": G,
-                }
-                return True
-            except:
+                WranglerLogger.debug("Shortest path successfully routed")
+
+            except nx.NetworkXNoPath:
                 return False
+
+            sp_links = candidate_links[
+                candidate_links["A"].isin(sp_route)
+                & candidate_links["B"].isin(sp_route)
+            ]
+            self.selections[sel_key]["route"]= sp_route
+            self.selections[sel_key]["links"]= sp_links
+            
+            return True
+
 
         if not unique_model_link_identifer_in_selection:
             # find the node ids for the candidate links
             WranglerLogger.debug("Not a unique ID selection, conduct search")
-            node_list_foreign_keys = list(candidate_links["u"]) + list(
-                candidate_links["v"]
+            node_list_foreign_keys = list(
+                set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(candidate_links[fk])])
+                #set(list(candidate_links["u"]) + list(candidate_links["v"]))
             )
             WranglerLogger.debug("Foreign key list: {}".format(node_list_foreign_keys))
             i = 0
