@@ -17,6 +17,7 @@ STPAUL_PC_DIR = os.path.join(os.getcwd(), "examples", "stpaul", "project_cards")
 
 @pytest.mark.schema
 @pytest.mark.roadschema
+@pytest.mark.skip(reason="need to work on this")
 def test_roadway_link_schema():
     schema_filename = os.path.join(SCHEMA_DIR, "roadway_network_link.json")
     link_file = os.path.join(SMALL_EX_DIR, "link.json")
@@ -31,6 +32,7 @@ def test_roadway_link_schema():
 
 
 @pytest.mark.schema
+@pytest.mark.skip(reason="need to work on this")
 def test_project_card_schema():
     schema_filename = os.path.join(SCHEMA_DIR, "project_card.json")
     card_file = os.path.join(STPAUL_PC_DIR, "1_simple_roadway_attribute_change.yml")

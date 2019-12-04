@@ -842,7 +842,7 @@ class RoadwayNetwork(object):
             ]
             self.selections[sel_key]["route"]= sp_route
             self.selections[sel_key]["links"]= sp_links
-            
+
             return True
 
 
