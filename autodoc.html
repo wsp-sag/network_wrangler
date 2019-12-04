@@ -446,7 +446,7 @@ fast: boolean that will skip validation to speed up read time</p>
 
 <dl class="method">
 <dt id="network_wrangler.RoadwayNetwork.select_roadway_features">
-<code class="sig-name descname">select_roadway_features</code><span class="sig-paren">(</span><em class="sig-param">selection</em>, <em class="sig-param">search_mode='drive'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.select_roadway_features" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">select_roadway_features</code><span class="sig-paren">(</span><em class="sig-param">selection</em>, <em class="sig-param">search_mode='drive'</em>, <em class="sig-param">force_search=False</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.select_roadway_features" title="Permalink to this definition">¶</a></dt>
 <dd><p>Selects roadway features that satisfy selection criteria</p>
 <dl class="simple">
 <dt>Example usage:</dt><dd><dl class="simple">
@@ -550,6 +550,17 @@ minimum required values.</p>
 <dt id="network_wrangler.RoadwayNetwork.validate_shape_schema">
 <em class="property">static </em><code class="sig-name descname">validate_shape_schema</code><span class="sig-paren">(</span><em class="sig-param">shape_file</em>, <em class="sig-param">schema_location='roadway_network_shape.json'</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.validate_shape_schema" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate roadway network data shape schema and output a boolean</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="network_wrangler.RoadwayNetwork.validate_uniqueness">
+<code class="sig-name descname">validate_uniqueness</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork.validate_uniqueness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Confirms that the unique identifiers are met.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
