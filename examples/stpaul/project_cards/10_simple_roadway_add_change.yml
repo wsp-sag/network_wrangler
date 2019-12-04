@@ -1,0 +1,26 @@
+project: test simple roadway add
+tags:
+  - 'add roadway'
+category: Add New Roadway
+dependencies:
+  prerequisites: []
+  corequisites: []
+  conflicts: []
+links:
+  - u: 36622
+    v: 125892
+    bike_access: 1
+    drive_access: 1
+    transit_access: 0
+    walk_access: 0
+    lanes: 1
+    model_link_id: 404982
+  - u: 125892
+    v: 36622
+    bike_access: 1
+    drive_access: 1
+    transit_access: 0
+    walk_access: 0
+    lanes: 1
+    model_link_id: 407042
+notes: Simple project card to add new roadway

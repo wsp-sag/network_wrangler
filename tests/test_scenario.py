@@ -1,4 +1,6 @@
 import os
+import sys
+import subprocess
 import pytest
 from network_wrangler import ProjectCard
 from network_wrangler import RoadwayNetwork
@@ -12,7 +14,7 @@ To run with print statments, use `pytest -s -m scenario`
 """
 
 STPAUL_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "example", "stpaul"
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "examples", "stpaul"
 )
 SCRATCH_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -26,7 +28,7 @@ def test_project_card_read(request):
     print("\n--Starting:", request.node.name)
     in_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
-        "example",
+        "examples",
         "stpaul",
         "project_cards",
     )
@@ -52,40 +54,23 @@ def test_project_card_write(request):
 
 
 @pytest.mark.scenario
+@pytest.mark.travis
 def test_scenario_conflicts(request):
 
     project_cards_list = []
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
-                "project_cards",
-                "a_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "a_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
-                "project_cards",
-                "b_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "b_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
-                "project_cards",
-                "c_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "c_test_project_card.yml")
         )
     )
 
@@ -104,6 +89,7 @@ def test_scenario_conflicts(request):
 
 
 @pytest.mark.scenario
+@pytest.mark.travis
 def test_scenario_requisites(request):
     print("\n--Starting:", request.node.name)
     base_scenario = {}
@@ -111,35 +97,17 @@ def test_scenario_requisites(request):
     project_cards_list = []
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
-                "project_cards",
-                "a_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "a_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
-                "project_cards",
-                "b_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "b_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
-                "project_cards",
-                "c_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "c_test_project_card.yml")
         )
     )
 
@@ -158,6 +126,7 @@ def test_scenario_requisites(request):
 
 
 @pytest.mark.scenario
+@pytest.mark.travis
 def test_project_sort(request):
     print("\n--Starting:", request.node.name)
     base_scenario = {}
@@ -165,35 +134,17 @@ def test_project_sort(request):
     project_cards_list = []
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
-                "project_cards",
-                "a_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "a_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
-                "project_cards",
-                "b_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "b_test_project_card.yml")
         )
     )
     project_cards_list.append(
         ProjectCard.read(
-            os.path.join(
-                os.getcwd(),
-                "example",
-                "stpaul",
-                "project_cards",
-                "c_test_project_card.yml",
-            )
+            os.path.join(STPAUL_DIR, "project_cards", "c_test_project_card.yml")
         )
     )
 
@@ -204,24 +155,25 @@ def test_project_sort(request):
     import pprint
 
     pprint.pprint(scen.prerequisites)
-    print("\nUnordered Projects:", scen.project_names())
+    print("\nUnordered Projects:", scen.get_project_names())
     scen.check_scenario_conflicts()
     scen.check_scenario_requisites()
 
     scen.order_project_cards()
-    print("Ordered Projects:", scen.project_names())
+    print("Ordered Projects:", scen.get_project_names())
     print("--Finished:", request.node.name)
 
 
 @pytest.mark.roadway
 @pytest.mark.scenario
+@pytest.mark.travis
 def test_managed_lane_project_card(request):
     print("\n--Starting:", request.node.name)
 
     print("Reading project card ...")
     project_card_name = "5_managed_lane.yml"
     project_card_path = os.path.join(
-        os.getcwd(), "example", "stpaul", "project_cards", project_card_name
+        os.getcwd(), "examples", "stpaul", "project_cards", project_card_name
     )
     project_card = ProjectCard.read(project_card_path)
     print(project_card)
@@ -229,24 +181,92 @@ def test_managed_lane_project_card(request):
     print("--Finished:", request.node.name)
 
 
+@pytest.mark.unique_ids
 @pytest.mark.travis
 def test_query_builder(request):
-    selection = {
+    selection_1 = {
+        "link": [{"name": ["6th", "Sixth", "sixth"]}],
+        "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+        "B": {"osm_node_id": "187865924"},  # end at B
+    }
+
+    sel_query = ProjectCard.build_link_selection_query(
+        selection=selection_1,
+        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+    )
+    answer = (
+        '((name.str.contains("6th") or '
+        'name.str.contains("Sixth") or '
+        'name.str.contains("sixth")) and '
+        "drive_access==1)"
+    )
+    # print("\nsel_query:\n", sel_query)
+    assert sel_query == answer
+
+    sel_query = ProjectCard.build_link_selection_query(
+        selection=selection_1,
+        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+        ignore=["name"],
+    )
+    answer = "(drive_access==1)"
+    # print("\nsel_query:\n", sel_query)
+    assert sel_query == answer
+
+    selection_2 = {
         "link": [
             {
                 "name": ["6th", "Sixth", "sixth"]
             },  # find streets that have one of the various forms of 6th
-            {"LANES": [1, 2]},  # only select links that are either 1 or 2 lanes
-            {"isBikeLink": [1]},  # only select links that are marked for biking
+            {"lanes": [1, 2]},  # only select links that are either 1 or 2 lanes
+            {"bike_access": [1]},  # only select links that are marked for biking
         ],
-        "A": {"osmNodeId": "187899923"},  # start searching for segments at A
-        "B": {"osmNodeId": "187865924"},  # end at B
+        "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+        "B": {"osm_node_id": "187865924"},  # end at B
     }
-    sel_query = ProjectCard.build_link_selection_query(selection)
-    print("\nsel_query:\n", sel_query)
 
-    resel_query = ProjectCard.build_link_selection_query(selection, ignore=["name"])
-    print("\nresel_query:\n", resel_query)
+    sel_query = ProjectCard.build_link_selection_query(
+        selection=selection_2,
+        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+    )
+    answer = (
+        '((name.str.contains("6th") or '
+        'name.str.contains("Sixth") or '
+        'name.str.contains("sixth")) and '
+        "(lanes==1 or lanes==2) and "
+        "(bike_access==1) and drive_access==1)"
+    )
+    # print("\nsel_query:\n", sel_query)
+    assert sel_query == answer
+
+    sel_query = ProjectCard.build_link_selection_query(
+        selection=selection_2,
+        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+        ignore=["name"],
+    )
+    answer = "((lanes==1 or lanes==2) and " "(bike_access==1) and drive_access==1)"
+    # print("\nsel_query:\n", sel_query)
+    assert sel_query == answer
+
+    selection_3 = {
+        "link": [
+            {
+                "name": ["6th", "Sixth", "sixth"]
+            },  # find streets that have one of the various forms of 6th
+            {"model_link_id": [134574]},
+            {"lanes": [1, 2]},  # only select links that are either 1 or 2 lanes
+            {"bike_access": [1]},  # only select links that are marked for biking
+        ],
+        "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+        "B": {"osm_node_id": "187865924"},  # end at B
+    }
+
+    sel_query = ProjectCard.build_link_selection_query(
+        selection=selection_3,
+        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+    )
+    answer = "((model_link_id==134574))"
+    # print("\nsel_query:\n", sel_query)
+    assert sel_query == answer
 
     print("--Finished:", request.node.name)
 
@@ -285,5 +305,26 @@ def test_apply_wrapper(request):
     )
 
     my_scenario.apply_all_projects()
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.scenario_building
+def test_scenario_building_from_script(request):
+    print("\n--Starting:", request.node.name)
+
+    config_file = os.path.join(os.getcwd(), "examples", "config_1.yml")
+    # config_file = os.path.join(os.getcwd(),"example","config_2.yml")
+    script_to_run = os.path.join(os.getcwd(), "scripts", "build_scenario.py")
+
+    # replace backward slash with forward slash
+    config_file = config_file.replace(os.sep, "/")
+    script_to_run = script_to_run.replace(os.sep, "/")
+
+    # print(config_file)
+    # print(script_to_run)
+
+    p = subprocess.Popen([sys.executable, script_to_run, config_file])
+    p.communicate()  # wait for the subprocess call to finish
 
     print("--Finished:", request.node.name)

@@ -1,0 +1,17 @@
+agency_id,agency_name,agency_url,agency_timezone,agency_lang
+0,Metro Transit,http://www.metrotransit.org,America/Chicago,EN
+1,Metro Transit,http://www.metrotransit.org,America/Chicago,EN
+2,Metro Transit,http://www.metrotransit.org,America/Chicago,EN
+3,Minnesota Valley,http://www.mvta.com,America/Chicago,EN
+4,Maple Grove,http://www.ci.maple-grove.mn.us,America/Chicago,EN
+5,Plymouth,http://www2.ci.plymouth.mn.us,America/Chicago,EN
+6,SouthWest Transit,http://www.swtransit.org,America/Chicago,EN
+7,Prior Lake,http://www.cityofpriorlake.com/transit.shtml,America/Chicago,EN
+8,Shakopee,http://www.ci.shakopee.mn.us/transit.cfm,America/Chicago,EN
+9,Scott County,http://www.co.scott.mn.us,America/Chicago,EN
+10,Airport (MAC),http://www.mspairport.com/MAC,America/Chicago,EN
+11,University of Minnesota,http://www.umn.edu,America/Chicago,EN
+12,Anoka County,http://www.metrotransit.org,America/Chicago,EN
+13,Minneapolis,http://www.metrotransit.org,America/Chicago,EN
+14,Saint Paul,http://www.metrotransit.org,America/Chicago,EN
+15,Other,http://www.metrotransit.org,America/Chicago,EN

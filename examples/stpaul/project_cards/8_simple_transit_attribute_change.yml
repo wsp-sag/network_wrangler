@@ -1,0 +1,14 @@
+project: Blue Line Service Enhancement C
+category: Transit Service Property Change
+tags:
+   - example
+dependencies:
+  prerequisites: []
+  corequisites: []
+  conflicts: []
+facility:
+  route_id: 21-111
+  time: ['09:00', '15:00']
+properties:
+  - property: headway_secs
+    change: -300

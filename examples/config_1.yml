@@ -1,0 +1,15 @@
+# base network
+base_network:
+  input_dir: "C:/Users/kulshresthaa/OneDrive/OneDrive - WSP O365/network_wrangler/example/stpaul"
+  shape_file_name: "shape.geojson"
+  link_file_name: "link.json"
+  node_file_name: "node.geojson"
+  validate_network: False
+scenario:
+  project_cards_filenames:
+  card_directory: "C:/Users/kulshresthaa/OneDrive/OneDrive - WSP O365/network_wrangler/example/stpaul/project_cards"
+  glob_search: "*attribute*.yml"
+  tags:
+  write_out: True
+  output_dir: "C:/Users/kulshresthaa/OneDrive/OneDrive - WSP O365/network_wrangler/scratch"
+  out_prefix: "my_scen"

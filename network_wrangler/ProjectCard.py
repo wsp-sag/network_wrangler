@@ -19,15 +19,17 @@ class ProjectCard(object):
     TRANSIT_CATEGORIES = ["Transit Service Property Change"]
 
     # categories that may affect transit, but only as a secondary
-    # effect of changeing roadways
+    # effect of changing roadways
     SECONDARY_TRANSIT_CATEGORIES = ["Roadway Deletion", "Parallel Managed Lanes"]
 
     ROADWAY_CATEGORIES = [
         "Roadway Property Change",
         "Roadway Deletion",
-        "Parallel Managed Lanes",
+        "Parallel Managed lanes",
         "Add New Roadway",
     ]
+
+    UNSPECIFIED_PROJECT_NAMES = ["", "TO DO User Define", "USER TO define"]
 
     def __init__(self, attribute_dictonary: dict):
         """
@@ -39,7 +41,7 @@ class ProjectCard(object):
         self.__dict__.update(attribute_dictonary)
         self.valid = False
 
-        ##todo more unstructuring of project card yaml
+        # todo more unstructuring of project card yaml
 
     def __str__(self):
         s = ["{}: {}".format(key, value) for key, value in self.__dict__.items()]
@@ -60,6 +62,11 @@ class ProjectCard(object):
             attribute_dictionary = yaml.safe_load(cardfile)
             attribute_dictionary["file"] = path_to_card
             card = ProjectCard(attribute_dictionary)
+
+        if card.project in ProjectCard.UNSPECIFIED_PROJECT_NAMES:
+            msg = "Card must have valid project name: {}".format(path_to_card)
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
 
         card.valid = False
         if validate:
@@ -117,19 +124,34 @@ class ProjectCard(object):
             WranglerLogger.error(exc.message)
 
     @staticmethod
-    def build_link_selection_query(selection: dict, mode="isDriveLink", ignore=[]):
+    def build_link_selection_query(
+        selection: dict,
+        unique_model_link_identifiers: [],
+        mode="drive_access",
+        ignore=[],
+    ):
         sel_query = "("
-        count = 1
+        count = 0
 
-        ## i think we can remove this b/c we are validating it ahead of time
-        # if 'link' not in selection.keys():
-        #    return sel_query
+        selection_keys = [k for l in selection["link"] for k, v in l.items()]
+        num_unique_model_link_identifiers = len(
+            set(unique_model_link_identifiers).intersection(selection_keys)
+        )
+        unique_model_link_identifer_exist = num_unique_model_link_identifiers > 0
 
         for l in selection["link"]:
             for key, value in l.items():
+
                 if key in ignore:
-                    count = count + 1
                     continue
+
+                if (
+                    unique_model_link_identifer_exist
+                    and key not in unique_model_link_identifiers
+                ):
+                    continue
+
+                count = count + 1
 
                 if isinstance(value, list):
                     sel_query = sel_query + "("
@@ -144,16 +166,26 @@ class ProjectCard(object):
                             v = v + 1
                     sel_query = sel_query + ")"
                 else:
-                    sel_query = sel_query + key + " == " + '"' + str(value) + '"'
+                    sel_query = sel_query + key + "==" + '"' + str(value) + '"'
 
-                if count != len(selection["link"]):
+                if not unique_model_link_identifer_exist and count != (
+                    len(selection["link"]) - len(ignore)
+                ):
                     sel_query = sel_query + " and "
-                count = count + 1
 
-        if count > (1 + len(ignore)):
-            sel_query = sel_query + " and "
-        sel_query = sel_query + mode + " == 1"
+                if (
+                    unique_model_link_identifer_exist
+                    and count != num_unique_model_link_identifiers
+                ):
+                    sel_query = sel_query + " and "
+
+        if not unique_model_link_identifer_exist:
+            if count > 0:
+                sel_query = sel_query + " and "
+            sel_query = sel_query + mode + "==1"
+
         sel_query = sel_query + ")"
+
         return sel_query
 
     def roadway_attribute_change(self, card: dict):
@@ -199,7 +231,7 @@ class ProjectCard(object):
     def parallel_managed_lanes(self, card: dict):
         """
         Probably delete.
-        Reads a Parallel Managed Lanes card.
+        Reads a Parallel Managed lanes card.
 
         args:
         card: the project card stored in a dictionary

@@ -1,0 +1,37 @@
+project: test managed lane project
+category: Parallel Managed lanes
+tags:
+   - 'example'
+dependencies:
+  prerequisites: []
+  corequisites: []
+  conflicts: []
+facility:
+  link:
+    - name:
+      - 'I 35E'
+  A:
+    osm_node_id: '961117623'
+  B:
+    osm_node_id: '2564047368'
+properties:
+  - property: lanes
+    set: 3
+    timeofday:
+      - time: ['6:00', '9:00']
+        set: 2
+  - property: ML_lanes
+    set: 0
+    timeofday:
+      - time: ['6:00', '9:00']
+        set: 1
+  - property: ML_price
+    set: 0
+    timeofday:
+      - time: ['6:00', '9:00']
+        set: 1.5
+  - property: ML_access
+    set: 'all'
+  - property: ML_egress
+    set: 'all'
+notes: Placeholder for notes
