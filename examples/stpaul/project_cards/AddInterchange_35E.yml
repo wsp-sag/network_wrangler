@@ -22,8 +22,8 @@ changes:
     count_NT: 192
     count_PM: 192
     roadway_class: 20
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 1
     drive_access: 1
     transit_access: 0
@@ -42,8 +42,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 10
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 1
     drive_access: 1
     transit_access: 0
@@ -62,8 +62,8 @@ changes:
     count_NT: 192
     count_PM: 192
     roadway_class: 20
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 1
     drive_access: 1
     transit_access: 0
@@ -82,8 +82,8 @@ changes:
     count_NT: 192
     count_PM: 192
     roadway_class: 20
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 1
     drive_access: 1
     transit_access: 0
@@ -102,8 +102,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 10
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 1
     drive_access: 1
     transit_access: 0
@@ -122,8 +122,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 10
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 1
     drive_access: 1
     transit_access: 0
@@ -142,8 +142,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 30
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 0
     drive_access: 1
     transit_access: 0
@@ -162,8 +162,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 30
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 0
     drive_access: 1
     transit_access: 0
@@ -182,8 +182,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 30
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 0
     drive_access: 1
     transit_access: 0
@@ -202,8 +202,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 10
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 0
     drive_access: 1
     transit_access: 0
@@ -222,8 +222,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 10
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 0
     drive_access: 1
     transit_access: 0
@@ -242,8 +242,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 10
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 0
     drive_access: 1
     transit_access: 0
@@ -262,8 +262,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 40
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 0
     drive_access: 1
     transit_access: 0
@@ -282,8 +282,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 40
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 0
     drive_access: 1
     transit_access: 0
@@ -302,8 +302,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 40
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 0
     drive_access: 1
     transit_access: 0
@@ -322,8 +322,8 @@ changes:
     count_NT: 0
     count_PM: 0
     roadway_class: 40
-    traveltime_assert: 0.0
-    transit_priority: 0
+    ttime_assert: 0.0
+    trn_priority: 0
     bike_access: 0
     drive_access: 1
     transit_access: 0

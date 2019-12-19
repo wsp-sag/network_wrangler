@@ -172,8 +172,8 @@ class TransitNetwork(object):
 
         args
         ------
-        project_card_dictionary: dict
-          a dictionary of the project card object
+        project_card_dictionary: dict[ProjectCard]
+          a dictionary of project card objects
 
         """
         WranglerLogger.info(
