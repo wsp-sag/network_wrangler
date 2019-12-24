@@ -1596,9 +1596,18 @@ class RoadwayNetwork(object):
         ml_links_df["locationReferences"] = ml_links_df["locationReferences"].apply(
             lambda x: _update_location_reference(x)
         )
+        ml_links_df["geometry"] = ml_links_df["locationReferences"].apply(
+            lambda x : _get_line_string(x)
+        )
 
         access_links_df, egress_links_df = RoadwayNetwork.create_dummy_connector_links(
             gp_links_df, ml_links_df
+        )
+        access_links_df["geometry"] = access_links_df["locationReferences"].apply(
+            lambda x : _get_line_string(x)
+        )
+        egress_links_df["geometry"] = egress_links_df["locationReferences"].apply(
+            lambda x : _get_line_string(x)
         )
 
         new_links_df = gp_links_df.append(ml_links_df)
@@ -1607,9 +1616,9 @@ class RoadwayNetwork(object):
         new_links_df = new_links_df.append(non_ml_links_df)
         new_links_df = new_links_df.drop("ML", axis=1)
 
-        new_links_df["geometry"] = new_links_df["locationReferences"].apply(
-            lambda x: _get_line_string(x)
-        )
+        # new_links_df["geometry"] = new_links_df["locationReferences"].apply(
+        #     lambda x: _get_line_string(x)
+        # )
 
         # only the ml_links_df has the new nodes added
         added_a_nodes = ml_links_df["A"]
