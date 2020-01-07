@@ -1,4 +1,4 @@
-stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,zone_id,stop_url,location_type,wheelchair_boarding,model_node_id,osm_link_id,node_ssid,parent_station
+stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,zone_id,stop_url,location_type,wheelchair_boarding,model_node_id,osm_node_id,node_ssid,parent_station
 1000,,50th St W & Upton Ave S,Near side E,44.912365,-93.315179,,http://www.metrotransit.org/NexTripBadge.aspx?stopnumber=1000,0,1.0,138337,33418852,02077ff9eaa26d2038bd906d0a475d11,
 10000,,Carmen Ave & Claude Way E,Across from S,44.857531,-93.041008,,http://www.metrotransit.org/NexTripBadge.aspx?stopnumber=10000,0,1.0,25793,186763642,70da1246350babf6f8a36b4632c12db0,
 10001,,Carmen Ave & 65th St E,Far side S,44.855001,-93.042491,,http://www.metrotransit.org/NexTripBadge.aspx?stopnumber=10001,0,1.0,34917,186796258,5b252f0e6fa468c1e9bb5cd4b0680368,
