@@ -54,6 +54,9 @@ class TransitNetwork(object):
         self.road_net: RoadwayNetwork = None
         self.graph: nx.MultiDiGraph = None
 
+        if not self.validate_frequencies():
+            raise ValueError("Transit lines with non-positive frequencies exist in the network")
+
     @staticmethod
     def validate_feed(feed: DotDict, config: nx.DiGraph) -> bool:
         """
@@ -88,6 +91,21 @@ class TransitNetwork(object):
             return False
 
         return updated_config
+
+    def validate_frequencies(self) -> Bool:
+        """
+        validates that there are no transit lines with zero frequencies
+        """
+
+        valid = True
+        zero_freq = self.feed.frequencies[self.feed.frequencies.headway_secs <= 0]
+
+        if len(zero_freq.index) > 0:
+            valid = False
+            msg = "Transit lines {} have non-positive frequencies".format(zero_freq.trip_id.to_list())
+            WranglerLogger.error(msg)
+
+        return valid
 
     @staticmethod
     def read(feed_path: str, fast: bool = False) -> TransitNetwork:
