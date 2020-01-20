@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from network_wrangler import offset_lat_lon
 from network_wrangler import haversine_distance
+import networkx as nx
 
 pd.set_option("display.max_rows", 500)
 pd.set_option("display.max_columns", 500)
@@ -239,7 +240,6 @@ def test_apply_roadway_feature_change(request, apply_feature_change_project_card
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_managed_lane(request):
@@ -524,7 +524,6 @@ def test_query_roadway_property_by_time_group(request, variable_query):
 
 
 @pytest.mark.highway
-@pytest.mark.ashishk
 def test_write_model_net(request):
     print("\n--Starting:", request.node.name)
 
@@ -576,5 +575,23 @@ def test_get_distance_bw_lat_lon(request):
     end = [-93.08844310000001, 44.9717832]
     dist = haversine_distance(start, end)
     print(dist)
+
+    print("--Finished:", request.node.name)
+
+@pytest.mark.highway
+def test_network_connectivity(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+    print("Checking network connectivity ...")
+    is_connected = net.is_network_connected()
+    print("Network Connected: ", is_connected)
 
     print("--Finished:", request.node.name)

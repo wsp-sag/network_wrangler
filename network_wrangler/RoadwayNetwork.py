@@ -23,8 +23,8 @@ from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 
 import osmnx as ox
-
 from shapely.geometry import Point, LineString
+from random import randint
 
 from .Logger import WranglerLogger
 from .Utils import point_df_to_geojson, link_df_to_json, parse_time_spans
@@ -1684,3 +1684,54 @@ class RoadwayNetwork(object):
             out_network.nodes_df = new_nodes_df
             out_network.shapes_df = new_shapes_df
             return out_network
+
+    def is_network_connected(self):
+        """
+        Determines if the network graph is "strongly" connected
+        A graph is strongly connected if each vertex is reachable from every other vertex.
+
+        Returns: boolean
+        """
+        G = RoadwayNetwork.ox_graph(self.nodes_df, self.links_df)
+        is_connected = nx.is_strongly_connected(G)
+
+        return is_connected
+
+    def network_connection_plot(self, ignore_end_nodes: bool = True):
+        """
+        Plot a graph to check for network connection
+
+        ignore_end_nodes: boolean to drop sub-graphs with only one node
+
+        returns
+        --------
+        fig, ax : tuple
+        """
+        G = RoadwayNetwork.ox_graph(self.nodes_df, self.links_df)
+        sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
+
+        sub_graph_nodes = [s for s in sorted(nx.strongly_connected_components(G), key=len, reverse=True)]
+
+        # sorted on decreasing length, dropping the main sub-graph
+        sub_graph_nodes = sub_graph_nodes[1:]
+
+        # dropping the sub-graphs with only 1 node
+        if ignore_end_nodes:
+            sub_graph_nodes = [list(s) for s in sub_graph_nodes if len(s) > 1]
+
+        colors = []
+        for i in range(len(sub_graph_nodes)):
+            colors.append('#%06X' % randint(0, 0xFFFFFF))
+
+        fig, ax = ox.plot_graph(G, fig_height=16, fig_width=16, show=False,
+                                close=False, edge_color='black', edge_alpha = 0.1,
+                                node_color='black', node_alpha = 0.5, node_size = 10
+                                )
+        i = 0
+        for nodes in sub_graph_nodes:
+            for n in nodes:
+                size = 100
+                ax.scatter(G.nodes[n]['x'],G.nodes[n]['y'], c=colors[i], s=size)
+            i = i + 1
+
+        return fig, ax
