@@ -54,6 +54,9 @@ class TransitNetwork(object):
         self.road_net: RoadwayNetwork = None
         self.graph: nx.MultiDiGraph = None
 
+        self.validated_frequencies = False
+        self.validated_road_network_consistency = False
+
         if not self.validate_frequencies():
             raise ValueError("Transit lines with non-positive frequencies exist in the network")
 
@@ -103,6 +106,94 @@ class TransitNetwork(object):
         if len(zero_freq.index) > 0:
             valid = False
             msg = "Transit lines {} have non-positive frequencies".format(zero_freq.trip_id.to_list())
+            WranglerLogger.error(msg)
+
+        self.validated_frequencies = True
+
+        return valid
+
+    def validate_road_network_consistencies(self) -> Bool:
+        """
+        validates transit network against the road network
+        """
+        if self.road_net is None:
+            raise ValueError(
+                "RoadwayNetwork not set yet, see TransitNetwork.set_roadnet()"
+            )
+
+        valid = True
+
+        valid_stops = self.validate_transit_stops()
+        valid_links = self.validate_transit_links()
+
+        self.validated_road_network_consistency = True
+
+        if not valid_stops or not valid_links:
+             valid = False
+             raise ValueError("Transit network is not consistent with road network.")
+
+        return valid
+
+
+    def validate_transit_stops(self) -> Bool:
+        """
+        validates that all transit stops are part of the roadway network
+        """
+
+        if self.road_net is None:
+            raise ValueError(
+                "RoadwayNetwork not set yet, see TransitNetwork.set_roadnet()"
+            )
+
+        stops = self.feed.stops
+        nodes = self.road_net.nodes_df
+
+        valid = True
+
+        stop_ids = [int(s) for s in stops[TransitNetwork.FK_STOPS].to_list()]
+        node_ids = [int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
+        #print("stop_ids", len(stop_ids))
+        #print("node_ids", len(node_ids))
+
+        if not set(stop_ids).issubset(node_ids):
+            valid = False
+            missing_stops = list(set(stop_ids) - set(node_ids))
+            #print("missing_stops", len(missing_stops))
+            msg = "Not all transit stops are part of the roadyway network. "
+            msg += "Missing stops ({}) from the roadway nodes are {}.".format(
+                TransitNetwork.FK_STOPS, missing_stops)
+            WranglerLogger.error(msg)
+
+        return valid
+
+    def validate_transit_links(self) -> Bool:
+        """
+        validates that all transit links are part of the roadway network
+        """
+
+        if self.road_net is None:
+            raise ValueError(
+                "RoadwayNetwork not set yet, see TransitNetwork.set_roadnet()"
+            )
+
+        shapes = self.feed.shapes
+        links = self.road_net.links_df
+
+        valid = True
+
+        shape_ids = [int(s) for s in shapes[TransitNetwork.FK_SHAPES].to_list()]
+        link_ids = [int(l) for l in links[RoadwayNetwork.UNIQUE_LINK_KEY].to_list()]
+
+        #print("shape_ids", len(shape_ids))
+        #print("link_ids", len(link_ids))
+
+        if not set(shape_ids).issubset(link_ids):
+            valid = False
+            missing_links = list(set(shape_ids) - set(link_ids))
+            #print("missing_links", len(missing_links))
+            msg = "Not all transit links are part of the roadyway network. "
+            msg += "Missing shapes ({}) from the roadway links are {}.".format(
+                TransitNetwork.FK_SHAPES, missing_links)
             WranglerLogger.error(msg)
 
         return valid

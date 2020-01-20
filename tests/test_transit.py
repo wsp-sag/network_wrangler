@@ -3,7 +3,7 @@ import json
 import pytest
 from network_wrangler import TransitNetwork
 from network_wrangler import ProjectCard
-
+from network_wrangler import RoadwayNetwork
 
 """
 Run just the tests labeled transit using `pytest -v -m transit`
@@ -322,6 +322,28 @@ def test_invalid_optional_selection_variable(request):
     sel = net.select_transit_features({"route_long_name": "Express", "agency_id": "2"})
     assert set(sel) == set(["14978409-JUN19-MVS-BUS-Weekday-01"])
 
+    print("--Finished:", request.node.name)
+
+@pytest.mark.test_ak
+def test_transit_road_consistencies(request):
+    print("\n--Starting:", request.node.name)
+    net = TransitNetwork.read(STPAUL_DIR)
+
+    STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
+    STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
+    STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
+
+    road_net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    net.set_roadnet(road_net = road_net)
+
+    net.validate_road_network_consistencies()
+    print(net.validated_road_network_consistency)
     print("--Finished:", request.node.name)
 
 
