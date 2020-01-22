@@ -80,6 +80,13 @@ class RoadwayNetwork(object):
 
     MANAGED_LANES_SCALAR = 500000
 
+    MODES_TO_NETWORK_VARIABLES = {
+        "drive": "drive_access",
+        "transit": "transit_access",
+        "walk": "walk_access",
+        "bike": "bike_access",
+    }
+
     def __init__(self, nodes: GeoDataFrame, links: GeoDataFrame, shapes: GeoDataFrame):
         """
         Constructor
@@ -695,17 +702,11 @@ class RoadwayNetwork(object):
         # assigned a heigher weight in the shortest path
         WranglerLogger.debug("Building selection query")
         # build a selection query based on the selection dictionary
-        modes_to_network_variables = {
-            "drive": "drive_access",
-            "transit": "transit_access",
-            "walk": "walk_access",
-            "bike": "bike_access",
-        }
 
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection,
             unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-            mode=modes_to_network_variables[search_mode],
+            mode=RoadwayNetwork.MODES_TO_NETWORK_VARIABLES[search_mode],
         )
         WranglerLogger.debug("Selecting features:\n{}".format(sel_query))
 
@@ -909,7 +910,7 @@ class RoadwayNetwork(object):
                     resel_query = ProjectCard.build_link_selection_query(
                         selection=selection,
                         unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-                        mode=modes_to_network_variables[search_mode],
+                        mode=RoadwayNetwork.MODES_TO_NETWORK_VARIABLES[search_mode],
                         ignore=["name"],
                     )
                     WranglerLogger.info("Reselecting features:\n{}".format(resel_query))
@@ -1695,29 +1696,58 @@ class RoadwayNetwork(object):
             out_network.shapes_df = new_shapes_df
             return out_network
 
-    def is_network_connected(self):
+    def is_network_connected(self, mode: str = None):
         """
         Determines if the network graph is "strongly" connected
         A graph is strongly connected if each vertex is reachable from every other vertex.
 
+        mode: to check the mode specific network connectivity
+
         Returns: boolean
         """
-        G = RoadwayNetwork.ox_graph(self.nodes_df, self.links_df)
+
+        _nodes_df = self.nodes_df
+        _links_df = self.links_df
+
+        if mode:
+            if mode in RoadwayNetwork.MODES_TO_NETWORK_VARIABLES.keys():
+                mode_variable = RoadwayNetwork.MODES_TO_NETWORK_VARIABLES[mode]
+                _links_df = _links_df[_links_df[mode_variable] == 1]
+            else:
+                raise ValueError("mode value should be one of {}.".format(
+                    list(RoadwayNetwork.MODES_TO_NETWORK_VARIABLES.keys()))
+                )
+
+        G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
         is_connected = nx.is_strongly_connected(G)
 
         return is_connected
 
-    def network_connection_plot(self, ignore_end_nodes: bool = True):
+    def network_connection_plot(self, mode: str = None, ignore_end_nodes: bool = True):
         """
         Plot a graph to check for network connection
 
+        mode: to check the mode specific network connectivity
         ignore_end_nodes: boolean to drop sub-graphs with only one node
 
         returns
         --------
         fig, ax : tuple
         """
-        G = RoadwayNetwork.ox_graph(self.nodes_df, self.links_df)
+
+        _nodes_df = self.nodes_df
+        _links_df = self.links_df
+
+        if mode:
+            if mode in RoadwayNetwork.MODES_TO_NETWORK_VARIABLES.keys():
+                mode_variable = RoadwayNetwork.MODES_TO_NETWORK_VARIABLES[mode]
+                _links_df = _links_df[_links_df[mode_variable] == 1]
+            else:
+                raise ValueError("mode value should be one of {}.".format(
+                    list(RoadwayNetwork.MODES_TO_NETWORK_VARIABLES.keys()))
+                )
+
+        G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
         #sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
         sub_graphs = [s for s in sorted((G.subgraph(c) for c in nx.strongly_connected_components(G)), key=len, reverse=True)]
 
