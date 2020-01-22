@@ -60,6 +60,25 @@ class TransitNetwork(object):
         if not self.validate_frequencies():
             raise ValueError("Transit lines with non-positive frequencies exist in the network")
 
+
+    @staticmethod
+    def read(feed_path: str, fast: bool = False) -> TransitNetwork:
+        """
+        Read GTFS feed from folder and TransitNetwork object
+        """
+        config = default_config()
+        feed = ptg.load_feed(feed_path, config=config)
+        updated_config = TransitNetwork.validate_feed(feed, config)
+
+        # Read in each feed so we can write over them
+        new_feed = DotDict()
+        for node in updated_config.nodes.keys():
+            # Load (initiate Partridge's lazy load)
+            new_feed[node.replace(".txt", "")] = feed.get(node)
+
+        transit_network = TransitNetwork(feed=new_feed, config=updated_config)
+        return transit_network
+
     @staticmethod
     def validate_feed(feed: DotDict, config: nx.DiGraph) -> bool:
         """
@@ -97,14 +116,19 @@ class TransitNetwork(object):
 
     def validate_frequencies(self) -> Bool:
         """
-        validates that there are no transit lines with zero frequencies
+        Validates that there are no transit trips in the feed with zero frequencies.
+
+        Changes state of self.validated_frequencies boolean based on outcome.
+
+        Returns:
+            boolean indicating if valid or not.
         """
 
-        valid = True
+        _valid = True
         zero_freq = self.feed.frequencies[self.feed.frequencies.headway_secs <= 0]
 
         if len(zero_freq.index) > 0:
-            valid = False
+            _valid = False
             msg = "Transit lines {} have non-positive frequencies".format(zero_freq.trip_id.to_list())
             WranglerLogger.error(msg)
 
@@ -114,7 +138,11 @@ class TransitNetwork(object):
 
     def validate_road_network_consistencies(self) -> Bool:
         """
-        validates transit network against the road network
+        Validates transit network against the road network for both stops
+        and links.
+
+        Returns:
+            boolean indicating if valid or not.
         """
         if self.road_net is None:
             raise ValueError(
@@ -137,7 +165,10 @@ class TransitNetwork(object):
 
     def validate_transit_stops(self) -> Bool:
         """
-        validates that all transit stops are part of the roadway network
+        Validates that all transit stops are part of the roadway network.
+
+        Returns:
+            Boolean indicating if valid or not.
         """
 
         if self.road_net is None:
@@ -168,7 +199,10 @@ class TransitNetwork(object):
 
     def validate_transit_links(self) -> Bool:
         """
-        validates that all transit links are part of the roadway network
+        Validates that all transit links are part of the roadway network.
+
+        Returns:
+            Boolean indicating if valid or not.
         """
 
         if self.road_net is None:
@@ -198,29 +232,12 @@ class TransitNetwork(object):
 
         return valid
 
-    @staticmethod
-    def read(feed_path: str, fast: bool = False) -> TransitNetwork:
-        """
-        Read GTFS feed from folder and TransitNetwork object
-        """
-        config = default_config()
-        feed = ptg.load_feed(feed_path, config=config)
-        updated_config = TransitNetwork.validate_feed(feed, config)
-
-        # Read in each feed so we can write over them
-        new_feed = DotDict()
-        for node in updated_config.nodes.keys():
-            # Load (initiate Partridge's lazy load)
-            new_feed[node.replace(".txt", "")] = feed.get(node)
-
-        transit_network = TransitNetwork(feed=new_feed, config=updated_config)
-        return transit_network
-
     def set_roadnet(
         self,
         road_net: RoadwayNetwork,
         graph_shapes: bool = False,
         graph_stops: bool = False,
+        validate_consistency: bool = True,
     ) -> None:
         self.road_net: RoadwayNetwork = road_net
         self.graph: nx.MultiDiGraph = RoadwayNetwork.ox_graph(
@@ -230,6 +247,9 @@ class TransitNetwork(object):
             self._graph_shapes()
         if graph_stops:
             self._graph_stops()
+
+        if validate_consistency:
+            self.validate_road_network_consistencies()
 
     def _graph_shapes(self) -> None:
         existing_shapes = self.feed.shapes
