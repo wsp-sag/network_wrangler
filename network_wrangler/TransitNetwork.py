@@ -31,8 +31,8 @@ class TransitNetwork(object):
     """
 
     # PK = primary key, FK = foreign key
-    FK_SHAPES = "shape_model_node_id"
-    FK_STOPS = "model_node_id"
+    SHAPES_FOREIGN_KEY = "shape_model_node_id"
+    STOPS_FOREIGN_KEY = "model_node_id"
 
     REQUIRED_FILES = [
         "agency.txt",
@@ -181,7 +181,7 @@ class TransitNetwork(object):
 
         valid = True
 
-        stop_ids = [int(s) for s in stops[TransitNetwork.FK_STOPS].to_list()]
+        stop_ids = [int(s) for s in stops[TransitNetwork.STOPS_FOREIGN_KEY].to_list()]
         node_ids = [int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
         #print("stop_ids", len(stop_ids))
         #print("node_ids", len(node_ids))
@@ -192,7 +192,7 @@ class TransitNetwork(object):
             #print("missing_stops", len(missing_stops))
             msg = "Not all transit stops are part of the roadyway network. "
             msg += "Missing stops ({}) from the roadway nodes are {}.".format(
-                TransitNetwork.FK_STOPS, missing_stops)
+                TransitNetwork.STOPS_FOREIGN_KEY, missing_stops)
             WranglerLogger.error(msg)
 
         return valid
@@ -215,7 +215,7 @@ class TransitNetwork(object):
 
         valid = True
 
-        shape_ids = [int(s) for s in shapes[TransitNetwork.FK_SHAPES].to_list()]
+        shape_ids = [int(s) for s in shapes[TransitNetwork.SHAPES_FOREIGN_KEY].to_list()]
         link_ids = [int(l) for l in links[RoadwayNetwork.UNIQUE_LINK_KEY].to_list()]
 
         #print("shape_ids", len(shape_ids))
@@ -227,7 +227,7 @@ class TransitNetwork(object):
             #print("missing_links", len(missing_links))
             msg = "Not all transit links are part of the roadyway network. "
             msg += "Missing shapes ({}) from the roadway links are {}.".format(
-                TransitNetwork.FK_SHAPES, missing_links)
+                TransitNetwork.SHAPES_FOREIGN_KEY, missing_links)
             WranglerLogger.error(msg)
 
         return valid
@@ -498,13 +498,13 @@ class TransitNetwork(object):
             shape_ids = (
                 self.feed.shapes.groupby("shape_id").filter(
                     lambda x: all(
-                        i in x[TransitNetwork.FK_SHAPES].tolist() for i in node_ids
+                        i in x[TransitNetwork.SHAPES_FOREIGN_KEY].tolist() for i in node_ids
                     )
                 )
             ).shape_id.drop_duplicates()
         else:
             shape_ids = self.feed.shapes[
-                self.feed.shapes[TransitNetwork.FK_SHAPES].isin(node_ids)
+                self.feed.shapes[TransitNetwork.SHAPES_FOREIGN_KEY].isin(node_ids)
             ].shape_id.drop_duplicates()
 
         # Return pandas.Series of trip_ids
@@ -580,7 +580,7 @@ class TransitNetwork(object):
                     "shape_pt_lon": None,  # FIXME
                     "shape_osm_node_id": None,  # FIXME
                     "shape_pt_sequence": None,
-                    TransitNetwork.FK_SHAPES: properties["set_shapes"],
+                    TransitNetwork.SHAPES_FOREIGN_KEY: properties["set_shapes"],
                 }
             )
 
@@ -588,7 +588,7 @@ class TransitNetwork(object):
             # Else, replace the whole thing
             if properties.get("existing") is not None:
                 # Match list
-                nodes = this_shape[TransitNetwork.FK_SHAPES].tolist()
+                nodes = this_shape[TransitNetwork.SHAPES_FOREIGN_KEY].tolist()
                 index_replacement_starts = nodes.index(properties["existing_shapes"][0])
                 index_replacement_ends = nodes.index(properties["existing_shapes"][-1])
                 this_shape = pd.concat(
@@ -616,7 +616,7 @@ class TransitNetwork(object):
             # If node IDs in properties["set_stops"] are not already
             # in stops.txt, create a new stop_id for them in stops
             if any(
-                x not in stops[TransitNetwork.FK_STOPS].tolist()
+                x not in stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
                 for x in properties["set_stops"]
             ):
                 # FIXME
@@ -632,7 +632,7 @@ class TransitNetwork(object):
 
                 # Merge on node IDs using stop_id (one node ID per stop_id)
                 this_stoptime = this_stoptime.merge(
-                    stops[["stop_id", TransitNetwork.FK_STOPS]],
+                    stops[["stop_id", TransitNetwork.STOPS_FOREIGN_KEY]],
                     how="left",
                     on="stop_id",
                 )
@@ -651,18 +651,18 @@ class TransitNetwork(object):
                         "stop_distance": None,
                         "timepoint": None,
                         "stop_is_skipped": None,
-                        TransitNetwork.FK_STOPS: properties["set_stops"],
+                        TransitNetwork.STOPS_FOREIGN_KEY: properties["set_stops"],
                     }
                 )
 
                 # Merge on stop_id using node IDs (many stop_id per node ID)
                 new_stoptime_rows = (
                     new_stoptime_rows.merge(
-                        stops[["stop_id", TransitNetwork.FK_STOPS]],
+                        stops[["stop_id", TransitNetwork.STOPS_FOREIGN_KEY]],
                         how="left",
-                        on=TransitNetwork.FK_STOPS,
+                        on=TransitNetwork.STOPS_FOREIGN_KEY,
                     )
-                    .groupby([TransitNetwork.FK_STOPS])
+                    .groupby([TransitNetwork.STOPS_FOREIGN_KEY])
                     .head(1)
                 )  # pick first
 
@@ -670,7 +670,7 @@ class TransitNetwork(object):
                 # Else, replace the whole thing
                 if properties.get("existing") is not None:
                     # Match list (remember stops are passed in with node IDs)
-                    nodes = this_stoptime[TransitNetwork.FK_STOPS].tolist()
+                    nodes = this_stoptime[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
                     index_replacement_starts = nodes.index(
                         properties["existing_stops"][0]
                     )
@@ -690,7 +690,7 @@ class TransitNetwork(object):
                     this_stoptime = new_stoptime_rows
 
                 # Remove node ID
-                del this_stoptime[TransitNetwork.FK_STOPS]
+                del this_stoptime[TransitNetwork.STOPS_FOREIGN_KEY]
 
                 # Renumber stop_sequence
                 this_stoptime["stop_sequence"] = np.arange(len(this_stoptime))
@@ -749,7 +749,7 @@ class TransitNetwork(object):
         self, trip_ids: pd.Series, node_ids: list, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         # Traversed nodes without a stop should be negative integers
-        all_stops = self.feed.stops[TransitNetwork.FK_STOPS].tolist()
+        all_stops = self.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
         node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
 
         self._apply_transit_feature_change_routing(
