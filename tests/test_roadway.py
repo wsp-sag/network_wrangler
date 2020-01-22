@@ -591,7 +591,15 @@ def test_network_connectivity(request):
         fast=True,
     )
     print("Checking network connectivity ...")
-    is_connected = net.is_network_connected()
-    print("Network Connected: ", is_connected)
+
+    print("All Mode Network Connected:", net.is_network_connected())
+
+    print("Drive Network Connected:", net.is_network_connected(mode = "drive"))
+
+    print("Transit Network Connected:", net.is_network_connected(mode = "transit"))
+
+    print("Bike Network Connected:", net.is_network_connected(mode = "bike"))
+
+    print("Walk Network Connected:", net.is_network_connected(mode = "walk"))
 
     print("--Finished:", request.node.name)
