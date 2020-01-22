@@ -7,6 +7,7 @@ import sys
 import glob
 import copy
 import pandas as pd
+from datetime import datetime
 from .ProjectCard import ProjectCard
 from collections import OrderedDict
 from .Logger import WranglerLogger
@@ -554,3 +555,32 @@ class Scenario(object):
             summary["total_parts"] = part - 1
 
         return summary
+
+    def scenario_summary(self):
+        """
+        Logs a high level summary of the created scenario
+
+        """
+
+        #setupLogging(logFileName="scenario_summary.log")
+
+        WranglerLogger.info("Scenario created on {}".format(datetime.now()))
+
+        WranglerLogger.info("Base Scenario:")
+        WranglerLogger.info("  Road Network:")
+        WranglerLogger.info("    Link File: {}".format(self.base_scenario["road_net"].link_file))
+        WranglerLogger.info("    Node File: {}".format(self.base_scenario["road_net"].node_file))
+        WranglerLogger.info("    Shape File: {}".format(self.base_scenario["road_net"].shape_file))
+        WranglerLogger.info("  Transit Network:")
+        WranglerLogger.info("    Feed Path: {}".format(self.base_scenario["transit_net"].feed_path))
+        WranglerLogger.info(" ")
+
+        WranglerLogger.info("Project Cards:")
+        for p in self.project_cards:
+            WranglerLogger.info("  {}".format(p.file))
+        WranglerLogger.info(" ")
+
+        WranglerLogger.info("Applied Projects:")
+        for project in self.applied_projects:
+            WranglerLogger.info("   {}".format(project))
+        WranglerLogger.info(" ")

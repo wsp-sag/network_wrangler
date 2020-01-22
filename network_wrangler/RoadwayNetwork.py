@@ -92,6 +92,10 @@ class RoadwayNetwork(object):
         self.links_df = links
         self.shapes_df = shapes
 
+        self.link_file = None
+        self.node_file = None
+        self.shape_file = None
+
         # Add non-required fields if they aren't there.
         # for field, default_value in RoadwayNetwork.OPTIONAL_FIELDS:
         #    if field not in self.links_df.columns:
@@ -99,6 +103,7 @@ class RoadwayNetwork(object):
         if not self.validate_uniqueness():
             raise ValueError("IDs in network not unique")
         self.selections = {}
+
 
     @staticmethod
     def read(
@@ -207,6 +212,10 @@ class RoadwayNetwork(object):
         roadway_network = RoadwayNetwork(
             nodes=nodes_df, links=links_df, shapes=shapes_df
         )
+
+        roadway_network.link_file = link_file
+        roadway_network.node_file = node_file
+        roadway_network.shape_file = shape_file
 
         return roadway_network
 
