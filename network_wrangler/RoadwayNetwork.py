@@ -1709,7 +1709,8 @@ class RoadwayNetwork(object):
         fig, ax : tuple
         """
         G = RoadwayNetwork.ox_graph(self.nodes_df, self.links_df)
-        sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
+        #sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
+        sub_graphs = [s for s in sorted((G.subgraph(c) for c in nx.strongly_connected_components(G)), key=len, reverse=True)]
 
         sub_graph_nodes = [s for s in sorted(nx.strongly_connected_components(G), key=len, reverse=True)]
 
