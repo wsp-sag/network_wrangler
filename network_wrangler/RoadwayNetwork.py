@@ -22,6 +22,7 @@ from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 
+import folium
 import osmnx as ox
 from shapely.geometry import Point, LineString
 from random import randint
@@ -1708,7 +1709,8 @@ class RoadwayNetwork(object):
         fig, ax : tuple
         """
         G = RoadwayNetwork.ox_graph(self.nodes_df, self.links_df)
-        sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
+        #sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
+        sub_graphs = [s for s in sorted((G.subgraph(c) for c in nx.strongly_connected_components(G)), key=len, reverse=True)]
 
         sub_graph_nodes = [s for s in sorted(nx.strongly_connected_components(G), key=len, reverse=True)]
 
@@ -1735,3 +1737,119 @@ class RoadwayNetwork(object):
             i = i + 1
 
         return fig, ax
+
+
+    def selection_map(selection: tuple):
+        '''
+        Shows which links are selected for roadway property change or parallel
+        managed lanes category of roadway projects
+        '''
+
+        sel_key = selection[0]
+        sel_val = selection[1]
+
+        A_node = sel_key[1]
+        B_node = sel_key[2]
+        selected_graph = sel_val['graph']
+        selected_links  = sel_val['selected_links']
+
+        m = ox.plot_graph_folium(selected_graph, edge_color=None, tiles='cartodbpositron')
+
+        def _folium_node(node, color='white', icon = ''):
+            node_marker = folium.Marker(location=[node['y'],node['x']],
+                                        icon=folium.Icon(icon = icon, color=color),
+                                       )
+            return node_marker
+
+        A = selected_graph.nodes[A_node]
+        B = selected_graph.nodes[B_node]
+
+        _folium_node(A, color="green", icon = 'play').add_to(m)
+        _folium_node(B, color="red", icon = 'star').add_to(m)
+
+        for _, row in selected_links.iterrows():
+            pl = ox.plot.make_folium_polyline(edge=row, edge_color="blue", edge_width=5, edge_opacity=0.8)
+            pl.add_to(m)
+
+        return m
+
+    def deletion_map(self, links: dict, nodes: dict):
+        '''
+        Shows which links and nodes are deleted from the roadway network
+        '''
+        #deleted_links = None
+        #deleted_nodes = None
+
+        if links is not None:
+            for key, val in links.items():
+                deleted_links = self.links_df[self.links_df[key].isin(val)]
+
+                node_list_foreign_keys = list(set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(deleted_links[fk])]))
+                candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
+        else:
+            deleted_links = None
+
+        if nodes is not None:
+            for key, val in nodes.items():
+                deleted_nodes = self.nodes_df[self.nodes_df[key].isin(val)]
+        else:
+            deleted_nodes = None
+
+        G = RoadwayNetwork.ox_graph(candidate_nodes, deleted_links)
+
+        m = ox.plot_graph_folium(G, edge_color='red', tiles='cartodbpositron')
+
+        def _folium_node(node, color='white', icon = ''):
+            node_circle = folium.Circle(location=[node['y'],node['x']], radius = 2,
+                                        fill = True, color = color, fill_opacity = 0.8
+                                        )
+            return node_circle
+
+        if deleted_nodes is not None:
+            for _, row in deleted_nodes.iterrows():
+                _folium_node(row, color="red").add_to(m)
+
+        return m
+
+    def addition_map(self, links: dict, nodes: dict):
+        '''
+        Shows which links and nodes are added to the roadway network
+        '''
+
+        if links is not None:
+            link_ids = []
+            for link in links:
+                link_ids.append(link.get(RoadwayNetwork.UNIQUE_LINK_KEY))
+
+            added_links = self.links_df[self.links_df[RoadwayNetwork.UNIQUE_LINK_KEY].isin(link_ids)]
+            node_list_foreign_keys = list(set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(added_links[fk])]))
+            try:
+                candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
+            except:
+                return None
+
+        if nodes is not None:
+            node_ids = []
+            for node in nodes:
+                node_ids.append(node.get(RoadwayNetwork.UNIQUE_NODE_KEY))
+
+            added_nodes = self.nodes_df[self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY].isin(node_ids)]
+        else:
+            added_nodes = None
+
+
+        G = RoadwayNetwork.ox_graph(candidate_nodes, added_links)
+
+        m = ox.plot_graph_folium(G, edge_color='green', tiles='cartodbpositron')
+
+        def _folium_node(node, color='white', icon = ''):
+            node_circle = folium.Circle(location=[node['y'],node['x']], radius = 2,
+                                        fill = True, color = color, fill_opacity = 0.8
+                                        )
+            return node_circle
+
+        if added_nodes is not None:
+            for _, row in added_nodes.iterrows():
+                _folium_node(row, color="green").add_to(m)
+
+        return m
