@@ -53,6 +53,7 @@ class TransitNetwork(object):
         self.config: nx.DiGraph = config
         self.road_net: RoadwayNetwork = None
         self.graph: nx.MultiDiGraph = None
+        self.feed_path = None
 
         self.validated_frequencies = False
         self.validated_road_network_consistency = False
@@ -77,6 +78,7 @@ class TransitNetwork(object):
             new_feed[node.replace(".txt", "")] = feed.get(node)
 
         transit_network = TransitNetwork(feed=new_feed, config=updated_config)
+        transit_network.feed_path = feed_path
         return transit_network
 
     @staticmethod
@@ -134,7 +136,7 @@ class TransitNetwork(object):
 
         self.validated_frequencies = True
 
-        return valid
+        return _valid
 
     def validate_road_network_consistencies(self) -> Bool:
         """
