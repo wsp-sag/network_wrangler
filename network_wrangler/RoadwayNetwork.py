@@ -1504,7 +1504,6 @@ class RoadwayNetwork(object):
                 access_row["locationReferences"][1]["point"],
             )
             access_row["roadway"] = "ml_access"
-            access_row["oneway"] = row["oneway"]
             access_row["name"] = row["name"]
             access_row["ref"] = row["ref"]
             access_df = access_df.append(access_row, ignore_index=True)
@@ -1526,7 +1525,6 @@ class RoadwayNetwork(object):
                 egress_row["locationReferences"][1]["point"],
             )
             egress_row["roadway"] = "ml_egress"
-            egress_row["oneway"] = row["oneway"]
             egress_row["name"] = row["name"]
             egress_row["ref"] = row["ref"]
             egress_df = egress_df.append(egress_row, ignore_index=True)
