@@ -603,3 +603,25 @@ def test_network_connectivity(request):
     print("Walk Network Connected:", net.is_network_connected(mode = "walk"))
 
     print("--Finished:", request.node.name)
+
+
+@pytest.mark.roadway
+@pytest.mark.test_ak
+def test_add_roadway_links(request):
+    print("\n--Starting:", request.node.name)
+    net = _read_stpaul_net()
+
+    print("Reading project card ...")
+    #project_card_name = "10_simple_roadway_add_change.yml"
+    project_card_name = "10a_incorrect_roadway_add_change.yml"
+
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+
+    project_card_dictionary = project_card.__dict__
+
+    net.add_new_roadway_feature_change(
+        project_card_dictionary.get("links"), project_card_dictionary.get("nodes")
+    )
+
+    print("--Finished:", request.node.name)

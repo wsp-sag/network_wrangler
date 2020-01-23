@@ -1227,6 +1227,22 @@ class RoadwayNetwork(object):
 
         if links is not None:
             for link in links:
+                for key in RoadwayNetwork.LINK_FOREIGN_KEY:
+                    if link.get(key) is None:
+                        msg = "New link to add doesn't contain link foreign key identifier: {}".format(key)
+                        WranglerLogger.error(msg)
+                        raise ValueError(msg)
+
+                ab_query = "A == " + str(link["A"]) + " and B == " + str(link["B"])
+
+                if not self.links_df.query(ab_query, engine="python").empty:
+                    msg = "Link with A = {} and B = {} already exist in the network".format(
+                        link["A"], link["B"]
+                    )
+                    WranglerLogger.error(msg)
+                    raise ValueError(msg)
+
+            for link in links:
                 self.links_df = _add_dict_to_df(self.links_df, link)
 
     def delete_roadway_feature_change(
