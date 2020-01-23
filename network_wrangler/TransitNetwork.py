@@ -141,7 +141,7 @@ class TransitNetwork(object):
     def validate_road_network_consistencies(self) -> Bool:
         """
         Validates transit network against the road network for both stops
-        and links.
+        and shapes.
 
         Returns:
             boolean indicating if valid or not.
@@ -154,11 +154,11 @@ class TransitNetwork(object):
         valid = True
 
         valid_stops = self.validate_transit_stops()
-        valid_links = self.validate_transit_links()
+        valid_shapes = self.validate_transit_shapes()
 
         self.validated_road_network_consistency = True
 
-        if not valid_stops or not valid_links:
+        if not valid_stops or not valid_shapes:
              valid = False
              raise ValueError("Transit network is not consistent with road network.")
 
@@ -185,13 +185,10 @@ class TransitNetwork(object):
 
         stop_ids = [int(s) for s in stops[TransitNetwork.STOPS_FOREIGN_KEY].to_list()]
         node_ids = [int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
-        #print("stop_ids", len(stop_ids))
-        #print("node_ids", len(node_ids))
 
         if not set(stop_ids).issubset(node_ids):
             valid = False
             missing_stops = list(set(stop_ids) - set(node_ids))
-            #print("missing_stops", len(missing_stops))
             msg = "Not all transit stops are part of the roadyway network. "
             msg += "Missing stops ({}) from the roadway nodes are {}.".format(
                 TransitNetwork.STOPS_FOREIGN_KEY, missing_stops)
@@ -199,9 +196,9 @@ class TransitNetwork(object):
 
         return valid
 
-    def validate_transit_links(self) -> Bool:
+    def validate_transit_shapes(self) -> Bool:
         """
-        Validates that all transit links are part of the roadway network.
+        Validates that all transit shapes are part of the roadway network.
 
         Returns:
             Boolean indicating if valid or not.
@@ -213,23 +210,19 @@ class TransitNetwork(object):
             )
 
         shapes = self.feed.shapes
-        links = self.road_net.links_df
+        nodes = self.road_net.nodes_df
 
         valid = True
 
         shape_ids = [int(s) for s in shapes[TransitNetwork.SHAPES_FOREIGN_KEY].to_list()]
-        link_ids = [int(l) for l in links[RoadwayNetwork.UNIQUE_LINK_KEY].to_list()]
+        node_ids = [int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
 
-        #print("shape_ids", len(shape_ids))
-        #print("link_ids", len(link_ids))
-
-        if not set(shape_ids).issubset(link_ids):
+        if not set(shape_ids).issubset(node_ids):
             valid = False
-            missing_links = list(set(shape_ids) - set(link_ids))
-            #print("missing_links", len(missing_links))
-            msg = "Not all transit links are part of the roadyway network. "
-            msg += "Missing shapes ({}) from the roadway links are {}.".format(
-                TransitNetwork.SHAPES_FOREIGN_KEY, missing_links)
+            missing_shapes = list(set(shape_ids) - set(node_ids))
+            msg = "Not all transit shapes are part of the roadyway network. "
+            msg += "Missing shapes ({}) from the roadway network are {}.".format(
+                TransitNetwork.SHAPES_FOREIGN_KEY, missing_shapes)
             WranglerLogger.error(msg)
 
         return valid
