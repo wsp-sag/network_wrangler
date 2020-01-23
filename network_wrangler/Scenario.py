@@ -114,7 +114,7 @@ class Scenario(object):
         )
 
         transit_net = TransitNetwork.read(base_dir)
-        transit_net.set_roadnet(road_net)
+        transit_net.set_roadnet(road_net, validate_consistency=validate)
 
         base_scenario = {"road_net": road_net, "transit_net": transit_net}
 
@@ -444,37 +444,38 @@ class Scenario(object):
         if not self.prerequisites_sorted:
             self.order_project_cards()
 
-        def _apply_each_project(_p):
+        for p in self.project_cards:
+            self.apply_project(p.__dict__)
 
-            if _p["category"] in ProjectCard.ROADWAY_CATEGORIES:
+
+    def apply_project(self, p):
+        if isinstance(p,ProjectCard):
+            WranglerLogger.info("Applying {}".format(p.project))
+
+        if not p.get("changes"):
+            if p["category"] in ProjectCard.ROADWAY_CATEGORIES:
                 if not self.road_net:
                     raise ("Missing Roadway Network")
-                self.road_net.apply(_p)
-            if _p["category"] in ProjectCard.TRANSIT_CATEGORIES:
+                self.road_net.apply(p)
+            if p["category"] in ProjectCard.TRANSIT_CATEGORIES:
                 if not self.transit_net:
                     raise ("Missing Transit Network")
-                self.transit_net.apply(_p)
+                self.transit_net.apply(p)
             if (
-                _p["category"] in ProjectCard.SECONDARY_TRANSIT_CATEGORIES
+                p["category"] in ProjectCard.SECONDARY_TRANSIT_CATEGORIES
                 and self.transit_net
             ):
-                self.transit_net.apply(_p)
+                self.transit_net.apply(p)
+            
+        else:
+            part = 1
+            for pc in p.changes:
+                pc["project"] = p.project + " – Part " + str(part)
+                part += 1
+            self.apply_project(pc)
 
-        # Make sure you have the right networks for the type of projects
-        # Then apply projects
-        for p in self.project_cards:
-            WranglerLogger.info("Applying {}".format(p.project))
+        if isinstance(p,ProjectCard):
             self.applied_projects.append(p.project)
-            if not p.__dict__.get("changes"):
-                _apply_each_project(p.__dict__)
-
-            # for complex project cards
-            else:
-                part = 1
-                for pc in p.changes:
-                    pc["project"] = p.project + " – Part " + str(part)
-                    part += 1
-                    _apply_each_project(pc)
 
 
     def applied_project_card_summary(self, project_card_dictionary: dict) -> dict:

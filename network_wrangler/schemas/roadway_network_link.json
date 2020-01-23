@@ -12,10 +12,8 @@
       "shstReferenceId",
       "shstGeometryId",
       "access",
-      "highway",
-      "maxspeed",
+      "roadway",
       "name",
-      "oneway",
       "osm_link_id",
       "u",
       "v",
@@ -80,10 +78,10 @@
         ],
         "pattern": "^(.*)$"
       },
-      "highway": {
-        "$id": "#/items/properties/highway",
+      "roadway": {
+        "$id": "#/items/properties/roadway",
         "type": "string",
-        "title": "The Highway Schema",
+        "title": "The RoadwayNetwork Schema",
         "default": "",
         "examples": [
           "residential"

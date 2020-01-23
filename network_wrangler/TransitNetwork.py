@@ -343,8 +343,12 @@ class TransitNetwork(object):
                     self.select_transit_features_by_nodes(managed_lane_nodes),
                     managed_lane_nodes,
                 )
+            elif project_dictionary["category"].lower() == "roadway deletion":
+                WranglerLogger.warning("Roadway Deletion not yet implemented in Transit; ignoring")
             else:
-                raise (BaseException)
+                msg = "{} not implemented yet in TransitNetwork; can't apply.".format(project_dictionary["category"])
+                WranglerLogger.error(msg)
+                raise (msg)
 
         if project_card_dictionary.get("changes"):
             for project_dictionary in project_card_dictionary["changes"]:
@@ -371,7 +375,7 @@ class TransitNetwork(object):
 
         # Turn selection's values into lists if they are not already
         for key in selection.keys():
-            if type(selection[key]) != list:
+            if type(selection[key]) not in [list, tuple]:
                 selection[key] = [selection[key]]
 
         # Based on the key in selection, filter trips
@@ -401,9 +405,10 @@ class TransitNetwork(object):
             raise ValueError
 
         # If a time key exists, filter trips using frequency table
-        if selection.get("time") is not None:
+        if selection.get("time"):
             selection["time"] = parse_time_spans(selection["time"])
-
+        elif selection.get("start_time") and selection.get("end_time"):
+            selection["time"] = parse_time_spans([selection["start_time"], selection["end_time"]])
             # Filter freq to trips in selection
             freq = freq[freq.trip_id.isin(trips["trip_id"])]
             freq = freq[freq.start_time == selection["time"][0]]

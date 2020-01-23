@@ -74,7 +74,7 @@ class RoadwayNetwork(object):
         "name",
         "oneway",
         "ref",
-        "highway",
+        "roadway",
         "length",
     ]
 
@@ -1503,7 +1503,7 @@ class RoadwayNetwork(object):
                 access_row["locationReferences"][0]["point"],
                 access_row["locationReferences"][1]["point"],
             )
-            access_row["highway"] = "ml_access"
+            access_row["roadway"] = "ml_access"
             access_row["oneway"] = row["oneway"]
             access_row["name"] = row["name"]
             access_row["ref"] = row["ref"]
@@ -1525,7 +1525,7 @@ class RoadwayNetwork(object):
                 egress_row["locationReferences"][0]["point"],
                 egress_row["locationReferences"][1]["point"],
             )
-            egress_row["highway"] = "ml_egress"
+            egress_row["roadway"] = "ml_egress"
             egress_row["oneway"] = row["oneway"]
             egress_row["name"] = row["name"]
             egress_row["ref"] = row["ref"]
@@ -1550,7 +1550,7 @@ class RoadwayNetwork(object):
         WranglerLogger.info("Creating network with duplicated managed lanes")
 
         # TODO make this a more rigorous test
-        if "ml_access" in self.links_df["highway"].tolist():
+        if "ml_access" in self.links_df["roadway"].tolist():
             msg = "managed lane access links already exist in network; shouldn't be running create managed lane network. Returning network as-is."
             WranglerLogger.error(msg)
             if in_place:
