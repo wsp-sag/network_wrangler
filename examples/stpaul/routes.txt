@@ -1,36 +1,29 @@
 route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color
-3-111,0,3,U of M - Como Av - Energy Park Dr - Maryland Av,,3,http://www.metrotransit.org/route/3,,0
-16-111,2,16,University Av - Midway,,3,http://www.metrotransit.org/route/16,,0
-21-111,0,21,Uptown - Lake St - Midway - Selby  Av,,3,http://www.metrotransit.org/route/21,,0
-53-111,0,53,Ltd Stop - Uptown - Lake St - Marshall Av,,3,http://www.metrotransit.org/route/53,,0
-54-111,0,54,Ltd Stop - W 7 St - Airport - MOA - Maplewood Mall,,3,http://www.metrotransit.org/route/54,,0
-61-111,0,61,E Hennepin Av - Larpenteur Av - Arcade St,,3,http://www.metrotransit.org/route/61,,0
-62-111,0,62,Shoreview - Little Canada - Rice St Signal Hills,,3,http://www.metrotransit.org/route/62,,0
-63-111,0,63,Raymond Sta - Grand Av - Sunray - McKnight Rd,,3,http://www.metrotransit.org/route/63,,0
-64-111,0,64,Payne - Maryland - White Bear Av - Maplewood Mall,,3,http://www.metrotransit.org/route/64,,0
-65-111,0,65,Dale St - Co Rd B - Rosedale,,3,http://www.metrotransit.org/route/65,,0
-67-111,0,67,W Minnehaha Av - Raymond Sta - Franklin Av,,3,http://www.metrotransit.org/route/67,,0
-68-111,0,68,Jackson St - Robert St - W St Paul - Inver Hills,,3,http://www.metrotransit.org/route/68,,0
-70-111,0,70,St Clair Av - W 7th St - Burns Av - Sunray,,3,http://www.metrotransit.org/route/70,,0
-71-111,0,71,Little Canada - Edgerton - Concord - Inver Hills,,3,http://www.metrotransit.org/route/71,,0
-74-111,0,74,46th St - Randolph - W 7th St - E 7th St - Sunray,,3,http://www.metrotransit.org/route/74,,0
-75-111,0,75,Stryker - Robert - Mendota Hts - Lake Cove Apts,,3,http://www.metrotransit.org/route/75,,0
-83-111,2,83,HarMar Target - Lexington Av,,3,http://www.metrotransit.org/route/83,,0
-94-111,0,94,Express - Mpls - St Paul,,3,http://www.metrotransit.org/route/94,,0
-262-111,0,262,Ltd Stop - 95Av P&R - Shoreview  Rice - St Paul,,3,http://www.metrotransit.org/route/262,,0
-265-111,0,265,Express - White Bear Lake - Maplewood - St Paul,,3,http://www.metrotransit.org/route/265,,0
-275-111,0,275,Express - Forest Lake - Co Rd 14 P&R - St Paul,,3,http://www.metrotransit.org/route/275,,0
-294-111,0,294,Express - Oakdale - Stillwater - St Paul,,3,http://www.metrotransit.org/route/294,,0
-350-111,2,350,Ltd Stop - Sunray - McKnight - St Paul,,3,http://www.metrotransit.org/route/350,,0
-351-111,0,351,Express - Woodbury - St Paul,,3,http://www.metrotransit.org/route/351,,0
-355-111,0,355,Express - Woodbury - Mpls,,3,http://www.metrotransit.org/route/355,,0
-361-111,0,361,Express - Cottage Grove - St Paul,,3,http://www.metrotransit.org/route/361,,0
-364-111,2,364,Express - Newport - Cottage Grove - St Paul,,3,http://www.metrotransit.org/route/364,,0
-365-111,0,365,Express - Cottage Grove - Newport - Mpls,,3,http://www.metrotransit.org/route/365,,0
-375-111,0,375,Express - Oakdale - Mpls,,3,http://www.metrotransit.org/route/375,,0
-417-111,2,417,Mendota Heights - St Paul,,3,http://www.metrotransit.org/route/417,,0
-452-111,0,452,Express -Mendota Heights - West St Paul - Mpls,,3,http://www.metrotransit.org/route/452,,0
-860-111,0,860,Express - Coon Rapids - Northtown - St Paul,,3,http://www.metrotransit.org/route/860,,0
-480-71,3,480,Apple Valley/Burnsville-St Paul,Express Peak-Only,3,http://www.mvta.com/bus_route_information_2.html?routeId=480,ED2028,FFFFFF
+3-111,0,3,U of M - Como Av - Energy Park Dr - Maryland Av,,3,http://www.metrotransit.org/route/3,,000000
+16-111,2,16,University Av - Midway,,3,http://www.metrotransit.org/route/16,,000000
+21-111,0,21,Uptown - Lake St - Midway - Selby  Av,,3,http://www.metrotransit.org/route/21,,000000
+53-111,0,53,Ltd Stop - Uptown - Lake St - Marshall Av,,3,http://www.metrotransit.org/route/53,,000000
+62-111,0,62,Shoreview - Little Canada - Rice St Signal Hills,,3,http://www.metrotransit.org/route/62,,000000
+67-111,0,67,W Minnehaha Av - Raymond Sta - Franklin Av,,3,http://www.metrotransit.org/route/67,,000000
+70-111,0,70,St Clair Av - W 7th St - Burns Av - Sunray,,3,http://www.metrotransit.org/route/70,,000000
+71-111,0,71,Little Canada - Edgerton - Concord - Inver Hills,,3,http://www.metrotransit.org/route/71,,000000
+74-111,0,74,46th St - Randolph - W 7th St - E 7th St - Sunray,,3,http://www.metrotransit.org/route/74,,000000
+75-111,0,75,Stryker - Robert - Mendota Hts - Lake Cove Apts,,3,http://www.metrotransit.org/route/75,,000000
+94-111,0,94,Express - Mpls - St Paul,,3,http://www.metrotransit.org/route/94,,000000
+262-111,0,262,Ltd Stop - 95Av P&R - Shoreview  Rice - St Paul,,3,http://www.metrotransit.org/route/262,,000000
+265-111,0,265,Express - White Bear Lake - Maplewood - St Paul,,3,http://www.metrotransit.org/route/265,,000000
+275-111,0,275,Express - Forest Lake - Co Rd 14 P&R - St Paul,,3,http://www.metrotransit.org/route/275,,000000
+294-111,0,294,Express - Oakdale - Stillwater - St Paul,,3,http://www.metrotransit.org/route/294,,000000
+350-111,2,350,Ltd Stop - Sunray - McKnight - St Paul,,3,http://www.metrotransit.org/route/350,,000000
+351-111,0,351,Express - Woodbury - St Paul,,3,http://www.metrotransit.org/route/351,,000000
+355-111,0,355,Express - Woodbury - Mpls,,3,http://www.metrotransit.org/route/355,,000000
+361-111,0,361,Express - Cottage Grove - St Paul,,3,http://www.metrotransit.org/route/361,,000000
+364-111,2,364,Express - Newport - Cottage Grove - St Paul,,3,http://www.metrotransit.org/route/364,,000000
+365-111,0,365,Express - Cottage Grove - Newport - Mpls,,3,http://www.metrotransit.org/route/365,,000000
+375-111,0,375,Express - Oakdale - Mpls,,3,http://www.metrotransit.org/route/375,,000000
+417-111,2,417,Mendota Heights - St Paul,,3,http://www.metrotransit.org/route/417,,000000
+452-111,0,452,Express -Mendota Heights - West St Paul - Mpls,,3,http://www.metrotransit.org/route/452,,000000
+860-111,0,860,Express - Coon Rapids - Northtown - St Paul,,3,http://www.metrotransit.org/route/860,,000000
+902-111,0,Green,METRO Green Line,,0,http://www.metrotransit.org/route/902,00B100,FFFFFF
 484-71,3,484,Eagan/Rosemount-St Paul,Express Peak-Only,3,http://www.mvta.com/bus_route_information_2.html?routeId=484,00AEEF,FFFFFF
 489-71,3,489,St Paul-Eagan Rev Comm,Local Peak-Only,3,http://www.mvta.com/bus_route_information_2.html?routeId=489,89564F,FFFFFF
