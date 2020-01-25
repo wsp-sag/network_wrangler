@@ -450,9 +450,19 @@ class Scenario(object):
 
     def apply_project(self, p):
         if isinstance(p,ProjectCard):
+            p = p.__dict__
+
+        if p.get('project'):
             WranglerLogger.info("Applying {}".format(p.project))
 
-        if not p.get("changes"):
+        if p.get("changes"):
+            part = 1
+            for pc in p["changes"]:
+                pc["project"] = p["project"] + " – Part " + str(part)
+                part += 1
+            self.apply_project(pc)
+
+        else:
             if p["category"] in ProjectCard.ROADWAY_CATEGORIES:
                 if not self.road_net:
                     raise ("Missing Roadway Network")
@@ -466,15 +476,8 @@ class Scenario(object):
                 and self.transit_net
             ):
                 self.transit_net.apply(p)
-            
-        else:
-            part = 1
-            for pc in p.changes:
-                pc["project"] = p.project + " – Part " + str(part)
-                part += 1
-            self.apply_project(pc)
 
-        if isinstance(p,ProjectCard):
+        if p.get('project'):
             self.applied_projects.append(p.project)
 
 
