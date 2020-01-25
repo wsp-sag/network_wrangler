@@ -14,6 +14,10 @@ from .Logger import WranglerLogger
 class ProjectCard(object):
     """
     Representation of a Project Card
+
+    Attributes:
+        __dict__: Dictionary of project card attributes
+        valid: Boolean indicating if data conforms to project card data schema
     """
 
     TRANSIT_CATEGORIES = ["Transit Service Property Change"]

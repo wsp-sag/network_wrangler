@@ -7,16 +7,16 @@ dependencies:
   corequisites: []
   conflicts: []
 links:
-  - A: 36622
-    B: 125892
+  - u: 36622
+    v: 125892
     bike_access: 1
     drive_access: 1
     transit_access: 0
     walk_access: 0
     lanes: 1
     model_link_id: 404982
-  - A: 125892
-    B: 36622
+  - u: 125892
+    v: 36622
     bike_access: 1
     drive_access: 1
     transit_access: 0

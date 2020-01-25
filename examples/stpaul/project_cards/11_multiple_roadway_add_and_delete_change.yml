@@ -19,16 +19,16 @@ changes:
         - 14248
   - category: Add New Roadway
     links:
-      - A: 354386
-        B: 16214
+      - u: 354386
+        v: 16214
         bike_access: 1
         drive_access: 1
         transit_access: 0
         walk_access: 0
         lanes: 1
         model_link_id: 2171
-      - A: 16214
-        B: 354386
+      - u: 16214
+        v: 354386
         bike_access: 1
         drive_access: 1
         transit_access: 0
