@@ -273,7 +273,6 @@ def test_query_builder(request):
 
 @pytest.mark.scenario
 @pytest.mark.travis
-@pytest.mark.menow
 def test_apply_wrapper(request):
     print("\n--Starting:", request.node.name)
 

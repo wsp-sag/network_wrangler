@@ -524,6 +524,7 @@ def test_query_roadway_property_by_time_group(request, variable_query):
 
 
 @pytest.mark.highway
+@pytest.mark.travis
 def test_write_model_net(request):
     print("\n--Starting:", request.node.name)
 
@@ -555,6 +556,7 @@ def test_write_model_net(request):
 
 
 @pytest.mark.offset
+@pytest.mark.travis
 def test_lat_lon_offset(request):
     print("\n--Starting:", request.node.name)
 
@@ -568,6 +570,7 @@ def test_lat_lon_offset(request):
 
 
 @pytest.mark.get_dist
+@pytest.mark.travis
 def test_get_distance_bw_lat_lon(request):
     print("\n--Starting:", request.node.name)
 
@@ -579,6 +582,7 @@ def test_get_distance_bw_lat_lon(request):
     print("--Finished:", request.node.name)
 
 @pytest.mark.highway
+@pytest.mark.travis
 def test_network_connectivity(request):
     print("\n--Starting:", request.node.name)
 
@@ -607,6 +611,8 @@ def test_network_connectivity(request):
 
 @pytest.mark.roadway
 @pytest.mark.test_ak
+@pytest.mark.travis
+@pytest.mark.xfail(strict=True)
 def test_add_roadway_links(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
