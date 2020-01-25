@@ -39,28 +39,62 @@ class RoadwayNetwork(object):
 
     Attributes:
         nodes_df (GeoDataFrame): node data
-        links_df (GeoDataFrame): link data, including start and end nodes and associated shape
+
+        links_df (GeoDataFrame): link data, including start and end
+            nodes and associated shape
+
         shapes_df (GeoDataFrame): detailed shape data
+
         selections (dict): dictionary storing selections in case they are made repeatedly
-        CRS (str): coordinate reference system in PROJ4 format. See https://proj.org/operations/projections/index.html#
+
+        CRS (str): coordinate reference system in PROJ4 format.
+            See https://proj.org/operations/projections/index.html#
+
         ESPG (int): integer representing coordinate system https://epsg.io/
 
-        NODE_FOREIGN_KEY (str): column in `nodes_df` associated with the LINK_FOREIGN_KEY
-        LINK_FOREIGN_KEY (list(str)): list of columns in `link_df` that represent the NODE_FOREIGN_KEY
+        NODE_FOREIGN_KEY (str): column in `nodes_df` associated with the
+            LINK_FOREIGN_KEY
+
+        LINK_FOREIGN_KEY (list(str)): list of columns in `link_df` that
+            represent the NODE_FOREIGN_KEY
+
         UNIQUE_LINK_KEY (str): column that is a unique key for links
+
         UNIQUE_NODE_KEY (str): column that is a unique key for nodes
-        UNIQUE_MODEL_LINK_IDENTIFIERS (list(str)): list of all unique identifiers for links, including the UNIQUE_LINK_KEY
-        UNIQUE_NODE_IDENTIFIERS (list(str)): list of all unique identifiers for nodes, including the UNIQUE_NODE_KEY
 
-        SELECTION_REQUIRES (list(str))): required attributes in the selection if a unique identifier is not used
-        SEARCH_BREADTH (int): initial number of links from name-based selection that are traveresed before trying another shortest path when searching for paths between A and B node
-        MAX_SEARCH_BREADTH (int): maximum number of links traversed between links that match the searched name when searching for paths between A and B node
-        SP_WEIGHT_FACTOR (Union(int, float)): penalty assigned for each degree of distance between a link and a link with the searched-for name when searching for paths between A and B node
+        UNIQUE_MODEL_LINK_IDENTIFIERS (list(str)): list of all unique
+            identifiers for links, including the UNIQUE_LINK_KEY
+        UNIQUE_NODE_IDENTIFIERS (list(str)): list of all unique identifiers
+            for nodes, including the UNIQUE_NODE_KEY
 
-        MANAGED_LANES_TO_NODE_ID_SCALAR (int): scalar value added to the general purpose lanes' `model_node_id` when creating an associated node for a parallel managed lane
-        MANAGED_LANES_TO_LINK_ID_SCALAR (int): scalar value added to the general purpose lanes' `model_link_id` when creating an associated link for a parallel managed lane
-        MANAGED_LANES_REQUIRED_ATTRIBUTES (list(str)): list of attributes that must be provided in managed lanes
-        KEEP_SAME_ATTRIBUTES_ML_AND_GP (list(str)): list of attributes to copy from a general purpose lane to managed lane
+        SELECTION_REQUIRES (list(str))): required attributes in the selection
+            if a unique identifier is not used
+
+        SEARCH_BREADTH (int): initial number of links from name-based
+            selection that are traveresed before trying another shortest
+            path when searching for paths between A and B node
+
+        MAX_SEARCH_BREADTH (int): maximum number of links traversed between
+            links that match the searched name when searching for paths
+            between A and B node
+
+        SP_WEIGHT_FACTOR (Union(int, float)): penalty assigned for each
+            degree of distance between a link and a link with the searched-for
+            name when searching for paths between A and B node
+
+        MANAGED_LANES_TO_NODE_ID_SCALAR (int): scalar value added to
+            the general purpose lanes' `model_node_id` when creating
+            an associated node for a parallel managed lane
+
+        MANAGED_LANES_TO_LINK_ID_SCALAR (int): scalar value added to
+            the general purpose lanes' `model_link_id` when creating
+            an associated link for a parallel managed lane
+
+        MANAGED_LANES_REQUIRED_ATTRIBUTES (list(str)): list of attributes
+            that must be provided in managed lanes
+
+        KEEP_SAME_ATTRIBUTES_ML_AND_GP (list(str)): list of attributes
+            to copy from a general purpose lane to managed lane
     """
 
     CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
@@ -618,18 +652,18 @@ class RoadwayNetwork(object):
         networkx multidigraph
         """
         WranglerLogger.debug("starting ox_graph()")
-        try:
-            graph_nodes = nodes_df.drop(
-                ["inboundReferenceId", "outboundReferenceId"], axis=1
-            )
-        except:
-            graph_nodes = nodes_df
+
+        graph_nodes = nodes_df.copy().drop(
+            ["inboundReferenceIds", "outboundReferenceIds"], axis=1
+        )
 
         graph_nodes.gdf_name = "network_nodes"
         WranglerLogger.debug("GRAPH NODES: {}".format(graph_nodes.columns))
         graph_nodes["id"] = graph_nodes[RoadwayNetwork.NODE_FOREIGN_KEY]
 
-        graph_links = links_df.copy()
+        graph_links = links_df.copy().drop(
+            ["osm_link_id","locationReferences"], axis=1
+        )
 
         #have to change this over into u,v b/c this is what osm-nx is expecting
         graph_links["u"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[0]]
@@ -638,7 +672,6 @@ class RoadwayNetwork(object):
         graph_links["key"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
-
         G = ox.gdfs_to_graph(graph_nodes, graph_links)
 
         WranglerLogger.debug("finished ox.gdfs_to_graph()")
