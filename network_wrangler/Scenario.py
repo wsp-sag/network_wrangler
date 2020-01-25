@@ -452,15 +452,14 @@ class Scenario(object):
         if isinstance(p,ProjectCard):
             p = p.__dict__
 
-        if p.get('project'):
-            WranglerLogger.info("Applying {}".format(p.project))
+        if p.get("project"):
+            WranglerLogger.info("Applying {}".format(p["project"]))
 
         if p.get("changes"):
             part = 1
             for pc in p["changes"]:
-                pc["project"] = p["project"] + " – Part " + str(part)
-                part += 1
-            self.apply_project(pc)
+                pc["project"] = p["project"]
+                self.apply_project(pc)
 
         else:
             if p["category"] in ProjectCard.ROADWAY_CATEGORIES:
@@ -477,8 +476,8 @@ class Scenario(object):
             ):
                 self.transit_net.apply(p)
 
-        if p.get('project'):
-            self.applied_projects.append(p.project)
+            if p["project"] not in self.applied_projects:
+                self.applied_projects.append(p["project"])
 
 
     def applied_project_card_summary(self, project_card_dictionary: dict) -> dict:
