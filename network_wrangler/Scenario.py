@@ -561,29 +561,31 @@ class Scenario(object):
 
     def scenario_summary(self):
         """
-        Logs a high level summary of the created scenario
+        write a high level summary of the created scenario to a text file
 
         """
 
-        #setupLogging(logFileName="scenario_summary.log")
+        file = open("scenario_log.txt","a")
 
-        WranglerLogger.info("Scenario created on {}".format(datetime.now()))
+        file.write("------------------------------\n")
+        file.write("Scenario created on {}\n".format(datetime.now()))
 
-        WranglerLogger.info("Base Scenario:")
-        WranglerLogger.info("  Road Network:")
-        WranglerLogger.info("    Link File: {}".format(self.base_scenario["road_net"].link_file))
-        WranglerLogger.info("    Node File: {}".format(self.base_scenario["road_net"].node_file))
-        WranglerLogger.info("    Shape File: {}".format(self.base_scenario["road_net"].shape_file))
-        WranglerLogger.info("  Transit Network:")
-        WranglerLogger.info("    Feed Path: {}".format(self.base_scenario["transit_net"].feed_path))
-        WranglerLogger.info(" ")
+        file.write("Base Scenario:\n")
+        file.write("  Road Network:\n")
+        file.write("    Link File: {}\n".format(self.base_scenario["road_net"].link_file))
+        file.write("    Node File: {}\n".format(self.base_scenario["road_net"].node_file))
+        file.write("    Shape File: {}\n".format(self.base_scenario["road_net"].shape_file))
+        file.write("  Transit Network:\n")
+        file.write("    Feed Path: {}\n".format(self.base_scenario["transit_net"].feed_path))
+        file.write("\n")
 
-        WranglerLogger.info("Project Cards:")
+        file.write("Project Cards:\n")
         for p in self.project_cards:
-            WranglerLogger.info("  {}".format(p.file))
-        WranglerLogger.info(" ")
+            file.write("  {}\n".format(p.file))
+        file.write("\n")
 
-        WranglerLogger.info("Applied Projects:")
+        file.write("Applied Projects:\n")
         for project in self.applied_projects:
-            WranglerLogger.info("   {}".format(project))
-        WranglerLogger.info(" ")
+            file.write("  {}\n".format(project))
+
+        file.close()
