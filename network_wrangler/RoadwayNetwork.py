@@ -1804,7 +1804,9 @@ class RoadwayNetwork(object):
 
         returns
         --------
-        fig, ax : tuple
+        dict
+            fig, ax : tuple
+            sub-graph nodes: list
         """
 
         _nodes_df = self.nodes_df
@@ -1823,7 +1825,7 @@ class RoadwayNetwork(object):
         #sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
         sub_graphs = [s for s in sorted((G.subgraph(c) for c in nx.strongly_connected_components(G)), key=len, reverse=True)]
 
-        sub_graph_nodes = [s for s in sorted(nx.strongly_connected_components(G), key=len, reverse=True)]
+        sub_graph_nodes = [list(s) for s in sorted(nx.strongly_connected_components(G), key=len, reverse=True)]
 
         # sorted on decreasing length, dropping the main sub-graph
         sub_graph_nodes = sub_graph_nodes[1:]
@@ -1837,7 +1839,7 @@ class RoadwayNetwork(object):
             colors.append('#%06X' % randint(0, 0xFFFFFF))
 
         fig, ax = ox.plot_graph(G, fig_height=16, fig_width=16, show=False,
-                                close=False, edge_color='black', edge_alpha = 0.1,
+                                close=True, edge_color='black', edge_alpha = 0.1,
                                 node_color='black', node_alpha = 0.5, node_size = 10
                                 )
         i = 0
@@ -1847,7 +1849,7 @@ class RoadwayNetwork(object):
                 ax.scatter(G.nodes[n]['x'],G.nodes[n]['y'], c=colors[i], s=size)
             i = i + 1
 
-        return fig, ax
+        return {"plot": (fig, ax), "subset_nodes": sub_graph_nodes}
 
 
     def selection_map(selection: tuple):
