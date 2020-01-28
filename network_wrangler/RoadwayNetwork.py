@@ -177,7 +177,6 @@ class RoadwayNetwork(object):
             raise ValueError("IDs in network not unique")
         self.selections = {}
 
-
     @staticmethod
     def read(
         link_file: str, node_file: str, shape_file: str, fast: bool = True
@@ -350,13 +349,19 @@ class RoadwayNetwork(object):
         for c in RoadwayNetwork.LINK_FOREIGN_KEY:
             if c not in self.links_df.columns:
                 valid = False
-                msg = "Network doesn't contain link foreign key identifier: {}".format(c)
+                msg = "Network doesn't contain link foreign key identifier: {}".format(
+                    c
+                )
                 WranglerLogger.error(msg)
-        link_foreign_key = self.links_df[RoadwayNetwork.LINK_FOREIGN_KEY].apply(lambda x: '-'.join(x.map(str)), axis=1)
+        link_foreign_key = self.links_df[RoadwayNetwork.LINK_FOREIGN_KEY].apply(
+            lambda x: "-".join(x.map(str)), axis=1
+        )
         if not link_foreign_key.is_unique:
-                valid = False
-                msg = "Foreign key: {} is not unique in network links".format(RoadwayNetwork.LINK_FOREIGN_KEY)
-                WranglerLogger.error(msg)
+            valid = False
+            msg = "Foreign key: {} is not unique in network links".format(
+                RoadwayNetwork.LINK_FOREIGN_KEY
+            )
+            WranglerLogger.error(msg)
         for c in RoadwayNetwork.UNIQUE_NODE_IDENTIFIERS:
             if c not in self.nodes_df.columns:
                 valid = False
@@ -368,12 +373,16 @@ class RoadwayNetwork(object):
                 WranglerLogger.error(msg)
         if RoadwayNetwork.NODE_FOREIGN_KEY not in self.nodes_df.columns:
             valid = False
-            msg = "Network doesn't contain node foreign key identifier: {}".format(RoadwayNetwork.NODE_FOREIGN_KEY)
+            msg = "Network doesn't contain node foreign key identifier: {}".format(
+                RoadwayNetwork.NODE_FOREIGN_KEY
+            )
             WranglerLogger.error(msg)
         elif not self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY].is_unique:
-                valid = False
-                msg = "Foreign key: {} is not unique in network nodes".format(RoadwayNetwork.NODE_FOREIGN_KEY)
-                WranglerLogger.error(msg)
+            valid = False
+            msg = "Foreign key: {} is not unique in network nodes".format(
+                RoadwayNetwork.NODE_FOREIGN_KEY
+            )
+            WranglerLogger.error(msg)
         return valid
 
     @staticmethod
@@ -641,7 +650,7 @@ class RoadwayNetwork(object):
         return [x + RoadwayNetwork.MANAGED_LANES_SCALAR for x in nodes_list]
 
     @staticmethod
-    def ox_graph(nodes_df, links_df):
+    def ox_graph(nodes_df: DataFrame, links_df: DataFrame):
         """
         create an osmnx-flavored network graph
 
@@ -669,10 +678,10 @@ class RoadwayNetwork(object):
         graph_nodes["id"] = graph_nodes[RoadwayNetwork.NODE_FOREIGN_KEY]
 
         graph_links = links_df.copy().drop(
-            ["osm_link_id","locationReferences"], axis=1
+            ["osm_link_id", "locationReferences"], axis=1
         )
 
-        #have to change this over into u,v b/c this is what osm-nx is expecting
+        # have to change this over into u,v b/c this is what osm-nx is expecting
         graph_links["u"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[0]]
         graph_links["v"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[1]]
         graph_links["id"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
@@ -854,10 +863,15 @@ class RoadwayNetwork(object):
             """
             WranglerLogger.debug("-Adding Breadth-")
 
-
             node_list_foreign_keys = list(
-                set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(candidate_links[fk])])
-                #set(list(candidate_links["u"]) + list(candidate_links["v"]))
+                set(
+                    [
+                        i
+                        for fk in RoadwayNetwork.LINK_FOREIGN_KEY
+                        for i in list(candidate_links[fk])
+                    ]
+                )
+                # set(list(candidate_links["u"]) + list(candidate_links["v"]))
             )
             candidate_nodes = nodes.loc[node_list_foreign_keys]
             WranglerLogger.debug("Candidate Nodes: {}".format(len(candidate_nodes)))
@@ -878,8 +892,14 @@ class RoadwayNetwork(object):
             links[links.model_link_id.isin(links_shstRefId_to_add)]["i"] = i
             candidate_links = candidate_links.append(links_to_add)
             node_list_foreign_keys = list(
-                set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(candidate_links[fk])])
-                #set(list(candidate_links["u"]) + list(candidate_links["v"]))
+                set(
+                    [
+                        i
+                        for fk in RoadwayNetwork.LINK_FOREIGN_KEY
+                        for i in list(candidate_links[fk])
+                    ]
+                )
+                # set(list(candidate_links["u"]) + list(candidate_links["v"]))
             )
 
             return candidate_links, node_list_foreign_keys
@@ -893,8 +913,14 @@ class RoadwayNetwork(object):
             )
 
             node_list_foreign_keys = list(
-                set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(candidate_links[fk])])
-                #set(list(candidate_links["u"]) + list(candidate_links["v"]))
+                set(
+                    [
+                        i
+                        for fk in RoadwayNetwork.LINK_FOREIGN_KEY
+                        for i in list(candidate_links[fk])
+                    ]
+                )
+                # set(list(candidate_links["u"]) + list(candidate_links["v"]))
             )
 
             candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
@@ -905,7 +931,11 @@ class RoadwayNetwork(object):
             self.selections[sel_key]["candidate_links"] = candidate_links
 
             try:
-                WranglerLogger.debug("Calculating NX shortest path from A_id: {} to B_id: {}".format(A_id, B_id))
+                WranglerLogger.debug(
+                    "Calculating NX shortest path from A_id: {} to B_id: {}".format(
+                        A_id, B_id
+                    )
+                )
                 sp_route = nx.shortest_path(G, A_id, B_id, weight="weight")
                 WranglerLogger.debug("Shortest path successfully routed")
 
@@ -916,18 +946,23 @@ class RoadwayNetwork(object):
                 candidate_links["A"].isin(sp_route)
                 & candidate_links["B"].isin(sp_route)
             ]
-            self.selections[sel_key]["route"]= sp_route
-            self.selections[sel_key]["links"]= sp_links
+            self.selections[sel_key]["route"] = sp_route
+            self.selections[sel_key]["links"] = sp_links
 
             return True
-
 
         if not unique_model_link_identifer_in_selection:
             # find the node ids for the candidate links
             WranglerLogger.debug("Not a unique ID selection, conduct search")
             node_list_foreign_keys = list(
-                set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(candidate_links[fk])])
-                #set(list(candidate_links["u"]) + list(candidate_links["v"]))
+                set(
+                    [
+                        i
+                        for fk in RoadwayNetwork.LINK_FOREIGN_KEY
+                        for i in list(candidate_links[fk])
+                    ]
+                )
+                # set(list(candidate_links["u"]) + list(candidate_links["v"]))
             )
             WranglerLogger.debug("Foreign key list: {}".format(node_list_foreign_keys))
             i = 0
@@ -975,7 +1010,9 @@ class RoadwayNetwork(object):
                     resel_query = ProjectCard.build_link_selection_query(
                         selection=selection,
                         unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-                        mode=RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[search_mode],
+                        mode=RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[
+                            search_mode
+                        ],
                         ignore=["name"],
                     )
                     WranglerLogger.info("Reselecting features:\n{}".format(resel_query))
@@ -1294,7 +1331,9 @@ class RoadwayNetwork(object):
             for link in links:
                 for key in RoadwayNetwork.LINK_FOREIGN_KEY:
                     if link.get(key) is None:
-                        msg = "New link to add doesn't contain link foreign key identifier: {}".format(key)
+                        msg = "New link to add doesn't contain link foreign key identifier: {}".format(
+                            key
+                        )
                         WranglerLogger.error(msg)
                         raise ValueError(msg)
 
@@ -1687,17 +1726,17 @@ class RoadwayNetwork(object):
             lambda x: _update_location_reference(x)
         )
         ml_links_df["geometry"] = ml_links_df["locationReferences"].apply(
-            lambda x : _get_line_string(x)
+            lambda x: _get_line_string(x)
         )
 
         access_links_df, egress_links_df = RoadwayNetwork.create_dummy_connector_links(
             gp_links_df, ml_links_df
         )
         access_links_df["geometry"] = access_links_df["locationReferences"].apply(
-            lambda x : _get_line_string(x)
+            lambda x: _get_line_string(x)
         )
         egress_links_df["geometry"] = egress_links_df["locationReferences"].apply(
-            lambda x : _get_line_string(x)
+            lambda x: _get_line_string(x)
         )
 
         new_links_df = gp_links_df.append(ml_links_df)
@@ -1772,155 +1811,284 @@ class RoadwayNetwork(object):
             out_network = copy.deepcopy(self)
             out_network.links_df = new_links_df
             out_network.nodes_df = new_nodes_df
-            out_network.shapes_df = new_shapes_df
             return out_network
 
-    def is_network_connected(self, mode: str = None):
+    @staticmethod
+    def get_modal_links_nodes(
+        links_df: DataFrame, nodes_df: DataFrame, mode: str = None
+    ) -> tuple(DataFrame, DataFrame):
+        """Returns nodes and link dataframes for specific mode.
+
+        Args:
+            links_df: DataFrame of standard network links
+            nodes_df: DataFrame of standard network nodes
+            mode: mode of the network, one of `drive`,`transit`,
+                `walk`, `bike`
+
+        Returns: tuple of DataFrames for links, nodes filtered by mode
+        """
+
+        if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
+            msg = "mode value should be one of {}.".format(
+                list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys())
+            )
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
+        mode_link_variable = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
+        mode_node_variable = RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES[mode]
+
+        if mode_link_variable not in links_df.columns:
+            msg = "{} not in provided links_df list of columns. Available columns are: \n {}".format(mode_link_variable,links_df.columns)
+            WranglerLogger.error(msg)
+
+        if mode_node_variable not in nodes_df.columns:
+            msg = "{} not in provided nodes_df list of columns. Available columns are: \n {}".format(mode_node_variable,nodes_df.columns)
+            WranglerLogger.error(msg)
+
+        modal_links_df = links_df[links_df[mode_link_variable] == 1]
+        ##TODO right now we don't filter the nodes because transit-only
+        # links with walk access are not marked as having walk access
+        # Issue discussed in https://github.com/wsp-sag/network_wrangler/issues/145
+        #modal_nodes_df = nodes_df[nodes_df[mode_node_variable] == 1]
+        modal_nodes_df = nodes_df
+        
+        return modal_links_df, modal_nodes_df
+
+    @staticmethod
+    def get_modal_graph(links_df: DataFrame, nodes_df: DataFrame, mode: str = None):
+        """Determines if the network graph is "strongly" connected
+        A graph is strongly connected if each vertex is reachable from every other vertex.
+
+        Args:
+            links_df: DataFrame of standard network links
+            nodes_df: DataFrame of standard network nodes
+            mode: mode of the network, one of `drive`,`transit`,
+                `walk`, `bike`
+
+        Returns: networkx: osmnx: DiGraph  of network
+        """
+        if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
+            msg = "mode value should be one of {}.".format(
+                list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys())
+            )
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
+        _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
+            links_df, nodes_df, mode=mode
+        )
+        G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
+
+        return G
+
+    def is_network_connected(
+        self, mode: str = None, links_df: DataFrame = None, nodes_df: DataFrame = None
+    ):
         """
         Determines if the network graph is "strongly" connected
         A graph is strongly connected if each vertex is reachable from every other vertex.
 
-        mode: to check the mode specific network connectivity
+        Args:
+            mode:  mode of the network, one of `drive`,`transit`,
+                `walk`, `bike`
+            links_df: DataFrame of standard network links
+            nodes_df: DataFrame of standard network nodes
 
         Returns: boolean
         """
 
-        _nodes_df = self.nodes_df
-        _links_df = self.links_df
+        _nodes_df = nodes_df if nodes_df else self.nodes_df
+        _links_df = links_df if links_df else self.links_df
 
         if mode:
-            if mode in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
-                link_variable = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
-                _links_df = _links_df[_links_df[link_variable] == 1]
-            else:
-                raise ValueError("mode value should be one of {}.".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()))
-                )
+            _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
+                _links_df, _nodes_df, mode=mode
+            )
+        else:
+            WranglerLogger.info(
+                "Assessing connectivity without a mode\
+                specified. This may have limited value in interpretation.\
+                To add mode specificity, add the keyword `mode =` to calling\
+                this method"
+            )
 
-            if mode in RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES.keys():
-                node_variable = RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES[mode]
-                _nodes_df = _nodes_df[_nodes_df[node_variable] == 1]
-            else:
-                raise ValueError("mode value should be one of {}.".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES.keys()))
-                )
-
+        # TODO: consider caching graphs if they start to take forever
+        #      and we are calling them more than once.
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
         is_connected = nx.is_strongly_connected(G)
 
         return is_connected
 
-    def network_connection_plot(self, mode: str = None, ignore_end_nodes: bool = True):
+    def assess_connectivity(
+        self,
+        mode: str = None,
+        ignore_end_nodes: bool = True,
+        links_df: DataFrame = None,
+        nodes_df: DataFrame = None,
+    ):
+        """Returns a network graph and list of disconnected subgraphs
+        as described by a list of their member nodes.
+
+        Args:
+            mode:  mode of the network, one of `drive`,`transit`,
+                `walk`, `bike`
+            ignore_end_nodes: if True, ignores stray singleton nodes
+            links_df: if specified, will assess connectivity of this
+                links list rather than self.links_df
+            nodes_df: if specified, will assess connectivity of this
+                nodes list rather than self.nodes_df
+
+        Returns: Tuple of
+            Network Graph (osmnx flavored networkX DiGraph)
+            List of disconnected subgraphs described by the list of their
+                member nodes (as described by their `model_node_id`)
         """
-        Plot a graph to check for network connection
-
-        mode: to check the mode specific network connectivity
-        ignore_end_nodes: boolean to drop sub-graphs with only one node
-
-        returns
-        --------
-        dict
-            fig, ax : tuple
-            sub-graph nodes: list
-        """
-
-        _nodes_df = self.nodes_df
-        _links_df = self.links_df
+        _nodes_df = nodes_df if nodes_df else self.nodes_df
+        _links_df = links_df if links_df else self.links_df
 
         if mode:
-            if mode in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
-                link_variable = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
-                _links_df = _links_df[_links_df[link_variable] == 1]
-            else:
-                raise ValueError("mode value should be one of {}.".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()))
-                )
-
-            if mode in RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES.keys():
-                node_variable = RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES[mode]
-                _nodes_df = _nodes_df[_nodes_df[node_variable] == 1]
-            else:
-                raise ValueError("mode value should be one of {}.".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES.keys()))
-                )
+            _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
+                _links_df, _nodes_df, mode=mode
+            )
+        else:
+            WranglerLogger.info(
+                "Assessing connectivity without a mode\
+                specified. This may have limited value in interpretation.\
+                To add mode specificity, add the keyword `mode =` to calling\
+                this method"
+            )
 
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
-        #sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
-        sub_graphs = [s for s in sorted((G.subgraph(c) for c in nx.strongly_connected_components(G)), key=len, reverse=True)]
+        # sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
+        sub_graphs = [
+            s
+            for s in sorted(
+                (G.subgraph(c) for c in nx.strongly_connected_components(G)),
+                key=len,
+                reverse=True,
+            )
+        ]
 
-        sub_graph_nodes = [list(s) for s in sorted(nx.strongly_connected_components(G), key=len, reverse=True)]
+        sub_graph_nodes = [
+            list(s)
+            for s in sorted(nx.strongly_connected_components(G), key=len, reverse=True)
+        ]
 
         # sorted on decreasing length, dropping the main sub-graph
-        sub_graph_nodes = sub_graph_nodes[1:]
+        disconnected_sub_graph_nodes = sub_graph_nodes[1:]
 
         # dropping the sub-graphs with only 1 node
         if ignore_end_nodes:
-            sub_graph_nodes = [list(s) for s in sub_graph_nodes if len(s) > 1]
+            disconnected_sub_graph_nodes = [
+                list(s) for s in disconnected_sub_graph_nodes if len(s) > 1
+            ]
+
+        WranglerLogger.info(
+            "{} for disconnected networks for mode = {}:\n{}".format(
+                RoadwayNetwork.NODE_FOREIGN_KEY,
+                mode,
+                "\n".join(list(map(str,disconnected_sub_graph_nodes))),
+            )
+        )
+        return G, disconnected_sub_graph_nodes
+
+    @staticmethod
+    def network_connection_plot(G, disconnected_subgraph_nodes: list):
+        """Plot a graph to check for network connection.
+
+        Args:
+            G: OSMNX flavored networkX graph.
+            disconnected_subgraph_nodes: List of disconnected subgraphs described by the list of their
+                member nodes (as described by their `model_node_id`).
+
+        returns: fig, ax : tuple
+        """
 
         colors = []
-        for i in range(len(sub_graph_nodes)):
-            colors.append('#%06X' % randint(0, 0xFFFFFF))
+        for i in range(len(disconnected_subgraph_nodes)):
+            colors.append("#%06X" % randint(0, 0xFFFFFF))
 
-        fig, ax = ox.plot_graph(G, fig_height=16, fig_width=16, show=False,
-                                close=True, edge_color='black', edge_alpha = 0.1,
-                                node_color='black', node_alpha = 0.5, node_size = 10
-                                )
+        fig, ax = ox.plot_graph(
+            G,
+            fig_height=16,
+            fig_width=16,
+            show=False,
+            close=True,
+            edge_color="black",
+            edge_alpha=0.1,
+            node_color="black",
+            node_alpha=0.5,
+            node_size=10,
+        )
         i = 0
-        for nodes in sub_graph_nodes:
+        for nodes in disconnected_subgraph_nodes:
             for n in nodes:
                 size = 100
-                ax.scatter(G.nodes[n]['x'],G.nodes[n]['y'], c=colors[i], s=size)
+                ax.scatter(G.nodes[n]["x"], G.nodes[n]["y"], c=colors[i], s=size)
             i = i + 1
 
-        return {"plot": (fig, ax), "subset_nodes": sub_graph_nodes}
-
+        return fig, ax
 
     def selection_map(selection: tuple):
-        '''
+        """
         Shows which links are selected for roadway property change or parallel
         managed lanes category of roadway projects
-        '''
+        """
 
         sel_key = selection[0]
         sel_val = selection[1]
 
         A_node = sel_key[1]
         B_node = sel_key[2]
-        selected_graph = sel_val['graph']
-        selected_links  = sel_val['selected_links']
+        selected_graph = sel_val["graph"]
+        selected_links = sel_val["selected_links"]
 
-        m = ox.plot_graph_folium(selected_graph, edge_color=None, tiles='cartodbpositron')
+        m = ox.plot_graph_folium(
+            selected_graph, edge_color=None, tiles="cartodbpositron"
+        )
 
-        def _folium_node(node, color='white', icon = ''):
-            node_marker = folium.Marker(location=[node['y'],node['x']],
-                                        icon=folium.Icon(icon = icon, color=color),
-                                       )
+        def _folium_node(node, color="white", icon=""):
+            node_marker = folium.Marker(
+                location=[node["y"], node["x"]],
+                icon=folium.Icon(icon=icon, color=color),
+            )
             return node_marker
 
         A = selected_graph.nodes[A_node]
         B = selected_graph.nodes[B_node]
 
-        _folium_node(A, color="green", icon = 'play').add_to(m)
-        _folium_node(B, color="red", icon = 'star').add_to(m)
+        _folium_node(A, color="green", icon="play").add_to(m)
+        _folium_node(B, color="red", icon="star").add_to(m)
 
         for _, row in selected_links.iterrows():
-            pl = ox.plot.make_folium_polyline(edge=row, edge_color="blue", edge_width=5, edge_opacity=0.8)
+            pl = ox.plot.make_folium_polyline(
+                edge=row, edge_color="blue", edge_width=5, edge_opacity=0.8
+            )
             pl.add_to(m)
 
         return m
 
     def deletion_map(self, links: dict, nodes: dict):
-        '''
+        """
         Shows which links and nodes are deleted from the roadway network
-        '''
-        #deleted_links = None
-        #deleted_nodes = None
+        """
+        # deleted_links = None
+        # deleted_nodes = None
 
         if links is not None:
             for key, val in links.items():
                 deleted_links = self.links_df[self.links_df[key].isin(val)]
 
-                node_list_foreign_keys = list(set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(deleted_links[fk])]))
+                node_list_foreign_keys = list(
+                    set(
+                        [
+                            i
+                            for fk in RoadwayNetwork.LINK_FOREIGN_KEY
+                            for i in list(deleted_links[fk])
+                        ]
+                    )
+                )
                 candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
         else:
             deleted_links = None
@@ -1933,12 +2101,16 @@ class RoadwayNetwork(object):
 
         G = RoadwayNetwork.ox_graph(candidate_nodes, deleted_links)
 
-        m = ox.plot_graph_folium(G, edge_color='red', tiles='cartodbpositron')
+        m = ox.plot_graph_folium(G, edge_color="red", tiles="cartodbpositron")
 
-        def _folium_node(node, color='white', icon = ''):
-            node_circle = folium.Circle(location=[node['y'],node['x']], radius = 2,
-                                        fill = True, color = color, fill_opacity = 0.8
-                                        )
+        def _folium_node(node, color="white", icon=""):
+            node_circle = folium.Circle(
+                location=[node["y"], node["x"]],
+                radius=2,
+                fill=True,
+                color=color,
+                fill_opacity=0.8,
+            )
             return node_circle
 
         if deleted_nodes is not None:
@@ -1948,17 +2120,27 @@ class RoadwayNetwork(object):
         return m
 
     def addition_map(self, links: dict, nodes: dict):
-        '''
+        """
         Shows which links and nodes are added to the roadway network
-        '''
+        """
 
         if links is not None:
             link_ids = []
             for link in links:
                 link_ids.append(link.get(RoadwayNetwork.UNIQUE_LINK_KEY))
 
-            added_links = self.links_df[self.links_df[RoadwayNetwork.UNIQUE_LINK_KEY].isin(link_ids)]
-            node_list_foreign_keys = list(set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(added_links[fk])]))
+            added_links = self.links_df[
+                self.links_df[RoadwayNetwork.UNIQUE_LINK_KEY].isin(link_ids)
+            ]
+            node_list_foreign_keys = list(
+                set(
+                    [
+                        i
+                        for fk in RoadwayNetwork.LINK_FOREIGN_KEY
+                        for i in list(added_links[fk])
+                    ]
+                )
+            )
             try:
                 candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
             except:
@@ -1969,19 +2151,24 @@ class RoadwayNetwork(object):
             for node in nodes:
                 node_ids.append(node.get(RoadwayNetwork.UNIQUE_NODE_KEY))
 
-            added_nodes = self.nodes_df[self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY].isin(node_ids)]
+            added_nodes = self.nodes_df[
+                self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY].isin(node_ids)
+            ]
         else:
             added_nodes = None
 
-
         G = RoadwayNetwork.ox_graph(candidate_nodes, added_links)
 
-        m = ox.plot_graph_folium(G, edge_color='green', tiles='cartodbpositron')
+        m = ox.plot_graph_folium(G, edge_color="green", tiles="cartodbpositron")
 
-        def _folium_node(node, color='white', icon = ''):
-            node_circle = folium.Circle(location=[node['y'],node['x']], radius = 2,
-                                        fill = True, color = color, fill_opacity = 0.8
-                                        )
+        def _folium_node(node, color="white", icon=""):
+            node_circle = folium.Circle(
+                location=[node["y"], node["x"]],
+                radius=2,
+                fill=True,
+                color=color,
+                fill_opacity=0.8,
+            )
             return node_circle
 
         if added_nodes is not None:
