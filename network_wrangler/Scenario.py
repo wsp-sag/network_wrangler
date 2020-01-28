@@ -447,9 +447,8 @@ class Scenario(object):
         for p in self.project_cards:
             self.apply_project(p.__dict__)
 
-
     def apply_project(self, p):
-        if isinstance(p,ProjectCard):
+        if isinstance(p, ProjectCard):
             p = p.__dict__
 
         if p.get("project"):
@@ -479,7 +478,6 @@ class Scenario(object):
             if p["project"] not in self.applied_projects:
                 self.applied_projects.append(p["project"])
 
-
     def applied_project_card_summary(self, project_card_dictionary: dict) -> dict:
         """
         Create a summary of applied project card and what they changed for the scenario
@@ -494,14 +492,20 @@ class Scenario(object):
             summary["category"] = project_card_dictionary["category"].lower()
             category = summary["category"]
 
-            if category == "roadway property change" or category == "parallel managed lanes":
+            if (
+                category == "roadway property change"
+                or category == "parallel managed lanes"
+            ):
                 sel_key = RoadwayNetwork.build_selection_key(
-                    self.road_net,
-                    project_card_dictionary["facility"]
+                    self.road_net, project_card_dictionary["facility"]
                 )
 
-                selected_indices = self.road_net.selections[sel_key]["selected_links"].index.tolist()
-                attributes = [p["property"] for p in project_card_dictionary["properties"]]
+                selected_indices = self.road_net.selections[sel_key][
+                    "selected_links"
+                ].index.tolist()
+                attributes = [
+                    p["property"] for p in project_card_dictionary["properties"]
+                ]
 
                 summary["sel_indices"] = selected_indices
                 summary["attributes"] = attributes
@@ -511,19 +515,23 @@ class Scenario(object):
 
             if category == "add new roadway":
                 if project_card_dictionary.get("links") is not None:
-                    summary["added_links"] = pd.DataFrame(project_card_dictionary.get("links"))
+                    summary["added_links"] = pd.DataFrame(
+                        project_card_dictionary.get("links")
+                    )
                 else:
                     summary["added_links"] = None
 
                 if project_card_dictionary.get("nodes") is not None:
-                    summary["added_nodes"] = pd.DataFrame(project_card_dictionary.get("nodes"))
+                    summary["added_nodes"] = pd.DataFrame(
+                        project_card_dictionary.get("nodes")
+                    )
                 else:
                     summary["added_nodes"] = None
 
                 summary["map"] = RoadwayNetwork.addition_map(
                     self.road_net,
                     project_card_dictionary.get("links"),
-                    project_card_dictionary.get("nodes")
+                    project_card_dictionary.get("nodes"),
                 )
 
             if category == "roadway deletion":
@@ -532,7 +540,7 @@ class Scenario(object):
                 summary["map"] = RoadwayNetwork.deletion_map(
                     self.base_scenario["road_net"],
                     project_card_dictionary.get("links"),
-                    project_card_dictionary.get("nodes")
+                    project_card_dictionary.get("nodes"),
                 )
 
             return summary
@@ -541,16 +549,20 @@ class Scenario(object):
             pc_summary = {}
             pc_summary["project"] = project_card_dictionary["project"]
             if project_card_dictionary["category"] in ProjectCard.ROADWAY_CATEGORIES:
-                pc_summary = _roadway_project_summary(project_card_dictionary, pc_summary)
+                pc_summary = _roadway_project_summary(
+                    project_card_dictionary, pc_summary
+                )
             if project_card_dictionary["category"] in ProjectCard.TRANSIT_CATEGORIES:
-                pass # todo: summary for applied transit projects
+                pass  # todo: summary for applied transit projects
             summary["total_parts"] = 1
             summary["Part 1"] = pc_summary
         else:
             part = 1
             for pc in project_card_dictionary.get("changes"):
                 pc_summary = {}
-                pc_summary["project"] = project_card_dictionary["project"] + " – Part " + str(part)
+                pc_summary["project"] = (
+                    project_card_dictionary["project"] + " – Part " + str(part)
+                )
                 if pc["category"] in ProjectCard.ROADWAY_CATEGORIES:
                     pc_summary = _roadway_project_summary(pc, pc_summary)
                     summary["Part " + str(part)] = pc_summary
@@ -565,18 +577,26 @@ class Scenario(object):
 
         """
 
-        file = open("scenario_log.txt","a")
+        file = open("scenario_log.txt", "a")
 
         file.write("------------------------------\n")
         file.write("Scenario created on {}\n".format(datetime.now()))
 
         file.write("Base Scenario:\n")
         file.write("  Road Network:\n")
-        file.write("    Link File: {}\n".format(self.base_scenario["road_net"].link_file))
-        file.write("    Node File: {}\n".format(self.base_scenario["road_net"].node_file))
-        file.write("    Shape File: {}\n".format(self.base_scenario["road_net"].shape_file))
+        file.write(
+            "    Link File: {}\n".format(self.base_scenario["road_net"].link_file)
+        )
+        file.write(
+            "    Node File: {}\n".format(self.base_scenario["road_net"].node_file)
+        )
+        file.write(
+            "    Shape File: {}\n".format(self.base_scenario["road_net"].shape_file)
+        )
         file.write("  Transit Network:\n")
-        file.write("    Feed Path: {}\n".format(self.base_scenario["transit_net"].feed_path))
+        file.write(
+            "    Feed Path: {}\n".format(self.base_scenario["transit_net"].feed_path)
+        )
         file.write("\n")
 
         file.write("Project Cards:\n")

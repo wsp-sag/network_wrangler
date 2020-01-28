@@ -273,14 +273,13 @@ def test_query_builder(request):
 
 @pytest.mark.scenario
 @pytest.mark.travis
-@pytest.mark.menow
 def test_apply_wrapper(request):
     print("\n--Starting:", request.node.name)
 
     card_filenames = [
-        '3_multiple_roadway_attribute_change.yml',
-        'multiple_changes.yml',
-        '4_simple_managed_lane.yml',
+        "3_multiple_roadway_attribute_change.yml",
+        "multiple_changes.yml",
+        "4_simple_managed_lane.yml",
     ]
 
     project_card_directory = os.path.join(STPAUL_DIR, "project_cards")

@@ -324,6 +324,7 @@ def test_invalid_optional_selection_variable(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.travis
 def test_transit_road_consistencies(request):
     print("\n--Starting:", request.node.name)
@@ -340,7 +341,7 @@ def test_transit_road_consistencies(request):
         fast=True,
     )
 
-    net.set_roadnet(road_net = road_net)
+    net.set_roadnet(road_net=road_net)
 
     net.validate_road_network_consistencies()
     print(net.validated_road_network_consistency)
