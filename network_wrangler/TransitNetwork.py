@@ -59,8 +59,9 @@ class TransitNetwork(object):
         self.validated_road_network_consistency = False
 
         if not self.validate_frequencies():
-            raise ValueError("Transit lines with non-positive frequencies exist in the network")
-
+            raise ValueError(
+                "Transit lines with non-positive frequencies exist in the network"
+            )
 
     @staticmethod
     def read(feed_path: str, fast: bool = False) -> TransitNetwork:
@@ -131,7 +132,9 @@ class TransitNetwork(object):
 
         if len(zero_freq.index) > 0:
             _valid = False
-            msg = "Transit lines {} have non-positive frequencies".format(zero_freq.trip_id.to_list())
+            msg = "Transit lines {} have non-positive frequencies".format(
+                zero_freq.trip_id.to_list()
+            )
             WranglerLogger.error(msg)
 
         self.validated_frequencies = True
@@ -159,11 +162,10 @@ class TransitNetwork(object):
         self.validated_road_network_consistency = True
 
         if not valid_stops or not valid_shapes:
-             valid = False
-             raise ValueError("Transit network is not consistent with road network.")
+            valid = False
+            raise ValueError("Transit network is not consistent with road network.")
 
         return valid
-
 
     def validate_transit_stops(self) -> Bool:
         """
@@ -191,7 +193,8 @@ class TransitNetwork(object):
             missing_stops = list(set(stop_ids) - set(node_ids))
             msg = "Not all transit stops are part of the roadyway network. "
             msg += "Missing stops ({}) from the roadway nodes are {}.".format(
-                TransitNetwork.STOPS_FOREIGN_KEY, missing_stops)
+                TransitNetwork.STOPS_FOREIGN_KEY, missing_stops
+            )
             WranglerLogger.error(msg)
 
         return valid
@@ -214,7 +217,9 @@ class TransitNetwork(object):
 
         valid = True
 
-        shape_ids = [int(s) for s in shapes[TransitNetwork.SHAPES_FOREIGN_KEY].to_list()]
+        shape_ids = [
+            int(s) for s in shapes[TransitNetwork.SHAPES_FOREIGN_KEY].to_list()
+        ]
         node_ids = [int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
 
         if not set(shape_ids).issubset(node_ids):
@@ -222,7 +227,8 @@ class TransitNetwork(object):
             missing_shapes = list(set(shape_ids) - set(node_ids))
             msg = "Not all transit shapes are part of the roadyway network. "
             msg += "Missing shapes ({}) from the roadway network are {}.".format(
-                TransitNetwork.SHAPES_FOREIGN_KEY, missing_shapes)
+                TransitNetwork.SHAPES_FOREIGN_KEY, missing_shapes
+            )
             WranglerLogger.error(msg)
 
         return valid
@@ -337,9 +343,13 @@ class TransitNetwork(object):
                     managed_lane_nodes,
                 )
             elif project_dictionary["category"].lower() == "roadway deletion":
-                WranglerLogger.warning("Roadway Deletion not yet implemented in Transit; ignoring")
+                WranglerLogger.warning(
+                    "Roadway Deletion not yet implemented in Transit; ignoring"
+                )
             else:
-                msg = "{} not implemented yet in TransitNetwork; can't apply.".format(project_dictionary["category"])
+                msg = "{} not implemented yet in TransitNetwork; can't apply.".format(
+                    project_dictionary["category"]
+                )
                 WranglerLogger.error(msg)
                 raise (msg)
 
@@ -401,7 +411,9 @@ class TransitNetwork(object):
         if selection.get("time"):
             selection["time"] = parse_time_spans(selection["time"])
         elif selection.get("start_time") and selection.get("end_time"):
-            selection["time"] = parse_time_spans([selection["start_time"], selection["end_time"]])
+            selection["time"] = parse_time_spans(
+                [selection["start_time"], selection["end_time"]]
+            )
             # Filter freq to trips in selection
             freq = freq[freq.trip_id.isin(trips["trip_id"])]
             freq = freq[freq.start_time == selection["time"][0]]
@@ -459,7 +471,8 @@ class TransitNetwork(object):
             shape_ids = (
                 self.feed.shapes.groupby("shape_id").filter(
                     lambda x: all(
-                        i in x[TransitNetwork.SHAPES_FOREIGN_KEY].tolist() for i in node_ids
+                        i in x[TransitNetwork.SHAPES_FOREIGN_KEY].tolist()
+                        for i in node_ids
                     )
                 )
             ).shape_id.drop_duplicates()
