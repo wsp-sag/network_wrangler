@@ -21,13 +21,8 @@
     "lanes": 1,
     "distance": 0.0503218951,
     "HOV_access": 0,
-<<<<<<< HEAD
-    "transit_priority": 0,
-    "traveltime_assert": 0,
-=======
     "trn_priority": 0,
     "ttime_assert": 0,
->>>>>>> develop
     "transit_access": 0,
     "drive_access": 1,
     "walk_access": 1,
@@ -76,13 +71,8 @@
     "lanes": 5,
     "distance": 0.0350601947,
     "HOV_access": 0,
-<<<<<<< HEAD
-    "transit_priority": 0,
-    "traveltime_assert": 0,
-=======
     "trn_priority": 0,
     "ttime_assert": 0,
->>>>>>> develop
     "transit_access": 0,
     "drive_access": 1,
     "walk_access": 0,
@@ -131,13 +121,8 @@
     "lanes": 3,
     "distance": 0.3900156059,
     "HOV_access": 0,
-<<<<<<< HEAD
-    "transit_priority": 0,
-    "traveltime_assert": 0,
-=======
     "trn_priority": 0,
     "ttime_assert": 0,
->>>>>>> develop
     "transit_access": 0,
     "drive_access": 1,
     "walk_access": 0,

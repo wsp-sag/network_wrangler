@@ -10,7 +10,7 @@ Run just the tests labeled transit using `pytest -v -m transit`
 """
 
 STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
-SCRATCH_DIR = os.path.join(os.getcwd(), "tests")
+SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
 
 @pytest.mark.basic
@@ -324,8 +324,6 @@ def test_invalid_optional_selection_variable(request):
 
     print("--Finished:", request.node.name)
 
-@pytest.mark.test_ak
-@pytest.mark.menow
 @pytest.mark.travis
 def test_transit_road_consistencies(request):
     print("\n--Starting:", request.node.name)
