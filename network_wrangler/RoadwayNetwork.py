@@ -139,11 +139,18 @@ class RoadwayNetwork(object):
 
     MANAGED_LANES_SCALAR = 500000
 
-    MODES_TO_NETWORK_VARIABLES = {
+    MODES_TO_NETWORK_LINK_VARIABLES = {
         "drive": "drive_access",
         "transit": "transit_access",
         "walk": "walk_access",
         "bike": "bike_access",
+    }
+
+    MODES_TO_NETWORK_NODE_VARIABLES = {
+        "drive": "drive_node",
+        "transit": "transit_node",
+        "walk": "walk_node",
+        "bike": "bike_node",
     }
 
     def __init__(self, nodes: GeoDataFrame, links: GeoDataFrame, shapes: GeoDataFrame):
@@ -764,7 +771,7 @@ class RoadwayNetwork(object):
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection,
             unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-            mode=RoadwayNetwork.MODES_TO_NETWORK_VARIABLES[search_mode],
+            mode=RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[search_mode],
         )
         WranglerLogger.debug("Selecting features:\n{}".format(sel_query))
 
@@ -968,7 +975,7 @@ class RoadwayNetwork(object):
                     resel_query = ProjectCard.build_link_selection_query(
                         selection=selection,
                         unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-                        mode=RoadwayNetwork.MODES_TO_NETWORK_VARIABLES[search_mode],
+                        mode=RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[search_mode],
                         ignore=["name"],
                     )
                     WranglerLogger.info("Reselecting features:\n{}".format(resel_query))
@@ -1782,12 +1789,20 @@ class RoadwayNetwork(object):
         _links_df = self.links_df
 
         if mode:
-            if mode in RoadwayNetwork.MODES_TO_NETWORK_VARIABLES.keys():
-                mode_variable = RoadwayNetwork.MODES_TO_NETWORK_VARIABLES[mode]
-                _links_df = _links_df[_links_df[mode_variable] == 1]
+            if mode in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
+                link_variable = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
+                _links_df = _links_df[_links_df[link_variable] == 1]
             else:
                 raise ValueError("mode value should be one of {}.".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_VARIABLES.keys()))
+                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()))
+                )
+
+            if mode in RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES.keys():
+                node_variable = RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES[mode]
+                _nodes_df = _nodes_df[_nodes_df[node_variable] == 1]
+            else:
+                raise ValueError("mode value should be one of {}.".format(
+                    list(RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES.keys()))
                 )
 
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
@@ -1813,12 +1828,20 @@ class RoadwayNetwork(object):
         _links_df = self.links_df
 
         if mode:
-            if mode in RoadwayNetwork.MODES_TO_NETWORK_VARIABLES.keys():
-                mode_variable = RoadwayNetwork.MODES_TO_NETWORK_VARIABLES[mode]
-                _links_df = _links_df[_links_df[mode_variable] == 1]
+            if mode in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
+                link_variable = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
+                _links_df = _links_df[_links_df[link_variable] == 1]
             else:
                 raise ValueError("mode value should be one of {}.".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_VARIABLES.keys()))
+                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()))
+                )
+
+            if mode in RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES.keys():
+                node_variable = RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES[mode]
+                _nodes_df = _nodes_df[_nodes_df[node_variable] == 1]
+            else:
+                raise ValueError("mode value should be one of {}.".format(
+                    list(RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES.keys()))
                 )
 
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
