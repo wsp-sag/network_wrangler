@@ -40,12 +40,12 @@ def test_select_transit_features(request):
         },
         "2. multiple trip_id": {
             "trip_id": [
-                "14940975-JUN19-MVS-BUS-Weekday-01",  # unordered
+                "14969841-JUN19-RAIL-Weekday-01",  # unordered
                 "14940701-JUN19-MVS-BUS-Weekday-01",
             ],
             "answer": [
                 "14940701-JUN19-MVS-BUS-Weekday-01",
-                "14940975-JUN19-MVS-BUS-Weekday-01",
+                "14969841-JUN19-RAIL-Weekday-01",
             ],
         },
         "3. route_id": {
@@ -78,22 +78,27 @@ def test_select_transit_features_from_projectcard(request):
             "file": "7a_multi_transit_attribute_change.yml",
             "answer": [
                 "14940701-JUN19-MVS-BUS-Weekday-01",
-                "14940963-JUN19-MVS-BUS-Weekday-01",
+                "14948032-JUN19-MVS-BUS-Weekday-01",
             ],
         },
         {
             "file": "8_simple_transit_attribute_change.yml",
             "answer": [
                 "14944012-JUN19-MVS-BUS-Weekday-01",
+                "14944018-JUN19-MVS-BUS-Weekday-01",
                 "14944019-JUN19-MVS-BUS-Weekday-01",
+                "14944022-JUN19-MVS-BUS-Weekday-01",
             ],
         },
         {
             "file": "8a_multi_transit_attribute_change.yml",
             "answer": [
                 "14944012-JUN19-MVS-BUS-Weekday-01",
+                "14944018-JUN19-MVS-BUS-Weekday-01",
                 "14944019-JUN19-MVS-BUS-Weekday-01",
-                "14948218-JUN19-MVS-BUS-Weekday-01",  # additional for 53-111
+                "14944022-JUN19-MVS-BUS-Weekday-01",
+                "14948211-JUN19-MVS-BUS-Weekday-01",  # additional for 53-111
+                "14948218-JUN19-MVS-BUS-Weekday-01",
             ],
         },
         {
@@ -140,14 +145,10 @@ def test_select_transit_features_from_projectcard(request):
                 "14981029-JUN19-MVS-BUS-Weekday-01",
                 "14986383-JUN19-MVS-BUS-Weekday-01",
                 "14986385-JUN19-MVS-BUS-Weekday-01",
-                "14948211-JUN19-MVS-BUS-Weekday-01",  # add below for Ltd Stop
-                "14948218-JUN19-MVS-BUS-Weekday-01",
-                "14945380-JUN19-MVS-BUS-Weekday-01",
-                "14945400-JUN19-MVS-BUS-Weekday-01",
-                "14945404-JUN19-MVS-BUS-Weekday-01",
-                "14945432-JUN19-MVS-BUS-Weekday-01",
+                "14946199-JUN19-MVS-BUS-Weekday-01", # add below for Ltd Stop
                 "14947598-JUN19-MVS-BUS-Weekday-01",
-                "14946199-JUN19-MVS-BUS-Weekday-01",
+                "14948211-JUN19-MVS-BUS-Weekday-01",
+                "14948218-JUN19-MVS-BUS-Weekday-01",
             ],
         },
     ]

@@ -33,6 +33,7 @@ def test_set_roadnet(request):
 
 @pytest.mark.transit_with_roadnet
 @pytest.mark.travis
+@pytest.mark.skip("need to update transit routing project card with new network")
 def test_project_card(request):
     print("\n--Starting:", request.node.name)
 
@@ -48,7 +49,7 @@ def test_project_card(request):
 
     # Shapes
     result = transit_net.feed.shapes[transit_net.feed.shapes["shape_id"] ==
-                                     "210005"]["shape_model_node_id"].tolist()
+                                     "2940002"]["shape_model_node_id"].tolist()
     answer = ["45983", "126312", "126316", "46663", "46665", "150855", "11188",
               "84899", "46666", "77077", "68609", "39425", "62146", "41991", "70841",
               "45691", "69793", "45683", "45685", "7688", "45687", "100784", "100782",
