@@ -234,6 +234,62 @@ class TransitNetwork(object):
 
         return valid
 
+    @staticmethod
+    def route_ids_in_routestxt(feed):
+        """
+        STUB: Wherever route_id occurs, make sure it is in routes.txt
+
+        Returns:
+            Boolean
+        """
+        pass
+
+    @staticmethod
+    def trip_ids_in_tripstxt(feed):
+        """
+        STUB: Wherever trip_id occurs, make sure it is in trips.txt
+
+        Returns:
+            Boolean
+        """
+        pass
+
+    @staticmethod
+    def shape_ids_in_shapestxt(feed):
+        """
+        STUB: Wherever shape_id occurs, make sure it is in shapes.txt
+
+        Returns:
+            Boolean
+        """
+        pass
+
+    @staticmethod
+    def stop_ids_in_stopstxt(feed):
+        """
+        STUB: Wherever stop_id occurs, make sure it is in stops.txt
+
+        Returns:
+            Boolean
+        """
+        pass
+
+    @staticmethod
+    def validate_network_connectivity(feed):
+        """
+        Validates foreign keys are present in all connecting feed files.
+
+
+        Returns:
+            Boolean
+        """
+        result = True
+        result = result and TransitNetwork.route_ids_in_routestxt(feed)
+        result = result and TransitNetwork.trip_ids_in_tripstxt(feed)
+        result = result and TransitNetwork.shape_ids_in_shapestxt(feed)
+        result = result and TransitNetwork.stop_ids_in_stopstxt(feed)
+        return result
+
     def set_roadnet(
         self,
         road_net: RoadwayNetwork,
@@ -455,16 +511,13 @@ class TransitNetwork(object):
         """
         Selects transit features that use any one of a list of node_ids
 
-        Parameters
-        ------------
-        node_ids : list (generally coming from nx.shortest_path)
-        require_all : bool if True, the returned trip_ids must traverse all of
-          the nodes (default = False)
+        Args:
+            node_ids: list (generally coming from nx.shortest_path)
+            require_all : bool if True, the returned trip_ids must traverse all of
+              the nodes (default = False)
 
-        Returns
-        -------
-        trip identifiers : list
-           list of GTFS trip IDs in the selection
+        Returns:
+            trip identifiers  list of GTFS trip IDs in the selection
         """
         # If require_all, the returned trip_ids must traverse all of the nodes
         # Else, filter any shapes that use any one of the nodes in node_ids
@@ -492,18 +545,16 @@ class TransitNetwork(object):
         Changes the transit attributes for the selected features based on the
         project card information passed
 
-        Parameters
-        ------------
-        trip_ids : pd.Series
-            all trip_ids to apply change to
-        properties : list of dictionaries
-            transit properties to change
-        in_place : bool
-            whether to apply changes in place or return a new network
+        Args:
+            trip_ids : pd.Series
+                all trip_ids to apply change to
+            properties : list of dictionaries
+                transit properties to change
+            in_place : bool
+                whether to apply changes in place or return a new network
 
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         for i in properties:
             if i["property"] in ["headway_secs"]:
