@@ -3,14 +3,14 @@ import json
 import pytest
 from network_wrangler import TransitNetwork
 from network_wrangler import ProjectCard
-
+from network_wrangler import RoadwayNetwork
 
 """
 Run just the tests labeled transit using `pytest -v -m transit`
 """
 
 STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
-SCRATCH_DIR = os.path.join(os.getcwd(), "tests")
+SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
 
 @pytest.mark.basic
@@ -40,12 +40,12 @@ def test_select_transit_features(request):
         },
         "2. multiple trip_id": {
             "trip_id": [
-                "14940975-JUN19-MVS-BUS-Weekday-01",  # unordered
+                "14969841-JUN19-RAIL-Weekday-01",  # unordered
                 "14940701-JUN19-MVS-BUS-Weekday-01",
             ],
             "answer": [
                 "14940701-JUN19-MVS-BUS-Weekday-01",
-                "14940975-JUN19-MVS-BUS-Weekday-01",
+                "14969841-JUN19-RAIL-Weekday-01",
             ],
         },
         "3. route_id": {
@@ -78,22 +78,27 @@ def test_select_transit_features_from_projectcard(request):
             "file": "7a_multi_transit_attribute_change.yml",
             "answer": [
                 "14940701-JUN19-MVS-BUS-Weekday-01",
-                "14940963-JUN19-MVS-BUS-Weekday-01",
+                "14948032-JUN19-MVS-BUS-Weekday-01",
             ],
         },
         {
             "file": "8_simple_transit_attribute_change.yml",
             "answer": [
                 "14944012-JUN19-MVS-BUS-Weekday-01",
+                "14944018-JUN19-MVS-BUS-Weekday-01",
                 "14944019-JUN19-MVS-BUS-Weekday-01",
+                "14944022-JUN19-MVS-BUS-Weekday-01",
             ],
         },
         {
             "file": "8a_multi_transit_attribute_change.yml",
             "answer": [
                 "14944012-JUN19-MVS-BUS-Weekday-01",
+                "14944018-JUN19-MVS-BUS-Weekday-01",
                 "14944019-JUN19-MVS-BUS-Weekday-01",
-                "14948218-JUN19-MVS-BUS-Weekday-01",  # additional for 53-111
+                "14944022-JUN19-MVS-BUS-Weekday-01",
+                "14948211-JUN19-MVS-BUS-Weekday-01",  # additional for 53-111
+                "14948218-JUN19-MVS-BUS-Weekday-01",
             ],
         },
         {
@@ -140,14 +145,10 @@ def test_select_transit_features_from_projectcard(request):
                 "14981029-JUN19-MVS-BUS-Weekday-01",
                 "14986383-JUN19-MVS-BUS-Weekday-01",
                 "14986385-JUN19-MVS-BUS-Weekday-01",
-                "14948211-JUN19-MVS-BUS-Weekday-01",  # add below for Ltd Stop
-                "14948218-JUN19-MVS-BUS-Weekday-01",
-                "14945380-JUN19-MVS-BUS-Weekday-01",
-                "14945400-JUN19-MVS-BUS-Weekday-01",
-                "14945404-JUN19-MVS-BUS-Weekday-01",
-                "14945432-JUN19-MVS-BUS-Weekday-01",
+                "14946199-JUN19-MVS-BUS-Weekday-01", # add below for Ltd Stop
                 "14947598-JUN19-MVS-BUS-Weekday-01",
-                "14946199-JUN19-MVS-BUS-Weekday-01",
+                "14948211-JUN19-MVS-BUS-Weekday-01",
+                "14948218-JUN19-MVS-BUS-Weekday-01",
             ],
         },
     ]
@@ -322,6 +323,29 @@ def test_invalid_optional_selection_variable(request):
     sel = net.select_transit_features({"route_long_name": "Express", "agency_id": "2"})
     assert set(sel) == set(["14978409-JUN19-MVS-BUS-Weekday-01"])
 
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.travis
+def test_transit_road_consistencies(request):
+    print("\n--Starting:", request.node.name)
+    net = TransitNetwork.read(STPAUL_DIR)
+
+    STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
+    STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
+    STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
+
+    road_net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    net.set_roadnet(road_net=road_net)
+
+    net.validate_road_network_consistencies()
+    print(net.validated_road_network_consistency)
     print("--Finished:", request.node.name)
 
 

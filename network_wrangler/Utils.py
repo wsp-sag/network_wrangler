@@ -87,8 +87,9 @@ def parse_time_spans(times):
     try:
         start_time, end_time = times
     except:
-        WranglerLogger.error("ERROR: times should be a tuple or list of two")
-        raise ValueError()
+        msg = "ERROR: times should be a tuple or list of two, got: {}".format(times)
+        WranglerLogger.error(msg)
+        raise ValueError(msg)
 
     # If times are strings, convert to int in seconds, else return as ints
     if isinstance(start_time, str) and isinstance(end_time, str):

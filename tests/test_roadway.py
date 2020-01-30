@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from network_wrangler import offset_lat_lon
 from network_wrangler import haversine_distance
+import networkx as nx
 
 pd.set_option("display.max_rows", 500)
 pd.set_option("display.max_columns", 500)
@@ -239,7 +240,6 @@ def test_apply_roadway_feature_change(request, apply_feature_change_project_card
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_managed_lane(request):
@@ -524,7 +524,7 @@ def test_query_roadway_property_by_time_group(request, variable_query):
 
 
 @pytest.mark.highway
-@pytest.mark.ashishk
+@pytest.mark.travis
 def test_write_model_net(request):
     print("\n--Starting:", request.node.name)
 
@@ -556,6 +556,7 @@ def test_write_model_net(request):
 
 
 @pytest.mark.offset
+@pytest.mark.travis
 def test_lat_lon_offset(request):
     print("\n--Starting:", request.node.name)
 
@@ -569,6 +570,7 @@ def test_lat_lon_offset(request):
 
 
 @pytest.mark.get_dist
+@pytest.mark.travis
 def test_get_distance_bw_lat_lon(request):
     print("\n--Starting:", request.node.name)
 
@@ -576,5 +578,86 @@ def test_get_distance_bw_lat_lon(request):
     end = [-93.08844310000001, 44.9717832]
     dist = haversine_distance(start, end)
     print(dist)
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.highway
+@pytest.mark.travis
+def test_network_connectivity(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+    print("Checking network connectivity ...")
+    print("Drive Network Connected:", net.is_network_connected(mode="drive"))
+    print("--Finished:", request.node.name)
+
+@pytest.mark.highway
+@pytest.mark.travis
+def test_get_modal_network(request):
+    print("\n--Starting:", request.node.name)
+
+    mode = "transit"
+    print("Reading network. Mode: {} ...".format(mode))
+
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+    _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
+        net.links_df, net.nodes_df, mode=mode,
+    )
+    mode_variable = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
+    non_transit_links =_links_df[_links_df[mode_variable] != 1]
+    assert non_transit_links.shape[0] == 0
+
+@pytest.mark.highway
+@pytest.mark.travis
+@pytest.mark.menow
+def test_network_connectivity_ignore_single_nodes(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+    print("Assessing network connectivity for walk...")
+    _, disconnected_nodes = net.assess_connectivity(mode="walk", ignore_end_nodes=True)
+    print("{} Disconnected Subnetworks:".format(len(disconnected_nodes)))
+    print("-->\n{}".format("\n".join(list(map(str,disconnected_nodes)))))
+    print("--Finished:", request.node.name)
+
+@pytest.mark.roadway
+@pytest.mark.travis
+@pytest.mark.xfail(strict=True)
+def test_add_roadway_links(request):
+    print("\n--Starting:", request.node.name)
+    net = _read_stpaul_net()
+
+    print("Reading project card ...")
+    # project_card_name = "10_simple_roadway_add_change.yml"
+    project_card_name = "10a_incorrect_roadway_add_change.yml"
+
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+
+    project_card_dictionary = project_card.__dict__
+
+    net.add_new_roadway_feature_change(
+        project_card_dictionary.get("links"), project_card_dictionary.get("nodes")
+    )
 
     print("--Finished:", request.node.name)

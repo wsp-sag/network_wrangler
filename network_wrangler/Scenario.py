@@ -5,6 +5,9 @@ from __future__ import annotations
 import os
 import sys
 import glob
+import copy
+import pandas as pd
+from datetime import datetime
 from .ProjectCard import ProjectCard
 from collections import OrderedDict
 from .Logger import WranglerLogger
@@ -34,14 +37,14 @@ class Scenario(object):
         self.base_scenario = base_scenario
 
         # if the base scenario had roadway or transit networks, use them as the basis.
-        if base_scenario.get("road_net"):
-            self.road_net = base_scenario["road_net"]
-        if base_scenario.get("transit_net"):
-            self.transit_net = base_scenario["transit_net"]
+        if self.base_scenario.get("road_net"):
+            self.road_net = copy.deepcopy(self.base_scenario["road_net"])
+        if self.base_scenario.get("transit_net"):
+            self.transit_net = copy.deepcopy(self.base_scenario["transit_net"])
 
         # if the base scenario had applied projects, add them to the list of applied
         self.applied_projects = []
-        if base_scenario.get("applied_projects"):
+        if self.base_scenario.get("applied_projects"):
             self.applied_projects = base_scenario["applied_projects"]
 
         self.project_cards = project_cards
@@ -111,7 +114,7 @@ class Scenario(object):
         )
 
         transit_net = TransitNetwork.read(base_dir)
-        transit_net.set_roadnet(road_net)
+        transit_net.set_roadnet(road_net, validate_consistency=validate)
 
         base_scenario = {"road_net": road_net, "transit_net": transit_net}
 
@@ -441,34 +444,168 @@ class Scenario(object):
         if not self.prerequisites_sorted:
             self.order_project_cards()
 
-        def _apply_each_project(_p):
+        for p in self.project_cards:
+            self.apply_project(p.__dict__)
 
-            if _p["category"] in ProjectCard.ROADWAY_CATEGORIES:
+    def apply_project(self, p):
+        if isinstance(p, ProjectCard):
+            p = p.__dict__
+
+        if p.get("project"):
+            WranglerLogger.info("Applying {}".format(p["project"]))
+
+        if p.get("changes"):
+            part = 1
+            for pc in p["changes"]:
+                pc["project"] = p["project"]
+                self.apply_project(pc)
+
+        else:
+            if p["category"] in ProjectCard.ROADWAY_CATEGORIES:
                 if not self.road_net:
                     raise ("Missing Roadway Network")
-                self.road_net.apply(_p)
-            if _p["category"] in ProjectCard.TRANSIT_CATEGORIES:
+                self.road_net.apply(p)
+            if p["category"] in ProjectCard.TRANSIT_CATEGORIES:
                 if not self.transit_net:
                     raise ("Missing Transit Network")
-                self.transit_net.apply(_p)
+                self.transit_net.apply(p)
             if (
-                _p["category"] in ProjectCard.SECONDARY_TRANSIT_CATEGORIES
+                p["category"] in ProjectCard.SECONDARY_TRANSIT_CATEGORIES
                 and self.transit_net
             ):
-                self.transit_net.apply(_p)
+                self.transit_net.apply(p)
 
-        # Make sure you have the right networks for the type of projects
-        # Then apply projects
+            if p["project"] not in self.applied_projects:
+                self.applied_projects.append(p["project"])
+
+    def applied_project_card_summary(self, project_card_dictionary: dict) -> dict:
+        """
+        Create a summary of applied project card and what they changed for the scenario
+
+        returns
+        a dict of project summary
+        """
+        summary = {}
+        summary["project card"] = project_card_dictionary["file"]
+
+        def _roadway_project_summary(project_card_dictionary, summary):
+            summary["category"] = project_card_dictionary["category"].lower()
+            category = summary["category"]
+
+            if (
+                category == "roadway property change"
+                or category == "parallel managed lanes"
+            ):
+                sel_key = RoadwayNetwork.build_selection_key(
+                    self.road_net, project_card_dictionary["facility"]
+                )
+
+                selected_indices = self.road_net.selections[sel_key][
+                    "selected_links"
+                ].index.tolist()
+                attributes = [
+                    p["property"] for p in project_card_dictionary["properties"]
+                ]
+
+                summary["sel_indices"] = selected_indices
+                summary["attributes"] = attributes
+                summary["map"] = RoadwayNetwork.selection_map(
+                    (sel_key, self.road_net.selections[sel_key])
+                )
+
+            if category == "add new roadway":
+                if project_card_dictionary.get("links") is not None:
+                    summary["added_links"] = pd.DataFrame(
+                        project_card_dictionary.get("links")
+                    )
+                else:
+                    summary["added_links"] = None
+
+                if project_card_dictionary.get("nodes") is not None:
+                    summary["added_nodes"] = pd.DataFrame(
+                        project_card_dictionary.get("nodes")
+                    )
+                else:
+                    summary["added_nodes"] = None
+
+                summary["map"] = RoadwayNetwork.addition_map(
+                    self.road_net,
+                    project_card_dictionary.get("links"),
+                    project_card_dictionary.get("nodes"),
+                )
+
+            if category == "roadway deletion":
+                summary["deleted_links"] = project_card_dictionary.get("links")
+                summary["deleted_nodes"] = project_card_dictionary.get("nodes")
+                summary["map"] = RoadwayNetwork.deletion_map(
+                    self.base_scenario["road_net"],
+                    project_card_dictionary.get("links"),
+                    project_card_dictionary.get("nodes"),
+                )
+
+            return summary
+
+        if not project_card_dictionary.get("changes"):
+            pc_summary = {}
+            pc_summary["project"] = project_card_dictionary["project"]
+            if project_card_dictionary["category"] in ProjectCard.ROADWAY_CATEGORIES:
+                pc_summary = _roadway_project_summary(
+                    project_card_dictionary, pc_summary
+                )
+            if project_card_dictionary["category"] in ProjectCard.TRANSIT_CATEGORIES:
+                pass  # todo: summary for applied transit projects
+            summary["total_parts"] = 1
+            summary["Part 1"] = pc_summary
+        else:
+            part = 1
+            for pc in project_card_dictionary.get("changes"):
+                pc_summary = {}
+                pc_summary["project"] = (
+                    project_card_dictionary["project"] + " – Part " + str(part)
+                )
+                if pc["category"] in ProjectCard.ROADWAY_CATEGORIES:
+                    pc_summary = _roadway_project_summary(pc, pc_summary)
+                    summary["Part " + str(part)] = pc_summary
+                part += 1
+            summary["total_parts"] = part - 1
+
+        return summary
+
+    def scenario_summary(self):
+        """
+        write a high level summary of the created scenario to a text file
+
+        """
+
+        file = open("scenario_log.txt", "a")
+
+        file.write("------------------------------\n")
+        file.write("Scenario created on {}\n".format(datetime.now()))
+
+        file.write("Base Scenario:\n")
+        file.write("  Road Network:\n")
+        file.write(
+            "    Link File: {}\n".format(self.base_scenario["road_net"].link_file)
+        )
+        file.write(
+            "    Node File: {}\n".format(self.base_scenario["road_net"].node_file)
+        )
+        file.write(
+            "    Shape File: {}\n".format(self.base_scenario["road_net"].shape_file)
+        )
+        file.write("  Transit Network:\n")
+        file.write(
+            "    Feed Path: {}\n".format(self.base_scenario["transit_net"].feed_path)
+        )
+        file.write("\n")
+
+        file.write("Project Cards:\n")
         for p in self.project_cards:
-            WranglerLogger.info("Applying {}".format(p.project))
-            self.applied_projects.append(p.project)
-            if not p.__dict__.get("changes"):
-                _apply_each_project(p.__dict__)
+            file.write("  {}\n".format(p.file))
+        file.write("\n")
 
-            # for complex project cards
-            else:
-                part = 1
-                for pc in p.changes:
-                    pc["project"] = p.project + " – Part " + str(part)
-                    part += 1
-                    _apply_each_project(pc)
+        file.write("Applied Projects:\n")
+        for project in self.applied_projects:
+            file.write("  {}\n".format(project))
+
+        file.close()

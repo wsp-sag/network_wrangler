@@ -155,18 +155,6 @@
             }
           }
         },
-        "trip_id": {
-          "type": "string"
-        },
-        "route_id": {
-          "type": "string"
-        },
-        "route_short_name": {
-          "type": "integer"
-        },
-        "route_long_name": {
-          "type": "string"
-        },
         "time": {
           "type": "array",
           "items": {

@@ -13,6 +13,7 @@ tests/t_*
 tests/*.txt
 # Logs
 *.log
+scenario_log.txt
 
 # Jupyter
 .ipynb_checkpoints/
@@ -62,3 +63,4 @@ env/
 .project
 .pydevproject
 .settings
+*.hubstorinfo

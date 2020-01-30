@@ -16,7 +16,7 @@ To run with print statments, use `pytest -s -m scenario`
 STPAUL_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "examples", "stpaul"
 )
-SCRATCH_DIR = os.path.dirname(os.path.realpath(__file__))
+SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
 STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
 STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
@@ -277,10 +277,9 @@ def test_apply_wrapper(request):
     print("\n--Starting:", request.node.name)
 
     card_filenames = [
-        "4_simple_managed_lane.yml",
-        "7_simple_transit_attribute_change.yml",
+        "3_multiple_roadway_attribute_change.yml",
         "multiple_changes.yml",
-        "AddBridgetoLake.yml",
+        "4_simple_managed_lane.yml",
     ]
 
     project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
@@ -305,6 +304,8 @@ def test_apply_wrapper(request):
     )
 
     my_scenario.apply_all_projects()
+
+    my_scenario.scenario_summary()
 
     print("--Finished:", request.node.name)
 
