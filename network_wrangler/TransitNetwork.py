@@ -41,7 +41,6 @@ class TransitNetwork(object):
         "shapes.txt",
         "stop_times.txt",
         "stops.txt",
-        "transfers.txt",
         "trips.txt",
     ]
 
@@ -70,6 +69,7 @@ class TransitNetwork(object):
         """
         config = default_config()
         feed = ptg.load_feed(feed_path, config=config)
+        WranglerLogger.info("Read in transit feed from: {}".format(feed_path))
         updated_config = TransitNetwork.validate_feed(feed, config)
 
         # Read in each feed so we can write over them
@@ -97,6 +97,7 @@ class TransitNetwork(object):
         for node in config.nodes.keys():
 
             n = feed.get(node)
+            WranglerLogger.debug("...{}:\n{}".format(node, n[:10]))
             if n.shape[0] == 0:
                 WranglerLogger.info(
                     "Removing {} from transit network config because file not found".format(
