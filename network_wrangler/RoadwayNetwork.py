@@ -877,8 +877,8 @@ class RoadwayNetwork(object):
             WranglerLogger.debug("Candidate Nodes: {}".format(len(candidate_nodes)))
             links_shstRefId_to_add = list(
                 set(
-                    sum(candidate_nodes["outboundReferenceId"].tolist(), [])
-                    + sum(candidate_nodes["inboundReferenceId"].tolist(), [])
+                    sum(candidate_nodes["outboundReferenceIds"].tolist(), [])
+                    + sum(candidate_nodes["inboundReferenceIds"].tolist(), [])
                 )
                 - set(candidate_links["shstReferenceId"].tolist())
                 - set([""])
@@ -1852,7 +1852,7 @@ class RoadwayNetwork(object):
         # Issue discussed in https://github.com/wsp-sag/network_wrangler/issues/145
         #modal_nodes_df = nodes_df[nodes_df[mode_node_variable] == 1]
         modal_nodes_df = nodes_df
-        
+
         return modal_links_df, modal_nodes_df
 
     @staticmethod
