@@ -420,14 +420,10 @@ class TransitNetwork(object):
         """
         Selects transit features that satisfy selection criteria
 
-        Parameters
-        ------------
-        selection : dictionary
+        Args:
+            selection : selection dictionary
 
-        Returns
-        -------
-        trip identifiers : list
-           list of GTFS trip IDs in the selection
+        Returns: trip identifiers : list of GTFS trip IDs in the selection
         """
         trips = self.feed.trips
         routes = self.feed.routes

@@ -187,10 +187,12 @@ class RoadwayNetwork(object):
         Validates that it conforms to the schema
 
         args:
-        link_file: full path to the link file
-        node_file: full path to the node file
-        shape_file: full path to the shape file
-        fast: boolean that will skip validation to speed up read time
+            link_file: full path to the link file
+            node_file: full path to the node file
+            shape_file: full path to the shape file
+            fast: boolean that will skip validation to speed up read time
+
+        Returns: a RoadwayNetwork instance
         """
 
         WranglerLogger.info(
@@ -296,8 +298,8 @@ class RoadwayNetwork(object):
         Writes a network in the roadway network standard
 
         args:
-        path: the path were the output will be saved
-        filename: the name prefix of the roadway files that will be generated
+            path: the path were the output will be saved
+            filename: the name prefix of the roadway files that will be generated
         """
 
         if not os.path.exists(path):
@@ -391,9 +393,14 @@ class RoadwayNetwork(object):
     ):
         """
         Determines if the roadway network is being built with the right object types.
-        Returns: boolean
-
         Does not validate schemas.
+
+        Args:
+            nodes: nodes geodataframe
+            links: link geodataframe
+            shapes: shape geodataframe
+
+        Returns: boolean
         """
 
         errors = ""
@@ -536,15 +543,10 @@ class RoadwayNetwork(object):
         Evaluate whetther the selection dictionary contains the
         minimum required values.
 
-        Parameters
-        -----------
-        selection : dict
-            selection dictionary to be evaluated
+        Args:
+            selection: selection dictionary to be evaluated
 
-        Returns
-        -------
-        boolean value as to whether the selection dictonary is valid.
-
+        Returns: boolean value as to whether the selection dictonary is valid.
         """
         if not set(RoadwayNetwork.SELECTION_REQUIRES).issubset(selection):
             err_msg = "Project Card Selection requires: {}".format(
@@ -614,14 +616,13 @@ class RoadwayNetwork(object):
         Returns the foreign key id (whatever is used in the u and v
         variables in the links file) for the AB nodes as a tuple.
 
-        Parameters
-        -----------
-        selection : dict
-            selection dictionary with A and B keys
-        node_foreign_key: str
-            variable name for whatever is used by the u and v variable
+        Args:
+            selection : selection dictionary with A and B keys
+            node_foreign_key: variable name for whatever is used by the u and v variable
             in the links_df file.  If nothing is specified, assume whatever
             default is (usually osm_node_id)
+
+        Returns: tuple of (A_id, B_id)
         """
 
         if not node_foreign_key:
@@ -650,7 +651,7 @@ class RoadwayNetwork(object):
         return [x + RoadwayNetwork.MANAGED_LANES_SCALAR for x in nodes_list]
 
     @staticmethod
-    def ox_graph(nodes_df: DataFrame, links_df: DataFrame):
+    def ox_graph(nodes_df: GeoDataFrame, links_df: GeoDataFrame):
         """
         create an osmnx-flavored network graph
 
@@ -658,14 +659,11 @@ class RoadwayNetwork(object):
         that have arrays.  osmnx also requires that certain variables
         be filled in, so do that too.
 
-        Parameters
-        ----------
-        nodes_df : GeoDataFrame
-        link_df : GeoDataFrame
+        Args:
+            nodes_df : GeoDataFrame of nodes
+            link_df : GeoDataFrame of links
 
-        Returns
-        -------
-        networkx multidigraph
+        Returns: a networkx multidigraph
         """
         WranglerLogger.debug("starting ox_graph()")
 
@@ -694,7 +692,15 @@ class RoadwayNetwork(object):
         return G
 
     @staticmethod
-    def selection_has_unique_link_id(selection_dict):
+    def selection_has_unique_link_id(selection_dict: dict)-> bool:
+        """
+        Args:
+            selection_dictionary: Dictionary representation of selection
+                of roadway features, containing a "link" key.
+
+        Returns: A boolean indicating if the selection dictionary contains
+            a required unique link id.
+        """
         selection_keys = [k for l in selection_dict["link"] for k, v in l.items()]
         return bool(
             set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(
@@ -702,7 +708,17 @@ class RoadwayNetwork(object):
             )
         )
 
-    def build_selection_key(self, selection_dict):
+    def build_selection_key(self, selection_dict: dict)->tuple:
+        """
+        Selections are stored by a key combining the query and the A and B ids.
+        This method combines the two for you based on the selection dictionary.
+
+        Args:
+            selection_dictonary: Selection Dictionary
+
+        Returns: Tuple serving as the selection key.
+
+        """
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection_dict,
             unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
@@ -733,18 +749,13 @@ class RoadwayNetwork(object):
                 'facility': {'name':'Main St'},
                 }, ... ])
 
-        Parameters
-        ------------
-        selection : dictionary
-            With keys for:
-             A - from node
-             B - to node
-             link - which includes at least a variable for `name`
+        Args:
+            selection : dictionary with keys for:
+                 A - from node
+                 B - to node
+                 link - which includes at least a variable for `name`
 
-        Returns
-        -------
-        shortest path node route : list
-           list of foreign IDs of nodes in the selection route
+        Returns: a list of node foreign IDs on shortest path
         """
         WranglerLogger.debug("validating selection")
         self.validate_selection(selection)
@@ -832,13 +843,12 @@ class RoadwayNetwork(object):
                 WranglerLogger.error(msg)
                 raise Exception(msg)
 
-        def _add_breadth(candidate_links, nodes, links, i):
+        def _add_breadth(candidate_links: DataFrame, nodes: Data, links, i):
             """
             Add outbound and inbound reference IDs to candidate links
             from existing nodes
 
-            Parameters
-            -----------
+            Args:
             candidate_links : GeoDataFrame
                 df with the links from the previous iteration that we
                 want to add on to
@@ -852,14 +862,13 @@ class RoadwayNetwork(object):
             i : int
                 iteration of adding breadth
 
-            Returns
-            -------
-            candidate_links : GeoDataFrame
-                updated df with one more degree of added breadth
+            Returns:
+                candidate_links : GeoDataFrame
+                    updated df with one more degree of added breadth
 
-            node_list_foreign_keys : list
-                list of foreign key ids for nodes in the updated candidate links
-                to test if the A and B nodes are in there.
+                node_list_foreign_keys : list
+                    list of foreign key ids for nodes in the updated candidate links
+                    to test if the A and B nodes are in there.
             """
             WranglerLogger.debug("-Adding Breadth-")
 
@@ -1051,19 +1060,15 @@ class RoadwayNetwork(object):
         If there are change or existing commands, make sure that that
         property exists in the network.
 
-        Parameters
-        -----------
-        properties : dict
-            properties dictionary to be evaluated
-        ignore_existing: bool
-            If True, will only warn about properties that specify an "existing"
-            value.  If False, will fail.
-        require_existing_for_change: bool
-            If True, will fail if there isn't a specified value in the
-            project card for existing when a change is specified.
-        Returns
-        -------
-        boolean value as to whether the properties dictonary is valid.
+        Args:
+            properties : properties dictionary to be evaluated
+            ignore_existing: If True, will only warn about properties
+                that specify an "existing" value.  If False, will fail.
+            require_existing_for_change: If True, will fail if there isn't
+                a specified value in theproject card for existing when a
+                change is specified.
+
+        Returns: boolean value as to whether the properties dictonary is valid.
         """
 
         validation_error_message = []
@@ -1112,10 +1117,9 @@ class RoadwayNetwork(object):
         """
         Wrapper method to apply a project to a roadway network.
 
-        args
-        ------
-        project_card_dictionary: dict
-          a dictionary of the project card object
+        Args:
+            project_card_dictionary: dict
+              a dictionary of the project card object
 
         """
 
@@ -1161,13 +1165,13 @@ class RoadwayNetwork(object):
         Changes the roadway attributes for the selected features based on the
         project card information passed
 
-        args:
-        link_idx : list
-            lndices of all links to apply change to
-        properties : list of dictionarys
-            roadway properties to change
-        in_place: boolean
-            update self or return a new roadway network object
+        Args:
+            link_idx : list
+                lndices of all links to apply change to
+            properties : list of dictionarys
+                roadway properties to change
+            in_place: boolean
+                update self or return a new roadway network object
         """
 
         # check if there are change or existing commands that that property
@@ -1216,12 +1220,11 @@ class RoadwayNetwork(object):
         """
         Apply the managed lane feature changes to the roadway network
 
-        link_idx : list
-            lndices of all links to apply change to
-        properties : list of dictionarys
-            roadway properties to change
-        in_place: boolean
-            update self or return a new roadway network object
+        Args:
+            link_idx : list of lndices of all links to apply change to
+            properties : list of dictionarys roadway properties to change
+            in_place: boolean to indicate whether to update self or return
+                a new roadway network object
         """
 
         # flag ML links
@@ -1284,10 +1287,8 @@ class RoadwayNetwork(object):
         add the new roadway features defined in the project card
 
         args:
-        links : dict
-            list of dictionaries
-        nodes : dict
-            list of dictionaries
+        links : list of dictionaries
+        nodes : list of dictionaries
         """
 
         # TODO:
@@ -1355,15 +1356,15 @@ class RoadwayNetwork(object):
         """
         delete the roadway features defined in the project card
 
-        args:
-        links : dict
-            list of dictionaries
-        nodes : dict
-            list of dictionaries
-        ignore_missing: bool
-            If True, will only warn about links/nodes that are missing from
-            network but specified to "delete" in project card
-            If False, will fail.
+        Args:
+            links : dict
+                list of dictionaries
+            nodes : dict
+                list of dictionaries
+            ignore_missing: bool
+                If True, will only warn about links/nodes that are missing from
+                network but specified to "delete" in project card
+                If False, will fail.
         """
 
         missing_error_message = []
@@ -1651,18 +1652,14 @@ class RoadwayNetwork(object):
 
         return (access_df, egress_df)
 
-    def create_managed_lane_network(self, in_place=False) -> RoadwayNetwork:
+    def create_managed_lane_network(self, in_place: bool=False) -> RoadwayNetwork:
         """
         Create a roadway network with managed lanes links separated out
 
-        args
-        ------
-        in_place: boolean
-            update self or return a new roadway network object
+        args:
+            in_place: update self or return a new roadway network object
 
-        returns
-        --------
-        Roadway Network
+        returns: A RoadwayNetwork instance
         """
 
         WranglerLogger.info("Creating network with duplicated managed lanes")
