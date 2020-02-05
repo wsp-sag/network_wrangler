@@ -955,6 +955,7 @@ class RoadwayNetwork(object):
                 candidate_links["A"].isin(sp_route)
                 & candidate_links["B"].isin(sp_route)
             ]
+
             self.selections[sel_key]["route"] = sp_route
             self.selections[sel_key]["links"] = sp_links
 
@@ -1580,10 +1581,10 @@ class RoadwayNetwork(object):
         create dummy connector links between the general purpose and managed lanes
 
         args:
-        gp_df : GeoDataFrame
-            dataframe of general purpose links (where managed lane also exists)
-        ml_df : GeoDataFrame
-            dataframe of corresponding managed lane links
+            gp_df : GeoDataFrame
+                dataframe of general purpose links (where managed lane also exists)
+            ml_df : GeoDataFrame
+                dataframe of corresponding managed lane links
         """
 
         gp_ml_links_df = pd.concat(
@@ -2072,6 +2073,8 @@ class RoadwayNetwork(object):
         """
         # deleted_links = None
         # deleted_nodes = None
+
+        missing_error_message = []
 
         if links is not None:
             for key, val in links.items():

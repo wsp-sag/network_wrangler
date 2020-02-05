@@ -8,6 +8,7 @@ import glob
 import copy
 import pandas as pd
 from datetime import datetime
+
 from .ProjectCard import ProjectCard
 from collections import OrderedDict
 from .Logger import WranglerLogger
