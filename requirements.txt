@@ -1,7 +1,8 @@
-pandas
+pandas < 0.26
 geopandas
 osmnx
 partridge >= 1.1
 pyyaml
 geojson
 jsonschema
+folium

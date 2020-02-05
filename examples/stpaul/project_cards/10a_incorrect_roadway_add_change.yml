@@ -7,8 +7,8 @@ dependencies:
   corequisites: []
   conflicts: []
 links:
-  - A: 36622
-    B: 125892
+  - A: 3230
+    B: 52771
     bike_access: 1
     drive_access: 1
     transit_access: 0
