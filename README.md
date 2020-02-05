@@ -9,19 +9,21 @@ Network Wrangler should be operating system agonistic and has been tested on Ubu
 
 In order to assist in installation, its helpful to have either [miniconda](https://docs.conda.io/en/latest/miniconda.html), [anaconda](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/index.html#regular-installation) or [Docker CE](https://docs.docker.com/install/) installed.  If you don't have any of these already, we reommend starting with Miniconda for Python 3.7 as it has the smallest footprint. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications.
 
-Network Wrangler does require Python 3.6+.  If you have a different version of Python installed, `conda` will take care of installing it for you in the installation instructions below.
+Network Wrangler does require Python 3.7+.  If you have a different version of Python installed, `conda` will take care of installing it for you in the installation instructions below.
 
 ## Installation
 Network Wrangler uses Python 3.6 and above.  Requirements are stored in `requirements.txt` but are automatically installed when using `pip`.
 
 If you are managing multiple python versions, we suggest using [`virtualenv`](https://virtualenv.pypa.io/en/latest/) or [`conda`](https://conda.io/en/latest/) virtual environments. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications.
 
-Example using conda in the command line:
+Example installing and running tests using conda in the command line:
 
 ```bash
 conda create python=3.7 -n wrangler_env
 source activate wrangler_env
-pip install git+https://github.com/wsp-sag/network_wrangler.git@master#egg=network_wrangler
+conda install rtree
+pip install network-wrangler
+pytest -s -m travis
 ```
 
 ### From GitHub
@@ -109,26 +111,14 @@ Successfully installed Rtree-0.8.3 attrs-19.1.0 cchardet-2.1.4 chardet-3.0.4 cli
 
 **5. Test the Installation**
 
-You can test that network wrangler was properly installed by running python from the command prompt and importing network wrangler as follows:
+You can test that network wrangler was properly installed by running the tests as follows:
 
 ```bash
-python
-import network_wrangler
-exit
-```
-
-**6. [optional] run all the tests**
-
-Running the official tests on your machine requires installing the test packages and can be accomplished as follows from the command line:
-
-```bash
-pip install -r dev-requirements.txt
-pytest -s -m basic
+pytest -s  -m  travis
 ```
 
 Using the `-s` flag will run all the tests in "noisy" mode.
-The `-m basic` flag runs only tests that are marked as "basic"
-
+The `-m travis` flag runs only tests that are marked as for "travis" continuous  integration
 
 Note: if you are not part of the project team and want to contribute code back to the project, please fork before you clone and then add the original repository to your upstream origin list per [these directions on github](https://help.github.com/en/articles/fork-a-repo).
 
@@ -205,7 +195,6 @@ While Network Wrangler as written here is based on these concepts, the code is d
 ## Contributing
 Pull requests are welcome. Please open an issue first to discuss what you would like to change.
 Please make sure to update tests as appropriate.
-
 
 
 ## License
