@@ -21,7 +21,7 @@ Example installing and running tests using conda in the command line:
 ```bash
 conda create python=3.7 -n wrangler_env
 source activate wrangler_env
-conda install rtree
+conda install rtree fiona geopandas shapely
 pip install network-wrangler
 pytest -s -m travis
 ```
@@ -86,9 +86,7 @@ Resolving deltas: 100% (140/140), done.
 Some packages are very finicky and don't like being installed from their version on the python package index on windows or macosx, so it is often necessary to install them ahead of network_wrangler.
 
 ```bash
-conda install shapely
-conda install rtree
-conda install Fiona
+conda install rtree fiona geopandas shapely
 ```
 
 
