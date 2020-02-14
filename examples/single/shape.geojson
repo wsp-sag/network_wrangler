@@ -38,8 +38,8 @@
           },
           "properties": {
               "id": "4a454269d65c6619a2d7e2026295a295",
-              "shstFromIntersectionId": "4d0231aa0ebb779f142c2518703ee481",
-              "shstToIntersectionId": "3654951b676940911fe5021b93c90cc5",
+              "fromIntersectionId": "4d0231aa0ebb779f142c2518703ee481",
+              "toIntersectionId": "3654951b676940911fe5021b93c90cc5",
               "forwardReferenceId": "6a22969708104ae2497244f3d079381d"
           }
       },
@@ -80,8 +80,8 @@
           },
           "properties": {
               "id": "4a454269d65c6619a2d7e2026295a295",
-              "shstFromIntersectionId": "3654951b676940911fe5021b93c90cc5",
-              "shstToIntersectionId": "4d0231aa0ebb779f142c2518703ee481",
+              "fromIntersectionId": "3654951b676940911fe5021b93c90cc5",
+              "toIntersectionId": "4d0231aa0ebb779f142c2518703ee481",
               "forwardReferenceId": "bfc504a9a8004eadd9d688acb5f4a713"
           }
       },
@@ -106,8 +106,8 @@
           },
           "properties": {
               "id": "4a454269d65c6619a2d7e2026295a295",
-              "shstFromIntersectionId": "4d0231aa0ebb779f142c2518703ee481",
-              "shstToIntersectionId": "3654951b676940911fe5021b93c90cc5",
+              "fromIntersectionId": "4d0231aa0ebb779f142c2518703ee481",
+              "toIntersectionId": "3654951b676940911fe5021b93c90cc5",
               "forwardReferenceId": "6a22969708104ae2497244f3d079381d"
           }
       }

@@ -90,8 +90,8 @@
             "title": "The Properties Schema",
             "required": [
               "id",
-              "shstFromIntersectionId",
-              "shstToIntersectionId",
+              "fromIntersectionId",
+              "foIntersectionId",
               "forwardReferenceId"
             ],
             "properties": {
@@ -105,8 +105,8 @@
                 ],
                 "pattern": "^(.*)$"
               },
-              "shstFromIntersectionId": {
-                "$id": "#/properties/features/items/properties/properties/properties/shstFromIntersectionId",
+              "fromIntersectionId": {
+                "$id": "#/properties/features/items/properties/properties/properties/fromIntersectionId",
                 "type": "string",
                 "title": "The Shstfromintersectionid Schema",
                 "default": "",
@@ -115,8 +115,8 @@
                 ],
                 "pattern": "^(.*)$"
               },
-              "shstToIntersectionId": {
-                "$id": "#/properties/features/items/properties/properties/properties/shstToIntersectionId",
+              "toIntersectionId": {
+                "$id": "#/properties/features/items/properties/properties/properties/toIntersectionId",
                 "type": "string",
                 "title": "The Shsttointersectionid Schema",
                 "default": "",
