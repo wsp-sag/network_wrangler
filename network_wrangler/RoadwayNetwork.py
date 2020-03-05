@@ -279,9 +279,9 @@ class RoadwayNetwork(object):
         nodes_df["y"] = nodes_df["geometry"].apply(lambda g: g.y)
         # todo: flatten json
 
-        WranglerLogger.info("Read %s links from %s" % (links_df.size, link_file))
-        WranglerLogger.info("Read %s nodes from %s" % (nodes_df.size, node_file))
-        WranglerLogger.info("Read %s shapes from %s" % (shapes_df.size, shape_file))
+        WranglerLogger.info("Read %s links from %s" % (len(links_df), link_file))
+        WranglerLogger.info("Read %s nodes from %s" % (len(nodes_df), node_file))
+        WranglerLogger.info("Read %s shapes from %s" % (len(shapes_df), shape_file))
 
         roadway_network = RoadwayNetwork(
             nodes=nodes_df, links=links_df, shapes=shapes_df
