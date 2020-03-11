@@ -252,7 +252,44 @@ returns: boolean</p>
 <dl class="class">
 <dt id="network_wrangler.RoadwayNetwork">
 <em class="property">class </em><code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">RoadwayNetwork</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">links</em>, <em class="sig-param">shapes</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.RoadwayNetwork" title="Permalink to this definition">¶</a></dt>
-<dd><p>Representation of a Roadway Network.</p>
+<dd><p>Representation of a Roadway Network.
+.. highlight:: python</p>
+<p>Typical usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">net</span> <span class="o">=</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">read</span><span class="p">(</span>
+    <span class="n">link_file</span><span class="o">=</span><span class="n">MY_LINK_FILE</span><span class="p">,</span>
+    <span class="n">node_file</span><span class="o">=</span><span class="n">MY_NODE_FILE</span><span class="p">,</span>
+    <span class="n">shape_file</span><span class="o">=</span><span class="n">MY_SHAPE_FILE</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">my_selection</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;link&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;I 35E&quot;</span><span class="p">]}],</span>
+    <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;osm_node_id&quot;</span><span class="p">:</span> <span class="s2">&quot;961117623&quot;</span><span class="p">},</span>  <span class="c1"># start searching for segments at A</span>
+    <span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;osm_node_id&quot;</span><span class="p">:</span> <span class="s2">&quot;2564047368&quot;</span><span class="p">},</span>
+<span class="p">}</span>
+<span class="n">net</span><span class="o">.</span><span class="n">select_roadway_features</span><span class="p">(</span><span class="n">my_selection</span><span class="p">)</span>
+
+<span class="n">my_change</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;property&#39;</span><span class="p">:</span> <span class="s1">&#39;lanes&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;existing&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s1">&#39;set&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+     <span class="p">},</span>
+     <span class="p">{</span>
+        <span class="s1">&#39;property&#39;</span><span class="p">:</span> <span class="s1">&#39;drive_access&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;set&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="p">},</span>
+<span class="p">]</span>
+
+<span class="n">my_net</span><span class="o">.</span><span class="n">apply_roadway_feature_change</span><span class="p">(</span>
+    <span class="n">my_net</span><span class="o">.</span><span class="n">select_roadway_features</span><span class="p">(</span><span class="n">my_selection</span><span class="p">),</span>
+    <span class="n">my_change</span>
+<span class="p">)</span>
+
+<span class="n">ml_net</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">create_managed_lane_network</span><span class="p">(</span><span class="n">in_place</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ml_net</span><span class="o">.</span><span class="n">is_network_connected</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;drive&quot;</span><span class="p">))</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">disconnected_nodes</span> <span class="o">=</span> <span class="n">ml_net</span><span class="o">.</span><span class="n">assess_connectivity</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;walk&quot;</span><span class="p">,</span> <span class="n">ignore_end_nodes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ml_net</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">my_out_prefix</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">my_dir</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl>
 <dt>Attributes:</dt><dd><p>nodes_df (GeoDataFrame): node data</p>
 <dl class="simple">
@@ -841,6 +878,17 @@ project card information passed</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="network_wrangler.TransitNetwork.empty">
+<em class="property">static </em><code class="sig-name descname">empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an empty transit network instance using the default config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TransitNetwork</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="network_wrangler.TransitNetwork.read">
 <em class="property">static </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">feed_path</em>, <em class="sig-param">fast=False</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.TransitNetwork.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read GTFS feed from folder and TransitNetwork object</p>
@@ -1033,7 +1081,69 @@ filename: the name prefix of the transit files that will be generated</p>
 <dl class="class">
 <dt id="network_wrangler.Scenario">
 <em class="property">class </em><code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">Scenario</code><span class="sig-paren">(</span><em class="sig-param">base_scenario</em>, <em class="sig-param">project_cards=None</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario" title="Permalink to this definition">¶</a></dt>
-<dd><p>Holds information about a scenario</p>
+<dd><p>Holds information about a scenario.</p>
+<p>Typical usage example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_base_scenario</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;road_net&quot;</span><span class="p">:</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">read</span><span class="p">(</span>
+        <span class="n">link_file</span><span class="o">=</span><span class="n">STPAUL_LINK_FILE</span><span class="p">,</span>
+        <span class="n">node_file</span><span class="o">=</span><span class="n">STPAUL_NODE_FILE</span><span class="p">,</span>
+        <span class="n">shape_file</span><span class="o">=</span><span class="n">STPAUL_SHAPE_FILE</span><span class="p">,</span>
+        <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">&quot;transit_net&quot;</span><span class="p">:</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">STPAUL_DIR</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="n">card_filenames</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;3_multiple_roadway_attribute_change.yml&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;multiple_changes.yml&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;4_simple_managed_lane.yml&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">project_card_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">STPAUL_DIR</span><span class="p">,</span> <span class="s2">&quot;project_cards&quot;</span><span class="p">)</span>
+
+<span class="n">project_cards_list</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">ProjectCard</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_card_directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">card_filenames</span>
+<span class="p">]</span>
+
+<span class="n">my_scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="o">.</span><span class="n">create_scenario</span><span class="p">(</span>
+  <span class="n">base_scenario</span><span class="o">=</span><span class="n">my_base_scenario</span><span class="p">,</span>
+  <span class="n">project_cards_list</span><span class="o">=</span><span class="n">project_cards_list</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">check_scenario_requisites</span><span class="p">()</span>
+
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_all_projects</span><span class="p">()</span>
+
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">scenario_summary</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl>
+<dt>Attributes:</dt><dd><p>base_scenario: dictionary representation of a scenario
+project_cards (Optional): list of Project Card Instances
+road_net: instance of RoadwayNetwork for the scenario
+transit_net: instance of TransitNetwork for the scenario
+applied_projects: list of project names that have been applied
+project_cards: list of project card instances
+ordered_project_cards:
+prerequisites:  dictionary storing prerequiste information
+corequisites:  dictionary storing corequisite information
+conflicts: dictionary storing conflict information
+requisites_checked: boolean indicating if the co- and pre-requisites</p>
+<blockquote>
+<div><p>have been checked in the project cards</p>
+</div></blockquote>
+<p>conflicts_checked: boolean indicating if the project conflicts have been checked
+has_requisite_error: boolean indicating if there is a conflict in the pre- or</p>
+<blockquote>
+<div><p>co-requisites of project cards</p>
+</div></blockquote>
+<p>has_conflict_error: boolean indicating if there is are conflicting project cards
+prerequisites_sorted: boolean indicating if the project cards have</p>
+<blockquote>
+<div><p>been sorted to make sure cards that are pre-requisites are applied first</p>
+</div></blockquote>
+</dd>
+</dl>
 <dl class="method">
 <dt id="network_wrangler.Scenario.add_project_cards_from_directory">
 <code class="sig-name descname">add_project_cards_from_directory</code><span class="sig-paren">(</span><em class="sig-param">folder</em>, <em class="sig-param">glob_search=''</em>, <em class="sig-param">validate=True</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario.add_project_cards_from_directory" title="Permalink to this definition">¶</a></dt>
@@ -1096,15 +1206,17 @@ Fail if the project A specifies that project B is a pre- or co-requisite and pro
 
 <dl class="method">
 <dt id="network_wrangler.Scenario.create_base_scenario">
-<em class="property">static </em><code class="sig-name descname">create_base_scenario</code><span class="sig-paren">(</span><em class="sig-param">base_shape_name</em>, <em class="sig-param">base_link_name</em>, <em class="sig-param">base_node_name</em>, <em class="sig-param">base_dir=''</em>, <em class="sig-param">validate=True</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario.create_base_scenario" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">create_base_scenario</code><span class="sig-paren">(</span><em class="sig-param">base_shape_name</em>, <em class="sig-param">base_link_name</em>, <em class="sig-param">base_node_name</em>, <em class="sig-param">roadway_dir=''</em>, <em class="sig-param">transit_dir=''</em>, <em class="sig-param">validate=True</em><span class="sig-paren">)</span><a class="headerlink" href="#network_wrangler.Scenario.create_base_scenario" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>base_dir: optional</dt><dd><p>path to the base scenario network files</p>
+<dt>roadway_dir: optional</dt><dd><p>path to the base scenario roadway network files</p>
 </dd>
 <dt>base_shape_name:</dt><dd><p>filename of the base network shape</p>
 </dd>
 <dt>base_link_name:</dt><dd><p>filename of the base network link</p>
 </dd>
 <dt>base_node_name:</dt><dd><p>filename of the base network node</p>
+</dd>
+<dt>transit_dir: optional</dt><dd><p>path to base scenario transit files</p>
 </dd>
 <dt>validate:</dt><dd><p>boolean indicating whether to validate the base network or not</p>
 </dd>
