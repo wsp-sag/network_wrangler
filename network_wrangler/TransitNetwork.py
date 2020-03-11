@@ -63,6 +63,15 @@ class TransitNetwork(object):
             )
 
     @staticmethod
+    def empty() -> TransitNetwork:
+        """
+        Create an empty transit network instance using the default config. 
+        """
+        ##TODO
+        pass
+
+
+    @staticmethod
     def read(feed_path: str, fast: bool = False) -> TransitNetwork:
         """
         Read GTFS feed from folder and TransitNetwork object
@@ -73,12 +82,12 @@ class TransitNetwork(object):
         updated_config = TransitNetwork.validate_feed(feed, config)
 
         # Read in each feed so we can write over them
-        new_feed = DotDict()
+        editable_feed = DotDict()
         for node in updated_config.nodes.keys():
             # Load (initiate Partridge's lazy load)
-            new_feed[node.replace(".txt", "")] = feed.get(node)
+            editable_feed[node.replace(".txt", "")] = feed.get(node)
 
-        transit_network = TransitNetwork(feed=new_feed, config=updated_config)
+        transit_network = TransitNetwork(feed=editable_feed, config=updated_config)
         transit_network.feed_path = feed_path
         return transit_network
 
