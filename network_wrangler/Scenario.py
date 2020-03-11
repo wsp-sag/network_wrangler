@@ -20,7 +20,64 @@ from .TransitNetwork import TransitNetwork
 
 class Scenario(object):
     """
-    Holds information about a scenario
+    Holds information about a scenario.
+
+    .. highlight:: python
+
+    Typical usage example:
+    ::
+        my_base_scenario = {
+            "road_net": RoadwayNetwork.read(
+                link_file=STPAUL_LINK_FILE,
+                node_file=STPAUL_NODE_FILE,
+                shape_file=STPAUL_SHAPE_FILE,
+                fast=True,
+            ),
+            "transit_net": TransitNetwork.read(STPAUL_DIR),
+        }
+
+        card_filenames = [
+            "3_multiple_roadway_attribute_change.yml",
+            "multiple_changes.yml",
+            "4_simple_managed_lane.yml",
+        ]
+
+        project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
+
+        project_cards_list = [
+            ProjectCard.read(os.path.join(project_card_directory, filename), validate=False)
+            for filename in card_filenames
+        ]
+
+        my_scenario = Scenario.create_scenario(
+          base_scenario=my_base_scenario,
+          project_cards_list=project_cards_list,
+        )
+        my_scenario.check_scenario_requisites()
+
+        my_scenario.apply_all_projects()
+
+        my_scenario.scenario_summary()
+
+    Attributes:
+        base_scenario: dictionary representation of a scenario
+        project_cards (Optional): list of Project Card Instances
+        road_net: instance of RoadwayNetwork for the scenario
+        transit_net: instance of TransitNetwork for the scenario
+        applied_projects: list of project names that have been applied
+        project_cards: list of project card instances
+        ordered_project_cards:
+        prerequisites:  dictionary storing prerequiste information
+        corequisites:  dictionary storing corequisite information
+        conflicts: dictionary storing conflict information
+        requisites_checked: boolean indicating if the co- and pre-requisites
+            have been checked in the project cards
+        conflicts_checked: boolean indicating if the project conflicts have been checked
+        has_requisite_error: boolean indicating if there is a conflict in the pre- or
+            co-requisites of project cards
+        has_conflict_error: boolean indicating if there is are conflicting project cards
+        prerequisites_sorted: boolean indicating if the project cards have
+            been sorted to make sure cards that are pre-requisites are applied first
     """
 
     def __init__(self, base_scenario: dict, project_cards: [ProjectCard] = None):
@@ -81,27 +138,30 @@ class Scenario(object):
         base_shape_name: str,
         base_link_name: str,
         base_node_name: str,
-        base_dir: str = "",
+        roadway_dir: str = "",
+        transit_dir: str = "",
         validate: bool = True,
     ) -> Scenario:
         """
         args
         -----
-        base_dir: optional
-          path to the base scenario network files
+        roadway_dir: optional
+          path to the base scenario roadway network files
         base_shape_name:
           filename of the base network shape
         base_link_name:
           filename of the base network link
         base_node_name:
           filename of the base network node
+        transit_dir: optional
+           path to base scenario transit files
         validate:
           boolean indicating whether to validate the base network or not
         """
-        if base_dir:
-            base_network_shape_file = os.path.join(base_dir, base_shape_name)
-            base_network_link_file = os.path.join(base_dir, base_link_name)
-            base_network_node_file = os.path.join(base_dir, base_node_name)
+        if roadway_dir:
+            base_network_shape_file = os.path.join(roadway_dir, base_shape_name)
+            base_network_link_file = os.path.join(roadway_dir, base_link_name)
+            base_network_node_file = os.path.join(roadway_dir, base_node_name)
         else:
             base_network_shape_file = base_shape_name
             base_network_link_file = base_link_name
@@ -114,9 +174,13 @@ class Scenario(object):
             fast=not validate,
         )
 
-        transit_net = TransitNetwork.read(base_dir)
-        transit_net.set_roadnet(road_net, validate_consistency=validate)
+        if transit_dir:
+            transit_net = TransitNetwork.read(transit_dir)
+        else:
+            transit_net = None
+            WranglerLogger.info("No transit directory specified, base scenario will have empty transit network.")
 
+        transit_net.set_roadnet(road_net, validate_consistency=validate)
         base_scenario = {"road_net": road_net, "transit_net": transit_net}
 
         return base_scenario

@@ -50,11 +50,12 @@ if __name__ == "__main__":
 
     # Create Base Network
     base_scenario = Scenario.create_base_scenario(
-        base_dir=base_network_dir,
+        highway_dir=base_network_dir,
         base_shape_name=base_shape_name,
         base_link_name=base_link_name,
         base_node_name=base_node_name,
         validate=validate_base_network,
+        transit_dir = base_network_dir,
     )
 
     # Create Scenaro Network
