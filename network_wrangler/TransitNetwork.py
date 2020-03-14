@@ -34,7 +34,7 @@ class TransitNetwork(object):
     SHAPES_FOREIGN_KEY = "shape_model_node_id"
     STOPS_FOREIGN_KEY = "model_node_id"
 
-    STOP_ID_SCALAR = 500000
+    ID_SCALAR = 100000000
 
     REQUIRED_FILES = [
         "agency.txt",
@@ -664,7 +664,7 @@ class TransitNetwork(object):
                         "stop_id", "stop_lat", "stop_lon",
                         TransitNetwork.STOPS_FOREIGN_KEY
                     ]] = [
-                        str(int(fk_i) + TransitNetwork.STOP_ID_SCALAR),
+                        str(int(fk_i) + TransitNetwork.ID_SCALAR),
                         nodes_df.loc[int(fk_i), 'y'],
                         nodes_df.loc[int(fk_i), 'x'],
                         fk_i
