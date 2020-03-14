@@ -34,6 +34,8 @@ class TransitNetwork(object):
     SHAPES_FOREIGN_KEY = "shape_model_node_id"
     STOPS_FOREIGN_KEY = "model_node_id"
 
+    STOP_ID_SCALAR = 500000
+
     REQUIRED_FILES = [
         "agency.txt",
         "frequencies.txt",
@@ -571,9 +573,9 @@ class TransitNetwork(object):
     def _apply_transit_feature_change_routing(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
-        shapes = self.feed.shapes
-        stop_times = self.feed.stop_times
-        stops = self.feed.stops
+        shapes = self.feed.shapes.copy()
+        stop_times = self.feed.stop_times.copy()
+        stops = self.feed.stops.copy()
 
         # A negative sign in "set" indicates a traversed node without a stop
         # If any positive numbers, stops have changed
@@ -611,7 +613,7 @@ class TransitNetwork(object):
                     "shape_pt_lon": None,  # FIXME
                     "shape_osm_node_id": None,  # FIXME
                     "shape_pt_sequence": None,
-                    TransitNetwork.SHAPES_FOREIGN_KEY: properties["set_shapes"],
+                    TransitNetwork.SHAPES_FOREIGN_KEY: properties["set_shapes"]
                 }
             )
 
@@ -646,15 +648,27 @@ class TransitNetwork(object):
         if stops_change:
             # If node IDs in properties["set_stops"] are not already
             # in stops.txt, create a new stop_id for them in stops
-            if any(
-                x not in stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
-                for x in properties["set_stops"]
-            ):
-                # FIXME
-                WranglerLogger.error(
-                    "Node ID is used that does not have an existing stop."
-                )
-                raise ValueError
+            existing_fk_ids = set(
+                stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
+            )
+            nodes_df = self.road_net.nodes_df.loc[
+                :, [TransitNetwork.STOPS_FOREIGN_KEY, "x", "y"]
+            ]
+            for fk_i in properties["set_stops"]:
+                if fk_i not in existing_fk_ids:
+                    WranglerLogger.info(
+                        "Creating a new stop in stops.txt for node ID: {}".format(fk_i)
+                    )
+                    # Add new row to stops
+                    stops.loc[len(stops.index) + 1, [
+                        "stop_id", "stop_lat", "stop_lon",
+                        TransitNetwork.STOPS_FOREIGN_KEY
+                    ]] = [
+                        str(int(fk_i) + TransitNetwork.STOP_ID_SCALAR),
+                        nodes_df.loc[int(fk_i), 'y'],
+                        nodes_df.loc[int(fk_i), 'x'],
+                        fk_i
+                    ]
 
             # Loop through all the trip_ids
             for trip_id in trip_ids:
@@ -747,7 +761,7 @@ class TransitNetwork(object):
     def _apply_transit_feature_change_frequencies(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
-        freq = self.feed.frequencies
+        freq = self.feed.frequencies.copy()
 
         # Grab only those records matching trip_ids (aka selection)
         freq = freq[freq.trip_id.isin(trip_ids)]
