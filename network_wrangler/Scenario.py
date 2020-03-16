@@ -543,6 +543,10 @@ class Scenario(object):
             if p["project"] not in self.applied_projects:
                 self.applied_projects.append(p["project"])
 
+    def remove_all_projects(self):
+        self.project_cards = []
+    
+                
     def applied_project_card_summary(self, project_card_dictionary: dict) -> dict:
         """
         Create a summary of applied project card and what they changed for the scenario
