@@ -8,7 +8,7 @@ import json
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
-from .Logger import WranglerLogger
+from .logger import WranglerLogger
 
 
 class ProjectCard(object):
