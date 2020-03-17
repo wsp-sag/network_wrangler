@@ -266,6 +266,34 @@ def test_add_managed_lane(request):
 
     print("--Finished:", request.node.name)
 
+@pytest.mark.roadway
+@pytest.mark.travis
+@pytest.mark.menow
+def test_add_managed_lane_complex(request):
+    print("\n--Starting:", request.node.name)
+    net = _read_stpaul_net()
+    print("Reading project card ...")
+    project_card_name = "broken_parallel_managed_lane.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+    print("Selecting roadway features ...")
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+
+    attributes_to_update = [p["property"] for p in project_card.properties]
+    orig_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    print("Original Links:\n", orig_links)
+
+    net.apply_managed_lane_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    print("Revised Links:\n", rev_links)
+
+    net.write(filename="test_ml", path=SCRATCH_DIR)
+
+    print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
