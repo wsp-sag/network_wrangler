@@ -1,5 +1,5 @@
 import pandas as pd
-from .Logger import WranglerLogger
+from .logger import WranglerLogger
 import math
 import copy
 
