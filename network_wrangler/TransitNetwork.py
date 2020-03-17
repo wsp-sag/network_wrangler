@@ -34,7 +34,7 @@ class TransitNetwork(object):
     SHAPES_FOREIGN_KEY = "shape_model_node_id"
     STOPS_FOREIGN_KEY = "model_node_id"
 
-    ID_SCALAR = 100000000
+    SHAPE_ID_SCALAR = 100000000
 
     REQUIRED_FILES = [
         "agency.txt",
@@ -614,7 +614,7 @@ class TransitNetwork(object):
                     "the trips' shape in your query will be changed."
                 )
                 old_shape_id = shape_id
-                shape_id = str(int(shape_id) + TransitNetwork.ID_SCALAR)
+                shape_id = str(int(shape_id) + TransitNetwork.SHAPE_ID_SCALAR)
                 dup_shape = shapes[shapes.shape_id == old_shape_id].copy()
                 dup_shape['shape_id'] = shape_id
                 shapes = pd.concat([shapes, dup_shape], ignore_index=True)
