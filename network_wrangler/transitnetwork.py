@@ -14,9 +14,9 @@ import pandas as pd
 import partridge as ptg
 from partridge.config import default_config
 
-from .Logger import WranglerLogger
-from .Utils import parse_time_spans
-from .RoadwayNetwork import RoadwayNetwork
+from .logger import WranglerLogger
+from .utils import parse_time_spans
+from .roadwaynetwork import RoadwayNetwork
 
 
 class TransitNetwork(object):
@@ -65,7 +65,7 @@ class TransitNetwork(object):
     @staticmethod
     def empty() -> TransitNetwork:
         """
-        Create an empty transit network instance using the default config. 
+        Create an empty transit network instance using the default config.
         """
         ##TODO
         pass

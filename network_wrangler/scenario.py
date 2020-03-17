@@ -9,13 +9,13 @@ import copy
 import pandas as pd
 from datetime import datetime
 
-from .ProjectCard import ProjectCard
+from .projectcard import ProjectCard
 from collections import OrderedDict
-from .Logger import WranglerLogger
+from .logger import WranglerLogger
 from collections import defaultdict
-from .Utils import topological_sort
-from .RoadwayNetwork import RoadwayNetwork
-from .TransitNetwork import TransitNetwork
+from .utils import topological_sort
+from .roadwaynetwork import RoadwayNetwork
+from .transitnetwork import TransitNetwork
 
 
 class Scenario(object):
@@ -545,8 +545,8 @@ class Scenario(object):
 
     def remove_all_projects(self):
         self.project_cards = []
-    
-                
+
+
     def applied_project_card_summary(self, project_card_dictionary: dict) -> dict:
         """
         Create a summary of applied project card and what they changed for the scenario

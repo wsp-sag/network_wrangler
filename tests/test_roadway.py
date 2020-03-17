@@ -34,20 +34,18 @@ SMALL_SHAPE_FILE = os.path.join(SMALL_DIR, "shape.geojson")
 SMALL_LINK_FILE = os.path.join(SMALL_DIR, "link.json")
 SMALL_NODE_FILE = os.path.join(SMALL_DIR, "node.geojson")
 
-
-def _read_stpaul_net():
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
-    return net
-
-
 SCRATCH_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "scratch"
 )
+
+def _read_small_net():
+    net = RoadwayNetwork.read(
+        link_file=SMALL_LINK_FILE,
+        node_file=SMALL_NODE_FILE,
+        shape_file=SMALL_SHAPE_FILE,
+        fast=True,
+    )
+    return net
 
 
 def _read_stpaul_net():
@@ -283,6 +281,30 @@ def test_add_adhoc_field(request):
 
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
+@pytest.mark.menow
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_add_adhoc_managed_lane_field(request):
+    """
+    Makes sure new fields can be added to the network for managed lanes that get moved there.
+    """
+    print("\n--Starting:", request.node.name)
+    net = _read_small_net()
+
+    facility = {'link':[{'model_link_id': 224}]}
+    selected_link_indices = net.select_roadway_features(facility)
+    net.links_df["ML_my_ad_hoc_field"] = 0
+    net.links_df["ML_my_ad_hoc_field"].loc[selected_link_indices] = 22.5
+    net.links_df["ML_lanes"] = 0
+    net.links_df["ML_lanes"].loc[selected_link_indices] = 1
+    net.links_df["ML_price"] = 0
+    net.links_df["ML_price"].loc[selected_link_indices] = 1.5
+    print("Network with field...\n ", net.links_df[["model_link_id","ML_my_ad_hoc_field","ML_lanes",'ML_price']])
+    ml_net =  net.create_managed_lane_network()
+    print("Managed Lane Network")
+    print(ml_net.links_df[["model_link_id","ML_my_ad_hoc_field","ML_lanes",'ML_price']])
+    #assert net.links_df["my_ad_hoc_field"][0] == 22.5
+    #print("CALCULATED:\n", v_series.loc[selected_link_indices])
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -622,7 +644,6 @@ def test_get_modal_network(request):
 
 @pytest.mark.highway
 @pytest.mark.travis
-@pytest.mark.menow
 def test_network_connectivity_ignore_single_nodes(request):
     print("\n--Starting:", request.node.name)
 
