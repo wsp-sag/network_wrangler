@@ -1268,9 +1268,12 @@ class RoadwayNetwork(object):
                 a new roadway network object
         """
 
-        # flag ML links
-        self.links_df["ML"] = 0
-        self.links_df.loc[link_idx, "ML"] = 1
+        # add ML flag
+        if "ML" in self.links_df.columns:
+            self.links_df.loc[link_idx, "ML"] = 1
+        else:
+            self.links_df["ML"] = 0
+            self.links_df.loc[link_idx, "ML"] = 1
 
         for p in properties:
             attribute = p["property"]

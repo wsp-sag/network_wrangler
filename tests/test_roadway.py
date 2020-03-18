@@ -710,3 +710,43 @@ def test_add_roadway_links(request):
     )
 
     print("--Finished:", request.node.name)
+
+@pytest.mark.test_ml
+@pytest.mark.highway
+def test_existing_managed_lane_apply(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    print("Reading project card ...")
+    project_card_name = "4_simple_managed_lane.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+
+    print("Selecting roadway features ...")
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+
+    if "ML" in net.links_df.columns:
+        existing_ml_links = len((net.links_df[net.links_df["ML"]==1]).index)
+    else:
+        existing_ml_links = 0
+
+    print("Existing # of ML links in the network:", existing_ml_links)
+
+    net.apply_managed_lane_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    new_ml_links = len((net.links_df[net.links_df["ML"]==1]).index)
+    print("New # of ML links in the network:", new_ml_links)
+
+    assert(new_ml_links == existing_ml_links + len(selected_link_indices))
+
+    print("--Finished:", request.node.name)
