@@ -68,50 +68,51 @@ def test_project_card(request):
 
 @pytest.mark.transit_with_roadnet
 @pytest.mark.travis
-@pytest.mark.skip("need to allow for creating new stops if they don't already exist in stops.txt")
-def test_wo_existing(request):
+def test_shape_used_by_another_nonselected_trip_and_new_stop(request):
     print("\n--Starting:", request.node.name)
 
+    road_net = RoadwayNetwork.read(
+        link_file=os.path.join(STPAUL_DIR, "link.json"),
+        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
+        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
+        fast=True
+    )
     transit_net = TransitNetwork.read(STPAUL_DIR)
+    transit_net.set_roadnet(road_net)
 
-    # A new node ID (not in stops.txt) should fail right now
-    with pytest.raises(Exception):
-        transit_net.apply_transit_feature_change(
-            trip_ids=transit_net.select_transit_features(
-                {"trip_id": ["14944022-JUN19-MVS-BUS-Weekday-01"]}
-            ),
-            properties=[
-                {
-                    "property": "routing",
-                    "set": [1]
-                }
-            ]
-        )
+    # Setup test with a trip_id that shares its shape_id with another trip not
+    # in the selection *and* a new stop that does not already exist in stops.txt
+    test_trip_id = "14941643-JUN19-MVS-BUS-Weekday-01"
+    test_shape_id = 740006
+    test_model_node_id = 353828  # does not exist in stops.txt
+
+    new_stop_id = str(test_model_node_id + TransitNetwork.ID_SCALAR)
+    new_shape_id = str(test_shape_id + TransitNetwork.ID_SCALAR)
 
     transit_net.apply_transit_feature_change(
         trip_ids=transit_net.select_transit_features(
-            {"trip_id": ["14986385-JUN19-MVS-BUS-Weekday-01"]}
+            {"trip_id": [test_trip_id]}
         ),
         properties=[
             {
                 "property": "routing",
-                "set": [75318]
+                "set": [test_model_node_id]
             }
         ]
     )
 
     # Shapes
     result = transit_net.feed.shapes[
-        transit_net.feed.shapes["shape_id"] == "210005"
+        transit_net.feed.shapes["shape_id"] == new_shape_id
     ]["shape_model_node_id"].tolist()
-    answer = ["1"]
+    answer = [str(test_model_node_id)]
     assert result == answer
 
     # Stops
     result = transit_net.feed.stop_times[
-        transit_net.feed.stop_times["trip_id"] == "14986385-JUN19-MVS-BUS-Weekday-01"
+        transit_net.feed.stop_times["trip_id"] == test_trip_id
     ]["stop_id"].tolist()
-    answer = ["2609"]  # first matching stop_id in stops.txt
+    answer = [new_stop_id]
     assert result == answer
 
     print("--Finished:", request.node.name)
