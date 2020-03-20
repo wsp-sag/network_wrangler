@@ -630,8 +630,7 @@ class TransitNetwork(object):
                         new_shape_rows,
                         this_shape.iloc[index_replacement_ends + 1 :],
                     ],
-                    sort=False,
-                    ignore_index=True,
+                    ignore_index=True, sort=False
                 )
             else:
                 this_shape = new_shape_rows
@@ -641,7 +640,8 @@ class TransitNetwork(object):
 
             # Add rows back into shapes
             shapes = pd.concat(
-                [shapes[shapes.shape_id != shape_id], this_shape], ignore_index=True
+                [shapes[shapes.shape_id != shape_id], this_shape],
+                ignore_index=True, sort=False
             )
 
         # Replace stop_times and stops records (if required)
@@ -728,8 +728,7 @@ class TransitNetwork(object):
                             new_stoptime_rows,
                             this_stoptime.iloc[index_replacement_ends + 1 :],
                         ],
-                        sort=False,
-                        ignore_index=True,
+                        ignore_index=True, sort=False
                     )
                 else:
                     this_stoptime = new_stoptime_rows
@@ -743,7 +742,7 @@ class TransitNetwork(object):
                 # Add rows back into stoptime
                 stop_times = pd.concat(
                     [stop_times[stop_times.trip_id != trip_id], this_stoptime],
-                    ignore_index=True,
+                    ignore_index=True, sort=False
                 )
 
         # Replace self if in_place, else return
