@@ -14,9 +14,9 @@ import pandas as pd
 import partridge as ptg
 from partridge.config import default_config
 
-from .Logger import WranglerLogger
-from .Utils import parse_time_spans
-from .RoadwayNetwork import RoadwayNetwork
+from .logger import WranglerLogger
+from .utils import parse_time_spans
+from .roadwaynetwork import RoadwayNetwork
 
 
 class TransitNetwork(object):
@@ -67,7 +67,7 @@ class TransitNetwork(object):
     @staticmethod
     def empty() -> TransitNetwork:
         """
-        Create an empty transit network instance using the default config. 
+        Create an empty transit network instance using the default config.
         """
         ##TODO
         pass
@@ -597,8 +597,28 @@ class TransitNetwork(object):
             ]
 
         # Replace shapes records
-        shape_ids = self.feed.trips[self.feed.trips.trip_id.isin(trip_ids)].shape_id
+        trips = self.feed.trips  # create pointer rather than a copy
+        shape_ids = trips[trips['trip_id'].isin(trip_ids)].shape_id
         for shape_id in shape_ids:
+            # Check if `shape_id` is used by trips that are not in
+            # parameter `trip_ids`
+            trips_using_shape_id = trips.loc[
+                trips["shape_id"] == shape_id, ["trip_id"]
+            ]
+            if not all(trips_using_shape_id.isin(trip_ids)):
+                # In this case, we need to create a new shape_id so as to leave
+                # the trips not part of the query alone
+                WranglerLogger.warning(
+                    "Trips that were not in your query selection use the "
+                    "same `shape_id` as trips that are in your query. Only "
+                    "the trips' shape in your query will be changed."
+                )
+                old_shape_id = shape_id
+                shape_id = str(int(shape_id) + TransitNetwork.ID_SCALAR)
+                dup_shape = shapes[shapes.shape_id == old_shape_id].copy()
+                dup_shape['shape_id'] = shape_id
+                shapes = pd.concat([shapes, dup_shape], ignore_index=True)
+
             # Pop the rows that match shape_id
             this_shape = shapes[shapes.shape_id == shape_id]
 

@@ -6,31 +6,33 @@ from __future__ import annotations
 import os
 import sys
 import copy
+from random import randint
 
-import yaml
+import folium
 import pandas as pd
 import geojson
 import geopandas as gpd
 import json
 import networkx as nx
 import numpy as np
+import osmnx as ox
+import yaml
+import numbers
+
+from geopandas.geodataframe import GeoDataFrame
 
 from pandas.core.frame import DataFrame
-from geopandas.geodataframe import GeoDataFrame
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 
-import folium
-import osmnx as ox
 from shapely.geometry import Point, LineString
-from random import randint
 
-from .Logger import WranglerLogger
-from .Utils import point_df_to_geojson, link_df_to_json, parse_time_spans
-from .Utils import offset_lat_lon, haversine_distance
-from .ProjectCard import ProjectCard
+from .logger import WranglerLogger
+from .projectcard import ProjectCard
+from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
+from .utils import offset_lat_lon, haversine_distance
 
 
 class RoadwayNetwork(object):
@@ -1266,9 +1268,12 @@ class RoadwayNetwork(object):
                 a new roadway network object
         """
 
-        # flag ML links
-        self.links_df["ML"] = 0
-        self.links_df.loc[link_idx, "ML"] = 1
+        # add ML flag
+        if "ML" in self.links_df.columns:
+            self.links_df.loc[link_idx, "ML"] = 1
+        else:
+            self.links_df["ML"] = 0
+            self.links_df.loc[link_idx, "ML"] = 1
 
         for p in properties:
             attribute = p["property"]
@@ -1311,12 +1316,41 @@ class RoadwayNetwork(object):
                 attr_value = 1
 
             if in_place:
-                self.links_df.loc[link_idx, attribute] = attr_value
+                if (
+                    attribute in self.links_df.columns
+                    and not isinstance(attr_value, numbers.Number)
+                ):
+                    # if the attribute already exists
+                    # and the attr value we are trying to set is not numeric
+                    # then change the attribute type to object
+                    self.links_df[attribute] = self.links_df[attribute].astype(object)
+
+                if attribute not in self.links_df.columns:
+                    # if it is a new attribute then initiate with NaN values
+                    self.links_df[attribute] = "NaN"
+
+                for idx in link_idx:
+                    self.links_df.at[idx, attribute] = attr_value
+
             else:
                 if i == 0:
                     updated_network = copy.deepcopy(self)
 
-                updated_network.links_df.loc[link_idx, attribute] = attr_value
+                if (
+                    attribute in self.links_df.columns
+                    and not isinstance(attr_value, numbers.Number)
+                ):
+                    # if the attribute already exists
+                    # and the attr value we are trying to set is not numeric
+                    # then change the attribute type to object
+                    updated_network.links_df[attribute] = updated_network.links_df[attribute].astype(object)
+
+                if attribute not in updated_network.links_df.columns:
+                    # if it is a new attribute then initiate with NaN values
+                    updated_network.links_df[attribute] = "NaN"
+
+                for idx in link_idx:
+                    updated_network.links_df.at[idx, attribute] = attr_value
 
                 if i == len(properties) - 1:
                     return updated_network

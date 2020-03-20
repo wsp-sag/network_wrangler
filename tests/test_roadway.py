@@ -34,20 +34,18 @@ SMALL_SHAPE_FILE = os.path.join(SMALL_DIR, "shape.geojson")
 SMALL_LINK_FILE = os.path.join(SMALL_DIR, "link.json")
 SMALL_NODE_FILE = os.path.join(SMALL_DIR, "node.geojson")
 
-
-def _read_stpaul_net():
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
-    return net
-
-
 SCRATCH_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "scratch"
 )
+
+def _read_small_net():
+    net = RoadwayNetwork.read(
+        link_file=SMALL_LINK_FILE,
+        node_file=SMALL_NODE_FILE,
+        shape_file=SMALL_SHAPE_FILE,
+        fast=True,
+    )
+    return net
 
 
 def _read_stpaul_net():
@@ -268,6 +266,34 @@ def test_add_managed_lane(request):
 
     print("--Finished:", request.node.name)
 
+@pytest.mark.roadway
+@pytest.mark.travis
+@pytest.mark.menow
+def test_add_managed_lane_complex(request):
+    print("\n--Starting:", request.node.name)
+    net = _read_stpaul_net()
+    print("Reading project card ...")
+    project_card_name = "broken_parallel_managed_lane.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+    print("Selecting roadway features ...")
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+
+    attributes_to_update = [p["property"] for p in project_card.properties]
+    orig_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    print("Original Links:\n", orig_links)
+
+    net.apply_managed_lane_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    print("Revised Links:\n", rev_links)
+
+    net.write(filename="test_ml", path=SCRATCH_DIR)
+
+    print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -283,6 +309,30 @@ def test_add_adhoc_field(request):
 
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
+@pytest.mark.menow
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_add_adhoc_managed_lane_field(request):
+    """
+    Makes sure new fields can be added to the network for managed lanes that get moved there.
+    """
+    print("\n--Starting:", request.node.name)
+    net = _read_small_net()
+
+    facility = {'link':[{'model_link_id': 224}]}
+    selected_link_indices = net.select_roadway_features(facility)
+    net.links_df["ML_my_ad_hoc_field"] = 0
+    net.links_df["ML_my_ad_hoc_field"].loc[selected_link_indices] = 22.5
+    net.links_df["ML_lanes"] = 0
+    net.links_df["ML_lanes"].loc[selected_link_indices] = 1
+    net.links_df["ML_price"] = 0
+    net.links_df["ML_price"].loc[selected_link_indices] = 1.5
+    print("Network with field...\n ", net.links_df[["model_link_id","ML_my_ad_hoc_field","ML_lanes",'ML_price']])
+    ml_net =  net.create_managed_lane_network()
+    print("Managed Lane Network")
+    print(ml_net.links_df[["model_link_id","ML_my_ad_hoc_field","ML_lanes",'ML_price']])
+    #assert net.links_df["my_ad_hoc_field"][0] == 22.5
+    #print("CALCULATED:\n", v_series.loc[selected_link_indices])
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -622,7 +672,6 @@ def test_get_modal_network(request):
 
 @pytest.mark.highway
 @pytest.mark.travis
-@pytest.mark.menow
 def test_network_connectivity_ignore_single_nodes(request):
     print("\n--Starting:", request.node.name)
 
@@ -659,5 +708,45 @@ def test_add_roadway_links(request):
     net.add_new_roadway_feature_change(
         project_card_dictionary.get("links"), project_card_dictionary.get("nodes")
     )
+
+    print("--Finished:", request.node.name)
+
+@pytest.mark.test_ml
+@pytest.mark.highway
+def test_existing_managed_lane_apply(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+
+    net = RoadwayNetwork.read(
+        link_file=STPAUL_LINK_FILE,
+        node_file=STPAUL_NODE_FILE,
+        shape_file=STPAUL_SHAPE_FILE,
+        fast=True,
+    )
+
+    print("Reading project card ...")
+    project_card_name = "4_simple_managed_lane.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+
+    print("Selecting roadway features ...")
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+
+    if "ML" in net.links_df.columns:
+        existing_ml_links = len((net.links_df[net.links_df["ML"]==1]).index)
+    else:
+        existing_ml_links = 0
+
+    print("Existing # of ML links in the network:", existing_ml_links)
+
+    net.apply_managed_lane_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    new_ml_links = len((net.links_df[net.links_df["ML"]==1]).index)
+    print("New # of ML links in the network:", new_ml_links)
+
+    assert(new_ml_links == existing_ml_links + len(selected_link_indices))
 
     print("--Finished:", request.node.name)

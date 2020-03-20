@@ -6,7 +6,7 @@ from network_wrangler import ProjectCard
 from network_wrangler import RoadwayNetwork
 from network_wrangler import TransitNetwork
 from network_wrangler import Scenario
-from network_wrangler.Logger import WranglerLogger
+from network_wrangler.logger import WranglerLogger
 
 """
 Run just the tests labeled scenario using `pytest -v -m scenario`
