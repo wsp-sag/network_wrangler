@@ -615,6 +615,8 @@ class TransitNetwork(object):
                 )
                 old_shape_id = shape_id
                 shape_id = str(int(shape_id) + TransitNetwork.ID_SCALAR)
+                if shape_id in shapes["shape_id"].tolist():
+                    WranglerLogger.error("Cannot create a unique new shape_id.")
                 dup_shape = shapes[shapes.shape_id == old_shape_id].copy()
                 dup_shape['shape_id'] = shape_id
                 shapes = pd.concat([shapes, dup_shape], ignore_index=True)
@@ -680,11 +682,16 @@ class TransitNetwork(object):
                         "Creating a new stop in stops.txt for node ID: {}".format(fk_i)
                     )
                     # Add new row to stops
+                    new_stop_id = str(int(fk_i) + TransitNetwork.ID_SCALAR)
+                    if stop_id in stops["stop_id"].tolist():
+                        WranglerLogger.error(
+                            "Cannot create a unique new stop_id."
+                        )
                     stops.loc[len(stops.index) + 1, [
                         "stop_id", "stop_lat", "stop_lon",
                         TransitNetwork.STOPS_FOREIGN_KEY
                     ]] = [
-                        str(int(fk_i) + TransitNetwork.ID_SCALAR),
+                        new_stop_id,
                         nodes_df.loc[int(fk_i), 'y'],
                         nodes_df.loc[int(fk_i), 'x'],
                         fk_i
