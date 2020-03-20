@@ -81,10 +81,10 @@ def test_shape_used_by_another_nonselected_trip_and_new_stop(request):
     transit_net.set_roadnet(road_net)
 
     # Setup test with a trip_id that shares its shape_id with another trip not
-    # in the selection *and* a new stop that does not already exist in stops.txt
+    # in the selection and a new stop that does not already exist in stops.txt
     test_trip_id = "14941643-JUN19-MVS-BUS-Weekday-01"
     test_shape_id = 740006
-    test_model_node_id = 353828  # does not exist in stops.txt
+    test_model_node_id = 353828
 
     new_stop_id = str(test_model_node_id + TransitNetwork.ID_SCALAR)
     new_shape_id = str(test_shape_id + TransitNetwork.ID_SCALAR)

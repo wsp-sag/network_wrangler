@@ -605,7 +605,7 @@ class TransitNetwork(object):
             trips_using_shape_id = trips.loc[
                 trips["shape_id"] == shape_id, ["trip_id"]
             ]
-            if not all(trips_using_shape_id.isin(trip_ids)):
+            if not all(trips_using_shape_id.isin(trip_ids)["trip_id"]):
                 # In this case, we need to create a new shape_id so as to leave
                 # the trips not part of the query alone
                 WranglerLogger.warning(
