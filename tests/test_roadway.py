@@ -309,7 +309,6 @@ def test_add_adhoc_field(request):
 
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
@@ -549,6 +548,7 @@ variable_queries = [
 
 @pytest.mark.parametrize("variable_query", variable_queries)
 @pytest.mark.roadway
+@pytest.mark.travis
 def test_query_roadway_property_by_time_group(request, variable_query):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -573,7 +573,7 @@ def test_query_roadway_property_by_time_group(request, variable_query):
     ## todo make test make sure the values are correct.
 
 
-@pytest.mark.highway
+@pytest.mark.roadway
 @pytest.mark.travis
 def test_write_model_net(request):
     print("\n--Starting:", request.node.name)
@@ -632,7 +632,7 @@ def test_get_distance_bw_lat_lon(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.highway
+@pytest.mark.roadway
 @pytest.mark.travis
 def test_network_connectivity(request):
     print("\n--Starting:", request.node.name)
@@ -649,7 +649,7 @@ def test_network_connectivity(request):
     print("Drive Network Connected:", net.is_network_connected(mode="drive"))
     print("--Finished:", request.node.name)
 
-@pytest.mark.highway
+@pytest.mark.roadway
 @pytest.mark.travis
 def test_get_modal_network(request):
     print("\n--Starting:", request.node.name)
@@ -670,7 +670,7 @@ def test_get_modal_network(request):
     non_transit_links =_links_df[_links_df[mode_variable] != 1]
     assert non_transit_links.shape[0] == 0
 
-@pytest.mark.highway
+@pytest.mark.roadway
 @pytest.mark.travis
 def test_network_connectivity_ignore_single_nodes(request):
     print("\n--Starting:", request.node.name)
@@ -712,7 +712,8 @@ def test_add_roadway_links(request):
     print("--Finished:", request.node.name)
 
 @pytest.mark.test_ml
-@pytest.mark.highway
+@pytest.mark.roadway
+@pytest.mark.travis
 def test_existing_managed_lane_apply(request):
     print("\n--Starting:", request.node.name)
 
