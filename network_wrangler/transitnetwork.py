@@ -64,6 +64,7 @@ class TransitNetwork(object):
                 "Transit lines with non-positive frequencies exist in the network"
             )
 
+
     @staticmethod
     def empty() -> TransitNetwork:
         """
@@ -81,6 +82,7 @@ class TransitNetwork(object):
         config = default_config()
         feed = ptg.load_feed(feed_path, config=config)
         WranglerLogger.info("Read in transit feed from: {}".format(feed_path))
+
         updated_config = TransitNetwork.validate_feed(feed, config)
 
         # Read in each feed so we can write over them
@@ -126,6 +128,8 @@ class TransitNetwork(object):
             WranglerLogger.error(msg)
             raise AttributeError(msg)
             return False
+
+        TransitNetwork.validate_network_keys(feed)
 
         return updated_config
 
@@ -248,45 +252,96 @@ class TransitNetwork(object):
     @staticmethod
     def route_ids_in_routestxt(feed):
         """
-        STUB: Wherever route_id occurs, make sure it is in routes.txt
+        Wherever route_id occurs, make sure it is in routes.txt
 
         Returns:
             Boolean
         """
-        pass
+        route_ids_routestxt = set(feed.routes.route_id.tolist())
+        route_ids_referenced = set(feed.trips.route_id.tolist())
+
+        missing_routes = route_ids_referenced-route_ids_routestxt
+
+        if missing_routes:
+            WranglerLogger.warning("The following route_ids are referenced but missing from routes.txt: {}".format(list(missing_routes)))
+            return False
+        return True
 
     @staticmethod
     def trip_ids_in_tripstxt(feed):
         """
-        STUB: Wherever trip_id occurs, make sure it is in trips.txt
+        Wherever trip_id occurs, make sure it is in trips.txt
 
         Returns:
             Boolean
         """
-        pass
+        trip_ids_tripstxt = set(feed.trips.trip_id.tolist())
+        trip_ids_referenced = set(
+            feed.stop_times.trip_id.tolist() +
+            feed.frequencies.trip_id.tolist()
+            )
+
+        missing_trips = trip_ids_referenced-trip_ids_tripstxt
+
+        if missing_trips:
+            WranglerLogger.warning("The following trip_ids are referenced but missing from trips.txt: {}".format(list(missing_trips)))
+            return False
+        return True
 
     @staticmethod
     def shape_ids_in_shapestxt(feed):
         """
-        STUB: Wherever shape_id occurs, make sure it is in shapes.txt
+        Wherever shape_id occurs, make sure it is in shapes.txt
 
         Returns:
             Boolean
         """
-        pass
+
+        shape_ids_shapestxt = set(feed.shapes.shape_id.tolist())
+        shape_ids_referenced = set(feed.trips.shape_id.tolist())
+
+        missing_shapes = shape_ids_referenced-shape_ids_shapestxt
+
+        if missing_shapes:
+            WranglerLogger.warning("The following shape_ids from trips.txt are missing from shapes.txt: {}".format(list(missing_shapes)))
+            return False
+        return True
+
 
     @staticmethod
     def stop_ids_in_stopstxt(feed):
         """
-        STUB: Wherever stop_id occurs, make sure it is in stops.txt
+        Wherever stop_id occurs, make sure it is in stops.txt
 
         Returns:
             Boolean
         """
-        pass
+        stop_ids_stopstxt = set(feed.stops.stop_id.tolist())
+        stop_ids_referenced = set(
+                feed.stop_times.stop_id.tolist() +
+                feed.stops.parent_station.tolist()
+                )
+
+        if feed.get("transfers.txt").shape[0]>0:
+            stop_ids_referenced += set(
+                self.feed.transfers.from_stop_id.tolist() +
+                self.feed.transfers.to_stop_id.tolist()
+                )
+        if feed.get("pathways.txt").shape[0]>0:
+            stop_ids_referenced += set(
+                feed.pathways.from_stop_id.tolist() +
+                feed.pathways.to_stop_id.tolist()
+                )
+
+        missing_stops = stop_ids_referenced-stop_ids_stopstxt
+
+        if missing_stops:
+            WranglerLogger.warning("The following stop_ids from are referenced but missing from stops.txt: {}".format(list(missing_stops)))
+            return False
+        return True
 
     @staticmethod
-    def validate_network_connectivity(feed):
+    def validate_network_keys(feed):
         """
         Validates foreign keys are present in all connecting feed files.
 
