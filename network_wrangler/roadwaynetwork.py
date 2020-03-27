@@ -1660,7 +1660,7 @@ class RoadwayNetwork(object):
         """
 
         gp_ml_links_df = pd.concat(
-            [gp_df, gp_df.add_prefix("ML_")], axis=1, join="inner"
+            [gp_df, ml_df.add_prefix("ML_")], axis=1, join="inner"
         )
 
         access_df = pd.DataFrame(columns=gp_df.columns.values.tolist())
