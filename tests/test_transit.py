@@ -326,6 +326,7 @@ def test_invalid_optional_selection_variable(request):
     print("--Finished:", request.node.name)
 
 
+@pytest.mark.test_ak
 @pytest.mark.travis
 def test_transit_road_consistencies(request):
     print("\n--Starting:", request.node.name)

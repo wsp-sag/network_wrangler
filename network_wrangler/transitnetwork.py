@@ -228,15 +228,17 @@ class TransitNetwork(object):
                 "RoadwayNetwork not set yet, see TransitNetwork.set_roadnet()"
             )
 
-        shapes = self.feed.shapes
-        nodes = self.road_net.nodes_df
+        shapes_df = self.feed.shapes
+        nodes_df = self.road_net.nodes_df
+        links_df = self.road_net.links_df
 
         valid = True
 
+        # check if all the node ids exist in the network
         shape_ids = [
-            int(s) for s in shapes[TransitNetwork.SHAPES_FOREIGN_KEY].to_list()
+            int(s) for s in shapes_df[TransitNetwork.SHAPES_FOREIGN_KEY].to_list()
         ]
-        node_ids = [int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
+        node_ids = [int(n) for n in nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
 
         if not set(shape_ids).issubset(node_ids):
             valid = False
@@ -246,6 +248,33 @@ class TransitNetwork(object):
                 TransitNetwork.SHAPES_FOREIGN_KEY, missing_shapes
             )
             WranglerLogger.error(msg)
+
+        if not valid:
+            return valid
+
+        # check if all the links in transit shapes exist in the network
+        unique_shape_ids = shapes_df.shape_id.unique().tolist()
+
+        for id in unique_shape_ids:
+            subset_shapes_df = shapes_df[shapes_df["shape_id"] == id]
+            subset_shapes_df = subset_shapes_df.sort_values(by = ["shape_pt_sequence"])
+            subset_shapes_df = subset_shapes_df.add_suffix('_1').join(
+                subset_shapes_df.shift(-1).add_suffix('_2')
+            )
+            subset_shapes_df = subset_shapes_df.dropna()
+
+            for index, row in subset_shapes_df.iterrows():
+                A_id = row[TransitNetwork.SHAPES_FOREIGN_KEY + "_1"]
+                B_id = row[TransitNetwork.SHAPES_FOREIGN_KEY + "_2"]
+                sel_query = "A == " + A_id + " and " + "B == " + B_id
+
+                if len(links_df.query(sel_query, engine="python").index) == 0:
+                    valid = False
+                    msg = "Missing link from shape id {} to shape id {} in the roadway network.".format(a_node, b_node)
+                    WranglerLogger.error(msg)
+
+        if not valid:
+            return valid
 
         return valid
 
