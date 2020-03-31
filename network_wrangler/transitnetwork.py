@@ -248,11 +248,10 @@ class TransitNetwork(object):
                 TransitNetwork.SHAPES_FOREIGN_KEY, missing_shapes
             )
             WranglerLogger.error(msg)
-
-        if not valid:
             return valid
 
         # check if all the links in transit shapes exist in the network
+        # and transit is allowed
         unique_shape_ids = shapes_df.shape_id.unique().tolist()
 
         for id in unique_shape_ids:
@@ -268,13 +267,19 @@ class TransitNetwork(object):
                 B_id = row[TransitNetwork.SHAPES_FOREIGN_KEY + "_2"]
                 sel_query = "A == " + A_id + " and " + "B == " + B_id
 
-                if len(links_df.query(sel_query, engine="python").index) == 0:
-                    valid = False
-                    msg = "Missing link from shape id {} to shape id {} in the roadway network.".format(a_node, b_node)
-                    WranglerLogger.error(msg)
+                shape_link = links_df.query(sel_query, engine="python")
 
-        if not valid:
-            return valid
+                # if link does not exist in the roadway network
+                if len(shape_link.index) == 0:
+                    valid = False
+                    msg = "Missing link from shape id {} to shape id {} in the roadway network.".format(A_id, B_id)
+                    WranglerLogger.error(msg)
+                # if transit is not allowed on the link
+                elif shape_link.iloc[0]["transit_access"] == 0:
+                    valid = False
+                    count = count + 1
+                    msg = "Link from shape id {} to shape id {} in the roadway network does not allow transit.".format(A_id, B_id)
+                    WranglerLogger.error(msg)
 
         return valid
 
