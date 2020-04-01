@@ -252,6 +252,7 @@ class TransitNetwork(object):
 
         # check if all the links in transit shapes exist in the network
         # and transit is allowed
+        shapes_df = shapes_df.astype({TransitNetwork.SHAPES_FOREIGN_KEY: int})
         unique_shape_ids = shapes_df.shape_id.unique().tolist()
 
         for id in unique_shape_ids:
@@ -262,23 +263,29 @@ class TransitNetwork(object):
             )
             subset_shapes_df = subset_shapes_df.dropna()
 
-            for index, row in subset_shapes_df.iterrows():
-                A_id = row[TransitNetwork.SHAPES_FOREIGN_KEY + "_1"]
-                B_id = row[TransitNetwork.SHAPES_FOREIGN_KEY + "_2"]
-                sel_query = "A == " + A_id + " and " + "B == " + B_id
+            merged_df = subset_shapes_df.merge(
+                links_df,
+                how='left',
+                left_on=[TransitNetwork.SHAPES_FOREIGN_KEY + "_1", TransitNetwork.SHAPES_FOREIGN_KEY + "_2"],
+                right_on=["A", "B"],
+                indicator=True
+            )
 
-                shape_link = links_df.query(sel_query, engine="python")
+            missing_links_df = merged_df.query('_merge == "left_only"')
 
-                # if link does not exist in the roadway network
-                if len(shape_link.index) == 0:
-                    valid = False
-                    msg = "Missing link from shape id {} to shape id {} in the roadway network.".format(A_id, B_id)
-                    WranglerLogger.error(msg)
-                # if transit is not allowed on the link
-                elif shape_link.iloc[0]["transit_access"] == 0:
-                    valid = False
-                    msg = "Link from shape id {} to shape id {} in the roadway network does not allow transit.".format(A_id, B_id)
-                    WranglerLogger.error(msg)
+            # there are shape links which does not exist in the roadway network
+            if len(missing_links_df.index) > 0:
+                valid = False
+                msg = "There are links for shape id {} which are missing in the roadway network.".format(id)
+                WranglerLogger.error(msg)
+
+            transit_not_allowed_df = merged_df.query('_merge == "both" & transit_access == 0')
+
+            # there are shape links where transit is not allowed
+            if len(transit_not_allowed_df.index) > 0:
+                valid = False
+                msg = "There are links for shape id {} which does not allow transit in the roadway network.".format(id)
+                WranglerLogger.error(msg)
 
         return valid
 
