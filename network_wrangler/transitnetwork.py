@@ -279,7 +279,9 @@ class TransitNetwork(object):
                 msg = "There are links for shape id {} which are missing in the roadway network.".format(id)
                 WranglerLogger.error(msg)
 
-            transit_not_allowed_df = merged_df.query('_merge == "both" & transit_access == 0')
+            transit_not_allowed_df = merged_df.query(
+                '_merge == "both" & drive_access == 0 & bus_only == 0 & rail_only == 0'
+            )
 
             # there are shape links where transit is not allowed
             if len(transit_not_allowed_df.index) > 0:
