@@ -734,8 +734,8 @@ def test_existing_managed_lane_apply(request):
     print("Selecting roadway features ...")
     selected_link_indices = net.select_roadway_features(project_card.facility)
 
-    if "ML" in net.links_df.columns:
-        existing_ml_links = len((net.links_df[net.links_df["ML"]==1]).index)
+    if "managed" in net.links_df.columns:
+        existing_ml_links = len((net.links_df[net.links_df["managed"]==1]).index)
     else:
         existing_ml_links = 0
 
@@ -745,7 +745,7 @@ def test_existing_managed_lane_apply(request):
         net.select_roadway_features(project_card.facility), project_card.properties
     )
 
-    new_ml_links = len((net.links_df[net.links_df["ML"]==1]).index)
+    new_ml_links = len((net.links_df[net.links_df["managed"]==1]).index)
     print("New # of ML links in the network:", new_ml_links)
 
     assert(new_ml_links == existing_ml_links + len(selected_link_indices))

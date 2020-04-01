@@ -1269,11 +1269,11 @@ class RoadwayNetwork(object):
         """
 
         # add ML flag
-        if "ML" in self.links_df.columns:
-            self.links_df.loc[link_idx, "ML"] = 1
+        if "managed" in self.links_df.columns:
+            self.links_df.loc[link_idx, "managed"] = 1
         else:
-            self.links_df["ML"] = 0
-            self.links_df.loc[link_idx, "ML"] = 1
+            self.links_df["managed"] = 0
+            self.links_df.loc[link_idx, "managed"] = 1
 
         for p in properties:
             attribute = p["property"]
@@ -1663,8 +1663,8 @@ class RoadwayNetwork(object):
             [gp_df, ml_df.add_prefix("ML_")], axis=1, join="inner"
         )
 
-        access_df = pd.DataFrame(columns=gp_df.columns.values.tolist())
-        egress_df = pd.DataFrame(columns=gp_df.columns.values.tolist())
+        access_df = gp_df.iloc[0:0,:].copy()
+        egress_df = gp_df.iloc[0:0,:].copy()
 
         def _get_connector_references(ref_1: list, ref_2: list, type: str):
             if type == "access":
@@ -1749,10 +1749,10 @@ class RoadwayNetwork(object):
         link_attributes = self.links_df.columns.values.tolist()
         ml_attributes = [i for i in link_attributes if i.startswith("ML_")]
 
-        non_ml_links_df = self.links_df[self.links_df["ML"] == 0]
+        non_ml_links_df = self.links_df[self.links_df["managed"] == 0]
         non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis=1)
 
-        ml_links_df = self.links_df[self.links_df["ML"] == 1]
+        ml_links_df = self.links_df[self.links_df["managed"] == 1]
         gp_links_df = ml_links_df.drop(ml_attributes, axis=1)
 
         for attr in link_attributes:
@@ -1770,6 +1770,9 @@ class RoadwayNetwork(object):
                 ml_links_df[attr] = ""
 
         ml_links_df = ml_links_df.drop(ml_attributes, axis=1)
+
+        ml_links_df["managed"] = 1
+        gp_links_df["managed"] = 0
 
         def _update_location_reference(location_reference: list):
             out_location_reference = copy.deepcopy(location_reference)
@@ -1816,11 +1819,6 @@ class RoadwayNetwork(object):
         new_links_df = new_links_df.append(access_links_df)
         new_links_df = new_links_df.append(egress_links_df)
         new_links_df = new_links_df.append(non_ml_links_df)
-        new_links_df = new_links_df.drop("ML", axis=1)
-
-        # new_links_df["geometry"] = new_links_df["locationReferences"].apply(
-        #     lambda x: _get_line_string(x)
-        # )
 
         # only the ml_links_df has the new nodes added
         added_a_nodes = ml_links_df["A"]
