@@ -277,7 +277,6 @@ class TransitNetwork(object):
                 # if transit is not allowed on the link
                 elif shape_link.iloc[0]["transit_access"] == 0:
                     valid = False
-                    count = count + 1
                     msg = "Link from shape id {} to shape id {} in the roadway network does not allow transit.".format(A_id, B_id)
                     WranglerLogger.error(msg)
 
