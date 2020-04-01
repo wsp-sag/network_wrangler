@@ -1757,7 +1757,10 @@ class RoadwayNetwork(object):
 
         for attr in link_attributes:
             if attr in ml_attributes and attr not in ["ML_ACCESS", "ML_EGRESS"]:
-                gp_attr = attr.split("_")[1]
+                if attr == "ML_segment_id":
+                    gp_attr = attr[3:]
+                else:
+                    gp_attr = attr.split("_")[1]
                 ml_links_df[gp_attr] = ml_links_df[attr]
 
             if (

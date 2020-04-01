@@ -23,8 +23,8 @@ properties:
     set: 'all'
   - property: ML_egress
     set: 'all'
-  - property: ML_HOV
+  - property: segment_id
     set: 5
-  - property: HOV
+  - property: ML_segment_id
     set: 5
 notes: Placeholder for notes
