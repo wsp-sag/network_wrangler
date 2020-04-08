@@ -252,7 +252,7 @@ def test_add_managed_lane(request):
     selected_link_indices = net.select_roadway_features(project_card.facility)
 
     attributes_to_update = [p["property"] for p in project_card.properties]
-    orig_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    orig_links = net.links_df.loc[selected_link_indices, net.links_df.columns.intersection(attributes_to_update)]
     print("Original Links:\n", orig_links)
 
     net.apply_managed_lane_feature_change(
@@ -268,7 +268,6 @@ def test_add_managed_lane(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.menow
 def test_add_managed_lane_complex(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -280,7 +279,8 @@ def test_add_managed_lane_complex(request):
     selected_link_indices = net.select_roadway_features(project_card.facility)
 
     attributes_to_update = [p["property"] for p in project_card.properties]
-    orig_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+
+    orig_links = net.links_df.loc[selected_link_indices, net.links_df.columns.intersection(attributes_to_update)]
     print("Original Links:\n", orig_links)
 
     net.apply_managed_lane_feature_change(
@@ -326,7 +326,9 @@ def test_add_adhoc_managed_lane_field(request):
     net.links_df["ML_lanes"].loc[selected_link_indices] = 1
     net.links_df["ML_price"] = 0
     net.links_df["ML_price"].loc[selected_link_indices] = 1.5
-    print("Network with field...\n ", net.links_df[["model_link_id","ML_my_ad_hoc_field","ML_lanes",'ML_price']])
+    net.links_df["managed"] = 0
+    net.links_df["managed"].loc[selected_link_indices] = 1
+    print("Network with field...\n ", net.links_df[["model_link_id","ML_my_ad_hoc_field","ML_lanes",'ML_price', 'managed']])
     ml_net =  net.create_managed_lane_network()
     print("Managed Lane Network")
     print(ml_net.links_df[["model_link_id","ML_my_ad_hoc_field","ML_lanes",'ML_price']])
