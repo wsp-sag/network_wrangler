@@ -86,7 +86,7 @@ Resolving deltas: 100% (140/140), done.
 Some packages are very finicky and don't like being installed from their version on the python package index on windows or macosx, so it is often necessary to install them ahead of network_wrangler.
 
 ```bash
-conda install rtree fiona geopandas shapely
+conda install rtree geopandas 
 ```
 
 
