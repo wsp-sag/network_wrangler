@@ -14,7 +14,7 @@ Network Wrangler does require Python 3.7+.  If you have a different version of P
 ## Installation
 Network Wrangler uses Python 3.6 and above.  Requirements are stored in `requirements.txt` but are automatically installed when using `pip`.
 
-If you are managing multiple python versions, we suggest using [`virtualenv`](https://virtualenv.pypa.io/en/latest/) or [`conda`](https://conda.io/en/latest/) virtual environments. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications.
+If you are managing multiple python versions, we suggest using [`virtualenv`](https://virtualenv.pypa.io/en/latest/) or [`conda`](https://conda.io/en/latest/) virtual environments. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications. Do not add Anaconda to the system path during installation. This may cause problems with other programs that require python 2.7 to be placed in the system path.
 
 Example of one way of installing and running tests using conda in the Anaconda Prompt command line:
 
