@@ -7,7 +7,7 @@ Network Wrangler is a Python library for managing travel model network scenarios
 ## System Requirements
 Network Wrangler should be operating system agonistic and has been tested on Ubuntu and Mac OS.
 
-In order to assist in installation, its helpful to have either [miniconda](https://docs.conda.io/en/latest/miniconda.html), [anaconda](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/index.html#regular-installation) or [Docker CE](https://docs.docker.com/install/) installed.  If you don't have any of these already, we reommend starting with Miniconda for Python 3.7 as it has the smallest footprint. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications.
+In order to assist in installation, its helpful to have either [miniconda](https://docs.conda.io/en/latest/miniconda.html), [anaconda](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/index.html#regular-installation) or [Docker CE](https://docs.docker.com/install/) installed.  If you don't have any of these already, we reommend starting with Miniconda for Python 3.7 as it has the smallest footprint. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications. All commands described below should be entered into the `Ananconda Prompt` command window. 
 
 Network Wrangler does require Python 3.7+.  If you have a different version of Python installed, `conda` will take care of installing it for you in the installation instructions below.
 
@@ -16,7 +16,7 @@ Network Wrangler uses Python 3.6 and above.  Requirements are stored in `require
 
 If you are managing multiple python versions, we suggest using [`virtualenv`](https://virtualenv.pypa.io/en/latest/) or [`conda`](https://conda.io/en/latest/) virtual environments. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications.
 
-Example installing and running tests using conda in the command line:
+Example of one way of installing and running tests using conda in the Anaconda Prompt command line:
 
 ```bash
 conda create python=3.7 -n wrangler_env
@@ -25,6 +25,8 @@ conda install rtree fiona geopandas shapely
 pip install network-wrangler
 pytest -s -m travis
 ```
+
+Network wrangler can be installed in several ways depending on the user's needs. Installing from github is the simplest method and is appropriate when the user does not anticipate needing to update network wrangler. An update will require rebuilding the network wrangler environment. Installing from clone is slightly more involved and requires the user to have a git manager on their machine, but permits the user to install network wrangler with the `-e`, edit, option so that their network wrangler installation can be updated through pulling new commits from the network wrangler repo without a full reinstallation.
 
 ### From GitHub
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install Network Wrangler from the source on GitHub.
@@ -156,6 +158,16 @@ Try installing shapely on its own from the Anaconda cloud
 ```bash
 conda install shapely
 ```
+**Issue: Conda is unable to install a library or to update to a specific library version**
+Try installing libraries from conda-forge
+
+```bash
+conda install -c conda-forge *library*
+```
+
+**Issue: User does not have permission to install in directories**
+Try running Anaconda Prompt as an administrator.
+
 ## Quickstart
 
 To get a feel for the API and using project cards, please refer to the "Wrangler Quickstart" jupyter notebook.
