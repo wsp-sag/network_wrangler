@@ -12,7 +12,7 @@ slug_test_list = [
 @pytest.mark.parametrize("slug_test", slug_test_list)
 def test_get_slug(request, slug_test):
     print("\n--Starting:", request.node.name)
-    from network_wrangler.Utils import make_slug
+    from network_wrangler.utils import make_slug
 
     slug = make_slug(slug_test["text"], delimiter=slug_test["delim"])
     print("From: {} \nTo: {}".format(slug_test["text"], slug))
@@ -38,7 +38,7 @@ def test_time_convert(request):
     df = DataFrame(time_tests, columns=["time", "time_results"])
     print("Original Time Series", df)
 
-    from network_wrangler.Utils import parse_time_spans
+    from network_wrangler.utils import parse_time_spans
 
     df["time"] = df["time"].apply(parse_time_spans)
     print("Result Time Series", df)

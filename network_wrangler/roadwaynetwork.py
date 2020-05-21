@@ -137,8 +137,8 @@ class RoadwayNetwork(object):
             to copy from a general purpose lane to managed lane
     """
 
-    CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
-    EPSG = 4326
+    #CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+    CRS = 4326#"EPSG:4326"
 
     NODE_FOREIGN_KEY = "model_node_id"
     LINK_FOREIGN_KEY = ["A", "B"]
