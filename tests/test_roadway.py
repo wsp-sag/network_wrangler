@@ -9,7 +9,9 @@ import numpy as np
 import pandas as pd
 from network_wrangler import offset_lat_lon
 from network_wrangler import haversine_distance
+from network_wrangler import create_unique_shape_id
 import networkx as nx
+from shapely.geometry import LineString
 
 pd.set_option("display.max_rows", 500)
 pd.set_option("display.max_columns", 500)
@@ -751,5 +753,19 @@ def test_existing_managed_lane_apply(request):
     print("New # of ML links in the network:", new_ml_links)
 
     assert(new_ml_links == existing_ml_links + len(selected_link_indices))
+
+    print("--Finished:", request.node.name)
+
+@pytest.mark.test_hash
+@pytest.mark.roadway
+def test_get_unique_shape_id(request):
+    geometry = LineString(
+        [
+            [-93.0855338, 44.9662078],
+            [-93.0843092, 44.9656997]
+        ]
+    )
+    hash_id = create_unique_shape_id(geometry)
+    print(hash_id)
 
     print("--Finished:", request.node.name)

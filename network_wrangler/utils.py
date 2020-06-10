@@ -2,7 +2,8 @@ import pandas as pd
 from .logger import WranglerLogger
 import math
 import copy
-
+from shapely.geometry import LineString
+import hashlib
 
 def point_df_to_geojson(df: pd.DataFrame, properties: list):
     """
@@ -154,3 +155,13 @@ def haversine_distance(origin: list, destination: list):
     d = d * 0.000621371 # miles
 
     return d
+
+def create_unique_shape_id(line_string: LineString):
+    x1, y1 = list(line_string.coords)[0]
+    x2, y2 = list(line_string.coords)[1]
+
+    message = "Geometry {} {} {} {}".format(x1, y1, x2, y2)
+    unhashed = message.encode("utf-8")
+    hash = hashlib.md5(unhashed).hexdigest()
+
+    return hash

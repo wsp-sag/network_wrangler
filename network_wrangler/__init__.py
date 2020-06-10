@@ -9,6 +9,7 @@ from .transitnetwork import TransitNetwork
 from .scenario import Scenario
 from .utils import point_df_to_geojson, link_df_to_json, make_slug
 from .utils import parse_time_spans, offset_lat_lon, haversine_distance
+from .utils import create_unique_shape_id
 
 __all__ = [
     "WranglerLogger",
@@ -23,6 +24,7 @@ __all__ = [
     "parse_time_spans",
     "offset_lat_lon",
     "haversine_distance",
+    "create_unique_shape_id"
 ]
 
 setupLogging(logFileName="network_wrangler.log")
