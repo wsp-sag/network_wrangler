@@ -727,7 +727,10 @@ class RoadwayNetwork(object):
         graph_links["key"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
-        G = ox.gdfs_to_graph(graph_nodes, graph_links)
+        try:
+            G = ox.graph_from_gdfs(graph_nodes,graph_links)
+        except:
+            G = ox.gdfs_to_graph(graph_nodes, graph_links)
 
         WranglerLogger.debug("finished ox.gdfs_to_graph()")
         return G
@@ -1871,7 +1874,7 @@ class RoadwayNetwork(object):
             new_shapes_df = new_shapes_df.append(
                 {"geometry": row["geometry"]}, ignore_index=True
             )
-
+        #links_df --> shha
         if in_place:
             self.links_df = new_links_df
             self.nodes_df = new_nodes_df
