@@ -157,8 +157,8 @@ def haversine_distance(origin: list, destination: list):
     return d
 
 def create_unique_shape_id(line_string: LineString):
-    x1, y1 = list(line_string.coords)[0]
-    x2, y2 = list(line_string.coords)[1]
+    x1, y1 = list(line_string.coords)[0]    # first coordinate (A node)
+    x2, y2 = list(line_string.coords)[-1]   # last coordiante (B node)
 
     message = "Geometry {} {} {} {}".format(x1, y1, x2, y2)
     unhashed = message.encode("utf-8")
