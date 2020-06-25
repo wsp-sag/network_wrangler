@@ -22,6 +22,7 @@ route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_
 375-111,0,375,Express - Oakdale - Mpls,,3,http://www.metrotransit.org/route/375,,000000
 417-111,2,417,Mendota Heights - St Paul,,3,http://www.metrotransit.org/route/417,,000000
 452-111,0,452,Express -Mendota Heights - West St Paul - Mpls,,3,http://www.metrotransit.org/route/452,,000000
+860-111,0,860,Express - Coon Rapids - Northtown - St Paul,,3,http://www.metrotransit.org/route/860,,000000
 902-111,0,Green,METRO Green Line,,0,http://www.metrotransit.org/route/902,00B100,FFFFFF
 480-71,3,480,Apple Valley/Burnsville-St Paul,Express Peak-Only,3,http://www.mvta.com/bus_route_information_2.html?routeId=480,ED2028,FFFFFF
 484-71,3,484,Eagan/Rosemount-St Paul,Express Peak-Only,3,http://www.mvta.com/bus_route_information_2.html?routeId=484,00AEEF,FFFFFF
