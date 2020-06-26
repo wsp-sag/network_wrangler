@@ -366,8 +366,8 @@ class TransitNetwork(object):
 
         if feed.get("transfers.txt").shape[0]>0:
             stop_ids_referenced += set(
-                self.feed.transfers.from_stop_id.tolist() +
-                self.feed.transfers.to_stop_id.tolist()
+                feed.transfers.from_stop_id.tolist() +
+                feed.transfers.to_stop_id.tolist()
                 )
         if feed.get("pathways.txt").shape[0]>0:
             stop_ids_referenced += set(
