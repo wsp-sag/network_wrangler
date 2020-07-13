@@ -32,7 +32,7 @@ from shapely.geometry import Point, LineString
 from .logger import WranglerLogger
 from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
-from .utils import offset_lat_lon, haversine_distance
+from .utils import offset_lat_lon, haversine_distance, create_unique_shape_id
 
 
 class RoadwayNetwork(object):
@@ -102,8 +102,11 @@ class RoadwayNetwork(object):
 
         UNIQUE_NODE_KEY (str): column that is a unique key for nodes
 
+        UNIQUE_SHAPE_KEY (str): column that is a unique shape key
+
         UNIQUE_MODEL_LINK_IDENTIFIERS (list(str)): list of all unique
             identifiers for links, including the UNIQUE_LINK_KEY
+
         UNIQUE_NODE_IDENTIFIERS (list(str)): list of all unique identifiers
             for nodes, including the UNIQUE_NODE_KEY
 
@@ -155,6 +158,8 @@ class RoadwayNetwork(object):
     UNIQUE_NODE_KEY = "model_node_id"
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
+
+    UNIQUE_SHAPE_KEY = "shape_id"
 
     MANAGED_LANES_REQUIRED_ATTRIBUTES = [
         "A",
@@ -1431,7 +1436,9 @@ class RoadwayNetwork(object):
         self, links: dict, nodes: dict, ignore_missing=True
     ) -> None:
         """
-        delete the roadway features defined in the project card
+        delete the roadway features defined in the project card.
+        valid links and nodes defined in the project gets deleted
+        and shapes corresponding to the deleted links are also deleted.
 
         Args:
             links : dict
@@ -1447,6 +1454,7 @@ class RoadwayNetwork(object):
         missing_error_message = []
 
         if links is not None:
+            shapes_to_delete = []
             for key, val in links.items():
                 missing_links = [v for v in val if v not in self.links_df[key].tolist()]
                 if missing_links:
@@ -1458,7 +1466,12 @@ class RoadwayNetwork(object):
                     else:
                         missing_error_message.append(message)
 
+                deleted_links = self.links_df[self.links_df[key].isin(val)]
+                shapes_to_delete.extend(deleted_links[RoadwayNetwork.UNIQUE_SHAPE_KEY].tolist())
+
                 self.links_df = self.links_df[~self.links_df[key].isin(val)]
+
+            self.shapes_df = self.shapes_df[~self.shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY].isin(shapes_to_delete)]
 
         if nodes is not None:
             for key, val in nodes.items():
