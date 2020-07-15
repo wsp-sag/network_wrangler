@@ -293,8 +293,6 @@ class RoadwayNetwork(object):
 
         shapes_df = gpd.read_file(shape_file)
         shapes_df.dropna(subset=["geometry", "id"], inplace=True)
-        if RoadwayNetwork.UNIQUE_SHAPE_KEY not in shapes_df:
-            shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = shapes_df["geometry"].apply(lambda g: create_unique_shape_id(g))
         shapes_df.crs = RoadwayNetwork.CRS
 
         # geopandas uses fiona OGR drivers, which doesn't let you have
