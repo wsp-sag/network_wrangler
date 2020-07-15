@@ -293,6 +293,8 @@ class RoadwayNetwork(object):
 
         shapes_df = gpd.read_file(shape_file)
         shapes_df.dropna(subset=["geometry", "id"], inplace=True)
+        if RoadwayNetwork.UNIQUE_SHAPE_KEY not in shapes_df:
+            shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = shapes_df["geometry"].apply(lambda g: create_unique_shape_id(g))
         shapes_df.crs = RoadwayNetwork.CRS
 
         # geopandas uses fiona OGR drivers, which doesn't let you have
@@ -429,6 +431,18 @@ class RoadwayNetwork(object):
             valid = False
             msg = "Foreign key: {} is not unique in network nodes".format(
                 RoadwayNetwork.NODE_FOREIGN_KEY
+            )
+            WranglerLogger.error(msg)
+        if RoadwayNetwork.UNIQUE_SHAPE_KEY not in self.shapes_df.columns:
+            valid = False
+            msg = "Network doesn't contain unique shape id: {}".format(
+                RoadwayNetwork.UNIQUE_SHAPE_KEY
+            )
+            WranglerLogger.error(msg)
+        elif not self.shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY].is_unique:
+            valid = False
+            msg = "Unique key: {} is not unique in network shapes".format(
+                RoadwayNetwork.UNIQUE_SHAPE_KEY
             )
             WranglerLogger.error(msg)
         return valid
