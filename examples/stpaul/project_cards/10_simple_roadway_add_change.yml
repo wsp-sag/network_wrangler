@@ -7,20 +7,20 @@ dependencies:
   corequisites: []
   conflicts: []
 links:
-  - A: 36622
-    B: 125892
+  - A: 269066
+    B: 268932
     bike_access: 1
-    drive_access: 1
+    drive_access: 0
     transit_access: 0
-    walk_access: 0
+    walk_access: 1
     lanes: 1
     model_link_id: 404982
-  - A: 125892
-    B: 36622
+  - A: 268932
+    B: 269066
     bike_access: 1
-    drive_access: 1
+    drive_access: 0
     transit_access: 0
-    walk_access: 0
+    walk_access: 1
     lanes: 1
     model_link_id: 407042
 notes: Simple project card to add new roadway

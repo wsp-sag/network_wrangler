@@ -1378,13 +1378,13 @@ class RoadwayNetwork(object):
 
     def add_new_roadway_feature_change(self, links: dict, nodes: dict) -> None:
         """
-        add the new roadway features defined in the project card
+        add the new roadway features defined in the project card.
+        new shapes are also added for the new roadway links.
 
         args:
         links : list of dictionaries
         nodes : list of dictionaries
         """
-
         # TODO:
         # validate links dictonary
 
@@ -1418,7 +1418,35 @@ class RoadwayNetwork(object):
             out_df = df.append(new_row_to_add, ignore_index=True)
             return out_df
 
+        def _get_line_string(location_reference: list):
+            return LineString(
+                [location_reference[0]["point"], location_reference[1]["point"]]
+            )
+
+        def _get_location_reference(node_a, node_b):
+            out_location_reference = [
+                {"sequence": 1, "point": [node_a["x"], node_a["y"]]},
+                {"sequence": 2, "point": [node_b["x"], node_b["y"]]},
+            ]
+            return out_location_reference
+
         if nodes is not None:
+            for node in nodes:
+                if node.get(RoadwayNetwork.NODE_FOREIGN_KEY) is None:
+                    msg = "New link to add doesn't contain link foreign key identifier: {}".format(
+                        RoadwayNetwork.NODE_FOREIGN_KEY
+                    )
+                    WranglerLogger.error(msg)
+                    raise ValueError(msg)
+
+                node_query = RoadwayNetwork.UNIQUE_NODE_KEY + " == " + str(node[RoadwayNetwork.NODE_FOREIGN_KEY])
+                if not self.nodes_df.query(node_query, engine="python").empty:
+                    msg = "Node with id = {} already exist in the network".format(
+                        node[RoadwayNetwork.NODE_FOREIGN_KEY]
+                    )
+                    WranglerLogger.error(msg)
+                    raise ValueError(msg)
+
             for node in nodes:
                 self.nodes_df = _add_dict_to_df(self.nodes_df, node)
 
@@ -1441,8 +1469,43 @@ class RoadwayNetwork(object):
                     WranglerLogger.error(msg)
                     raise ValueError(msg)
 
+                a_node_query = RoadwayNetwork.UNIQUE_NODE_KEY + " == " + str(link["A"])
+                b_node_query = RoadwayNetwork.UNIQUE_NODE_KEY + " == " + str(link["B"])
+
+                if self.nodes_df.query(a_node_query, engine="python").empty:
+                    msg = "New link to add has A node = {} but the node does not exist in the network".format(
+                        link["A"]
+                    )
+                    WranglerLogger.error(msg)
+                    raise ValueError(msg)
+
+                if self.nodes_df.query(b_node_query, engine="python").empty:
+                    msg = "New link to add has B node = {} but the node does not exist in the network".format(
+                        link["B"]
+                    )
+                    WranglerLogger.error(msg)
+                    raise ValueError(msg)
+
             for link in links:
                 self.links_df = _add_dict_to_df(self.links_df, link)
+
+            #add location reference and geometry for new links
+            self.links_df["locationReferences"] = self.links_df.apply(
+                lambda x: _get_location_reference(
+                    self.nodes_df[
+                        self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == x["A"]
+                    ].iloc[0],
+                    self.nodes_df[
+                        self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == x["B"]
+                    ].iloc[0]
+                ) if x["locationReferences"] == '' else x["locationReferences"],
+                axis = 1
+            )
+            self.links_df["geometry"] = self.links_df.apply(
+                lambda x: _get_line_string(x["locationReferences"]) if x["geometry"] == '' else x["geometry"],
+                axis = 1
+            )
+
 
     def delete_roadway_feature_change(
         self, links: dict, nodes: dict, ignore_missing=True

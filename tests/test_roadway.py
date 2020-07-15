@@ -770,7 +770,6 @@ def test_get_unique_shape_id(request):
 
     print("--Finished:", request.node.name)
 
-@pytest.mark.test_ak
 @pytest.mark.roadway
 def test_delete_roadway_shape(request):
     print("\n--Starting:", request.node.name)
@@ -793,8 +792,30 @@ def test_delete_roadway_shape(request):
 
     rev_links_count = len(net.links_df)
     rev_shapes_count = len(net.shapes_df)
-    print(orig_links_count, orig_shapes_count)
-    print(rev_links_count, rev_shapes_count)
+
     assert((orig_links_count - rev_links_count) == (orig_shapes_count - rev_shapes_count))
+
+    print("--Finished:", request.node.name)
+
+@pytest.mark.roadway
+def test_create_default_geometry(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = _read_stpaul_net()
+
+    print("Reading project card ...")
+    project_card_name = "10_simple_roadway_add_change.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path, validate=False)
+    project_card_dictionary = project_card.__dict__
+
+    net.add_new_roadway_feature_change(
+        project_card_dictionary.get("links"), project_card_dictionary.get("nodes")
+    )
+
+    links_without_geomtery = net.links_df[net.links_df["geometry"] == ""]
+
+    assert(len(links_without_geomtery) == 0)
 
     print("--Finished:", request.node.name)
