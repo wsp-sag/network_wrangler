@@ -781,7 +781,7 @@ def test_delete_roadway_shape(request):
     print("Reading project card ...")
     project_card_name = "13_simple_roadway_delete_change.yml"
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path)
+    project_card = ProjectCard.read(project_card_path, validate=False)
     project_card_dictionary = project_card.__dict__
 
     orig_links_count = len(net.links_df)

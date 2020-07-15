@@ -1481,9 +1481,15 @@ class RoadwayNetwork(object):
                 deleted_links = self.links_df[self.links_df[key].isin(val)]
                 shapes_to_delete.extend(deleted_links[RoadwayNetwork.UNIQUE_SHAPE_KEY].tolist())
 
-                self.links_df = self.links_df[~self.links_df[key].isin(val)]
+                self.links_df.drop(
+                    self.links_df.index[self.links_df[key].isin(val)],
+                    inplace=True
+                )
 
-            self.shapes_df = self.shapes_df[~self.shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY].isin(shapes_to_delete)]
+            self.shapes_df.drop(
+                self.shapes_df.index[self.shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY].isin(shapes_to_delete)],
+                inplace=True
+            )
 
         if nodes is not None:
             for key, val in nodes.items():
