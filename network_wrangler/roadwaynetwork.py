@@ -1483,6 +1483,7 @@ class RoadwayNetwork(object):
                     raise ValueError(msg)
 
             for link in links:
+                link["new_link"] = 1
                 self.links_df = _add_dict_to_df(self.links_df, link)
 
             #add location reference and geometry for new links
@@ -1501,6 +1502,16 @@ class RoadwayNetwork(object):
                 lambda x: _get_line_string(x["locationReferences"]) if x["geometry"] == '' else x["geometry"],
                 axis = 1
             )
+
+            added_links = self.links_df[self.links_df["new_link"] == 1]
+
+            new_shapes_df = pd.DataFrame({"geometry": added_links["geometry"]})
+            new_shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = new_shapes_df["geometry"].apply(
+                lambda x: create_unique_shape_id(x)
+            )
+            self.shapes_df = self.shapes_df.append(new_shapes_df)
+
+            self.links_df.drop(["new_link"], axis=1, inplace=True)
 
 
     def delete_roadway_feature_change(
