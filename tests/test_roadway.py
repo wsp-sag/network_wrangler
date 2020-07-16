@@ -765,8 +765,10 @@ def test_get_unique_shape_id(request):
             [-93.0843092, 44.9656997]
         ]
     )
-    hash_id = create_unique_shape_id(geometry)
-    print(hash_id)
+
+    shape_id = create_unique_shape_id(geometry)
+
+    assert(shape_id == '72ceb24e2c632c02f7eae5e33ed12702')
 
     print("--Finished:", request.node.name)
 
