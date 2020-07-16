@@ -822,7 +822,6 @@ def test_create_default_geometry(request):
 
     print("--Finished:", request.node.name)
 
-
 @pytest.mark.roadway
 def test_add_roadway_shape(request):
     print("\n--Starting:", request.node.name)
@@ -847,5 +846,7 @@ def test_add_roadway_shape(request):
     rev_shapes_count = len(net.shapes_df)
 
     assert((rev_links_count - orig_links_count) == (rev_shapes_count - orig_shapes_count))
+    assert(rev_shapes_count > orig_shapes_count)
+    assert(rev_links_count > orig_links_count)
 
     print("--Finished:", request.node.name)
