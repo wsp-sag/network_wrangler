@@ -10,6 +10,7 @@ import pandas as pd
 from network_wrangler import offset_lat_lon
 from network_wrangler import haversine_distance
 from network_wrangler import create_unique_shape_id
+from network_wrangler import create_location_reference_from_nodes
 import networkx as nx
 from shapely.geometry import LineString
 
@@ -818,9 +819,9 @@ def test_create_default_geometry(request):
         project_card_dictionary.get("links"), project_card_dictionary.get("nodes")
     )
 
-    links_without_geomtery = net.links_df[net.links_df["geometry"] == ""]
+    links_without_geometry = net.links_df[net.links_df["geometry"] == ""]
 
-    assert(len(links_without_geomtery) == 0)
+    assert(len(links_without_geometry) == 0)
 
     print("--Finished:", request.node.name)
 

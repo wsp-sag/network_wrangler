@@ -33,7 +33,7 @@ from .logger import WranglerLogger
 from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .utils import offset_lat_lon, haversine_distance, create_unique_shape_id
-
+from .utils import create_location_reference_from_nodes, create_line_string
 
 class RoadwayNetwork(object):
     """
@@ -279,15 +279,7 @@ class RoadwayNetwork(object):
             link_json = json.load(f)
 
         link_properties = pd.DataFrame(link_json)
-        link_geometries = [
-            LineString(
-                [
-                    g["locationReferences"][0]["point"],
-                    g["locationReferences"][1]["point"],
-                ]
-            )
-            for g in link_json
-        ]
+        link_geometries = [create_line_string(g["locationReferences"]) for g in link_json]
         links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
         links_df.crs = RoadwayNetwork.CRS
 
@@ -1414,18 +1406,6 @@ class RoadwayNetwork(object):
             out_df = df.append(new_row_to_add, ignore_index=True)
             return out_df
 
-        def _get_line_string(location_reference: list):
-            return LineString(
-                [location_reference[0]["point"], location_reference[1]["point"]]
-            )
-
-        def _get_location_reference(node_a, node_b):
-            out_location_reference = [
-                {"sequence": 1, "point": [node_a["X"], node_a["Y"]]},
-                {"sequence": 2, "point": [node_b["X"], node_b["Y"]]},
-            ]
-            return out_location_reference
-
         if nodes is not None:
             for node in nodes:
                 if node.get(RoadwayNetwork.NODE_FOREIGN_KEY) is None:
@@ -1465,17 +1445,14 @@ class RoadwayNetwork(object):
                     WranglerLogger.error(msg)
                     raise ValueError(msg)
 
-                a_node_query = RoadwayNetwork.UNIQUE_NODE_KEY + " == " + str(link["A"])
-                b_node_query = RoadwayNetwork.UNIQUE_NODE_KEY + " == " + str(link["B"])
-
-                if self.nodes_df.query(a_node_query, engine="python").empty:
+                if self.nodes_df[self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY ]==link["A"]].empty:
                     msg = "New link to add has A node = {} but the node does not exist in the network".format(
                         link["A"]
                     )
                     WranglerLogger.error(msg)
                     raise ValueError(msg)
 
-                if self.nodes_df.query(b_node_query, engine="python").empty:
+                if self.nodes_df[self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY ]==link["B"]].empty:
                     msg = "New link to add has B node = {} but the node does not exist in the network".format(
                         link["B"]
                     )
@@ -1488,21 +1465,22 @@ class RoadwayNetwork(object):
 
             #add location reference and geometry for new links
             self.links_df["locationReferences"] = self.links_df.apply(
-                lambda x: _get_location_reference(
+                lambda x: create_location_reference_from_nodes(
                     self.nodes_df[
                         self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == x["A"]
-                    ].iloc[0],
+                    ].squeeze(),
                     self.nodes_df[
                         self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == x["B"]
-                    ].iloc[0]
-                ) if x["locationReferences"] == '' else x["locationReferences"],
+                    ].squeeze()
+                ) if x["new_link"] == 1 else x["locationReferences"],
                 axis = 1
             )
             self.links_df["geometry"] = self.links_df.apply(
-                lambda x: _get_line_string(x["locationReferences"]) if x["geometry"] == '' else x["geometry"],
+                lambda x: create_line_string(x["locationReferences"]) if x["new_link"] == 1 else x["geometry"],
                 axis = 1
             )
 
+            # add new shapes
             added_links = self.links_df[self.links_df["new_link"] == 1]
 
             new_shapes_df = pd.DataFrame({"geometry": added_links["geometry"]})
@@ -1886,11 +1864,6 @@ class RoadwayNetwork(object):
             )
             return out_location_reference
 
-        def _get_line_string(location_reference: list):
-            return LineString(
-                [location_reference[0]["point"], location_reference[1]["point"]]
-            )
-
         ml_links_df["A"] = (
             ml_links_df["A"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
         )
@@ -1904,17 +1877,17 @@ class RoadwayNetwork(object):
             lambda x: _update_location_reference(x)
         )
         ml_links_df["geometry"] = ml_links_df["locationReferences"].apply(
-            lambda x: _get_line_string(x)
+            lambda x: create_line_string(x)
         )
 
         access_links_df, egress_links_df = RoadwayNetwork.create_dummy_connector_links(
             gp_links_df, ml_links_df
         )
         access_links_df["geometry"] = access_links_df["locationReferences"].apply(
-            lambda x: _get_line_string(x)
+            lambda x: create_line_string(x)
         )
         egress_links_df["geometry"] = egress_links_df["locationReferences"].apply(
-            lambda x: _get_line_string(x)
+            lambda x: create_line_string(x)
         )
 
         new_links_df = gp_links_df.append(ml_links_df)

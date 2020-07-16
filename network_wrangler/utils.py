@@ -174,3 +174,28 @@ def create_unique_shape_id(line_string: LineString):
     hash = hashlib.md5(unhashed).hexdigest()
 
     return hash
+
+def create_location_reference_from_nodes(node_a, node_b):
+    """
+    Creates a location reference using the node a and node b coordinates
+
+    Args:
+    node_a: Node A as Series
+    node_b: Node B as Series
+
+    """
+    out_location_reference = [
+        {"sequence": 1, "point": [node_a["X"], node_a["Y"]]},
+        {"sequence": 2, "point": [node_b["X"], node_b["Y"]]},
+    ]
+
+    return out_location_reference
+
+def create_line_string(location_reference: list):
+    """
+    Creates a geometry as a LineString using location reference
+    """
+
+    return LineString(
+        [location_reference[0]["point"], location_reference[1]["point"]]
+    )
