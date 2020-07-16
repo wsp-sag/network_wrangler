@@ -321,8 +321,8 @@ class RoadwayNetwork(object):
         nodes_df.set_index(RoadwayNetwork.NODE_FOREIGN_KEY + "_idx", inplace=True)
 
         nodes_df.crs = RoadwayNetwork.CRS
-        nodes_df["X"] = nodes_df["geometry"].apply(lambda g: g.X)
-        nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.Y)
+        nodes_df["X"] = nodes_df["geometry"].apply(lambda g: g.x)
+        nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.y)
         # todo: flatten json
 
         WranglerLogger.info("Read %s links from %s" % (len(links_df), link_file))
@@ -1386,11 +1386,7 @@ class RoadwayNetwork(object):
         nodes : list of dictionaries
         """
         # TODO:
-        # validate links dictonary
-
-        # CHECKS:
-        # check if new link model_link_id already exists?
-        # check if u and v nodes are already present or not?
+        # validate links and nodes dictonary
 
         def _add_dict_to_df(df, new_dict):
             df_column_names = df.columns
@@ -1950,8 +1946,8 @@ class RoadwayNetwork(object):
                     ignore_index=True,
                 )
 
-        new_nodes_df["X"] = new_nodes_df["geometry"].apply(lambda g: g.X)
-        new_nodes_df["Y"] = new_nodes_df["geometry"].apply(lambda g: g.Y)
+        new_nodes_df["X"] = new_nodes_df["geometry"].apply(lambda g: g.x)
+        new_nodes_df["Y"] = new_nodes_df["geometry"].apply(lambda g: g.y)
 
         new_shapes_df = self.shapes_df
 
