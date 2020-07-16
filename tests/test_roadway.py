@@ -796,6 +796,8 @@ def test_delete_roadway_shape(request):
     rev_shapes_count = len(net.shapes_df)
 
     assert((orig_links_count - rev_links_count) == (orig_shapes_count - rev_shapes_count))
+    assert(orig_shapes_count > rev_shapes_count)
+    assert(orig_links_count > rev_links_count)
 
     print("--Finished:", request.node.name)
 
