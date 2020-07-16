@@ -359,21 +359,23 @@ class TransitNetwork(object):
             Boolean
         """
         stop_ids_stopstxt = set(feed.stops.stop_id.tolist())
-        stop_ids_referenced = set(
-                feed.stop_times.stop_id.tolist() +
-                feed.stops.parent_station.tolist()
-                )
+        stop_ids_referenced = []
 
+        # STOP_TIMES
+        stop_ids_referenced.extend(feed.stop_times.stop_id.dropna().tolist())
+        stop_ids_referenced.extend(feed.stops.parent_station.dropna().tolist())
+
+        # TRANSFERS
         if feed.get("transfers.txt").shape[0]>0:
-            stop_ids_referenced += set(
-                feed.transfers.from_stop_id.tolist() +
-                feed.transfers.to_stop_id.tolist()
-                )
+            stop_ids_referenced.extend(feed.transfers.from_stop_id.dropna().tolist())
+            stop_ids_referenced.extend(feed.transfers.to_stop_id.dropna().tolist())
+
+        # PATHWAYS
         if feed.get("pathways.txt").shape[0]>0:
-            stop_ids_referenced += set(
-                feed.pathways.from_stop_id.tolist() +
-                feed.pathways.to_stop_id.tolist()
-                )
+            stop_ids_referenced.extend(feed.pathways.from_stop_id.dropna().tolist())
+            stop_ids_referenced.extend(feed.pathways.to_stop_id.dropna().tolist())
+
+        stop_ids_referenced = set(stop_ids_referenced)
 
         missing_stops = stop_ids_referenced-stop_ids_stopstxt
 
