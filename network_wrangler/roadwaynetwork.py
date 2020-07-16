@@ -321,8 +321,8 @@ class RoadwayNetwork(object):
         nodes_df.set_index(RoadwayNetwork.NODE_FOREIGN_KEY + "_idx", inplace=True)
 
         nodes_df.crs = RoadwayNetwork.CRS
-        nodes_df["x"] = nodes_df["geometry"].apply(lambda g: g.x)
-        nodes_df["y"] = nodes_df["geometry"].apply(lambda g: g.y)
+        nodes_df["X"] = nodes_df["geometry"].apply(lambda g: g.X)
+        nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.Y)
         # todo: flatten json
 
         WranglerLogger.info("Read %s links from %s" % (len(links_df), link_file))
@@ -1425,8 +1425,8 @@ class RoadwayNetwork(object):
 
         def _get_location_reference(node_a, node_b):
             out_location_reference = [
-                {"sequence": 1, "point": [node_a["x"], node_a["y"]]},
-                {"sequence": 2, "point": [node_b["x"], node_b["y"]]},
+                {"sequence": 1, "point": [node_a["X"], node_a["Y"]]},
+                {"sequence": 2, "point": [node_b["X"], node_b["Y"]]},
             ]
             return out_location_reference
 
@@ -1950,8 +1950,8 @@ class RoadwayNetwork(object):
                     ignore_index=True,
                 )
 
-        new_nodes_df["x"] = new_nodes_df["geometry"].apply(lambda g: g.x)
-        new_nodes_df["y"] = new_nodes_df["geometry"].apply(lambda g: g.y)
+        new_nodes_df["X"] = new_nodes_df["geometry"].apply(lambda g: g.X)
+        new_nodes_df["Y"] = new_nodes_df["geometry"].apply(lambda g: g.Y)
 
         new_shapes_df = self.shapes_df
 
@@ -2191,7 +2191,7 @@ class RoadwayNetwork(object):
         for nodes in disconnected_subgraph_nodes:
             for n in nodes:
                 size = 100
-                ax.scatter(G.nodes[n]["x"], G.nodes[n]["y"], c=colors[i], s=size)
+                ax.scatter(G.nodes[n]["X"], G.nodes[n]["Y"], c=colors[i], s=size)
             i = i + 1
 
         return fig, ax
@@ -2216,7 +2216,7 @@ class RoadwayNetwork(object):
 
         def _folium_node(node, color="white", icon=""):
             node_marker = folium.Marker(
-                location=[node["y"], node["x"]],
+                location=[node["Y"], node["X"]],
                 icon=folium.Icon(icon=icon, color=color),
             )
             return node_marker
@@ -2273,7 +2273,7 @@ class RoadwayNetwork(object):
 
         def _folium_node(node, color="white", icon=""):
             node_circle = folium.Circle(
-                location=[node["y"], node["x"]],
+                location=[node["Y"], node["X"]],
                 radius=2,
                 fill=True,
                 color=color,
@@ -2331,7 +2331,7 @@ class RoadwayNetwork(object):
 
         def _folium_node(node, color="white", icon=""):
             node_circle = folium.Circle(
-                location=[node["y"], node["x"]],
+                location=[node["Y"], node["X"]],
                 radius=2,
                 fill=True,
                 color=color,

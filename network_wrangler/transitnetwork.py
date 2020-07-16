@@ -771,7 +771,7 @@ class TransitNetwork(object):
                 stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
             )
             nodes_df = self.road_net.nodes_df.loc[
-                :, [TransitNetwork.STOPS_FOREIGN_KEY, "x", "y"]
+                :, [TransitNetwork.STOPS_FOREIGN_KEY, "X", "Y"]
             ]
             for fk_i in properties["set_stops"]:
                 if fk_i not in existing_fk_ids:
@@ -789,8 +789,8 @@ class TransitNetwork(object):
                         TransitNetwork.STOPS_FOREIGN_KEY
                     ]] = [
                         new_stop_id,
-                        nodes_df.loc[int(fk_i), 'y'],
-                        nodes_df.loc[int(fk_i), 'x'],
+                        nodes_df.loc[int(fk_i), "Y"],
+                        nodes_df.loc[int(fk_i), "X"],
                         fk_i
                     ]
 

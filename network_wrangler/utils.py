@@ -19,7 +19,7 @@ def point_df_to_geojson(df: pd.DataFrame, properties: list):
             "properties": {},
             "geometry": {"type": "Point", "coordinates": []},
         }
-        feature["geometry"]["coordinates"] = [row["geometry"].x, row["geometry"].y]
+        feature["geometry"]["coordinates"] = [row["geometry"].X, row["geometry"].Y]
         feature["properties"][RoadwayNetwork.NODE_FOREIGN_KEY] = row.name
         for prop in properties:
             feature["properties"][prop] = row[prop]
