@@ -257,12 +257,12 @@ class RoadwayNetwork(object):
             raise ValueError(msg)
 
         if not os.path.exists(node_file):
-            msg = "Link file doesn't exist at: {}".format(link_file)
+            msg = "Node file doesn't exist at: {}".format(node_file)
             WranglerLogger.error(msg)
             raise ValueError(msg)
 
         if not os.path.exists(shape_file):
-            msg = "Link file doesn't exist at: {}".format(link_file)
+            msg = "Shape file doesn't exist at: {}".format(shape_file)
             WranglerLogger.error(msg)
             raise ValueError(msg)
 
