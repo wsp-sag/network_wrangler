@@ -853,3 +853,32 @@ def test_add_roadway_shape(request):
     assert(rev_links_count > orig_links_count)
 
     print("--Finished:", request.node.name)
+
+@pytest.mark.test_ak
+@pytest.mark.roadway
+def test_create_ml_network_shape(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = _read_stpaul_net()
+
+    print("Reading project card ...")
+    project_card_name = "4_simple_managed_lane.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path, validate=False)
+    project_card_dictionary = project_card.__dict__
+
+    orig_links_count = len(net.links_df)
+    orig_shapes_count = len(net.shapes_df)
+
+    net.apply(project_card_dictionary)
+    ml_net = net.create_managed_lane_network()
+
+    rev_links_count = len(ml_net.links_df)
+    rev_shapes_count = len(ml_net.shapes_df)
+
+    assert((rev_links_count - orig_links_count) == (rev_shapes_count - orig_shapes_count))
+    assert(rev_shapes_count > orig_shapes_count)
+    assert(rev_links_count > orig_links_count)
+
+    print("--Finished:", request.node.name)

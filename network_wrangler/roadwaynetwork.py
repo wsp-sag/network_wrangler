@@ -1815,7 +1815,9 @@ class RoadwayNetwork(object):
 
     def create_managed_lane_network(self, in_place: bool=False) -> RoadwayNetwork:
         """
-        Create a roadway network with managed lanes links separated out
+        Create a roadway network with managed lanes links separated out.
+        Add new parallel managed lane links, access/egress links,
+        and add shapes corresponding to the new links
 
         args:
             in_place: update self or return a new roadway network object
@@ -1875,14 +1877,17 @@ class RoadwayNetwork(object):
         ml_links_df["B"] = (
             ml_links_df["B"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
         )
-        ml_links_df["model_link_id"] = (
-            ml_links_df["model_link_id"] + RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR
+        ml_links_df[RoadwayNetwork.UNIQUE_LINK_KEY] = (
+            ml_links_df[RoadwayNetwork.UNIQUE_LINK_KEY] + RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR
         )
         ml_links_df["locationReferences"] = ml_links_df["locationReferences"].apply(
             lambda x: _update_location_reference(x)
         )
         ml_links_df["geometry"] = ml_links_df["locationReferences"].apply(
             lambda x: create_line_string(x)
+        )
+        ml_links_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = ml_links_df["geometry"].apply(
+            lambda x: create_unique_shape_id(x)
         )
 
         access_links_df, egress_links_df = RoadwayNetwork.create_dummy_connector_links(
@@ -1894,24 +1899,30 @@ class RoadwayNetwork(object):
         egress_links_df["geometry"] = egress_links_df["locationReferences"].apply(
             lambda x: create_line_string(x)
         )
+        access_links_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = access_links_df["geometry"].apply(
+            lambda x: create_unique_shape_id(x)
+        )
+        egress_links_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = egress_links_df["geometry"].apply(
+            lambda x: create_unique_shape_id(x)
+        )
 
-        new_links_df = gp_links_df.append(ml_links_df)
-        new_links_df = new_links_df.append(access_links_df)
-        new_links_df = new_links_df.append(egress_links_df)
-        new_links_df = new_links_df.append(non_ml_links_df)
+        out_links_df = gp_links_df.append(ml_links_df)
+        out_links_df = out_links_df.append(access_links_df)
+        out_links_df = out_links_df.append(egress_links_df)
+        out_links_df = out_links_df.append(non_ml_links_df)
 
         # only the ml_links_df has the new nodes added
         added_a_nodes = ml_links_df["A"]
         added_b_nodes = ml_links_df["B"]
 
-        new_nodes_df = self.nodes_df
+        out_nodes_df = self.nodes_df
 
         for a_node in added_a_nodes:
-            new_nodes_df = new_nodes_df.append(
+            out_nodes_df = out_nodes_df.append(
                 {
                     "model_node_id": a_node,
                     "geometry": Point(
-                        new_links_df[new_links_df["A"] == a_node].iloc[0][
+                        out_links_df[out_links_df["A"] == a_node].iloc[0][
                             "locationReferences"
                         ][0]["point"]
                     ),
@@ -1921,12 +1932,12 @@ class RoadwayNetwork(object):
             )
 
         for b_node in added_b_nodes:
-            if b_node not in new_nodes_df["model_node_id"].tolist():
-                new_nodes_df = new_nodes_df.append(
+            if b_node not in out_nodes_df["model_node_id"].tolist():
+                out_nodes_df = out_nodes_df.append(
                     {
                         "model_node_id": b_node,
                         "geometry": Point(
-                            new_links_df[new_links_df["B"] == b_node].iloc[0][
+                            out_links_df[out_links_df["B"] == b_node].iloc[0][
                                 "locationReferences"
                             ][1]["point"]
                         ),
@@ -1935,33 +1946,34 @@ class RoadwayNetwork(object):
                     ignore_index=True,
                 )
 
-        new_nodes_df["X"] = new_nodes_df["geometry"].apply(lambda g: g.x)
-        new_nodes_df["Y"] = new_nodes_df["geometry"].apply(lambda g: g.y)
+        out_nodes_df["X"] = out_nodes_df["geometry"].apply(lambda g: g.x)
+        out_nodes_df["Y"] = out_nodes_df["geometry"].apply(lambda g: g.y)
 
-        new_shapes_df = self.shapes_df
+        out_shapes_df = self.shapes_df
 
         # managed lanes, access and egress connectors are new geometry
-        for index, row in ml_links_df.iterrows():
-            new_shapes_df = new_shapes_df.append(
-                {"geometry": row["geometry"]}, ignore_index=True
-            )
-        for index, row in access_links_df.iterrows():
-            new_shapes_df = new_shapes_df.append(
-                {"geometry": row["geometry"]}, ignore_index=True
-            )
-        for index, row in egress_links_df.iterrows():
-            new_shapes_df = new_shapes_df.append(
-                {"geometry": row["geometry"]}, ignore_index=True
-            )
-        #links_df --> shha
+        new_shapes_df = pd.DataFrame({"geometry": ml_links_df["geometry"].append(
+            access_links_df["geometry"]).append(
+                egress_links_df["geometry"])
+        })
+        new_shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = new_shapes_df["geometry"].apply(
+            lambda x: create_unique_shape_id(x)
+        )
+        out_shapes_df = out_shapes_df.append(new_shapes_df)
+
+        out_links_df = out_links_df.reset_index()
+        out_nodes_df = out_nodes_df.reset_index()
+        out_shapes_df = out_shapes_df.reset_index()
+
         if in_place:
-            self.links_df = new_links_df
-            self.nodes_df = new_nodes_df
-            self.shapes_df = new_shapes_df
+            self.links_df = out_links_df
+            self.nodes_df = out_nodes_df
+            self.shapes_df = out_shapes_df
         else:
             out_network = copy.deepcopy(self)
-            out_network.links_df = new_links_df
-            out_network.nodes_df = new_nodes_df
+            out_network.links_df = out_links_df
+            out_network.nodes_df = out_nodes_df
+            out_network.shapes_df = out_shapes_df
             return out_network
 
     @staticmethod
