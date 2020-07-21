@@ -1480,6 +1480,11 @@ class RoadwayNetwork(object):
                 axis = 1
             )
 
+            self.links_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = self.links_df.apply(
+                lambda x: create_unique_shape_id(x["geometry"]) if x["new_link"] == 1 else x[RoadwayNetwork.UNIQUE_SHAPE_KEY],
+                axis = 1
+            )
+
             # add new shapes
             added_links = self.links_df[self.links_df["new_link"] == 1]
 
