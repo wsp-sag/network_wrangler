@@ -42,6 +42,11 @@ class ProjectCard(object):
         args:
         attribute_dictonary: a nested dictionary of attributes
         """
+        # add these first so they are first on write out
+        self.project = None
+        self.tags = ''
+        self.dependencies = ''
+
         self.__dict__.update(attribute_dictonary)
         self.valid = False
 
@@ -86,8 +91,17 @@ class ProjectCard(object):
             from network_wrangler.Utils import make_slug
 
             filename = make_slug(self.project) + ".yml"
+
+        #import collections
+        #out_dict = collections.OrderedDict()
+        out_dict = {}
+        out_dict['project'] = None
+        out_dict['tags'] = ''
+        out_dict['dependencies'] = ''
+        out_dict.update(self.__dict__)
+
         with open(filename, "w") as outfile:
-            yaml.dump(self.__dict__, outfile, default_flow_style=False)
+            yaml.dump(out_dict, outfile, default_flow_style=False, sort_keys=False)
 
     @staticmethod
     def validate_project_card_schema(
