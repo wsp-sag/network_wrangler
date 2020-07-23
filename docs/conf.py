@@ -43,6 +43,14 @@ extensions = [
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
+    "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.coverage",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
+    "recommonmark",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -65,3 +73,20 @@ html_theme = "sphinx_rtd_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+
+# -- Options for Autodoc -------------------------------------------------
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": True,
+    "inherited-members": True,
+    "imported-members": True,
+    "show-inheritance": True,
+    "member-order": "groupwise",
+}
+
+autoclass_content = (
+    "class"
+)  # classes should include both the class' and the __init__ method's docstring
+
+autosummary_generate = True

@@ -131,7 +131,7 @@ class TransitNetwork(object):
 
         return updated_config
 
-    def validate_frequencies(self) -> Bool:
+    def validate_frequencies(self) -> bool:
         """
         Validates that there are no transit trips in the feed with zero frequencies.
 
@@ -155,7 +155,7 @@ class TransitNetwork(object):
 
         return _valid
 
-    def validate_road_network_consistencies(self) -> Bool:
+    def validate_road_network_consistencies(self) -> bool:
         """
         Validates transit network against the road network for both stops
         and shapes.
@@ -181,7 +181,7 @@ class TransitNetwork(object):
 
         return valid
 
-    def validate_transit_stops(self) -> Bool:
+    def validate_transit_stops(self) -> bool:
         """
         Validates that all transit stops are part of the roadway network.
 
@@ -213,7 +213,7 @@ class TransitNetwork(object):
 
         return valid
 
-    def validate_transit_shapes(self) -> Bool:
+    def validate_transit_shapes(self) -> bool:
         """
         Validates that all transit shapes are part of the roadway network.
 
