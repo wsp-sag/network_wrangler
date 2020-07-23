@@ -1,6 +1,8 @@
 __version__ = "0.0.0"
 
+import os
 import sys
+from datetime import datetime
 
 from .logger import WranglerLogger, setupLogging
 from .projectcard import ProjectCard
@@ -28,7 +30,13 @@ __all__ = [
     "haversine_distance",
     "create_unique_shape_id",
     "create_location_reference_from_nodes",
-    "create_line_string"
+    "create_line_string",
 ]
 
-setupLogging(logFileName="network_wrangler.log")
+setupLogging(
+    log_filename=os.path.join(
+        os.getcwd(),
+        "network_wrangler_{}.log".format(datetime.now().strftime("%Y-%m-%d_%H:%M:%S")),
+    ),
+    log_to_console=True,
+)
