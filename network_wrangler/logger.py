@@ -11,15 +11,14 @@ __all__ = ["WranglerLogger", "setupLogging"]
 WranglerLogger = logging.getLogger("WranglerLogger")
 
 
-def setupLogging(level=None, logFileName=None, logToConsole=False):
+def setupLogging(level: int=None, log_filename: str=None, log_to_console: bool=False):
     """
-        Sets up the Wrangler Logger
-        
+    Sets up the WranglerLogger w.r.t. the debug file location and if logging to console.
+
     args:
-        level (int): the level of logging that will be recorded 
-        logFileName (string): the name of the log file that will get created
-        logToConsole(boolean): if True, logging will go to the console
-        
+        level: the level of logging that will be recorded
+        log_filename: the location of the log file that will get created to add the DEBUG log
+        log_to_console: if True, logging will go to the console at INFO level
         """
 
     if level is None:
@@ -31,14 +30,14 @@ def setupLogging(level=None, logFileName=None, logToConsole=False):
         "%(asctime)-15s %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S,"
     )
 
-    if logFileName:
-        file_handler = logging.FileHandler(logFileName)
+    if log_filename:
+        file_handler = logging.FileHandler(log_filename)
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(FORMAT)
         WranglerLogger.addHandler(file_handler)
 
-    if logToConsole:
+    if log_to_console:
         console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.WARNING)
+        console_handler.setLevel(logging.INFO)
         console_handler.setFormatter(FORMAT)
         WranglerLogger.addHandler(console_handler)

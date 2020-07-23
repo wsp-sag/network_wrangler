@@ -23,7 +23,7 @@ def test_set_roadnet(request):
         link_file=os.path.join(STPAUL_DIR, "link.json"),
         node_file=os.path.join(STPAUL_DIR, "node.geojson"),
         shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True
+        fast=True,
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.set_roadnet(road_net)
@@ -33,7 +33,7 @@ def test_set_roadnet(request):
 
 @pytest.mark.transit_with_roadnet
 @pytest.mark.travis
-#@pytest.mark.skip("")
+# @pytest.mark.skip("")
 def test_project_card(request):
     print("\n--Starting:", request.node.name)
 
@@ -41,7 +41,7 @@ def test_project_card(request):
         link_file=os.path.join(STPAUL_DIR, "link.json"),
         node_file=os.path.join(STPAUL_DIR, "node.geojson"),
         shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True
+        fast=True,
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net
@@ -51,21 +51,57 @@ def test_project_card(request):
     project_card = ProjectCard.read(project_card_path)
     transit_net.apply_transit_feature_change(
         transit_net.select_transit_features(project_card.facility),
-        project_card.properties
+        project_card.properties,
     )
 
     # Shapes
-    result = transit_net.feed.shapes[transit_net.feed.shapes["shape_id"] ==
-                                     "2940002"]["shape_model_node_id"].tolist()
-    answer = ["37582", "37574", "4761", "4763", "4764", "98429", "45985", "57483", "126324",
-    "57484", "150855", "11188", "84899", "46666", "46665", "46663", "81820", "76167", "77077",
-    "68609", "39425", "62146", "41991", "70841", "45691", "69793", "45683", "45685", "7688",
-    "45687", "100784", "100782", "45688", "37609", "19077", "38696"]
+    result = transit_net.feed.shapes[transit_net.feed.shapes["shape_id"] == "2940002"][
+        "shape_model_node_id"
+    ].tolist()
+    answer = [
+        "37582",
+        "37574",
+        "4761",
+        "4763",
+        "4764",
+        "98429",
+        "45985",
+        "57483",
+        "126324",
+        "57484",
+        "150855",
+        "11188",
+        "84899",
+        "46666",
+        "46665",
+        "46663",
+        "81820",
+        "76167",
+        "77077",
+        "68609",
+        "39425",
+        "62146",
+        "41991",
+        "70841",
+        "45691",
+        "69793",
+        "45683",
+        "45685",
+        "7688",
+        "45687",
+        "100784",
+        "100782",
+        "45688",
+        "37609",
+        "19077",
+        "38696",
+    ]
     assert result == answer
 
     # Stops
-    result = transit_net.feed.stop_times[transit_net.feed.stop_times["trip_id"] ==
-                                         "14944022-JUN19-MVS-BUS-Weekday-01"]["stop_id"].tolist()
+    result = transit_net.feed.stop_times[
+        transit_net.feed.stop_times["trip_id"] == "14944022-JUN19-MVS-BUS-Weekday-01"
+    ]["stop_id"].tolist()
     result_tail = result[-5:]
     answer_tail = ["17013", "17010", "17009", "17006", "17005"]
     assert result_tail == answer_tail
@@ -75,7 +111,7 @@ def test_project_card(request):
 
 @pytest.mark.transit_with_roadnet
 @pytest.mark.travis
-#@pytest.mark.skip("need to allow for creating new stops if they don't already exist in stops.txt")
+# @pytest.mark.skip("need to allow for creating new stops if they don't already exist in stops.txt")
 def test_wo_existing(request):
     print("\n--Starting:", request.node.name)
 
@@ -83,7 +119,7 @@ def test_wo_existing(request):
         link_file=os.path.join(STPAUL_DIR, "link.json"),
         node_file=os.path.join(STPAUL_DIR, "node.geojson"),
         shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True
+        fast=True,
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net
@@ -105,12 +141,7 @@ def test_wo_existing(request):
         trip_ids=transit_net.select_transit_features(
             {"trip_id": ["14986385-JUN19-MVS-BUS-Weekday-01"]}
         ),
-        properties=[
-            {
-                "property": "routing",
-                "set": [75318]
-            }
-        ]
+        properties=[{"property": "routing", "set": [75318]}],
     )
 
     # Shapes
@@ -129,9 +160,10 @@ def test_wo_existing(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.transit_with_roadnet
 @pytest.mark.travis
-#@pytest.mark.skip("need to update trips and nodes")
+# @pytest.mark.skip("need to update trips and nodes")
 def test_select_transit_features_by_nodes(request):
     print("\n--Starting:", request.node.name)
 
@@ -142,31 +174,36 @@ def test_select_transit_features_by_nodes(request):
         node_ids=["75520", "66380", "57530"]
     )
     print(trip_ids)
-    assert set(trip_ids) == set([
-        "14941148-JUN19-MVS-BUS-Weekday-01",
-        "14941151-JUN19-MVS-BUS-Weekday-01",
-        "14941153-JUN19-MVS-BUS-Weekday-01",
-        "14941163-JUN19-MVS-BUS-Weekday-01",
-        "14944379-JUN19-MVS-BUS-Weekday-01",
-        "14944386-JUN19-MVS-BUS-Weekday-01"
-    ])
+    assert set(trip_ids) == set(
+        [
+            "14941148-JUN19-MVS-BUS-Weekday-01",
+            "14941151-JUN19-MVS-BUS-Weekday-01",
+            "14941153-JUN19-MVS-BUS-Weekday-01",
+            "14941163-JUN19-MVS-BUS-Weekday-01",
+            "14944379-JUN19-MVS-BUS-Weekday-01",
+            "14944386-JUN19-MVS-BUS-Weekday-01",
+        ]
+    )
 
     # All nodes
     trip_ids = transit_net.select_transit_features_by_nodes(
         node_ids=["75520", "66380"], require_all=True
     )
-    assert set(trip_ids) == set([
-        "14941148-JUN19-MVS-BUS-Weekday-01",
-        "14941151-JUN19-MVS-BUS-Weekday-01",
-        "14941153-JUN19-MVS-BUS-Weekday-01",
-        "14941163-JUN19-MVS-BUS-Weekday-01"
-    ])
+    assert set(trip_ids) == set(
+        [
+            "14941148-JUN19-MVS-BUS-Weekday-01",
+            "14941151-JUN19-MVS-BUS-Weekday-01",
+            "14941153-JUN19-MVS-BUS-Weekday-01",
+            "14941163-JUN19-MVS-BUS-Weekday-01",
+        ]
+    )
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.transit_with_roadnet
 @pytest.mark.travis
-#@pytest.mark.skip("need to update trips and nodes")
+# @pytest.mark.skip("need to update trips and nodes")
 def test_select_transit_features_by_nodes(request):
     print("\n--Starting:", request.node.name)
 
@@ -177,24 +214,28 @@ def test_select_transit_features_by_nodes(request):
         node_ids=["75520", "66380", "57530"]
     )
     print(trip_ids)
-    assert set(trip_ids) == set([
-        "14941148-JUN19-MVS-BUS-Weekday-01",
-        "14941151-JUN19-MVS-BUS-Weekday-01",
-        "14941153-JUN19-MVS-BUS-Weekday-01",
-        "14941163-JUN19-MVS-BUS-Weekday-01",
-        "14944379-JUN19-MVS-BUS-Weekday-01",
-        "14944386-JUN19-MVS-BUS-Weekday-01"
-    ])
+    assert set(trip_ids) == set(
+        [
+            "14941148-JUN19-MVS-BUS-Weekday-01",
+            "14941151-JUN19-MVS-BUS-Weekday-01",
+            "14941153-JUN19-MVS-BUS-Weekday-01",
+            "14941163-JUN19-MVS-BUS-Weekday-01",
+            "14944379-JUN19-MVS-BUS-Weekday-01",
+            "14944386-JUN19-MVS-BUS-Weekday-01",
+        ]
+    )
 
     # All nodes
     trip_ids = transit_net.select_transit_features_by_nodes(
         node_ids=["75520", "66380"], require_all=True
     )
-    assert set(trip_ids) == set([
-        "14941148-JUN19-MVS-BUS-Weekday-01",
-        "14941151-JUN19-MVS-BUS-Weekday-01",
-        "14941153-JUN19-MVS-BUS-Weekday-01",
-        "14941163-JUN19-MVS-BUS-Weekday-01"
-    ])
+    assert set(trip_ids) == set(
+        [
+            "14941148-JUN19-MVS-BUS-Weekday-01",
+            "14941151-JUN19-MVS-BUS-Weekday-01",
+            "14941153-JUN19-MVS-BUS-Weekday-01",
+            "14941163-JUN19-MVS-BUS-Weekday-01",
+        ]
+    )
 
     print("--Finished:", request.node.name)

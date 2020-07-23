@@ -178,7 +178,9 @@ class Scenario(object):
             transit_net = TransitNetwork.read(transit_dir)
         else:
             transit_net = None
-            WranglerLogger.info("No transit directory specified, base scenario will have empty transit network.")
+            WranglerLogger.info(
+                "No transit directory specified, base scenario will have empty transit network."
+            )
 
         transit_net.set_roadnet(road_net, validate_consistency=validate)
         base_scenario = {"road_net": road_net, "transit_net": transit_net}
@@ -545,7 +547,6 @@ class Scenario(object):
 
     def remove_all_projects(self):
         self.project_cards = []
-
 
     def applied_project_card_summary(self, project_card_dictionary: dict) -> dict:
         """

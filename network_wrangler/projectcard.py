@@ -44,8 +44,8 @@ class ProjectCard(object):
         """
         # add these first so they are first on write out
         self.project = None
-        self.tags = ''
-        self.dependencies = ''
+        self.tags = ""
+        self.dependencies = ""
 
         self.__dict__.update(attribute_dictonary)
         self.valid = False
@@ -92,12 +92,12 @@ class ProjectCard(object):
 
             filename = make_slug(self.project) + ".yml"
 
-        #import collections
-        #out_dict = collections.OrderedDict()
+        # import collections
+        # out_dict = collections.OrderedDict()
         out_dict = {}
-        out_dict['project'] = None
-        out_dict['tags'] = ''
-        out_dict['dependencies'] = ''
+        out_dict["project"] = None
+        out_dict["tags"] = ""
+        out_dict["dependencies"] = ""
         out_dict.update(self.__dict__)
 
         with open(filename, "w") as outfile:

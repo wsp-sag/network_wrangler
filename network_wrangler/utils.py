@@ -5,6 +5,7 @@ import copy
 from shapely.geometry import LineString
 import hashlib
 
+
 def point_df_to_geojson(df: pd.DataFrame, properties: list):
     """
     Author: Geoff Boeing:
@@ -151,10 +152,11 @@ def haversine_distance(origin: list, destination: list):
         math.radians(lat1)
     ) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) * math.sin(dlon / 2)
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    d = radius * c # meters
-    d = d * 0.000621371 # miles
+    d = radius * c  # meters
+    d = d * 0.000621371  # miles
 
     return d
+
 
 def create_unique_shape_id(line_string: LineString):
     """
@@ -166,14 +168,15 @@ def create_unique_shape_id(line_string: LineString):
     Returns: string
     """
 
-    x1, y1 = list(line_string.coords)[0]    # first co-ordinate (A node)
-    x2, y2 = list(line_string.coords)[-1]   # last co-ordinate (B node)
+    x1, y1 = list(line_string.coords)[0]  # first co-ordinate (A node)
+    x2, y2 = list(line_string.coords)[-1]  # last co-ordinate (B node)
 
     message = "Geometry {} {} {} {}".format(x1, y1, x2, y2)
     unhashed = message.encode("utf-8")
     hash = hashlib.md5(unhashed).hexdigest()
 
     return hash
+
 
 def create_location_reference_from_nodes(node_a, node_b):
     """
@@ -191,11 +194,10 @@ def create_location_reference_from_nodes(node_a, node_b):
 
     return out_location_reference
 
+
 def create_line_string(location_reference: list):
     """
     Creates a geometry as a LineString using location reference
     """
 
-    return LineString(
-        [location_reference[0]["point"], location_reference[1]["point"]]
-    )
+    return LineString([location_reference[0]["point"], location_reference[1]["point"]])

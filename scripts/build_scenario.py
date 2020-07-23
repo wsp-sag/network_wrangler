@@ -55,7 +55,7 @@ if __name__ == "__main__":
         base_link_name=base_link_name,
         base_node_name=base_node_name,
         validate=validate_base_network,
-        transit_dir = base_network_dir,
+        transit_dir=base_network_dir,
     )
 
     # Create Scenaro Network

@@ -41,6 +41,7 @@ SCRATCH_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "scratch"
 )
 
+
 def _read_small_net():
     net = RoadwayNetwork.read(
         link_file=SMALL_LINK_FILE,
@@ -255,7 +256,9 @@ def test_add_managed_lane(request):
     selected_link_indices = net.select_roadway_features(project_card.facility)
 
     attributes_to_update = [p["property"] for p in project_card.properties]
-    orig_links = net.links_df.loc[selected_link_indices, net.links_df.columns.intersection(attributes_to_update)]
+    orig_links = net.links_df.loc[
+        selected_link_indices, net.links_df.columns.intersection(attributes_to_update)
+    ]
     print("Original Links:\n", orig_links)
 
     net.apply_managed_lane_feature_change(
@@ -268,6 +271,7 @@ def test_add_managed_lane(request):
     net.write(filename="test_ml", path=SCRATCH_DIR)
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -283,7 +287,9 @@ def test_add_managed_lane_complex(request):
 
     attributes_to_update = [p["property"] for p in project_card.properties]
 
-    orig_links = net.links_df.loc[selected_link_indices, net.links_df.columns.intersection(attributes_to_update)]
+    orig_links = net.links_df.loc[
+        selected_link_indices, net.links_df.columns.intersection(attributes_to_update)
+    ]
     print("Original Links:\n", orig_links)
 
     net.apply_managed_lane_feature_change(
@@ -312,6 +318,7 @@ def test_add_adhoc_field(request):
 
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
@@ -321,7 +328,7 @@ def test_add_adhoc_managed_lane_field(request):
     print("\n--Starting:", request.node.name)
     net = _read_small_net()
 
-    facility = {'link':[{'model_link_id': 224}]}
+    facility = {"link": [{"model_link_id": 224}]}
     selected_link_indices = net.select_roadway_features(facility)
     net.links_df["ML_my_ad_hoc_field"] = 0
     net.links_df["ML_my_ad_hoc_field"].loc[selected_link_indices] = 22.5
@@ -331,12 +338,20 @@ def test_add_adhoc_managed_lane_field(request):
     net.links_df["ML_price"].loc[selected_link_indices] = 1.5
     net.links_df["managed"] = 0
     net.links_df["managed"].loc[selected_link_indices] = 1
-    print("Network with field...\n ", net.links_df[["model_link_id","ML_my_ad_hoc_field","ML_lanes",'ML_price', 'managed']])
-    ml_net =  net.create_managed_lane_network()
+    print(
+        "Network with field...\n ",
+        net.links_df[
+            ["model_link_id", "ML_my_ad_hoc_field", "ML_lanes", "ML_price", "managed"]
+        ],
+    )
+    ml_net = net.create_managed_lane_network()
     print("Managed Lane Network")
-    print(ml_net.links_df[["model_link_id","ML_my_ad_hoc_field","ML_lanes",'ML_price']])
-    #assert net.links_df["my_ad_hoc_field"][0] == 22.5
-    #print("CALCULATED:\n", v_series.loc[selected_link_indices])
+    print(
+        ml_net.links_df[["model_link_id", "ML_my_ad_hoc_field", "ML_lanes", "ML_price"]]
+    )
+    # assert net.links_df["my_ad_hoc_field"][0] == 22.5
+    # print("CALCULATED:\n", v_series.loc[selected_link_indices])
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -654,6 +669,7 @@ def test_network_connectivity(request):
     print("Drive Network Connected:", net.is_network_connected(mode="drive"))
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_get_modal_network(request):
@@ -672,8 +688,9 @@ def test_get_modal_network(request):
         net.links_df, net.nodes_df, mode=mode,
     )
     mode_variable = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
-    non_transit_links =_links_df[_links_df[mode_variable] != 1]
+    non_transit_links = _links_df[_links_df[mode_variable] != 1]
     assert non_transit_links.shape[0] == 0
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -691,8 +708,9 @@ def test_network_connectivity_ignore_single_nodes(request):
     print("Assessing network connectivity for walk...")
     _, disconnected_nodes = net.assess_connectivity(mode="walk", ignore_end_nodes=True)
     print("{} Disconnected Subnetworks:".format(len(disconnected_nodes)))
-    print("-->\n{}".format("\n".join(list(map(str,disconnected_nodes)))))
+    print("-->\n{}".format("\n".join(list(map(str, disconnected_nodes)))))
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -715,6 +733,7 @@ def test_add_roadway_links(request):
     )
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.test_ml
 @pytest.mark.roadway
@@ -740,7 +759,7 @@ def test_existing_managed_lane_apply(request):
     selected_link_indices = net.select_roadway_features(project_card.facility)
 
     if "managed" in net.links_df.columns:
-        existing_ml_links = len((net.links_df[net.links_df["managed"]==1]).index)
+        existing_ml_links = len((net.links_df[net.links_df["managed"] == 1]).index)
     else:
         existing_ml_links = 0
 
@@ -750,28 +769,25 @@ def test_existing_managed_lane_apply(request):
         net.select_roadway_features(project_card.facility), project_card.properties
     )
 
-    new_ml_links = len((net.links_df[net.links_df["managed"]==1]).index)
+    new_ml_links = len((net.links_df[net.links_df["managed"] == 1]).index)
     print("New # of ML links in the network:", new_ml_links)
 
-    assert(new_ml_links == existing_ml_links + len(selected_link_indices))
+    assert new_ml_links == existing_ml_links + len(selected_link_indices)
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.test_hash
 @pytest.mark.roadway
 def test_get_unique_shape_id(request):
-    geometry = LineString(
-        [
-            [-93.0855338, 44.9662078],
-            [-93.0843092, 44.9656997]
-        ]
-    )
+    geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
 
     shape_id = create_unique_shape_id(geometry)
 
-    assert(shape_id == '72ceb24e2c632c02f7eae5e33ed12702')
+    assert shape_id == "72ceb24e2c632c02f7eae5e33ed12702"
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 def test_delete_roadway_shape(request):
@@ -796,11 +812,14 @@ def test_delete_roadway_shape(request):
     rev_links_count = len(net.links_df)
     rev_shapes_count = len(net.shapes_df)
 
-    assert((orig_links_count - rev_links_count) == (orig_shapes_count - rev_shapes_count))
-    assert(orig_shapes_count > rev_shapes_count)
-    assert(orig_links_count > rev_links_count)
+    assert (orig_links_count - rev_links_count) == (
+        orig_shapes_count - rev_shapes_count
+    )
+    assert orig_shapes_count > rev_shapes_count
+    assert orig_links_count > rev_links_count
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 def test_create_default_geometry(request):
@@ -821,9 +840,10 @@ def test_create_default_geometry(request):
 
     links_without_geometry = net.links_df[net.links_df["geometry"] == ""]
 
-    assert(len(links_without_geometry) == 0)
+    assert len(links_without_geometry) == 0
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 def test_add_roadway_shape(request):
@@ -848,11 +868,14 @@ def test_add_roadway_shape(request):
     rev_links_count = len(net.links_df)
     rev_shapes_count = len(net.shapes_df)
 
-    assert((rev_links_count - orig_links_count) == (rev_shapes_count - orig_shapes_count))
-    assert(rev_shapes_count > orig_shapes_count)
-    assert(rev_links_count > orig_links_count)
+    assert (rev_links_count - orig_links_count) == (
+        rev_shapes_count - orig_shapes_count
+    )
+    assert rev_shapes_count > orig_shapes_count
+    assert rev_links_count > orig_links_count
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.test_ak
 @pytest.mark.roadway
@@ -877,8 +900,10 @@ def test_create_ml_network_shape(request):
     rev_links_count = len(ml_net.links_df)
     rev_shapes_count = len(ml_net.shapes_df)
 
-    assert((rev_links_count - orig_links_count) == (rev_shapes_count - orig_shapes_count))
-    assert(rev_shapes_count > orig_shapes_count)
-    assert(rev_links_count > orig_links_count)
+    assert (rev_links_count - orig_links_count) == (
+        rev_shapes_count - orig_shapes_count
+    )
+    assert rev_shapes_count > orig_shapes_count
+    assert rev_links_count > orig_links_count
 
     print("--Finished:", request.node.name)

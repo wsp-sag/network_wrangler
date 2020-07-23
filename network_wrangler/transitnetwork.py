@@ -64,7 +64,6 @@ class TransitNetwork(object):
                 "Transit lines with non-positive frequencies exist in the network"
             )
 
-
     @staticmethod
     def empty() -> TransitNetwork:
         """
@@ -72,7 +71,6 @@ class TransitNetwork(object):
         """
         ##TODO
         pass
-
 
     @staticmethod
     def read(feed_path: str, fast: bool = False) -> TransitNetwork:
@@ -257,18 +255,21 @@ class TransitNetwork(object):
 
         for id in unique_shape_ids:
             subset_shapes_df = shapes_df[shapes_df["shape_id"] == id]
-            subset_shapes_df = subset_shapes_df.sort_values(by = ["shape_pt_sequence"])
-            subset_shapes_df = subset_shapes_df.add_suffix('_1').join(
-                subset_shapes_df.shift(-1).add_suffix('_2')
+            subset_shapes_df = subset_shapes_df.sort_values(by=["shape_pt_sequence"])
+            subset_shapes_df = subset_shapes_df.add_suffix("_1").join(
+                subset_shapes_df.shift(-1).add_suffix("_2")
             )
             subset_shapes_df = subset_shapes_df.dropna()
 
             merged_df = subset_shapes_df.merge(
                 links_df,
-                how='left',
-                left_on=[TransitNetwork.SHAPES_FOREIGN_KEY + "_1", TransitNetwork.SHAPES_FOREIGN_KEY + "_2"],
+                how="left",
+                left_on=[
+                    TransitNetwork.SHAPES_FOREIGN_KEY + "_1",
+                    TransitNetwork.SHAPES_FOREIGN_KEY + "_2",
+                ],
                 right_on=["A", "B"],
-                indicator=True
+                indicator=True,
             )
 
             missing_links_df = merged_df.query('_merge == "left_only"')
@@ -276,7 +277,9 @@ class TransitNetwork(object):
             # there are shape links which does not exist in the roadway network
             if len(missing_links_df.index) > 0:
                 valid = False
-                msg = "There are links for shape id {} which are missing in the roadway network.".format(id)
+                msg = "There are links for shape id {} which are missing in the roadway network.".format(
+                    id
+                )
                 WranglerLogger.error(msg)
 
             transit_not_allowed_df = merged_df.query(
@@ -286,7 +289,9 @@ class TransitNetwork(object):
             # there are shape links where transit is not allowed
             if len(transit_not_allowed_df.index) > 0:
                 valid = False
-                msg = "There are links for shape id {} which does not allow transit in the roadway network.".format(id)
+                msg = "There are links for shape id {} which does not allow transit in the roadway network.".format(
+                    id
+                )
                 WranglerLogger.error(msg)
 
         return valid
@@ -302,10 +307,14 @@ class TransitNetwork(object):
         route_ids_routestxt = set(feed.routes.route_id.tolist())
         route_ids_referenced = set(feed.trips.route_id.tolist())
 
-        missing_routes = route_ids_referenced-route_ids_routestxt
+        missing_routes = route_ids_referenced - route_ids_routestxt
 
         if missing_routes:
-            WranglerLogger.warning("The following route_ids are referenced but missing from routes.txt: {}".format(list(missing_routes)))
+            WranglerLogger.warning(
+                "The following route_ids are referenced but missing from routes.txt: {}".format(
+                    list(missing_routes)
+                )
+            )
             return False
         return True
 
@@ -319,14 +328,17 @@ class TransitNetwork(object):
         """
         trip_ids_tripstxt = set(feed.trips.trip_id.tolist())
         trip_ids_referenced = set(
-            feed.stop_times.trip_id.tolist() +
-            feed.frequencies.trip_id.tolist()
-            )
+            feed.stop_times.trip_id.tolist() + feed.frequencies.trip_id.tolist()
+        )
 
-        missing_trips = trip_ids_referenced-trip_ids_tripstxt
+        missing_trips = trip_ids_referenced - trip_ids_tripstxt
 
         if missing_trips:
-            WranglerLogger.warning("The following trip_ids are referenced but missing from trips.txt: {}".format(list(missing_trips)))
+            WranglerLogger.warning(
+                "The following trip_ids are referenced but missing from trips.txt: {}".format(
+                    list(missing_trips)
+                )
+            )
             return False
         return True
 
@@ -342,13 +354,16 @@ class TransitNetwork(object):
         shape_ids_shapestxt = set(feed.shapes.shape_id.tolist())
         shape_ids_referenced = set(feed.trips.shape_id.tolist())
 
-        missing_shapes = shape_ids_referenced-shape_ids_shapestxt
+        missing_shapes = shape_ids_referenced - shape_ids_shapestxt
 
         if missing_shapes:
-            WranglerLogger.warning("The following shape_ids from trips.txt are missing from shapes.txt: {}".format(list(missing_shapes)))
+            WranglerLogger.warning(
+                "The following shape_ids from trips.txt are missing from shapes.txt: {}".format(
+                    list(missing_shapes)
+                )
+            )
             return False
         return True
-
 
     @staticmethod
     def stop_ids_in_stopstxt(feed):
@@ -366,21 +381,25 @@ class TransitNetwork(object):
         stop_ids_referenced.extend(feed.stops.parent_station.dropna().tolist())
 
         # TRANSFERS
-        if feed.get("transfers.txt").shape[0]>0:
+        if feed.get("transfers.txt").shape[0] > 0:
             stop_ids_referenced.extend(feed.transfers.from_stop_id.dropna().tolist())
             stop_ids_referenced.extend(feed.transfers.to_stop_id.dropna().tolist())
 
         # PATHWAYS
-        if feed.get("pathways.txt").shape[0]>0:
+        if feed.get("pathways.txt").shape[0] > 0:
             stop_ids_referenced.extend(feed.pathways.from_stop_id.dropna().tolist())
             stop_ids_referenced.extend(feed.pathways.to_stop_id.dropna().tolist())
 
         stop_ids_referenced = set(stop_ids_referenced)
 
-        missing_stops = stop_ids_referenced-stop_ids_stopstxt
+        missing_stops = stop_ids_referenced - stop_ids_stopstxt
 
         if missing_stops:
-            WranglerLogger.warning("The following stop_ids from are referenced but missing from stops.txt: {}".format(list(missing_stops)))
+            WranglerLogger.warning(
+                "The following stop_ids from are referenced but missing from stops.txt: {}".format(
+                    list(missing_stops)
+                )
+            )
             return False
         return True
 
@@ -697,13 +716,11 @@ class TransitNetwork(object):
 
         # Replace shapes records
         trips = self.feed.trips  # create pointer rather than a copy
-        shape_ids = trips[trips['trip_id'].isin(trip_ids)].shape_id
+        shape_ids = trips[trips["trip_id"].isin(trip_ids)].shape_id
         for shape_id in shape_ids:
             # Check if `shape_id` is used by trips that are not in
             # parameter `trip_ids`
-            trips_using_shape_id = trips.loc[
-                trips["shape_id"] == shape_id, ["trip_id"]
-            ]
+            trips_using_shape_id = trips.loc[trips["shape_id"] == shape_id, ["trip_id"]]
             if not all(trips_using_shape_id.isin(trip_ids)["trip_id"]):
                 # In this case, we need to create a new shape_id so as to leave
                 # the trips not part of the query alone
@@ -717,7 +734,7 @@ class TransitNetwork(object):
                 if shape_id in shapes["shape_id"].tolist():
                     WranglerLogger.error("Cannot create a unique new shape_id.")
                 dup_shape = shapes[shapes.shape_id == old_shape_id].copy()
-                dup_shape['shape_id'] = shape_id
+                dup_shape["shape_id"] = shape_id
                 shapes = pd.concat([shapes, dup_shape], ignore_index=True)
 
             # Pop the rows that match shape_id
@@ -734,7 +751,7 @@ class TransitNetwork(object):
                     "shape_pt_lon": None,  # FIXME
                     "shape_osm_node_id": None,  # FIXME
                     "shape_pt_sequence": None,
-                    TransitNetwork.SHAPES_FOREIGN_KEY: properties["set_shapes"]
+                    TransitNetwork.SHAPES_FOREIGN_KEY: properties["set_shapes"],
                 }
             )
 
@@ -751,7 +768,8 @@ class TransitNetwork(object):
                         new_shape_rows,
                         this_shape.iloc[index_replacement_ends + 1 :],
                     ],
-                    ignore_index=True, sort=False
+                    ignore_index=True,
+                    sort=False,
                 )
             else:
                 this_shape = new_shape_rows
@@ -762,16 +780,15 @@ class TransitNetwork(object):
             # Add rows back into shapes
             shapes = pd.concat(
                 [shapes[shapes.shape_id != shape_id], this_shape],
-                ignore_index=True, sort=False
+                ignore_index=True,
+                sort=False,
             )
 
         # Replace stop_times and stops records (if required)
         if stops_change:
             # If node IDs in properties["set_stops"] are not already
             # in stops.txt, create a new stop_id for them in stops
-            existing_fk_ids = set(
-                stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
-            )
+            existing_fk_ids = set(stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist())
             nodes_df = self.road_net.nodes_df.loc[
                 :, [TransitNetwork.STOPS_FOREIGN_KEY, "X", "Y"]
             ]
@@ -783,17 +800,20 @@ class TransitNetwork(object):
                     # Add new row to stops
                     new_stop_id = str(int(fk_i) + TransitNetwork.ID_SCALAR)
                     if stop_id in stops["stop_id"].tolist():
-                        WranglerLogger.error(
-                            "Cannot create a unique new stop_id."
-                        )
-                    stops.loc[len(stops.index) + 1, [
-                        "stop_id", "stop_lat", "stop_lon",
-                        TransitNetwork.STOPS_FOREIGN_KEY
-                    ]] = [
+                        WranglerLogger.error("Cannot create a unique new stop_id.")
+                    stops.loc[
+                        len(stops.index) + 1,
+                        [
+                            "stop_id",
+                            "stop_lat",
+                            "stop_lon",
+                            TransitNetwork.STOPS_FOREIGN_KEY,
+                        ],
+                    ] = [
                         new_stop_id,
                         nodes_df.loc[int(fk_i), "Y"],
                         nodes_df.loc[int(fk_i), "X"],
-                        fk_i
+                        fk_i,
                     ]
 
             # Loop through all the trip_ids
@@ -854,7 +874,8 @@ class TransitNetwork(object):
                             new_stoptime_rows,
                             this_stoptime.iloc[index_replacement_ends + 1 :],
                         ],
-                        ignore_index=True, sort=False
+                        ignore_index=True,
+                        sort=False,
                     )
                 else:
                     this_stoptime = new_stoptime_rows
@@ -868,7 +889,8 @@ class TransitNetwork(object):
                 # Add rows back into stoptime
                 stop_times = pd.concat(
                     [stop_times[stop_times.trip_id != trip_id], this_stoptime],
-                    ignore_index=True, sort=False
+                    ignore_index=True,
+                    sort=False,
                 )
 
         # Replace self if in_place, else return
