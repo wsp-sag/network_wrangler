@@ -88,7 +88,7 @@ class ProjectCard(object):
         Writes project card dictionary to YAML file
         """
         if not filename:
-            from network_wrangler.Utils import make_slug
+            from network_wrangler.utils import make_slug
 
             filename = make_slug(self.project) + ".yml"
 
@@ -102,6 +102,8 @@ class ProjectCard(object):
 
         with open(filename, "w") as outfile:
             yaml.dump(out_dict, outfile, default_flow_style=False, sort_keys=False)
+
+        WranglerLogger.info("Wrote project card to: {}".format(filename))
 
     @staticmethod
     def validate_project_card_schema(
