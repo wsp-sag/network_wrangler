@@ -36,7 +36,7 @@ __all__ = [
 setupLogging(
     log_filename=os.path.join(
         os.getcwd(),
-        "network_wrangler_{}.log".format(datetime.now().strftime("%Y-%m-%d_%H:%M:%S")),
+        "network_wrangler_{}.log".format(datetime.now().strftime("%Y_%m_%d__%H_%M_%S")),
     ),
     log_to_console=True,
 )
