@@ -375,6 +375,14 @@ class RoadwayNetwork(object):
 
         self.shapes_df.to_file(shapes_file, driver="GeoJSON")
 
+    @staticmethod
+    def roadway_net_to_gdf(roadway_net: RoadwayNetwork):
+        """
+        ##TODO make this much more sophisticated
+         - attach link info to shapes
+        """
+        return roadway_net.shapes_df
+
     def validate_uniqueness(self) -> Bool:
         """
         Confirms that the unique identifiers are met.

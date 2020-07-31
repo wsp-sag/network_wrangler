@@ -5,6 +5,8 @@
 scratch/*
 tests/temp/
 scratch/*
+*.mbtiles
+*.geojson
 .temp
 .pytest_cache
 *.bak

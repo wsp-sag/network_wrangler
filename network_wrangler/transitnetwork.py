@@ -482,6 +482,15 @@ class TransitNetwork(object):
 
                 df.to_csv(outpath, index=False)
 
+    @staticmethod
+    def transit_net_to_gdf(transit_net: TransitNetwork):
+        """
+        TODO make more sophisticated
+        """
+        from partridge import geo
+        transit_gdf = geo.build_shapes(transit_net.feed.shapes)
+        return transit_gdf
+
     def apply(self, project_card_dictionary: dict):
         """
         Wrapper method to apply a project to a transit network.

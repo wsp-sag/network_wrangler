@@ -9,11 +9,13 @@ from .projectcard import ProjectCard
 from .roadwaynetwork import RoadwayNetwork
 from .transitnetwork import TransitNetwork
 from .scenario import Scenario
+from .scenario import net_to_mapbox
 from .utils import point_df_to_geojson, link_df_to_json, make_slug
 from .utils import parse_time_spans, offset_lat_lon, haversine_distance
 from .utils import create_unique_shape_id
 from .utils import create_location_reference_from_nodes
 from .utils import create_line_string
+
 
 __all__ = [
     "WranglerLogger",
@@ -31,6 +33,7 @@ __all__ = [
     "create_unique_shape_id",
     "create_location_reference_from_nodes",
     "create_line_string",
+    "net_to_mapbox"
 ]
 
 setupLogging(

@@ -1,10 +1,14 @@
-import pandas as pd
-from .logger import WranglerLogger
-import math
+import os
 import copy
-from shapely.geometry import LineString
 import hashlib
+import math
+from typing import Union
 
+import pandas as pd
+import geopandas as gpd
+from shapely.geometry import LineString
+
+from .logger import WranglerLogger
 
 def point_df_to_geojson(df: pd.DataFrame, properties: list):
     """
