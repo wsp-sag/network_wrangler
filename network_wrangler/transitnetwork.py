@@ -488,6 +488,7 @@ class TransitNetwork(object):
         TODO make more sophisticated
         """
         from partridge import geo
+
         transit_gdf = geo.build_shapes(transit_net.feed.shapes)
         return transit_gdf
 

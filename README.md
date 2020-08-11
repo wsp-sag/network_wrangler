@@ -19,9 +19,9 @@ If you are managing multiple python versions, we suggest using [`virtualenv`](ht
 Example installing and running tests using conda in the command line:
 
 ```bash
-conda create python=3.7 -n wrangler_env
-source activate wrangler_env
-conda install rtree
+conda config --add channels conda-forge
+conda create python=3.7 rtree geopandas osmnx -n <my_wrangler_environment>
+conda activate <my_wrangler_environment>
 pip install network-wrangler
 pytest -s -m travis
 ```
@@ -30,6 +30,9 @@ pytest -s -m travis
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install Network Wrangler from the source on GitHub.
 
 ```bash
+conda config --add channels conda-forge
+conda create python=3.7 rtree geopandas osmnx -n <my_wrangler_environment>
+conda activate <my_wrangler_environment>
 pip install git+https://github.com/wsp-sag/network_wrangler.git@master#egg=network_wrangler
 ```
 
@@ -53,13 +56,22 @@ conda activate wrangler_env
 
 I chose `wrangler_env` as the name of my environment, but you could choose something else...just remember it so that you can access it later.
 
-**NOTE** in order to get back to this "conda" environment (i.e. after you close this command prompt), you will need to access it from the command line by using the following command:
+**NOTE** in order to get back to "this" conda environment (i.e. after you close this command prompt), you will need to access it from the command line by using the following command:
 
 ```bash
 conda activate wrangler_env
 ```
 
-**3. "Clone" (aka download) network wrangler from Github on to your machine**
+**3. Install finicky Requirements**
+
+Some requirements are best installed using conda rather than "pip"
+
+```bash
+conda config --add channels conda-forge
+conda install rtree geopandas osmnx
+```
+
+**4. "Clone" (aka download) network wrangler from Github on to your machine**
 
 If you have [GitHub desktop](https://desktop.github.com/) installed, you can either do this by using the GitHub user interface by clicking on the green button "clone or download" in the [main network wrangler repository page](https://github.com/wsp-sag/network_wrangler).
 
@@ -81,18 +93,8 @@ remote: Total 307 (delta 28), reused 29 (delta 19), pack-reused 254
 Receiving objects: 100% (307/307), 15.94 MiB | 10.49 MiB/s, done.
 Resolving deltas: 100% (140/140), done.
 ```
-**4a. If you aren't using linux, try to install these packages before network wrangler**
 
-Some packages are very finicky and don't like being installed from their version on the python package index on windows or macosx, so it is often necessary to install them ahead of network_wrangler.
-
-```bash
-conda install shapely
-conda install rtree
-conda install Fiona
-```
-
-
-**4b. Install Network Wrangler in "develop" mode.**
+**5. Install Network Wrangler in "develop" mode.**
 
 Navigate your command prompt into the network wrangler folder and then install network wrangler in editable mode.
 This will take a few minutes because it is also installing all the prerequisites.

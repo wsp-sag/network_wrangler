@@ -10,6 +10,7 @@ from shapely.geometry import LineString
 
 from .logger import WranglerLogger
 
+
 def point_df_to_geojson(df: pd.DataFrame, properties: list):
     """
     Author: Geoff Boeing:

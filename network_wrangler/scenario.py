@@ -683,15 +683,16 @@ class Scenario(object):
 
         file.close()
 
+
 def net_to_mapbox(
-    roadway: Union[RoadwayNetwork,gpd.GeoDataFrame]=gpd.GeoDataFrame(),
-    transit: Union[TransitNetwork,gpd.GeoDataFrame]=gpd.GeoDataFrame(),
-    roadway_geojson:str = "roadway_shapes.geojson",
-    transit_geojson:str = "transit_shapes.geojson",
-    mbtiles_out:str  = "network.mbtiles",
-    overwrite:bool = True,
-    port:str  = "9000",
-    ):
+    roadway: Union[RoadwayNetwork, gpd.GeoDataFrame] = gpd.GeoDataFrame(),
+    transit: Union[TransitNetwork, gpd.GeoDataFrame] = gpd.GeoDataFrame(),
+    roadway_geojson: str = "roadway_shapes.geojson",
+    transit_geojson: str = "transit_shapes.geojson",
+    mbtiles_out: str = "network.mbtiles",
+    overwrite: bool = True,
+    port: str = "9000",
+):
     """
 
     Args:
@@ -699,37 +700,54 @@ def net_to_mapbox(
         transit: a TransitNetwork instance or a geodataframe with transit linetrings
     """
     import subprocess
+
     # test for mapbox token
     try:
-        token = os.getenv('MAPBOX_ACCESS_TOKEN')
+        token = os.getenv("MAPBOX_ACCESS_TOKEN")
     except:
-        raise("NEED TO SET MAPBOX ACCESS TOKEN IN ENVIRONMENT VARIABLES/n In command line: >>export MAPBOX_ACCESS_TOKEN='pk.0000.1111' # replace value with your mapbox public access token")
+        raise (
+            "NEED TO SET MAPBOX ACCESS TOKEN IN ENVIRONMENT VARIABLES/n In command line: >>export MAPBOX_ACCESS_TOKEN='pk.0000.1111' # replace value with your mapbox public access token"
+        )
 
     if type(transit) != gpd.GeoDataFrame:
         transit = TransitNetwork.transit_net_to_gdf(transit)
     if type(roadway) != gpd.GeoDataFrame:
         roadway = RoadwayNetwork.roadway_net_to_gdf(roadway)
 
-    transit.to_file(transit_geojson, driver='GeoJSON')
-    roadway.to_file(roadway_geojson, driver='GeoJSON')
+    transit.to_file(transit_geojson, driver="GeoJSON")
+    roadway.to_file(roadway_geojson, driver="GeoJSON")
 
-    tippe_options_list = ["-zg","-o",mbtiles_out]
+    tippe_options_list = ["-zg", "-o", mbtiles_out]
     if overwrite:
         tippe_options_list.append("--force")
-    #tippe_options_list.append("--drop-densest-as-needed")
+    # tippe_options_list.append("--drop-densest-as-needed")
     tippe_options_list.append(roadway_geojson)
     tippe_options_list.append(transit_geojson)
 
     try:
-        WranglerLogger.info("Running tippecanoe with following options: {}".format(" ".join(tippe_options_list)))
+        WranglerLogger.info(
+            "Running tippecanoe with following options: {}".format(
+                " ".join(tippe_options_list)
+            )
+        )
         tippe_out = subprocess.run(["tippecanoe"] + tippe_options_list)
     except:
         WranglerLogger.error()
-        raise("If tippecanoe isn't installed, try `brew install tippecanoe` or visit https://github.com/mapbox/tippecanoe")
+        raise (
+            "If tippecanoe isn't installed, try `brew install tippecanoe` or visit https://github.com/mapbox/tippecanoe"
+        )
 
     try:
-        WranglerLogger.info("Running mbview with following options: {}".format(" ".join(tippe_options_list)))
-        mbview_out = subprocess.run(["mbview","--port", port,",/{}".format(mbtiles_out)])
+        WranglerLogger.info(
+            "Running mbview with following options: {}".format(
+                " ".join(tippe_options_list)
+            )
+        )
+        mbview_out = subprocess.run(
+            ["mbview", "--port", port, ",/{}".format(mbtiles_out)]
+        )
     except:
         WranglerLogger.error()
-        raise("If mbview isn't installed, try `npm install -g @mapbox/mbview` or visit https://github.com/mapbox/mbview")
+        raise (
+            "If mbview isn't installed, try `npm install -g @mapbox/mbview` or visit https://github.com/mapbox/mbview"
+        )

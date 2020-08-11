@@ -33,7 +33,7 @@ __all__ = [
     "create_unique_shape_id",
     "create_location_reference_from_nodes",
     "create_line_string",
-    "net_to_mapbox"
+    "net_to_mapbox",
 ]
 
 setupLogging(

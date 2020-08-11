@@ -11,7 +11,9 @@ __all__ = ["WranglerLogger", "setupLogging"]
 WranglerLogger = logging.getLogger("WranglerLogger")
 
 
-def setupLogging(level: int=None, log_filename: str=None, log_to_console: bool=False):
+def setupLogging(
+    level: int = None, log_filename: str = None, log_to_console: bool = False
+):
     """
     Sets up the WranglerLogger w.r.t. the debug file location and if logging to console.
 
