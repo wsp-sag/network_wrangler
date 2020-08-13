@@ -1513,11 +1513,11 @@ class RoadwayNetwork(object):
             # add new shapes
             added_links = self.links_df[self.links_df["new_link"] == 1]
 
-            new_shapes_df = pd.DataFrame({"geometry": added_links["geometry"]})
-            new_shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = new_shapes_df[
+            added_shapes_df = pd.DataFrame({"geometry": added_links["geometry"]})
+            added_shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = added_shapes_df[
                 "geometry"
             ].apply(lambda x: create_unique_shape_id(x))
-            self.shapes_df = self.shapes_df.append(new_shapes_df)
+            self.shapes_df = self.shapes_df.append(added_shapes_df)
 
             self.links_df.drop(["new_link"], axis=1, inplace=True)
 
@@ -1867,6 +1867,9 @@ class RoadwayNetwork(object):
 
         link_attributes = self.links_df.columns.values.tolist()
         ml_attributes = [i for i in link_attributes if i.startswith("ML_")]
+
+       # non_ml_links are links in the network where there is no managed lane.
+       # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
 
         non_ml_links_df = self.links_df[self.links_df["managed"] == 0]
         non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis=1)

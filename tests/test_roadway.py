@@ -871,13 +871,12 @@ def test_add_roadway_shape(request):
     assert (rev_links_count - orig_links_count) == (
         rev_shapes_count - orig_shapes_count
     )
-    assert rev_shapes_count > orig_shapes_count
-    assert rev_links_count > orig_links_count
+    assert rev_shapes_count == orig_shapes_count + 2
+    assert rev_links_count == orig_links_count + 2
 
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.test_ak
 @pytest.mark.roadway
 def test_create_ml_network_shape(request):
     print("\n--Starting:", request.node.name)
@@ -903,7 +902,10 @@ def test_create_ml_network_shape(request):
     assert (rev_links_count - orig_links_count) == (
         rev_shapes_count - orig_shapes_count
     )
-    assert rev_shapes_count > orig_shapes_count
-    assert rev_links_count > orig_links_count
+
+    # 2 new ML links, each ML link has 2 more access/egress links
+    # total new links for 2 ML links will be 6 (2*3)
+    assert rev_shapes_count == orig_shapes_count + 2*3
+    assert rev_links_count == orig_links_count + 2*3
 
     print("--Finished:", request.node.name)
