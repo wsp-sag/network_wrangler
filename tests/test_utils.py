@@ -16,7 +16,7 @@ def test_get_slug(request, slug_test):
 
     from network_wrangler.utils import make_slug
     slug = make_slug(slug_test["text"], delimiter=slug_test["delim"])
-    
+
     print("From: {} \nTo: {}".format(slug_test["text"], slug))
     print("Expected: {}".format(slug_test["answer"]))
     assert slug == slug_test["answer"]
@@ -80,6 +80,7 @@ def test_lat_lon_offset(request):
 def test_get_unique_shape_id(request):
     print("\n--Starting:", request.node.name)
 
+    from shapely.geometry import LineString
     geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
 
     from network_wrangler import create_unique_shape_id
@@ -88,3 +89,18 @@ def test_get_unique_shape_id(request):
     assert shape_id == "72ceb24e2c632c02f7eae5e33ed12702"
 
     print("--Finished:", request.node.name)
+
+@pytest.mark.elo
+@pytest.mark.travis
+def test_link_df_to_json(request):
+    print("\n--Starting:", request.node.name)
+    json_in = [{"a":1,"b":2,"distance":5.1},{"a":2,"b":3,"distance":1.2}]
+
+    from pandas import DataFrame
+    df = DataFrame(json_in)
+
+    from network_wrangler import link_df_to_json
+
+    json_out = link_df_to_json(df,["a","b","distance"])
+
+    assert(json_in == json_out)

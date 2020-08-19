@@ -25,7 +25,7 @@ def point_df_to_geojson(df: pd.DataFrame, properties: list):
             "properties": {},
             "geometry": {"type": "Point", "coordinates": []},
         }
-        feature["geometry"]["coordinates"] = [row["geometry"].X, row["geometry"].Y]
+        feature["geometry"]["coordinates"] = [row["geometry"].x, row["geometry"].y]
         feature["properties"][RoadwayNetwork.NODE_FOREIGN_KEY] = row.name
         for prop in properties:
             feature["properties"][prop] = row[prop]
@@ -34,17 +34,27 @@ def point_df_to_geojson(df: pd.DataFrame, properties: list):
 
 
 def link_df_to_json(df: pd.DataFrame, properties: list):
-    """
+    """ Export pandas dataframe as a json object.
+
     Modified from: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/
+
+    Args:
+        df: Dataframe to export
+        properties: list of properties to export
     """
-    df["distance"].fillna(0)
+
+    #can't remember why we need this?
+    if "distance" in properties:
+        df["distance"].fillna(0)
+
     json = []
     for _, row in df.iterrows():
         feature = {}
         for prop in properties:
             feature[prop] = row[prop]
         json.append(feature)
+
     return json
 
 
