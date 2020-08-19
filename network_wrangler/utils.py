@@ -7,7 +7,7 @@ from typing import Union
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import LineString
-
+from geographiclib.geodesic import Geodesic
 from .logger import WranglerLogger
 
 
@@ -146,6 +146,71 @@ def offset_lat_lon(lon_lat_point: list, offset_meters=100):
     return [lonO, latO]
 
 
+def get_bearing(lat1, lon1, lat2, lon2):
+    """
+    calculate the bearing (forward azimuth) b/w the two points
+
+    returns: bearing in radians
+    """
+    # bearing in degrees
+    brng = Geodesic.WGS84.Inverse(lat1, lon1, lat2, lon2)['azi1']
+
+    return math.radians(brng)
+
+
+def offset_point_with_distance_and_bearing(lat, lon, distance, bearing):
+    """
+    Get the new lat long (in degrees) given current point (lat/lon), distance and bearing
+    """
+    # Earth's radius in meters
+    radius = 6378137
+
+    # convert the lat long from degree to radians
+    lat_radians = math.radians(lat)
+    lon_radians = math.radians(lon)
+
+    # calculate the new lat long in radians
+    out_lat_radians = math.asin(
+        math.sin(lat_radians)*math.cos(distance/radius) +
+        math.cos(lat_radians)*math.sin(distance/radius)*math.cos(bearing)
+    )
+
+    out_lon_radians = lon_radians + math.atan2(
+        math.sin(bearing)*math.sin(distance/radius)*math.cos(lat_radians),
+        math.cos(distance/radius)-math.sin(lat_radians)*math.sin(lat_radians)
+    )
+    #convert the new lat long back to degree
+    out_lat = math.degrees(out_lat_radians)
+    out_lon = math.degrees(out_lon_radians)
+
+    return((out_lat, out_lon))
+
+
+def offset_location_reference(location_reference, offset_meters = 50):
+    lon_1 = location_reference[0]["point"][0]
+    lat_1 = location_reference[0]["point"][1]
+    lon_2 = location_reference[1]["point"][0]
+    lat_2 = location_reference[1]["point"][1]
+
+    bearing = get_bearing(lat_1, lon_1, lat_2, lon_2)
+    # adding 0.05 radian (~2.85 dergees) to the bearing
+    bearing = bearing + 0.05
+
+    new_lat_1, new_lon_1 = offset_point_with_distance_and_bearing(
+        lat_1, lon_1, offset_meters, bearing
+    )
+    new_lat_2, new_lon_2 = offset_point_with_distance_and_bearing(
+        lat_2, lon_2, offset_meters, bearing
+    )
+
+    out_location_reference = [
+        {"sequence": 1, "point": [new_lon_1, new_lat_1]},
+        {"sequence": 2, "point": [new_lon_2, new_lat_2]}
+    ]
+
+    return out_location_reference
+
+
 def haversine_distance(origin: list, destination: list):
     lon1, lat1 = origin
     lon2, lat2 = destination
@@ -205,4 +270,6 @@ def create_line_string(location_reference: list):
     Creates a geometry as a LineString using location reference
     """
 
-    return LineString([location_reference[0]["point"], location_reference[1]["point"]])
+    return LineString(
+        [location_reference[0]["point"], location_reference[1]["point"]]
+    )

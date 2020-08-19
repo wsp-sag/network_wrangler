@@ -1,6 +1,10 @@
 import os
 import pytest
 
+from network_wrangler import haversine_distance
+from network_wrangler import create_unique_shape_id
+from network_wrangler import offset_location_reference
+
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
     {"text": "I'm a roadway", "delim": "_", "answer": "im_a_roadway"},
@@ -48,3 +52,45 @@ def test_time_convert(request):
 
 
 null_val_type_list = [("1", 0), ("3.2", 0.0), ("Howdy", ""), ("False", False)]
+
+
+@pytest.mark.get_dist
+@pytest.mark.travis
+def test_get_distance_bw_lat_lon(request):
+    print("\n--Starting:", request.node.name)
+
+    start = [-93.0889873, 44.966861]
+    end = [-93.08844310000001, 44.9717832]
+    dist = haversine_distance(start, end)
+    print(dist)
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.test_hash
+@pytest.mark.roadway
+def test_get_unique_shape_id(request):
+    geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
+
+    shape_id = create_unique_shape_id(geometry)
+
+    assert shape_id == "72ceb24e2c632c02f7eae5e33ed12702"
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.travis
+def test_location_reference_offset(request):
+    print("\n--Starting:", request.node.name)
+
+    location_reference = [
+        {'sequence': 1, 'point': [-93.0903549, 44.961085]},
+        {'sequence': 2, 'point': [-93.0889873, 44.966861]}
+    ]
+
+    print("original ref", location_reference)
+
+    new_location_reference = offset_location_reference(location_reference)
+    print("new ref", new_location_reference)
+
+    print("--Finished:", request.node.name)

@@ -32,7 +32,7 @@ from shapely.geometry import Point, LineString
 from .logger import WranglerLogger
 from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
-from .utils import offset_lat_lon, haversine_distance, create_unique_shape_id
+from .utils import offset_lat_lon, offset_location_reference, haversine_distance, create_unique_shape_id
 from .utils import create_location_reference_from_nodes, create_line_string
 
 
@@ -1868,8 +1868,8 @@ class RoadwayNetwork(object):
         link_attributes = self.links_df.columns.values.tolist()
         ml_attributes = [i for i in link_attributes if i.startswith("ML_")]
 
-       # non_ml_links are links in the network where there is no managed lane.
-       # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
+        # non_ml_links are links in the network where there is no managed lane.
+        # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
 
         non_ml_links_df = self.links_df[self.links_df["managed"] == 0]
         non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis=1)
@@ -1914,7 +1914,8 @@ class RoadwayNetwork(object):
             + RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR
         )
         ml_links_df["locationReferences"] = ml_links_df["locationReferences"].apply(
-            lambda x: _update_location_reference(x)
+            #lambda x: _update_location_reference(x)
+            lambda x: offset_location_reference(x)
         )
         ml_links_df["geometry"] = ml_links_df["locationReferences"].apply(
             lambda x: create_line_string(x)

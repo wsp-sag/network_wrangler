@@ -7,10 +7,6 @@ from network_wrangler import ProjectCard
 import time
 import numpy as np
 import pandas as pd
-from network_wrangler import offset_lat_lon
-from network_wrangler import haversine_distance
-from network_wrangler import create_unique_shape_id
-from network_wrangler import create_location_reference_from_nodes
 import networkx as nx
 from shapely.geometry import LineString
 
@@ -625,33 +621,6 @@ def test_write_model_net(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.offset
-@pytest.mark.travis
-def test_lat_lon_offset(request):
-    print("\n--Starting:", request.node.name)
-
-    in_lat_lon = [-93.0903549, 44.961085]
-    print(in_lat_lon)
-
-    new_lat_lon = offset_lat_lon(in_lat_lon)
-    print(new_lat_lon)
-
-    print("--Finished:", request.node.name)
-
-
-@pytest.mark.get_dist
-@pytest.mark.travis
-def test_get_distance_bw_lat_lon(request):
-    print("\n--Starting:", request.node.name)
-
-    start = [-93.0889873, 44.966861]
-    end = [-93.08844310000001, 44.9717832]
-    dist = haversine_distance(start, end)
-    print(dist)
-
-    print("--Finished:", request.node.name)
-
-
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_network_connectivity(request):
@@ -773,18 +742,6 @@ def test_existing_managed_lane_apply(request):
     print("New # of ML links in the network:", new_ml_links)
 
     assert new_ml_links == existing_ml_links + len(selected_link_indices)
-
-    print("--Finished:", request.node.name)
-
-
-@pytest.mark.test_hash
-@pytest.mark.roadway
-def test_get_unique_shape_id(request):
-    geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
-
-    shape_id = create_unique_shape_id(geometry)
-
-    assert shape_id == "72ceb24e2c632c02f7eae5e33ed12702"
 
     print("--Finished:", request.node.name)
 
