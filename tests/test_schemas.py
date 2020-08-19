@@ -16,7 +16,6 @@ STPAUL_PC_DIR = os.path.join(os.getcwd(), "examples", "stpaul", "project_cards")
 
 
 @pytest.mark.schema
-@pytest.mark.roadschema
 @pytest.mark.skip(reason="need to work on this")
 def test_roadway_link_schema():
     schema_filename = os.path.join(SCHEMA_DIR, "roadway_network_link.json")

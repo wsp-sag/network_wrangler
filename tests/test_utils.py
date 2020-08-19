@@ -1,6 +1,7 @@
 import os
 import pytest
 
+
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
     {"text": "I'm a roadway", "delim": "_", "answer": "im_a_roadway"},
@@ -8,13 +9,14 @@ slug_test_list = [
     {"text": "I am a roadway", "delim": "", "answer": "iamaroadway"},
 ]
 
-
+@pytest.mark.travis
 @pytest.mark.parametrize("slug_test", slug_test_list)
 def test_get_slug(request, slug_test):
     print("\n--Starting:", request.node.name)
-    from network_wrangler.utils import make_slug
 
+    from network_wrangler.utils import make_slug
     slug = make_slug(slug_test["text"], delimiter=slug_test["delim"])
+    
     print("From: {} \nTo: {}".format(slug_test["text"], slug))
     print("Expected: {}".format(slug_test["answer"]))
     assert slug == slug_test["answer"]
@@ -46,5 +48,43 @@ def test_time_convert(request):
 
     assert_series_equal(df["time"], df["time_results"], check_names=False)
 
+@pytest.mark.geography
+@pytest.mark.travis
+def test_get_distance_bw_lat_lon(request):
+    print("\n--Starting:", request.node.name)
 
-null_val_type_list = [("1", 0), ("3.2", 0.0), ("Howdy", ""), ("False", False)]
+    start = [-93.0889873, 44.966861]
+    end = [-93.08844310000001, 44.9717832]
+
+    from network_wrangler import haversine_distance
+    dist = haversine_distance(start, end)
+    print(dist)
+
+    print("--Finished:", request.node.name)
+
+@pytest.mark.geography
+@pytest.mark.travis
+def test_lat_lon_offset(request):
+    print("\n--Starting:", request.node.name)
+
+    in_lat_lon = [-93.0903549, 44.961085]
+    print(in_lat_lon)
+    from network_wrangler import offset_lat_lon
+    new_lat_lon = offset_lat_lon(in_lat_lon)
+    print(new_lat_lon)
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.travis
+def test_get_unique_shape_id(request):
+    print("\n--Starting:", request.node.name)
+
+    geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
+
+    from network_wrangler import create_unique_shape_id
+    shape_id = create_unique_shape_id(geometry)
+
+    assert shape_id == "72ceb24e2c632c02f7eae5e33ed12702"
+
+    print("--Finished:", request.node.name)

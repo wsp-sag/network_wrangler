@@ -24,6 +24,7 @@ STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
 
 
 @pytest.mark.scenario
+@pytest.mark.travis
 def test_project_card_read(request):
     print("\n--Starting:", request.node.name)
     in_dir = os.path.join(
@@ -41,6 +42,7 @@ def test_project_card_read(request):
 
 
 @pytest.mark.scenario
+@pytest.mark.travis
 def test_project_card_write(request):
     print("\n--Starting:", request.node.name)
     in_dir = os.path.join(STPAUL_DIR, "project_cards")
@@ -181,7 +183,6 @@ def test_managed_lane_project_card(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.unique_ids
 @pytest.mark.travis
 def test_query_builder(request):
     selection_1 = {
@@ -310,7 +311,8 @@ def test_apply_wrapper(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario_building
+@pytest.mark.scenario
+@pytest.mark.travis
 def test_scenario_building_from_script(request):
     print("\n--Starting:", request.node.name)
 
