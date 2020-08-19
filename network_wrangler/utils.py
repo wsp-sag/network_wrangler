@@ -128,24 +128,6 @@ def parse_time_spans(times):
     return (start_time_sec, end_time_sec)
 
 
-def offset_lat_lon(lon_lat_point: list, offset_meters=100):
-    in_lon = lon_lat_point[0]
-    in_lat = lon_lat_point[1]
-
-    # Earth's radius
-    radius = 6378137
-
-    # offset in radians
-    offset_lat_radians = offset_meters / radius
-    offset_lon_radians = offset_meters / (radius * math.cos(math.pi * in_lat / 180))
-
-    # offset lat lon
-    latO = in_lat + offset_lat_radians * 180 / math.pi
-    lonO = in_lon + offset_lon_radians * 180 / math.pi
-
-    return [lonO, latO]
-
-
 def get_bearing(lat1, lon1, lat2, lon2):
     """
     calculate the bearing (forward azimuth) b/w the two points
@@ -155,12 +137,17 @@ def get_bearing(lat1, lon1, lat2, lon2):
     # bearing in degrees
     brng = Geodesic.WGS84.Inverse(lat1, lon1, lat2, lon2)['azi1']
 
-    return math.radians(brng)
+    # convert bearing to radians
+    brng = math.radians(brng)
+
+    return brng
 
 
 def offset_point_with_distance_and_bearing(lat, lon, distance, bearing):
     """
     Get the new lat long (in degrees) given current point (lat/lon), distance and bearing
+
+    returns: new lat/long
     """
     # Earth's radius in meters
     radius = 6378137
@@ -186,15 +173,23 @@ def offset_point_with_distance_and_bearing(lat, lon, distance, bearing):
     return((out_lat, out_lon))
 
 
-def offset_location_reference(location_reference, offset_meters = 50):
+def offset_location_reference(location_reference, offset_meters = 10):
+    """
+    Creates a new location reference
+    using the node a and node b of given location reference,
+    offseting it by 90 degree to the bearing of given location reference
+    and distance equals to offset_meters
+
+    returns: new location_reference with offset
+    """
     lon_1 = location_reference[0]["point"][0]
     lat_1 = location_reference[0]["point"][1]
     lon_2 = location_reference[1]["point"][0]
     lat_2 = location_reference[1]["point"][1]
 
     bearing = get_bearing(lat_1, lon_1, lat_2, lon_2)
-    # adding 0.05 radian (~2.85 dergees) to the bearing
-    bearing = bearing + 0.05
+    # adding 90 degrees (1.57 radians) to the current bearing
+    bearing = bearing + 1.57
 
     new_lat_1, new_lon_1 = offset_point_with_distance_and_bearing(
         lat_1, lon_1, offset_meters, bearing
@@ -212,6 +207,16 @@ def offset_location_reference(location_reference, offset_meters = 50):
 
 
 def haversine_distance(origin: list, destination: list):
+    """
+    Calculates haversine distance between two points
+
+    Args:
+    origin: lat/lon for point A
+    destination: lat/lon for point B
+
+    Returns: string
+    """
+
     lon1, lat1 = origin
     lon2, lat2 = destination
     radius = 6378137  # meter

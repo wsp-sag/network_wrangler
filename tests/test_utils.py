@@ -63,7 +63,7 @@ def test_get_distance_bw_lat_lon(request):
     end = [-93.08844310000001, 44.9717832]
     dist = haversine_distance(start, end)
     print(dist)
-
+    assert dist == 0.34151200885686445
     print("--Finished:", request.node.name)
 
 
@@ -78,7 +78,7 @@ def test_get_unique_shape_id(request):
 
     print("--Finished:", request.node.name)
 
-
+@pytest.mark.test_ak
 @pytest.mark.travis
 def test_location_reference_offset(request):
     print("\n--Starting:", request.node.name)
@@ -90,7 +90,14 @@ def test_location_reference_offset(request):
 
     print("original ref", location_reference)
 
+    expected_location_reference = [
+        {'sequence': 1, 'point': [-93.09022968479499, 44.961070179988084]},
+        {'sequence': 2, 'point': [-93.08886207218725, 44.966846179988075]}
+    ]
+
     new_location_reference = offset_location_reference(location_reference)
     print("new ref", new_location_reference)
+
+    assert new_location_reference == expected_location_reference
 
     print("--Finished:", request.node.name)

@@ -11,7 +11,7 @@ from .transitnetwork import TransitNetwork
 from .scenario import Scenario
 from .scenario import net_to_mapbox
 from .utils import point_df_to_geojson, link_df_to_json, make_slug
-from .utils import parse_time_spans, offset_lat_lon, offset_location_reference, haversine_distance
+from .utils import parse_time_spans, offset_location_reference, haversine_distance
 from .utils import create_unique_shape_id
 from .utils import create_location_reference_from_nodes
 from .utils import create_line_string
@@ -28,7 +28,6 @@ __all__ = [
     "link_df_to_json",
     "make_slug",
     "parse_time_spans",
-    "offset_lat_lon",
     "offset_location_reference",
     "haversine_distance",
     "create_unique_shape_id",
