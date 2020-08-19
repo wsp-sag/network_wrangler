@@ -6,18 +6,16 @@ from __future__ import annotations
 import os
 import sys
 import copy
+import numbers
 from random import randint
 
 import folium
 import pandas as pd
-import geojson
 import geopandas as gpd
 import json
 import networkx as nx
 import numpy as np
 import osmnx as ox
-import yaml
-import numbers
 
 from geopandas.geodataframe import GeoDataFrame
 
@@ -750,6 +748,9 @@ class RoadwayNetwork(object):
         try:
             G = ox.graph_from_gdfs(graph_nodes, graph_links)
         except:
+            WranglerLogger.debug(
+                "Please upgrade your OSMNX package. For now, using depricated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found"
+            )
             G = ox.gdfs_to_graph(graph_nodes, graph_links)
 
         WranglerLogger.debug("finished ox.gdfs_to_graph()")
@@ -1868,8 +1869,8 @@ class RoadwayNetwork(object):
         link_attributes = self.links_df.columns.values.tolist()
         ml_attributes = [i for i in link_attributes if i.startswith("ML_")]
 
-       # non_ml_links are links in the network where there is no managed lane.
-       # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
+        # non_ml_links are links in the network where there is no managed lane.
+        # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
 
         non_ml_links_df = self.links_df[self.links_df["managed"] == 0]
         non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis=1)
@@ -2265,7 +2266,7 @@ class RoadwayNetwork(object):
         _folium_node(B, color="red", icon="star").add_to(m)
 
         for _, row in selected_links.iterrows():
-            pl = ox.plot.make_folium_polyline(
+            pl = ox.folium._make_folium_polyline(
                 edge=row, edge_color="blue", edge_width=5, edge_opacity=0.8
             )
             pl.add_to(m)

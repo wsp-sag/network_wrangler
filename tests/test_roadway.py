@@ -619,6 +619,7 @@ def test_write_model_net(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_network_connectivity(request):
@@ -744,7 +745,6 @@ def test_existing_managed_lane_apply(request):
     print("--Finished:", request.node.name)
 
 
-
 @pytest.mark.travis
 @pytest.mark.roadway
 def test_delete_roadway_shape(request):
@@ -777,6 +777,7 @@ def test_delete_roadway_shape(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.travis
 @pytest.mark.roadway
 def test_create_default_geometry(request):
@@ -800,6 +801,7 @@ def test_create_default_geometry(request):
     assert len(links_without_geometry) == 0
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.travis
 @pytest.mark.roadway
@@ -833,6 +835,7 @@ def test_add_roadway_shape(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.travis
 @pytest.mark.roadway
 def test_create_ml_network_shape(request):
@@ -862,7 +865,7 @@ def test_create_ml_network_shape(request):
 
     # 2 new ML links, each ML link has 2 more access/egress links
     # total new links for 2 ML links will be 6 (2*3)
-    assert rev_shapes_count == orig_shapes_count + 2*3
-    assert rev_links_count == orig_links_count + 2*3
+    assert rev_shapes_count == orig_shapes_count + 2 * 3
+    assert rev_links_count == orig_links_count + 2 * 3
 
     print("--Finished:", request.node.name)

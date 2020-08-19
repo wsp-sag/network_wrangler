@@ -4,9 +4,10 @@ import hashlib
 import math
 from typing import Union
 
+from shapely.geometry import LineString
+
 import pandas as pd
 import geopandas as gpd
-from shapely.geometry import LineString
 
 from .logger import WranglerLogger
 
@@ -44,7 +45,7 @@ def link_df_to_json(df: pd.DataFrame, properties: list):
         properties: list of properties to export
     """
 
-    #can't remember why we need this?
+    # can't remember why we need this?
     if "distance" in properties:
         df["distance"].fillna(0)
 
@@ -65,15 +66,15 @@ def topological_sort(adjacency_list, visited_list):
 
     output_stack = []
 
-    def topology_sort_util(vertex):
+    def _topology_sort_util(vertex):
         if not visited_list[vertex]:
             visited_list[vertex] = True
             for neighbor in adjacency_list[vertex]:
-                topology_sort_util(neighbor)
+                _topology_sort_util(neighbor)
             output_stack.insert(0, vertex)
 
     for vertex in visited_list:
-        topology_sort_util(vertex)
+        _topology_sort_util(vertex)
 
     return output_stack
 
@@ -214,5 +215,4 @@ def create_line_string(location_reference: list):
     """
     Creates a geometry as a LineString using location reference
     """
-
     return LineString([location_reference[0]["point"], location_reference[1]["point"]])

@@ -13,6 +13,7 @@ Run just the tests labeled transit using `pytest -v -m transit`
 STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
+
 @pytest.mark.roadway
 @pytest.mark.transit
 @pytest.mark.travis

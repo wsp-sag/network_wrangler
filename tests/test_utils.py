@@ -9,12 +9,14 @@ slug_test_list = [
     {"text": "I am a roadway", "delim": "", "answer": "iamaroadway"},
 ]
 
+
 @pytest.mark.travis
 @pytest.mark.parametrize("slug_test", slug_test_list)
 def test_get_slug(request, slug_test):
     print("\n--Starting:", request.node.name)
 
     from network_wrangler.utils import make_slug
+
     slug = make_slug(slug_test["text"], delimiter=slug_test["delim"])
 
     print("From: {} \nTo: {}".format(slug_test["text"], slug))
@@ -48,6 +50,7 @@ def test_time_convert(request):
 
     assert_series_equal(df["time"], df["time_results"], check_names=False)
 
+
 @pytest.mark.geography
 @pytest.mark.travis
 def test_get_distance_bw_lat_lon(request):
@@ -57,10 +60,12 @@ def test_get_distance_bw_lat_lon(request):
     end = [-93.08844310000001, 44.9717832]
 
     from network_wrangler import haversine_distance
+
     dist = haversine_distance(start, end)
     print(dist)
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.geography
 @pytest.mark.travis
@@ -70,6 +75,7 @@ def test_lat_lon_offset(request):
     in_lat_lon = [-93.0903549, 44.961085]
     print(in_lat_lon)
     from network_wrangler import offset_lat_lon
+
     new_lat_lon = offset_lat_lon(in_lat_lon)
     print(new_lat_lon)
 
@@ -81,26 +87,30 @@ def test_get_unique_shape_id(request):
     print("\n--Starting:", request.node.name)
 
     from shapely.geometry import LineString
+
     geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
 
     from network_wrangler import create_unique_shape_id
+
     shape_id = create_unique_shape_id(geometry)
 
     assert shape_id == "72ceb24e2c632c02f7eae5e33ed12702"
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.elo
 @pytest.mark.travis
 def test_link_df_to_json(request):
     print("\n--Starting:", request.node.name)
-    json_in = [{"a":1,"b":2,"distance":5.1},{"a":2,"b":3,"distance":1.2}]
+    json_in = [{"a": 1, "b": 2, "distance": 5.1}, {"a": 2, "b": 3, "distance": 1.2}]
 
     from pandas import DataFrame
+
     df = DataFrame(json_in)
 
     from network_wrangler import link_df_to_json
 
-    json_out = link_df_to_json(df,["a","b","distance"])
+    json_out = link_df_to_json(df, ["a", "b", "distance"])
 
-    assert(json_in == json_out)
+    assert json_in == json_out
