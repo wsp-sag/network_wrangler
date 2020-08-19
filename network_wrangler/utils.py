@@ -45,7 +45,7 @@ def link_df_to_json(df: pd.DataFrame, properties: list):
         properties: list of properties to export
     """
 
-    #can't remember why we need this?
+    # can't remember why we need this?
     if "distance" in properties:
         df["distance"].fillna(0)
 

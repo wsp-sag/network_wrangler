@@ -748,7 +748,9 @@ class RoadwayNetwork(object):
         try:
             G = ox.graph_from_gdfs(graph_nodes, graph_links)
         except:
-            WranglerLogger.debug("Please upgrade your OSMNX package. For now, using depricated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found")
+            WranglerLogger.debug(
+                "Please upgrade your OSMNX package. For now, using depricated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found"
+            )
             G = ox.gdfs_to_graph(graph_nodes, graph_links)
 
         WranglerLogger.debug("finished ox.gdfs_to_graph()")
@@ -1867,8 +1869,8 @@ class RoadwayNetwork(object):
         link_attributes = self.links_df.columns.values.tolist()
         ml_attributes = [i for i in link_attributes if i.startswith("ML_")]
 
-       # non_ml_links are links in the network where there is no managed lane.
-       # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
+        # non_ml_links are links in the network where there is no managed lane.
+        # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
 
         non_ml_links_df = self.links_df[self.links_df["managed"] == 0]
         non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis=1)
