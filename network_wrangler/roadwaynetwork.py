@@ -185,17 +185,21 @@ class RoadwayNetwork(object):
     MANAGED_LANES_SCALAR = 500000
 
     MODES_TO_NETWORK_LINK_VARIABLES = {
-        "drive": "drive_access",
-        "transit": "transit_access",
+        "drive": ["drive_access"],
+        "bus": ["bus_only","drive_access"],
+        "rail":["rail_only"],
+        "transit": ["bus_only","rail_only","drive_access"],
         "walk": "walk_access",
         "bike": "bike_access",
     }
 
     MODES_TO_NETWORK_NODE_VARIABLES = {
-        "drive": "drive_node",
-        "transit": "transit_node",
-        "walk": "walk_node",
-        "bike": "bike_node",
+        "drive": ["drive_node"],
+        "rail": ["rail_only","drive_node"],
+        "bus": ["bus_only","drive_node"],
+        "transit": ["bus_only","rail_only","drive_node"],
+        "walk": ["walk_node"],
+        "bike": ["bike_node"],
     }
 
     def __init__(self, nodes: GeoDataFrame, links: GeoDataFrame, shapes: GeoDataFrame):
@@ -283,6 +287,10 @@ class RoadwayNetwork(object):
         ]
         links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
         links_df.crs = RoadwayNetwork.CRS
+        #coerce types for booleans which might not have a 1 and are therefore read in as intersection
+        bool_columns = ["rail_only","bus_only","drive_access","bike_access","walk_access","truck_access"]
+        for bc in bool_columns:
+            links_df[bc] = links_df[bc].astype(bool)
 
         shapes_df = gpd.read_file(shape_file)
         shapes_df.dropna(subset=["geometry", "id"], inplace=True)
@@ -2015,42 +2023,44 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def get_modal_links_nodes(
-        links_df: DataFrame, nodes_df: DataFrame, mode: str = None
+        links_df: DataFrame, nodes_df: DataFrame, modes: list[str] = None
     ) -> tuple(DataFrame, DataFrame):
         """Returns nodes and link dataframes for specific mode.
 
         Args:
             links_df: DataFrame of standard network links
             nodes_df: DataFrame of standard network nodes
-            mode: mode of the network, one of `drive`,`transit`,
-                `walk`, `bike`
+            modes: list of the modes of the network to be kept, must be in `drive`,`transit`,`rail`,`bus`,
+                `walk`, `bike`. For example, if bike and walk are selected, both bike and walk links will be kept.
 
         Returns: tuple of DataFrames for links, nodes filtered by mode
         """
 
-        if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
-            msg = "mode value should be one of {}.".format(
-                list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys())
-            )
-            WranglerLogger.error(msg)
-            raise ValueError(msg)
+        for mode in modes:
+            if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
+                msg = "mode value should be one of {}.".format(
+                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys())
+                )
+                WranglerLogger.error(msg)
+                raise ValueError(msg)
 
-        mode_link_variable = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
-        mode_node_variable = RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES[mode]
+        mode_link_variables = list(set([mode for mode in modes for mode in  RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]]))
+        mode_node_variables = list(set([mode for mode in modes for mode in  RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES[mode]]))
 
-        if mode_link_variable not in links_df.columns:
+        if not set(mode_link_variables).issubset(set(links_df.columns)):
             msg = "{} not in provided links_df list of columns. Available columns are: \n {}".format(
-                mode_link_variable, links_df.columns
+                set(mode_link_variables)-set(links_df.columns), links_df.columns
             )
             WranglerLogger.error(msg)
 
-        if mode_node_variable not in nodes_df.columns:
+        if not set(mode_node_variables).issubset(set(nodes_df.columns)):
             msg = "{} not in provided nodes_df list of columns. Available columns are: \n {}".format(
-                mode_node_variable, nodes_df.columns
+                set(mode_node_variables)-set(nodes_df.columns), nodes_df.columns
             )
             WranglerLogger.error(msg)
 
-        modal_links_df = links_df[links_df[mode_link_variable] == 1]
+        modal_links_df= links_df.loc[links_df[mode_link_variables].any(axis=1)]
+
         ##TODO right now we don't filter the nodes because transit-only
         # links with walk access are not marked as having walk access
         # Issue discussed in https://github.com/wsp-sag/network_wrangler/issues/145
@@ -2080,7 +2090,7 @@ class RoadwayNetwork(object):
             raise ValueError(msg)
 
         _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-            links_df, nodes_df, mode=mode
+            links_df, nodes_df, modes=[mode],
         )
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
 
@@ -2107,7 +2117,7 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, mode=mode
+                _links_df, _nodes_df, modes=[mode],
             )
         else:
             WranglerLogger.info(
@@ -2153,7 +2163,7 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, mode=mode
+                _links_df, _nodes_df, modes=[mode],
             )
         else:
             WranglerLogger.info(

@@ -228,7 +228,7 @@ def test_select_transit_features_by_nodes(request):
             "14941153-JUN19-MVS-BUS-Weekday-01",
             "14941163-JUN19-MVS-BUS-Weekday-01",
             "14944379-JUN19-MVS-BUS-Weekday-01",
-            "14944386-JUN19-MVS-BUS-Weekday-01",        
+            "14944386-JUN19-MVS-BUS-Weekday-01",
             "14944413-JUN19-MVS-BUS-Weekday-01",
             "14944416-JUN19-MVS-BUS-Weekday-01",
         ]

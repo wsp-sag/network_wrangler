@@ -637,7 +637,7 @@ def test_network_connectivity(request):
     print("Drive Network Connected:", net.is_network_connected(mode="drive"))
     print("--Finished:", request.node.name)
 
-
+@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_get_modal_network(request):
@@ -653,12 +653,23 @@ def test_get_modal_network(request):
         fast=True,
     )
     _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-        net.links_df, net.nodes_df, mode=mode,
+        net.links_df, net.nodes_df, modes=[mode],
     )
-    mode_variable = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
-    non_transit_links = _links_df[_links_df[mode_variable] != 1]
-    assert non_transit_links.shape[0] == 0
 
+    test_links_of_selection = _links_df["model_link_id"].tolist()
+    print("TEST - Number of selected links: {}".format(len(test_links_of_selection)))
+
+    mode_variables = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
+
+    control_links_of_selection = []
+    for m in mode_variables:
+        control_links_of_selection.extend(net.links_df.loc[net.links_df[m],"model_link_id"])
+    print("CONTROL - Number of selected links: {}".format(len(control_links_of_selection)))
+
+    all_model_link_ids = _links_df["model_link_id"].tolist()
+    print("CONTROL - Number of total links: {}".format(len(all_model_link_ids)))
+
+    assert(set(test_links_of_selection)==set(control_links_of_selection))
 
 @pytest.mark.roadway
 @pytest.mark.travis
