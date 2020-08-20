@@ -876,7 +876,7 @@ class RoadwayNetwork(object):
             "candidate_links"
         ]  # b/c too long to keep that way
 
-        candidate_links["i"] = 0
+        candidate_links.loc[:,"i"] = 0
 
         if len(candidate_links.index) == 0 and unique_model_link_identifer_in_selection:
             msg = "No links found based on unique link identifiers.\nSelection Failed."
@@ -909,7 +909,7 @@ class RoadwayNetwork(object):
             )
             candidate_links = self.selections[sel_key]["candidate_links"]
 
-            candidate_links["i"] = 0
+            candidate_links.loc[:,"i"] = 0
 
             if len(candidate_links.index) == 0:
                 msg = "No candidate links in search using either 'name' or 'ref' in query.\nSelection Failed."
@@ -990,7 +990,7 @@ class RoadwayNetwork(object):
             WranglerLogger.debug(
                 "_shortest_path(): calculating shortest path from graph"
             )
-            candidate_links["weight"] = 1 + (
+            candidate_links.loc[:,"weight"] = 1 + (
                 candidate_links["i"] * RoadwayNetwork.SP_WEIGHT_FACTOR
             )
 
@@ -1889,13 +1889,13 @@ class RoadwayNetwork(object):
         for attr in link_attributes:
             if attr in ml_attributes and attr not in ["ML_ACCESS", "ML_EGRESS"]:
                 gp_attr = attr.split("_", 1)[1]
-                ml_links_df[gp_attr] = ml_links_df[attr]
+                ml_links_df.loc[:,gp_attr] = ml_links_df[attr]
 
             if (
                 attr not in RoadwayNetwork.KEEP_SAME_ATTRIBUTES_ML_AND_GP
                 and attr not in RoadwayNetwork.MANAGED_LANES_REQUIRED_ATTRIBUTES
             ):
-                ml_links_df[attr] = ""
+                ml_links_df.loc[:,attr] = ""
 
         ml_links_df = ml_links_df.drop(ml_attributes, axis=1)
 
