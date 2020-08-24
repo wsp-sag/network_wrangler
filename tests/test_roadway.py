@@ -127,28 +127,28 @@ def test_quick_roadway_read_write(request):
 @pytest.mark.parametrize(
     "selection",
     [
-        {
+        { # SELECTION 1
             "link": [{"name": ["6th", "Sixth", "sixth"]}],
             "A": {"osm_node_id": "187899923"},
             "B": {"osm_node_id": "187865924"},
             "answer": ["187899923", "187858777", "187923585", "187865924"],
         },
-        {
+        { # SELECTION 2
             "link": [{"name": ["6th", "Sixth", "sixth"]}],
             "A": {"osm_node_id": "187899923"},  # start searching for segments at A
             "B": {"osm_node_id": "187942339"},
         },
-        {
+        { # SELECTION 3
             "link": [{"name": ["6th", "Sixth", "sixth"]}, {"lanes": [1, 2]}],
             "A": {"osm_node_id": "187899923"},  # start searching for segments at A
             "B": {"osm_node_id": "187942339"},
         },
-        {
+        { # SELECTION 4
             "link": [{"name": ["I 35E"]}],
             "A": {"osm_node_id": "961117623"},  # start searching for segments at A
             "B": {"osm_node_id": "2564047368"},
         },
-        {
+        { # SELECTION 5
             "link": [
                 {"name": ["6th", "Sixth", "sixth"]},
                 {"model_link_id": [2846, 2918]},
@@ -159,6 +159,7 @@ def test_quick_roadway_read_write(request):
 )
 @pytest.mark.roadway
 @pytest.mark.travis
+@pytest.mark.elo
 def test_select_roadway_features(request, selection):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -209,6 +210,7 @@ def test_select_roadway_features_from_projectcard(request):
         "3_multiple_roadway_attribute_change.yml",
     ],
 )
+@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_apply_roadway_feature_change(request, apply_feature_change_project_card):
@@ -313,7 +315,7 @@ def test_add_adhoc_field(request):
 
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
-
+@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
@@ -413,6 +415,7 @@ def test_bad_properties_statements(request):
 
 @pytest.mark.travis
 @pytest.mark.roadway
+@pytest.mark.elo
 def test_add_delete_roadway_project_card(request):
     print("\n--Starting:", request.node.name)
 
@@ -637,7 +640,6 @@ def test_network_connectivity(request):
     print("Drive Network Connected:", net.is_network_connected(mode="drive"))
     print("--Finished:", request.node.name)
 
-@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_get_modal_network(request):
@@ -673,6 +675,7 @@ def test_get_modal_network(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
+@pytest.mark.elo
 def test_network_connectivity_ignore_single_nodes(request):
     print("\n--Starting:", request.node.name)
 

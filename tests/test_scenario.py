@@ -183,91 +183,109 @@ def test_managed_lane_project_card(request):
     print("--Finished:", request.node.name)
 
 
+# selection, answer
+query_tests = [
+    #TEST 1
+    (
+        #SELECTION 1
+        {
+            "selection":
+                {
+                    "link": [{"name": ["6th", "Sixth", "sixth"]}],
+                    "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+                    "B": {"osm_node_id": "187865924"},  # end at B
+                },
+            "ignore":
+                [],
+        },
+        #ANSWER 1
+            '((name.str.contains("6th") or '+\
+            'name.str.contains("Sixth") or '+\
+            'name.str.contains("sixth")) and '+\
+            '(drive_access==1))'
+    ),
+    #TEST 2
+    (
+        #SELECTION 2
+        {
+            "selection":
+                {
+                    "link": [{"name": ["6th", "Sixth", "sixth"]}],
+                    "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+                    "B": {"osm_node_id": "187865924"},  # end at B
+                },
+            "ignore":
+                ["name"],
+        },
+        #ANSWER 1
+            '((drive_access==1))'
+    ),
+    #TEST 3
+    (
+        #SELECTION 3
+        {
+            "selection":
+                {
+                    "link": [
+                        {
+                            "name": ["6th", "Sixth", "sixth"]
+                        },  # find streets that have one of the various forms of 6th
+                        {"lanes": [1, 2]},  # only select links that are either 1 or 2 lanes
+                        {"bike_access": [1]},  # only select links that are marked for biking
+                    ],
+                    "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+                    "B": {"osm_node_id": "187865924"},  # end at B
+                },
+            "ignore":
+                [],
+        },
+        #ANSWER 3
+            '((name.str.contains("6th") or '+\
+            'name.str.contains("Sixth") or '+\
+            'name.str.contains("sixth")) and '+\
+            "(lanes==1 or lanes==2) and "+\
+            "(bike_access==1) and (drive_access==1))",
+    ),
+    #TEST 4
+    (
+        #SELECTION 4
+        {
+            "selection":
+                {
+                    "link": [
+                        {
+                            "name": ["6th", "Sixth", "sixth"]
+                        },  # find streets that have one of the various forms of 6th
+                        {"model_link_id": [134574]},
+                        {"lanes": [1, 2]},  # only select links that are either 1 or 2 lanes
+                        {"bike_access": [1]},  # only select links that are marked for biking
+                    ],
+                    "A": {"osm_node_id": "187899923"},  # start searching for segments at A
+                    "B": {"osm_node_id": "187865924"},  # end at B
+                },
+            "ignore":
+                [],
+        },
+        #ANSWER 4
+            "((model_link_id==134574))",
+    ),
+  ]
+
+@pytest.mark.parametrize(
+    "test_spec", query_tests)
 @pytest.mark.travis
-def test_query_builder(request):
-    selection_1 = {
-        "link": [{"name": ["6th", "Sixth", "sixth"]}],
-        "A": {"osm_node_id": "187899923"},  # start searching for segments at A
-        "B": {"osm_node_id": "187865924"},  # end at B
-    }
+def test_query_builder(request,test_spec):
+    selection, answer = test_spec
 
     sel_query = ProjectCard.build_link_selection_query(
-        selection=selection_1,
+        selection=selection["selection"],
         unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+        ignore=selection["ignore"],
     )
-    answer = (
-        '((name.str.contains("6th") or '
-        'name.str.contains("Sixth") or '
-        'name.str.contains("sixth")) and '
-        "drive_access==1)"
-    )
-    # print("\nsel_query:\n", sel_query)
-    assert sel_query == answer
 
-    sel_query = ProjectCard.build_link_selection_query(
-        selection=selection_1,
-        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-        ignore=["name"],
-    )
-    answer = "(drive_access==1)"
-    # print("\nsel_query:\n", sel_query)
-    assert sel_query == answer
-
-    selection_2 = {
-        "link": [
-            {
-                "name": ["6th", "Sixth", "sixth"]
-            },  # find streets that have one of the various forms of 6th
-            {"lanes": [1, 2]},  # only select links that are either 1 or 2 lanes
-            {"bike_access": [1]},  # only select links that are marked for biking
-        ],
-        "A": {"osm_node_id": "187899923"},  # start searching for segments at A
-        "B": {"osm_node_id": "187865924"},  # end at B
-    }
-
-    sel_query = ProjectCard.build_link_selection_query(
-        selection=selection_2,
-        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-    )
-    answer = (
-        '((name.str.contains("6th") or '
-        'name.str.contains("Sixth") or '
-        'name.str.contains("sixth")) and '
-        "(lanes==1 or lanes==2) and "
-        "(bike_access==1) and drive_access==1)"
-    )
-    # print("\nsel_query:\n", sel_query)
-    assert sel_query == answer
-
-    sel_query = ProjectCard.build_link_selection_query(
-        selection=selection_2,
-        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-        ignore=["name"],
-    )
-    answer = "((lanes==1 or lanes==2) and " "(bike_access==1) and drive_access==1)"
-    # print("\nsel_query:\n", sel_query)
-    assert sel_query == answer
-
-    selection_3 = {
-        "link": [
-            {
-                "name": ["6th", "Sixth", "sixth"]
-            },  # find streets that have one of the various forms of 6th
-            {"model_link_id": [134574]},
-            {"lanes": [1, 2]},  # only select links that are either 1 or 2 lanes
-            {"bike_access": [1]},  # only select links that are marked for biking
-        ],
-        "A": {"osm_node_id": "187899923"},  # start searching for segments at A
-        "B": {"osm_node_id": "187865924"},  # end at B
-    }
-
-    sel_query = ProjectCard.build_link_selection_query(
-        selection=selection_3,
-        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-    )
-    answer = "((model_link_id==134574))"
-    # print("\nsel_query:\n", sel_query)
-    assert sel_query == answer
+    print("\nsel_query:\n", sel_query)
+    print("\nanswer:\n", answer)
+    assert(sel_query == answer)
 
     print("--Finished:", request.node.name)
 

@@ -289,7 +289,7 @@ class RoadwayNetwork(object):
         links_df.crs = RoadwayNetwork.CRS
         #coerce types for booleans which might not have a 1 and are therefore read in as intersection
         bool_columns = ["rail_only","bus_only","drive_access","bike_access","walk_access","truck_access"]
-        for bc in bool_columns:
+        for bc in list(set(bool_columns) & set(links_df.columns)):
             links_df[bc] = links_df[bc].astype(bool)
 
         shapes_df = gpd.read_file(shape_file)
@@ -876,7 +876,7 @@ class RoadwayNetwork(object):
             "candidate_links"
         ]  # b/c too long to keep that way
 
-        candidate_links.loc[:,"i"] = 0
+        candidate_links["i"] = 0
 
         if len(candidate_links.index) == 0 and unique_model_link_identifer_in_selection:
             msg = "No links found based on unique link identifiers.\nSelection Failed."
@@ -909,7 +909,7 @@ class RoadwayNetwork(object):
             )
             candidate_links = self.selections[sel_key]["candidate_links"]
 
-            candidate_links.loc[:,"i"] = 0
+            candidate_links["i"] = 0
 
             if len(candidate_links.index) == 0:
                 msg = "No candidate links in search using either 'name' or 'ref' in query.\nSelection Failed."
@@ -2058,8 +2058,8 @@ class RoadwayNetwork(object):
                 set(mode_node_variables)-set(nodes_df.columns), nodes_df.columns
             )
             WranglerLogger.error(msg)
-
-        modal_links_df= links_df.loc[links_df[mode_link_variables].any(axis=1)]
+        print("MODE LINK VARIABLES",mode_link_variables)
+        modal_links_df = links_df.loc[links_df[mode_link_variables].any(axis=1)]
 
         ##TODO right now we don't filter the nodes because transit-only
         # links with walk access are not marked as having walk access
