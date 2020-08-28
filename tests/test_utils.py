@@ -99,7 +99,6 @@ def test_get_unique_shape_id(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.elo
 @pytest.mark.travis
 def test_link_df_to_json(request):
     print("\n--Starting:", request.node.name)

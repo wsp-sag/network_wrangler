@@ -159,7 +159,6 @@ def test_quick_roadway_read_write(request):
 )
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.elo
 def test_select_roadway_features(request, selection):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -225,7 +224,7 @@ def test_apply_roadway_feature_change(request, apply_feature_change_project_card
     print("Selecting roadway features ...")
     selected_link_indices = my_net.select_roadway_features(project_card.facility)
 
-    attributes_to_update = [p["property"] for p in project_card.properties]
+    attributes_to_update = [p["property"] for p in project_card.properties if p["property"] in my_net.links_df.columns]
     orig_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
     print("Original Links:\n", orig_links)
 
@@ -315,7 +314,6 @@ def test_add_adhoc_field(request):
 
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
-@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
@@ -415,7 +413,6 @@ def test_bad_properties_statements(request):
 
 @pytest.mark.travis
 @pytest.mark.roadway
-@pytest.mark.elo
 def test_add_delete_roadway_project_card(request):
     print("\n--Starting:", request.node.name)
 
