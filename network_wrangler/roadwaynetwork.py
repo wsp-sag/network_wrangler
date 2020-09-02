@@ -189,8 +189,8 @@ class RoadwayNetwork(object):
         "bus": ["bus_only","drive_access"],
         "rail":["rail_only"],
         "transit": ["bus_only","rail_only","drive_access"],
-        "walk": "walk_access",
-        "bike": "bike_access",
+        "walk": ["walk_access"],
+        "bike": ["bike_access"],
     }
 
     MODES_TO_NETWORK_NODE_VARIABLES = {
@@ -2058,7 +2058,7 @@ class RoadwayNetwork(object):
                 set(mode_node_variables)-set(nodes_df.columns), nodes_df.columns
             )
             WranglerLogger.error(msg)
-        print("MODE LINK VARIABLES",mode_link_variables)
+
         modal_links_df = links_df.loc[links_df[mode_link_variables].any(axis=1)]
 
         ##TODO right now we don't filter the nodes because transit-only
