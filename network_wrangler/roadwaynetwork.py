@@ -1902,7 +1902,7 @@ class RoadwayNetwork(object):
                 attr not in RoadwayNetwork.KEEP_SAME_ATTRIBUTES_ML_AND_GP
                 and attr not in RoadwayNetwork.MANAGED_LANES_REQUIRED_ATTRIBUTES
             ):
-                ml_links_df.loc[:, attr] = ""
+                ml_links_df[attr] = ""
 
         ml_links_df = ml_links_df.drop(ml_attributes, axis=1)
 
