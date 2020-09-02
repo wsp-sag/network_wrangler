@@ -14,7 +14,8 @@ STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
 
-@pytest.mark.transit_with_roadnet
+@pytest.mark.roadway
+@pytest.mark.transit
 @pytest.mark.travis
 def test_set_roadnet(request):
     print("\n--Starting:", request.node.name)
@@ -31,7 +32,8 @@ def test_set_roadnet(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit_with_roadnet
+@pytest.mark.roadway
+@pytest.mark.transit
 @pytest.mark.travis
 # @pytest.mark.skip("")
 def test_project_card(request):
@@ -109,7 +111,8 @@ def test_project_card(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit_with_roadnet
+@pytest.mark.roadway
+@pytest.mark.transit
 @pytest.mark.travis
 # @pytest.mark.skip("need to allow for creating new stops if they don't already exist in stops.txt")
 def test_wo_existing(request):
@@ -161,7 +164,8 @@ def test_wo_existing(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit_with_roadnet
+@pytest.mark.roadway
+@pytest.mark.transit
 @pytest.mark.travis
 # @pytest.mark.skip("need to update trips and nodes")
 def test_select_transit_features_by_nodes(request):
@@ -182,6 +186,8 @@ def test_select_transit_features_by_nodes(request):
             "14941163-JUN19-MVS-BUS-Weekday-01",
             "14944379-JUN19-MVS-BUS-Weekday-01",
             "14944386-JUN19-MVS-BUS-Weekday-01",
+            "14944413-JUN19-MVS-BUS-Weekday-01",
+            "14944416-JUN19-MVS-BUS-Weekday-01",
         ]
     )
 
@@ -201,7 +207,8 @@ def test_select_transit_features_by_nodes(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit_with_roadnet
+@pytest.mark.roadway
+@pytest.mark.transit
 @pytest.mark.travis
 # @pytest.mark.skip("need to update trips and nodes")
 def test_select_transit_features_by_nodes(request):
@@ -222,6 +229,8 @@ def test_select_transit_features_by_nodes(request):
             "14941163-JUN19-MVS-BUS-Weekday-01",
             "14944379-JUN19-MVS-BUS-Weekday-01",
             "14944386-JUN19-MVS-BUS-Weekday-01",
+            "14944413-JUN19-MVS-BUS-Weekday-01",
+            "14944416-JUN19-MVS-BUS-Weekday-01",
         ]
     )
 

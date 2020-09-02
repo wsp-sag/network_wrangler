@@ -13,12 +13,15 @@ slug_test_list = [
 ]
 
 
+@pytest.mark.travis
 @pytest.mark.parametrize("slug_test", slug_test_list)
 def test_get_slug(request, slug_test):
     print("\n--Starting:", request.node.name)
+
     from network_wrangler.utils import make_slug
 
     slug = make_slug(slug_test["text"], delimiter=slug_test["delim"])
+
     print("From: {} \nTo: {}".format(slug_test["text"], slug))
     print("Expected: {}".format(slug_test["answer"]))
     assert slug == slug_test["answer"]
@@ -51,9 +54,6 @@ def test_time_convert(request):
     assert_series_equal(df["time"], df["time_results"], check_names=False)
 
 
-null_val_type_list = [("1", 0), ("3.2", 0.0), ("Howdy", ""), ("False", False)]
-
-
 @pytest.mark.get_dist
 @pytest.mark.travis
 def test_get_distance_bw_lat_lon(request):
@@ -78,7 +78,7 @@ def test_get_unique_shape_id(request):
 
     print("--Finished:", request.node.name)
 
-@pytest.mark.test_ak
+
 @pytest.mark.travis
 def test_location_reference_offset(request):
     print("\n--Starting:", request.node.name)
@@ -101,3 +101,4 @@ def test_location_reference_offset(request):
     assert new_location_reference == expected_location_reference
 
     print("--Finished:", request.node.name)
+

@@ -4,6 +4,7 @@
 import os
 import yaml
 import json
+from typing import Optional, List
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -147,7 +148,7 @@ class ProjectCard(object):
     def build_link_selection_query(
         selection: dict,
         unique_model_link_identifiers: [],
-        mode="drive_access",
+        mode: List[str] = ["drive_access"],
         ignore=[],
     ):
         sel_query = "("
@@ -202,7 +203,10 @@ class ProjectCard(object):
         if not unique_model_link_identifer_exist:
             if count > 0:
                 sel_query = sel_query + " and "
-            sel_query = sel_query + mode + "==1"
+
+            #add mode query
+            mode_sel = "(" + " or ".join(m + "==1" for m in mode) + ")"
+            sel_query = sel_query + mode_sel
 
         sel_query = sel_query + ")"
 
