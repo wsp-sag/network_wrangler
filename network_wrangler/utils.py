@@ -148,7 +148,7 @@ def get_bearing(lat1, lon1, lat2, lon2):
     returns: bearing in radians
     """
     # bearing in degrees
-    brng = Geodesic.WGS84.Inverse(lat1, lon1, lat2, lon2)['azi1']
+    brng = Geodesic.WGS84.Inverse(lat1, lon1, lat2, lon2)["azi1"]
 
     # convert bearing to radians
     brng = math.radians(brng)
@@ -171,22 +171,22 @@ def offset_point_with_distance_and_bearing(lat, lon, distance, bearing):
 
     # calculate the new lat long in radians
     out_lat_radians = math.asin(
-        math.sin(lat_radians)*math.cos(distance/radius) +
-        math.cos(lat_radians)*math.sin(distance/radius)*math.cos(bearing)
+        math.sin(lat_radians) * math.cos(distance / radius)
+        + math.cos(lat_radians) * math.sin(distance / radius) * math.cos(bearing)
     )
 
     out_lon_radians = lon_radians + math.atan2(
-        math.sin(bearing)*math.sin(distance/radius)*math.cos(lat_radians),
-        math.cos(distance/radius)-math.sin(lat_radians)*math.sin(lat_radians)
+        math.sin(bearing) * math.sin(distance / radius) * math.cos(lat_radians),
+        math.cos(distance / radius) - math.sin(lat_radians) * math.sin(lat_radians),
     )
-    #convert the new lat long back to degree
+    # convert the new lat long back to degree
     out_lat = math.degrees(out_lat_radians)
     out_lon = math.degrees(out_lon_radians)
 
-    return((out_lat, out_lon))
+    return (out_lat, out_lon)
 
 
-def offset_location_reference(location_reference, offset_meters = 10):
+def offset_location_reference(location_reference, offset_meters=10):
     """
     Creates a new location reference
     using the node a and node b of given location reference,
@@ -213,7 +213,7 @@ def offset_location_reference(location_reference, offset_meters = 10):
 
     out_location_reference = [
         {"sequence": 1, "point": [new_lon_1, new_lat_1]},
-        {"sequence": 2, "point": [new_lon_2, new_lat_2]}
+        {"sequence": 2, "point": [new_lon_2, new_lat_2]},
     ]
 
     return out_location_reference
@@ -288,7 +288,4 @@ def create_line_string(location_reference: list):
     Creates a geometry as a LineString using location reference
     """
 
-    return LineString(
-        [location_reference[0]["point"], location_reference[1]["point"]]
-    )
-
+    return LineString([location_reference[0]["point"], location_reference[1]["point"]])

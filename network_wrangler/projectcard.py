@@ -204,7 +204,7 @@ class ProjectCard(object):
             if count > 0:
                 sel_query = sel_query + " and "
 
-            #add mode query
+            # add mode query
             mode_sel = "(" + " or ".join(m + "==1" for m in mode) + ")"
             sel_query = sel_query + mode_sel
 

@@ -127,28 +127,28 @@ def test_quick_roadway_read_write(request):
 @pytest.mark.parametrize(
     "selection",
     [
-        { # SELECTION 1
+        {  # SELECTION 1
             "link": [{"name": ["6th", "Sixth", "sixth"]}],
             "A": {"osm_node_id": "187899923"},
             "B": {"osm_node_id": "187865924"},
             "answer": ["187899923", "187858777", "187923585", "187865924"],
         },
-        { # SELECTION 2
+        {  # SELECTION 2
             "link": [{"name": ["6th", "Sixth", "sixth"]}],
             "A": {"osm_node_id": "187899923"},  # start searching for segments at A
             "B": {"osm_node_id": "187942339"},
         },
-        { # SELECTION 3
+        {  # SELECTION 3
             "link": [{"name": ["6th", "Sixth", "sixth"]}, {"lanes": [1, 2]}],
             "A": {"osm_node_id": "187899923"},  # start searching for segments at A
             "B": {"osm_node_id": "187942339"},
         },
-        { # SELECTION 4
+        {  # SELECTION 4
             "link": [{"name": ["I 35E"]}],
             "A": {"osm_node_id": "961117623"},  # start searching for segments at A
             "B": {"osm_node_id": "2564047368"},
         },
-        { # SELECTION 5
+        {  # SELECTION 5
             "link": [
                 {"name": ["6th", "Sixth", "sixth"]},
                 {"model_link_id": [2846, 2918]},
@@ -224,7 +224,11 @@ def test_apply_roadway_feature_change(request, apply_feature_change_project_card
     print("Selecting roadway features ...")
     selected_link_indices = my_net.select_roadway_features(project_card.facility)
 
-    attributes_to_update = [p["property"] for p in project_card.properties if p["property"] in my_net.links_df.columns]
+    attributes_to_update = [
+        p["property"]
+        for p in project_card.properties
+        if p["property"] in my_net.links_df.columns
+    ]
     orig_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
     print("Original Links:\n", orig_links)
 
@@ -313,6 +317,7 @@ def test_add_adhoc_field(request):
     print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5])
 
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -637,6 +642,7 @@ def test_network_connectivity(request):
     print("Drive Network Connected:", net.is_network_connected(mode="drive"))
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_get_modal_network(request):
@@ -662,13 +668,18 @@ def test_get_modal_network(request):
 
     control_links_of_selection = []
     for m in mode_variables:
-        control_links_of_selection.extend(net.links_df.loc[net.links_df[m],"model_link_id"])
-    print("CONTROL - Number of selected links: {}".format(len(control_links_of_selection)))
+        control_links_of_selection.extend(
+            net.links_df.loc[net.links_df[m], "model_link_id"]
+        )
+    print(
+        "CONTROL - Number of selected links: {}".format(len(control_links_of_selection))
+    )
 
     all_model_link_ids = _links_df["model_link_id"].tolist()
     print("CONTROL - Number of total links: {}".format(len(all_model_link_ids)))
 
-    assert(set(test_links_of_selection)==set(control_links_of_selection))
+    assert set(test_links_of_selection) == set(control_links_of_selection)
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -754,7 +765,6 @@ def test_existing_managed_lane_apply(request):
     assert new_ml_links == existing_ml_links + len(selected_link_indices)
 
     print("--Finished:", request.node.name)
-
 
 
 @pytest.mark.travis

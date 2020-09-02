@@ -186,18 +186,18 @@ class RoadwayNetwork(object):
 
     MODES_TO_NETWORK_LINK_VARIABLES = {
         "drive": ["drive_access"],
-        "bus": ["bus_only","drive_access"],
-        "rail":["rail_only"],
-        "transit": ["bus_only","rail_only","drive_access"],
+        "bus": ["bus_only", "drive_access"],
+        "rail": ["rail_only"],
+        "transit": ["bus_only", "rail_only", "drive_access"],
         "walk": ["walk_access"],
         "bike": ["bike_access"],
     }
 
     MODES_TO_NETWORK_NODE_VARIABLES = {
         "drive": ["drive_node"],
-        "rail": ["rail_only","drive_node"],
-        "bus": ["bus_only","drive_node"],
-        "transit": ["bus_only","rail_only","drive_node"],
+        "rail": ["rail_only", "drive_node"],
+        "bus": ["bus_only", "drive_node"],
+        "transit": ["bus_only", "rail_only", "drive_node"],
         "walk": ["walk_node"],
         "bike": ["bike_node"],
     }
@@ -287,8 +287,15 @@ class RoadwayNetwork(object):
         ]
         links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
         links_df.crs = RoadwayNetwork.CRS
-        #coerce types for booleans which might not have a 1 and are therefore read in as intersection
-        bool_columns = ["rail_only","bus_only","drive_access","bike_access","walk_access","truck_access"]
+        # coerce types for booleans which might not have a 1 and are therefore read in as intersection
+        bool_columns = [
+            "rail_only",
+            "bus_only",
+            "drive_access",
+            "bike_access",
+            "walk_access",
+            "truck_access",
+        ]
         for bc in list(set(bool_columns) & set(links_df.columns)):
             links_df[bc] = links_df[bc].astype(bool)
 
@@ -990,7 +997,7 @@ class RoadwayNetwork(object):
             WranglerLogger.debug(
                 "_shortest_path(): calculating shortest path from graph"
             )
-            candidate_links.loc[:,"weight"] = 1 + (
+            candidate_links.loc[:, "weight"] = 1 + (
                 candidate_links["i"] * RoadwayNetwork.SP_WEIGHT_FACTOR
             )
 
@@ -1889,13 +1896,13 @@ class RoadwayNetwork(object):
         for attr in link_attributes:
             if attr in ml_attributes and attr not in ["ML_ACCESS", "ML_EGRESS"]:
                 gp_attr = attr.split("_", 1)[1]
-                ml_links_df.loc[:,gp_attr] = ml_links_df[attr]
+                ml_links_df.loc[:, gp_attr] = ml_links_df[attr]
 
             if (
                 attr not in RoadwayNetwork.KEEP_SAME_ATTRIBUTES_ML_AND_GP
                 and attr not in RoadwayNetwork.MANAGED_LANES_REQUIRED_ATTRIBUTES
             ):
-                ml_links_df.loc[:,attr] = ""
+                ml_links_df.loc[:, attr] = ""
 
         ml_links_df = ml_links_df.drop(ml_attributes, axis=1)
 
@@ -1923,7 +1930,7 @@ class RoadwayNetwork(object):
             + RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR
         )
         ml_links_df["locationReferences"] = ml_links_df["locationReferences"].apply(
-            #lambda x: _update_location_reference(x)
+            # lambda x: _update_location_reference(x)
             lambda x: offset_location_reference(x)
         )
         ml_links_df["geometry"] = ml_links_df["locationReferences"].apply(
@@ -2045,18 +2052,34 @@ class RoadwayNetwork(object):
                 WranglerLogger.error(msg)
                 raise ValueError(msg)
 
-        mode_link_variables = list(set([mode for mode in modes for mode in  RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]]))
-        mode_node_variables = list(set([mode for mode in modes for mode in  RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES[mode]]))
+        mode_link_variables = list(
+            set(
+                [
+                    mode
+                    for mode in modes
+                    for mode in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
+                ]
+            )
+        )
+        mode_node_variables = list(
+            set(
+                [
+                    mode
+                    for mode in modes
+                    for mode in RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES[mode]
+                ]
+            )
+        )
 
         if not set(mode_link_variables).issubset(set(links_df.columns)):
             msg = "{} not in provided links_df list of columns. Available columns are: \n {}".format(
-                set(mode_link_variables)-set(links_df.columns), links_df.columns
+                set(mode_link_variables) - set(links_df.columns), links_df.columns
             )
             WranglerLogger.error(msg)
 
         if not set(mode_node_variables).issubset(set(nodes_df.columns)):
             msg = "{} not in provided nodes_df list of columns. Available columns are: \n {}".format(
-                set(mode_node_variables)-set(nodes_df.columns), nodes_df.columns
+                set(mode_node_variables) - set(nodes_df.columns), nodes_df.columns
             )
             WranglerLogger.error(msg)
 

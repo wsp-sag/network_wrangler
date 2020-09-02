@@ -84,15 +84,15 @@ def test_location_reference_offset(request):
     print("\n--Starting:", request.node.name)
 
     location_reference = [
-        {'sequence': 1, 'point': [-93.0903549, 44.961085]},
-        {'sequence': 2, 'point': [-93.0889873, 44.966861]}
+        {"sequence": 1, "point": [-93.0903549, 44.961085]},
+        {"sequence": 2, "point": [-93.0889873, 44.966861]},
     ]
 
     print("original ref", location_reference)
 
     expected_location_reference = [
-        {'sequence': 1, 'point': [-93.09022968479499, 44.961070179988084]},
-        {'sequence': 2, 'point': [-93.08886207218725, 44.966846179988075]}
+        {"sequence": 1, "point": [-93.09022968479499, 44.961070179988084]},
+        {"sequence": 2, "point": [-93.08886207218725, 44.966846179988075]},
     ]
 
     new_location_reference = offset_location_reference(location_reference)
@@ -101,4 +101,3 @@ def test_location_reference_offset(request):
     assert new_location_reference == expected_location_reference
 
     print("--Finished:", request.node.name)
-
