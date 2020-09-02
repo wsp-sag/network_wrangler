@@ -1,6 +1,9 @@
 import os
 import pytest
 
+from network_wrangler import haversine_distance
+from network_wrangler import create_unique_shape_id
+from network_wrangler import offset_location_reference
 
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
@@ -51,46 +54,23 @@ def test_time_convert(request):
     assert_series_equal(df["time"], df["time_results"], check_names=False)
 
 
-@pytest.mark.geography
+@pytest.mark.get_dist
 @pytest.mark.travis
 def test_get_distance_bw_lat_lon(request):
     print("\n--Starting:", request.node.name)
 
     start = [-93.0889873, 44.966861]
     end = [-93.08844310000001, 44.9717832]
-
-    from network_wrangler import haversine_distance
-
     dist = haversine_distance(start, end)
     print(dist)
-
+    assert dist == 0.34151200885686445
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.geography
-@pytest.mark.travis
-def test_lat_lon_offset(request):
-    print("\n--Starting:", request.node.name)
-
-    in_lat_lon = [-93.0903549, 44.961085]
-    print(in_lat_lon)
-    from network_wrangler import offset_lat_lon
-
-    new_lat_lon = offset_lat_lon(in_lat_lon)
-    print(new_lat_lon)
-
-    print("--Finished:", request.node.name)
-
-
-@pytest.mark.travis
+@pytest.mark.test_hash
+@pytest.mark.roadway
 def test_get_unique_shape_id(request):
-    print("\n--Starting:", request.node.name)
-
-    from shapely.geometry import LineString
-
     geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
-
-    from network_wrangler import create_unique_shape_id
 
     shape_id = create_unique_shape_id(geometry)
 
@@ -100,16 +80,25 @@ def test_get_unique_shape_id(request):
 
 
 @pytest.mark.travis
-def test_link_df_to_json(request):
+def test_location_reference_offset(request):
     print("\n--Starting:", request.node.name)
-    json_in = [{"a": 1, "b": 2, "distance": 5.1}, {"a": 2, "b": 3, "distance": 1.2}]
 
-    from pandas import DataFrame
+    location_reference = [
+        {'sequence': 1, 'point': [-93.0903549, 44.961085]},
+        {'sequence': 2, 'point': [-93.0889873, 44.966861]}
+    ]
 
-    df = DataFrame(json_in)
+    print("original ref", location_reference)
 
-    from network_wrangler import link_df_to_json
+    expected_location_reference = [
+        {'sequence': 1, 'point': [-93.09022968479499, 44.961070179988084]},
+        {'sequence': 2, 'point': [-93.08886207218725, 44.966846179988075]}
+    ]
 
-    json_out = link_df_to_json(df, ["a", "b", "distance"])
+    new_location_reference = offset_location_reference(location_reference)
+    print("new ref", new_location_reference)
 
-    assert json_in == json_out
+    assert new_location_reference == expected_location_reference
+
+    print("--Finished:", request.node.name)
+
