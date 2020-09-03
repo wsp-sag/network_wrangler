@@ -1,4 +1,5 @@
 pandas >= 1.0
+geographiclib
 geopandas >= 0.8.0
 osmnx >= 0.12
 partridge >= 1.1
