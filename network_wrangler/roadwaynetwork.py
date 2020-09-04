@@ -749,6 +749,9 @@ class RoadwayNetwork(object):
         WranglerLogger.debug("GRAPH NODES: {}".format(graph_nodes.columns))
         graph_nodes["id"] = graph_nodes[RoadwayNetwork.NODE_FOREIGN_KEY]
 
+        graph_nodes["x"] = graph_nodes["X"]
+        graph_nodes["y"] = graph_nodes["Y"]
+
         graph_links = links_df.copy().drop(
             ["osm_link_id", "locationReferences"], axis=1
         )
@@ -2043,11 +2046,10 @@ class RoadwayNetwork(object):
 
         Returns: tuple of DataFrames for links, nodes filtered by mode
         """
-
         for mode in modes:
             if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
-                msg = "mode value should be one of {}.".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys())
+                msg = "mode value should be one of {}, got {}".format(
+                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()), mode,
                 )
                 WranglerLogger.error(msg)
                 raise ValueError(msg)
@@ -2160,7 +2162,7 @@ class RoadwayNetwork(object):
 
     def assess_connectivity(
         self,
-        mode: str = None,
+        mode: list[str] = [],
         ignore_end_nodes: bool = True,
         links_df: DataFrame = None,
         nodes_df: DataFrame = None,
@@ -2187,7 +2189,7 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df, _nodes_df, modes=mode,
             )
         else:
             WranglerLogger.info(
@@ -2249,8 +2251,7 @@ class RoadwayNetwork(object):
 
         fig, ax = ox.plot_graph(
             G,
-            fig_height=16,
-            fig_width=16,
+            figsize=(16, 16),
             show=False,
             close=True,
             edge_color="black",
@@ -2268,42 +2269,81 @@ class RoadwayNetwork(object):
 
         return fig, ax
 
-    def selection_map(selection: tuple):
+    def selection_map(
+        self,
+        selected_link_idx: list,
+        A: Optional[Any] = None,
+        B: Optional[Any] = None,
+        candidate_link_idx: Optional[List] = [],
+    ):
         """
         Shows which links are selected for roadway property change or parallel
-        managed lanes category of roadway projects
+        managed lanes category of roadway projects.
+
+        Args:
+            selected_links_idx: list of selected link indices
+            candidate_links_idx: optional list of candidate link indices to also include in map
+            A: optional foreign key of starting node of a route selection
+            B: optional foreign key of ending node of a route selection
         """
-
-        sel_key = selection[0]
-        sel_val = selection[1]
-
-        A_node = sel_key[1]
-        B_node = sel_key[2]
-        selected_graph = sel_val["graph"]
-        selected_links = sel_val["selected_links"]
-
-        m = ox.plot_graph_folium(
-            selected_graph, edge_color=None, tiles="cartodbpositron"
+        WranglerLogger.debug(
+            "Selected Links: {}\nCandidate Links: {}\n".format(
+                selected_link_idx, candidate_link_idx
+            )
         )
 
-        def _folium_node(node, color="white", icon=""):
-            node_marker = folium.Marker(
-                location=[node["Y"], node["X"]],
-                icon=folium.Icon(icon=icon, color=color),
+        graph_link_idx = list(set(selected_link_idx + candidate_link_idx))
+        graph_links = self.links_df.loc[graph_link_idx]
+
+        node_list_foreign_keys = list(
+            set(
+                [
+                    i
+                    for fk in RoadwayNetwork.LINK_FOREIGN_KEY
+                    for i in list(graph_links[fk])
+                ]
             )
-            return node_marker
+        )
 
-        A = selected_graph.nodes[A_node]
-        B = selected_graph.nodes[B_node]
+        graph_nodes = self.nodes_df.loc[node_list_foreign_keys]
 
-        _folium_node(A, color="green", icon="play").add_to(m)
-        _folium_node(B, color="red", icon="star").add_to(m)
+        G = RoadwayNetwork.ox_graph(graph_nodes, graph_links)
+
+        # base map plot with whole graph
+        m = ox.plot_graph_folium(G, edge_color=None, tiles="cartodbpositron")
+
+        # plot selection
+        selected_links = self.links_df.loc[selected_link_idx]
 
         for _, row in selected_links.iterrows():
             pl = ox.folium._make_folium_polyline(
                 edge=row, edge_color="blue", edge_width=5, edge_opacity=0.8
             )
             pl.add_to(m)
+
+        # if have A and B node add them to base map
+        def _folium_node(node_row, color="white", icon=""):
+            node_marker = folium.Marker(
+                location=[node_row["Y"], node_row["X"]],
+                icon=folium.Icon(icon=icon, color=color),
+            )
+            return node_marker
+
+        if A:
+
+            # WranglerLogger.debug("A: {}\n{}".format(A,self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == A]))
+            _folium_node(
+                self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == A],
+                color="green",
+                icon="play",
+            ).add_to(m)
+
+        if B:
+            _folium_node(
+                self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == B],
+                color="red",
+                icon="star",
+            ).add_to(m)
 
         return m
 

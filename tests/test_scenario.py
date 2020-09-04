@@ -288,7 +288,7 @@ def test_query_builder(request, test_spec):
 
 @pytest.mark.scenario
 @pytest.mark.travis
-def test_apply_wrapper(request):
+def test_apply_summary_wrappers(request):
     print("\n--Starting:", request.node.name)
 
     card_filenames = [

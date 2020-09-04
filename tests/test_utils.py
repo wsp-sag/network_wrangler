@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from shapely.geometry  import LineString
+from shapely.geometry import LineString
 
 from network_wrangler import haversine_distance
 from network_wrangler import create_unique_shape_id
