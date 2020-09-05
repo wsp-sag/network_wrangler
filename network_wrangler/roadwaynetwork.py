@@ -2310,7 +2310,7 @@ class RoadwayNetwork(object):
         G = RoadwayNetwork.ox_graph(graph_nodes, graph_links)
 
         # base map plot with whole graph
-        m = ox.plot_graph_folium(G, edge_color=None, tiles="cartodbpositron")
+        m = ox.plot_graph_folium(G, edge_color=None, tiles="cartodbpositron", width='300px', height='250px')
 
         # plot selection
         selected_links = self.links_df.loc[selected_link_idx]

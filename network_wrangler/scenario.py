@@ -621,7 +621,7 @@ class Scenario(object):
                 )
             )
             change_summary = {
-                "project": project_card_dictionary["project"] + " – Part " + str(i+1),
+                "project": project_card_dictionary["project"] + " – Part " + str(i + 1),
                 "category": change["category"].lower(),
             }
 
@@ -684,7 +684,9 @@ class Scenario(object):
         if project_detail:
             report_str += "\n---Project Card Details---\n"
             for p in self.project_cards:
-                report_str += "\n{}".format(pprint.pformat(self.applied_project_card_summary(p.__dict__)))
+                report_str += "\n{}".format(
+                    pprint.pformat(self.applied_project_card_summary(p.__dict__))
+                )
 
         if outfile:
             with open(outfile, mode) as f:
