@@ -440,6 +440,9 @@ class TransitNetwork(object):
 
     def _graph_shapes(self) -> None:
         existing_shapes = self.feed.shapes
+        msg = "_graph_shapes() not implemented yet."
+        WranglerLogger.error(msg)
+        raise NotImplemented(msg)
         # graphed_shapes = pd.DataFrame()
 
         # for shape_id in shapes:
@@ -453,6 +456,9 @@ class TransitNetwork(object):
 
     def _graph_stops(self) -> None:
         existing_stops = self.feed.stops
+        msg = "_graph_stops() not implemented yet."
+        WranglerLogger.error(msg)
+        raise NotImplemented(msg)
         # graphed_stops = pd.DataFrame()
 
         # for stop_id in stops:
@@ -483,13 +489,23 @@ class TransitNetwork(object):
                 df.to_csv(outpath, index=False)
 
     @staticmethod
-    def transit_net_to_gdf(transit_net: TransitNetwork):
+    def transit_net_to_gdf(transit: Union(TransitNetwork, pd.DataFrame)):
         """
-        TODO make more sophisticated
+        Returns a geodataframe given a TransitNetwork or a valid Shapes DataFrame.
+
+        Args:
+            transit: either a TransitNetwork or a Shapes GeoDataFrame
+
+        TODO make more sophisticated.
         """
         from partridge import geo
 
-        transit_gdf = geo.build_shapes(transit_net.feed.shapes)
+        if type(transit) is pd.DataFrame:
+            shapes = transit
+        else:
+            shapes = transit.feed.shapes
+
+        transit_gdf = geo.build_shapes(shapes)
         return transit_gdf
 
     def apply(self, project_card_dictionary: dict):
