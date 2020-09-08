@@ -37,6 +37,7 @@ from .utils import create_location_reference_from_nodes, create_line_string
 class RoadwayNetwork(object):
     """
     Representation of a Roadway Network.
+
     .. highlight:: python
 
     Typical usage example:
@@ -230,7 +231,6 @@ class RoadwayNetwork(object):
     def read(
         link_file: str, node_file: str, shape_file: str, fast: bool = True
     ) -> RoadwayNetwork:
-        ##TODO turn off fast=True as default
         """
         Reads a network from the roadway network standard
         Validates that it conforms to the schema
@@ -242,6 +242,8 @@ class RoadwayNetwork(object):
             fast: boolean that will skip validation to speed up read time
 
         Returns: a RoadwayNetwork instance
+
+        .. todo:: Turn off fast=True as default
         """
 
         WranglerLogger.info(
@@ -331,7 +333,6 @@ class RoadwayNetwork(object):
         nodes_df.crs = RoadwayNetwork.CRS
         nodes_df["X"] = nodes_df["geometry"].apply(lambda g: g.x)
         nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.y)
-        # todo: flatten json
 
         WranglerLogger.info("Read %s links from %s" % (len(links_df), link_file))
         WranglerLogger.info("Read %s nodes from %s" % (len(nodes_df), node_file))
@@ -389,10 +390,15 @@ class RoadwayNetwork(object):
         self.shapes_df.to_file(shapes_file, driver="GeoJSON")
 
     @staticmethod
-    def roadway_net_to_gdf(roadway_net: RoadwayNetwork):
+    def roadway_net_to_gdf(roadway_net: RoadwayNetwork)-> gpd.GeoDataFrame:
         """
-        ##TODO make this much more sophisticated
-         - attach link info to shapes
+        Turn the roadway network into a GeoDataFrame
+        args:
+            roadway_net: the roadway network to export
+
+        returns: shapes dataframe
+
+        .. todo:: Make this much more sophisticated, for example attach link info to shapes
         """
         return roadway_net.shapes_df
 
@@ -952,6 +958,8 @@ class RoadwayNetwork(object):
                 node_list_foreign_keys : list
                     list of foreign key ids for nodes in the updated candidate links
                     to test if the A and B nodes are in there.
+
+            ..todo:: Make unique ID for links in the settings
             """
             WranglerLogger.debug("-Adding Breadth-")
 
@@ -1309,6 +1317,8 @@ class RoadwayNetwork(object):
             properties : list of dictionarys roadway properties to change
             in_place: boolean to indicate whether to update self or return
                 a new roadway network object
+
+        .. todo:: decide on connectors info when they are more specific in project card
         """
 
         # add ML flag
@@ -1404,11 +1414,13 @@ class RoadwayNetwork(object):
         new shapes are also added for the new roadway links.
 
         args:
-        links : list of dictionaries
-        nodes : list of dictionaries
+            links : list of dictionaries
+            nodes : list of dictionaries
+
+        returns: None
+
+        .. todo:: validate links and nodes dictionary
         """
-        # TODO:
-        # validate links and nodes dictonary
 
         def _add_dict_to_df(df, new_dict):
             df_column_names = df.columns
@@ -1644,6 +1656,11 @@ class RoadwayNetwork(object):
             return_partial_match: bool = False,
             partial_match_minutes: int = 60,
         ):
+            """
+
+            .. todo:: return the time period with the largest overlap
+
+            """
 
             if category and not time_spans:
                 WranglerLogger.error(
@@ -1871,11 +1888,12 @@ class RoadwayNetwork(object):
             in_place: update self or return a new roadway network object
 
         returns: A RoadwayNetwork instance
+
+        .. todo:: make this a more rigorous test
         """
 
         WranglerLogger.info("Creating network with duplicated managed lanes")
 
-        # TODO make this a more rigorous test
         if "ml_access" in self.links_df["roadway"].tolist():
             msg = "managed lane access links already exist in network; shouldn't be running create managed lane network. Returning network as-is."
             WranglerLogger.error(msg)
@@ -2045,6 +2063,11 @@ class RoadwayNetwork(object):
                 `walk`, `bike`. For example, if bike and walk are selected, both bike and walk links will be kept.
 
         Returns: tuple of DataFrames for links, nodes filtered by mode
+
+        .. todo:: Right now we don't filter the nodes because transit-only
+        links with walk access are not marked as having walk access
+        Issue discussed in https://github.com/wsp-sag/network_wrangler/issues/145
+        modal_nodes_df = nodes_df[nodes_df[mode_node_variable] == 1]
         """
         for mode in modes:
             if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
@@ -2136,6 +2159,8 @@ class RoadwayNetwork(object):
             nodes_df: DataFrame of standard network nodes
 
         Returns: boolean
+
+        .. todo:: Consider caching graphs if they take a long time.
         """
 
         _nodes_df = nodes_df if nodes_df else self.nodes_df

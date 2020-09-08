@@ -23,18 +23,41 @@ class TransitNetwork(object):
     """
     Representation of a Transit Network.
 
-    Usage:
-      import network_wrangler as wr
-      stpaul = r'/home/jovyan/work/example/stpaul'
-      tc=wr.TransitNetwork.read(path=stpaul)
+    .. highlight:: python
 
+    Typical usage example:
+    ::
+        import network_wrangler as wr
+        stpaul = r'/home/jovyan/work/example/stpaul'
+        tc=wr.TransitNetwork.read(path=stpaul)
+
+    Attributes:
+        feed (DotDict): Partridge feed mapping dataframes.
+        config (nx.DiGraph): Partridge config
+        road_net (RoadwayNetwork): Associated roadway network object.
+        graph (nx.MultiDiGraph): Graph for associated roadway network object.
+        feed_path (str): Where the feed was read in from.
+        validated_frequencies (bool): The frequencies have been validated.
+        validated_road_network_consistency (): The network has been validated against the road network.
+        SHAPES_FOREIGN_KEY (str): foreign key between shapes dataframe and roadway network nodes
+        STOPS_FOREIGN_KEY (str): foreign  key between stops dataframe and roadway network nodes
+        ID_SCALAR (int): scalar value added to create new IDs when necessary.
+        REQUIRED_FILES (list[str]): list of files that the transit network requires.
+
+    .. todo::
+      investigate consolidating scalars this with RoadwayNetwork
+      consolidate thes foreign key constants into one if possible
     """
 
     # PK = primary key, FK = foreign key
     SHAPES_FOREIGN_KEY = "shape_model_node_id"
     STOPS_FOREIGN_KEY = "model_node_id"
 
+    ##TODO consolidate these two ^^^ constants if possible
+
     ID_SCALAR = 100000000
+
+    ##TODO investigate consolidating this with RoadwayNetwork
 
     REQUIRED_FILES = [
         "agency.txt",
@@ -49,6 +72,8 @@ class TransitNetwork(object):
     def __init__(self, feed: DotDict = None, config: nx.DiGraph = None):
         """
         Constructor
+
+        .. todo:: Make graph a reference to associated RoadwayNetwork's graph, not its own thing.
         """
         self.feed: DotDict = feed
         self.config: nx.DiGraph = config
@@ -68,14 +93,24 @@ class TransitNetwork(object):
     def empty() -> TransitNetwork:
         """
         Create an empty transit network instance using the default config.
+
+        .. todo:: fill out this method
         """
         ##TODO
-        pass
+
+        msg = "TransitNetwork.empty is not implemented."
+        WranglerLogger.error(msg)
+        raise NotImplemented(msg)
 
     @staticmethod
-    def read(feed_path: str, fast: bool = False) -> TransitNetwork:
+    def read(feed_path: str) -> TransitNetwork:
         """
         Read GTFS feed from folder and TransitNetwork object
+
+        Args:
+            feed_path: where to read transit network files from
+
+        Returns: a TransitNetwork object.
         """
         config = default_config()
         feed = ptg.load_feed(feed_path, config=config)
@@ -102,6 +137,10 @@ class TransitNetwork(object):
         Partridge uses a DiGraph from the networkx library to represent the
         relationships between GTFS files. Each file is a 'node', and the
         relationship between files are 'edges'.
+
+        Args:
+            feed: partridge feed
+            config: partridge config
         """
         updated_config = copy.deepcopy(config)
         files_not_found = []
@@ -297,12 +336,15 @@ class TransitNetwork(object):
         return valid
 
     @staticmethod
-    def route_ids_in_routestxt(feed):
+    def route_ids_in_routestxt(feed: DotDict)->Bool:
         """
         Wherever route_id occurs, make sure it is in routes.txt
 
+        Args:
+            feed: partridge feed object
+
         Returns:
-            Boolean
+            Boolean indicating if feed is okay.
         """
         route_ids_routestxt = set(feed.routes.route_id.tolist())
         route_ids_referenced = set(feed.trips.route_id.tolist())
@@ -319,12 +361,15 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def trip_ids_in_tripstxt(feed):
+    def trip_ids_in_tripstxt(feed: DotDict)->Bool:
         """
         Wherever trip_id occurs, make sure it is in trips.txt
 
+        Args:
+            feed: partridge feed object
+
         Returns:
-            Boolean
+            Boolean indicating if feed is okay.
         """
         trip_ids_tripstxt = set(feed.trips.trip_id.tolist())
         trip_ids_referenced = set(
@@ -343,12 +388,15 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def shape_ids_in_shapestxt(feed):
+    def shape_ids_in_shapestxt(feed: DotDict)->Bool:
         """
         Wherever shape_id occurs, make sure it is in shapes.txt
 
+        Args:
+            feed: partridge feed object
+
         Returns:
-            Boolean
+            Boolean indicating if feed is okay.
         """
 
         shape_ids_shapestxt = set(feed.shapes.shape_id.tolist())
@@ -366,12 +414,15 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def stop_ids_in_stopstxt(feed):
+    def stop_ids_in_stopstxt(feed: DotDict)->Bool:
         """
         Wherever stop_id occurs, make sure it is in stops.txt
 
+        Args:
+            feed: partridge feed object
+
         Returns:
-            Boolean
+            Boolean indicating if feed is okay.
         """
         stop_ids_stopstxt = set(feed.stops.stop_id.tolist())
         stop_ids_referenced = []
@@ -404,13 +455,15 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def validate_network_keys(feed):
+    def validate_network_keys(feed: DotDict)->Bool:
         """
         Validates foreign keys are present in all connecting feed files.
 
+        Args:
+            feed: partridge feed object
 
         Returns:
-            Boolean
+            Boolean indicating if feed is okay.
         """
         result = True
         result = result and TransitNetwork.route_ids_in_routestxt(feed)
@@ -439,6 +492,10 @@ class TransitNetwork(object):
             self.validate_road_network_consistencies()
 
     def _graph_shapes(self) -> None:
+        """
+
+        .. todo:: Fill out this method.
+        """
         existing_shapes = self.feed.shapes
         msg = "_graph_shapes() not implemented yet."
         WranglerLogger.error(msg)
@@ -455,6 +512,9 @@ class TransitNetwork(object):
         # self.feed.shapes = graphed_shapes
 
     def _graph_stops(self) -> None:
+        """
+        .. todo:: Fill out this method.
+        """
         existing_stops = self.feed.stops
         msg = "_graph_stops() not implemented yet."
         WranglerLogger.error(msg)
@@ -470,10 +530,9 @@ class TransitNetwork(object):
         """
         Writes a network in the transit network standard
 
-        Parameters
-        ------------
-        path: the path were the output will be saved
-        filename: the name prefix of the transit files that will be generated
+        Args:
+            path: the path were the output will be saved
+            filename: the name prefix of the transit files that will be generated
         """
         WranglerLogger.info("Writing transit to directory: {}".format(path))
         for node in self.config.nodes.keys():
@@ -496,7 +555,7 @@ class TransitNetwork(object):
         Args:
             transit: either a TransitNetwork or a Shapes GeoDataFrame
 
-        TODO make more sophisticated.
+        .. todo:: Make more sophisticated.
         """
         from partridge import geo
 
@@ -512,10 +571,9 @@ class TransitNetwork(object):
         """
         Wrapper method to apply a project to a transit network.
 
-        args
-        ------
-        project_card_dictionary: dict
-          a dictionary of the project card object
+        Args:
+            project_card_dictionary: dict
+                a dictionary of the project card object
 
         """
         WranglerLogger.info(
