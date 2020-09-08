@@ -390,7 +390,7 @@ class RoadwayNetwork(object):
         self.shapes_df.to_file(shapes_file, driver="GeoJSON")
 
     @staticmethod
-    def roadway_net_to_gdf(roadway_net: RoadwayNetwork)-> gpd.GeoDataFrame:
+    def roadway_net_to_gdf(roadway_net: RoadwayNetwork) -> gpd.GeoDataFrame:
         """
         Turn the roadway network into a GeoDataFrame
         args:
@@ -1851,8 +1851,12 @@ class RoadwayNetwork(object):
                 access_row["locationReferences"][1]["point"],
             )
             access_row["roadway"] = "ml_access"
-            access_row["name"] = row["name"]
-            access_row["ref"] = row["ref"]
+            access_row["name"] = "Access Dummy " + row["name"]
+            # ref is not a *required* attribute, so make conditional:
+            if "ref" in gp_ml_links_df.columns:
+                access_row["ref"] = row["ref"]
+            else:
+                access_row["ref"] = ""
             access_df = access_df.append(access_row, ignore_index=True)
 
             egress_row = {}
@@ -1872,8 +1876,12 @@ class RoadwayNetwork(object):
                 egress_row["locationReferences"][1]["point"],
             )
             egress_row["roadway"] = "ml_egress"
-            egress_row["name"] = row["name"]
-            egress_row["ref"] = row["ref"]
+            egress_row["name"] = "Egress Dummy " + row["name"]
+            # ref is not a *required* attribute, so make conditional:
+            if "ref" in gp_ml_links_df.columns:
+                egress_row["ref"] = row["ref"]
+            else:
+                egress_row["ref"] = ""
             egress_df = egress_df.append(egress_row, ignore_index=True)
 
         return (access_df, egress_df)
@@ -1903,6 +1911,7 @@ class RoadwayNetwork(object):
                 return copy.deepcopy(self)
 
         link_attributes = self.links_df.columns.values.tolist()
+
         ml_attributes = [i for i in link_attributes if i.startswith("ML_")]
 
         # non_ml_links are links in the network where there is no managed lane.
@@ -1915,7 +1924,9 @@ class RoadwayNetwork(object):
         gp_links_df = ml_links_df.drop(ml_attributes, axis=1)
 
         for attr in link_attributes:
-            if attr in ml_attributes and attr not in ["ML_ACCESS", "ML_EGRESS"]:
+            if attr ==  "name":
+                ml_links_df["name"] = "Managed Lane "+gp_links_df["name"]
+            elif attr in ml_attributes and attr not in ["ML_ACCESS", "ML_EGRESS"]:
                 gp_attr = attr.split("_", 1)[1]
                 ml_links_df.loc[:, gp_attr] = ml_links_df[attr]
 
@@ -2187,7 +2198,7 @@ class RoadwayNetwork(object):
 
     def assess_connectivity(
         self,
-        mode: list[str] = [],
+        mode: str = "",
         ignore_end_nodes: bool = True,
         links_df: DataFrame = None,
         nodes_df: DataFrame = None,
@@ -2196,7 +2207,7 @@ class RoadwayNetwork(object):
         as described by a list of their member nodes.
 
         Args:
-            mode:  mode of the network, one of `drive`,`transit`,
+            mode:  list of modes of the network, one of `drive`,`transit`,
                 `walk`, `bike`
             ignore_end_nodes: if True, ignores stray singleton nodes
             links_df: if specified, will assess connectivity of this
@@ -2214,7 +2225,7 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=mode,
+                _links_df, _nodes_df, modes=[mode],
             )
         else:
             WranglerLogger.info(

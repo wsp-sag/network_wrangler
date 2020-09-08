@@ -209,7 +209,6 @@ def test_select_roadway_features_from_projectcard(request):
         "3_multiple_roadway_attribute_change.yml",
     ],
 )
-@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_apply_roadway_feature_change(request, apply_feature_change_project_card):
@@ -319,6 +318,7 @@ def test_add_adhoc_field(request):
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
 
+@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
@@ -341,14 +341,20 @@ def test_add_adhoc_managed_lane_field(request):
     print(
         "Network with field...\n ",
         net.links_df[
-            ["model_link_id", "ML_my_ad_hoc_field", "ML_lanes", "ML_price", "managed"]
+            [
+                "model_link_id",
+                "name",
+                "ML_my_ad_hoc_field",
+                "lanes",
+                "ML_lanes",
+                "ML_price",
+                "managed",
+            ]
         ],
     )
     ml_net = net.create_managed_lane_network()
     print("Managed Lane Network")
-    print(
-        ml_net.links_df[["model_link_id", "ML_my_ad_hoc_field", "ML_lanes", "ML_price"]]
-    )
+    print(ml_net.links_df[["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]])
     # assert net.links_df["my_ad_hoc_field"][0] == 22.5
     # print("CALCULATED:\n", v_series.loc[selected_link_indices])
 
@@ -683,7 +689,6 @@ def test_get_modal_network(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-@pytest.mark.elo
 def test_network_connectivity_ignore_single_nodes(request):
     print("\n--Starting:", request.node.name)
 

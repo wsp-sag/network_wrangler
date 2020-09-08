@@ -28,7 +28,7 @@ import network_wrangler
 # -- Project information -----------------------------------------------------
 
 project = "Network Wrangler"
-copyright = "2019, Metropolitan Council"
+copyright = "2020, Metropolitan Council"
 author = "Metropolitan Council"
 
 
@@ -90,4 +90,4 @@ autoclass_content = "class"  # classes should include both the class' and the __
 
 autosummary_generate = True
 
-todo_include_todos  = True
+todo_include_todos = True

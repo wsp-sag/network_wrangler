@@ -21,8 +21,6 @@ Objectives
    todo
 
 
-
-
 Indices and tables
 ==================
 
