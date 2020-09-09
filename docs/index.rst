@@ -18,8 +18,7 @@ Objectives
    design
    autodoc
    contributing
-
-
+   todo
 
 
 Indices and tables

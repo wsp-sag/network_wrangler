@@ -5,13 +5,10 @@ changes:
   - category: Roadway Deletion
     links:
       model_link_id:
-        - 2171
-        - 25856
-        - 383747
-        - 383790
+        - 281
+        - 477533
     nodes:
       model_node_id:
-        - 16214
         - 4336
         - 12590
         - 12655
@@ -19,35 +16,36 @@ changes:
         - 14248
   - category: Add New Roadway
     links:
-      - A: 354386
-        B: 16214
-        bike_access: 1
-        drive_access: 1
-        transit_access: 0
-        walk_access: 0
-        lanes: 1
-        model_link_id: 2171
-      - A: 16214
-        B: 354386
-        bike_access: 1
-        drive_access: 1
-        transit_access: 0
-        walk_access: 0
-        lanes: 1
-        model_link_id: 25856
+    - A: 3230
+      B: 3262
+      model_link_id: 999998
+      trn_priority: 0
+      lanes: 1
+      bike_facility: 3
+      drive_access: 1
+      walk_access: 1
+      bike_access: 1
+      distance: 0.10462
+      ttime_assert: 0.0
+      OPERATION_final: A
+    - A: 3262
+      B: 3230
+      model_link_id: 999997
+      trn_priority: 0
+      lanes: 1
+      bike_facility: 3
+      drive_access: 1
+      walk_access: 1
+      bike_access: 1
+      distance: 0.10462
+      ttime_assert: 0.0
+      OPERATION_final: A
     nodes:
-      - bike_node: 1
-        drive_node: 1
-        transit_node: 0
-        walk_node: 1
-        model_node_id: 354386
-        X: -93.14412
-        Y: 44.87497
-      - bike_node: 1
-        drive_node: 1
-        transit_node: 0
-        walk_node: 1
-        model_node_id: 354387
-        X: -93.14189
-        Y: 44.87644
+    - model_node_id: 354388
+      X: -93.18389
+      Y: 44.96898
+      osm_node_id: ''
+      drive_node: 1
+      walk_node: 0
+      bike_node: 0
 notes: project card with multiple category of add and delete changes

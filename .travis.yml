@@ -23,4 +23,4 @@ deploy:
   github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
   keep_history: true
   on:
-    branch: develop # will change to master when we have it figured out
+    branch: master # will change to master when we have it figured out

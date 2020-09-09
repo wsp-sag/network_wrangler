@@ -7,7 +7,7 @@ Network Wrangler is a Python library for managing travel model network scenarios
 ## System Requirements
 Network Wrangler should be operating system agonistic and has been tested on Ubuntu and Mac OS.
 
-In order to assist in installation, its helpful to have either [miniconda](https://docs.conda.io/en/latest/miniconda.html), [anaconda](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/index.html#regular-installation) or [Docker CE](https://docs.docker.com/install/) installed.  If you don't have any of these already, we reommend starting with Miniconda for Python 3.7 as it has the smallest footprint. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications. All commands described below should be entered into the `Ananconda Prompt` command window. 
+In order to assist in installation, its helpful to have either [miniconda](https://docs.conda.io/en/latest/miniconda.html), [anaconda](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/index.html#regular-installation) or [Docker CE](https://docs.docker.com/install/) installed.  If you don't have any of these already, we reommend starting with Miniconda for Python 3.7 as it has the smallest footprint. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications. All commands described below should be entered into the `Ananconda Prompt` command window.
 
 Network Wrangler does require Python 3.7+.  If you have a different version of Python installed, `conda` will take care of installing it for you in the installation instructions below.
 
@@ -16,12 +16,12 @@ Network Wrangler uses Python 3.6 and above.  Requirements are stored in `require
 
 If you are managing multiple python versions, we suggest using [`virtualenv`](https://virtualenv.pypa.io/en/latest/) or [`conda`](https://conda.io/en/latest/) virtual environments. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications. Do not add Anaconda to the system path during installation. This may cause problems with other programs that require python 2.7 to be placed in the system path.
 
-Example of one way of installing and running tests using conda in the Anaconda Prompt command line:
+Example installing and running tests using conda in the command line:
 
 ```bash
-conda create python=3.7 -n wrangler_env
-source activate wrangler_env
-conda install rtree fiona geopandas shapely
+conda config --add channels conda-forge
+conda create python=3.7 rtree geopandas osmnx -n <my_wrangler_environment>
+conda activate <my_wrangler_environment>
 pip install network-wrangler
 pytest -s -m travis
 ```
@@ -32,6 +32,9 @@ Network wrangler can be installed in several ways depending on the user's needs.
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install Network Wrangler from the source on GitHub.
 
 ```bash
+conda config --add channels conda-forge
+conda create python=3.7 rtree geopandas osmnx -n <my_wrangler_environment>
+conda activate <my_wrangler_environment>
 pip install git+https://github.com/wsp-sag/network_wrangler.git@master#egg=network_wrangler
 ```
 
@@ -55,13 +58,22 @@ conda activate wrangler_env
 
 I chose `wrangler_env` as the name of my environment, but you could choose something else...just remember it so that you can access it later.
 
-**NOTE** in order to get back to this "conda" environment (i.e. after you close this command prompt), you will need to access it from the command line by using the following command:
+**NOTE** in order to get back to "this" conda environment (i.e. after you close this command prompt), you will need to access it from the command line by using the following command:
 
 ```bash
 conda activate wrangler_env
 ```
 
-**3. "Clone" (aka download) network wrangler from Github on to your machine**
+**3. Install finicky Requirements**
+
+Some requirements are best installed using conda rather than "pip"
+
+```bash
+conda config --add channels conda-forge
+conda install rtree geopandas osmnx
+```
+
+**4. "Clone" (aka download) network wrangler from Github on to your machine**
 
 If you have [GitHub desktop](https://desktop.github.com/) installed, you can either do this by using the GitHub user interface by clicking on the green button "clone or download" in the [main network wrangler repository page](https://github.com/wsp-sag/network_wrangler).
 
@@ -83,16 +95,8 @@ remote: Total 307 (delta 28), reused 29 (delta 19), pack-reused 254
 Receiving objects: 100% (307/307), 15.94 MiB | 10.49 MiB/s, done.
 Resolving deltas: 100% (140/140), done.
 ```
-**4a. If you aren't using linux, try to install these packages before network wrangler**
 
-Some packages are very finicky and don't like being installed from their version on the python package index on windows or macosx, so it is often necessary to install them ahead of network_wrangler.
-
-```bash
-conda install rtree geopandas 
-```
-
-
-**4b. Install Network Wrangler in "develop" mode.**
+**5. Install Network Wrangler in "develop" mode.**
 
 Navigate your command prompt into the network wrangler folder and then install network wrangler in editable mode.
 This will take a few minutes because it is also installing all the prerequisites.
@@ -109,7 +113,7 @@ Running setup.py develop for network-wrangler
 Successfully installed Rtree-0.8.3 attrs-19.1.0 cchardet-2.1.4 chardet-3.0.4 click-7.0 click-plugins-1.1.1 cligj-0.5.0 cycler-0.10.0 decorator-4.4.0 descartes-1.1.0 fiona-1.8.6 geojson-2.4.1 geopandas-0.5.1 idna-2.8 isoweek-1.3.3 jsonschema-3.0.2 kiwisolver-1.1.0 matplotlib-3.1.1 munch-2.3.2 network-wrangler networkx-2.3 numpy-1.17.0 osmnx-0.10 pandas-0.25.0 partridge-1.1.0 pyparsing-2.4.2 pyproj-2.2.1 pyrsistent-0.15.4 python-dateutil-2.8.0 pytz-2019.2 pyyaml-5.1.2 requests-2.22.0 shapely-1.6.4.post2 six-1.12.0 urllib3-1.25.3
 ```
 
-**5. Test the Installation**
+**6. Test the Installation**
 
 You can test that network wrangler was properly installed by running the tests as follows:
 
