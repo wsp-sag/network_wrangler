@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,12 +11,19 @@
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
   
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -29,14 +35,10 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Wrangler Classes and Functions" href="autodoc.html" /> 
+    <link rel="next" title="To Do List" href="todo.html" />
+    <link rel="prev" title="network_wrangler.logger" href="_generated/network_wrangler.logger.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -50,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Network Wrangler
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Network Wrangler
           
 
           
@@ -73,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -92,11 +95,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#continuous-integration">Continuous Integration</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="todo.html">To Do List</a></li>
 </ul>
 
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -135,7 +140,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Contributing</li>
     
@@ -143,7 +148,7 @@
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/contributing.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/contributing.md.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -160,26 +165,41 @@
 <h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="development-workflow">
 <h2>Development Workflow<a class="headerlink" href="#development-workflow" title="Permalink to this headline">¶</a></h2>
+<ol class="simple">
+<li><p>Create <a class="reference external" href="https://github.com/wsp-sag/network_wrangler/issues">an issue</a> for any features/bugs that you are working on.</p></li>
+<li><p>Develop comprehensive tests.</p></li>
+<li><p>Modify code including inline documentation such that it passes <em>all</em>  tests (not just your new ones)</p></li>
+<li><p>Lint code to PEP8 using a tool like <code class="docutils literal notranslate"><span class="pre">black</span></code></p></li>
+<li><p>Fill out information in the <a class="reference external" href="https://github.com/wsp-sag/network_wrangler/blob/master/.github/.github/pull_request_template">pull request template</a></p></li>
+<li><p>Submit pull requests to the <code class="docutils literal notranslate"><span class="pre">develop</span></code> branch.</p></li>
+<li><p>Core developer will review your pull request and suggest changes.</p></li>
+<li><p>After requested changes are complete, core developer will sign off on pull-request merge.</p></li>
+</ol>
 </div>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
-<p>Documentation is produced by Sphinx and can be run by executing:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">html</span>
+<p>Documentation is produced by Sphinx and can be run by executing the following from the <code class="docutils literal notranslate"><span class="pre">/docs</span></code> folder:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make html
 </pre></div>
 </div>
 </div>
 <div class="section" id="roadmap">
 <h2>Roadmap<a class="headerlink" href="#roadmap" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/wsp-sag/network_wrangler/issues">Issue List</a></p></li>
+<li><p><a class="reference internal" href="todo.html"><span class="doc">To Do List</span></a></p></li>
+</ul>
 </div>
 <div class="section" id="testing">
 <h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
-<p>To run:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pytest</span>
+<p>Tests and test data reside in the <code class="docutils literal notranslate"><span class="pre">/tests</span></code> directory. To run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest
 </pre></div>
 </div>
 </div>
 <div class="section" id="continuous-integration">
 <h2>Continuous Integration<a class="headerlink" href="#continuous-integration" title="Permalink to this headline">¶</a></h2>
+<p>Continuous integration is set up in <a class="reference external" href="https://travis-ci.org/wsp-sag/network_wrangler">Travis CI</a>.</p>
 </div>
 </div>
 
@@ -191,8 +211,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="todo.html" class="btn btn-neutral float-right" title="To Do List" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-        <a href="autodoc.html" class="btn btn-neutral float-left" title="Wrangler Classes and Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+        <a href="_generated/network_wrangler.logger.html" class="btn btn-neutral float-left" title="network_wrangler.logger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -201,11 +223,19 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Metropolitan Council
+        
+        &copy; Copyright 2020, Metropolitan Council
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -216,7 +246,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -1,0 +1,1257 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>network_wrangler.transitnetwork &mdash; Network Wrangler  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> Network Wrangler
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../autodoc.html">Wrangler Classes and Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../todo.html">To Do List</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Network Wrangler</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>network_wrangler.transitnetwork</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for network_wrangler.transitnetwork</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">partridge</span> <span class="k">as</span> <span class="nn">ptg</span>
+<span class="kn">from</span> <span class="nn">partridge.config</span> <span class="kn">import</span> <span class="n">default_config</span>
+
+<span class="kn">from</span> <span class="nn">.logger</span> <span class="kn">import</span> <span class="n">WranglerLogger</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">parse_time_spans</span>
+<span class="kn">from</span> <span class="nn">.roadwaynetwork</span> <span class="kn">import</span> <span class="n">RoadwayNetwork</span>
+
+
+<div class="viewcode-block" id="TransitNetwork"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork">[docs]</a><span class="k">class</span> <span class="nc">TransitNetwork</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Representation of a Transit Network.</span>
+
+<span class="sd">    .. highlight:: python</span>
+
+<span class="sd">    Typical usage example:</span>
+<span class="sd">    ::</span>
+<span class="sd">        import network_wrangler as wr</span>
+<span class="sd">        stpaul = r&#39;/home/jovyan/work/example/stpaul&#39;</span>
+<span class="sd">        tc=wr.TransitNetwork.read(path=stpaul)</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        feed (DotDict): Partridge feed mapping dataframes.</span>
+<span class="sd">        config (nx.DiGraph): Partridge config</span>
+<span class="sd">        road_net (RoadwayNetwork): Associated roadway network object.</span>
+<span class="sd">        graph (nx.MultiDiGraph): Graph for associated roadway network object.</span>
+<span class="sd">        feed_path (str): Where the feed was read in from.</span>
+<span class="sd">        validated_frequencies (bool): The frequencies have been validated.</span>
+<span class="sd">        validated_road_network_consistency (): The network has been validated against the road network.</span>
+<span class="sd">        SHAPES_FOREIGN_KEY (str): foreign key between shapes dataframe and roadway network nodes</span>
+<span class="sd">        STOPS_FOREIGN_KEY (str): foreign  key between stops dataframe and roadway network nodes</span>
+<span class="sd">        ID_SCALAR (int): scalar value added to create new IDs when necessary.</span>
+<span class="sd">        REQUIRED_FILES (list[str]): list of files that the transit network requires.</span>
+
+<span class="sd">    .. todo::</span>
+<span class="sd">      investigate consolidating scalars this with RoadwayNetwork</span>
+<span class="sd">      consolidate thes foreign key constants into one if possible</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># PK = primary key, FK = foreign key</span>
+    <span class="n">SHAPES_FOREIGN_KEY</span> <span class="o">=</span> <span class="s2">&quot;shape_model_node_id&quot;</span>
+    <span class="n">STOPS_FOREIGN_KEY</span> <span class="o">=</span> <span class="s2">&quot;model_node_id&quot;</span>
+
+    <span class="c1">##TODO consolidate these two ^^^ constants if possible</span>
+
+    <span class="n">ID_SCALAR</span> <span class="o">=</span> <span class="mi">100000000</span>
+
+    <span class="c1">##TODO investigate consolidating this with RoadwayNetwork</span>
+
+    <span class="n">REQUIRED_FILES</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;agency.txt&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frequencies.txt&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;routes.txt&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;shapes.txt&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;stop_times.txt&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;stops.txt&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;trips.txt&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+<div class="viewcode-block" id="TransitNetwork.__init__"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feed</span><span class="p">:</span> <span class="n">DotDict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor</span>
+
+<span class="sd">        .. todo:: Make graph a reference to associated RoadwayNetwork&#39;s graph, not its own thing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="p">:</span> <span class="n">DotDict</span> <span class="o">=</span> <span class="n">feed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="p">:</span> <span class="n">RoadwayNetwork</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feed_path</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">validated_frequencies</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validated_road_network_consistency</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_frequencies</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Transit lines with non-positive frequencies exist in the network&quot;</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.empty"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.empty">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">empty</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">TransitNetwork</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an empty transit network instance using the default config.</span>
+
+<span class="sd">        .. todo:: fill out this method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">##TODO</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;TransitNetwork.empty is not implemented.&quot;</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.read"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.read">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">feed_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TransitNetwork</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read GTFS feed from folder and TransitNetwork object</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feed_path: where to read transit network files from</span>
+
+<span class="sd">        Returns: a TransitNetwork object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">default_config</span><span class="p">()</span>
+        <span class="n">feed</span> <span class="o">=</span> <span class="n">ptg</span><span class="o">.</span><span class="n">load_feed</span><span class="p">(</span><span class="n">feed_path</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Read in transit feed from: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">feed_path</span><span class="p">))</span>
+
+        <span class="n">updated_config</span> <span class="o">=</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">validate_feed</span><span class="p">(</span><span class="n">feed</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+        <span class="c1"># Read in each feed so we can write over them</span>
+        <span class="n">editable_feed</span> <span class="o">=</span> <span class="n">DotDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">updated_config</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># Load (initiate Partridge&#39;s lazy load)</span>
+            <span class="n">editable_feed</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">feed</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="n">transit_network</span> <span class="o">=</span> <span class="n">TransitNetwork</span><span class="p">(</span><span class="n">feed</span><span class="o">=</span><span class="n">editable_feed</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">updated_config</span><span class="p">)</span>
+        <span class="n">transit_network</span><span class="o">.</span><span class="n">feed_path</span> <span class="o">=</span> <span class="n">feed_path</span>
+        <span class="k">return</span> <span class="n">transit_network</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.validate_feed"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.validate_feed">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">validate_feed</span><span class="p">(</span><span class="n">feed</span><span class="p">:</span> <span class="n">DotDict</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Since Partridge lazily loads the df, load each file to make sure it</span>
+<span class="sd">        actually works.</span>
+
+<span class="sd">        Partridge uses a DiGraph from the networkx library to represent the</span>
+<span class="sd">        relationships between GTFS files. Each file is a &#39;node&#39;, and the</span>
+<span class="sd">        relationship between files are &#39;edges&#39;.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feed: partridge feed</span>
+<span class="sd">            config: partridge config</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">updated_config</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">files_not_found</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+
+            <span class="n">n</span> <span class="o">=</span> <span class="n">feed</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;...</span><span class="si">{}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">n</span><span class="p">[:</span><span class="mi">10</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;Removing </span><span class="si">{}</span><span class="s2"> from transit network config because file not found&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">node</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">updated_config</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">REQUIRED_FILES</span><span class="p">:</span>
+                    <span class="n">files_not_found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">files_not_found</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Required files not found or valid: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">files_not_found</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">validate_network_keys</span><span class="p">(</span><span class="n">feed</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">updated_config</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.validate_frequencies"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.validate_frequencies">[docs]</a>    <span class="k">def</span> <span class="nf">validate_frequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates that there are no transit trips in the feed with zero frequencies.</span>
+
+<span class="sd">        Changes state of self.validated_frequencies boolean based on outcome.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            boolean indicating if valid or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_valid</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">zero_freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">frequencies</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">frequencies</span><span class="o">.</span><span class="n">headway_secs</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">zero_freq</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_valid</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Transit lines </span><span class="si">{}</span><span class="s2"> have non-positive frequencies&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">zero_freq</span><span class="o">.</span><span class="n">trip_id</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">validated_frequencies</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="n">_valid</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.validate_road_network_consistencies"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.validate_road_network_consistencies">[docs]</a>    <span class="k">def</span> <span class="nf">validate_road_network_consistencies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates transit network against the road network for both stops</span>
+<span class="sd">        and shapes.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            boolean indicating if valid or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;RoadwayNetwork not set yet, see TransitNetwork.set_roadnet()&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">valid</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">valid_stops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_transit_stops</span><span class="p">()</span>
+        <span class="n">valid_shapes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_transit_shapes</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">validated_road_network_consistency</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid_stops</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">valid_shapes</span><span class="p">:</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Transit network is not consistent with road network.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">valid</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.validate_transit_stops"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.validate_transit_stops">[docs]</a>    <span class="k">def</span> <span class="nf">validate_transit_stops</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates that all transit stops are part of the roadway network.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Boolean indicating if valid or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;RoadwayNetwork not set yet, see TransitNetwork.set_roadnet()&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">stops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">stops</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">nodes_df</span>
+
+        <span class="n">valid</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">stop_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">stops</span><span class="p">[</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">()]</span>
+        <span class="n">node_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">[</span><span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">NODE_FOREIGN_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">()]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">stop_ids</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">node_ids</span><span class="p">):</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">missing_stops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">stop_ids</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">node_ids</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not all transit stops are part of the roadyway network. &quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;Missing stops (</span><span class="si">{}</span><span class="s2">) from the roadway nodes are </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">,</span> <span class="n">missing_stops</span>
+            <span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">valid</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.validate_transit_shapes"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.validate_transit_shapes">[docs]</a>    <span class="k">def</span> <span class="nf">validate_transit_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates that all transit shapes are part of the roadway network.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Boolean indicating if valid or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;RoadwayNetwork not set yet, see TransitNetwork.set_roadnet()&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">shapes_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span>
+        <span class="n">nodes_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">nodes_df</span>
+        <span class="n">links_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">links_df</span>
+
+        <span class="n">valid</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># check if all the node ids exist in the network</span>
+        <span class="n">shape_ids</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shapes_df</span><span class="p">[</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">SHAPES_FOREIGN_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+        <span class="p">]</span>
+        <span class="n">node_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes_df</span><span class="p">[</span><span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">NODE_FOREIGN_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">()]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">shape_ids</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">node_ids</span><span class="p">):</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">missing_shapes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">shape_ids</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">node_ids</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not all transit shapes are part of the roadyway network. &quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;Missing shapes (</span><span class="si">{}</span><span class="s2">) from the roadway network are </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">SHAPES_FOREIGN_KEY</span><span class="p">,</span> <span class="n">missing_shapes</span>
+            <span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">valid</span>
+
+        <span class="c1"># check if all the links in transit shapes exist in the network</span>
+        <span class="c1"># and transit is allowed</span>
+        <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">SHAPES_FOREIGN_KEY</span><span class="p">:</span> <span class="nb">int</span><span class="p">})</span>
+        <span class="n">unique_shape_ids</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="o">.</span><span class="n">shape_id</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">unique_shape_ids</span><span class="p">:</span>
+            <span class="n">subset_shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="p">[</span><span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">id</span><span class="p">]</span>
+            <span class="n">subset_shapes_df</span> <span class="o">=</span> <span class="n">subset_shapes_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;shape_pt_sequence&quot;</span><span class="p">])</span>
+            <span class="n">subset_shapes_df</span> <span class="o">=</span> <span class="n">subset_shapes_df</span><span class="o">.</span><span class="n">add_suffix</span><span class="p">(</span><span class="s2">&quot;_1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">subset_shapes_df</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">add_suffix</span><span class="p">(</span><span class="s2">&quot;_2&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">subset_shapes_df</span> <span class="o">=</span> <span class="n">subset_shapes_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+
+            <span class="n">merged_df</span> <span class="o">=</span> <span class="n">subset_shapes_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                <span class="n">links_df</span><span class="p">,</span>
+                <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+                <span class="n">left_on</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">SHAPES_FOREIGN_KEY</span> <span class="o">+</span> <span class="s2">&quot;_1&quot;</span><span class="p">,</span>
+                    <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">SHAPES_FOREIGN_KEY</span> <span class="o">+</span> <span class="s2">&quot;_2&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">right_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">],</span>
+                <span class="n">indicator</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">missing_links_df</span> <span class="o">=</span> <span class="n">merged_df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;_merge == &quot;left_only&quot;&#39;</span><span class="p">)</span>
+
+            <span class="c1"># there are shape links which does not exist in the roadway network</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_links_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">valid</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;There are links for shape id </span><span class="si">{}</span><span class="s2"> which are missing in the roadway network.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">id</span>
+                <span class="p">)</span>
+                <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="n">transit_not_allowed_df</span> <span class="o">=</span> <span class="n">merged_df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                <span class="s1">&#39;_merge == &quot;both&quot; &amp; drive_access == 0 &amp; bus_only == 0 &amp; rail_only == 0&#39;</span>
+            <span class="p">)</span>
+
+            <span class="c1"># there are shape links where transit is not allowed</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">transit_not_allowed_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">valid</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;There are links for shape id </span><span class="si">{}</span><span class="s2"> which does not allow transit in the roadway network.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">id</span>
+                <span class="p">)</span>
+                <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">valid</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.route_ids_in_routestxt"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.route_ids_in_routestxt">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">route_ids_in_routestxt</span><span class="p">(</span><span class="n">feed</span><span class="p">:</span> <span class="n">DotDict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wherever route_id occurs, make sure it is in routes.txt</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feed: partridge feed object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Boolean indicating if feed is okay.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">route_ids_routestxt</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">routes</span><span class="o">.</span><span class="n">route_id</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">route_ids_referenced</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">trips</span><span class="o">.</span><span class="n">route_id</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="n">missing_routes</span> <span class="o">=</span> <span class="n">route_ids_referenced</span> <span class="o">-</span> <span class="n">route_ids_routestxt</span>
+
+        <span class="k">if</span> <span class="n">missing_routes</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;The following route_ids are referenced but missing from routes.txt: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">list</span><span class="p">(</span><span class="n">missing_routes</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.trip_ids_in_tripstxt"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.trip_ids_in_tripstxt">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">trip_ids_in_tripstxt</span><span class="p">(</span><span class="n">feed</span><span class="p">:</span> <span class="n">DotDict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wherever trip_id occurs, make sure it is in trips.txt</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feed: partridge feed object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Boolean indicating if feed is okay.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">trip_ids_tripstxt</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">trips</span><span class="o">.</span><span class="n">trip_id</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">trip_ids_referenced</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+            <span class="n">feed</span><span class="o">.</span><span class="n">stop_times</span><span class="o">.</span><span class="n">trip_id</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">feed</span><span class="o">.</span><span class="n">frequencies</span><span class="o">.</span><span class="n">trip_id</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="n">missing_trips</span> <span class="o">=</span> <span class="n">trip_ids_referenced</span> <span class="o">-</span> <span class="n">trip_ids_tripstxt</span>
+
+        <span class="k">if</span> <span class="n">missing_trips</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;The following trip_ids are referenced but missing from trips.txt: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">list</span><span class="p">(</span><span class="n">missing_trips</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.shape_ids_in_shapestxt"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.shape_ids_in_shapestxt">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">shape_ids_in_shapestxt</span><span class="p">(</span><span class="n">feed</span><span class="p">:</span> <span class="n">DotDict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wherever shape_id occurs, make sure it is in shapes.txt</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feed: partridge feed object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Boolean indicating if feed is okay.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">shape_ids_shapestxt</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">shape_id</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">shape_ids_referenced</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">trips</span><span class="o">.</span><span class="n">shape_id</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="n">missing_shapes</span> <span class="o">=</span> <span class="n">shape_ids_referenced</span> <span class="o">-</span> <span class="n">shape_ids_shapestxt</span>
+
+        <span class="k">if</span> <span class="n">missing_shapes</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;The following shape_ids from trips.txt are missing from shapes.txt: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">list</span><span class="p">(</span><span class="n">missing_shapes</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.stop_ids_in_stopstxt"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.stop_ids_in_stopstxt">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">stop_ids_in_stopstxt</span><span class="p">(</span><span class="n">feed</span><span class="p">:</span> <span class="n">DotDict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wherever stop_id occurs, make sure it is in stops.txt</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feed: partridge feed object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Boolean indicating if feed is okay.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stop_ids_stopstxt</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">stops</span><span class="o">.</span><span class="n">stop_id</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">stop_ids_referenced</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># STOP_TIMES</span>
+        <span class="n">stop_ids_referenced</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">stop_times</span><span class="o">.</span><span class="n">stop_id</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">stop_ids_referenced</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">stops</span><span class="o">.</span><span class="n">parent_station</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="c1"># TRANSFERS</span>
+        <span class="k">if</span> <span class="n">feed</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;transfers.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">stop_ids_referenced</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">transfers</span><span class="o">.</span><span class="n">from_stop_id</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">stop_ids_referenced</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">transfers</span><span class="o">.</span><span class="n">to_stop_id</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="c1"># PATHWAYS</span>
+        <span class="k">if</span> <span class="n">feed</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pathways.txt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">stop_ids_referenced</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">pathways</span><span class="o">.</span><span class="n">from_stop_id</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">stop_ids_referenced</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">pathways</span><span class="o">.</span><span class="n">to_stop_id</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="n">stop_ids_referenced</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">stop_ids_referenced</span><span class="p">)</span>
+
+        <span class="n">missing_stops</span> <span class="o">=</span> <span class="n">stop_ids_referenced</span> <span class="o">-</span> <span class="n">stop_ids_stopstxt</span>
+
+        <span class="k">if</span> <span class="n">missing_stops</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;The following stop_ids from are referenced but missing from stops.txt: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">list</span><span class="p">(</span><span class="n">missing_stops</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.validate_network_keys"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.validate_network_keys">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">validate_network_keys</span><span class="p">(</span><span class="n">feed</span><span class="p">:</span> <span class="n">DotDict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates foreign keys are present in all connecting feed files.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            feed: partridge feed object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Boolean indicating if feed is okay.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="ow">and</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">route_ids_in_routestxt</span><span class="p">(</span><span class="n">feed</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="ow">and</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">trip_ids_in_tripstxt</span><span class="p">(</span><span class="n">feed</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="ow">and</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">shape_ids_in_shapestxt</span><span class="p">(</span><span class="n">feed</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="ow">and</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">stop_ids_in_stopstxt</span><span class="p">(</span><span class="n">feed</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.set_roadnet"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.set_roadnet">[docs]</a>    <span class="k">def</span> <span class="nf">set_roadnet</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">road_net</span><span class="p">:</span> <span class="n">RoadwayNetwork</span><span class="p">,</span>
+        <span class="n">graph_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">graph_stops</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">validate_consistency</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="p">:</span> <span class="n">RoadwayNetwork</span> <span class="o">=</span> <span class="n">road_net</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span> <span class="o">=</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">ox_graph</span><span class="p">(</span>
+            <span class="n">road_net</span><span class="o">.</span><span class="n">nodes_df</span><span class="p">,</span> <span class="n">road_net</span><span class="o">.</span><span class="n">links_df</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">graph_shapes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_shapes</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">graph_stops</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_stops</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">validate_consistency</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_road_network_consistencies</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_graph_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        .. todo:: Fill out this method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">existing_shapes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;_graph_shapes() not implemented yet.&quot;</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="c1"># graphed_shapes = pd.DataFrame()</span>
+
+        <span class="c1"># for shape_id in shapes:</span>
+        <span class="c1"># TODO traverse point by point, mapping shortest path on graph,</span>
+        <span class="c1"># then append to a list</span>
+        <span class="c1"># return total list of all link ids</span>
+        <span class="c1"># rebuild rows in shapes dataframe and add to graphed_shapes</span>
+        <span class="c1"># make graphed_shapes a GeoDataFrame</span>
+
+        <span class="c1"># self.feed.shapes = graphed_shapes</span>
+
+    <span class="k">def</span> <span class="nf">_graph_stops</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        .. todo:: Fill out this method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">existing_stops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">stops</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;_graph_stops() not implemented yet.&quot;</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="c1"># graphed_stops = pd.DataFrame()</span>
+
+        <span class="c1"># for stop_id in stops:</span>
+        <span class="c1"># TODO</span>
+
+        <span class="c1"># self.feed.stops = graphed_stops</span>
+
+<div class="viewcode-block" id="TransitNetwork.write"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Writes a network in the transit network standard</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path: the path were the output will be saved</span>
+<span class="sd">            filename: the name prefix of the transit files that will be generated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing transit to directory: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+                    <span class="n">outpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">node</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">outpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+                <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Writing file: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">outpath</span><span class="p">))</span>
+
+                <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outpath</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.transit_net_to_gdf"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.transit_net_to_gdf">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">transit_net_to_gdf</span><span class="p">(</span><span class="n">transit</span><span class="p">:</span> <span class="n">Union</span><span class="p">(</span><span class="n">TransitNetwork</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a geodataframe given a TransitNetwork or a valid Shapes DataFrame.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            transit: either a TransitNetwork or a Shapes GeoDataFrame</span>
+
+<span class="sd">        .. todo:: Make more sophisticated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">partridge</span> <span class="kn">import</span> <span class="n">geo</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">transit</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+            <span class="n">shapes</span> <span class="o">=</span> <span class="n">transit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shapes</span> <span class="o">=</span> <span class="n">transit</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span>
+
+        <span class="n">transit_gdf</span> <span class="o">=</span> <span class="n">geo</span><span class="o">.</span><span class="n">build_shapes</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">transit_gdf</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.apply"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_card_dictionary</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wrapper method to apply a project to a transit network.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            project_card_dictionary: dict</span>
+<span class="sd">                a dictionary of the project card object</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Applying Project to Transit Network: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">project_card_dictionary</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_apply_individual_change</span><span class="p">(</span><span class="n">project_dictionary</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">project_dictionary</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="o">==</span> <span class="s2">&quot;transit service property change&quot;</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">apply_transit_feature_change</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">select_transit_features</span><span class="p">(</span><span class="n">project_dictionary</span><span class="p">[</span><span class="s2">&quot;facility&quot;</span><span class="p">]),</span>
+                    <span class="n">project_dictionary</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">project_dictionary</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;parallel managed lanes&quot;</span><span class="p">:</span>
+                <span class="c1"># Grab the list of nodes in the facility from road_net</span>
+                <span class="c1"># It should be cached because managed lane projects are</span>
+                <span class="c1"># processed by RoadwayNetwork first via</span>
+                <span class="c1"># Scenario.apply_all_projects</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">managed_lane_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">selections</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">build_selection_key</span><span class="p">(</span>
+                            <span class="n">project_dictionary</span><span class="p">[</span><span class="s2">&quot;facility&quot;</span><span class="p">]</span>
+                        <span class="p">)</span>
+                    <span class="p">)[</span><span class="s2">&quot;route&quot;</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="s2">&quot;RoadwayNetwork not set yet, see TransitNetwork.set_roadnet()&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Reroute any transit using these nodes</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">apply_transit_managed_lane</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">select_transit_features_by_nodes</span><span class="p">(</span><span class="n">managed_lane_nodes</span><span class="p">),</span>
+                    <span class="n">managed_lane_nodes</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">project_dictionary</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;roadway deletion&quot;</span><span class="p">:</span>
+                <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Roadway Deletion not yet implemented in Transit; ignoring&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not implemented yet in TransitNetwork; can&#39;t apply.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">project_dictionary</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">project_card_dictionary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;changes&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">project_dictionary</span> <span class="ow">in</span> <span class="n">project_card_dictionary</span><span class="p">[</span><span class="s2">&quot;changes&quot;</span><span class="p">]:</span>
+                <span class="n">_apply_individual_change</span><span class="p">(</span><span class="n">project_dictionary</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_apply_individual_change</span><span class="p">(</span><span class="n">project_card_dictionary</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.select_transit_features"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.select_transit_features">[docs]</a>    <span class="k">def</span> <span class="nf">select_transit_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selection</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Selects transit features that satisfy selection criteria</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            selection : selection dictionary</span>
+
+<span class="sd">        Returns: trip identifiers : list of GTFS trip IDs in the selection</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">trips</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">trips</span>
+        <span class="n">routes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">routes</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">frequencies</span>
+
+        <span class="c1"># Turn selection&#39;s values into lists if they are not already</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">selection</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">selection</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">]:</span>
+                <span class="n">selection</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">selection</span><span class="p">[</span><span class="n">key</span><span class="p">]]</span>
+
+        <span class="c1"># Based on the key in selection, filter trips</span>
+        <span class="k">if</span> <span class="s2">&quot;trip_id&quot;</span> <span class="ow">in</span> <span class="n">selection</span><span class="p">:</span>
+            <span class="n">trips</span> <span class="o">=</span> <span class="n">trips</span><span class="p">[</span><span class="n">trips</span><span class="o">.</span><span class="n">trip_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selection</span><span class="p">[</span><span class="s2">&quot;trip_id&quot;</span><span class="p">])]</span>
+
+        <span class="k">elif</span> <span class="s2">&quot;route_id&quot;</span> <span class="ow">in</span> <span class="n">selection</span><span class="p">:</span>
+            <span class="n">trips</span> <span class="o">=</span> <span class="n">trips</span><span class="p">[</span><span class="n">trips</span><span class="o">.</span><span class="n">route_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selection</span><span class="p">[</span><span class="s2">&quot;route_id&quot;</span><span class="p">])]</span>
+
+        <span class="k">elif</span> <span class="s2">&quot;route_short_name&quot;</span> <span class="ow">in</span> <span class="n">selection</span><span class="p">:</span>
+            <span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span><span class="p">[</span><span class="n">routes</span><span class="o">.</span><span class="n">route_short_name</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selection</span><span class="p">[</span><span class="s2">&quot;route_short_name&quot;</span><span class="p">])]</span>
+            <span class="n">trips</span> <span class="o">=</span> <span class="n">trips</span><span class="p">[</span><span class="n">trips</span><span class="o">.</span><span class="n">route_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">routes</span><span class="p">[</span><span class="s2">&quot;route_id&quot;</span><span class="p">])]</span>
+
+        <span class="k">elif</span> <span class="s2">&quot;route_long_name&quot;</span> <span class="ow">in</span> <span class="n">selection</span><span class="p">:</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">sel</span> <span class="ow">in</span> <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;route_long_name&quot;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">route_long_name</span> <span class="ow">in</span> <span class="n">routes</span><span class="p">[</span><span class="s2">&quot;route_long_name&quot;</span><span class="p">]:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="n">route_long_name</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">route_long_name</span><span class="p">)</span>
+
+            <span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span><span class="p">[</span><span class="n">routes</span><span class="o">.</span><span class="n">route_long_name</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">matches</span><span class="p">)]</span>
+            <span class="n">trips</span> <span class="o">=</span> <span class="n">trips</span><span class="p">[</span><span class="n">trips</span><span class="o">.</span><span class="n">route_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">routes</span><span class="p">[</span><span class="s2">&quot;route_id&quot;</span><span class="p">])]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Selection not supported </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">selection</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+
+        <span class="c1"># If a time key exists, filter trips using frequency table</span>
+        <span class="k">if</span> <span class="n">selection</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">):</span>
+            <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_time_spans</span><span class="p">(</span><span class="n">selection</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">selection</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start_time&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">selection</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;end_time&quot;</span><span class="p">):</span>
+            <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_time_spans</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">selection</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">],</span> <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;end_time&quot;</span><span class="p">]]</span>
+            <span class="p">)</span>
+            <span class="c1"># Filter freq to trips in selection</span>
+            <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="n">freq</span><span class="o">.</span><span class="n">trip_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">trips</span><span class="p">[</span><span class="s2">&quot;trip_id&quot;</span><span class="p">])]</span>
+            <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="n">freq</span><span class="o">.</span><span class="n">start_time</span> <span class="o">==</span> <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="n">freq</span><span class="o">.</span><span class="n">end_time</span> <span class="o">==</span> <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
+
+            <span class="c1"># Filter trips table to those still in freq table</span>
+            <span class="n">trips</span> <span class="o">=</span> <span class="n">trips</span><span class="p">[</span><span class="n">trips</span><span class="o">.</span><span class="n">trip_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">freq</span><span class="p">[</span><span class="s2">&quot;trip_id&quot;</span><span class="p">])]</span>
+
+        <span class="c1"># If any other key exists, filter routes or trips accordingly</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">selection</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;trip_id&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;route_id&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;route_short_name&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;route_long_name&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;time&quot;</span><span class="p">,</span>
+            <span class="p">]:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">trips</span><span class="p">:</span>
+                    <span class="n">trips</span> <span class="o">=</span> <span class="n">trips</span><span class="p">[</span><span class="n">trips</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selection</span><span class="p">[</span><span class="n">key</span><span class="p">])]</span>
+                <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">routes</span><span class="p">:</span>
+                    <span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span><span class="p">[</span><span class="n">routes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selection</span><span class="p">[</span><span class="n">key</span><span class="p">])]</span>
+                    <span class="n">trips</span> <span class="o">=</span> <span class="n">trips</span><span class="p">[</span><span class="n">trips</span><span class="o">.</span><span class="n">route_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">routes</span><span class="p">[</span><span class="s2">&quot;route_id&quot;</span><span class="p">])]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Selection not supported </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span>
+
+        <span class="c1"># Check that there is at least one trip in trips table or raise error</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">trips</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Selection returned zero trips&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+
+        <span class="c1"># Return pandas.Series of trip_ids</span>
+        <span class="k">return</span> <span class="n">trips</span><span class="p">[</span><span class="s2">&quot;trip_id&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.select_transit_features_by_nodes"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.select_transit_features_by_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">select_transit_features_by_nodes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">require_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Selects transit features that use any one of a list of node_ids</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node_ids: list (generally coming from nx.shortest_path)</span>
+<span class="sd">            require_all : bool if True, the returned trip_ids must traverse all of</span>
+<span class="sd">              the nodes (default = False)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            trip identifiers  list of GTFS trip IDs in the selection</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If require_all, the returned trip_ids must traverse all of the nodes</span>
+        <span class="c1"># Else, filter any shapes that use any one of the nodes in node_ids</span>
+        <span class="k">if</span> <span class="n">require_all</span><span class="p">:</span>
+            <span class="n">shape_ids</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;shape_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">all</span><span class="p">(</span>
+                        <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">SHAPES_FOREIGN_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">node_ids</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">shape_id</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shape_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span><span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span><span class="p">[</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">SHAPES_FOREIGN_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">node_ids</span><span class="p">)</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">shape_id</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+
+        <span class="c1"># Return pandas.Series of trip_ids</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">trips</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">trips</span><span class="o">.</span><span class="n">shape_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">shape_ids</span><span class="p">)]</span><span class="o">.</span><span class="n">trip_id</span></div>
+
+<div class="viewcode-block" id="TransitNetwork.apply_transit_feature_change"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.apply_transit_feature_change">[docs]</a>    <span class="k">def</span> <span class="nf">apply_transit_feature_change</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">trip_ids</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">TransitNetwork</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Changes the transit attributes for the selected features based on the</span>
+<span class="sd">        project card information passed</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            trip_ids : pd.Series</span>
+<span class="sd">                all trip_ids to apply change to</span>
+<span class="sd">            properties : list of dictionaries</span>
+<span class="sd">                transit properties to change</span>
+<span class="sd">            in_place : bool</span>
+<span class="sd">                whether to apply changes in place or return a new network</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="s2">&quot;property&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;headway_secs&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transit_feature_change_frequencies</span><span class="p">(</span><span class="n">trip_ids</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">in_place</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">i</span><span class="p">[</span><span class="s2">&quot;property&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;routing&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transit_feature_change_routing</span><span class="p">(</span><span class="n">trip_ids</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">in_place</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_apply_transit_feature_change_routing</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">trip_ids</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">TransitNetwork</span><span class="p">):</span>
+        <span class="n">shapes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">stop_times</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">stop_times</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">stops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">stops</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># A negative sign in &quot;set&quot; indicates a traversed node without a stop</span>
+        <span class="c1"># If any positive numbers, stops have changed</span>
+        <span class="n">stops_change</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;set&quot;</span><span class="p">]):</span>
+            <span class="c1"># Simplify &quot;set&quot; and &quot;existing&quot; to only stops</span>
+            <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;set_stops&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;set&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;existing&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;existing_stops&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;existing&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                <span class="p">]</span>
+            <span class="n">stops_change</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Convert ints to objects</span>
+        <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;set_shapes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;set&quot;</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;existing&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;existing_shapes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">str</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;existing&quot;</span><span class="p">]</span>
+            <span class="p">]</span>
+
+        <span class="c1"># Replace shapes records</span>
+        <span class="n">trips</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">trips</span>  <span class="c1"># create pointer rather than a copy</span>
+        <span class="n">shape_ids</span> <span class="o">=</span> <span class="n">trips</span><span class="p">[</span><span class="n">trips</span><span class="p">[</span><span class="s2">&quot;trip_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">trip_ids</span><span class="p">)]</span><span class="o">.</span><span class="n">shape_id</span>
+        <span class="k">for</span> <span class="n">shape_id</span> <span class="ow">in</span> <span class="n">shape_ids</span><span class="p">:</span>
+            <span class="c1"># Check if `shape_id` is used by trips that are not in</span>
+            <span class="c1"># parameter `trip_ids`</span>
+            <span class="n">trips_using_shape_id</span> <span class="o">=</span> <span class="n">trips</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">trips</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">shape_id</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;trip_id&quot;</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">trips_using_shape_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">trip_ids</span><span class="p">)[</span><span class="s2">&quot;trip_id&quot;</span><span class="p">]):</span>
+                <span class="c1"># In this case, we need to create a new shape_id so as to leave</span>
+                <span class="c1"># the trips not part of the query alone</span>
+                <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Trips that were not in your query selection use the &quot;</span>
+                    <span class="s2">&quot;same `shape_id` as trips that are in your query. Only &quot;</span>
+                    <span class="s2">&quot;the trips&#39; shape in your query will be changed.&quot;</span>
+                <span class="p">)</span>
+                <span class="n">old_shape_id</span> <span class="o">=</span> <span class="n">shape_id</span>
+                <span class="n">shape_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">shape_id</span><span class="p">)</span> <span class="o">+</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">ID_SCALAR</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">shape_id</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
+                    <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Cannot create a unique new shape_id.&quot;</span><span class="p">)</span>
+                <span class="n">dup_shape</span> <span class="o">=</span> <span class="n">shapes</span><span class="p">[</span><span class="n">shapes</span><span class="o">.</span><span class="n">shape_id</span> <span class="o">==</span> <span class="n">old_shape_id</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">dup_shape</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shape_id</span>
+                <span class="n">shapes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">shapes</span><span class="p">,</span> <span class="n">dup_shape</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Pop the rows that match shape_id</span>
+            <span class="n">this_shape</span> <span class="o">=</span> <span class="n">shapes</span><span class="p">[</span><span class="n">shapes</span><span class="o">.</span><span class="n">shape_id</span> <span class="o">==</span> <span class="n">shape_id</span><span class="p">]</span>
+
+            <span class="c1"># Make sure they are ordered by shape_pt_sequence</span>
+            <span class="n">this_shape</span> <span class="o">=</span> <span class="n">this_shape</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;shape_pt_sequence&quot;</span><span class="p">])</span>
+
+            <span class="c1"># Build a pd.DataFrame of new shape records</span>
+            <span class="n">new_shape_rows</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;shape_id&quot;</span><span class="p">:</span> <span class="n">shape_id</span><span class="p">,</span>
+                    <span class="s2">&quot;shape_pt_lat&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># FIXME Populate from self.road_net?</span>
+                    <span class="s2">&quot;shape_pt_lon&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># FIXME</span>
+                    <span class="s2">&quot;shape_osm_node_id&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># FIXME</span>
+                    <span class="s2">&quot;shape_pt_sequence&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">SHAPES_FOREIGN_KEY</span><span class="p">:</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;set_shapes&quot;</span><span class="p">],</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+            <span class="c1"># If &quot;existing&quot; is specified, replace only that segment</span>
+            <span class="c1"># Else, replace the whole thing</span>
+            <span class="k">if</span> <span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;existing&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Match list</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="n">this_shape</span><span class="p">[</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">SHAPES_FOREIGN_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="n">index_replacement_starts</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;existing_shapes&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">index_replacement_ends</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;existing_shapes&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">this_shape</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="n">this_shape</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="n">index_replacement_starts</span><span class="p">],</span>
+                        <span class="n">new_shape_rows</span><span class="p">,</span>
+                        <span class="n">this_shape</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">index_replacement_ends</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:],</span>
+                    <span class="p">],</span>
+                    <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">this_shape</span> <span class="o">=</span> <span class="n">new_shape_rows</span>
+
+            <span class="c1"># Renumber shape_pt_sequence</span>
+            <span class="n">this_shape</span><span class="p">[</span><span class="s2">&quot;shape_pt_sequence&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">this_shape</span><span class="p">))</span>
+
+            <span class="c1"># Add rows back into shapes</span>
+            <span class="n">shapes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">shapes</span><span class="p">[</span><span class="n">shapes</span><span class="o">.</span><span class="n">shape_id</span> <span class="o">!=</span> <span class="n">shape_id</span><span class="p">],</span> <span class="n">this_shape</span><span class="p">],</span>
+                <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Replace stop_times and stops records (if required)</span>
+        <span class="k">if</span> <span class="n">stops_change</span><span class="p">:</span>
+            <span class="c1"># If node IDs in properties[&quot;set_stops&quot;] are not already</span>
+            <span class="c1"># in stops.txt, create a new stop_id for them in stops</span>
+            <span class="n">existing_fk_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">stops</span><span class="p">[</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">nodes_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">nodes_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+                <span class="p">:,</span> <span class="p">[</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">,</span> <span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">]</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">fk_i</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;set_stops&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">fk_i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_fk_ids</span><span class="p">:</span>
+                    <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="s2">&quot;Creating a new stop in stops.txt for node ID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fk_i</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="c1"># Add new row to stops</span>
+                    <span class="n">new_stop_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fk_i</span><span class="p">)</span> <span class="o">+</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">ID_SCALAR</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">stop_id</span> <span class="ow">in</span> <span class="n">stops</span><span class="p">[</span><span class="s2">&quot;stop_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
+                        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Cannot create a unique new stop_id.&quot;</span><span class="p">)</span>
+                    <span class="n">stops</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="n">stops</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                        <span class="p">[</span>
+                            <span class="s2">&quot;stop_id&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;stop_lat&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;stop_lon&quot;</span><span class="p">,</span>
+                            <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">,</span>
+                        <span class="p">],</span>
+                    <span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="n">new_stop_id</span><span class="p">,</span>
+                        <span class="n">nodes_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">fk_i</span><span class="p">),</span> <span class="s2">&quot;Y&quot;</span><span class="p">],</span>
+                        <span class="n">nodes_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">fk_i</span><span class="p">),</span> <span class="s2">&quot;X&quot;</span><span class="p">],</span>
+                        <span class="n">fk_i</span><span class="p">,</span>
+                    <span class="p">]</span>
+
+            <span class="c1"># Loop through all the trip_ids</span>
+            <span class="k">for</span> <span class="n">trip_id</span> <span class="ow">in</span> <span class="n">trip_ids</span><span class="p">:</span>
+                <span class="c1"># Pop the rows that match trip_id</span>
+                <span class="n">this_stoptime</span> <span class="o">=</span> <span class="n">stop_times</span><span class="p">[</span><span class="n">stop_times</span><span class="o">.</span><span class="n">trip_id</span> <span class="o">==</span> <span class="n">trip_id</span><span class="p">]</span>
+
+                <span class="c1"># Merge on node IDs using stop_id (one node ID per stop_id)</span>
+                <span class="n">this_stoptime</span> <span class="o">=</span> <span class="n">this_stoptime</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                    <span class="n">stops</span><span class="p">[[</span><span class="s2">&quot;stop_id&quot;</span><span class="p">,</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">]],</span>
+                    <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+                    <span class="n">on</span><span class="o">=</span><span class="s2">&quot;stop_id&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Make sure the stop_times are ordered by stop_sequence</span>
+                <span class="n">this_stoptime</span> <span class="o">=</span> <span class="n">this_stoptime</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;stop_sequence&quot;</span><span class="p">])</span>
+
+                <span class="c1"># Build a pd.DataFrame of new shape records from properties</span>
+                <span class="n">new_stoptime_rows</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;trip_id&quot;</span><span class="p">:</span> <span class="n">trip_id</span><span class="p">,</span>
+                        <span class="s2">&quot;arrival_time&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">&quot;departure_time&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">&quot;pickup_type&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">&quot;drop_off_type&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">&quot;stop_distance&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">&quot;timepoint&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">&quot;stop_is_skipped&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">:</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;set_stops&quot;</span><span class="p">],</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Merge on stop_id using node IDs (many stop_id per node ID)</span>
+                <span class="n">new_stoptime_rows</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">new_stoptime_rows</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                        <span class="n">stops</span><span class="p">[[</span><span class="s2">&quot;stop_id&quot;</span><span class="p">,</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">]],</span>
+                        <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+                        <span class="n">on</span><span class="o">=</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">])</span>
+                    <span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>  <span class="c1"># pick first</span>
+
+                <span class="c1"># If &quot;existing&quot; is specified, replace only that segment</span>
+                <span class="c1"># Else, replace the whole thing</span>
+                <span class="k">if</span> <span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;existing&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Match list (remember stops are passed in with node IDs)</span>
+                    <span class="n">nodes</span> <span class="o">=</span> <span class="n">this_stoptime</span><span class="p">[</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                    <span class="n">index_replacement_starts</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+                        <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;existing_stops&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="p">)</span>
+                    <span class="n">index_replacement_ends</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+                        <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;existing_stops&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="p">)</span>
+                    <span class="n">this_stoptime</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+                        <span class="p">[</span>
+                            <span class="n">this_stoptime</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="n">index_replacement_starts</span><span class="p">],</span>
+                            <span class="n">new_stoptime_rows</span><span class="p">,</span>
+                            <span class="n">this_stoptime</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">index_replacement_ends</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:],</span>
+                        <span class="p">],</span>
+                        <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">this_stoptime</span> <span class="o">=</span> <span class="n">new_stoptime_rows</span>
+
+                <span class="c1"># Remove node ID</span>
+                <span class="k">del</span> <span class="n">this_stoptime</span><span class="p">[</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">]</span>
+
+                <span class="c1"># Renumber stop_sequence</span>
+                <span class="n">this_stoptime</span><span class="p">[</span><span class="s2">&quot;stop_sequence&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">this_stoptime</span><span class="p">))</span>
+
+                <span class="c1"># Add rows back into stoptime</span>
+                <span class="n">stop_times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">stop_times</span><span class="p">[</span><span class="n">stop_times</span><span class="o">.</span><span class="n">trip_id</span> <span class="o">!=</span> <span class="n">trip_id</span><span class="p">],</span> <span class="n">this_stoptime</span><span class="p">],</span>
+                    <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Replace self if in_place, else return</span>
+        <span class="k">if</span> <span class="n">in_place</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span> <span class="o">=</span> <span class="n">shapes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">stops</span> <span class="o">=</span> <span class="n">stops</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">stop_times</span> <span class="o">=</span> <span class="n">stop_times</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">updated_network</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">updated_network</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span> <span class="o">=</span> <span class="n">shapes</span>
+            <span class="n">updated_network</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">stops</span> <span class="o">=</span> <span class="n">stops</span>
+            <span class="n">updated_network</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">stop_times</span> <span class="o">=</span> <span class="n">stop_times</span>
+            <span class="k">return</span> <span class="n">updated_network</span>
+
+    <span class="k">def</span> <span class="nf">_apply_transit_feature_change_frequencies</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">trip_ids</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">TransitNetwork</span><span class="p">):</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">frequencies</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Grab only those records matching trip_ids (aka selection)</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="n">freq</span><span class="o">.</span><span class="n">trip_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">trip_ids</span><span class="p">)]</span>
+
+        <span class="c1"># Check all `existing` properties if given</span>
+        <span class="k">if</span> <span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;existing&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">freq</span><span class="o">.</span><span class="n">headway_secs</span> <span class="o">==</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;existing&quot;</span><span class="p">]):</span>
+                <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s2">&quot;Existing does not match for at least &quot;</span>
+                    <span class="s2">&quot;1 trip in:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">trip_ids</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+
+        <span class="c1"># Calculate build value</span>
+        <span class="k">if</span> <span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;set&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">build_value</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;set&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">build_value</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;change&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">freq</span><span class="o">.</span><span class="n">headway_secs</span><span class="p">]</span>
+
+        <span class="c1"># Update self or return a new object</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">frequencies</span><span class="o">.</span><span class="n">trip_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">freq</span><span class="p">[</span><span class="s2">&quot;trip_id&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">in_place</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">frequencies</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">q</span><span class="p">,</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;property&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">build_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">updated_network</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">updated_network</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">q</span><span class="p">,</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;property&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">build_value</span>
+            <span class="k">return</span> <span class="n">updated_network</span>
+
+<div class="viewcode-block" id="TransitNetwork.apply_transit_managed_lane"><a class="viewcode-back" href="../../_generated/network_wrangler.TransitNetwork.html#network_wrangler.TransitNetwork.apply_transit_managed_lane">[docs]</a>    <span class="k">def</span> <span class="nf">apply_transit_managed_lane</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">trip_ids</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">TransitNetwork</span><span class="p">):</span>
+        <span class="c1"># Traversed nodes without a stop should be negative integers</span>
+        <span class="n">all_stops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">stops</span><span class="p">[</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">STOPS_FOREIGN_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">node_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">in</span> <span class="n">all_stops</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">node_ids</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transit_feature_change_routing</span><span class="p">(</span>
+            <span class="n">trip_ids</span><span class="o">=</span><span class="n">trip_ids</span><span class="p">,</span>
+            <span class="n">properties</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;existing&quot;</span><span class="p">:</span> <span class="n">node_ids</span><span class="p">,</span>
+                <span class="s2">&quot;set&quot;</span><span class="p">:</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">get_managed_lane_node_ids</span><span class="p">(</span><span class="n">node_ids</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">in_place</span><span class="o">=</span><span class="n">in_place</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">DotDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    dot.notation access to dictionary attributes</span>
+<span class="sd">    Source: https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="fm">__getattr__</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="fm">__getitem__</span>
+    <span class="fm">__setattr__</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="fm">__setitem__</span>
+    <span class="fm">__delattr__</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="fm">__delitem__</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Metropolitan Council
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

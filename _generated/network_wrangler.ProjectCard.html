@@ -1,0 +1,411 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>network_wrangler.ProjectCard &mdash; Network Wrangler  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="network_wrangler.Scenario" href="network_wrangler.Scenario.html" />
+    <link rel="prev" title="Wrangler Classes and Functions" href="../autodoc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Network Wrangler
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../design.html">Design</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../autodoc.html">Wrangler Classes and Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../autodoc.html#base-classes">Base Classes</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">network_wrangler.ProjectCard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="network_wrangler.Scenario.html">network_wrangler.Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="network_wrangler.RoadwayNetwork.html">network_wrangler.RoadwayNetwork</a></li>
+<li class="toctree-l2"><a class="reference internal" href="network_wrangler.TransitNetwork.html">network_wrangler.TransitNetwork</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autodoc.html#utils-and-functions">Utils and Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../todo.html">To Do List</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Network Wrangler</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../autodoc.html">Wrangler Classes and Functions</a> &raquo;</li>
+        
+      <li>network_wrangler.ProjectCard</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_generated/network_wrangler.ProjectCard.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="network-wrangler-projectcard">
+<h1>network_wrangler.ProjectCard<a class="headerlink" href="#network-wrangler-projectcard" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="network_wrangler.ProjectCard">
+<em class="property">class </em><code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">ProjectCard</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attribute_dictonary</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Representation of a Project Card</p>
+<dl class="py attribute">
+<dt id="network_wrangler.ProjectCard.__dict__">
+<code class="sig-name descname">__dict__</code><a class="headerlink" href="#network_wrangler.ProjectCard.__dict__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of project card attributes</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.ProjectCard.valid">
+<code class="sig-name descname">valid</code><a class="headerlink" href="#network_wrangler.ProjectCard.valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Boolean indicating if data conforms to project card data schema</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attribute_dictonary</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor</p>
+<p>args:
+attribute_dictonary: a nested dictionary of attributes</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.__init__" title="network_wrangler.ProjectCard.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(attribute_dictonary)</p></td>
+<td><p>Constructor</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.build_link_selection_query" title="network_wrangler.ProjectCard.build_link_selection_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_link_selection_query</span></code></a>(selection, …[, …])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.new_roadway" title="network_wrangler.ProjectCard.new_roadway"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_roadway</span></code></a>(card)</p></td>
+<td><p>Probably delete.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.new_transit_right_of_way" title="network_wrangler.ProjectCard.new_transit_right_of_way"><code class="xref py py-obj docutils literal notranslate"><span class="pre">new_transit_right_of_way</span></code></a>(card)</p></td>
+<td><p>Probably delete.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.parallel_managed_lanes" title="network_wrangler.ProjectCard.parallel_managed_lanes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parallel_managed_lanes</span></code></a>(card)</p></td>
+<td><p>Probably delete.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.read" title="network_wrangler.ProjectCard.read"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read</span></code></a>(path_to_card[, validate])</p></td>
+<td><p>Reads and validates a Project card</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.roadway_attribute_change" title="network_wrangler.ProjectCard.roadway_attribute_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">roadway_attribute_change</span></code></a>(card)</p></td>
+<td><p>Probably delete.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.transit_attribute_change" title="network_wrangler.ProjectCard.transit_attribute_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transit_attribute_change</span></code></a>(card)</p></td>
+<td><p>Probably delete.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.validate_project_card_schema" title="network_wrangler.ProjectCard.validate_project_card_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_project_card_schema</span></code></a>(card_file[, …])</p></td>
+<td><p>Tests project card schema validity by evaluating if it conforms to the schemas returns: boolean</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.write" title="network_wrangler.ProjectCard.write"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write</span></code></a>([filename])</p></td>
+<td><p>Writes project card dictionary to YAML file</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.ROADWAY_CATEGORIES" title="network_wrangler.ProjectCard.ROADWAY_CATEGORIES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ROADWAY_CATEGORIES</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.SECONDARY_TRANSIT_CATEGORIES" title="network_wrangler.ProjectCard.SECONDARY_TRANSIT_CATEGORIES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SECONDARY_TRANSIT_CATEGORIES</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.TRANSIT_CATEGORIES" title="network_wrangler.ProjectCard.TRANSIT_CATEGORIES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TRANSIT_CATEGORIES</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.UNSPECIFIED_PROJECT_NAMES" title="network_wrangler.ProjectCard.UNSPECIFIED_PROJECT_NAMES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UNSPECIFIED_PROJECT_NAMES</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.build_link_selection_query">
+<em class="property">static </em><code class="sig-name descname">build_link_selection_query</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selection</span></em>, <em class="sig-param"><span class="n">unique_model_link_identifiers</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">['drive_access']</span></em>, <em class="sig-param"><span class="n">ignore</span><span class="o">=</span><span class="default_value">[]</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.build_link_selection_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.build_link_selection_query" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.new_roadway">
+<code class="sig-name descname">new_roadway</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">card</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.new_roadway"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.new_roadway" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probably delete.
+Reads a New Roadway card.</p>
+<p>args:
+card: the project card stored in a dictionary</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.new_transit_right_of_way">
+<code class="sig-name descname">new_transit_right_of_way</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">card</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.new_transit_right_of_way"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.new_transit_right_of_way" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probably delete.
+Reads a New Transit Dedicated Right of Way card.</p>
+<p>args:
+card: the project card stored in a dictionary</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.parallel_managed_lanes">
+<code class="sig-name descname">parallel_managed_lanes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">card</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.parallel_managed_lanes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.parallel_managed_lanes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probably delete.
+Reads a Parallel Managed lanes card.</p>
+<p>args:
+card: the project card stored in a dictionary</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.read">
+<em class="property">static </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_card</span></em>, <em class="sig-param"><span class="n">validate</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads and validates a Project card</p>
+<p>args:
+path_to_card: the path to the project card</p>
+<p>Returns a Project Card object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.roadway_attribute_change">
+<code class="sig-name descname">roadway_attribute_change</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">card</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.roadway_attribute_change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.roadway_attribute_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probably delete.
+Reads a Roadway Attribute Change card.</p>
+<p>args:
+card: the project card stored in a dictionary</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.transit_attribute_change">
+<code class="sig-name descname">transit_attribute_change</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">card</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.transit_attribute_change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.transit_attribute_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probably delete.
+Reads a Transit Service Attribute Change card.</p>
+<p>args:
+card: the project card stored in a dictionary</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.validate_project_card_schema">
+<em class="property">static </em><code class="sig-name descname">validate_project_card_schema</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">card_file</span></em>, <em class="sig-param"><span class="n">card_schema_file</span><span class="o">=</span><span class="default_value">'project_card.json'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.validate_project_card_schema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.validate_project_card_schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests project card schema validity by evaluating if it conforms to the schemas
+returns: boolean</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes project card dictionary to YAML file</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.ProjectCard.ROADWAY_CATEGORIES">
+<code class="sig-name descname">ROADWAY_CATEGORIES</code><em class="property"> = ['Roadway Property Change', 'Roadway Deletion', 'Parallel Managed lanes', 'Add New Roadway']</em><a class="headerlink" href="#network_wrangler.ProjectCard.ROADWAY_CATEGORIES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.ProjectCard.SECONDARY_TRANSIT_CATEGORIES">
+<code class="sig-name descname">SECONDARY_TRANSIT_CATEGORIES</code><em class="property"> = ['Roadway Deletion', 'Parallel Managed Lanes']</em><a class="headerlink" href="#network_wrangler.ProjectCard.SECONDARY_TRANSIT_CATEGORIES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.ProjectCard.TRANSIT_CATEGORIES">
+<code class="sig-name descname">TRANSIT_CATEGORIES</code><em class="property"> = ['Transit Service Property Change']</em><a class="headerlink" href="#network_wrangler.ProjectCard.TRANSIT_CATEGORIES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.ProjectCard.UNSPECIFIED_PROJECT_NAMES">
+<code class="sig-name descname">UNSPECIFIED_PROJECT_NAMES</code><em class="property"> = ['', 'TO DO User Define', 'USER TO define']</em><a class="headerlink" href="#network_wrangler.ProjectCard.UNSPECIFIED_PROJECT_NAMES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="network_wrangler.Scenario.html" class="btn btn-neutral float-right" title="network_wrangler.Scenario" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../autodoc.html" class="btn btn-neutral float-left" title="Wrangler Classes and Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Metropolitan Council
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

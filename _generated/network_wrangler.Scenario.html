@@ -1,0 +1,596 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>network_wrangler.Scenario &mdash; Network Wrangler  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="network_wrangler.RoadwayNetwork" href="network_wrangler.RoadwayNetwork.html" />
+    <link rel="prev" title="network_wrangler.ProjectCard" href="network_wrangler.ProjectCard.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Network Wrangler
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../design.html">Design</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../autodoc.html">Wrangler Classes and Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../autodoc.html#base-classes">Base Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="network_wrangler.ProjectCard.html">network_wrangler.ProjectCard</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">network_wrangler.Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="network_wrangler.RoadwayNetwork.html">network_wrangler.RoadwayNetwork</a></li>
+<li class="toctree-l2"><a class="reference internal" href="network_wrangler.TransitNetwork.html">network_wrangler.TransitNetwork</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autodoc.html#utils-and-functions">Utils and Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../todo.html">To Do List</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Network Wrangler</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../autodoc.html">Wrangler Classes and Functions</a> &raquo;</li>
+        
+      <li>network_wrangler.Scenario</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_generated/network_wrangler.Scenario.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="network-wrangler-scenario">
+<h1>network_wrangler.Scenario<a class="headerlink" href="#network-wrangler-scenario" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="network_wrangler.Scenario">
+<em class="property">class </em><code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">Scenario</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_scenario</span></em>, <em class="sig-param"><span class="n">project_cards</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Holds information about a scenario.</p>
+<p>Typical usage example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_base_scenario</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;road_net&quot;</span><span class="p">:</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">read</span><span class="p">(</span>
+        <span class="n">link_file</span><span class="o">=</span><span class="n">STPAUL_LINK_FILE</span><span class="p">,</span>
+        <span class="n">node_file</span><span class="o">=</span><span class="n">STPAUL_NODE_FILE</span><span class="p">,</span>
+        <span class="n">shape_file</span><span class="o">=</span><span class="n">STPAUL_SHAPE_FILE</span><span class="p">,</span>
+        <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">&quot;transit_net&quot;</span><span class="p">:</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">STPAUL_DIR</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="n">card_filenames</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;3_multiple_roadway_attribute_change.yml&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;multiple_changes.yml&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;4_simple_managed_lane.yml&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">project_card_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">STPAUL_DIR</span><span class="p">,</span> <span class="s2">&quot;project_cards&quot;</span><span class="p">)</span>
+
+<span class="n">project_cards_list</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">ProjectCard</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_card_directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">card_filenames</span>
+<span class="p">]</span>
+
+<span class="n">my_scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="o">.</span><span class="n">create_scenario</span><span class="p">(</span>
+  <span class="n">base_scenario</span><span class="o">=</span><span class="n">my_base_scenario</span><span class="p">,</span>
+  <span class="n">project_cards_list</span><span class="o">=</span><span class="n">project_cards_list</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">check_scenario_requisites</span><span class="p">()</span>
+
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_all_projects</span><span class="p">()</span>
+
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">scenario_summary</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.base_scenario">
+<code class="sig-name descname">base_scenario</code><a class="headerlink" href="#network_wrangler.Scenario.base_scenario" title="Permalink to this definition">¶</a></dt>
+<dd><p>dictionary representation of a scenario</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.project_cards">
+<code class="sig-name descname">project_cards</code><a class="headerlink" href="#network_wrangler.Scenario.project_cards" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of Project Card Instances</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.road_net">
+<code class="sig-name descname">road_net</code><a class="headerlink" href="#network_wrangler.Scenario.road_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>instance of RoadwayNetwork for the scenario</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.transit_net">
+<code class="sig-name descname">transit_net</code><a class="headerlink" href="#network_wrangler.Scenario.transit_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>instance of TransitNetwork for the scenario</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.applied_projects">
+<code class="sig-name descname">applied_projects</code><a class="headerlink" href="#network_wrangler.Scenario.applied_projects" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of project names that have been applied</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="id0">
+<code class="sig-name descname">project_cards</code><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of project card instances</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.ordered_project_cards">
+<code class="sig-name descname">ordered_project_cards</code><a class="headerlink" href="#network_wrangler.Scenario.ordered_project_cards" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.prerequisites">
+<code class="sig-name descname">prerequisites</code><a class="headerlink" href="#network_wrangler.Scenario.prerequisites" title="Permalink to this definition">¶</a></dt>
+<dd><p>dictionary storing prerequiste information</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.corequisites">
+<code class="sig-name descname">corequisites</code><a class="headerlink" href="#network_wrangler.Scenario.corequisites" title="Permalink to this definition">¶</a></dt>
+<dd><p>dictionary storing corequisite information</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.conflicts">
+<code class="sig-name descname">conflicts</code><a class="headerlink" href="#network_wrangler.Scenario.conflicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>dictionary storing conflict information</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.requisites_checked">
+<code class="sig-name descname">requisites_checked</code><a class="headerlink" href="#network_wrangler.Scenario.requisites_checked" title="Permalink to this definition">¶</a></dt>
+<dd><p>boolean indicating if the co- and pre-requisites
+have been checked in the project cards</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.conflicts_checked">
+<code class="sig-name descname">conflicts_checked</code><a class="headerlink" href="#network_wrangler.Scenario.conflicts_checked" title="Permalink to this definition">¶</a></dt>
+<dd><p>boolean indicating if the project conflicts have been checked</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.has_requisite_error">
+<code class="sig-name descname">has_requisite_error</code><a class="headerlink" href="#network_wrangler.Scenario.has_requisite_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>boolean indicating if there is a conflict in the pre- or
+co-requisites of project cards</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.has_conflict_error">
+<code class="sig-name descname">has_conflict_error</code><a class="headerlink" href="#network_wrangler.Scenario.has_conflict_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>boolean indicating if there is are conflicting project cards</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.Scenario.prerequisites_sorted">
+<code class="sig-name descname">prerequisites_sorted</code><a class="headerlink" href="#network_wrangler.Scenario.prerequisites_sorted" title="Permalink to this definition">¶</a></dt>
+<dd><p>boolean indicating if the project cards have
+been sorted to make sure cards that are pre-requisites are applied first</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_scenario</span></em>, <em class="sig-param"><span class="n">project_cards</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor</p>
+<p>args:
+base_scenario: dict the base scenario
+project_cards: list this scenario’s project cards</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.Scenario.__init__" title="network_wrangler.Scenario.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(base_scenario[, project_cards])</p></td>
+<td><p>Constructor</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.Scenario.add_project_card_from_file" title="network_wrangler.Scenario.add_project_card_from_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_project_card_from_file</span></code></a>(project_card_file)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.Scenario.add_project_cards_from_directory" title="network_wrangler.Scenario.add_project_cards_from_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_project_cards_from_directory</span></code></a>(folder[, …])</p></td>
+<td><p>Adds projects cards to the scenario.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.Scenario.add_project_cards_from_tags" title="network_wrangler.Scenario.add_project_cards_from_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_project_cards_from_tags</span></code></a>(folder[, tags, …])</p></td>
+<td><p>Adds projects cards to the scenario.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.Scenario.applied_project_card_summary" title="network_wrangler.Scenario.applied_project_card_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">applied_project_card_summary</span></code></a>(…)</p></td>
+<td><p>Create a summary of applied project card and what they changed for the scenario.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.Scenario.apply_all_projects" title="network_wrangler.Scenario.apply_all_projects"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_all_projects</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.Scenario.apply_project" title="network_wrangler.Scenario.apply_project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_project</span></code></a>(p)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.Scenario.check_scenario_conflicts" title="network_wrangler.Scenario.check_scenario_conflicts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_scenario_conflicts</span></code></a>()</p></td>
+<td><p>Checks if there are any conflicting projects in the scenario Fail if the project A specifies that project B is a conflict and project B is included in the scenario</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.Scenario.check_scenario_requisites" title="network_wrangler.Scenario.check_scenario_requisites"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_scenario_requisites</span></code></a>()</p></td>
+<td><p>Checks if there are any missing pre- or co-requisite projects in the scenario Fail if the project A specifies that project B is a pre- or co-requisite and project B is not included in the scenario</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.Scenario.create_base_scenario" title="network_wrangler.Scenario.create_base_scenario"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_base_scenario</span></code></a>(base_shape_name, …[, …])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param roadway_dir</dt>
+<dd class="field-odd"><p>path to the base scenario roadway network files</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.Scenario.create_scenario" title="network_wrangler.Scenario.create_scenario"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_scenario</span></code></a>([base_scenario, …])</p></td>
+<td><p>Validates project cards with a specific tag from the specified folder or list of user specified project cards and creates a scenario object with the valid project card.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.Scenario.get_project_names" title="network_wrangler.Scenario.get_project_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_project_names</span></code></a>()</p></td>
+<td><p>Returns a list of project names</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.Scenario.order_project_cards" title="network_wrangler.Scenario.order_project_cards"><code class="xref py py-obj docutils literal notranslate"><span class="pre">order_project_cards</span></code></a>()</p></td>
+<td><p>create a list of project cards such that they are in order based on pre-requisites</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.Scenario.remove_all_projects" title="network_wrangler.Scenario.remove_all_projects"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_all_projects</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.Scenario.scenario_summary" title="network_wrangler.Scenario.scenario_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scenario_summary</span></code></a>([project_detail, outfile, mode])</p></td>
+<td><p>A high level summary of the created scenario.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="network_wrangler.Scenario.add_project_card_from_file">
+<code class="sig-name descname">add_project_card_from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_card_file</span></em>, <em class="sig-param"><span class="n">validate</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">tags</span><span class="o">=</span><span class="default_value">[]</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.add_project_card_from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.add_project_card_from_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.add_project_cards_from_directory">
+<code class="sig-name descname">add_project_cards_from_directory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">folder</span></em>, <em class="sig-param"><span class="n">glob_search</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">validate</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.add_project_cards_from_directory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.add_project_cards_from_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds projects cards to the scenario.
+A folder is provided to look for project cards and if applicable, a glob-style search.</p>
+<p>i.e. glob_search = ‘road*.yml’</p>
+<p>args:
+folder: the folder location where the project cards will be
+glob_search: <a class="reference external" href="https://docs.python.org/2/library/glob.html">https://docs.python.org/2/library/glob.html</a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.add_project_cards_from_tags">
+<code class="sig-name descname">add_project_cards_from_tags</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">folder</span></em>, <em class="sig-param"><span class="n">tags</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">glob_search</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">validate</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.add_project_cards_from_tags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.add_project_cards_from_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds projects cards to the scenario.
+A folder is provided to look for project cards that have a matching tag that is passed to the method.</p>
+<p>args:
+folder: the folder location where the project cards will be
+tags: only project cards with these tags will be validated and added to the returning scenario</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.applied_project_card_summary">
+<code class="sig-name descname">applied_project_card_summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_card_dictionary</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.applied_project_card_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.applied_project_card_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a summary of applied project card and what they changed for the scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>project_card_dictionary</strong> – dictionary representation of the values of a project card (i.e. ProjectCard.__dict__ )</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dict of project summary change dictionaries for each change</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.apply_all_projects">
+<code class="sig-name descname">apply_all_projects</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.apply_all_projects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.apply_all_projects" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.apply_project">
+<code class="sig-name descname">apply_project</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.apply_project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.apply_project" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.check_scenario_conflicts">
+<code class="sig-name descname">check_scenario_conflicts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.check_scenario_conflicts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.check_scenario_conflicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if there are any conflicting projects in the scenario
+Fail if the project A specifies that project B is a conflict and project B is included in the scenario</p>
+<p>Returns: boolean indicating if the check was successful or returned an error</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.check_scenario_requisites">
+<code class="sig-name descname">check_scenario_requisites</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.check_scenario_requisites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.check_scenario_requisites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if there are any missing pre- or co-requisite projects in the scenario
+Fail if the project A specifies that project B is a pre- or co-requisite and project B is not included in the scenario</p>
+<p>Returns: boolean indicating if the checks were successful or returned an error</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.create_base_scenario">
+<em class="property">static </em><code class="sig-name descname">create_base_scenario</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_shape_name</span></em>, <em class="sig-param"><span class="n">base_link_name</span></em>, <em class="sig-param"><span class="n">base_node_name</span></em>, <em class="sig-param"><span class="n">roadway_dir</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">transit_dir</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">validate</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.create_base_scenario"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.create_base_scenario" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>roadway_dir</strong> (<em>optional</em>) – path to the base scenario roadway network files</p></li>
+<li><p><strong>base_shape_name</strong> – filename of the base network shape</p></li>
+<li><p><strong>base_link_name</strong> – filename of the base network link</p></li>
+<li><p><strong>base_node_name</strong> – filename of the base network node</p></li>
+<li><p><strong>transit_dir</strong> (<em>optional</em>) – path to base scenario transit files</p></li>
+<li><p><strong>validate</strong> – boolean indicating whether to validate the base network or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.create_scenario">
+<em class="property">static </em><code class="sig-name descname">create_scenario</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_scenario</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">card_directory</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">tags</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project_cards_list</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">glob_search</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">validate_project_cards</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.create_scenario"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.create_scenario" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates project cards with a specific tag from the specified folder or
+list of user specified project cards and
+creates a scenario object with the valid project card.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_scenario</strong> – object dictionary for the base scenario (i.e. my_base_scenario.__dict__)</p></li>
+<li><p><strong>tags</strong> – only project cards with these tags will be read/validated</p></li>
+<li><p><strong>folder</strong> – the folder location where the project cards will be</p></li>
+<li><p><strong>project_cards_list</strong> – list of project cards to be applied</p></li>
+<li><p><strong>glob_search</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.get_project_names">
+<code class="sig-name descname">get_project_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.get_project_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.get_project_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of project names</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.order_project_cards">
+<code class="sig-name descname">order_project_cards</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.order_project_cards"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.order_project_cards" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a list of project cards such that they are in order based on pre-requisites</p>
+<p>Returns: ordered list of project cards to be applied to scenario</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.remove_all_projects">
+<code class="sig-name descname">remove_all_projects</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.remove_all_projects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.remove_all_projects" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.Scenario.scenario_summary">
+<code class="sig-name descname">scenario_summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_detail</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">outfile</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">'a'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/scenario.html#Scenario.scenario_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.Scenario.scenario_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>A high level summary of the created scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_detail</strong> – If True (default), will write out project card summaries.</p></li>
+<li><p><strong>outfile</strong> – If specified, will write scenario summary to text file.</p></li>
+<li><p><strong>mode</strong> – Outfile open mode. ‘a’ to append ‘w’ to overwrite.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>string of summary</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="network_wrangler.RoadwayNetwork.html" class="btn btn-neutral float-right" title="network_wrangler.RoadwayNetwork" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="network_wrangler.ProjectCard.html" class="btn btn-neutral float-left" title="network_wrangler.ProjectCard" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Metropolitan Council
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

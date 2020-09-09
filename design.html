@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,12 +11,19 @@
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
   
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -29,11 +35,6 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Wrangler Classes and Functions" href="autodoc.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Network Wrangler
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Network Wrangler
           
 
           
@@ -74,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -89,11 +91,13 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="autodoc.html">Wrangler Classes and Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="todo.html">To Do List</a></li>
 </ul>
 
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -132,7 +136,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Design</li>
     
@@ -140,7 +144,7 @@
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/design.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/design.md.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -157,15 +161,12 @@
 <h1>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="atomic-parts">
 <h2>Atomic Parts<a class="headerlink" href="#atomic-parts" title="Permalink to this headline">¶</a></h2>
-<p>_Scenarios_ are created from the API and consist of at least a RoadwayNetwork, and
-TransitNetwork.  Scenarios can be based on or tiered from other scenarios.
-Scenarios can query and add ProjectCards to describe a set of changes that should be made to the network.</p>
-<p>_RoadwayNetworks_ are read in from three json files: links, shapes, and nodes.
-Their data is stored as GeoDataFrames in the object.</p>
-<p>_TransitNetworks_ are read in from gtfs csv files and stored as a
-Partridge object, which is a series of DataFrames and GeoDataFrames</p>
-<p>_ProjectCards_ are read in as Project Card objects and are validated,
-ordered and managed within a Scenario Object.</p>
+<p>NetworkWrangler deals with four primary atomic parts:</p>
+<p><strong>1. <a class="reference external" href="_generated/network_wrangler.Scenario.html"><code class="docutils literal notranslate"><span class="pre">Scenario</span></code></a></strong> objects describe a Roadway Network, Transit Network, and collection of Projects. Scenarios manage the addition and construction of projects on the network via projct cards. Scenarios can be based on or tiered from other scenarios.</p>
+<p><strong>2. <a class="reference external" href="_generated/network_wrangler.RoadwayNetwork.html"><code class="docutils literal notranslate"><span class="pre">RoadwayNetwork</span></code></a></strong> objects stores information about roadway nodes, directed links between nodes, and the shapes of links (note that the same shape can be shared between two or more links). Network Wrangler reads/writes roadway network objects from/to three files: <code class="docutils literal notranslate"><span class="pre">links.json</span></code>, <code class="docutils literal notranslate"><span class="pre">shapes.geojson</span></code>, and <code class="docutils literal notranslate"><span class="pre">nodes.geojson</span></code>. Their data is stored as GeoDataFrames in the object.</p>
+<p><strong>3. <a class="reference external" href="_generated/network_wrangler.TransitNetwork.html"><code class="docutils literal notranslate"><span class="pre">TransitNetwork</span></code></a></strong> objects contain information about stops, routes, trips, shapes, stoptimes, and frequencies. Network Wrangler reads/writes transit network information from/to gtfs csv files and stores them as DataFrames within a
+<code class="docutils literal notranslate"><span class="pre">Partridge</span></code> <code class="docutils literal notranslate"><span class="pre">feed</span></code> object.  Transit networks can be associated with Roadway networks.</p>
+<p><strong>4.<a class="reference external" href="_generated/network_wrangler.ProjectCard.html"><code class="docutils literal notranslate"><span class="pre">ProjectCard</span></code></a></strong> objects store infromation (including  metadata) about changes to the network.  Network Wtanglr reads project cards from .yml files validates them, and manages them within a <code class="docutils literal notranslate"><span class="pre">Scenario</span></code> object.</p>
 </div>
 </div>
 
@@ -189,11 +190,19 @@ ordered and managed within a Scenario Object.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Metropolitan Council
+        
+        &copy; Copyright 2020, Metropolitan Council
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -204,7 +213,6 @@ ordered and managed within a Scenario Object.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

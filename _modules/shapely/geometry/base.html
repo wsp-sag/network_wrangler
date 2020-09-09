@@ -1,0 +1,1235 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>shapely.geometry.base &mdash; Network Wrangler  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> Network Wrangler
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../autodoc.html">Wrangler Classes and Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../todo.html">To Do List</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Network Wrangler</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>shapely.geometry.base</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for shapely.geometry.base</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Base geometry class and utilities</span>
+
+<span class="sd">Note: a third, z, coordinate value may be used when constructing</span>
+<span class="sd">geometry objects, but has no effect on geometric analysis. All</span>
+<span class="sd">operations are performed in the x-y plane. Thus, geometries with</span>
+<span class="sd">different z values may intersect or be equal.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">binascii</span> <span class="kn">import</span> <span class="n">a2b_hex</span>
+<span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">c_size_t</span><span class="p">,</span> <span class="n">c_char_p</span><span class="p">,</span> <span class="n">c_void_p</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">islice</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+
+<span class="kn">from</span> <span class="nn">shapely.affinity</span> <span class="kn">import</span> <span class="n">affine_transform</span>
+<span class="kn">from</span> <span class="nn">shapely.coords</span> <span class="kn">import</span> <span class="n">CoordinateSequence</span>
+<span class="kn">from</span> <span class="nn">shapely.errors</span> <span class="kn">import</span> <span class="n">WKBReadingError</span><span class="p">,</span> <span class="n">WKTReadingError</span>
+<span class="kn">from</span> <span class="nn">shapely.geos</span> <span class="kn">import</span> <span class="n">WKBWriter</span><span class="p">,</span> <span class="n">WKTWriter</span>
+<span class="kn">from</span> <span class="nn">shapely.geos</span> <span class="kn">import</span> <span class="n">lgeos</span>
+<span class="kn">from</span> <span class="nn">shapely.impl</span> <span class="kn">import</span> <span class="n">DefaultImplementation</span><span class="p">,</span> <span class="n">delegated</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="nb">range</span> <span class="o">=</span> <span class="n">xrange</span>
+    <span class="n">integer_types</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">long</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">integer_types</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">,)</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="n">integer_types</span> <span class="o">=</span> <span class="n">integer_types</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">,)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<span class="n">GEOMETRY_TYPES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;Point&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;LineString&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;LinearRing&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Polygon&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MultiPoint&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MultiLineString&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;MultiPolygon&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GeometryCollection&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">dump_coords</span><span class="p">(</span><span class="n">geom</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dump coordinates of a geometry in the same order as data packing&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="n">BaseGeometry</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must be instance of a geometry class; found &#39;</span> <span class="o">+</span>
+                         <span class="n">geom</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">geom</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Point&#39;</span><span class="p">,</span> <span class="s1">&#39;LineString&#39;</span><span class="p">,</span> <span class="s1">&#39;LinearRing&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">geom</span><span class="o">.</span><span class="n">coords</span><span class="p">[:]</span>
+    <span class="k">elif</span> <span class="n">geom</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;Polygon&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">geom</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span><span class="p">[:]</span> <span class="o">+</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">coords</span><span class="p">[:]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">geom</span><span class="o">.</span><span class="n">interiors</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">geom</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Multi&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">geom</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;GeometryCollection&#39;</span><span class="p">:</span>
+        <span class="c1"># Recursive call</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">dump_coords</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">geom</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unhandled geometry type: &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">geometry_type_name</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Null geometry has no type&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">GEOMETRY_TYPES</span><span class="p">[</span><span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSGeomTypeId</span><span class="p">(</span><span class="n">g</span><span class="p">)]</span>
+
+
+<span class="k">def</span> <span class="nf">geom_factory</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Abstract geometry factory for use with topological methods below</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No Shapely geometry can be created from null value&quot;</span><span class="p">)</span>
+    <span class="n">ob</span> <span class="o">=</span> <span class="n">BaseGeometry</span><span class="p">()</span>
+    <span class="n">geom_type</span> <span class="o">=</span> <span class="n">geometry_type_name</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="c1"># TODO: check cost of dynamic import by profiling</span>
+    <span class="n">mod</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span>
+        <span class="s1">&#39;shapely.geometry&#39;</span><span class="p">,</span>
+        <span class="nb">globals</span><span class="p">(),</span>
+        <span class="nb">locals</span><span class="p">(),</span>
+        <span class="p">[</span><span class="n">geom_type</span><span class="p">],</span>
+        <span class="p">)</span>
+    <span class="n">ob</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">geom_type</span><span class="p">)</span>
+    <span class="n">ob</span><span class="o">.</span><span class="n">_geom</span> <span class="o">=</span> <span class="n">g</span>
+    <span class="n">ob</span><span class="o">.</span><span class="n">__p__</span> <span class="o">=</span> <span class="n">parent</span>
+    <span class="k">if</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">methods</span><span class="p">[</span><span class="s1">&#39;has_z&#39;</span><span class="p">](</span><span class="n">g</span><span class="p">):</span>
+        <span class="n">ob</span><span class="o">.</span><span class="n">_ndim</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ob</span><span class="o">.</span><span class="n">_ndim</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">ob</span><span class="o">.</span><span class="n">_is_empty</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">ob</span>
+
+
+<span class="k">def</span> <span class="nf">geom_from_wkt</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;`geom_from_wkt` is deprecated. Use `geos.wkt_reader.read(data)`.&quot;</span><span class="p">,</span>
+         <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span>
+    <span class="n">geom</span> <span class="o">=</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSGeomFromWKT</span><span class="p">(</span><span class="n">c_char_p</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">geom</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">WKTReadingError</span><span class="p">(</span>
+            <span class="s2">&quot;Could not create geometry because of errors while reading input.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">geom_to_wkt</span><span class="p">(</span><span class="n">ob</span><span class="p">):</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;`geom_to_wkt` is deprecated. Use `geos.wkt_writer.write(ob)`.&quot;</span><span class="p">,</span>
+         <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ob</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ob</span><span class="o">.</span><span class="n">_geom</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Null geometry supports no operations&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSGeomToWKT</span><span class="p">(</span><span class="n">ob</span><span class="o">.</span><span class="n">_geom</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">deserialize_wkb</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">geom</span> <span class="o">=</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSGeomFromWKB_buf</span><span class="p">(</span><span class="n">c_char_p</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">c_size_t</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">geom</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">WKBReadingError</span><span class="p">(</span>
+            <span class="s2">&quot;Could not create geometry because of errors while reading input.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">geom</span>
+
+
+<span class="k">def</span> <span class="nf">geom_from_wkb</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;`geom_from_wkb` is deprecated. Use `geos.wkb_reader.read(data)`.&quot;</span><span class="p">,</span>
+         <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="n">deserialize_wkb</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">geom_to_wkb</span><span class="p">(</span><span class="n">ob</span><span class="p">):</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;`geom_to_wkb` is deprecated. Use `geos.wkb_writer.write(ob)`.&quot;</span><span class="p">,</span>
+         <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ob</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ob</span><span class="o">.</span><span class="n">_geom</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Null geometry supports no operations&quot;</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">c_size_t</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSGeomToWKB_buf</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">ob</span><span class="o">.</span><span class="n">_geom</span><span class="p">),</span> <span class="n">pointer</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">geos_geom_from_py</span><span class="p">(</span><span class="n">ob</span><span class="p">,</span> <span class="n">create_func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function for geos_*_from_py functions in each geom type.</span>
+
+<span class="sd">    If a create_func is specified the coodinate sequence is cloned and a new</span>
+<span class="sd">    geometry is created with it, otherwise the geometry is cloned directly.</span>
+<span class="sd">    This behaviour is useful for converting between LineString and LinearRing</span>
+<span class="sd">    objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">create_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">geom</span> <span class="o">=</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSGeom_clone</span><span class="p">(</span><span class="n">ob</span><span class="o">.</span><span class="n">_geom</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSGeom_getCoordSeq</span><span class="p">(</span><span class="n">ob</span><span class="o">.</span><span class="n">_geom</span><span class="p">)</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSCoordSeq_clone</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+        <span class="n">geom</span> <span class="o">=</span> <span class="n">create_func</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">ob</span><span class="o">.</span><span class="n">_ndim</span>
+
+    <span class="k">return</span> <span class="n">geom</span><span class="p">,</span> <span class="n">N</span>
+
+
+<span class="k">def</span> <span class="nf">exceptNull</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator which helps avoid GEOS operations on null pointers.&quot;&quot;&quot;</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_geom</span> <span class="ow">or</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Null/empty geometry supports no operations&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+
+<span class="k">class</span> <span class="nc">CAP_STYLE</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="nb">round</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">flat</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">square</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+<span class="k">class</span> <span class="nc">JOIN_STYLE</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="nb">round</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">mitre</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">bevel</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="n">EMPTY</span> <span class="o">=</span> <span class="n">deserialize_wkb</span><span class="p">(</span><span class="n">a2b_hex</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;010700000000000000&#39;</span><span class="p">))</span>
+
+
+<span class="k">class</span> <span class="nc">BaseGeometry</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provides GEOS spatial predicates and topological operations.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Attributes</span>
+    <span class="c1"># ----------</span>
+    <span class="c1"># __geom__ : c_void_p</span>
+    <span class="c1">#     Cached ctypes pointer to GEOS geometry. Not to be accessed.</span>
+    <span class="c1"># _geom : c_void_p</span>
+    <span class="c1">#     Property by which the GEOS geometry is accessed.</span>
+    <span class="c1"># __p__ : object</span>
+    <span class="c1">#     Parent (Shapely) geometry</span>
+    <span class="c1"># _ctypes_data : object</span>
+    <span class="c1">#     Cached ctypes data buffer</span>
+    <span class="c1"># _ndim : int</span>
+    <span class="c1">#     Number of dimensions (2 or 3, generally)</span>
+    <span class="c1"># _crs : object</span>
+    <span class="c1">#     Coordinate reference system. Available for Shapely extensions, but</span>
+    <span class="c1">#     not implemented here.</span>
+    <span class="c1"># _other_owned : bool</span>
+    <span class="c1">#     True if this object&#39;s GEOS geometry is owned by another as in the</span>
+    <span class="c1">#     case of a multipart geometry member.</span>
+    <span class="n">__geom__</span> <span class="o">=</span> <span class="n">EMPTY</span>
+    <span class="n">__p__</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_ctypes_data</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_ndim</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_crs</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_other_owned</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_is_empty</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Backend config</span>
+    <span class="n">impl</span> <span class="o">=</span> <span class="n">DefaultImplementation</span>
+
+    <span class="c1"># a reference to the so/dll proxy to preserve access during clean up</span>
+    <span class="n">_lgeos</span> <span class="o">=</span> <span class="n">lgeos</span>
+
+    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="n">EMPTY</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_other_owned</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__geom__</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__geom__</span> <span class="o">!=</span> <span class="n">EMPTY</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_lgeos</span><span class="o">.</span><span class="n">GEOSGeom_destroy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__geom__</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="c1"># _lgeos might be empty on shutdown</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Failed to delete GEOS geom&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_empty</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__geom__</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span> <span class="ow">is</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">__nonzero__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__bool__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__p__</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wkt</span>
+
+    <span class="c1"># To support pickling</span>
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">wkb</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__geom__</span> <span class="o">=</span> <span class="n">deserialize_wkb</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_empty</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">methods</span><span class="p">[</span><span class="s1">&#39;has_z&#39;</span><span class="p">](</span><span class="bp">self</span><span class="o">.</span><span class="n">__geom__</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ndim</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ndim</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_geom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__geom__</span>
+
+    <span class="nd">@_geom</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_geom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_empty</span> <span class="o">=</span> <span class="n">val</span> <span class="ow">in</span> <span class="p">[</span><span class="n">EMPTY</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__geom__</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="c1"># Operators</span>
+    <span class="c1"># ---------</span>
+
+    <span class="k">def</span> <span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__xor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetric_difference</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="fm">__hash__</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Array and ctypes interfaces</span>
+    <span class="c1"># ---------------------------</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ctypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ctypes buffer&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">array_interface_base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">byteorder</span> <span class="o">==</span> <span class="s1">&#39;little&#39;</span><span class="p">:</span>
+            <span class="n">typestr</span> <span class="o">=</span> <span class="s1">&#39;&lt;f8&#39;</span>
+        <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">byteorder</span> <span class="o">==</span> <span class="s1">&#39;big&#39;</span><span class="p">:</span>
+            <span class="n">typestr</span> <span class="o">=</span> <span class="s1">&#39;&gt;f8&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Unsupported byteorder: neither little nor big-endian&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="s1">&#39;typestr&#39;</span><span class="p">:</span> <span class="n">typestr</span><span class="p">,</span>
+            <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctypes</span><span class="p">,</span>
+            <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">__array_interface__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Provide the Numpy array protocol.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="c1"># Coordinate access</span>
+    <span class="c1"># -----------------</span>
+
+    <span class="k">def</span> <span class="nf">_get_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access to geometry&#39;s coordinates (CoordinateSequence)&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">CoordinateSequence</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ob</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;set_coords must be provided by derived classes&quot;</span><span class="p">)</span>
+
+    <span class="n">coords</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_coords</span><span class="p">,</span> <span class="n">_set_coords</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">xy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Separate arrays of X and Y coordinate values&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="c1"># Python feature protocol</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">__geo_interface__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dictionary representation of the geometry&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="c1"># Type of geometry and its representations</span>
+    <span class="c1"># ----------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">geometryType</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">geometry_type_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_geom</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometryType</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">to_wkb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;`to_wkb` is deprecated. Use the `wkb` property.&quot;</span><span class="p">,</span>
+             <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">geom_to_wkb</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">to_wkt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;`to_wkt` is deprecated. Use the `wkt` property.&quot;</span><span class="p">,</span>
+             <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">geom_to_wkt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">wkt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;WKT representation of the geometry&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">WKTWriter</span><span class="p">(</span><span class="n">lgeos</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">wkb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;WKB representation of the geometry&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">WKBWriter</span><span class="p">(</span><span class="n">lgeos</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">wkb_hex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;WKB hex representation of the geometry&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">WKBWriter</span><span class="p">(</span><span class="n">lgeos</span><span class="p">)</span><span class="o">.</span><span class="n">write_hex</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">svg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raises NotImplementedError&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_repr_svg_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;SVG representation for iPython notebook&quot;&quot;&quot;</span>
+        <span class="n">svg_top</span> <span class="o">=</span> <span class="s1">&#39;&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; &#39;</span> \
+            <span class="s1">&#39;xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot; &#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">svg_top</span> <span class="o">+</span> <span class="s1">&#39;/&gt;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Establish SVG canvas that will fit all the data + small space</span>
+            <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span>
+            <span class="k">if</span> <span class="n">xmin</span> <span class="o">==</span> <span class="n">xmax</span> <span class="ow">and</span> <span class="n">ymin</span> <span class="o">==</span> <span class="n">ymax</span><span class="p">:</span>
+                <span class="c1"># This is a point; buffer using an arbitrary size</span>
+                <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">bounds</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Expand bounds by a fraction of the data ranges</span>
+                <span class="n">expand</span> <span class="o">=</span> <span class="mf">0.04</span>  <span class="c1"># or 4%, same as R plots</span>
+                <span class="n">widest_part</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">-</span> <span class="n">ymin</span><span class="p">])</span>
+                <span class="n">expand_amount</span> <span class="o">=</span> <span class="n">widest_part</span> <span class="o">*</span> <span class="n">expand</span>
+                <span class="n">xmin</span> <span class="o">-=</span> <span class="n">expand_amount</span>
+                <span class="n">ymin</span> <span class="o">-=</span> <span class="n">expand_amount</span>
+                <span class="n">xmax</span> <span class="o">+=</span> <span class="n">expand_amount</span>
+                <span class="n">ymax</span> <span class="o">+=</span> <span class="n">expand_amount</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="n">ymax</span> <span class="o">-</span> <span class="n">ymin</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">max</span><span class="p">([</span><span class="mf">100.</span><span class="p">,</span> <span class="n">dx</span><span class="p">]),</span> <span class="mi">300</span><span class="p">])</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">max</span><span class="p">([</span><span class="mf">100.</span><span class="p">,</span> <span class="n">dy</span><span class="p">]),</span> <span class="mi">300</span><span class="p">])</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">scale_factor</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">])</span> <span class="o">/</span> <span class="nb">max</span><span class="p">([</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">ZeroDivisionError</span><span class="p">:</span>
+                <span class="n">scale_factor</span> <span class="o">=</span> <span class="mf">1.</span>
+            <span class="n">view_box</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="s2">&quot;matrix(1,0,0,-1,0,</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ymax</span> <span class="o">+</span> <span class="n">ymin</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">svg_top</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="s1">&#39;width=&quot;</span><span class="si">{1}</span><span class="s1">&quot; height=&quot;</span><span class="si">{2}</span><span class="s1">&quot; viewBox=&quot;</span><span class="si">{0}</span><span class="s1">&quot; &#39;</span>
+                <span class="s1">&#39;preserveAspectRatio=&quot;xMinYMin meet&quot;&gt;&#39;</span>
+                <span class="s1">&#39;&lt;g transform=&quot;</span><span class="si">{3}</span><span class="s1">&quot;&gt;</span><span class="si">{4}</span><span class="s1">&lt;/g&gt;&lt;/svg&gt;&#39;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">view_box</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">svg</span><span class="p">(</span><span class="n">scale_factor</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">geom_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the geometry&#39;s type, such as &#39;Point&#39;&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometryType</span><span class="p">()</span>
+
+    <span class="c1"># Real-valued properties and methods</span>
+    <span class="c1"># ----------------------------------</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unitless area of the geometry (float)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;area&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unitless distance to other geometry (float)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;distance&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">hausdorff_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unitless hausdorff distance to other geometry (float)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;hausdorff_distance&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unitless length of the geometry (float)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;length&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">minimum_clearance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unitless distance by which a node could be moved to produce an invalid geometry (float)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;minimum_clearance&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="c1"># Topological properties</span>
+    <span class="c1"># ----------------------</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a lower dimension geometry that bounds the object</span>
+
+<span class="sd">        The boundary of a polygon is a line, the boundary of a line is a</span>
+<span class="sd">        collection of points. The boundary of a point is an empty (null)</span>
+<span class="sd">        collection.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;boundary&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns minimum bounding region (minx, miny, maxx, maxy)&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the geometric center of the object&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;centroid&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@delegated</span>
+    <span class="k">def</span> <span class="nf">representative_point</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a point guaranteed to be within the object, cheaply.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;representative_point&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">convex_hull</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Imagine an elastic band stretched around the geometry: that&#39;s a</span>
+<span class="sd">        convex hull, more or less</span>
+
+<span class="sd">        The convex hull of a three member multipoint, for example, is a</span>
+<span class="sd">        triangular polygon.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;convex_hull&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">envelope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A figure that envelopes the geometry&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;envelope&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">minimum_rotated_rectangle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the general minimum bounding rectangle of</span>
+<span class="sd">        the geometry. Can possibly be rotated. If the convex hull</span>
+<span class="sd">        of the object is a degenerate (line or point) this same degenerate</span>
+<span class="sd">        is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># first compute the convex hull</span>
+        <span class="n">hull</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convex_hull</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">hull</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># may be a Point or a LineString</span>
+            <span class="k">return</span> <span class="n">hull</span>
+        <span class="c1"># generate the edge vectors between the convex hull&#39;s coords</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">((</span><span class="n">pt2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">pt1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pt2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pt1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">pt1</span><span class="p">,</span> <span class="n">pt2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">coords</span><span class="p">,</span> <span class="n">islice</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>
+
+        <span class="k">def</span> <span class="nf">_transformed_rects</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+                <span class="c1"># compute the normalized direction vector of the edge</span>
+                <span class="c1"># vector.</span>
+                <span class="n">length</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dx</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="n">ux</span><span class="p">,</span> <span class="n">uy</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">/</span> <span class="n">length</span><span class="p">,</span> <span class="n">dy</span> <span class="o">/</span> <span class="n">length</span>
+                <span class="c1"># compute the normalized perpendicular vector</span>
+                <span class="n">vx</span><span class="p">,</span> <span class="n">vy</span> <span class="o">=</span> <span class="o">-</span><span class="n">uy</span><span class="p">,</span> <span class="n">ux</span>
+                <span class="c1"># transform hull from the original coordinate system to</span>
+                <span class="c1"># the coordinate system defined by the edge and compute</span>
+                <span class="c1"># the axes-parallel bounding rectangle.</span>
+                <span class="n">transf_rect</span> <span class="o">=</span> <span class="n">affine_transform</span><span class="p">(</span>
+                    <span class="n">hull</span><span class="p">,</span> <span class="p">(</span><span class="n">ux</span><span class="p">,</span> <span class="n">uy</span><span class="p">,</span> <span class="n">vx</span><span class="p">,</span> <span class="n">vy</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">envelope</span>
+                <span class="c1"># yield the transformed rectangle and a matrix to</span>
+                <span class="c1"># transform it back to the original coordinate system.</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">transf_rect</span><span class="p">,</span> <span class="p">(</span><span class="n">ux</span><span class="p">,</span> <span class="n">vx</span><span class="p">,</span> <span class="n">uy</span><span class="p">,</span> <span class="n">vy</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="c1"># check for the minimum area rectangle and return it</span>
+        <span class="n">transf_rect</span><span class="p">,</span> <span class="n">inv_matrix</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="n">_transformed_rects</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">affine_transform</span><span class="p">(</span><span class="n">transf_rect</span><span class="p">,</span> <span class="n">inv_matrix</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">quadsegs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">cap_style</span><span class="o">=</span><span class="n">CAP_STYLE</span><span class="o">.</span><span class="n">round</span><span class="p">,</span> <span class="n">join_style</span><span class="o">=</span><span class="n">JOIN_STYLE</span><span class="o">.</span><span class="n">round</span><span class="p">,</span>
+               <span class="n">mitre_limit</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">single_sided</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a geometry that represents all points within a distance</span>
+<span class="sd">        of this geometry.</span>
+
+<span class="sd">        A positive distance produces a dilation, a negative distance an</span>
+<span class="sd">        erosion. A very small or zero distance may sometimes be used to</span>
+<span class="sd">        &quot;tidy&quot; a polygon.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        distance : float</span>
+<span class="sd">            The distance to buffer around the object.</span>
+<span class="sd">        resolution : int, optional</span>
+<span class="sd">            The resolution of the buffer around each vertex of the</span>
+<span class="sd">            object.</span>
+<span class="sd">        quadsegs : int, optional</span>
+<span class="sd">            Sets the number of line segments used to approximate an</span>
+<span class="sd">            angle fillet.  Note: the use of a `quadsegs` parameter is</span>
+<span class="sd">            deprecated and will be gone from the next major release.</span>
+<span class="sd">        cap_style : int, optional</span>
+<span class="sd">            The styles of caps are: CAP_STYLE.round (1), CAP_STYLE.flat</span>
+<span class="sd">            (2), and CAP_STYLE.square (3).</span>
+<span class="sd">        join_style : int, optional</span>
+<span class="sd">            The styles of joins between offset segments are:</span>
+<span class="sd">            JOIN_STYLE.round (1), JOIN_STYLE.mitre (2), and</span>
+<span class="sd">            JOIN_STYLE.bevel (3).</span>
+<span class="sd">        mitre_limit : float, optional</span>
+<span class="sd">            The mitre limit ratio is used for very sharp corners. The</span>
+<span class="sd">            mitre ratio is the ratio of the distance from the corner to</span>
+<span class="sd">            the end of the mitred offset corner. When two line segments</span>
+<span class="sd">            meet at a sharp angle, a miter join will extend the original</span>
+<span class="sd">            geometry. To prevent unreasonable geometry, the mitre limit</span>
+<span class="sd">            allows controlling the maximum length of the join corner.</span>
+<span class="sd">            Corners with a ratio which exceed the limit will be beveled.</span>
+<span class="sd">        single_side : bool, optional</span>
+<span class="sd">            The side used is determined by the sign of the buffer</span>
+<span class="sd">            distance:</span>
+
+<span class="sd">                a positive distance indicates the left-hand side</span>
+<span class="sd">                a negative distance indicates the right-hand side</span>
+
+<span class="sd">            The single-sided buffer of point geometries is the same as</span>
+<span class="sd">            the regular buffer.  The End Cap Style for single-sided</span>
+<span class="sd">            buffers is always ignored, and forced to the equivalent of</span>
+<span class="sd">            CAP_FLAT.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Geometry</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The return value is a strictly two-dimensional geometry. All</span>
+<span class="sd">        Z coordinates of the original geometry will be ignored.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from shapely.wkt import loads</span>
+<span class="sd">        &gt;&gt;&gt; g = loads(&#39;POINT (0.0 0.0)&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; g.buffer(1.0).area        # 16-gon approx of a unit radius circle</span>
+<span class="sd">        3.1365484905459389</span>
+<span class="sd">        &gt;&gt;&gt; g.buffer(1.0, 128).area   # 128-gon approximation</span>
+<span class="sd">        3.1415138011443009</span>
+<span class="sd">        &gt;&gt;&gt; g.buffer(1.0, 3).area     # triangle approximation</span>
+<span class="sd">        3.0</span>
+<span class="sd">        &gt;&gt;&gt; list(g.buffer(1.0, cap_style=CAP_STYLE.square).exterior.coords)</span>
+<span class="sd">        [(1.0, 1.0), (1.0, -1.0), (-1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)]</span>
+<span class="sd">        &gt;&gt;&gt; g.buffer(1.0, cap_style=CAP_STYLE.square).area</span>
+<span class="sd">        4.0</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">quadsegs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The `quadsegs` argument is deprecated. Use `resolution`.&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">quadsegs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">resolution</span>
+
+        <span class="k">if</span> <span class="n">mitre_limit</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Cannot compute offset from zero-length line segment&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;buffer_with_params&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lgeos</span><span class="o">.</span><span class="n">GEOSBufferParams_create</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lgeos</span><span class="o">.</span><span class="n">GEOSBufferParams_setEndCapStyle</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">cap_style</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lgeos</span><span class="o">.</span><span class="n">GEOSBufferParams_setJoinStyle</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">join_style</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lgeos</span><span class="o">.</span><span class="n">GEOSBufferParams_setMitreLimit</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">mitre_limit</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lgeos</span><span class="o">.</span><span class="n">GEOSBufferParams_setQuadrantSegments</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lgeos</span><span class="o">.</span><span class="n">GEOSBufferParams_setSingleSided</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">single_sided</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;buffer_with_params&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">distance</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">cap_style</span> <span class="o">==</span> <span class="n">CAP_STYLE</span><span class="o">.</span><span class="n">round</span> <span class="ow">and</span> <span class="n">join_style</span> <span class="o">==</span> <span class="n">JOIN_STYLE</span><span class="o">.</span><span class="n">round</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;buffer&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">res</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="s1">&#39;buffer_with_style&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Styled buffering not available for &quot;</span>
+                                      <span class="s2">&quot;GEOS versions &lt; 3.2.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;buffer_with_style&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span>
+                                                           <span class="n">cap_style</span><span class="p">,</span>
+                                                           <span class="n">join_style</span><span class="p">,</span>
+                                                           <span class="n">mitre_limit</span><span class="p">))</span>
+
+    <span class="nd">@delegated</span>
+    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">preserve_topology</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a simplified geometry produced by the Douglas-Peucker</span>
+<span class="sd">        algorithm</span>
+
+<span class="sd">        Coordinates of the simplified geometry will be no more than the</span>
+<span class="sd">        tolerance distance from the original. Unless the topology preserving</span>
+<span class="sd">        option is used, the algorithm may produce self-intersecting or</span>
+<span class="sd">        otherwise invalid geometries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">preserve_topology</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;topology_preserve_simplify&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;simplify&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="n">op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">))</span>
+
+    <span class="c1"># Binary operations</span>
+    <span class="c1"># -----------------</span>
+
+    <span class="k">def</span> <span class="nf">difference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the difference of the geometries&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;difference&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the intersection of the geometries&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;intersection&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">symmetric_difference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the symmetric difference of the geometries</span>
+<span class="sd">        (Shapely geometry)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;symmetric_difference&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the union of the geometries (Shapely geometry)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;union&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="c1"># Unary predicates</span>
+    <span class="c1"># ----------------</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_z</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if the geometry&#39;s coordinate sequence(s) have z values (are</span>
+<span class="sd">        3-dimensional)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;has_z&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if the set of points in this geometry is empty, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_geom</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;is_empty&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_ring</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if the geometry is a closed ring, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;is_ring&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if the geometry is closed, else False</span>
+
+<span class="sd">        Applicable only to 1-D geometries.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">==</span> <span class="s1">&#39;LinearRing&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">==</span> <span class="s1">&#39;LineString&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;is_closed&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;is_closed&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if the geometry is simple, meaning that any self-intersections</span>
+<span class="sd">        are only at boundary points, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;is_simple&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;True if the geometry is valid (definition depends on sub-class),</span>
+<span class="sd">        else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;is_valid&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="c1"># Binary predicates</span>
+    <span class="c1"># -----------------</span>
+
+    <span class="k">def</span> <span class="nf">relate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the DE-9IM intersection matrix for the two geometries</span>
+<span class="sd">        (string)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;relate&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">covers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if the geometry covers the other, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;covers&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if the geometry contains the other, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;contains&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">crosses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if the geometries cross, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;crosses&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">disjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if geometries are disjoint, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;disjoint&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if geometries are equal, else False</span>
+
+<span class="sd">        Refers to point-set equality (or topological equality), and is equivalent to</span>
+<span class="sd">        (self.within(other) &amp; self.contains(other))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;equals&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">intersects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if geometries intersect, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;intersects&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">overlaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if geometries overlap, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;overlaps&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">touches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if geometries touch, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;touches&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if geometry is within the other, else False&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;within&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">equals_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if geometries are equal to within a specified</span>
+<span class="sd">        tolerance</span>
+
+<span class="sd">        Refers to coordinate equality, which requires coordinates to be equal</span>
+<span class="sd">        and in the same order for all components of a geometry</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;equals_exact&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">almost_equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if geometries are equal at all coordinates to a</span>
+<span class="sd">        specified decimal place</span>
+
+<span class="sd">        Refers to approximate coordinate equality, which requires coordinates be</span>
+<span class="sd">        approximately equal and in the same order for all components of a geometry.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">equals_exact</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">decimal</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">relate_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if the DE-9IM string code for the relationship between</span>
+<span class="sd">        the geometries satisfies the pattern, else False&quot;&quot;&quot;</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">c_char_p</span><span class="p">(</span><span class="n">pattern</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;relate_pattern&#39;</span><span class="p">](</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">pattern</span><span class="p">))</span>
+
+    <span class="c1"># Linear referencing</span>
+    <span class="c1"># ------------------</span>
+
+    <span class="nd">@delegated</span>
+    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the distance along this geometry to a point nearest the</span>
+<span class="sd">        specified point</span>
+
+<span class="sd">        If the normalized arg is True, return the distance normalized to the</span>
+<span class="sd">        length of the linear geometry.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;project_normalized&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;project&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="nd">@delegated</span>
+    <span class="nd">@exceptNull</span>
+    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a point at the specified distance along a linear geometry</span>
+
+<span class="sd">        Negative length values are taken as measured in the reverse</span>
+<span class="sd">        direction from the end of the geometry. Out-of-range index</span>
+<span class="sd">        values are handled by clamping them to the valid range of values.</span>
+<span class="sd">        If the normalized arg is True, the distance will be interpreted as a</span>
+<span class="sd">        fraction of the geometry&#39;s length.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;interpolate_normalized&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="p">[</span><span class="s1">&#39;interpolate&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">geom_factory</span><span class="p">(</span><span class="n">op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">))</span>
+
+
+<span class="k">class</span> <span class="nc">BaseMultipartGeometry</span><span class="p">(</span><span class="n">BaseGeometry</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">shape_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="c1"># Factory for part instances, usually a geometry class</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;To be implemented by derived classes&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ctypes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Multi-part geometries have no ctypes representations&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">__array_interface__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Provide the Numpy array protocol.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Multi-part geometries do not themselves &quot;</span>
+                                  <span class="s2">&quot;provide the array interface&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Sub-geometries may have coordinate &quot;</span>
+                                  <span class="s2">&quot;sequences, but collections do not&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ob</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Sub-geometries may have coordinate &quot;</span>
+                                  <span class="s2">&quot;sequences, but collections do not&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">coords</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Multi-part geometries do not provide a coordinate sequence&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">geoms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">GeometrySequence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_factory</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span> <span class="ow">is</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geoms</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">([])</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geoms</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">geoms</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">()[</span><span class="n">index</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="fm">__hash__</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">svg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a group of SVG elements for the multipart geometry.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        scale_factor : float</span>
+<span class="sd">            Multiplication factor for the SVG stroke-width.  Default is 1.</span>
+<span class="sd">        color : str, optional</span>
+<span class="sd">            Hex string for stroke or fill color. Default is to use &quot;#66cc99&quot;</span>
+<span class="sd">            if geometry is valid, and &quot;#ff3333&quot; if invalid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;&lt;g /&gt;&#39;</span>
+        <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;#66cc99&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="k">else</span> <span class="s2">&quot;#ff3333&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;g&gt;&#39;</span> <span class="o">+</span> \
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">svg</span><span class="p">(</span><span class="n">scale_factor</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="s1">&#39;&lt;/g&gt;&#39;</span>
+
+
+<span class="k">class</span> <span class="nc">GeometrySequence</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterative access to members of a homogeneous multipart geometry.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Attributes</span>
+    <span class="c1"># ----------</span>
+    <span class="c1"># _factory : callable</span>
+    <span class="c1">#     Returns instances of Shapely geometries</span>
+    <span class="c1"># _geom : c_void_p</span>
+    <span class="c1">#     Ctypes pointer to the parent&#39;s GEOS geometry</span>
+    <span class="c1"># _ndim : int</span>
+    <span class="c1">#     Number of dimensions (2 or 3, generally)</span>
+    <span class="c1"># __p__ : object</span>
+    <span class="c1">#     Parent (Shapely) geometry</span>
+    <span class="n">shape_factory</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_geom</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">__p__</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_ndim</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape_factory</span> <span class="o">=</span> <span class="nb">type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__p__</span> <span class="o">=</span> <span class="n">parent</span>
+
+    <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_geom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__p__</span><span class="o">.</span><span class="n">_geom</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__p__</span><span class="o">.</span><span class="n">_ndim</span>
+
+    <span class="k">def</span> <span class="nf">_get_geom_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_factory</span><span class="p">()</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">_other_owned</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">_geom</span> <span class="o">=</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSGetGeometryN</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_geom</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">_ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ndim</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">__p__</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="n">g</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()):</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_geom_item</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSGetNumGeometries</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_geom</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">integer_types</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">+</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">&gt;=</span> <span class="n">m</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;index out of range&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">m</span> <span class="o">+</span> <span class="n">key</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">key</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_geom_item</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="n">HeterogeneousGeometrySequence</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Heterogenous geometry collections are not sliceable&quot;</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">stride</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">stride</span><span class="p">):</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_geom_item</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__p__</span><span class="p">)(</span><span class="n">res</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;key must be an index or slice&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_longest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">max</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">:</span>
+                <span class="nb">max</span> <span class="o">=</span> <span class="n">l</span>
+
+
+<span class="k">class</span> <span class="nc">HeterogeneousGeometrySequence</span><span class="p">(</span><span class="n">GeometrySequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterative access to a heterogeneous sequence of geometries.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HeterogeneousGeometrySequence</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_geom_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="n">sub</span> <span class="o">=</span> <span class="n">lgeos</span><span class="o">.</span><span class="n">GEOSGetGeometryN</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_geom</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">geom_factory</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">_other_owned</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">g</span>
+
+
+<span class="k">class</span> <span class="nc">EmptyGeometry</span><span class="p">(</span><span class="n">BaseGeometry</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create an empty geometry.&quot;&quot;&quot;</span>
+        <span class="n">BaseGeometry</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_test</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Test runner&quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">_test</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Metropolitan Council
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

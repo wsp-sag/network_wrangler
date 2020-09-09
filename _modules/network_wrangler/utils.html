@@ -1,0 +1,493 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>network_wrangler.utils &mdash; Network Wrangler  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> Network Wrangler
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../autodoc.html">Wrangler Classes and Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../todo.html">To Do List</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Network Wrangler</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>network_wrangler.utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for network_wrangler.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">LineString</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">LineString</span>
+<span class="kn">from</span> <span class="nn">geographiclib.geodesic</span> <span class="kn">import</span> <span class="n">Geodesic</span>
+
+<span class="kn">from</span> <span class="nn">.logger</span> <span class="kn">import</span> <span class="n">WranglerLogger</span>
+
+
+<div class="viewcode-block" id="point_df_to_geojson"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.point_df_to_geojson">[docs]</a><span class="k">def</span> <span class="nf">point_df_to_geojson</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Author: Geoff Boeing:</span>
+<span class="sd">    https://geoffboeing.com/2015/10/exporting-python-data-geojson/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.roadwaynetwork</span> <span class="kn">import</span> <span class="n">RoadwayNetwork</span>
+
+    <span class="n">geojson</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;FeatureCollection&quot;</span><span class="p">,</span> <span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">feature</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Feature&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Point&quot;</span><span class="p">,</span> <span class="s2">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">[]},</span>
+        <span class="p">}</span>
+        <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;coordinates&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">y</span><span class="p">]</span>
+        <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">NODE_FOREIGN_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
+            <span class="n">feature</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="n">prop</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">prop</span><span class="p">]</span>
+        <span class="n">geojson</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">geojson</span></div>
+
+
+<div class="viewcode-block" id="link_df_to_json"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.link_df_to_json">[docs]</a><span class="k">def</span> <span class="nf">link_df_to_json</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Export pandas dataframe as a json object.</span>
+
+<span class="sd">    Modified from: Geoff Boeing:</span>
+<span class="sd">    https://geoffboeing.com/2015/10/exporting-python-data-geojson/</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df: Dataframe to export</span>
+<span class="sd">        properties: list of properties to export</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># can&#39;t remember why we need this?</span>
+    <span class="k">if</span> <span class="s2">&quot;distance&quot;</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;distance&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">json</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">feature</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
+            <span class="n">feature</span><span class="p">[</span><span class="n">prop</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">prop</span><span class="p">]</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">json</span></div>
+
+
+<div class="viewcode-block" id="topological_sort"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.topological_sort">[docs]</a><span class="k">def</span> <span class="nf">topological_sort</span><span class="p">(</span><span class="n">adjacency_list</span><span class="p">,</span> <span class="n">visited_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Topological sorting for Acyclic Directed Graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">output_stack</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">_topology_sort_util</span><span class="p">(</span><span class="n">vertex</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">visited_list</span><span class="p">[</span><span class="n">vertex</span><span class="p">]:</span>
+            <span class="n">visited_list</span><span class="p">[</span><span class="n">vertex</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">adjacency_list</span><span class="p">[</span><span class="n">vertex</span><span class="p">]:</span>
+                <span class="n">_topology_sort_util</span><span class="p">(</span><span class="n">neighbor</span><span class="p">)</span>
+            <span class="n">output_stack</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">vertex</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="n">visited_list</span><span class="p">:</span>
+        <span class="n">_topology_sort_util</span><span class="p">(</span><span class="n">vertex</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">output_stack</span></div>
+
+
+<div class="viewcode-block" id="make_slug"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.make_slug">[docs]</a><span class="k">def</span> <span class="nf">make_slug</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    makes a slug from text</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">re</span>
+
+    <span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;[,.;@#?!&amp;$&#39;]+&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;[\ ]+&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="parse_time_spans"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.parse_time_spans">[docs]</a><span class="k">def</span> <span class="nf">parse_time_spans</span><span class="p">(</span><span class="n">times</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    parse time spans into tuples of seconds from midnight</span>
+<span class="sd">    can also be used as an apply function for a pandas series</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    times: tuple(string) or tuple(int) or list(string) or list(int)</span>
+
+<span class="sd">    returns</span>
+<span class="sd">    --------</span>
+<span class="sd">    tuple(integer)</span>
+<span class="sd">      time span as seconds from midnight</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span> <span class="o">=</span> <span class="n">times</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;ERROR: times should be a tuple or list of two, got: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># If times are strings, convert to int in seconds, else return as ints</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">end_time</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">end_time</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="c1"># If time is given without seconds, add 00</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">start_time</span> <span class="o">+=</span> <span class="s2">&quot;:00&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">end_time</span> <span class="o">+=</span> <span class="s2">&quot;:00&quot;</span>
+
+        <span class="c1"># Convert times to seconds from midnight (Partride&#39;s time storage)</span>
+        <span class="n">h0</span><span class="p">,</span> <span class="n">m0</span><span class="p">,</span> <span class="n">s0</span> <span class="o">=</span> <span class="n">start_time</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+        <span class="n">start_time_sec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">m0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">s0</span><span class="p">)</span>
+
+        <span class="n">h1</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">s1</span> <span class="o">=</span> <span class="n">end_time</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+        <span class="n">end_time_sec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">start_time_sec</span><span class="p">,</span> <span class="n">end_time_sec</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">end_time</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">times</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;ERROR: times should be ints or strings&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">start_time_sec</span><span class="p">,</span> <span class="n">end_time_sec</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_bearing"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.get_bearing">[docs]</a><span class="k">def</span> <span class="nf">get_bearing</span><span class="p">(</span><span class="n">lat1</span><span class="p">,</span> <span class="n">lon1</span><span class="p">,</span> <span class="n">lat2</span><span class="p">,</span> <span class="n">lon2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    calculate the bearing (forward azimuth) b/w the two points</span>
+
+<span class="sd">    returns: bearing in radians</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># bearing in degrees</span>
+    <span class="n">brng</span> <span class="o">=</span> <span class="n">Geodesic</span><span class="o">.</span><span class="n">WGS84</span><span class="o">.</span><span class="n">Inverse</span><span class="p">(</span><span class="n">lat1</span><span class="p">,</span> <span class="n">lon1</span><span class="p">,</span> <span class="n">lat2</span><span class="p">,</span> <span class="n">lon2</span><span class="p">)[</span><span class="s2">&quot;azi1&quot;</span><span class="p">]</span>
+
+    <span class="c1"># convert bearing to radians</span>
+    <span class="n">brng</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">brng</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">brng</span></div>
+
+
+<div class="viewcode-block" id="offset_point_with_distance_and_bearing"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.offset_point_with_distance_and_bearing">[docs]</a><span class="k">def</span> <span class="nf">offset_point_with_distance_and_bearing</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">bearing</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the new lat long (in degrees) given current point (lat/lon), distance and bearing</span>
+
+<span class="sd">    returns: new lat/long</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Earth&#39;s radius in meters</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="mi">6378137</span>
+
+    <span class="c1"># convert the lat long from degree to radians</span>
+    <span class="n">lat_radians</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+    <span class="n">lon_radians</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
+
+    <span class="c1"># calculate the new lat long in radians</span>
+    <span class="n">out_lat_radians</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">asin</span><span class="p">(</span>
+        <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat_radians</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">distance</span> <span class="o">/</span> <span class="n">radius</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat_radians</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">distance</span> <span class="o">/</span> <span class="n">radius</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">bearing</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">out_lon_radians</span> <span class="o">=</span> <span class="n">lon_radians</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span>
+        <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">bearing</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">distance</span> <span class="o">/</span> <span class="n">radius</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat_radians</span><span class="p">),</span>
+        <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">distance</span> <span class="o">/</span> <span class="n">radius</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat_radians</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat_radians</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="c1"># convert the new lat long back to degree</span>
+    <span class="n">out_lat</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">out_lat_radians</span><span class="p">)</span>
+    <span class="n">out_lon</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">out_lon_radians</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">out_lat</span><span class="p">,</span> <span class="n">out_lon</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="offset_location_reference"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.offset_location_reference">[docs]</a><span class="k">def</span> <span class="nf">offset_location_reference</span><span class="p">(</span><span class="n">location_reference</span><span class="p">,</span> <span class="n">offset_meters</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a new location reference</span>
+<span class="sd">    using the node a and node b of given location reference,</span>
+<span class="sd">    offseting it by 90 degree to the bearing of given location reference</span>
+<span class="sd">    and distance equals to offset_meters</span>
+
+<span class="sd">    returns: new location_reference with offset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lon_1</span> <span class="o">=</span> <span class="n">location_reference</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;point&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">lat_1</span> <span class="o">=</span> <span class="n">location_reference</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;point&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">lon_2</span> <span class="o">=</span> <span class="n">location_reference</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;point&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">lat_2</span> <span class="o">=</span> <span class="n">location_reference</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;point&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">bearing</span> <span class="o">=</span> <span class="n">get_bearing</span><span class="p">(</span><span class="n">lat_1</span><span class="p">,</span> <span class="n">lon_1</span><span class="p">,</span> <span class="n">lat_2</span><span class="p">,</span> <span class="n">lon_2</span><span class="p">)</span>
+    <span class="c1"># adding 90 degrees (1.57 radians) to the current bearing</span>
+    <span class="n">bearing</span> <span class="o">=</span> <span class="n">bearing</span> <span class="o">+</span> <span class="mf">1.57</span>
+
+    <span class="n">new_lat_1</span><span class="p">,</span> <span class="n">new_lon_1</span> <span class="o">=</span> <span class="n">offset_point_with_distance_and_bearing</span><span class="p">(</span>
+        <span class="n">lat_1</span><span class="p">,</span> <span class="n">lon_1</span><span class="p">,</span> <span class="n">offset_meters</span><span class="p">,</span> <span class="n">bearing</span>
+    <span class="p">)</span>
+    <span class="n">new_lat_2</span><span class="p">,</span> <span class="n">new_lon_2</span> <span class="o">=</span> <span class="n">offset_point_with_distance_and_bearing</span><span class="p">(</span>
+        <span class="n">lat_2</span><span class="p">,</span> <span class="n">lon_2</span><span class="p">,</span> <span class="n">offset_meters</span><span class="p">,</span> <span class="n">bearing</span>
+    <span class="p">)</span>
+
+    <span class="n">out_location_reference</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;point&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">new_lon_1</span><span class="p">,</span> <span class="n">new_lat_1</span><span class="p">]},</span>
+        <span class="p">{</span><span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;point&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">new_lon_2</span><span class="p">,</span> <span class="n">new_lat_2</span><span class="p">]},</span>
+    <span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">out_location_reference</span></div>
+
+
+<div class="viewcode-block" id="haversine_distance"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.haversine_distance">[docs]</a><span class="k">def</span> <span class="nf">haversine_distance</span><span class="p">(</span><span class="n">origin</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates haversine distance between two points</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    origin: lat/lon for point A</span>
+<span class="sd">    destination: lat/lon for point B</span>
+
+<span class="sd">    Returns: string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span> <span class="o">=</span> <span class="n">origin</span>
+    <span class="n">lon2</span><span class="p">,</span> <span class="n">lat2</span> <span class="o">=</span> <span class="n">destination</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="mi">6378137</span>  <span class="c1"># meter</span>
+
+    <span class="n">dlat</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat2</span> <span class="o">-</span> <span class="n">lat1</span><span class="p">)</span>
+    <span class="n">dlon</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lon2</span> <span class="o">-</span> <span class="n">lon1</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlat</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlat</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span>
+        <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat1</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat2</span><span class="p">))</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlon</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlon</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">a</span><span class="p">))</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">c</span>  <span class="c1"># meters</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="mf">0.000621371</span>  <span class="c1"># miles</span>
+
+    <span class="k">return</span> <span class="n">d</span></div>
+
+
+<div class="viewcode-block" id="create_unique_shape_id"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.create_unique_shape_id">[docs]</a><span class="k">def</span> <span class="nf">create_unique_shape_id</span><span class="p">(</span><span class="n">line_string</span><span class="p">:</span> <span class="n">LineString</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a unique hash id using the coordinates of the geomtery</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    line_string: Line Geometry as a LineString</span>
+
+<span class="sd">    Returns: string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">line_string</span><span class="o">.</span><span class="n">coords</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># first co-ordinate (A node)</span>
+    <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">line_string</span><span class="o">.</span><span class="n">coords</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># last co-ordinate (B node)</span>
+
+    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Geometry </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span>
+    <span class="n">unhashed</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="nb">hash</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">unhashed</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="nb">hash</span></div>
+
+
+<div class="viewcode-block" id="create_location_reference_from_nodes"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.create_location_reference_from_nodes">[docs]</a><span class="k">def</span> <span class="nf">create_location_reference_from_nodes</span><span class="p">(</span><span class="n">node_a</span><span class="p">,</span> <span class="n">node_b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a location reference using the node a and node b coordinates</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    node_a: Node A as Series</span>
+<span class="sd">    node_b: Node B as Series</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out_location_reference</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;point&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">node_a</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">],</span> <span class="n">node_a</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]]},</span>
+        <span class="p">{</span><span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;point&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">node_b</span><span class="p">[</span><span class="s2">&quot;X&quot;</span><span class="p">],</span> <span class="n">node_b</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]]},</span>
+    <span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">out_location_reference</span></div>
+
+
+<div class="viewcode-block" id="create_line_string"><a class="viewcode-back" href="../../_generated/network_wrangler.utils.html#network_wrangler.utils.create_line_string">[docs]</a><span class="k">def</span> <span class="nf">create_line_string</span><span class="p">(</span><span class="n">location_reference</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a geometry as a LineString using location reference</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">LineString</span><span class="p">([</span><span class="n">location_reference</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;point&quot;</span><span class="p">],</span> <span class="n">location_reference</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;point&quot;</span><span class="p">]])</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Metropolitan Council
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

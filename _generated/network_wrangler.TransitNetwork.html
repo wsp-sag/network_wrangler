@@ -1,0 +1,804 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>network_wrangler.TransitNetwork &mdash; Network Wrangler  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="network_wrangler.utils" href="network_wrangler.utils.html" />
+    <link rel="prev" title="network_wrangler.RoadwayNetwork" href="network_wrangler.RoadwayNetwork.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Network Wrangler
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../design.html">Design</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../autodoc.html">Wrangler Classes and Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../autodoc.html#base-classes">Base Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="network_wrangler.ProjectCard.html">network_wrangler.ProjectCard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="network_wrangler.Scenario.html">network_wrangler.Scenario</a></li>
+<li class="toctree-l2"><a class="reference internal" href="network_wrangler.RoadwayNetwork.html">network_wrangler.RoadwayNetwork</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">network_wrangler.TransitNetwork</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../autodoc.html#utils-and-functions">Utils and Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../todo.html">To Do List</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Network Wrangler</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../autodoc.html">Wrangler Classes and Functions</a> &raquo;</li>
+        
+      <li>network_wrangler.TransitNetwork</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_generated/network_wrangler.TransitNetwork.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="network-wrangler-transitnetwork">
+<h1>network_wrangler.TransitNetwork<a class="headerlink" href="#network-wrangler-transitnetwork" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="network_wrangler.TransitNetwork">
+<em class="property">class </em><code class="sig-prename descclassname">network_wrangler.</code><code class="sig-name descname">TransitNetwork</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Representation of a Transit Network.</p>
+<p>Typical usage example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">network_wrangler</span> <span class="k">as</span> <span class="nn">wr</span>
+<span class="n">stpaul</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;/home/jovyan/work/example/stpaul&#39;</span>
+<span class="n">tc</span><span class="o">=</span><span class="n">wr</span><span class="o">.</span><span class="n">TransitNetwork</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">stpaul</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.feed">
+<code class="sig-name descname">feed</code><a class="headerlink" href="#network_wrangler.TransitNetwork.feed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partridge feed mapping dataframes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>DotDict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.config">
+<code class="sig-name descname">config</code><a class="headerlink" href="#network_wrangler.TransitNetwork.config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partridge config</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>nx.DiGraph</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.road_net">
+<code class="sig-name descname">road_net</code><a class="headerlink" href="#network_wrangler.TransitNetwork.road_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associated roadway network object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="network_wrangler.RoadwayNetwork.html#network_wrangler.RoadwayNetwork" title="network_wrangler.RoadwayNetwork">RoadwayNetwork</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.graph">
+<code class="sig-name descname">graph</code><a class="headerlink" href="#network_wrangler.TransitNetwork.graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Graph for associated roadway network object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>nx.MultiDiGraph</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.feed_path">
+<code class="sig-name descname">feed_path</code><a class="headerlink" href="#network_wrangler.TransitNetwork.feed_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Where the feed was read in from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.validated_frequencies">
+<code class="sig-name descname">validated_frequencies</code><a class="headerlink" href="#network_wrangler.TransitNetwork.validated_frequencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>The frequencies have been validated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.validated_road_network_consistency">
+<code class="sig-name descname">validated_road_network_consistency</code><a class="headerlink" href="#network_wrangler.TransitNetwork.validated_road_network_consistency" title="Permalink to this definition">¶</a></dt>
+<dd><p>The network has been validated against the road network.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.SHAPES_FOREIGN_KEY">
+<code class="sig-name descname">SHAPES_FOREIGN_KEY</code><a class="headerlink" href="#network_wrangler.TransitNetwork.SHAPES_FOREIGN_KEY" title="Permalink to this definition">¶</a></dt>
+<dd><p>foreign key between shapes dataframe and roadway network nodes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.STOPS_FOREIGN_KEY">
+<code class="sig-name descname">STOPS_FOREIGN_KEY</code><a class="headerlink" href="#network_wrangler.TransitNetwork.STOPS_FOREIGN_KEY" title="Permalink to this definition">¶</a></dt>
+<dd><p>foreign  key between stops dataframe and roadway network nodes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.ID_SCALAR">
+<code class="sig-name descname">ID_SCALAR</code><a class="headerlink" href="#network_wrangler.TransitNetwork.ID_SCALAR" title="Permalink to this definition">¶</a></dt>
+<dd><p>scalar value added to create new IDs when necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="network_wrangler.TransitNetwork.REQUIRED_FILES">
+<code class="sig-name descname">REQUIRED_FILES</code><a class="headerlink" href="#network_wrangler.TransitNetwork.REQUIRED_FILES" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of files that the transit network requires.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>investigate consolidating scalars this with RoadwayNetwork
+consolidate thes foreign key constants into one if possible</p>
+</div>
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor</p>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>Make graph a reference to associated RoadwayNetwork’s graph, not its own thing.</p>
+</div>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.__init__" title="network_wrangler.TransitNetwork.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([feed, config])</p></td>
+<td><p>Constructor</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.apply" title="network_wrangler.TransitNetwork.apply"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply</span></code></a>(project_card_dictionary)</p></td>
+<td><p>Wrapper method to apply a project to a transit network.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.apply_transit_feature_change" title="network_wrangler.TransitNetwork.apply_transit_feature_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_transit_feature_change</span></code></a>(trip_ids, …)</p></td>
+<td><p>Changes the transit attributes for the selected features based on the project card information passed</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.apply_transit_managed_lane" title="network_wrangler.TransitNetwork.apply_transit_managed_lane"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_transit_managed_lane</span></code></a>(trip_ids, node_ids)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.empty" title="network_wrangler.TransitNetwork.empty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">empty</span></code></a>()</p></td>
+<td><p>Create an empty transit network instance using the default config.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.read" title="network_wrangler.TransitNetwork.read"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read</span></code></a>(feed_path)</p></td>
+<td><p>Read GTFS feed from folder and TransitNetwork object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.route_ids_in_routestxt" title="network_wrangler.TransitNetwork.route_ids_in_routestxt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">route_ids_in_routestxt</span></code></a>(feed)</p></td>
+<td><p>Wherever route_id occurs, make sure it is in routes.txt</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.select_transit_features" title="network_wrangler.TransitNetwork.select_transit_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_transit_features</span></code></a>(selection)</p></td>
+<td><p>Selects transit features that satisfy selection criteria</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.select_transit_features_by_nodes" title="network_wrangler.TransitNetwork.select_transit_features_by_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_transit_features_by_nodes</span></code></a>(node_ids[, …])</p></td>
+<td><p>Selects transit features that use any one of a list of node_ids</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.set_roadnet" title="network_wrangler.TransitNetwork.set_roadnet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_roadnet</span></code></a>(road_net[, graph_shapes, …])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.shape_ids_in_shapestxt" title="network_wrangler.TransitNetwork.shape_ids_in_shapestxt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape_ids_in_shapestxt</span></code></a>(feed)</p></td>
+<td><p>Wherever shape_id occurs, make sure it is in shapes.txt</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.stop_ids_in_stopstxt" title="network_wrangler.TransitNetwork.stop_ids_in_stopstxt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop_ids_in_stopstxt</span></code></a>(feed)</p></td>
+<td><p>Wherever stop_id occurs, make sure it is in stops.txt</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.transit_net_to_gdf" title="network_wrangler.TransitNetwork.transit_net_to_gdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transit_net_to_gdf</span></code></a>(transit)</p></td>
+<td><p>Returns a geodataframe given a TransitNetwork or a valid Shapes DataFrame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.trip_ids_in_tripstxt" title="network_wrangler.TransitNetwork.trip_ids_in_tripstxt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trip_ids_in_tripstxt</span></code></a>(feed)</p></td>
+<td><p>Wherever trip_id occurs, make sure it is in trips.txt</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.validate_feed" title="network_wrangler.TransitNetwork.validate_feed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_feed</span></code></a>(feed, config)</p></td>
+<td><p>Since Partridge lazily loads the df, load each file to make sure it actually works.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.validate_frequencies" title="network_wrangler.TransitNetwork.validate_frequencies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_frequencies</span></code></a>()</p></td>
+<td><p>Validates that there are no transit trips in the feed with zero frequencies.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.validate_network_keys" title="network_wrangler.TransitNetwork.validate_network_keys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_network_keys</span></code></a>(feed)</p></td>
+<td><p>Validates foreign keys are present in all connecting feed files.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.validate_road_network_consistencies" title="network_wrangler.TransitNetwork.validate_road_network_consistencies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_road_network_consistencies</span></code></a>()</p></td>
+<td><p>Validates transit network against the road network for both stops and shapes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.validate_transit_shapes" title="network_wrangler.TransitNetwork.validate_transit_shapes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_transit_shapes</span></code></a>()</p></td>
+<td><p>Validates that all transit shapes are part of the roadway network.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.validate_transit_stops" title="network_wrangler.TransitNetwork.validate_transit_stops"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_transit_stops</span></code></a>()</p></td>
+<td><p>Validates that all transit stops are part of the roadway network.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.TransitNetwork.write" title="network_wrangler.TransitNetwork.write"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write</span></code></a>([path, filename])</p></td>
+<td><p>Writes a network in the transit network standard</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="network_wrangler.TransitNetwork.ID_SCALAR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ID_SCALAR</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id5" title="network_wrangler.TransitNetwork.REQUIRED_FILES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REQUIRED_FILES</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id6" title="network_wrangler.TransitNetwork.SHAPES_FOREIGN_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SHAPES_FOREIGN_KEY</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id7" title="network_wrangler.TransitNetwork.STOPS_FOREIGN_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STOPS_FOREIGN_KEY</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_card_dictionary</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper method to apply a project to a transit network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>project_card_dictionary</strong> – dict
+a dictionary of the project card object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.apply_transit_feature_change">
+<code class="sig-name descname">apply_transit_feature_change</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trip_ids</span></em>, <em class="sig-param"><span class="n">properties</span></em>, <em class="sig-param"><span class="n">in_place</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.apply_transit_feature_change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.apply_transit_feature_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes the transit attributes for the selected features based on the
+project card information passed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trip_ids</strong> – pd.Series
+all trip_ids to apply change to</p></li>
+<li><p><strong>properties</strong> – list of dictionaries
+transit properties to change</p></li>
+<li><p><strong>in_place</strong> – bool
+whether to apply changes in place or return a new network</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.apply_transit_managed_lane">
+<code class="sig-name descname">apply_transit_managed_lane</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trip_ids</span></em>, <em class="sig-param"><span class="n">node_ids</span></em>, <em class="sig-param"><span class="n">in_place</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.apply_transit_managed_lane"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.apply_transit_managed_lane" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.empty">
+<em class="property">static </em><code class="sig-name descname">empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an empty transit network instance using the default config.</p>
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">Todo</p>
+<p>fill out this method</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TransitNetwork</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.read">
+<em class="property">static </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feed_path</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read GTFS feed from folder and TransitNetwork object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>feed_path</strong> – where to read transit network files from</p>
+</dd>
+</dl>
+<p>Returns: a TransitNetwork object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TransitNetwork</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.route_ids_in_routestxt">
+<em class="property">static </em><code class="sig-name descname">route_ids_in_routestxt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feed</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.route_ids_in_routestxt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.route_ids_in_routestxt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wherever route_id occurs, make sure it is in routes.txt</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>feed</strong> – partridge feed object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Boolean indicating if feed is okay.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.select_transit_features">
+<code class="sig-name descname">select_transit_features</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selection</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.select_transit_features"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.select_transit_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects transit features that satisfy selection criteria</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>selection</strong> – selection dictionary</p>
+</dd>
+</dl>
+<p>Returns: trip identifiers : list of GTFS trip IDs in the selection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.select_transit_features_by_nodes">
+<code class="sig-name descname">select_transit_features_by_nodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node_ids</span></em>, <em class="sig-param"><span class="n">require_all</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.select_transit_features_by_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.select_transit_features_by_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects transit features that use any one of a list of node_ids</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_ids</strong> – list (generally coming from nx.shortest_path)</p></li>
+<li><p><strong>require_all</strong> – bool if True, the returned trip_ids must traverse all of
+the nodes (default = False)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>trip identifiers  list of GTFS trip IDs in the selection</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.set_roadnet">
+<code class="sig-name descname">set_roadnet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">road_net</span></em>, <em class="sig-param"><span class="n">graph_shapes</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">graph_stops</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">validate_consistency</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.set_roadnet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.set_roadnet" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.shape_ids_in_shapestxt">
+<em class="property">static </em><code class="sig-name descname">shape_ids_in_shapestxt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feed</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.shape_ids_in_shapestxt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.shape_ids_in_shapestxt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wherever shape_id occurs, make sure it is in shapes.txt</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>feed</strong> – partridge feed object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Boolean indicating if feed is okay.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.stop_ids_in_stopstxt">
+<em class="property">static </em><code class="sig-name descname">stop_ids_in_stopstxt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feed</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.stop_ids_in_stopstxt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.stop_ids_in_stopstxt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wherever stop_id occurs, make sure it is in stops.txt</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>feed</strong> – partridge feed object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Boolean indicating if feed is okay.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.transit_net_to_gdf">
+<em class="property">static </em><code class="sig-name descname">transit_net_to_gdf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">transit</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.transit_net_to_gdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.transit_net_to_gdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a geodataframe given a TransitNetwork or a valid Shapes DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>transit</strong> – either a TransitNetwork or a Shapes GeoDataFrame</p>
+</dd>
+</dl>
+<div class="admonition-todo admonition" id="id4">
+<p class="admonition-title">Todo</p>
+<p>Make more sophisticated.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.trip_ids_in_tripstxt">
+<em class="property">static </em><code class="sig-name descname">trip_ids_in_tripstxt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feed</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.trip_ids_in_tripstxt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.trip_ids_in_tripstxt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wherever trip_id occurs, make sure it is in trips.txt</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>feed</strong> – partridge feed object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Boolean indicating if feed is okay.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.validate_feed">
+<em class="property">static </em><code class="sig-name descname">validate_feed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feed</span></em>, <em class="sig-param"><span class="n">config</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.validate_feed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.validate_feed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Since Partridge lazily loads the df, load each file to make sure it
+actually works.</p>
+<p>Partridge uses a DiGraph from the networkx library to represent the
+relationships between GTFS files. Each file is a ‘node’, and the
+relationship between files are ‘edges’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feed</strong> – partridge feed</p></li>
+<li><p><strong>config</strong> – partridge config</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.validate_frequencies">
+<code class="sig-name descname">validate_frequencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.validate_frequencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.validate_frequencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates that there are no transit trips in the feed with zero frequencies.</p>
+<p>Changes state of self.validated_frequencies boolean based on outcome.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>boolean indicating if valid or not.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.validate_network_keys">
+<em class="property">static </em><code class="sig-name descname">validate_network_keys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feed</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.validate_network_keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.validate_network_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates foreign keys are present in all connecting feed files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>feed</strong> – partridge feed object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Boolean indicating if feed is okay.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.validate_road_network_consistencies">
+<code class="sig-name descname">validate_road_network_consistencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.validate_road_network_consistencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.validate_road_network_consistencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates transit network against the road network for both stops
+and shapes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>boolean indicating if valid or not.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.validate_transit_shapes">
+<code class="sig-name descname">validate_transit_shapes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.validate_transit_shapes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.validate_transit_shapes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates that all transit shapes are part of the roadway network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Boolean indicating if valid or not.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.validate_transit_stops">
+<code class="sig-name descname">validate_transit_stops</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.validate_transit_stops"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.validate_transit_stops" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates that all transit stops are part of the roadway network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Boolean indicating if valid or not.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.TransitNetwork.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">'.'</span></em>, <em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/transitnetwork.html#TransitNetwork.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.TransitNetwork.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a network in the transit network standard</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – the path were the output will be saved</p></li>
+<li><p><strong>filename</strong> – the name prefix of the transit files that will be generated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="id0">
+<code class="sig-name descname">ID_SCALAR</code><em class="property"> = 100000000</em><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="id5">
+<code class="sig-name descname">REQUIRED_FILES</code><em class="property"> = ['agency.txt', 'frequencies.txt', 'routes.txt', 'shapes.txt', 'stop_times.txt', 'stops.txt', 'trips.txt']</em><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="id6">
+<code class="sig-name descname">SHAPES_FOREIGN_KEY</code><em class="property"> = 'shape_model_node_id'</em><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="id7">
+<code class="sig-name descname">STOPS_FOREIGN_KEY</code><em class="property"> = 'model_node_id'</em><a class="headerlink" href="#id7" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="network_wrangler.utils.html" class="btn btn-neutral float-right" title="network_wrangler.utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="network_wrangler.RoadwayNetwork.html" class="btn btn-neutral float-left" title="network_wrangler.RoadwayNetwork" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Metropolitan Council
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

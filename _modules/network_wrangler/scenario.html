@@ -1,0 +1,967 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>network_wrangler.scenario &mdash; Network Wrangler  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> Network Wrangler
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../autodoc.html">Wrangler Classes and Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../todo.html">To Do List</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Network Wrangler</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>network_wrangler.scenario</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for network_wrangler.scenario</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
+
+<span class="kn">from</span> <span class="nn">.projectcard</span> <span class="kn">import</span> <span class="n">ProjectCard</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">.logger</span> <span class="kn">import</span> <span class="n">WranglerLogger</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">topological_sort</span>
+<span class="kn">from</span> <span class="nn">.roadwaynetwork</span> <span class="kn">import</span> <span class="n">RoadwayNetwork</span>
+<span class="kn">from</span> <span class="nn">.transitnetwork</span> <span class="kn">import</span> <span class="n">TransitNetwork</span>
+
+
+<div class="viewcode-block" id="Scenario"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario">[docs]</a><span class="k">class</span> <span class="nc">Scenario</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Holds information about a scenario.</span>
+
+<span class="sd">    .. highlight:: python</span>
+
+<span class="sd">    Typical usage example:</span>
+<span class="sd">    ::</span>
+<span class="sd">        my_base_scenario = {</span>
+<span class="sd">            &quot;road_net&quot;: RoadwayNetwork.read(</span>
+<span class="sd">                link_file=STPAUL_LINK_FILE,</span>
+<span class="sd">                node_file=STPAUL_NODE_FILE,</span>
+<span class="sd">                shape_file=STPAUL_SHAPE_FILE,</span>
+<span class="sd">                fast=True,</span>
+<span class="sd">            ),</span>
+<span class="sd">            &quot;transit_net&quot;: TransitNetwork.read(STPAUL_DIR),</span>
+<span class="sd">        }</span>
+
+<span class="sd">        card_filenames = [</span>
+<span class="sd">            &quot;3_multiple_roadway_attribute_change.yml&quot;,</span>
+<span class="sd">            &quot;multiple_changes.yml&quot;,</span>
+<span class="sd">            &quot;4_simple_managed_lane.yml&quot;,</span>
+<span class="sd">        ]</span>
+
+<span class="sd">        project_card_directory = os.path.join(STPAUL_DIR, &quot;project_cards&quot;)</span>
+
+<span class="sd">        project_cards_list = [</span>
+<span class="sd">            ProjectCard.read(os.path.join(project_card_directory, filename), validate=False)</span>
+<span class="sd">            for filename in card_filenames</span>
+<span class="sd">        ]</span>
+
+<span class="sd">        my_scenario = Scenario.create_scenario(</span>
+<span class="sd">          base_scenario=my_base_scenario,</span>
+<span class="sd">          project_cards_list=project_cards_list,</span>
+<span class="sd">        )</span>
+<span class="sd">        my_scenario.check_scenario_requisites()</span>
+
+<span class="sd">        my_scenario.apply_all_projects()</span>
+
+<span class="sd">        my_scenario.scenario_summary()</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        base_scenario: dictionary representation of a scenario</span>
+<span class="sd">        project_cards (Optional): list of Project Card Instances</span>
+<span class="sd">        road_net: instance of RoadwayNetwork for the scenario</span>
+<span class="sd">        transit_net: instance of TransitNetwork for the scenario</span>
+<span class="sd">        applied_projects: list of project names that have been applied</span>
+<span class="sd">        project_cards: list of project card instances</span>
+<span class="sd">        ordered_project_cards:</span>
+<span class="sd">        prerequisites:  dictionary storing prerequiste information</span>
+<span class="sd">        corequisites:  dictionary storing corequisite information</span>
+<span class="sd">        conflicts: dictionary storing conflict information</span>
+<span class="sd">        requisites_checked: boolean indicating if the co- and pre-requisites</span>
+<span class="sd">            have been checked in the project cards</span>
+<span class="sd">        conflicts_checked: boolean indicating if the project conflicts have been checked</span>
+<span class="sd">        has_requisite_error: boolean indicating if there is a conflict in the pre- or</span>
+<span class="sd">            co-requisites of project cards</span>
+<span class="sd">        has_conflict_error: boolean indicating if there is are conflicting project cards</span>
+<span class="sd">        prerequisites_sorted: boolean indicating if the project cards have</span>
+<span class="sd">            been sorted to make sure cards that are pre-requisites are applied first</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Scenario.__init__"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_scenario</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">project_cards</span><span class="p">:</span> <span class="p">[</span><span class="n">ProjectCard</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor</span>
+
+<span class="sd">        args:</span>
+<span class="sd">        base_scenario: dict the base scenario</span>
+<span class="sd">        project_cards: list this scenario&#39;s project cards</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span> <span class="o">=</span> <span class="n">base_scenario</span>
+
+        <span class="c1"># if the base scenario had roadway or transit networks, use them as the basis.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;road_net&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span><span class="p">[</span><span class="s2">&quot;road_net&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;transit_net&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span><span class="p">[</span><span class="s2">&quot;transit_net&quot;</span><span class="p">])</span>
+
+        <span class="c1"># if the base scenario had applied projects, add them to the list of applied</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">applied_projects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;applied_projects&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">applied_projects</span> <span class="o">=</span> <span class="n">base_scenario</span><span class="p">[</span><span class="s2">&quot;applied_projects&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span> <span class="o">=</span> <span class="n">project_cards</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ordered_project_cards</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prerequisites</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">corequisites</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conflicts</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">requisites_checked</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conflicts_checked</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_requisite_error</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_conflict_error</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prerequisites_sorted</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">card</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dependencies&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">card</span><span class="o">.</span><span class="n">dependencies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;prerequisites&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">prerequisites</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="p">{</span><span class="n">card</span><span class="o">.</span><span class="n">project</span><span class="p">:</span> <span class="n">card</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="s2">&quot;prerequisites&quot;</span><span class="p">]}</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">card</span><span class="o">.</span><span class="n">dependencies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;corequisites&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">corequisites</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="p">{</span><span class="n">card</span><span class="o">.</span><span class="n">project</span><span class="p">:</span> <span class="n">card</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="s2">&quot;corequisites&quot;</span><span class="p">]}</span>
+                <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scenario.create_base_scenario"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.create_base_scenario">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_base_scenario</span><span class="p">(</span>
+        <span class="n">base_shape_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">base_link_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">base_node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">roadway_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">transit_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Scenario</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        args</span>
+<span class="sd">        -----</span>
+<span class="sd">        roadway_dir: optional</span>
+<span class="sd">          path to the base scenario roadway network files</span>
+<span class="sd">        base_shape_name:</span>
+<span class="sd">          filename of the base network shape</span>
+<span class="sd">        base_link_name:</span>
+<span class="sd">          filename of the base network link</span>
+<span class="sd">        base_node_name:</span>
+<span class="sd">          filename of the base network node</span>
+<span class="sd">        transit_dir: optional</span>
+<span class="sd">           path to base scenario transit files</span>
+<span class="sd">        validate:</span>
+<span class="sd">          boolean indicating whether to validate the base network or not</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">roadway_dir</span><span class="p">:</span>
+            <span class="n">base_network_shape_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">roadway_dir</span><span class="p">,</span> <span class="n">base_shape_name</span><span class="p">)</span>
+            <span class="n">base_network_link_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">roadway_dir</span><span class="p">,</span> <span class="n">base_link_name</span><span class="p">)</span>
+            <span class="n">base_network_node_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">roadway_dir</span><span class="p">,</span> <span class="n">base_node_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">base_network_shape_file</span> <span class="o">=</span> <span class="n">base_shape_name</span>
+            <span class="n">base_network_link_file</span> <span class="o">=</span> <span class="n">base_link_name</span>
+            <span class="n">base_network_node_file</span> <span class="o">=</span> <span class="n">base_node_name</span>
+
+        <span class="n">road_net</span> <span class="o">=</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">read</span><span class="p">(</span>
+            <span class="n">link_file</span><span class="o">=</span><span class="n">base_network_link_file</span><span class="p">,</span>
+            <span class="n">node_file</span><span class="o">=</span><span class="n">base_network_node_file</span><span class="p">,</span>
+            <span class="n">shape_file</span><span class="o">=</span><span class="n">base_network_shape_file</span><span class="p">,</span>
+            <span class="n">fast</span><span class="o">=</span><span class="ow">not</span> <span class="n">validate</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">transit_dir</span><span class="p">:</span>
+            <span class="n">transit_net</span> <span class="o">=</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">transit_dir</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">transit_net</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;No transit directory specified, base scenario will have empty transit network.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">transit_net</span><span class="o">.</span><span class="n">set_roadnet</span><span class="p">(</span><span class="n">road_net</span><span class="p">,</span> <span class="n">validate_consistency</span><span class="o">=</span><span class="n">validate</span><span class="p">)</span>
+        <span class="n">base_scenario</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;road_net&quot;</span><span class="p">:</span> <span class="n">road_net</span><span class="p">,</span> <span class="s2">&quot;transit_net&quot;</span><span class="p">:</span> <span class="n">transit_net</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">base_scenario</span></div>
+
+<div class="viewcode-block" id="Scenario.create_scenario"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.create_scenario">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_scenario</span><span class="p">(</span>
+        <span class="n">base_scenario</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="n">card_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">project_cards_list</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">glob_search</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">validate_project_cards</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Scenario</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates project cards with a specific tag from the specified folder or</span>
+<span class="sd">        list of user specified project cards and</span>
+<span class="sd">        creates a scenario object with the valid project card.</span>
+
+<span class="sd">        args</span>
+<span class="sd">        -----</span>
+<span class="sd">        base_scenario:</span>
+<span class="sd">          object dictionary for the base scenario (i.e. my_base_scenario.__dict__)</span>
+<span class="sd">        tags:</span>
+<span class="sd">          only project cards with these tags will be read/validated</span>
+<span class="sd">        folder:</span>
+<span class="sd">          the folder location where the project cards will be</span>
+<span class="sd">        project_cards_list:</span>
+<span class="sd">          list of project cards to be applied</span>
+<span class="sd">        glob_search:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating Scenario&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">project_cards_list</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Adding project cards from List.</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">project</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">project_cards_list</span><span class="p">])</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="p">(</span><span class="n">base_scenario</span><span class="p">,</span> <span class="n">project_cards</span><span class="o">=</span><span class="n">project_cards_list</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">card_directory</span> <span class="ow">and</span> <span class="n">tags</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Adding project cards from directory and tags.</span><span class="se">\n</span><span class="s2">Dir: </span><span class="si">{}</span><span class="se">\n</span><span class="s2">Tags: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">card_directory</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">scenario</span><span class="o">.</span><span class="n">add_project_cards_from_tags</span><span class="p">(</span>
+                <span class="n">card_directory</span><span class="p">,</span>
+                <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+                <span class="n">glob_search</span><span class="o">=</span><span class="n">glob_search</span><span class="p">,</span>
+                <span class="n">validate</span><span class="o">=</span><span class="n">validate_project_cards</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">card_directory</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Adding project cards from directory.</span><span class="se">\n</span><span class="s2">Dir: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">card_directory</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">scenario</span><span class="o">.</span><span class="n">add_project_cards_from_directory</span><span class="p">(</span>
+                <span class="n">card_directory</span><span class="p">,</span> <span class="n">glob_search</span><span class="o">=</span><span class="n">glob_search</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate_project_cards</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">scenario</span></div>
+
+<div class="viewcode-block" id="Scenario.add_project_card_from_file"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.add_project_card_from_file">[docs]</a>    <span class="k">def</span> <span class="nf">add_project_card_from_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">project_card_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">tags</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="p">):</span>
+
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Trying to add project card from file: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">project_card_file</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">project_card</span> <span class="o">=</span> <span class="n">ProjectCard</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">project_card_file</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">project_card</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;project card not read: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">project_card_file</span><span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tags</span> <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">project_card</span><span class="o">.</span><span class="n">tags</span><span class="p">):</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Project card tags: </span><span class="si">{}</span><span class="s2"> don&#39;t match search tags: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_card</span><span class="o">.</span><span class="n">tags</span><span class="p">),</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">project</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_project_names</span><span class="p">():</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;project card with name &#39;</span><span class="si">{}</span><span class="s2">&#39; already in Scenario. Project names must be unique&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">project_card</span><span class="o">.</span><span class="n">project</span>
+            <span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">requisites_checked</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conflicts_checked</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prerequisites_sorted</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Adding project card to scenario: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">project_card</span><span class="o">.</span><span class="n">project</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">project_card</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">project_card</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dependencies&quot;</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Adding project card dependencies&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">dependencies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;prerequisites&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prerequisites</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span><span class="n">project_card</span><span class="o">.</span><span class="n">project</span><span class="p">:</span> <span class="n">project_card</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="s2">&quot;prerequisites&quot;</span><span class="p">]}</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">dependencies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;corequisites&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corequisites</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span><span class="n">project_card</span><span class="o">.</span><span class="n">project</span><span class="p">:</span> <span class="n">project_card</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="s2">&quot;corequisites&quot;</span><span class="p">]}</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">dependencies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;conflicts&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conflicts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span><span class="n">project_card</span><span class="o">.</span><span class="n">project</span><span class="p">:</span> <span class="n">project_card</span><span class="o">.</span><span class="n">dependencies</span><span class="p">[</span><span class="s2">&quot;conflicts&quot;</span><span class="p">]}</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scenario.add_project_cards_from_directory"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.add_project_cards_from_directory">[docs]</a>    <span class="k">def</span> <span class="nf">add_project_cards_from_directory</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">glob_search</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds projects cards to the scenario.</span>
+<span class="sd">        A folder is provided to look for project cards and if applicable, a glob-style search.</span>
+
+<span class="sd">        i.e. glob_search = &#39;road*.yml&#39;</span>
+
+<span class="sd">        args:</span>
+<span class="sd">        folder: the folder location where the project cards will be</span>
+<span class="sd">        glob_search: https://docs.python.org/2/library/glob.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot find specified directory to add project cards: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">folder</span>
+            <span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">glob_search</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Adding project cards using glob search: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">glob_search</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">iglob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">glob_search</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.yml&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.yaml&quot;</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_project_card_from_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.yml&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.yaml&quot;</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_project_card_from_file</span><span class="p">(</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">file</span><span class="p">),</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span>
+                    <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scenario.add_project_cards_from_tags"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.add_project_cards_from_tags">[docs]</a>    <span class="k">def</span> <span class="nf">add_project_cards_from_tags</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tags</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">glob_search</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds projects cards to the scenario.</span>
+<span class="sd">        A folder is provided to look for project cards that have a matching tag that is passed to the method.</span>
+
+<span class="sd">        args:</span>
+<span class="sd">        folder: the folder location where the project cards will be</span>
+<span class="sd">        tags: only project cards with these tags will be validated and added to the returning scenario</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">glob_search</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Adding project cards using </span><span class="se">\n</span><span class="s2">-tags: </span><span class="si">{}</span><span class="s2"> and </span><span class="se">\n</span><span class="s2">glob search: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">tags</span><span class="p">,</span> <span class="n">glob_search</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">iglob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">glob_search</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_project_card_from_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Adding project cards using </span><span class="se">\n</span><span class="s2">-tags: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tags</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_project_card_from_file</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Scenario.get_project_names"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.get_project_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_project_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of project names</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">project_card</span><span class="o">.</span><span class="n">project</span> <span class="k">for</span> <span class="n">project_card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Scenario.check_scenario_conflicts"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.check_scenario_conflicts">[docs]</a>    <span class="k">def</span> <span class="nf">check_scenario_conflicts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if there are any conflicting projects in the scenario</span>
+<span class="sd">        Fail if the project A specifies that project B is a conflict and project B is included in the scenario</span>
+
+<span class="sd">        Returns: boolean indicating if the check was successful or returned an error</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">conflict_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conflicts</span>
+        <span class="n">scenario_projects</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">project</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">project</span><span class="p">,</span> <span class="n">conflicts</span> <span class="ow">in</span> <span class="n">conflict_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">conflicts</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">conflicts</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">scenario_projects</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span>
+                        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                            <span class="s2">&quot;Projects </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%s</span><span class="s2"> as conflicting project&quot;</span>
+                            <span class="o">%</span> <span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">has_conflict_error</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conflicts_checked</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_conflict_error</span></div>
+
+<div class="viewcode-block" id="Scenario.check_scenario_requisites"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.check_scenario_requisites">[docs]</a>    <span class="k">def</span> <span class="nf">check_scenario_requisites</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if there are any missing pre- or co-requisite projects in the scenario</span>
+<span class="sd">        Fail if the project A specifies that project B is a pre- or co-requisite and project B is not included in the scenario</span>
+
+<span class="sd">        Returns: boolean indicating if the checks were successful or returned an error</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">corequisite_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corequisites</span>
+        <span class="n">prerequisite_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prerequisites</span>
+
+        <span class="n">scenario_projects</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">project</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">project</span><span class="p">,</span> <span class="n">coreq</span> <span class="ow">in</span> <span class="n">corequisite_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">coreq</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">coreq</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scenario_projects</span><span class="p">:</span>
+                        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                            <span class="s2">&quot;Projects </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%s</span><span class="s2"> as corequisite project which is missing for the scenario&quot;</span>
+                            <span class="o">%</span> <span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">has_requisite_error</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">for</span> <span class="n">project</span><span class="p">,</span> <span class="n">prereq</span> <span class="ow">in</span> <span class="n">prerequisite_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">prereq</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">prereq</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scenario_projects</span><span class="p">:</span>
+                        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                            <span class="s2">&quot;Projects </span><span class="si">%s</span><span class="s2"> has </span><span class="si">%s</span><span class="s2"> as prerequisite project which is missing for the scenario&quot;</span>
+                            <span class="o">%</span> <span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">has_requisite_error</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">requisites_checked</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_requisite_error</span></div>
+
+<div class="viewcode-block" id="Scenario.order_project_cards"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.order_project_cards">[docs]</a>    <span class="k">def</span> <span class="nf">order_project_cards</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        create a list of project cards such that they are in order based on pre-requisites</span>
+
+<span class="sd">        Returns: ordered list of project cards to be applied to scenario</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">scenario_projects</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">project</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">]</span>
+
+        <span class="c1"># build prereq (adjacency) list for topological sort</span>
+        <span class="n">adjacency_list</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="n">visited_list</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">scenario_projects</span><span class="p">:</span>
+            <span class="n">visited_list</span><span class="p">[</span><span class="n">project</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">prerequisites</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">project</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">prereq</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prerequisites</span><span class="p">[</span><span class="n">project</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">scenario_projects</span>
+                <span class="p">):</span>  <span class="c1"># this will always be true, else would have been flagged in missing prerequsite check, but just in case</span>
+                    <span class="n">adjacency_list</span><span class="p">[</span><span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="p">[</span><span class="n">project</span><span class="p">]</span>
+
+        <span class="c1"># sorted_project_names is topological sorted project card names (based on prerequsiite)</span>
+        <span class="n">sorted_project_names</span> <span class="o">=</span> <span class="n">topological_sort</span><span class="p">(</span>
+            <span class="n">adjacency_list</span><span class="o">=</span><span class="n">adjacency_list</span><span class="p">,</span> <span class="n">visited_list</span><span class="o">=</span><span class="n">visited_list</span>
+        <span class="p">)</span>
+
+        <span class="c1"># get the project card objects for these sorted project names</span>
+        <span class="n">project_card_and_name_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">project_card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">:</span>
+            <span class="n">project_card_and_name_dict</span><span class="p">[</span><span class="n">project_card</span><span class="o">.</span><span class="n">project</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">project_card</span>
+
+        <span class="n">sorted_project_cards</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">project_card_and_name_dict</span><span class="p">[</span><span class="n">project_name</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">project_name</span> <span class="ow">in</span> <span class="n">sorted_project_names</span>
+        <span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_project_cards</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Sorted project cards (</span><span class="si">{}</span><span class="s2">) are not of same number as unsorted (</span><span class="si">{}</span><span class="s2">).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">sorted_project_cards</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prerequisites_sorted</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ordered_project_cards</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">project_name</span><span class="p">:</span> <span class="n">project_card_and_name_dict</span><span class="p">[</span><span class="n">project_name</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">project_name</span> <span class="ow">in</span> <span class="n">sorted_project_names</span>
+        <span class="p">}</span>
+
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Ordered Project Cards: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ordered_project_cards</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span> <span class="o">=</span> <span class="n">sorted_project_cards</span>
+
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Project Cards: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">sorted_project_cards</span></div>
+
+<div class="viewcode-block" id="Scenario.apply_all_projects"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.apply_all_projects">[docs]</a>    <span class="k">def</span> <span class="nf">apply_all_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># Get everything in order</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">requisites_checked</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_scenario_requisites</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">conflicts_checked</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_scenario_conflicts</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">prerequisites_sorted</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">order_project_cards</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">apply_project</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scenario.apply_project"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.apply_project">[docs]</a>    <span class="k">def</span> <span class="nf">apply_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">ProjectCard</span><span class="p">):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span>
+
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;project&quot;</span><span class="p">):</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Applying </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;changes&quot;</span><span class="p">):</span>
+            <span class="n">part</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">pc</span> <span class="ow">in</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;changes&quot;</span><span class="p">]:</span>
+                <span class="n">pc</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">apply_project</span><span class="p">(</span><span class="n">pc</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">ProjectCard</span><span class="o">.</span><span class="n">ROADWAY_CATEGORIES</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="p">(</span><span class="s2">&quot;Missing Roadway Network&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">ProjectCard</span><span class="o">.</span><span class="n">TRANSIT_CATEGORIES</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="p">(</span><span class="s2">&quot;Missing Transit Network&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">p</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">ProjectCard</span><span class="o">.</span><span class="n">SECONDARY_TRANSIT_CATEGORIES</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">applied_projects</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">applied_projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Scenario.remove_all_projects"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.remove_all_projects">[docs]</a>    <span class="k">def</span> <span class="nf">remove_all_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="Scenario.applied_project_card_summary"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.applied_project_card_summary">[docs]</a>    <span class="k">def</span> <span class="nf">applied_project_card_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_card_dictionary</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a summary of applied project card and what they changed for the scenario.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            project_card_dictionary: dictionary representation of the values of a project card (i.e. ProjectCard.__dict__ )</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dict of project summary change dictionaries for each change</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="n">project_card_dictionary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;changes&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">project_card_dictionary</span><span class="p">])</span>
+
+        <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;project_card&quot;</span><span class="p">:</span> <span class="n">project_card_dictionary</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;total_parts&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">changes</span><span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">def</span> <span class="nf">_summarize_change_roadway</span><span class="p">(</span><span class="n">change</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">change_summary</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+
+            <span class="n">sel_key</span> <span class="o">=</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">build_selection_key</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="p">,</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;facility&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="n">change_summary</span><span class="p">[</span><span class="s2">&quot;sel_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">selections</span><span class="p">[</span><span class="n">sel_key</span><span class="p">][</span>
+                <span class="s2">&quot;selected_links&quot;</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+            <span class="n">change_summary</span><span class="p">[</span><span class="s2">&quot;attributes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s2">&quot;property&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]]</span>
+
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">sel_key</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">A_id</span><span class="p">,</span> <span class="n">B_id</span> <span class="o">=</span> <span class="n">sel_key</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">A_id</span><span class="p">,</span> <span class="n">B_id</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="n">change_summary</span><span class="p">[</span><span class="s2">&quot;map&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">selection_map</span><span class="p">(</span>
+                <span class="n">change_summary</span><span class="p">[</span><span class="s2">&quot;sel_idx&quot;</span><span class="p">],</span>
+                <span class="n">A</span><span class="o">=</span><span class="n">A_id</span><span class="p">,</span>
+                <span class="n">B</span><span class="o">=</span><span class="n">B_id</span><span class="p">,</span>
+                <span class="n">candidate_link_idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">selections</span><span class="p">[</span><span class="n">sel_key</span><span class="p">]</span>
+                <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;candidate_links&quot;</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([]))</span>
+                <span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">change_summary</span>
+
+        <span class="k">def</span> <span class="nf">_summarize_add_roadway</span><span class="p">(</span><span class="n">change</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">change_summary</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">change_summary</span><span class="p">[</span><span class="s2">&quot;added_links&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;links&quot;</span><span class="p">))</span>
+            <span class="n">change_summary</span><span class="p">[</span><span class="s2">&quot;added_nodes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">))</span>
+            <span class="n">change_summary</span><span class="p">[</span><span class="s2">&quot;map&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">addition_map</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="p">,</span> <span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;links&quot;</span><span class="p">),</span> <span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">change_summary</span>
+
+        <span class="k">def</span> <span class="nf">_summarize_deletion</span><span class="p">(</span><span class="n">change</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">change_summary</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">change_summary</span><span class="p">[</span><span class="s2">&quot;deleted_links&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;links&quot;</span><span class="p">)</span>
+            <span class="n">change_summary</span><span class="p">[</span><span class="s2">&quot;deleted_nodes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">)</span>
+            <span class="n">change_summary</span><span class="p">[</span><span class="s2">&quot;map&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">deletion_map</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span><span class="p">[</span><span class="s2">&quot;road_net&quot;</span><span class="p">],</span>
+                <span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;links&quot;</span><span class="p">),</span>
+                <span class="n">change</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">change_summary</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">change</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">changes</span><span class="p">):</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Summarizing </span><span class="si">{}</span><span class="s2"> Part: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">project_card_dictionary</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">],</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">change_summary</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;project&quot;</span><span class="p">:</span> <span class="n">project_card_dictionary</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; – Part &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;roadway deletion&quot;</span><span class="p">:</span>
+                <span class="n">change_summary</span> <span class="o">=</span> <span class="n">_summarize_deletion</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">change_summary</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;add new roadway&quot;</span><span class="p">:</span>
+                <span class="n">change_summary</span> <span class="o">=</span> <span class="n">_summarize_add_roadway</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">change_summary</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">change</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;roadway property change&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;parallel managed lanes&quot;</span><span class="p">,</span>
+            <span class="p">]:</span>
+                <span class="n">change_summary</span> <span class="o">=</span> <span class="n">_summarize_change_roadway</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">change_summary</span><span class="p">)</span>
+
+            <span class="n">summary</span><span class="p">[</span><span class="s2">&quot;Part &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">change_summary</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div>
+
+<div class="viewcode-block" id="Scenario.scenario_summary"><a class="viewcode-back" href="../../_generated/network_wrangler.Scenario.html#network_wrangler.Scenario.scenario_summary">[docs]</a>    <span class="k">def</span> <span class="nf">scenario_summary</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">project_detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A high level summary of the created scenario.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            project_detail: If True (default), will write out project card summaries.</span>
+<span class="sd">            outfile: If specified, will write scenario summary to text file.</span>
+<span class="sd">            mode: Outfile open mode. &#39;a&#39; to append &#39;w&#39; to overwrite.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            string of summary</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Summarizing Scenario&quot;</span><span class="p">)</span>
+        <span class="n">report_str</span> <span class="o">=</span> <span class="s2">&quot;------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;Scenario created on </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;Base Scenario:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;--Road Network:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;----Link File: </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span><span class="p">[</span><span class="s2">&quot;road_net&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">link_file</span>
+        <span class="p">)</span>
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;----Node File: </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span><span class="p">[</span><span class="s2">&quot;road_net&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">node_file</span>
+        <span class="p">)</span>
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;----Shape File: </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span><span class="p">[</span><span class="s2">&quot;road_net&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape_file</span>
+        <span class="p">)</span>
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;--Transit Network:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;----Feed Path: </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_scenario</span><span class="p">[</span><span class="s2">&quot;transit_net&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">feed_path</span>
+        <span class="p">)</span>
+
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Project Cards:</span><span class="se">\n</span><span class="s2"> -&quot;</span>
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">file</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">)</span>
+
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Applied Projects:</span><span class="se">\n</span><span class="s2">-&quot;</span>
+        <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">applied_projects</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">project_detail</span><span class="p">:</span>
+            <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">---Project Card Details---</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">:</span>
+                <span class="n">report_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">applied_project_card_summary</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">report_str</span><span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Wrote Scenario Report to: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">outfile</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">report_str</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">net_to_mapbox</span><span class="p">(</span>
+    <span class="n">roadway</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">RoadwayNetwork</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(),</span>
+    <span class="n">transit</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TransitNetwork</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(),</span>
+    <span class="n">roadway_geojson</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;roadway_shapes.geojson&quot;</span><span class="p">,</span>
+    <span class="n">transit_geojson</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;transit_shapes.geojson&quot;</span><span class="p">,</span>
+    <span class="n">mbtiles_out</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;network.mbtiles&quot;</span><span class="p">,</span>
+    <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">port</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;9000&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        roadway: a RoadwayNetwork instance or a geodataframe with roadway linetrings</span>
+<span class="sd">        transit: a TransitNetwork instance or a geodataframe with transit linetrings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">subprocess</span>
+
+    <span class="c1"># test for mapbox token</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;MAPBOX_ACCESS_TOKEN&quot;</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="p">(</span>
+            <span class="s2">&quot;NEED TO SET MAPBOX ACCESS TOKEN IN ENVIRONMENT VARIABLES/n In command line: &gt;&gt;export MAPBOX_ACCESS_TOKEN=&#39;pk.0000.1111&#39; # replace value with your mapbox public access token&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">transit</span><span class="p">)</span> <span class="o">!=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">:</span>
+        <span class="n">transit</span> <span class="o">=</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">transit_net_to_gdf</span><span class="p">(</span><span class="n">transit</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">roadway</span><span class="p">)</span> <span class="o">!=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">:</span>
+        <span class="n">roadway</span> <span class="o">=</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">roadway_net_to_gdf</span><span class="p">(</span><span class="n">roadway</span><span class="p">)</span>
+
+    <span class="n">transit</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">transit_geojson</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GeoJSON&quot;</span><span class="p">)</span>
+    <span class="n">roadway</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">roadway_geojson</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GeoJSON&quot;</span><span class="p">)</span>
+
+    <span class="n">tippe_options_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;-zg&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">mbtiles_out</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">overwrite</span><span class="p">:</span>
+        <span class="n">tippe_options_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--force&quot;</span><span class="p">)</span>
+    <span class="c1"># tippe_options_list.append(&quot;--drop-densest-as-needed&quot;)</span>
+    <span class="n">tippe_options_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">roadway_geojson</span><span class="p">)</span>
+    <span class="n">tippe_options_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transit_geojson</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Running tippecanoe with following options: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tippe_options_list</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">tippe_out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;tippecanoe&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">tippe_options_list</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="p">(</span>
+            <span class="s2">&quot;If tippecanoe isn&#39;t installed, try `brew install tippecanoe` or visit https://github.com/mapbox/tippecanoe&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Running mbview with following options: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tippe_options_list</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">mbview_out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;mbview&quot;</span><span class="p">,</span> <span class="s2">&quot;--port&quot;</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="s2">&quot;,/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mbtiles_out</span><span class="p">)]</span>
+        <span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="p">(</span>
+            <span class="s2">&quot;If mbview isn&#39;t installed, try `npm install -g @mapbox/mbview` or visit https://github.com/mapbox/mbview&quot;</span>
+        <span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Metropolitan Council
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
