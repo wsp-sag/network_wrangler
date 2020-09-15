@@ -32,6 +32,7 @@ class ProjectCard(object):
         "Roadway Deletion",
         "Parallel Managed lanes",
         "Add New Roadway",
+        "Calculated Roadway",
     ]
 
     UNSPECIFIED_PROJECT_NAMES = ["", "TO DO User Define", "USER TO define"]
@@ -67,11 +68,17 @@ class ProjectCard(object):
 
         Returns a Project Card object
         """
+        card_suffix = path_to_card.split(".")[-1].lower()
 
-        with open(path_to_card, "r") as cardfile:
-            attribute_dictionary = yaml.safe_load(cardfile)
-            attribute_dictionary["file"] = path_to_card
-            card = ProjectCard(attribute_dictionary)
+        if card_suffix in ["yaml",'yml']:
+            attribute_dictionary = ProjectCard.read_yml(path_to_card)
+        elif card_suffix in ["wrangler",'wr']:
+            attribute_dictionary = ProjectCard.read_wrangler_card(path_to_card)
+        else:
+            msg = "Card should have a suffix of yaml, yml, wrangler, or wr. Found suffix: {}".format(card_suffix)
+            raise ValueError(msg)
+
+        card = ProjectCard(attribute_dictionary)
 
         if card.project in ProjectCard.UNSPECIFIED_PROJECT_NAMES:
             msg = "Card must have valid project name: {}".format(path_to_card)
@@ -83,6 +90,49 @@ class ProjectCard(object):
             card.valid = ProjectCard.validate_project_card_schema(path_to_card)
 
         return card
+
+    @staticmethod
+    def read_wrangler_card(path_to_card: str) -> dict:
+        """
+        Reads wrangler project cards with YAML front matter and then python code.
+
+        Args:
+            path_to_card: where the project card is
+
+        Returns: Attribute Dictionary for Project Card
+        """
+        WranglerLogger.debug("Reading Wrangler-Style Project Card")
+
+        with open(path_to_card, "r") as cardfile:
+            delim = cardfile.readline()
+            WranglerLogger.debug("Using delimiter: {}".format(delim))
+            _yaml,_pycode = cardfile.read().split(delim)
+            WranglerLogger.debug("_yaml: {}\n_pycode: {}".format(_yaml, _pycode))
+
+        attribute_dictionary = yaml.load(_yaml)
+        attribute_dictionary["file"] = path_to_card
+        attribute_dictionary["pycode"] = _pycode.lstrip("\n")
+
+        return attribute_dictionary
+
+
+    @staticmethod
+    def read_yml(path_to_card: str) -> dict:
+        """
+        Reads "normal" wrangler project cards defined in YAML.
+
+        Args:
+            path_to_card: where the project card is
+
+        Returns: Attribute Dictionary for Project Card
+        """
+        WranglerLogger.debug("Reading YAML-Style Project Card")
+
+        with open(path_to_card, "r") as cardfile:
+            attribute_dictionary = yaml.safe_load(cardfile)
+            attribute_dictionary["file"] = path_to_card
+
+        return attribute_dictionary
 
     def write(self, filename: str = None):
         """

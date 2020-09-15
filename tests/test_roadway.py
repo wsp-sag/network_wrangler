@@ -318,7 +318,6 @@ def test_add_adhoc_field(request):
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
 
-@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
@@ -896,3 +895,35 @@ def test_create_ml_network_shape(request):
     assert rev_links_count == orig_links_count + 2 * 3
 
     print("--Finished:", request.node.name)
+
+@pytest.mark.elo
+@pytest.mark.travis
+@pytest.mark.roadway
+def test_dot_wrangler_roadway(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading .wrangler project card ...")
+    project_card_name = "add_highway_lanes.wrangler"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path, validate=False)
+    print(project_card)
+    assert("self.links_df.loc[self.links_df['lanes'] == 4, 'lanes'] = 12" in project_card.pycode)
+
+@pytest.mark.elo
+@pytest.mark.travis
+@pytest.mark.roadway
+def test_apply_pycode_roadway(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = _read_stpaul_net()
+
+    print("Apply pycode ...")
+    print("BEFORE CHANGE...\n",net.links_df.loc[net.links_df['lanes'] == 4, ['model_link_id','lanes']])
+    net.apply(
+        { "category": "Calculated Roadway",
+          "project": "megaroads",
+          "pycode": "self.links_df.loc[self.links_df['lanes'] == 4, 'lanes'] = 12",
+        }
+    )
+    print("AFTER CHANGE...\n",net.links_df.loc[net.links_df['lanes'] == 12, ['model_link_id','lanes']])
