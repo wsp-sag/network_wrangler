@@ -1,6 +1,7 @@
 pytest
 jupyter
 notebook
+recommonmark
 sphinx
 sphinx-autodoc-typehints
 sphinx_rtd_theme
