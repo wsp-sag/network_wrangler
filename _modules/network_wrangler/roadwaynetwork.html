@@ -1394,6 +1394,10 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">delete_roadway_feature_change</span><span class="p">(</span>
                     <span class="n">project_dictionary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;links&quot;</span><span class="p">),</span> <span class="n">project_dictionary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">project_dictionary</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;calculated roadway&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">apply_python_calculation</span><span class="p">(</span>
+                    <span class="n">project_dictionary</span><span class="p">[</span><span class="s1">&#39;pycode&#39;</span><span class="p">]</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="p">(</span><span class="ne">BaseException</span><span class="p">)</span>
 
@@ -1402,6 +1406,16 @@
                 <span class="n">_apply_individual_change</span><span class="p">(</span><span class="n">project_dictionary</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_apply_individual_change</span><span class="p">(</span><span class="n">project_card_dictionary</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RoadwayNetwork.apply_python_calculation"><a class="viewcode-back" href="../../_generated/network_wrangler.RoadwayNetwork.html#network_wrangler.RoadwayNetwork.apply_python_calculation">[docs]</a>    <span class="k">def</span> <span class="nf">apply_python_calculation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pycode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">RoadwayNetwork</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Changes roadway network object by executing pycode.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            pycode: python code which changes values in the roadway network object</span>
+<span class="sd">            in_place: update self or return a new roadway network object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">exec</span><span class="p">(</span><span class="n">pycode</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RoadwayNetwork.apply_roadway_feature_change"><a class="viewcode-back" href="../../_generated/network_wrangler.RoadwayNetwork.html#network_wrangler.RoadwayNetwork.apply_roadway_feature_change">[docs]</a>    <span class="k">def</span> <span class="nf">apply_roadway_feature_change</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">link_idx</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">in_place</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>

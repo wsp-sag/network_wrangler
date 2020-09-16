@@ -19,6 +19,8 @@
       ~ProjectCard.new_transit_right_of_way
       ~ProjectCard.parallel_managed_lanes
       ~ProjectCard.read
+      ~ProjectCard.read_wrangler_card
+      ~ProjectCard.read_yml
       ~ProjectCard.roadway_attribute_change
       ~ProjectCard.transit_attribute_change
       ~ProjectCard.validate_project_card_schema

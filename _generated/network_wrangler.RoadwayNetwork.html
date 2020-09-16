@@ -485,61 +485,64 @@ to copy from a general purpose lane to managed lane</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.apply_managed_lane_feature_change" title="network_wrangler.RoadwayNetwork.apply_managed_lane_feature_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_managed_lane_feature_change</span></code></a>(link_idx, …)</p></td>
 <td><p>Apply the managed lane feature changes to the roadway network</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.apply_roadway_feature_change" title="network_wrangler.RoadwayNetwork.apply_roadway_feature_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_roadway_feature_change</span></code></a>(link_idx, …)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.apply_python_calculation" title="network_wrangler.RoadwayNetwork.apply_python_calculation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_python_calculation</span></code></a>(pycode[, in_place])</p></td>
+<td><p>Changes roadway network object by executing pycode.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.apply_roadway_feature_change" title="network_wrangler.RoadwayNetwork.apply_roadway_feature_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_roadway_feature_change</span></code></a>(link_idx, …)</p></td>
 <td><p>Changes the roadway attributes for the selected features based on the project card information passed</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.assess_connectivity" title="network_wrangler.RoadwayNetwork.assess_connectivity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assess_connectivity</span></code></a>([mode, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.assess_connectivity" title="network_wrangler.RoadwayNetwork.assess_connectivity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assess_connectivity</span></code></a>([mode, …])</p></td>
 <td><p>Returns a network graph and list of disconnected subgraphs as described by a list of their member nodes.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.build_selection_key" title="network_wrangler.RoadwayNetwork.build_selection_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_selection_key</span></code></a>(selection_dict)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.build_selection_key" title="network_wrangler.RoadwayNetwork.build_selection_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_selection_key</span></code></a>(selection_dict)</p></td>
 <td><p>Selections are stored by a key combining the query and the A and B ids.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.create_dummy_connector_links" title="network_wrangler.RoadwayNetwork.create_dummy_connector_links"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_dummy_connector_links</span></code></a>(ml_df)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.create_dummy_connector_links" title="network_wrangler.RoadwayNetwork.create_dummy_connector_links"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_dummy_connector_links</span></code></a>(ml_df)</p></td>
 <td><p>create dummy connector links between the general purpose and managed lanes</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.create_managed_lane_network" title="network_wrangler.RoadwayNetwork.create_managed_lane_network"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_managed_lane_network</span></code></a>([in_place])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.create_managed_lane_network" title="network_wrangler.RoadwayNetwork.create_managed_lane_network"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_managed_lane_network</span></code></a>([in_place])</p></td>
 <td><p>Create a roadway network with managed lanes links separated out.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.delete_roadway_feature_change" title="network_wrangler.RoadwayNetwork.delete_roadway_feature_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete_roadway_feature_change</span></code></a>(links, nodes)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.delete_roadway_feature_change" title="network_wrangler.RoadwayNetwork.delete_roadway_feature_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete_roadway_feature_change</span></code></a>(links, nodes)</p></td>
 <td><p>delete the roadway features defined in the project card.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.deletion_map" title="network_wrangler.RoadwayNetwork.deletion_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deletion_map</span></code></a>(links, nodes)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.deletion_map" title="network_wrangler.RoadwayNetwork.deletion_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deletion_map</span></code></a>(links, nodes)</p></td>
 <td><p>Shows which links and nodes are deleted from the roadway network</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.get_managed_lane_node_ids" title="network_wrangler.RoadwayNetwork.get_managed_lane_node_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_managed_lane_node_ids</span></code></a>(nodes_list)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.get_managed_lane_node_ids" title="network_wrangler.RoadwayNetwork.get_managed_lane_node_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_managed_lane_node_ids</span></code></a>(nodes_list)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.get_modal_graph" title="network_wrangler.RoadwayNetwork.get_modal_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_modal_graph</span></code></a>(links_df, nodes_df[, mode])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.get_modal_graph" title="network_wrangler.RoadwayNetwork.get_modal_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_modal_graph</span></code></a>(links_df, nodes_df[, mode])</p></td>
 <td><p>Determines if the network graph is “strongly” connected A graph is strongly connected if each vertex is reachable from every other vertex.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.get_modal_links_nodes" title="network_wrangler.RoadwayNetwork.get_modal_links_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_modal_links_nodes</span></code></a>(links_df, nodes_df[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.get_modal_links_nodes" title="network_wrangler.RoadwayNetwork.get_modal_links_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_modal_links_nodes</span></code></a>(links_df, nodes_df[, …])</p></td>
 <td><p>Returns nodes and link dataframes for specific mode.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.get_property_by_time_period_and_group" title="network_wrangler.RoadwayNetwork.get_property_by_time_period_and_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_property_by_time_period_and_group</span></code></a>(property)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.get_property_by_time_period_and_group" title="network_wrangler.RoadwayNetwork.get_property_by_time_period_and_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_property_by_time_period_and_group</span></code></a>(property)</p></td>
 <td><p>Return a series for the properties with a specific group or time period.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.is_network_connected" title="network_wrangler.RoadwayNetwork.is_network_connected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_network_connected</span></code></a>([mode, links_df, nodes_df])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.is_network_connected" title="network_wrangler.RoadwayNetwork.is_network_connected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_network_connected</span></code></a>([mode, links_df, nodes_df])</p></td>
 <td><p>Determines if the network graph is “strongly” connected A graph is strongly connected if each vertex is reachable from every other vertex.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.network_connection_plot" title="network_wrangler.RoadwayNetwork.network_connection_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">network_connection_plot</span></code></a>(G, …)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.network_connection_plot" title="network_wrangler.RoadwayNetwork.network_connection_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">network_connection_plot</span></code></a>(G, …)</p></td>
 <td><p>Plot a graph to check for network connection.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.orig_dest_nodes_foreign_key" title="network_wrangler.RoadwayNetwork.orig_dest_nodes_foreign_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">orig_dest_nodes_foreign_key</span></code></a>(selection[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.orig_dest_nodes_foreign_key" title="network_wrangler.RoadwayNetwork.orig_dest_nodes_foreign_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">orig_dest_nodes_foreign_key</span></code></a>(selection[, …])</p></td>
 <td><p>Returns the foreign key id (whatever is used in the u and v variables in the links file) for the AB nodes as a tuple.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.ox_graph" title="network_wrangler.RoadwayNetwork.ox_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ox_graph</span></code></a>(nodes_df, links_df)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.ox_graph" title="network_wrangler.RoadwayNetwork.ox_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ox_graph</span></code></a>(nodes_df, links_df)</p></td>
 <td><p>create an osmnx-flavored network graph</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.read" title="network_wrangler.RoadwayNetwork.read"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read</span></code></a>(link_file, node_file, shape_file[, fast])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.read" title="network_wrangler.RoadwayNetwork.read"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read</span></code></a>(link_file, node_file, shape_file[, fast])</p></td>
 <td><p>Reads a network from the roadway network standard Validates that it conforms to the schema</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.roadway_net_to_gdf" title="network_wrangler.RoadwayNetwork.roadway_net_to_gdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">roadway_net_to_gdf</span></code></a>(roadway_net)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.roadway_net_to_gdf" title="network_wrangler.RoadwayNetwork.roadway_net_to_gdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">roadway_net_to_gdf</span></code></a>(roadway_net)</p></td>
 <td><p>Turn the roadway network into a GeoDataFrame :param roadway_net: the roadway network to export</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.select_roadway_features" title="network_wrangler.RoadwayNetwork.select_roadway_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_roadway_features</span></code></a>(selection[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.select_roadway_features" title="network_wrangler.RoadwayNetwork.select_roadway_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_roadway_features</span></code></a>(selection[, …])</p></td>
 <td><p>Selects roadway features that satisfy selection criteria</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.selection_has_unique_link_id" title="network_wrangler.RoadwayNetwork.selection_has_unique_link_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">selection_has_unique_link_id</span></code></a>(selection_dict)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.selection_has_unique_link_id" title="network_wrangler.RoadwayNetwork.selection_has_unique_link_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">selection_has_unique_link_id</span></code></a>(selection_dict)</p></td>
 <td><p><dl class="field-list simple">
 <dt class="field-odd">param selection_dictionary</dt>
 <dd class="field-odd"><p>Dictionary representation of selection</p>
@@ -547,31 +550,31 @@ to copy from a general purpose lane to managed lane</p>
 </dl>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.selection_map" title="network_wrangler.RoadwayNetwork.selection_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">selection_map</span></code></a>(selected_link_idx[, A, B, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.selection_map" title="network_wrangler.RoadwayNetwork.selection_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">selection_map</span></code></a>(selected_link_idx[, A, B, …])</p></td>
 <td><p>Shows which links are selected for roadway property change or parallel managed lanes category of roadway projects.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_link_schema" title="network_wrangler.RoadwayNetwork.validate_link_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_link_schema</span></code></a>(link_file[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_link_schema" title="network_wrangler.RoadwayNetwork.validate_link_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_link_schema</span></code></a>(link_file[, …])</p></td>
 <td><p>Validate roadway network data link schema and output a boolean</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_node_schema" title="network_wrangler.RoadwayNetwork.validate_node_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_node_schema</span></code></a>(node_file[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_node_schema" title="network_wrangler.RoadwayNetwork.validate_node_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_node_schema</span></code></a>(node_file[, …])</p></td>
 <td><p>Validate roadway network data node schema and output a boolean</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_object_types" title="network_wrangler.RoadwayNetwork.validate_object_types"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_object_types</span></code></a>(nodes, links, shapes)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_object_types" title="network_wrangler.RoadwayNetwork.validate_object_types"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_object_types</span></code></a>(nodes, links, shapes)</p></td>
 <td><p>Determines if the roadway network is being built with the right object types.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_properties" title="network_wrangler.RoadwayNetwork.validate_properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_properties</span></code></a>(properties[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_properties" title="network_wrangler.RoadwayNetwork.validate_properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_properties</span></code></a>(properties[, …])</p></td>
 <td><p>If there are change or existing commands, make sure that that property exists in the network.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_selection" title="network_wrangler.RoadwayNetwork.validate_selection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_selection</span></code></a>(selection)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_selection" title="network_wrangler.RoadwayNetwork.validate_selection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_selection</span></code></a>(selection)</p></td>
 <td><p>Evaluate whetther the selection dictionary contains the minimum required values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_shape_schema" title="network_wrangler.RoadwayNetwork.validate_shape_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_shape_schema</span></code></a>(shape_file[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_shape_schema" title="network_wrangler.RoadwayNetwork.validate_shape_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_shape_schema</span></code></a>(shape_file[, …])</p></td>
 <td><p>Validate roadway network data shape schema and output a boolean</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_uniqueness" title="network_wrangler.RoadwayNetwork.validate_uniqueness"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_uniqueness</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.validate_uniqueness" title="network_wrangler.RoadwayNetwork.validate_uniqueness"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_uniqueness</span></code></a>()</p></td>
 <td><p>Confirms that the unique identifiers are met.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.write" title="network_wrangler.RoadwayNetwork.write"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write</span></code></a>([path, filename])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.RoadwayNetwork.write" title="network_wrangler.RoadwayNetwork.write"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write</span></code></a>([path, filename])</p></td>
 <td><p>Writes a network in the roadway network standard</p></td>
 </tr>
 </tbody>
@@ -706,6 +709,23 @@ a new roadway network object</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>Union(None, <a class="reference internal" href="#network_wrangler.RoadwayNetwork" title="network_wrangler.RoadwayNetwork">RoadwayNetwork</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.RoadwayNetwork.apply_python_calculation">
+<code class="sig-name descname">apply_python_calculation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pycode</span></em>, <em class="sig-param"><span class="n">in_place</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/roadwaynetwork.html#RoadwayNetwork.apply_python_calculation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.RoadwayNetwork.apply_python_calculation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes roadway network object by executing pycode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pycode</strong> – python code which changes values in the roadway network object</p></li>
+<li><p><strong>in_place</strong> – update self or return a new roadway network object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Union(None, <a class="reference internal" href="#network_wrangler.RoadwayNetwork" title="network_wrangler.RoadwayNetwork">RoadwayNetwork</a>)</p>
 </dd>
 </dl>
 </dd></dl>

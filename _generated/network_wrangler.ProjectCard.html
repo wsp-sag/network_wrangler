@@ -216,6 +216,12 @@ attribute_dictonary: a nested dictionary of attributes</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.read" title="network_wrangler.ProjectCard.read"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read</span></code></a>(path_to_card[, validate])</p></td>
 <td><p>Reads and validates a Project card</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.read_wrangler_card" title="network_wrangler.ProjectCard.read_wrangler_card"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_wrangler_card</span></code></a>(path_to_card)</p></td>
+<td><p>Reads wrangler project cards with YAML front matter and then python code.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.read_yml" title="network_wrangler.ProjectCard.read_yml"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_yml</span></code></a>(path_to_card)</p></td>
+<td><p>Reads “normal” wrangler project cards defined in YAML.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#network_wrangler.ProjectCard.roadway_attribute_change" title="network_wrangler.ProjectCard.roadway_attribute_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">roadway_attribute_change</span></code></a>(card)</p></td>
 <td><p>Probably delete.</p></td>
 </tr>
@@ -293,6 +299,40 @@ path_to_card: the path to the project card</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="network_wrangler.ProjectCard.read_wrangler_card">
+<em class="property">static </em><code class="sig-name descname">read_wrangler_card</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_card</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.read_wrangler_card"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.read_wrangler_card" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads wrangler project cards with YAML front matter and then python code.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path_to_card</strong> – where the project card is</p>
+</dd>
+</dl>
+<p>Returns: Attribute Dictionary for Project Card</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="network_wrangler.ProjectCard.read_yml">
+<em class="property">static </em><code class="sig-name descname">read_yml</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_card</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.read_yml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.read_yml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads “normal” wrangler project cards defined in YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path_to_card</strong> – where the project card is</p>
+</dd>
+</dl>
+<p>Returns: Attribute Dictionary for Project Card</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="network_wrangler.ProjectCard.roadway_attribute_change">
 <code class="sig-name descname">roadway_attribute_change</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">card</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/network_wrangler/projectcard.html#ProjectCard.roadway_attribute_change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#network_wrangler.ProjectCard.roadway_attribute_change" title="Permalink to this definition">¶</a></dt>
 <dd><p>Probably delete.
@@ -330,7 +370,7 @@ returns: boolean</p>
 
 <dl class="py attribute">
 <dt id="network_wrangler.ProjectCard.ROADWAY_CATEGORIES">
-<code class="sig-name descname">ROADWAY_CATEGORIES</code><em class="property"> = ['Roadway Property Change', 'Roadway Deletion', 'Parallel Managed lanes', 'Add New Roadway']</em><a class="headerlink" href="#network_wrangler.ProjectCard.ROADWAY_CATEGORIES" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ROADWAY_CATEGORIES</code><em class="property"> = ['Roadway Property Change', 'Roadway Deletion', 'Parallel Managed lanes', 'Add New Roadway', 'Calculated Roadway']</em><a class="headerlink" href="#network_wrangler.ProjectCard.ROADWAY_CATEGORIES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

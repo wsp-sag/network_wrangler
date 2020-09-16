@@ -18,6 +18,7 @@
       ~RoadwayNetwork.addition_map
       ~RoadwayNetwork.apply
       ~RoadwayNetwork.apply_managed_lane_feature_change
+      ~RoadwayNetwork.apply_python_calculation
       ~RoadwayNetwork.apply_roadway_feature_change
       ~RoadwayNetwork.assess_connectivity
       ~RoadwayNetwork.build_selection_key
