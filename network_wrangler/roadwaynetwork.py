@@ -1241,6 +1241,10 @@ class RoadwayNetwork(object):
                 self.delete_roadway_feature_change(
                     project_dictionary.get("links"), project_dictionary.get("nodes")
                 )
+            elif project_dictionary["category"].lower() == "calculated roadway":
+                self.apply_python_calculation(
+                    project_dictionary['pycode']
+                )
             else:
                 raise (BaseException)
 
@@ -1249,6 +1253,16 @@ class RoadwayNetwork(object):
                 _apply_individual_change(project_dictionary)
         else:
             _apply_individual_change(project_card_dictionary)
+
+    def apply_python_calculation(self, pycode: str, in_place: bool = True) -> Union(None, RoadwayNetwork):
+        """
+        Changes roadway network object by executing pycode.
+
+        Args:
+            pycode: python code which changes values in the roadway network object
+            in_place: update self or return a new roadway network object
+        """
+        exec(pycode)
 
     def apply_roadway_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
