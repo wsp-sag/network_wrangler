@@ -70,12 +70,14 @@ class ProjectCard(object):
         """
         card_suffix = path_to_card.split(".")[-1].lower()
 
-        if card_suffix in ["yaml",'yml']:
+        if card_suffix in ["yaml", "yml"]:
             attribute_dictionary = ProjectCard.read_yml(path_to_card)
-        elif card_suffix in ["wrangler",'wr']:
+        elif card_suffix in ["wrangler", "wr"]:
             attribute_dictionary = ProjectCard.read_wrangler_card(path_to_card)
         else:
-            msg = "Card should have a suffix of yaml, yml, wrangler, or wr. Found suffix: {}".format(card_suffix)
+            msg = "Card should have a suffix of yaml, yml, wrangler, or wr. Found suffix: {}".format(
+                card_suffix
+            )
             raise ValueError(msg)
 
         card = ProjectCard(attribute_dictionary)
@@ -106,7 +108,7 @@ class ProjectCard(object):
         with open(path_to_card, "r") as cardfile:
             delim = cardfile.readline()
             WranglerLogger.debug("Using delimiter: {}".format(delim))
-            _yaml,_pycode = cardfile.read().split(delim)
+            _yaml, _pycode = cardfile.read().split(delim)
             WranglerLogger.debug("_yaml: {}\n_pycode: {}".format(_yaml, _pycode))
 
         attribute_dictionary = yaml.load(_yaml)
@@ -114,7 +116,6 @@ class ProjectCard(object):
         attribute_dictionary["pycode"] = _pycode.lstrip("\n")
 
         return attribute_dictionary
-
 
     @staticmethod
     def read_yml(path_to_card: str) -> dict:
