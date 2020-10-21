@@ -366,8 +366,9 @@ class Scenario(object):
         else:
             WranglerLogger.debug("Adding project cards using \n-tags: {}".format(tags))
             for file in os.listdir(folder):
-
-                self.add_project_card_from_file(file, tags=tags, validate=validate)
+                self.add_project_card_from_file(
+                    os.path.join(folder, file), tags=tags, validate=validate
+                )
 
     def __str__(self):
         s = ["{}: {}".format(key, value) for key, value in self.__dict__.items()]
