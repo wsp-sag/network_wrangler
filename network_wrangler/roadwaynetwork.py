@@ -32,6 +32,7 @@ from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .utils import offset_location_reference, haversine_distance, create_unique_shape_id
 from .utils import create_location_reference_from_nodes, create_line_string
+from .client import Client
 
 
 class NoPathFound(Exception):
@@ -147,67 +148,35 @@ class RoadwayNetwork(object):
     """
 
     # CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
-    CRS = 4326  # "EPSG:4326"
+    CRS = Client.CRS  # "EPSG:4326"
 
-    NODE_FOREIGN_KEY = "model_node_id"
-    LINK_FOREIGN_KEY = ["A", "B"]
+    NODE_FOREIGN_KEY = Client.NODE_FOREIGN_KEY
+    LINK_FOREIGN_KEY = Client.LINK_FOREIGN_KEY
 
-    SEARCH_BREADTH = 5
-    MAX_SEARCH_BREADTH = 10
-    SP_WEIGHT_FACTOR = 100
-    MANAGED_LANES_NODE_ID_SCALAR = 500000
-    MANAGED_LANES_LINK_ID_SCALAR = 1000000
+    SEARCH_BREADTH = Client.SEARCH_BREADTH
+    MAX_SEARCH_BREADTH = Client.MAX_SEARCH_BREADTH
+    SP_WEIGHT_FACTOR = Client.SP_WEIGHT_FACTOR
+    MANAGED_LANES_NODE_ID_SCALAR = Client.MANAGED_LANES_NODE_ID_SCALAR
+    MANAGED_LANES_LINK_ID_SCALAR = Client.MANAGED_LANES_LINK_ID_SCALAR
 
-    SELECTION_REQUIRES = ["link"]
+    SELECTION_REQUIRES = Client.SELECTION_REQUIRES
 
-    UNIQUE_LINK_KEY = "model_link_id"
-    UNIQUE_NODE_KEY = "model_node_id"
-    UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
-    UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
+    UNIQUE_LINK_KEY = Client.UNIQUE_LINK_KEY
+    UNIQUE_NODE_KEY = Client.UNIQUE_NODE_KEY
+    UNIQUE_MODEL_LINK_IDENTIFIERS = Client.UNIQUE_MODEL_LINK_IDENTIFIERS
+    UNIQUE_NODE_IDENTIFIERS = Client.UNIQUE_NODE_IDENTIFIERS
 
-    UNIQUE_SHAPE_KEY = "shape_id"
+    UNIQUE_SHAPE_KEY = Client.UNIQUE_SHAPE_KEY
 
-    MANAGED_LANES_REQUIRED_ATTRIBUTES = [
-        "A",
-        "B",
-        "model_link_id",
-        "locationReferences",
-    ]
+    MANAGED_LANES_REQUIRED_ATTRIBUTES = Client.MANAGED_LANES_REQUIRED_ATTRIBUTES
 
-    KEEP_SAME_ATTRIBUTES_ML_AND_GP = [
-        "distance",
-        "bike_access",
-        "drive_access",
-        "transit_access",
-        "walk_access",
-        "maxspeed",
-        "name",
-        "oneway",
-        "ref",
-        "roadway",
-        "length",
-        "segment_id",
-    ]
+    KEEP_SAME_ATTRIBUTES_ML_AND_GP = Client.KEEP_SAME_ATTRIBUTES_ML_AND_GP
 
-    MANAGED_LANES_SCALAR = 500000
+    MANAGED_LANES_SCALAR = Client.MANAGED_LANES_SCALAR
 
-    MODES_TO_NETWORK_LINK_VARIABLES = {
-        "drive": ["drive_access"],
-        "bus": ["bus_only", "drive_access"],
-        "rail": ["rail_only"],
-        "transit": ["bus_only", "rail_only", "drive_access"],
-        "walk": ["walk_access"],
-        "bike": ["bike_access"],
-    }
+    MODES_TO_NETWORK_LINK_VARIABLES = Client.MODES_TO_NETWORK_LINK_VARIABLES
 
-    MODES_TO_NETWORK_NODE_VARIABLES = {
-        "drive": ["drive_node"],
-        "rail": ["rail_only", "drive_node"],
-        "bus": ["bus_only", "drive_node"],
-        "transit": ["bus_only", "rail_only", "drive_node"],
-        "walk": ["walk_node"],
-        "bike": ["bike_node"],
-    }
+    MODES_TO_NETWORK_NODE_VARIABLES = Client.MODES_TO_NETWORK_NODE_VARIABLES
 
     def __init__(self, nodes: GeoDataFrame, links: GeoDataFrame, shapes: GeoDataFrame):
         """
@@ -1933,7 +1902,7 @@ class RoadwayNetwork(object):
             access_row = {}
             access_row["A"] = row["A"]
             access_row["B"] = row["ML_A"]
-            access_row["lanes"] = 1
+            access_row["numlanes"] = 1
             access_row["model_link_id"] = (
                 row["model_link_id"] + row["ML_model_link_id"] + 1
             )
@@ -1958,7 +1927,7 @@ class RoadwayNetwork(object):
             egress_row = {}
             egress_row["A"] = row["ML_B"]
             egress_row["B"] = row["B"]
-            egress_row["lanes"] = 1
+            egress_row["numlanes"] = 1
             egress_row["model_link_id"] = (
                 row["model_link_id"] + row["ML_model_link_id"] + 2
             )
