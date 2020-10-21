@@ -1902,7 +1902,7 @@ class RoadwayNetwork(object):
             access_row = {}
             access_row["A"] = row["A"]
             access_row["B"] = row["ML_A"]
-            access_row["numlanes"] = 1
+            access_row["lanes"] = 1
             access_row["model_link_id"] = (
                 row["model_link_id"] + row["ML_model_link_id"] + 1
             )
@@ -1927,7 +1927,7 @@ class RoadwayNetwork(object):
             egress_row = {}
             egress_row["A"] = row["ML_B"]
             egress_row["B"] = row["B"]
-            egress_row["numlanes"] = 1
+            egress_row["lanes"] = 1
             egress_row["model_link_id"] = (
                 row["model_link_id"] + row["ML_model_link_id"] + 2
             )
