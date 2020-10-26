@@ -1393,85 +1393,124 @@ class RoadwayNetwork(object):
             self.links_df["managed"] = 0
             self.links_df.loc[link_idx, "managed"] = 1
 
+        p = 1
+
         for p in properties:
             attribute = p["property"]
+            attr_value = ""
 
-            if "group" in p.keys():
-                attr_value = {}
-                attr_value["default"] = p["set"]
-                attr_value["timeofday"] = []
-                for g in p["group"]:
-                    category = g["category"]
-                    for tod in g["timeofday"]:
-                        attr_value["timeofday"].append(
-                            {
-                                "category": category,
-                                "time": parse_time_spans(tod["time"]),
-                                "value": tod["set"],
-                            }
+            for idx in link_idx:
+                if "group" in p.keys():
+                    attr_value = {}
+
+                    if "set" in p.keys():
+                        attr_value["default"] = p["set"]
+                    elif "change" in p.keys():
+                        attr_value["default"] = (
+                            self.links_df.at[idx, attribute] + p["change"]
                         )
 
-            elif "timeofday" in p.keys():
-                attr_value = {}
-                attr_value["default"] = p["set"]
-                attr_value["timeofday"] = []
-                for tod in p["timeofday"]:
-                    attr_value["timeofday"].append(
-                        {"time": parse_time_spans(tod["time"]), "value": tod["set"]}
-                    )
+                    attr_value["timeofday"] = []
 
-            elif "set" in p.keys():
-                attr_value = p["set"]
+                    for g in p["group"]:
+                        category = g["category"]
+                        for tod in g["timeofday"]:
+                            if "set" in tod.keys():
+                                attr_value["timeofday"].append(
+                                    {
+                                        "category": category,
+                                        "time": parse_time_spans(tod["time"]),
+                                        "value": tod["set"],
+                                    }
+                                )
+                            elif "change" in tod.keys():
+                                attr_value["timeofday"].append(
+                                    {
+                                        "category": category,
+                                        "time": parse_time_spans(tod["time"]),
+                                        "value": self.links_df.at[idx, attribute] + tod["change"]
+                                    }
+                                )
 
-            else:
-                attr_value = ""
+                elif "timeofday" in p.keys():
+                    attr_value = {}
 
-            # TODO: decide on connectors info when they are more specific in project card
-            if attribute == "ML_ACCESS" and attr_value == "all":
-                attr_value = 1
+                    if "set" in p.keys():
+                        attr_value["default"] = p["set"]
+                    elif "change" in p.keys():
+                        attr_value["default"] = (
+                            self.links_df.at[idx, attribute] + p["change"]
+                        )
 
-            if attribute == "ML_EGRESS" and attr_value == "all":
-                attr_value = 1
+                    attr_value["timeofday"] = []
 
-            if in_place:
-                if attribute in self.links_df.columns and not isinstance(
-                    attr_value, numbers.Number
-                ):
-                    # if the attribute already exists
-                    # and the attr value we are trying to set is not numeric
-                    # then change the attribute type to object
-                    self.links_df[attribute] = self.links_df[attribute].astype(object)
+                    for tod in p["timeofday"]:
+                        if "set" in tod.keys():
+                            attr_value["timeofday"].append(
+                                {
+                                    "time": parse_time_spans(tod["time"]),
+                                    "value": tod["set"]
+                                }
+                            )
+                        elif "change" in tod.keys():
+                            attr_value["timeofday"].append(
+                                {
+                                    "time": parse_time_spans(tod["time"]),
+                                    "value": self.links_df.at[idx, attribute] + tod["change"]
+                                }
+                            )
+                elif "set" in p.keys():
+                    attr_value = p["set"]
 
-                if attribute not in self.links_df.columns:
-                    # if it is a new attribute then initiate with NaN values
-                    self.links_df[attribute] = "NaN"
+                elif "change" in p.keys():
+                    attr_value = self.links_df.at[idx, attribute] + p["change"]
 
-                for idx in link_idx:
+                # TODO: decide on connectors info when they are more specific in project card
+                if attribute == "ML_ACCESS" and attr_value == "all":
+                    attr_value = 1
+
+                if attribute == "ML_EGRESS" and attr_value == "all":
+                    attr_value = 1
+
+                if in_place:
+                    if attribute in self.links_df.columns and not isinstance(
+                        attr_value, numbers.Number
+                    ):
+                        # if the attribute already exists
+                        # and the attr value we are trying to set is not numeric
+                        # then change the attribute type to object
+                        self.links_df[attribute] = self.links_df[attribute].astype(object)
+
+                    if attribute not in self.links_df.columns:
+                        # if it is a new attribute then initialize with NaN values
+                        self.links_df[attribute] = "NaN"
+
                     self.links_df.at[idx, attribute] = attr_value
 
-            else:
-                if i == 0:
-                    updated_network = copy.deepcopy(self)
+                else:
+                    if i == 1:
+                        updated_network = copy.deepcopy(self)
 
-                if attribute in self.links_df.columns and not isinstance(
-                    attr_value, numbers.Number
-                ):
-                    # if the attribute already exists
-                    # and the attr value we are trying to set is not numeric
-                    # then change the attribute type to object
-                    updated_network.links_df[attribute] = updated_network.links_df[
-                        attribute
-                    ].astype(object)
+                    if attribute in self.links_df.columns and not isinstance(
+                        attr_value, numbers.Number
+                    ):
+                        # if the attribute already exists
+                        # and the attr value we are trying to set is not numeric
+                        # then change the attribute type to object
+                        updated_network.links_df[attribute] = updated_network.links_df[
+                            attribute
+                        ].astype(object)
 
-                if attribute not in updated_network.links_df.columns:
-                    # if it is a new attribute then initiate with NaN values
-                    updated_network.links_df[attribute] = "NaN"
+                    if attribute not in updated_network.links_df.columns:
+                        # if it is a new attribute then initialize with NaN values
+                        updated_network.links_df[attribute] = "NaN"
 
-                for idx in link_idx:
                     updated_network.links_df.at[idx, attribute] = attr_value
 
-                if i == len(properties) - 1:
-                    return updated_network
+                    if p == len(properties):
+                        return updated_network
+                    else:
+                        p = p + 1
 
     def add_new_roadway_feature_change(self, links: dict, nodes: dict) -> None:
         """

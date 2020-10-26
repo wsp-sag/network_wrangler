@@ -305,6 +305,38 @@ def test_add_managed_lane_complex(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
+def test_managed_lane_change_functionality(request):
+    print("\n--Starting:", request.node.name)
+    net = _read_stpaul_net()
+    print("Reading project card ...")
+    project_card_name = "test_managed_lanes_change_keyword.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path, validate = False)
+
+    print("Selecting roadway features ...")
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+
+    attributes_to_update = [p["property"] for p in project_card.properties]
+
+    orig_links = net.links_df.loc[
+        selected_link_indices, net.links_df.columns.intersection(attributes_to_update)
+    ]
+    print("Original Links:\n", orig_links)
+
+    net.apply_managed_lane_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    print("Revised Links:\n", rev_links)
+
+    rev_links.to_csv(os.path.join(SCRATCH_DIR, "ml_links.csv"), index=False)
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.roadway
+@pytest.mark.travis
 def test_add_adhoc_field(request):
     """
     Makes sure new fields can be added in the API and be saved and read in again.
