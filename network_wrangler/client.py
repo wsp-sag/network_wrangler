@@ -45,6 +45,8 @@ class Client(object):
         "roadway",
         "length",
         "segment_id",
+        "ft",
+        "assignable",
     ]
 
     MANAGED_LANES_SCALAR = 4500000
