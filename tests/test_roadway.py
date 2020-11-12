@@ -311,7 +311,7 @@ def test_managed_lane_change_functionality(request):
     print("Reading project card ...")
     project_card_name = "test_managed_lanes_change_keyword.yml"
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate = False)
+    project_card = ProjectCard.read(project_card_path, validate=False)
 
     print("Selecting roadway features ...")
     selected_link_indices = net.select_roadway_features(project_card.facility)

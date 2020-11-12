@@ -4,6 +4,7 @@ geopandas >= 0.8.0
 osmnx >= 0.12
 partridge >= 1.1
 pyyaml
+geographiclib
 geojson
 jsonschema
 folium

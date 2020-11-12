@@ -15,7 +15,6 @@ from .utils import parse_time_spans, offset_location_reference, haversine_distan
 from .utils import create_unique_shape_id
 from .utils import create_location_reference_from_nodes
 from .utils import create_line_string
-from .client import Client
 
 
 __all__ = [
@@ -35,7 +34,6 @@ __all__ = [
     "create_location_reference_from_nodes",
     "create_line_string",
     "net_to_mapbox",
-    "Client"
 ]
 
 setupLogging(

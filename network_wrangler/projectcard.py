@@ -11,6 +11,8 @@ from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 from .logger import WranglerLogger
 
+UNSPECIFIED_PROJECT_NAMES = ["", "TO DO User Define", "USER TO define"]
+
 
 class ProjectCard(object):
     """
@@ -34,8 +36,6 @@ class ProjectCard(object):
         "Add New Roadway",
         "Calculated Roadway",
     ]
-
-    UNSPECIFIED_PROJECT_NAMES = ["", "TO DO User Define", "USER TO define"]
 
     def __init__(self, attribute_dictonary: dict):
         """
@@ -82,7 +82,7 @@ class ProjectCard(object):
 
         card = ProjectCard(attribute_dictionary)
 
-        if card.project in ProjectCard.UNSPECIFIED_PROJECT_NAMES:
+        if card.project in UNSPECIFIED_PROJECT_NAMES:
             msg = "Card must have valid project name: {}".format(path_to_card)
             WranglerLogger.error(msg)
             raise ValueError(msg)
