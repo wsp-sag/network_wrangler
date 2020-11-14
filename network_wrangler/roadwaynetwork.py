@@ -122,9 +122,10 @@ class RoadwayNetwork(object):
     ::
 
         net = RoadwayNetwork.read(
-            link_file=MY_LINK_FILE,
-            node_file=MY_NODE_FILE,
-            shape_file=MY_SHAPE_FILE,
+            link_filename=MY_LINK_FILE,
+            node_filename=MY_NODE_FILE,
+            shape_filename=MY_SHAPE_FILE,
+            shape_foreign_key ='shape_id',
         )
         my_selection = {
             "link": [{"name": ["I 35E"]}],
@@ -160,7 +161,6 @@ class RoadwayNetwork(object):
         links_df (GeoDataFrame): link data, including start and end
             nodes and associated shape
         shapes_df (GeoDataFrame): detailed shape data
-        
         crs (int): coordinate reference system, ESPG number
         node_foreign_key (str):  variable linking the node table to the link table
         link_foreign_key (list): list of variable linking the link table to the node foreign key
@@ -169,13 +169,14 @@ class RoadwayNetwork(object):
         unique_node_ids (list): list of variables unique to each node
         modes_to_network_link_variables (dict): Mapping of modes to link variables in the network 
         modes_to_network_nodes_variables (dict): Mapping of modes to node variables in the network 
-
         managed_lanes_node_id_scalar (int): Scalar values added to primary keys for nodes for 
             corresponding managed lanes.
         managed_lanes_link_id_scalar (int): Scalar values added to primary keys for links for 
             corresponding managed lanes.
-        managed_lanes_required_attributes (list):
-        keep_same_attributes_ml_and_gp (list):
+        managed_lanes_required_attributes (list): attributes that must be specified in managed
+            lane projects.
+        keep_same_attributes_ml_and_gp (list): attributes to copy to managed lanes from parallel
+            general purpose lanes.
 
         selections (dict): dictionary storing selections in case they are made repeatedly
     """
@@ -185,24 +186,35 @@ class RoadwayNetwork(object):
         nodes: GeoDataFrame,
         links: GeoDataFrame,
         shapes: GeoDataFrame = None,
+        node_foreign_key: str = None,
+        link_foreign_key: str = None, 
+        shape_foreign_key: str = None,
+        unique_link_ids: list = None,
+        unique_node_ids: list = None,
+        crs: int = None,
         **kwargs,
     ):
         """
         Constructor
         """
-
-        if not RoadwayNetwork.validate_object_types(nodes, links, shapes):
-            sys.exit("RoadwayNetwork: Invalid constructor data type")
+        inputs_valid = [isinstance(x,GeoDataFrame) for x in (nodes, links, shapes)]
+        if False in inputs_valid:
+            raise(TypeError("Input nodes ({}), links ({})or shapes ({}) not of required type GeoDataFrame".format(inputs_valid)))
 
         self.nodes_df = nodes
         self.links_df = links
         self.shapes_df = shapes
 
-        self.__dict__.update(kwargs)
+        self.node_foreign_key = NODE_FOREIGN_KEY if node_foreign_key is None else node_foreign_key
+        self.link_foreign_key = LINK_FOREIGN_KEY if link_foreign_key is None else link_foreign_key
+        self.shape_foreign_key = SHAPE_FOREIGN_KEY if shape_foreign_key is None else shape_foreign_key
 
-        self.link_file = None
-        self.node_file = None
-        self.shape_file = None
+        self.unique_link_ids = UNIQUE_LINK_IDS if unique_link_ids is None else unique_link_ids
+        self.unique_node_ids = UNIQUE_NODE_IDS if unique_node_ids is None else unique_node_ids
+
+        self.crs = CRS if crs is None else crs
+
+        self.__dict__.update(kwargs)
 
         # Add non-required fields if they aren't there.
         # for field, default_value in RoadwayNetwork.OPTIONAL_FIELDS:
@@ -214,9 +226,9 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def read(
-        link_file: str,
-        node_file: str,
-        shape_file: str,
+        link_filename: str,
+        node_filename: str,
+        shape_filename: str,
         fast: bool = True,
         crs: int = CRS,
         node_foreign_key: str = NODE_FOREIGN_KEY,
@@ -238,12 +250,12 @@ class RoadwayNetwork(object):
         Validates that it conforms to the schema
 
         args:
-            link_file: full path to the link file
-            node_file: full path to the node file
-            shape_file: full path to the shape file
+            node_filename: full path to the node file
+            link_filename: full path to the link file
+            shape_filename: full path to the shape file
             fast: boolean that will skip validation to speed up read time
             crs: coordinate reference system, ESPG number
-            node_foreign_key: 
+            node_foreign_key: variable linking the node table to the link table.
             link_foreign_key: 
             shape_foreign_key: 
             unique_link_ids: 
@@ -262,41 +274,76 @@ class RoadwayNetwork(object):
 
         WranglerLogger.info("Reading RoadwayNetwork")
 
+        nodes_df,links_df,shapes_df = RoadwayNetwork.load_transform_network(
+            node_filename,
+            link_filename,
+            shape_filename,
+            crs = crs,
+            node_foreign_key = node_foreign_key,
+            validate_schema = not fast,
+        )
+
+        roadway_network = RoadwayNetwork(
+            nodes=nodes_df,
+            links=links_df,
+            shapes=shapes_df,
+            crs=crs,
+            node_foreign_key=node_foreign_key,
+            link_foreign_key=link_foreign_key,
+            shape_foreign_key=shape_foreign_key,
+            unique_link_ids=unique_link_ids,
+            unique_node_ids=unique_node_ids,
+            unique_link_key=unique_link_key,
+            unique_node_key=unique_node_key,
+            modes_to_network_link_variables=modes_to_network_link_variables,
+            modes_to_network_nodes_variables=modes_to_network_nodes_variables,
+            link_filename = link_filename,
+            node_filename = node_filename,
+            shape_filename = shape_filename,
+        )
+
+        return roadway_network
+
+    @staticmethod
+    def load_transform_network(
+        node_filename: str, 
+        link_filename: str, 
+        shape_filename: str, 
+        crs: int = CRS,
+        node_foreign_key: str = NODE_FOREIGN_KEY,
+        validate_schema: bool = True,
+        **kwargs,
+    ) -> tuple:
+        """
+        Reads roadway network files from disk and transforms them into GeoDataFrames.
+
+        args: 
+            node_filename: file name for nodes.
+            link_filename: file name for links.
+            shape_filename: file name for shapes.
+            crs: coordinate reference system. Defaults to value in CRS.
+            node_foreign_key: variable linking the node table to the link table. Defaults 
+                to NODE_FOREIGN_KEY.
+            validate_schema: boolean indicating if network should be validated to schema. 
+
+        returns: tuple of GeodataFrames nodes_df, links_df, shapes_df
+        """
         WranglerLogger.debug(
             "Reading RoadwayNetwork from following files:\n   -{}\n   -{}\n   -{}.".format(
-                link_file, node_file, shape_file
+                link_filename, node_filename, shape_filename
             )
         )
 
-        """
-        Validate Input
-        """
-
-        if not os.path.exists(link_file):
-            msg = "Link file doesn't exist at: {}".format(link_file)
-            WranglerLogger.error(msg)
-            raise ValueError(msg)
-
-        if not os.path.exists(node_file):
-            msg = "Node file doesn't exist at: {}".format(node_file)
-            WranglerLogger.error(msg)
-            raise ValueError(msg)
-
-        if not os.path.exists(shape_file):
-            msg = "Shape file doesn't exist at: {}".format(shape_file)
-            WranglerLogger.error(msg)
-            raise ValueError(msg)
-
-        if not fast:
+        if validate_schema:
             if not (
-                RoadwayNetwork.validate_node_schema(node_file)
-                and RoadwayNetwork.validate_link_schema(link_file)
-                and RoadwayNetwork.validate_shape_schema(shape_file)
+                RoadwayNetwork.validate_node_schema(node_filename)
+                and RoadwayNetwork.validate_link_schema(link_filename)
+                and RoadwayNetwork.validate_shape_schema(shape_filename)
             ):
 
-                sys.exit("RoadwayNetwork: Data doesn't conform to schema")
+                raise ValueError("RoadwayNetwork: Data doesn't conform to schema")
 
-        with open(link_file) as f:
+        with open(link_filename) as f:
             link_json = json.load(f)
 
         link_properties = pd.DataFrame(link_json)
@@ -318,7 +365,7 @@ class RoadwayNetwork(object):
         for bc in list(set(bool_columns) & set(links_df.columns)):
             links_df[bc] = links_df[bc].astype(bool)
 
-        shapes_df = gpd.read_file(shape_file)
+        shapes_df = gpd.read_file(shape_filename)
         shapes_df.dropna(subset=["geometry", "id"], inplace=True)
         shapes_df.crs = crs
 
@@ -326,17 +373,25 @@ class RoadwayNetwork(object):
         # a list as a property type. Therefore, must read in node_properties
         # separately in a vanilla dataframe and then convert to geopandas
 
-        with open(node_file) as f:
+        with open(node_filename) as f:
             node_geojson = json.load(f)
 
-        node_properties = pd.DataFrame(
+        node_properties_df = pd.DataFrame(
             [g["properties"] for g in node_geojson["features"]]
         )
+
+        if node_foreign_key not in node_properties_df.columns:
+            raise ValueError("Specified `node_foreign_key`: {} not found in {}. Available properties: {}".format(
+                node_foreign_key,
+                node_filename,
+                node_properties_df.columns
+            ))
+
         node_geometries = [
             Point(g["geometry"]["coordinates"]) for g in node_geojson["features"]
         ]
 
-        nodes_df = gpd.GeoDataFrame(node_properties, geometry=node_geometries)
+        nodes_df = gpd.GeoDataFrame(node_properties_df, geometry=node_geometries)
 
         nodes_df.gdf_name = "network_nodes"
 
@@ -349,31 +404,12 @@ class RoadwayNetwork(object):
         nodes_df["X"] = nodes_df["geometry"].apply(lambda g: g.x)
         nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.y)
 
-        WranglerLogger.info("Read %s links from %s" % (len(links_df), link_file))
-        WranglerLogger.info("Read %s nodes from %s" % (len(nodes_df), node_file))
-        WranglerLogger.info("Read %s shapes from %s" % (len(shapes_df), shape_file))
+        WranglerLogger.info("Read %s links from %s" % (len(links_df), link_filename))
+        WranglerLogger.info("Read %s nodes from %s" % (len(nodes_df), node_filename))
+        WranglerLogger.info("Read %s shapes from %s" % (len(shapes_df), shape_filename))
 
-        roadway_network = RoadwayNetwork(
-            nodes=nodes_df,
-            links=links_df,
-            shapes=shapes_df,
-            crs=crs,
-            node_foreign_key=node_foreign_key,
-            link_foreign_key=link_foreign_key,
-            shape_foreign_key=shape_foreign_key,
-            unique_link_ids=unique_link_ids,
-            unique_node_ids=unique_node_ids,
-            unique_link_key=unique_link_key,
-            unique_node_key=unique_node_key,
-            modes_to_network_link_variables=modes_to_network_link_variables,
-            modes_to_network_nodes_variables=modes_to_network_nodes_variables,
-        )
+        return nodes_df, links_df, shapes_df
 
-        roadway_network.link_file = link_file
-        roadway_network.node_file = node_file
-        roadway_network.shape_file = shape_file
-
-        return roadway_network
 
     def write(self, path: str = ".", filename: str = None) -> None:
         """
@@ -495,47 +531,6 @@ class RoadwayNetwork(object):
         return valid
 
     @staticmethod
-    def validate_object_types(
-        nodes: GeoDataFrame, links: GeoDataFrame, shapes: GeoDataFrame
-    ):
-        """
-        Determines if the roadway network is being built with the right object types.
-        Does not validate schemas.
-
-        Args:
-            nodes: nodes geodataframe
-            links: link geodataframe
-            shapes: shape geodataframe
-
-        Returns: boolean
-        """
-
-        errors = ""
-
-        if not isinstance(nodes, GeoDataFrame):
-            error_message = "Incompatible nodes type:{}. Must provide a GeoDataFrame.  ".format(
-                type(nodes)
-            )
-            WranglerLogger.error(error_message)
-            errors.append(error_message)
-        if not isinstance(links, GeoDataFrame):
-            error_message = "Incompatible links type:{}. Must provide a GeoDataFrame.  ".format(
-                type(links)
-            )
-            WranglerLogger.error(error_message)
-            errors.append(error_message)
-        if not isinstance(shapes, GeoDataFrame):
-            error_message = "Incompatible shapes type:{}. Must provide a GeoDataFrame.  ".format(
-                type(shapes)
-            )
-            WranglerLogger.error(error_message)
-            errors.append(error_message)
-
-        if errors:
-            return False
-        return True
-
-    @staticmethod
     def validate_node_schema(
         node_file, schema_location: str = "roadway_network_node.json"
     ):
@@ -573,7 +568,7 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def validate_link_schema(
-        link_file, schema_location: str = "roadway_network_link.json"
+        link_filenane, schema_location: str = "roadway_network_link.json"
     ):
         """
         Validate roadway network data link schema and output a boolean
@@ -588,7 +583,7 @@ class RoadwayNetwork(object):
         with open(schema_location) as schema_json_file:
             schema = json.load(schema_json_file)
 
-        with open(link_file) as link_json_file:
+        with open(link_filename) as link_json_file:
             json_data = json.load(link_json_file)
 
         try:
@@ -597,7 +592,7 @@ class RoadwayNetwork(object):
 
         except ValidationError as exc:
             WranglerLogger.error("Failed Link schema validation: Validation Error")
-            WranglerLogger.error("Link File Loc:{}".format(link_file))
+            WranglerLogger.error("Link File Loc:{}".format(link_filename))
             WranglerLogger.error("Path:{}".format(exc.path))
             WranglerLogger.error(exc.message)
 

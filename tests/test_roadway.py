@@ -39,9 +39,9 @@ SCRATCH_DIR = os.path.join(
 
 def _read_small_net():
     net = RoadwayNetwork.read(
-        link_file=SMALL_LINK_FILE,
-        node_file=SMALL_NODE_FILE,
-        shape_file=SMALL_SHAPE_FILE,
+        link_filename=SMALL_LINK_FILE,
+        node_filename=SMALL_NODE_FILE,
+        shape_filename=SMALL_SHAPE_FILE,
         fast=True,
         shape_foreign_key ='shape_id',
     )
@@ -50,9 +50,9 @@ def _read_small_net():
 
 def _read_stpaul_net():
     net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
+        link_filename=STPAUL_LINK_FILE,
+        node_filename=STPAUL_NODE_FILE,
+        shape_filename=STPAUL_SHAPE_FILE,
         fast=True,
         shape_foreign_key ='shape_id',
     )
@@ -72,9 +72,9 @@ def test_roadway_read_write(request):
     time0 = time.time()
 
     net = RoadwayNetwork.read(
-        link_file=SMALL_LINK_FILE,
-        node_file=SMALL_NODE_FILE,
-        shape_file=SMALL_SHAPE_FILE,
+        link_filename=SMALL_LINK_FILE,
+        node_filename=SMALL_NODE_FILE,
+        shape_filename=SMALL_SHAPE_FILE,
         fast=True,
         shape_foreign_key ='shape_id',
     )
@@ -83,9 +83,9 @@ def test_roadway_read_write(request):
     net.write(filename=out_prefix, path=SCRATCH_DIR)
     time2 = time.time()
     net_2 = RoadwayNetwork.read(
-        link_file=out_link_file, 
-        node_file=out_node_file, 
-        shape_file=out_shape_file,
+        link_filename=out_link_file, 
+        node_filename=out_node_file, 
+        shape_filename=out_shape_file,
         shape_foreign_key ='shape_id',
     )
     time3 = time.time()
@@ -118,17 +118,17 @@ def test_quick_roadway_read_write(request):
     out_link_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "link.json")
     out_node_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "node.geojson")
     net = RoadwayNetwork.read(
-        link_file=SMALL_LINK_FILE,
-        node_file=SMALL_NODE_FILE,
-        shape_file=SMALL_SHAPE_FILE,
+        link_filename=SMALL_LINK_FILE,
+        node_filename=SMALL_NODE_FILE,
+        shape_filename=SMALL_SHAPE_FILE,
         fast=True,
         shape_foreign_key ='shape_id',
     )
     net.write(filename=out_prefix, path=SCRATCH_DIR)
     net_2 = RoadwayNetwork.read(
-        link_file=out_link_file, 
-        node_file=out_node_file, 
-        shape_file=out_shape_file,
+        link_filename=out_link_file, 
+        node_filename=out_node_file, 
+        shape_filename=out_shape_file,
         shape_foreign_key ='shape_id',
     )
     print("--Finished:", request.node.name)

@@ -32,9 +32,9 @@ class Scenario(object):
     ::
         my_base_scenario = {
             "road_net": RoadwayNetwork.read(
-                link_file=STPAUL_LINK_FILE,
-                node_file=STPAUL_NODE_FILE,
-                shape_file=STPAUL_SHAPE_FILE,
+                link_filename=STPAUL_LINK_FILE,
+                node_filename=STPAUL_NODE_FILE,
+                shape_filename=STPAUL_SHAPE_FILE,
                 fast=True,
             ),
             "transit_net": TransitNetwork.read(STPAUL_DIR),
@@ -156,6 +156,7 @@ class Scenario(object):
         roadway_dir: str = "",
         transit_dir: str = "",
         validate: bool = True,
+        **kwargs,
     ) -> Scenario:
         """
         args
@@ -183,10 +184,11 @@ class Scenario(object):
             base_network_node_file = base_node_name
 
         road_net = RoadwayNetwork.read(
-            link_file=base_network_link_file,
-            node_file=base_network_node_file,
-            shape_file=base_network_shape_file,
+            link_filename=base_network_link_file,
+            node_filename=base_network_node_file,
+            shape_filename=base_network_shape_file,
             fast=not validate,
+            **kwargs,
         )
 
         if transit_dir:
@@ -261,16 +263,16 @@ class Scenario(object):
         return scenario
 
     def add_project_card_from_file(
-        self, project_card_file: str, validate: bool = True, tags: list = []
+        self, project_card_filename: str, validate: bool = True, tags: list = []
     ):
 
         WranglerLogger.debug(
-            "Trying to add project card from file: {}".format(project_card_file)
+            "Trying to add project card from file: {}".format(project_card_filename)
         )
-        project_card = ProjectCard.read(project_card_file, validate=validate)
+        project_card = ProjectCard.read(project_card_filename, validate=validate)
 
         if project_card == None:
-            msg = "project card not read: {}".format(project_card_file)
+            msg = "project card not read: {}".format(project_card_filename)
             WranglerLogger.error(msg)
             raise ValueError(msg)
 

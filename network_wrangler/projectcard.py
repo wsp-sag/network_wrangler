@@ -144,10 +144,10 @@ class ProjectCard(object):
             out_filename: file location to write the project card object as yml.  
                 If not provided, will write to current directory using the project name as the filename. 
         """
-        if not filename:
+        if not out_filename:
             from network_wrangler.utils import make_slug
 
-            filename = make_slug(self.project) + ".yml"
+            out_filename = make_slug(self.project) + ".yml"
 
         # import collections
         # out_dict = collections.OrderedDict()
