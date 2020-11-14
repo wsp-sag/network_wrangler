@@ -25,6 +25,7 @@ def test_transit_read_write(request):
     print("Transit Write Directory:", SCRATCH_DIR)
 
     print("--Finished:", request.node.name)
+    #todo #249
 
 
 @pytest.mark.travis
@@ -263,7 +264,7 @@ def test_wrong_existing(request):
         net.apply_transit_feature_change(
             selected_trips, [{"property": "headway_secs", "existing": 553, "set": 900}]
         )
-
+    #todo #250
     print("--Finished:", request.node.name)
 
 
@@ -280,7 +281,7 @@ def test_zero_valid_facilities(request):
                 "time": ["06:00:00", "09:00:00"],
             }
         )
-
+    #todo #251
     print("--Finished:", request.node.name)
 
 
@@ -295,7 +296,7 @@ def test_invalid_selection_key(request):
         net.select_transit_features({"trip_ids": ["14941433-JUN19-MVS-BUS-Weekday-01"]})
 
     print("--Finished:", request.node.name)
-
+    #todo #252
 
 @pytest.mark.transit
 @pytest.mark.travis
@@ -324,7 +325,7 @@ def test_invalid_optional_selection_variable(request):
     assert set(sel) == set(["14978409-JUN19-MVS-BUS-Weekday-01"])
 
     print("--Finished:", request.node.name)
-
+    #todo #253
 
 @pytest.mark.travis
 def test_transit_road_consistencies(request):
@@ -340,6 +341,7 @@ def test_transit_road_consistencies(request):
         node_file=STPAUL_NODE_FILE,
         shape_file=STPAUL_SHAPE_FILE,
         fast=True,
+        shape_foreign_key ='shape_id',
     )
 
     net.set_roadnet(road_net=road_net)
@@ -347,7 +349,7 @@ def test_transit_road_consistencies(request):
     net.validate_road_network_consistencies()
     print(net.validated_road_network_consistency)
     print("--Finished:", request.node.name)
-
+    #todo #254 
 
 if __name__ == "__main__":
     test_transit_read_write()

@@ -256,7 +256,7 @@ class TransitNetwork(object):
         valid = True
 
         stop_ids = [int(s) for s in stops[self.stops_foreign_key].to_list()]
-        node_ids = [int(n) for n in nodes[self.node_foreign_key].to_list()]
+        node_ids = [int(n) for n in nodes[self.road_net.node_foreign_key].to_list()]
 
         if not set(stop_ids).issubset(node_ids):
             valid = False
@@ -756,10 +756,8 @@ class TransitNetwork(object):
             ).shape_id.drop_duplicates()
         else:
             shape_ids = self.feed.shapes[
-                self.feed.shapes[
-                    self.shapes_foreign_key.isin(node_ids)
-                ].shape_id.drop_duplicates()
-            ]
+                self.feed.shapes[self.shapes_foreign_key].isin(node_ids)
+            ].shape_id.drop_duplicates()
 
         # Return pandas.Series of trip_ids
         return self.feed.trips[self.feed.trips.shape_id.isin(shape_ids)].trip_id

@@ -14,12 +14,16 @@ from geographiclib.geodesic import Geodesic
 from .logger import WranglerLogger
 
 
-def point_df_to_geojson(df: pd.DataFrame, properties: list):
+def point_df_to_geojson(
+    df: pd.DataFrame, 
+    properties: list,
+    node_foreign_key = None):
     """
     Author: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/
     """
-    from .roadwaynetwork import RoadwayNetwork
+    from .roadwaynetwork import NODE_FOREIGN_KEY
+    if not node_foreign_key: node_foreign_key = NODE_FOREIGN_KEY
 
     geojson = {"type": "FeatureCollection", "features": []}
     for _, row in df.iterrows():
@@ -29,7 +33,7 @@ def point_df_to_geojson(df: pd.DataFrame, properties: list):
             "geometry": {"type": "Point", "coordinates": []},
         }
         feature["geometry"]["coordinates"] = [row["geometry"].x, row["geometry"].y]
-        feature["properties"][RoadwayNetwork.NODE_FOREIGN_KEY] = row.name
+        feature["properties"][node_foreign_key] = row.name
         for prop in properties:
             feature["properties"][prop] = row[prop]
         geojson["features"].append(feature)

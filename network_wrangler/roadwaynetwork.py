@@ -43,8 +43,8 @@ LINK_FOREIGN_KEY = ["A", "B"]
 SHAPE_FOREIGN_KEY = "id"  # formerly UNIQUE_SHAPE_ID
 
 # List of variables that are unique such that they can be directly queried and you should get a single item returned
-UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
-UNIQUE_MODEL_NODE_IDENTIFIERS = ["model_node_id"]
+UNIQUE_LINK_IDS = ["model_link_id"]
+UNIQUE_NODE_IDS = ["model_node_id"]
 
 # Minimum requirements for selection query
 SELECTION_REQUIRES = ["link"]
@@ -165,8 +165,8 @@ class RoadwayNetwork(object):
         node_foreign_key (str):  variable linking the node table to the link table
         link_foreign_key (list): list of variable linking the link table to the node foreign key
         shape_foreign_key (str): variable linking the links table and shape table
-        unique_model_link_identifiers (list): list of variables unique to each link
-        unique_model_node_identifiers (list): list of variables unique to each node
+        unique_link_ids (list): list of variables unique to each link
+        unique_node_ids (list): list of variables unique to each node
         modes_to_network_link_variables (dict): Mapping of modes to link variables in the network 
         modes_to_network_nodes_variables (dict): Mapping of modes to node variables in the network 
 
@@ -174,6 +174,8 @@ class RoadwayNetwork(object):
             corresponding managed lanes.
         managed_lanes_link_id_scalar (int): Scalar values added to primary keys for links for 
             corresponding managed lanes.
+        managed_lanes_required_attributes (list):
+        keep_same_attributes_ml_and_gp (list):
 
         selections (dict): dictionary storing selections in case they are made repeatedly
     """
@@ -222,10 +224,14 @@ class RoadwayNetwork(object):
         shape_foreign_key: str = SHAPE_FOREIGN_KEY,
         unique_link_key: str = UNIQUE_LINK_KEY,
         unique_node_key: str = UNIQUE_NODE_KEY,
-        unique_model_link_identifiers: list = UNIQUE_MODEL_LINK_IDENTIFIERS,
-        unique_model_node_identifiers: list = UNIQUE_MODEL_NODE_IDENTIFIERS,
+        unique_link_ids: list = UNIQUE_LINK_IDS,
+        unique_node_ids: list = UNIQUE_NODE_IDS,
         modes_to_network_link_variables: dict = MODES_TO_NETWORK_LINK_VARIABLES,
         modes_to_network_nodes_variables: dict = MODES_TO_NETWORK_NODE_VARIABLES,
+        managed_lanes_link_id_scalar: int = MANAGED_LANES_LINK_ID_SCALAR,
+        managed_lanes_node_id_scalar: int = MANAGED_LANES_NODE_ID_SCALAR,
+        managed_lanes_required_attributes: list = MANAGED_LANES_REQUIRED_ATTRIBUTES,
+        keep_same_attributes_ml_and_gp: list = KEEP_SAME_ATTRIBUTES_ML_AND_GP,
     ) -> RoadwayNetwork:
         """
         Reads a network from the roadway network standard
@@ -240,18 +246,24 @@ class RoadwayNetwork(object):
             node_foreign_key: 
             link_foreign_key: 
             shape_foreign_key: 
-            unique_model_link_identifiers: 
-            unique_model_node_identifiers: 
+            unique_link_ids: 
+            unique_node_ids: 
             modes_to_network_link_variables:
             modes_to_network_nodes_variables: 
+            managed_lanes_node_id_scalar:
+            managed_lanes_link_id_scalar:
+            managed_lanes_required_attributes: 
+            keep_same_attributes_ml_and_gp:
 
         Returns: a RoadwayNetwork instance
 
         .. todo:: Turn off fast=True as default
         """
 
-        WranglerLogger.info(
-            "Reading from following files:\n-{}\n-{}\n-{}.".format(
+        WranglerLogger.info("Reading RoadwayNetwork")
+
+        WranglerLogger.debug(
+            "Reading RoadwayNetwork from following files:\n   -{}\n   -{}\n   -{}.".format(
                 link_file, node_file, shape_file
             )
         )
@@ -349,10 +361,10 @@ class RoadwayNetwork(object):
             node_foreign_key=node_foreign_key,
             link_foreign_key=link_foreign_key,
             shape_foreign_key=shape_foreign_key,
-            unique_model_link_identifiers=unique_model_link_identifiers,
-            unique_model_node_identifiers=unique_model_node_identifiers,
+            unique_link_ids=unique_link_ids,
+            unique_node_ids=unique_node_ids,
             unique_link_key=unique_link_key,
-            unique_node_key=unique_nodes_key,
+            unique_node_key=unique_node_key,
             modes_to_network_link_variables=modes_to_network_link_variables,
             modes_to_network_nodes_variables=modes_to_network_nodes_variables,
         )
@@ -422,7 +434,7 @@ class RoadwayNetwork(object):
         Confirms that the unique identifiers are met.
         """
         valid = True
-        for c in self.unique_model_link_ids:
+        for c in self.unique_link_ids:
             if c not in self.links_df.columns:
                 valid = False
                 msg = "Network doesn't contain unique link identifier: {}".format(c)
@@ -447,7 +459,7 @@ class RoadwayNetwork(object):
                 self.link_foreign_key
             )
             WranglerLogger.error(msg)
-        for c in self.unique_node_identifiers:
+        for c in self.unique_node_ids:
             if c not in self.nodes_df.columns:
                 valid = False
                 msg = "Network doesn't contain unique node identifier: {}".format(c)
@@ -664,7 +676,7 @@ class RoadwayNetwork(object):
                     )
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
         unique_link_id = bool(
-            set(self.unique_model_link_identifiers).intersection(set(selection_keys))
+            set(self.unique_link_ids).intersection(set(selection_keys))
         )
 
         if not unique_link_id:
@@ -810,26 +822,22 @@ class RoadwayNetwork(object):
         WranglerLogger.debug("finished ox.gdfs_to_graph()")
         return G
 
-    @staticmethod
     def selection_has_unique_link_id(
+        self,
         selection_dict: dict,
-        unique_model_link_identifiers: list = UNIQUE_MODEL_LINK_IDENTIFIERS,
     ) -> bool:
         """
         Args:
             selection_dictionary: Dictionary representation of selection
                 of roadway features, containing a "link" key.
-            unique_model_link_identifiers: unique link identifiers
 
         Returns: A boolean indicating if the selection dictionary contains
-            a required unique link id.
+            a unique identifier for links. 
 
         """
         selection_keys = [k for l in selection_dict["link"] for k, v in l.items()]
         return bool(
-            set(RoadwayNetwork.unique_model_link_identifiers).intersection(
-                set(selection_keys)
-            )
+            set(self.unique_link_ids) & set(selection_keys)
         )
 
     def build_selection_key(self, selection_dict: dict) -> tuple:
@@ -845,13 +853,10 @@ class RoadwayNetwork(object):
         """
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection_dict,
-            unique_model_link_identifiers=self.unique_model_link_identifiers,
+            unique_link_ids=self.unique_link_ids,
         )
 
-        if RoadwayNetwork.selection_has_unique_link_id(
-            selection_dict,
-            unique_model_link_identifiers=self.unique_model_link_identifiers,
-        ):
+        if self.selection_has_unique_link_id(selection_dict):
             return sel_query
 
         A_id, B_id = self.orig_dest_nodes_foreign_key(selection_dict)
@@ -1117,7 +1122,11 @@ class RoadwayNetwork(object):
             raise NoPathFound(msg)
 
     def select_roadway_features(
-        self, selection: dict, search_mode="drive", force_search=False
+        self, 
+        selection: dict, 
+        search_mode="drive", 
+        force_search=False,
+        sp_weight_factor = None,
     ) -> GeoDataFrame:
         """
         Selects roadway features that satisfy selection criteria
@@ -1140,11 +1149,23 @@ class RoadwayNetwork(object):
                  A - from node
                  B - to node
                  link - which includes at least a variable for `name`
+            search_mode: mode which you are searching for; defaults to "drive"
+            force_search: boolean directing method to perform search even if one 
+                with same selection dict is stored from a previous search.
+            sp_weight_factor: multiple used to discourage shortest paths which 
+                meander from original search returned from name or ref query. 
+                If not set here, will default to value of sp_weight_factor in 
+                RoadwayNetwork instance. If not set there, will defaul to SP_WEIGHT_FACTOR.
 
         Returns: a list of link IDs in selection
         """
         WranglerLogger.debug("validating selection")
         self.validate_selection(selection)
+
+        if not sp_weight_factor:
+            sp_weight_factor = self.__dict__.get("sp_weight_factor")
+        if not sp_weight_factor:
+            sp_weight_factor = SP_WEIGHT_FACTOR
 
         # create a unique key for the selection so that we can cache it
         sel_key = self.build_selection_key(selection)
@@ -1162,10 +1183,9 @@ class RoadwayNetwork(object):
         self.selections[sel_key] = {}
         self.selections[sel_key]["selection_found"] = False
 
-        unique_model_link_identifer_in_selection = RoadwayNetwork.selection_has_unique_link_id(
-            selection, unique_model_link_identifiers=self.unique_model_link_identifiers,
-        )
-        if not unique_model_link_identifer_in_selection:
+        unique_link_identifer_in_selection = self.selection_has_unique_link_id(selection)
+
+        if not unique_link_identifer_in_selection:
             A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
         # identify candidate links which match the initial query
         # assign them as iteration = 0
@@ -1176,8 +1196,8 @@ class RoadwayNetwork(object):
 
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection,
-            unique_model_link_identifiers=self.unique_model_link_identifiers,
-            mode=RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[search_mode],
+            unique_link_ids=self.unique_link_ids,
+            mode=self.modes_to_network_link_variables[search_mode],
         )
         WranglerLogger.debug("Selecting features:\n{}".format(sel_query))
 
@@ -1191,7 +1211,7 @@ class RoadwayNetwork(object):
 
         candidate_links["i"] = 0
 
-        if len(candidate_links.index) == 0 and unique_model_link_identifer_in_selection:
+        if len(candidate_links.index) == 0 and unique_link_identifer_in_selection:
             msg = "No links found based on unique link identifiers.\nSelection Failed."
             WranglerLogger.error(msg)
             raise Exception(msg)
@@ -1229,7 +1249,7 @@ class RoadwayNetwork(object):
                 WranglerLogger.error(msg)
                 raise Exception(msg)
 
-        if unique_model_link_identifer_in_selection:
+        if unique_link_identifer_in_selection:
             # unique identifier exists and no need to go through big search
             self.selections[sel_key]["selected_links"] = self.selections[sel_key][
                 "candidate_links"
@@ -1249,7 +1269,7 @@ class RoadwayNetwork(object):
                 self.selections[sel_key]["candidate_links"],
                 A_id,
                 B_id,
-                weight_factor=RoadwayNetwork.SP_WEIGHT_FACTOR,
+                weight_factor=sp_weight_factor,
             )
 
             if len(selection["link"]) == 1:
@@ -1261,8 +1281,8 @@ class RoadwayNetwork(object):
             else:
                 resel_query = ProjectCard.build_link_selection_query(
                     selection=selection,
-                    unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-                    mode=RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[search_mode],
+                    unique_link_ids=self.unique_link_ids,
+                    mode=self.modes_to_network_link_variables[search_mode],
                     ignore=["name"],
                 )
                 WranglerLogger.debug("Reselecting features:\n{}".format(resel_query))
@@ -2093,9 +2113,11 @@ class RoadwayNetwork(object):
 
     def create_managed_lane_network(
         self,
-        keep_same_attributes_ml_and_gp: list = KEEP_SAME_ATTRIBUTES_ML_AND_GP,
+        keep_same_attributes_ml_and_gp: list = None,
         keep_additional_attributes_ml_and_gp: list = [],
-        managed_lanes_required_attributes: list = MANAGED_LANES_REQUIRED_ATTRIBUTES,
+        managed_lanes_required_attributes: list = [],
+        managed_lanes_node_id_scalar: int = None,
+        managed_lanes_link_id_scalar: int = None,
         in_place: bool = False,
     ) -> RoadwayNetwork:
         """
@@ -2104,6 +2126,20 @@ class RoadwayNetwork(object):
         and add shapes corresponding to the new links
 
         args:
+            keep_same_attributes_ml_and_gp: list of attributes to copy from general purpose
+                lane to managed lane. If not specified, will look for value in the RoadwayNetwork
+                instance.  If not found there, will default to KEEP_SAME_ATTRIBUTES_ML_AND_GP.
+            keep_additional_attributes_ml_and_gp: list of additional attributes to add. This is useful
+                if you want to leave the default attributes and then ALSO some others.
+            managed_lanes_required_attributes: list of attributes that are required to be specified
+                in new managed lanes. If not specified, will look for value in the RoadwayNetwork
+                instance.  If not found there, will default to MANAGED_LANES_REQUIRED_ATTRIBUTES.
+            managed_lanes_node_id_scalar: integer value added to original node IDs to create managed
+                lane unique ids. If not specified, will look for value in the RoadwayNetwork
+                instance.  If not found there, will default to MANAGED_LANES_NODE_ID_SCALAR.
+            managed_lanes_link_id_scalar: integer value added to original link IDs to create managed
+                lane unique ids. If not specified, will look for value in the RoadwayNetwork
+                instance.  If not found there, will default to MANAGED_LANES_LINK_ID_SCALAR.
             in_place: update self or return a new roadway network object
 
         returns: A RoadwayNetwork instance
@@ -2121,18 +2157,29 @@ class RoadwayNetwork(object):
             else:
                 return copy.deepcopy(self)
 
-        if (
-            not self.managed_lanes_node_id_scalar
-            or not self.managed_lanes_link_id_scalar
-        ):
-            msg = "Need to specify scalars to add to link and nodes for managed lanes using \
-                   variables `managed_lanes_link_id_scalar` and `managed_lanes_node_id_scalar`\
-                   in RoadwayNetwork instance."
-            WranglerLogger.error(msg)
-            raise ValueError(msg)
+        # identify parameters to use
+        if not keep_same_attributes_ml_and_gp:
+            keep_same_attributes_ml_and_gp = self.__dict__.get("keep_same_attributes_ml_and_gp")
+        if not keep_same_attributes_ml_and_gp:
+            keep_same_attributes_ml_and_gp = KEEP_SAME_ATTRIBUTES_ML_AND_GP
 
-        keep_same_attributes_ml_and_gp = (
-            keep_same_attributes_ml_and_gp + keep_additional_attributes_ml_and_gp
+        if not managed_lanes_required_attributes:
+            managed_lanes_required_attributes = self.__dict__.get("managed_lanes_required_attributes")
+        if not managed_lanes_required_attributes:
+            managed_lanes_required_attributes = MANAGED_LANES_REQUIRED_ATTRIBUTES
+
+        if not managed_lanes_node_id_scalar:
+            managed_lanes_node_id_scalar = self.__dict__.get("managed_lanes_node_id_scalar")
+        if not managed_lanes_node_id_scalar:
+            managed_lanes_node_id_scalar = MANAGED_LANES_NODE_ID_SCALAR
+
+        if not managed_lanes_link_id_scalar:
+            managed_lanes_link_id_scalar = self.__dict__.get("managed_lanes_link_id_scalar")
+        if not managed_lanes_link_id_scalar:
+            managed_lanes_link_id_scalar = MANAGED_LANES_LINK_ID_SCALAR
+
+        keep_same_attributes_ml_and_gp = list(
+            set(keep_same_attributes_ml_and_gp + keep_additional_attributes_ml_and_gp)
         )
 
         link_attributes = self.links_df.columns.values.tolist()
@@ -2176,10 +2223,10 @@ class RoadwayNetwork(object):
             )
             return out_location_reference
 
-        ml_links_df["A"] = ml_links_df["A"] + self.managed_lanes_node_id_scalar
-        ml_links_df["B"] = ml_links_df["B"] + self.managed_lanes_node_id_scalar
-        ml_links_df[unique_link_key] = (
-            ml_links_df[unique_link_key] + self.managed_lanes_link_id_scalar
+        ml_links_df["A"] = ml_links_df["A"] + managed_lanes_node_id_scalar
+        ml_links_df["B"] = ml_links_df["B"] + managed_lanes_node_id_scalar
+        ml_links_df[self.unique_link_key] = (
+            ml_links_df[self.unique_link_key] + managed_lanes_link_id_scalar
         )
         ml_links_df["locationReferences"] = ml_links_df["locationReferences"].apply(
             # lambda x: _update_location_reference(x)
@@ -2261,7 +2308,7 @@ class RoadwayNetwork(object):
                 .append(egress_links_df["geometry"])
             }
         )
-        new_shapes_df[self.unique_shape_key] = new_shapes_df["geometry"].apply(
+        new_shapes_df[self.shape_foreign_key] = new_shapes_df["geometry"].apply(
             lambda x: create_unique_shape_id(x)
         )
         out_shapes_df = out_shapes_df.append(new_shapes_df)
@@ -2283,7 +2330,10 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def get_modal_links_nodes(
-        links_df: DataFrame, nodes_df: DataFrame, modes: list[str] = None
+        links_df: DataFrame, 
+        nodes_df: DataFrame, 
+        modes: list[str] = None,
+        modes_to_network_link_variables: dict = MODES_TO_NETWORK_LINK_VARIABLES,
     ) -> tuple(DataFrame, DataFrame):
         """Returns nodes and link dataframes for specific mode.
 
@@ -2292,6 +2342,8 @@ class RoadwayNetwork(object):
             nodes_df: DataFrame of standard network nodes
             modes: list of the modes of the network to be kept, must be in `drive`,`transit`,`rail`,`bus`,
                 `walk`, `bike`. For example, if bike and walk are selected, both bike and walk links will be kept.
+            modes_to_network_link_variables: dictionary mapping the mode selections to the network variables 
+                that must bool to true to select that mode. Defaults to MODES_TO_NETWORK_LINK_VARIABLES
 
         Returns: tuple of DataFrames for links, nodes filtered by mode
 
@@ -2301,9 +2353,9 @@ class RoadwayNetwork(object):
         modal_nodes_df = nodes_df[nodes_df[mode_node_variable] == 1]
         """
         for mode in modes:
-            if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
+            if mode not in modes_to_network_link_variables.keys():
                 msg = "mode value should be one of {}, got {}".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()), mode,
+                    list(modes_to_network_link_variables.keys()), mode,
                 )
                 WranglerLogger.error(msg)
                 raise ValueError(msg)
@@ -2313,7 +2365,7 @@ class RoadwayNetwork(object):
                 [
                     mode
                     for mode in modes
-                    for mode in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
+                    for mode in modes_to_network_link_variables[mode]
                 ]
             )
         )
@@ -2322,7 +2374,7 @@ class RoadwayNetwork(object):
                 [
                     mode
                     for mode in modes
-                    for mode in RoadwayNetwork.MODES_TO_NETWORK_NODE_VARIABLES[mode]
+                    for mode in modes_to_network_link_variables[mode]
                 ]
             )
         )
@@ -2350,7 +2402,12 @@ class RoadwayNetwork(object):
         return modal_links_df, modal_nodes_df
 
     @staticmethod
-    def get_modal_graph(links_df: DataFrame, nodes_df: DataFrame, mode: str = None):
+    def get_modal_graph(
+        links_df: DataFrame, 
+        nodes_df: DataFrame, 
+        mode: str = None,
+        modes_to_network_link_variables: dict = MODES_TO_NETWORK_LINK_VARIABLES,
+    ):
         """Determines if the network graph is "strongly" connected
         A graph is strongly connected if each vertex is reachable from every other vertex.
 
@@ -2359,12 +2416,14 @@ class RoadwayNetwork(object):
             nodes_df: DataFrame of standard network nodes
             mode: mode of the network, one of `drive`,`transit`,
                 `walk`, `bike`
+            modes_to_network_link_variables: dictionary mapping the mode selections to the network variables 
+                that must bool to true to select that mode. Defaults to MODES_TO_NETWORK_LINK_VARIABLES
 
         Returns: networkx: osmnx: DiGraph  of network
         """
-        if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
+        if mode not in modes_to_network_link_variables.keys():
             msg = "mode value should be one of {}.".format(
-                list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys())
+                list(modes_to_network_link_variables.keys())
             )
             WranglerLogger.error(msg)
             raise ValueError(msg)
@@ -2421,6 +2480,7 @@ class RoadwayNetwork(object):
         links_df: DataFrame = None,
         nodes_df: DataFrame = None,
         link_variables: list = [],
+        unique_node_key = UNIQUE_NODE_KEY,
     ) -> DataFrame:
         """
         Add data from links going to/from nodes to node.
@@ -2448,13 +2508,13 @@ class RoadwayNetwork(object):
         _nodes_from_links_A = nodes_df.merge(
             links_df[["A"] + _link_vals_to_nodes],
             how="outer",
-            left_on=RoadwayNetwork.UNIQUE_NODE_KEY,
+            left_on=unique_node_key,
             right_on="A",
         )
         _nodes_from_links_B = nodes_df.merge(
             links_df[["B"] + _link_vals_to_nodes],
             how="outer",
-            left_on=RoadwayNetwork.UNIQUE_NODE_KEY,
+            left_on=unique_node_key,
             right_on="B",
         )
         _nodes_from_links_ab = pd.concat([_nodes_from_links_A, _nodes_from_links_B])
@@ -2537,7 +2597,7 @@ class RoadwayNetwork(object):
                 len(_nodes_df),
                 _nodes_df[
                     [
-                        RoadwayNetwork.UNIQUE_NODE_KEY,
+                        self.unique_node_key,
                         "name",
                         "ref",
                         "distance",
@@ -2556,18 +2616,18 @@ class RoadwayNetwork(object):
         _max_name_endpoints = NAME_PER_NODE / 2
         # - Attach frequency  of node/ref
         _nodes_df = _nodes_df.merge(
-            _nodes_df.groupby(by=[RoadwayNetwork.UNIQUE_NODE_KEY, "ref"])
+            _nodes_df.groupby(by=[self.unique_node_key, "ref"])
             .size()
             .rename("ref_N_freq"),
-            on=[RoadwayNetwork.UNIQUE_NODE_KEY, "ref"],
+            on=[self.unique_node_key, "ref"],
         )
         # WranglerLogger.debug("_ref_count+_nodes:\n{}".format(_nodes_df[["model_node_id","ref","name","ref_N_freq"]]))
         # - Attach frequency  of node/name
         _nodes_df = _nodes_df.merge(
-            _nodes_df.groupby(by=[RoadwayNetwork.UNIQUE_NODE_KEY, "name"])
+            _nodes_df.groupby(by=[self.unique_node_key, "name"])
             .size()
             .rename("name_N_freq"),
-            on=[RoadwayNetwork.UNIQUE_NODE_KEY, "name"],
+            on=[self.unique_node_key, "name"],
         )
         # WranglerLogger.debug("_name_count+_nodes:\n{}".format(_nodes_df[["model_node_id","ref","name","name_N_freq"]]))
 
@@ -2575,7 +2635,7 @@ class RoadwayNetwork(object):
             "Possible segment endpoints:\n{}".format(
                 _nodes_df[
                     [
-                        RoadwayNetwork.UNIQUE_NODE_KEY,
+                        self.unique_node_key,
                         "name",
                         "ref",
                         "distance",
@@ -2597,7 +2657,7 @@ class RoadwayNetwork(object):
                 _max_name_endpoints,
                 _nodes_df[
                     [
-                        RoadwayNetwork.UNIQUE_NODE_KEY,
+                        self.unique_node_key,
                         "name",
                         "ref",
                         "ref_N_freq",
@@ -2620,8 +2680,8 @@ class RoadwayNetwork(object):
 
         # https://stackoverflow.com/questions/13446480/python-pandas-remove-entries-based-on-the-number-of-occurrences
         _nodes_df = _nodes_df[
-            _nodes_df.groupby(["segment_id", RoadwayNetwork.UNIQUE_NODE_KEY])[
-                RoadwayNetwork.UNIQUE_NODE_KEY
+            _nodes_df.groupby(["segment_id", self.unique_node_key])[
+                self.unique_node_key
             ].transform(len)
             > 1
         ]
@@ -2630,7 +2690,7 @@ class RoadwayNetwork(object):
             "{} Segments with at least nodes:\n{}".format(
                 len(_nodes_df),
                 _nodes_df[
-                    [RoadwayNetwork.UNIQUE_NODE_KEY, "name", "ref", "segment_id"]
+                    [self.unique_node_key, "name", "ref", "segment_id"]
                 ],
             )
         )
@@ -2655,7 +2715,7 @@ class RoadwayNetwork(object):
         _nodes_df = _nodes_df.loc[
             (_nodes_df["max_seg_distance"] == _nodes_df["seg_distance"])
             & (_nodes_df["seg_distance"] > 0)
-        ].drop_duplicates(subset=[RoadwayNetwork.UNIQUE_NODE_KEY, "segment_id"])
+        ].drop_duplicates(subset=[self.unique_node_key, "segment_id"])
 
         # ----------------------------------------
         # Reassign segment id for final segments
@@ -2669,7 +2729,7 @@ class RoadwayNetwork(object):
                 len(_segments),
                 _nodes_df[
                     [
-                        RoadwayNetwork.UNIQUE_NODE_KEY,
+                        self.unique_node_key,
                         "name",
                         "ref",
                         "segment_id",
@@ -2680,7 +2740,7 @@ class RoadwayNetwork(object):
         )
 
         return _nodes_df[
-            ["segment_id", RoadwayNetwork.UNIQUE_NODE_KEY, "geometry", "name", "ref"]
+            ["segment_id", self.unique_node_key, "geometry", "name", "ref"]
         ]
 
     def identify_segment(
@@ -2817,7 +2877,7 @@ class RoadwayNetwork(object):
 
         WranglerLogger.info(
             "{} for disconnected networks for mode = {}:\n{}".format(
-                RoadwayNetwork.NODE_FOREIGN_KEY,
+                self.node_foreign_key,
                 mode,
                 "\n".join(list(map(str, disconnected_sub_graph_nodes))),
             )
@@ -2890,7 +2950,7 @@ class RoadwayNetwork(object):
             set(
                 [
                     i
-                    for fk in RoadwayNetwork.LINK_FOREIGN_KEY
+                    for fk in self.link_foreign_key
                     for i in list(graph_links[fk])
                 ]
             )
@@ -2926,14 +2986,14 @@ class RoadwayNetwork(object):
 
             # WranglerLogger.debug("A: {}\n{}".format(A,self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == A]))
             _folium_node(
-                self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == A],
+                self.nodes_df[self.nodes_df[self.node_foreign_key] == A],
                 color="green",
                 icon="play",
             ).add_to(m)
 
         if B:
             _folium_node(
-                self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == B],
+                self.nodes_df[self.nodes_df[self.node_foreign_key] == B],
                 color="red",
                 icon="star",
             ).add_to(m)
@@ -2957,7 +3017,7 @@ class RoadwayNetwork(object):
                     set(
                         [
                             i
-                            for fk in RoadwayNetwork.LINK_FOREIGN_KEY
+                            for fk in self.link_foreign_key
                             for i in list(deleted_links[fk])
                         ]
                     )
@@ -3009,7 +3069,7 @@ class RoadwayNetwork(object):
                 set(
                     [
                         i
-                        for fk in RoadwayNetwork.LINK_FOREIGN_KEY
+                        for fk in self.link_foreign_key
                         for i in list(added_links[fk])
                     ]
                 )
@@ -3022,10 +3082,10 @@ class RoadwayNetwork(object):
         if nodes is not None:
             node_ids = []
             for node in nodes:
-                node_ids.append(node.get(RoadwayNetwork.UNIQUE_NODE_KEY))
+                node_ids.append(node.get(self.unique_node_key))
 
             added_nodes = self.nodes_df[
-                self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY].isin(node_ids)
+                self.nodes_df[self.unique_node_key].isin(node_ids)
             ]
         else:
             added_nodes = None
