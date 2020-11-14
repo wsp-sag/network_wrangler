@@ -308,8 +308,8 @@ def test_apply_summary_wrappers(request):
     base_scenario = {
         "road_net": RoadwayNetwork.read(
             link_filename=STPAUL_LINK_FILE,
-            node_file=STPAUL_NODE_FILE,
-            shape_file=STPAUL_SHAPE_FILE,
+            node_filename=STPAUL_NODE_FILE,
+            shape_filename=STPAUL_SHAPE_FILE,
             fast=True,
             shape_foreign_key ='shape_id',
         ),
