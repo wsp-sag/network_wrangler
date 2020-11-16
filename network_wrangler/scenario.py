@@ -676,13 +676,13 @@ class Scenario(object):
         report_str += "Base Scenario:\n"
         report_str += "--Road Network:\n"
         report_str += "----Link File: {}\n".format(
-            self.base_scenario["road_net"].link_file
+            self.base_scenario["road_net"].link_filename
         )
         report_str += "----Node File: {}\n".format(
-            self.base_scenario["road_net"].node_file
+            self.base_scenario["road_net"].node_filename
         )
         report_str += "----Shape File: {}\n".format(
-            self.base_scenario["road_net"].shape_file
+            self.base_scenario["road_net"].shape_filename
         )
         report_str += "--Transit Network:\n"
         report_str += "----Feed Path: {}\n".format(
