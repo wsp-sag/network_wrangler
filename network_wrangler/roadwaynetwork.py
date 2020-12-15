@@ -443,9 +443,15 @@ class RoadwayNetwork(object):
 
         link_property_columns = self.links_df.columns.values.tolist()
         link_property_columns.remove("geometry")
+        """
         links_json = link_df_to_json(self.links_df, link_property_columns)
         with open(links_file, "w") as f:
             json.dump(links_json, f)
+        """
+        links_json = self.links_df[link_property_columns].to_json(orient = "records")
+
+        with open(links_file, 'w') as f:
+            f.write(links_json)
 
         # geopandas wont let you write to geojson because
         # it uses fiona, which doesn't accept a list as one of the properties
