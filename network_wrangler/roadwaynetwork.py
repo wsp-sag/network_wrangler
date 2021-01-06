@@ -8,6 +8,7 @@ import sys
 import copy
 import numbers
 from random import randint
+from typing import Union
 
 import folium
 import pandas as pd
@@ -465,7 +466,7 @@ class RoadwayNetwork(object):
         """
         return roadway_net.shapes_df
 
-    def validate_uniqueness(self) -> Bool:
+    def validate_uniqueness(self) -> bool:
         """
         Confirms that the unique identifiers are met.
         """
@@ -568,7 +569,7 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def validate_link_schema(
-        link_filenane, schema_location: str = "roadway_network_link.json"
+        link_filename, schema_location: str = "roadway_network_link.json"
     ):
         """
         Validate roadway network data link schema and output a boolean
@@ -1820,14 +1821,14 @@ class RoadwayNetwork(object):
             raise ValueError()
 
     def get_property_by_time_period_and_group(
-        self, property, time_period=None, category=None
+        self, prop, time_period=None, category=None, default_return=None
     ):
         """
         Return a series for the properties with a specific group or time period.
 
         args
         ------
-        property: str
+        prop: str
           the variable that you want from network
         time_period: list(str)
           the time period that you are querying for
@@ -1840,11 +1841,16 @@ class RoadwayNetwork(object):
 
           list of group categories in order of search, i.e.
           ["hov3","hov2"]
+        default_return: what to return if variable or time period not found. Default is None. 
 
         returns
         --------
         pandas series
         """
+
+        if prop not in list(self.links_df.columns):
+            WranglerLogger.warning("Property {} not in links to split, returning as default value: {}".format(prop, default_value))
+            return pd.Series([default_return]*len(self.link_df))
 
         def _get_property(
             v,
@@ -1994,7 +2000,7 @@ class RoadwayNetwork(object):
 
         time_spans = parse_time_spans(time_period)
 
-        return self.links_df[property].apply(
+        return self.links_df[prop].apply(
             _get_property, time_spans=time_spans, category=category
         )
 
