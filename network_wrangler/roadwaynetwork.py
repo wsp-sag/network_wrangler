@@ -809,7 +809,7 @@ class RoadwayNetwork(object):
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
         try:
             G = ox.graph_from_gdfs(graph_nodes, graph_links)
-        except:
+        except AttributeError:
             WranglerLogger.debug(
                 "Please upgrade your OSMNX package. For now, using depricated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found"
             )
