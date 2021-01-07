@@ -33,7 +33,7 @@ from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .utils import offset_location_reference, haversine_distance, create_unique_shape_id
 from .utils import create_location_reference_from_nodes, create_line_string
-
+from .utils import update_df
 
 # Coordinate reference system
 CRS = 4326  # AKA EPSG:4326, WGS 1984
@@ -643,7 +643,7 @@ class RoadwayNetwork(object):
 
     def validate_selection(
         self, selection: dict, selection_requires: list = SELECTION_REQUIRES
-    ) -> Bool:
+    ) -> bool:
         """
         Evaluate whetther the selection dictionary contains the
         minimum required values.
@@ -702,7 +702,6 @@ class RoadwayNetwork(object):
                 "--existing link columns:{}".format(" ".join(self.links_df.columns))
             )
             raise ValueError()
-            return False
         else:
             return True
 
@@ -2004,6 +2003,88 @@ class RoadwayNetwork(object):
             _get_property, time_spans=time_spans, category=category
         )
 
+    def update_distance(
+        self, 
+        links_df: GeoDataFrame = None, 
+        use_shapes: bool = False,
+        units: str = "miles",
+        network_variable: str = "distance", 
+        overwrite: bool = True,
+        inplace = True
+    ):
+        """
+        Calculate link distance in specified units to network variable using either straight line
+        distance or (if specified) shape distance if available. 
+
+        Args:
+            links_df: Links GeoDataFrame.  Useful if want to update a portion of network links 
+                (i.e. only centroid connectors). If not provided, will use entire self.links_df.
+            use_shapes: if True, will add length information from self.shapes_df rather than crow-fly. 
+                If no corresponding shape found in self.shapes_df, will default to crow-fly. 
+            units: units to use. Defaults to the standard unit of miles. Available units: "meters", "miles". 
+            network_variable: variable to store link distance in. Defaults to "distance". 
+            overwrite: Defaults to True and will overwrite all existing calculated distances. 
+                False will only update NaNs.
+            inplace: updates self.links_df
+
+        Returns:
+            links_df with updated distance
+
+        """
+        if units not in ["miles","meters"]:
+            raise NotImplementedError
+
+        if links_df is None:
+            links_df = self.links_df.copy()
+
+        msg = "Update distance in {} to variable: {}".format(units, network_variable)
+        if overwrite: msg + "\n  - overwriting existing calculated values if found."
+        if use_shapes: msg + "\n  - using shapes_df length if found."
+        WranglerLogger.debug(msg)
+
+        """
+        Start actual process
+        """
+
+        temp_links_gdf = links_df.copy()
+        temp_links_gdf.crs = "EPSG:4326" 
+        temp_links_gdf = temp_links_gdf.to_crs(epsg=26915) #in meters
+
+        conversion_from_meters = {"miles": 1/1609.34, "meters": 1}
+        temp_links_gdf[network_variable] = temp_links_gdf.geometry.length * conversion_from_meters[units]
+
+        if use_shapes:
+            _needed_shapes_gdf = self.shapes_df.loc[
+                self.shapes_df[self.shape_foreign_key] in links_df[self.shape_foreign_key]
+            ].copy()
+
+            _needed_shapes_gdf = _needed_shapes_gdf.to_crs(epsg=26915)
+            _needed_shapes_gdf[network_variable] = _needed_shapes_gdf.geometry.length * conversion_from_meters[units]
+
+            temp_links_gdf = update_df(
+                temp_links_gdf,
+                _needed_shapes_gdf,
+                merge_key = self.shape_foreign_key,
+                update_fields = [network_variable],
+                method = "update if found",
+            )
+
+        if overwrite:
+            links_df[network_variable] = temp_links_gdf[network_variable]
+        else:
+            links_df = update_df(
+                links_df,
+                temp_links_gdf,
+                merge_key = self.unique_link_key,
+                update_fields = [network_variable],
+                method = "update nan",
+            )
+
+        if inplace:
+            self.links_df = links_df
+        else:
+            return links_df
+    
     def create_dummy_connector_links(
         gp_df: GeoDataFrame,
         ml_df: GeoDataFrame,
