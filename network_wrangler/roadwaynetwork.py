@@ -2295,16 +2295,6 @@ class RoadwayNetwork(object):
         ml_links_df["managed"] = 1
         gp_links_df["managed"] = 0
 
-        def _update_location_reference(location_reference: list):
-            out_location_reference = copy.deepcopy(location_reference)
-            out_location_reference[0]["point"] = offset_lat_lon(
-                out_location_reference[0]["point"]
-            )
-            out_location_reference[1]["point"] = offset_lat_lon(
-                out_location_reference[1]["point"]
-            )
-            return out_location_reference
-
         ml_links_df["A"] = ml_links_df["A"] + managed_lanes_node_id_scalar
         ml_links_df["B"] = ml_links_df["B"] + managed_lanes_node_id_scalar
         ml_links_df[self.unique_link_key] = (

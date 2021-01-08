@@ -302,7 +302,7 @@ def update_df(
     merge_key: str = None,
     left_on: str = None,
     right_on: str = None, 
-    update_fields: Collection = [],
+    update_fields: Collection = None,
     method: str = "update if found",
 ):
     """
@@ -311,10 +311,10 @@ def update_df(
     Args:
         base_df: DataFrame to be updated
         update_df: DataFrame with with updated values
-        merge_key: column to merge on (i.e. model_link_id)
-        left_on: key for base_df
-        right_on: keuy for update_df
-        update_fields: list of fields to update values for
+        merge_key: column to merge on (i.e. model_link_id). If not specified, must have left_on AND right_on.
+        left_on: key for base_df.  Must also specify right_on. If not specified, must specify merge_key. 
+        right_on: key for update_df.  Must also specify left_on. If not specified, must specify merge_key. 
+        update_fields: required list of fields to update values for.  Must be columns in update_df.
         method: string indicating how the dataframe should be updated. One of:
             - "update if found" (default) which will update the values if the update values are not NaN
             - "overwrite all" will overwrite the current value with the update value even if it is NaN
@@ -323,21 +323,30 @@ def update_df(
     Returns: Dataframe with updated values
     """
     valid_methods = ["update if found", "overwrite all", "update nan"] 
+
     if method not in valid_methods:
         raise ValueError("Specified 'method' was: {} but must be one of: {}".format(method, valid_methods))
-    if not set(update_fields).issubset(base_df.columns):
-        WranglerLogger.warning(
-            "Update fields: {} not in base_df; adding columns as overwrite: {}".format(update_fields, base_df.columns)
+    
+    if update_fields is None:
+        raise ValueError(
+            "Must specify which fields to update, None specified."
         )
-        overwrite = True
-        ##TODO SEPARATE OUT EXISTING FIELDS SO THEY CAN BE UPDATED RATHER THAN OVERWRITTEN
-        
+
     if not set(update_fields).issubset(update_df.columns):
         raise ValueError(
             "Update fields: {} not in update_df: {}".format(
                 update_fields, update_df.columns
             )
         )
+
+    new_fields = [v for v in update_fields if v not in base_df.columns]
+    update_fields = list(set(update_fields)-set(new_fields))
+
+    if new_fields: 
+        WranglerLogger.debug(
+            "Some update fields: {} not in base_df; adding then as new columns.".format(new_fields)
+        )
+        
     if merge_key and left_on or merge_key and right_on:
         raise ValueError("Only need a merge_key or right_on and left_on but both specified")
     if not merge_key and not (left_on and right_on):
@@ -355,6 +364,7 @@ def update_df(
         raise ValueError(
             "Merge key: {} not in update_df: {}".format(right_on, update_df.columns)
         )
+    # Actual Process
 
     if method == "overwrite all":
         suffixes = ["-orig", None]
@@ -392,4 +402,12 @@ def update_df(
             ]
         merged_df = merged_df.drop(columns=[c + "-update" for c in update_fields])
     # print("merged_df-updated:\n",merged_df)
+
+    if new_fields:
+        merged_df = merged_df.merge(
+            update_df[new_fields+ [(right_on)]],
+            left_on=left_on,
+            right_on= right_on,
+            how="left",
+        )
     return merged_df

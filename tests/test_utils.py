@@ -119,6 +119,7 @@ def test_location_reference_offset(request):
 update_test_list =[
     {
         "method": "update if found",
+        "update_fields": ["cb"],
         "expected_result": pd.DataFrame(
             {
                 "id": [101, 102, 103, 104],
@@ -130,6 +131,7 @@ update_test_list =[
     },
     {
         "method": "update nan",
+        "update_fields": ["cb"],
         "expected_result": pd.DataFrame(
             {
                 "id": [101, 102, 103, 104],
@@ -141,12 +143,26 @@ update_test_list =[
     },
     {
         "method": "overwrite all",
+        "update_fields": ["cb"],
         "expected_result": pd.DataFrame(
             {
                 "id": [101, 102, 103, 104],
                 "ca": [1, 2, 3, 4],
                 "cb": [np.NaN, "bb", "cc", "dd"],
                 "cc": [111, 222, 333, 444],
+            }
+        )
+    },
+    {
+        "method": "update nan",
+        "update_fields": ["cb", "zz"],
+        "expected_result": pd.DataFrame(
+            {
+                "id": [101, 102, 103, 104],
+                "ca": [1, 2, 3, 4],
+                "cb": ["a", "bb", "c", "dd"],
+                "cc": [111, 222, 333, 444],
+                "zz": [np.NaN, "like", "ice", "cream."],
             }
         )
     },
@@ -176,11 +192,11 @@ def test_update_df(request, update_test):
             "id": [1041, 102, 103, 104],
             "ca": [-1, 222, 123, 432],
             "cb": ["aa", "bb", "cc", "dd"],
+            "zz": ["I", "like", "ice", "cream."],
         }
     )
 
-    
 
-    result_df = update_df(df1, df2, "id", update_fields=["cb"], method = update_test['method'])
+    result_df = update_df(df1, df2, "id", update_fields=update_test['update_fields'], method = update_test['method'])
     print("UPDATE METHOD: {}\nResulting DF:\n{}\nExpected DF:\n{}".format(update_test['method'], result_df, update_test['expected_result'] ))
     pd.testing.assert_frame_equal( update_test['expected_result'], result_df)
