@@ -91,10 +91,10 @@ MODES_TO_NETWORK_LINK_VARIABLES = {
 }
 
 MODES_TO_NETWORK_NODE_VARIABLES = {
-    "drive": ["drive_node"],
-    "rail": ["rail_only", "drive_node"],
-    "bus": ["bus_only", "drive_node"],
-    "transit": ["bus_only", "rail_only", "drive_node"],
+    "drive": ["drive_access"],
+    "rail": ["rail_only", "drive_access"],
+    "bus": ["bus_only", "drive_access"],
+    "transit": ["bus_only", "rail_only", "drive_access"],
     "walk": ["walk_node"],
     "bike": ["bike_node"],
 }
@@ -2284,7 +2284,7 @@ class RoadwayNetwork(object):
                             "locationReferences"
                         ][0]["point"]
                     ),
-                    "drive_node": 1,
+                    "drive_access": 1,
                 },
                 ignore_index=True,
             )
@@ -2299,7 +2299,7 @@ class RoadwayNetwork(object):
                                 "locationReferences"
                             ][1]["point"]
                         ),
-                        "drive_node": 1,
+                        "drive_access": 1,
                     },
                     ignore_index=True,
                 )
