@@ -179,5 +179,8 @@ def test_update_df(request, update_test):
         }
     )
 
+    
+
     result_df = update_df(df1, df2, "id", update_fields=["cb"], method = update_test['method'])
-    pd.testing.assert_frame_equal( update_test['exected_reault'], result_df)
+    print("UPDATE METHOD: {}\nResulting DF:\n{}\nExpected DF:\n{}".format(update_test['method'], result_df, update_test['expected_result'] ))
+    pd.testing.assert_frame_equal( update_test['expected_result'], result_df)

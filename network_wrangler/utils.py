@@ -2,12 +2,12 @@ import os
 import copy
 import hashlib
 import math
-from typing import Union
+from typing import Union, Collection
 
-from shapely.geometry import LineString
-
+import numpy as np
 import pandas as pd
 import geopandas as gpd
+
 from shapely.geometry import LineString
 from geographiclib.geodesic import Geodesic
 
@@ -297,8 +297,8 @@ def create_line_string(location_reference: list):
     return LineString([location_reference[0]["point"], location_reference[1]["point"]])
 
 def update_df(
-    base_df: DataFrame,
-    update_df: DataFrame,
+    base_df: pd.DataFrame,
+    update_df: pd.DataFrame,
     merge_key: str = None,
     left_on: str = None,
     right_on: str = None, 
@@ -323,8 +323,8 @@ def update_df(
     Returns: Dataframe with updated values
     """
     valid_methods = ["update if found", "overwrite all", "update nan"] 
-    if method not in valid_methods return:
-        ValueError("Specified 'method' was: {} but must be one of: {}".format(method, valid_methods))
+    if method not in valid_methods:
+        raise ValueError("Specified 'method' was: {} but must be one of: {}".format(method, valid_methods))
     if not set(update_fields).issubset(base_df.columns):
         WranglerLogger.warning(
             "Update fields: {} not in base_df; adding columns as overwrite: {}".format(update_fields, base_df.columns)
@@ -356,7 +356,7 @@ def update_df(
             "Merge key: {} not in update_df: {}".format(right_on, update_df.columns)
         )
 
-    if method = "overwrite all":
+    if method == "overwrite all":
         suffixes = ["-orig", None]
     else:
         base_df.loc[:, update_fields] = base_df.loc[:, update_fields].replace(
@@ -372,14 +372,15 @@ def update_df(
         suffixes=suffixes,
     )
     # print("merged_df:\n",merged_df)
-    if method == "total overwrite":
+    if method == "overwrite all":
         merged_df = merged_df.drop(columns=[c + "-orig" for c in update_fields if c + "-orig" in merged_df.columns])
         merged_df = merged_df[base_df.columns.tolist()]
     elif method == "update if found":
         #overwrite if the updated field is not Nan
         for c in update_fields:
+            # selects rows where updated value is not NA; 
             merged_df.loc[~merged_df[c + "-update"].isna(), c] = merged_df.loc[
-                merged_df[c].isna(), c + "-update"
+                ~merged_df[c + "-update"].isna(), c + "-update"
             ]
         merged_df = merged_df.drop(columns=[c + "-update" for c in update_fields])
     elif method == "update nan":
