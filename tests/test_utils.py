@@ -1,11 +1,13 @@
 import os
 import pytest
 
+import numpy as np
+import pandas as pd
 from shapely.geometry import LineString
 
-from network_wrangler import haversine_distance
-from network_wrangler import create_unique_shape_id
-from network_wrangler import offset_location_reference
+
+
+
 
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
@@ -20,7 +22,7 @@ slug_test_list = [
 def test_get_slug(request, slug_test):
     print("\n--Starting:", request.node.name)
 
-    from network_wrangler.utils import make_slug
+    from network_wrangler import make_slug
 
     slug = make_slug(slug_test["text"], delimiter=slug_test["delim"])
 
@@ -59,7 +61,10 @@ def test_time_convert(request):
 @pytest.mark.get_dist
 @pytest.mark.travis
 def test_get_distance_bw_lat_lon(request):
+    
     print("\n--Starting:", request.node.name)
+    
+    from network_wrangler import haversine_distance
 
     start = [-93.0889873, 44.966861]
     end = [-93.08844310000001, 44.9717832]
@@ -72,6 +77,10 @@ def test_get_distance_bw_lat_lon(request):
 @pytest.mark.test_hash
 @pytest.mark.roadway
 def test_get_unique_shape_id(request):
+    print("\n--Starting:", request.node.name)
+
+    from network_wrangler import create_unique_shape_id
+
     geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
 
     shape_id = create_unique_shape_id(geometry)
@@ -84,6 +93,8 @@ def test_get_unique_shape_id(request):
 @pytest.mark.travis
 def test_location_reference_offset(request):
     print("\n--Starting:", request.node.name)
+
+    from network_wrangler import offset_location_reference
 
     location_reference = [
         {"sequence": 1, "point": [-93.0903549, 44.961085]},
@@ -103,3 +114,89 @@ def test_location_reference_offset(request):
     assert new_location_reference == expected_location_reference
 
     print("--Finished:", request.node.name)
+
+
+update_test_list =[
+    {
+        "method": "update if found",
+        "update_fields": ["cb"],
+        "expected_result": pd.DataFrame(
+            {
+                "id": [101, 102, 103, 104],
+                "ca": [1, 2, 3, 4],
+                "cb": ["a", "bb", "cc", "dd"],
+                "cc": [111, 222, 333, 444],
+            }
+        )
+    },
+    {
+        "method": "update nan",
+        "update_fields": ["cb"],
+        "expected_result": pd.DataFrame(
+            {
+                "id": [101, 102, 103, 104],
+                "ca": [1, 2, 3, 4],
+                "cb": ["a", "bb", "c", "dd"],
+                "cc": [111, 222, 333, 444],
+            }
+        )
+    },
+    {
+        "method": "overwrite all",
+        "update_fields": ["cb"],
+        "expected_result": pd.DataFrame(
+            {
+                "id": [101, 102, 103, 104],
+                "ca": [1, 2, 3, 4],
+                "cb": [np.NaN, "bb", "cc", "dd"],
+                "cc": [111, 222, 333, 444],
+            }
+        )
+    },
+    {
+        "method": "update nan",
+        "update_fields": ["cb", "zz"],
+        "expected_result": pd.DataFrame(
+            {
+                "id": [101, 102, 103, 104],
+                "ca": [1, 2, 3, 4],
+                "cb": ["a", "bb", "c", "dd"],
+                "cc": [111, 222, 333, 444],
+                "zz": [np.NaN, "like", "ice", "cream."],
+            }
+        )
+    },
+]
+
+@pytest.mark.update_df
+@pytest.mark.travis
+@pytest.mark.parametrize("update_test", update_test_list)
+def test_update_df(request, update_test):
+    """
+    Tests that lanes are computed
+    """
+    print("\n--Starting:", request.node.name)
+
+    from network_wrangler import update_df
+
+    df1 = pd.DataFrame(
+        {
+            "id": [101, 102, 103, 104],
+            "ca": [1, 2, 3, 4],
+            "cb": ["a", np.NaN, "c", ""],
+            "cc": [111, 222, 333, 444],
+        }
+    )
+    df2 = pd.DataFrame(
+        {
+            "id": [1041, 102, 103, 104],
+            "ca": [-1, 222, 123, 432],
+            "cb": ["aa", "bb", "cc", "dd"],
+            "zz": ["I", "like", "ice", "cream."],
+        }
+    )
+
+
+    result_df = update_df(df1, df2, "id", update_fields=update_test['update_fields'], method = update_test['method'])
+    print("UPDATE METHOD: {}\nResulting DF:\n{}\nExpected DF:\n{}".format(update_test['method'], result_df, update_test['expected_result'] ))
+    pd.testing.assert_frame_equal( update_test['expected_result'], result_df)
