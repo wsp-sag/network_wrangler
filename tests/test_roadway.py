@@ -83,8 +83,8 @@ def test_roadway_read_write(request):
     net.write(filename=out_prefix, path=SCRATCH_DIR)
     time2 = time.time()
     net_2 = RoadwayNetwork.read(
-        link_filename=out_link_file,
-        node_filename=out_node_file,
+        link_filename=out_link_file, 
+        node_filename=out_node_file, 
         shape_filename=out_shape_file,
         shape_foreign_key ='shape_id',
     )
@@ -126,8 +126,8 @@ def test_quick_roadway_read_write(request):
     )
     net.write(filename=out_prefix, path=SCRATCH_DIR)
     net_2 = RoadwayNetwork.read(
-        link_filename=out_link_file,
-        node_filename=out_node_file,
+        link_filename=out_link_file, 
+        node_filename=out_node_file, 
         shape_filename=out_shape_file,
         shape_foreign_key ='shape_id',
     )
@@ -1041,42 +1041,3 @@ def test_find_segment(request):
     seg_df = net.identify_segment(seg_ends[0], seg_ends[1], selection_dict=sel_dict)
     print(seg_df)
     #TODO #242
-
-@pytest.mark.travis
-@pytest.mark.roadway
-def test_duplicates_in_ml_network(request):
-    print("\n--Starting:", request.node.name)
-
-    print("Reading network ...")
-    net = _read_stpaul_net()
-
-    print("Reading project card ...")
-    project_card_name = "4_simple_managed_lane.yml"
-    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate=False)
-    project_card_dictionary = project_card.__dict__
-
-    net.apply(project_card_dictionary)
-    ml_net = net.create_managed_lane_network()
-
-    links_df = ml_net.links_df
-    shapes_df = ml_net.shapes_df
-    nodes_df = ml_net.nodes_df
-
-    duplicate_links_df = links_df[
-        links_df.duplicated(subset=["A", "B"], keep="first")
-    ]
-
-    duplicate_nodes_df = nodes_df[
-        nodes_df.duplicated(subset=["model_node_id"], keep="first")
-    ]
-
-    duplicate_shapes_df = shapes_df[
-        shapes_df.duplicated(subset=[ml_net.shape_foreign_key], keep="first")
-    ]
-
-    assert len(duplicate_links_df) == 0
-    assert len(duplicate_nodes_df) == 0
-    assert len(duplicate_shapes_df) == 0
-
-    print("--Finished:", request.node.name)
