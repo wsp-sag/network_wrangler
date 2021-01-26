@@ -2361,18 +2361,19 @@ class RoadwayNetwork(object):
 
         # add node if it is not already present
         for a_node in added_a_nodes:
-            out_nodes_df = out_nodes_df.append(
-                {
-                    "model_node_id": a_node,
-                    "geometry": Point(
-                        out_links_df[out_links_df["A"] == a_node].iloc[0][
-                            "locationReferences"
-                        ][0]["point"]
-                    ),
-                    "drive_access": 1,
-                },
-                ignore_index=True,
-            )
+            if a_node not in out_nodes_df["model_node_id"].tolist():
+                out_nodes_df = out_nodes_df.append(
+                    {
+                        "model_node_id": a_node,
+                        "geometry": Point(
+                            out_links_df[out_links_df["A"] == a_node].iloc[0][
+                                "locationReferences"
+                            ][0]["point"]
+                        ),
+                        "drive_access": 1,
+                    },
+                    ignore_index=True,
+                )
 
         for b_node in added_b_nodes:
             if b_node not in out_nodes_df["model_node_id"].tolist():
