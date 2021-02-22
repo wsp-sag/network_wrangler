@@ -2285,7 +2285,7 @@ class RoadwayNetwork(object):
         # non_ml_links are links in the network where there is no managed lane.
         # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
 
-        non_ml_links_df = self.links_df[self.links_df["managed"] == 0]
+        non_ml_links_df = self.links_df[self.links_df["managed"] != 1]
         non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis=1)
 
         ml_links_df = self.links_df[self.links_df["managed"] == 1]
