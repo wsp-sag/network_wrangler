@@ -1907,8 +1907,29 @@ class RoadwayNetwork(object):
             if v.get("timeofday"):
                 categories = []
                 for tg in v["timeofday"]:
-                    if (time_spans[0] >= tg["time"][0]) and (
-                        time_spans[1] <= tg["time"][1]
+                    if ((time_spans[0] >= tg["time"][0]) and (
+                        time_spans[1] <= tg["time"][1]) and (
+                        time_spans[0] <= time_spans[1])
+                    ):
+                        if tg.get("category"):
+                            categories += tg["category"]
+                            for c in search_cats:
+                                print("CAT:", c, tg["category"])
+                                if c in tg["category"]:
+                                    # print("Var:", v)
+                                    # print(
+                                    #    "RETURNING:", time_spans, category, tg["value"]
+                                    # )
+                                    return tg["value"]
+                        else:
+                            # print("Var:", v)
+                            # print("RETURNING:", time_spans, category, tg["value"])
+                            return tg["value"]
+
+                    if ((time_spans[0] >= tg["time"][0]) and (
+                        time_spans[1] <= tg["time"][1]) and (
+                        time_spans[0] > time_spans[1]) and (
+                        tg["time"][0] > tg["time"][1])
                     ):
                         if tg.get("category"):
                             categories += tg["category"]
