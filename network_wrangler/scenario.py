@@ -326,17 +326,17 @@ class Scenario(object):
             raise ValueError(msg)
 
         if glob_search:
-            WranglerLogger.debug(
+            WranglerLogger.info(
                 "Adding project cards using glob search: {}".format(glob_search)
             )
             for file in glob.iglob(os.path.join(folder, glob_search)):
-                if not file.endswith(".yml") or file.endswith(".yaml"):
+                if not (file.endswith(".yml") or file.endswith(".yaml") or file.endswith(".wrangler") or file.endswith(".wr")):
                     continue
                 else:
                     self.add_project_card_from_file(file, validate=validate)
         else:
             for file in os.listdir(folder):
-                if not file.endswith(".yml") or file.endswith(".yaml"):
+                if not (file.endswith(".yml") or file.endswith(".yaml") or file.endswith(".wrangler") or file.endswith(".wr")):
                     continue
                 else:
                     self.add_project_card_from_file(
