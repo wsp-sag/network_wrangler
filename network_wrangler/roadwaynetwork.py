@@ -2193,6 +2193,18 @@ class RoadwayNetwork(object):
 
         return (access_df, egress_df)
 
+    @staticmethod
+    def has_managed_lanes(links_df: GeoDataFrame) -> bool:
+        ml_lanes_attributes = [i for i in self.links_df.columns.values.tolist() if i.lower().startswith("ml_lanes")]
+
+        if not ml_lanes_attributes:
+            WranglerLogger.info("No managed lanes attributes found when calculating managed lane network. Returning original network.")
+            return False
+        if not self.links_df[ml_lanes_attributes].max()>0:
+            WranglerLogger.info("Max number of managed lanes is not greater than zero ({}). Returning original network.".format(self.links_df[ml_lanes_attributes].max()))
+            return False
+        return True
+
     def create_managed_lane_network(
         self,
         keep_same_attributes_ml_and_gp: list = None,
@@ -2201,7 +2213,7 @@ class RoadwayNetwork(object):
         managed_lanes_node_id_scalar: int = None,
         managed_lanes_link_id_scalar: int = None,
         in_place: bool = False,
-    ) -> RoadwayNetwork:
+    ) -> Union[None,Collection[GeoDataFrame]:
         """
         Create a roadway network with managed lanes links separated out.
         Add new parallel managed lane links, access/egress links,
@@ -2222,22 +2234,23 @@ class RoadwayNetwork(object):
             managed_lanes_link_id_scalar: integer value added to original link IDs to create managed
                 lane unique ids. If not specified, will look for value in the RoadwayNetwork
                 instance.  If not found there, will default to MANAGED_LANES_LINK_ID_SCALAR.
-            in_place: update self or return a new roadway network object
+            in_place: If True, will update self.links_model_df, self.shapes_df, and self.nodes_model_df. 
+                Otherwise, will return a tuple with self.links_model_df, self.shapes_df, and self.nodes_model_df. 
 
-        returns: A RoadwayNetwork instance
+        returns: 
+            None if `in_place' True.
+            A Tuple of self.model_links_df, self.shapes_df, and self.model_nodes_df if `in_place` is False. 
 
         .. todo:: make this a more rigorous test
         """
+        # assess first if you need to run the rest of this by identifying if any managed lane attributes exist
+        if not RoadwayNetwork.has_managed_lanes(self.links_df):
+            if in_place:
+                return 
+            else:
+                return self
 
         WranglerLogger.info("Creating network with duplicated managed lanes")
-
-        if "ml_access" in self.links_df["roadway"].tolist():
-            msg = "managed lane access links already exist in network; shouldn't be running create managed lane network. Returning network as-is."
-            WranglerLogger.error(msg)
-            if in_place:
-                return
-            else:
-                return copy.deepcopy(self)
 
         # identify parameters to use
         if not keep_same_attributes_ml_and_gp:
@@ -2404,15 +2417,11 @@ class RoadwayNetwork(object):
         out_shapes_df = out_shapes_df.reset_index()
 
         if in_place:
-            self.links_df = out_links_df
-            self.nodes_df = out_nodes_df
+            self.model_links_df = out_links_df
+            self.nodes_df  = out_nodes_df
             self.shapes_df = out_shapes_df
         else:
-            out_network = copy.deepcopy(self)
-            out_network.links_df = out_links_df
-            out_network.nodes_df = out_nodes_df
-            out_network.shapes_df = out_shapes_df
-            return out_network
+            return out_links_df, out_nodes_df, out_shapes_df
 
     @staticmethod
     def get_modal_links_nodes(
