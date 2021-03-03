@@ -51,8 +51,9 @@ UNIQUE_NODE_IDS = ["model_node_id"]
 SELECTION_REQUIRES = ["link"]
 
 # Scalar values added to primary keys for nodes and links for corresponding managed lanes
-MANAGED_LANES_NODE_ID_SCALAR = 500000
-MANAGED_LANES_LINK_ID_SCALAR = 1000000
+# MTC
+MANAGED_LANES_NODE_ID_SCALAR = 4500000
+MANAGED_LANES_LINK_ID_SCALAR = 10000000
 
 # Required attributes to specify for managed lanes
 MANAGED_LANES_REQUIRED_ATTRIBUTES = [
@@ -76,6 +77,8 @@ KEEP_SAME_ATTRIBUTES_ML_AND_GP = [
     "roadway",
     "length",
     "segment_id",
+    "ft",
+    "assignable",
 ]
 
 # Mapping of modes to variables in the network
@@ -89,10 +92,10 @@ MODES_TO_NETWORK_LINK_VARIABLES = {
 }
 
 MODES_TO_NETWORK_NODE_VARIABLES = {
-    "drive": ["drive_node"],
-    "rail": ["rail_only", "drive_node"],
-    "bus": ["bus_only", "drive_node"],
-    "transit": ["bus_only", "rail_only", "drive_node"],
+    "drive": ["drive_access"],
+    "rail": ["rail_only", "drive_access"],
+    "bus": ["bus_only", "drive_access"],
+    "transit": ["bus_only", "rail_only", "drive_access"],
     "walk": ["walk_node"],
     "bike": ["bike_node"],
 }
@@ -168,11 +171,11 @@ class RoadwayNetwork(object):
         shape_foreign_key (str): variable linking the links table and shape table
         unique_link_ids (list): list of variables unique to each link
         unique_node_ids (list): list of variables unique to each node
-        modes_to_network_link_variables (dict): Mapping of modes to link variables in the network 
-        modes_to_network_nodes_variables (dict): Mapping of modes to node variables in the network 
-        managed_lanes_node_id_scalar (int): Scalar values added to primary keys for nodes for 
+        modes_to_network_link_variables (dict): Mapping of modes to link variables in the network
+        modes_to_network_nodes_variables (dict): Mapping of modes to node variables in the network
+        managed_lanes_node_id_scalar (int): Scalar values added to primary keys for nodes for
             corresponding managed lanes.
-        managed_lanes_link_id_scalar (int): Scalar values added to primary keys for links for 
+        managed_lanes_link_id_scalar (int): Scalar values added to primary keys for links for
             corresponding managed lanes.
         managed_lanes_required_attributes (list): attributes that must be specified in managed
             lane projects.
@@ -188,8 +191,10 @@ class RoadwayNetwork(object):
         links: GeoDataFrame,
         shapes: GeoDataFrame = None,
         node_foreign_key: str = None,
-        link_foreign_key: str = None, 
+        link_foreign_key: str = None,
         shape_foreign_key: str = None,
+        unique_link_key: str = None,
+        unique_node_key: str = None,
         unique_link_ids: list = None,
         unique_node_ids: list = None,
         crs: int = None,
@@ -209,6 +214,9 @@ class RoadwayNetwork(object):
         self.node_foreign_key = NODE_FOREIGN_KEY if node_foreign_key is None else node_foreign_key
         self.link_foreign_key = LINK_FOREIGN_KEY if link_foreign_key is None else link_foreign_key
         self.shape_foreign_key = SHAPE_FOREIGN_KEY if shape_foreign_key is None else shape_foreign_key
+
+        self.unique_link_key = UNIQUE_LINK_KEY if unique_link_key is None else unique_link_key
+        self.unique_node_key = UNIQUE_NODE_KEY if unique_node_key is None else unique_node_key
 
         self.unique_link_ids = UNIQUE_LINK_IDS if unique_link_ids is None else unique_link_ids
         self.unique_node_ids = UNIQUE_NODE_IDS if unique_node_ids is None else unique_node_ids
@@ -257,15 +265,15 @@ class RoadwayNetwork(object):
             fast: boolean that will skip validation to speed up read time
             crs: coordinate reference system, ESPG number
             node_foreign_key: variable linking the node table to the link table.
-            link_foreign_key: 
-            shape_foreign_key: 
-            unique_link_ids: 
-            unique_node_ids: 
+            link_foreign_key:
+            shape_foreign_key:
+            unique_link_ids:
+            unique_node_ids:
             modes_to_network_link_variables:
-            modes_to_network_nodes_variables: 
+            modes_to_network_nodes_variables:
             managed_lanes_node_id_scalar:
             managed_lanes_link_id_scalar:
-            managed_lanes_required_attributes: 
+            managed_lanes_required_attributes:
             keep_same_attributes_ml_and_gp:
 
         Returns: a RoadwayNetwork instance
@@ -307,9 +315,9 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def load_transform_network(
-        node_filename: str, 
-        link_filename: str, 
-        shape_filename: str, 
+        node_filename: str,
+        link_filename: str,
+        shape_filename: str,
         crs: int = CRS,
         node_foreign_key: str = NODE_FOREIGN_KEY,
         validate_schema: bool = True,
@@ -318,14 +326,14 @@ class RoadwayNetwork(object):
         """
         Reads roadway network files from disk and transforms them into GeoDataFrames.
 
-        args: 
+        args:
             node_filename: file name for nodes.
             link_filename: file name for links.
             shape_filename: file name for shapes.
             crs: coordinate reference system. Defaults to value in CRS.
-            node_foreign_key: variable linking the node table to the link table. Defaults 
+            node_foreign_key: variable linking the node table to the link table. Defaults
                 to NODE_FOREIGN_KEY.
-            validate_schema: boolean indicating if network should be validated to schema. 
+            validate_schema: boolean indicating if network should be validated to schema.
 
         returns: tuple of GeodataFrames nodes_df, links_df, shapes_df
         """
@@ -436,9 +444,15 @@ class RoadwayNetwork(object):
 
         link_property_columns = self.links_df.columns.values.tolist()
         link_property_columns.remove("geometry")
+        """
         links_json = link_df_to_json(self.links_df, link_property_columns)
         with open(links_file, "w") as f:
             json.dump(links_json, f)
+        """
+        links_json = self.links_df[link_property_columns].to_json(orient = "records")
+
+        with open(links_file, 'w') as f:
+            f.write(links_json)
 
         # geopandas wont let you write to geojson because
         # it uses fiona, which doesn't accept a list as one of the properties
@@ -776,8 +790,8 @@ class RoadwayNetwork(object):
         Args:
             nodes_df : GeoDataFrame of nodes
             link_df : GeoDataFrame of links
-            node_foreign_key: field referenced in `link_foreign_key` 
-            link_foreign_key: list of attributes that define the link start and end nodes to the node foreign key 
+            node_foreign_key: field referenced in `link_foreign_key`
+            link_foreign_key: list of attributes that define the link start and end nodes to the node foreign key
             unique_link_key: primary key for links
 
         Returns: a networkx multidigraph
@@ -827,7 +841,7 @@ class RoadwayNetwork(object):
                 of roadway features, containing a "link" key.
 
         Returns: A boolean indicating if the selection dictionary contains
-            a unique identifier for links. 
+            a unique identifier for links.
 
         """
         selection_keys = [k for l in selection_dict["link"] for k, v in l.items()]
@@ -970,7 +984,7 @@ class RoadwayNetwork(object):
             D_id: destination node foreigh key ID
             weight_column: column to use for weight of shortest path. Defaults to "i" (iteration)
             weight_factor: optional weight to multiply the weight column by when finding the shortest path
-            search_breadth: 
+            search_breadth:
 
         Returns
 
@@ -1117,9 +1131,9 @@ class RoadwayNetwork(object):
             raise NoPathFound(msg)
 
     def select_roadway_features(
-        self, 
-        selection: dict, 
-        search_mode="drive", 
+        self,
+        selection: dict,
+        search_mode="drive",
         force_search=False,
         sp_weight_factor = None,
     ) -> GeoDataFrame:
@@ -1145,11 +1159,11 @@ class RoadwayNetwork(object):
                  B - to node
                  link - which includes at least a variable for `name`
             search_mode: mode which you are searching for; defaults to "drive"
-            force_search: boolean directing method to perform search even if one 
+            force_search: boolean directing method to perform search even if one
                 with same selection dict is stored from a previous search.
-            sp_weight_factor: multiple used to discourage shortest paths which 
-                meander from original search returned from name or ref query. 
-                If not set here, will default to value of sp_weight_factor in 
+            sp_weight_factor: multiple used to discourage shortest paths which
+                meander from original search returned from name or ref query.
+                If not set here, will default to value of sp_weight_factor in
                 RoadwayNetwork instance. If not set there, will defaul to SP_WEIGHT_FACTOR.
 
         Returns: a list of link IDs in selection
@@ -1840,7 +1854,7 @@ class RoadwayNetwork(object):
 
           list of group categories in order of search, i.e.
           ["hov3","hov2"]
-        default_return: what to return if variable or time period not found. Default is None. 
+        default_return: what to return if variable or time period not found. Default is None.
 
         returns
         --------
@@ -1893,8 +1907,29 @@ class RoadwayNetwork(object):
             if v.get("timeofday"):
                 categories = []
                 for tg in v["timeofday"]:
-                    if (time_spans[0] >= tg["time"][0]) and (
-                        time_spans[1] <= tg["time"][1]
+                    if ((time_spans[0] >= tg["time"][0]) and (
+                        time_spans[1] <= tg["time"][1]) and (
+                        time_spans[0] <= time_spans[1])
+                    ):
+                        if tg.get("category"):
+                            categories += tg["category"]
+                            for c in search_cats:
+                                print("CAT:", c, tg["category"])
+                                if c in tg["category"]:
+                                    # print("Var:", v)
+                                    # print(
+                                    #    "RETURNING:", time_spans, category, tg["value"]
+                                    # )
+                                    return tg["value"]
+                        else:
+                            # print("Var:", v)
+                            # print("RETURNING:", time_spans, category, tg["value"])
+                            return tg["value"]
+
+                    if ((time_spans[0] >= tg["time"][0]) and (
+                        time_spans[1] <= tg["time"][1]) and (
+                        time_spans[0] > time_spans[1]) and (
+                        tg["time"][0] > tg["time"][1])
                     ):
                         if tg.get("category"):
                             categories += tg["category"]
@@ -2004,26 +2039,26 @@ class RoadwayNetwork(object):
         )
 
     def update_distance(
-        self, 
-        links_df: GeoDataFrame = None, 
+        self,
+        links_df: GeoDataFrame = None,
         use_shapes: bool = False,
         units: str = "miles",
-        network_variable: str = "distance", 
+        network_variable: str = "distance",
         overwrite: bool = True,
         inplace = True
     ):
         """
         Calculate link distance in specified units to network variable using either straight line
-        distance or (if specified) shape distance if available. 
+        distance or (if specified) shape distance if available.
 
         Args:
-            links_df: Links GeoDataFrame.  Useful if want to update a portion of network links 
+            links_df: Links GeoDataFrame.  Useful if want to update a portion of network links
                 (i.e. only centroid connectors). If not provided, will use entire self.links_df.
-            use_shapes: if True, will add length information from self.shapes_df rather than crow-fly. 
-                If no corresponding shape found in self.shapes_df, will default to crow-fly. 
-            units: units to use. Defaults to the standard unit of miles. Available units: "meters", "miles". 
-            network_variable: variable to store link distance in. Defaults to "distance". 
-            overwrite: Defaults to True and will overwrite all existing calculated distances. 
+            use_shapes: if True, will add length information from self.shapes_df rather than crow-fly.
+                If no corresponding shape found in self.shapes_df, will default to crow-fly.
+            units: units to use. Defaults to the standard unit of miles. Available units: "meters", "miles".
+            network_variable: variable to store link distance in. Defaults to "distance".
+            overwrite: Defaults to True and will overwrite all existing calculated distances.
                 False will only update NaNs.
             inplace: updates self.links_df
 
@@ -2047,7 +2082,7 @@ class RoadwayNetwork(object):
         """
 
         temp_links_gdf = links_df.copy()
-        temp_links_gdf.crs = "EPSG:4326" 
+        temp_links_gdf.crs = "EPSG:4326"
         temp_links_gdf = temp_links_gdf.to_crs(epsg=26915) #in meters
 
         conversion_from_meters = {"miles": 1/1609.34, "meters": 1}
@@ -2084,7 +2119,7 @@ class RoadwayNetwork(object):
             self.links_df = links_df
         else:
             return links_df
-    
+
     def create_dummy_connector_links(
         gp_df: GeoDataFrame,
         ml_df: GeoDataFrame,
@@ -2284,7 +2319,7 @@ class RoadwayNetwork(object):
         # non_ml_links are links in the network where there is no managed lane.
         # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
 
-        non_ml_links_df = self.links_df[self.links_df["managed"] == 0]
+        non_ml_links_df = self.links_df[self.links_df["managed"] != 1]
         non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis=1)
 
         ml_links_df = self.links_df[self.links_df["managed"] == 1]
@@ -2369,7 +2404,7 @@ class RoadwayNetwork(object):
                                 "locationReferences"
                             ][0]["point"]
                         ),
-                        "drive_node": 1,
+                        "drive_access": 1,
                     },
                     ignore_index=True,
                 )
@@ -2384,7 +2419,7 @@ class RoadwayNetwork(object):
                                 "locationReferences"
                             ][1]["point"]
                         ),
-                        "drive_node": 1,
+                        "drive_access": 1,
                     },
                     ignore_index=True,
                 )
@@ -2425,8 +2460,8 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def get_modal_links_nodes(
-        links_df: DataFrame, 
-        nodes_df: DataFrame, 
+        links_df: DataFrame,
+        nodes_df: DataFrame,
         modes: list[str] = None,
         modes_to_network_link_variables: dict = MODES_TO_NETWORK_LINK_VARIABLES,
     ) -> tuple(DataFrame, DataFrame):
@@ -2437,7 +2472,7 @@ class RoadwayNetwork(object):
             nodes_df: DataFrame of standard network nodes
             modes: list of the modes of the network to be kept, must be in `drive`,`transit`,`rail`,`bus`,
                 `walk`, `bike`. For example, if bike and walk are selected, both bike and walk links will be kept.
-            modes_to_network_link_variables: dictionary mapping the mode selections to the network variables 
+            modes_to_network_link_variables: dictionary mapping the mode selections to the network variables
                 that must bool to true to select that mode. Defaults to MODES_TO_NETWORK_LINK_VARIABLES
 
         Returns: tuple of DataFrames for links, nodes filtered by mode
@@ -2498,8 +2533,8 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def get_modal_graph(
-        links_df: DataFrame, 
-        nodes_df: DataFrame, 
+        links_df: DataFrame,
+        nodes_df: DataFrame,
         mode: str = None,
         modes_to_network_link_variables: dict = MODES_TO_NETWORK_LINK_VARIABLES,
     ):
@@ -2511,7 +2546,7 @@ class RoadwayNetwork(object):
             nodes_df: DataFrame of standard network nodes
             mode: mode of the network, one of `drive`,`transit`,
                 `walk`, `bike`
-            modes_to_network_link_variables: dictionary mapping the mode selections to the network variables 
+            modes_to_network_link_variables: dictionary mapping the mode selections to the network variables
                 that must bool to true to select that mode. Defaults to MODES_TO_NETWORK_LINK_VARIABLES
 
         Returns: networkx: osmnx: DiGraph  of network
