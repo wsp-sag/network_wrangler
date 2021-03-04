@@ -8,6 +8,7 @@ from network_wrangler import TransitNetwork
 from network_wrangler import Scenario
 from network_wrangler.logger import WranglerLogger
 from network_wrangler.roadwaynetwork import UNIQUE_LINK_IDS
+
 """
 Run just the tests labeled scenario using `pytest -v -m scenario`
 To run with print statments, use `pytest -s -m scenario`
@@ -88,7 +89,7 @@ def test_scenario_conflicts(request):
 
     print("Conflict checks done:", scen.conflicts_checked)
     print("--Finished:", request.node.name)
-    #todo #243
+    # todo #243
 
 
 @pytest.mark.scenario
@@ -126,7 +127,7 @@ def test_scenario_requisites(request):
 
     print("Requisite checks done:", scen.requisites_checked)
     print("--Finished:", request.node.name)
-    #todo #244
+    # todo #244
 
 
 @pytest.mark.scenario
@@ -166,7 +167,7 @@ def test_project_sort(request):
     scen.order_project_cards()
     print("Ordered Projects:", scen.get_project_names())
     print("--Finished:", request.node.name)
-    #todo #245
+    # todo #245
 
 
 @pytest.mark.roadway
@@ -184,7 +185,8 @@ def test_managed_lane_project_card(request):
     print(project_card)
 
     print("--Finished:", request.node.name)
-    #todo #246
+    # todo #246
+
 
 # selection, answer
 query_tests = [
@@ -270,6 +272,7 @@ query_tests = [
     ),
 ]
 
+
 @pytest.mark.parametrize("test_spec", query_tests)
 @pytest.mark.travis
 def test_query_builder(request, test_spec):
@@ -286,6 +289,7 @@ def test_query_builder(request, test_spec):
     assert sel_query == answer
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.scenario
 @pytest.mark.travis
@@ -311,7 +315,7 @@ def test_apply_summary_wrappers(request):
             node_filename=STPAUL_NODE_FILE,
             shape_filename=STPAUL_SHAPE_FILE,
             fast=True,
-            shape_foreign_key ='shape_id',
+            shape_foreign_key="shape_id",
         ),
         "transit_net": TransitNetwork.read(STPAUL_DIR),
     }
@@ -325,7 +329,7 @@ def test_apply_summary_wrappers(request):
     my_scenario.scenario_summary()
 
     print("--Finished:", request.node.name)
-    #todo #247
+    # todo #247
 
 
 @pytest.mark.scenario
@@ -348,4 +352,4 @@ def test_scenario_building_from_script(request):
     p.communicate()  # wait for the subprocess call to finish
 
     print("--Finished:", request.node.name)
-    #todo #248
+    # todo #248

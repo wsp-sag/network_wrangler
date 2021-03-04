@@ -117,9 +117,9 @@ class TransitNetwork(object):
 
         Args:
             feed_path: where to read transit network files from.
-            shapes_foreign_key: foreign key between shapes dataframe and roadway network nodes. Will default to SHAPES_FOREIGN_KEY if not provided. 
-            stops_foreign_key: foreign key between stops dataframe and roadway network nodes. Will defaul to STOPS_FOREIGN_KEY if not provided. 
-            id_scalar: scalar value added to create new stop and shape IDs when necessary. Will default to ID_SCALAR if not provided. 
+            shapes_foreign_key: foreign key between shapes dataframe and roadway network nodes. Will default to SHAPES_FOREIGN_KEY if not provided.
+            stops_foreign_key: foreign key between stops dataframe and roadway network nodes. Will defaul to STOPS_FOREIGN_KEY if not provided.
+            id_scalar: scalar value added to create new stop and shape IDs when necessary. Will default to ID_SCALAR if not provided.
 
         Returns: a TransitNetwork object.
         """
@@ -900,7 +900,12 @@ class TransitNetwork(object):
                         WranglerLogger.error("Cannot create a unique new stop_id.")
                     stops.loc[
                         len(stops.index) + 1,
-                        ["stop_id", "stop_lat", "stop_lon", self.stops_foreign_key,],
+                        [
+                            "stop_id",
+                            "stop_lat",
+                            "stop_lon",
+                            self.stops_foreign_key,
+                        ],
                     ] = [
                         new_stop_id,
                         nodes_df.loc[int(fk_i), "Y"],

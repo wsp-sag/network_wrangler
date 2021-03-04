@@ -26,7 +26,7 @@ def test_set_roadnet(request):
         node_filename=os.path.join(STPAUL_DIR, "node.geojson"),
         shape_filename=os.path.join(STPAUL_DIR, "shape.geojson"),
         fast=True,
-        shape_foreign_key ='shape_id',
+        shape_foreign_key="shape_id",
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.set_roadnet(road_net)
@@ -46,7 +46,7 @@ def test_project_card(request):
         node_filename=os.path.join(STPAUL_DIR, "node.geojson"),
         shape_filename=os.path.join(STPAUL_DIR, "shape.geojson"),
         fast=True,
-        shape_foreign_key ='shape_id',
+        shape_foreign_key="shape_id",
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net
@@ -126,7 +126,7 @@ def test_wo_existing(request):
         node_filename=os.path.join(STPAUL_DIR, "node.geojson"),
         shape_filename=os.path.join(STPAUL_DIR, "shape.geojson"),
         fast=True,
-        shape_foreign_key ='shape_id',
+        shape_foreign_key="shape_id",
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net
@@ -166,6 +166,7 @@ def test_wo_existing(request):
     assert result == answer
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 @pytest.mark.transit

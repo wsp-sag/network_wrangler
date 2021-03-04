@@ -43,7 +43,7 @@ def _read_small_net():
         node_filename=SMALL_NODE_FILE,
         shape_filename=SMALL_SHAPE_FILE,
         fast=True,
-        shape_foreign_key ='shape_id',
+        shape_foreign_key="shape_id",
     )
     return net
 
@@ -54,7 +54,7 @@ def _read_stpaul_net():
         node_filename=STPAUL_NODE_FILE,
         shape_filename=STPAUL_SHAPE_FILE,
         fast=True,
-        shape_foreign_key ='shape_id',
+        shape_foreign_key="shape_id",
     )
     return net
 
@@ -76,7 +76,7 @@ def test_roadway_read_write(request):
         node_filename=SMALL_NODE_FILE,
         shape_filename=SMALL_SHAPE_FILE,
         fast=True,
-        shape_foreign_key ='shape_id',
+        shape_foreign_key="shape_id",
     )
     time1 = time.time()
     print("Writing to: {}".format(SCRATCH_DIR))
@@ -86,7 +86,7 @@ def test_roadway_read_write(request):
         link_filename=out_link_file,
         node_filename=out_node_file,
         shape_filename=out_shape_file,
-        shape_foreign_key ='shape_id',
+        shape_foreign_key="shape_id",
     )
     time3 = time.time()
 
@@ -122,14 +122,14 @@ def test_quick_roadway_read_write(request):
         node_filename=SMALL_NODE_FILE,
         shape_filename=SMALL_SHAPE_FILE,
         fast=True,
-        shape_foreign_key ='shape_id',
+        shape_foreign_key="shape_id",
     )
     net.write(filename=out_prefix, path=SCRATCH_DIR)
     net_2 = RoadwayNetwork.read(
         link_filename=out_link_file,
         node_filename=out_node_file,
         shape_filename=out_shape_file,
-        shape_foreign_key ='shape_id',
+        shape_foreign_key="shape_id",
     )
     print("--Finished:", request.node.name)
 
@@ -343,6 +343,7 @@ def test_managed_lane_change_functionality(request):
     rev_links.to_csv(os.path.join(SCRATCH_DIR, "ml_links.csv"), index=False)
 
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -682,6 +683,7 @@ def test_query_roadway_property_by_time_group(request, variable_query):
 
     ## todo make test make sure the values are correct.
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_write_model_net(request):
@@ -708,6 +710,7 @@ def test_write_model_net(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_network_connectivity(request):
@@ -720,6 +723,7 @@ def test_network_connectivity(request):
     print("Drive Network Connected:", net.is_network_connected(mode="drive"))
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_get_modal_network(request):
@@ -730,7 +734,9 @@ def test_get_modal_network(request):
 
     net = _read_stpaul_net()
     _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-        net.links_df, net.nodes_df, modes=[mode],
+        net.links_df,
+        net.nodes_df,
+        modes=[mode],
     )
 
     test_links_of_selection = _links_df["model_link_id"].tolist()
@@ -752,6 +758,7 @@ def test_get_modal_network(request):
 
     assert set(test_links_of_selection) == set(control_links_of_selection)
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_network_connectivity_ignore_single_nodes(request):
@@ -765,7 +772,8 @@ def test_network_connectivity_ignore_single_nodes(request):
     print("{} Disconnected Subnetworks:".format(len(disconnected_nodes)))
     print("-->\n{}".format("\n".join(list(map(str, disconnected_nodes)))))
     print("--Finished:", request.node.name)
-    #TODO #240
+    # TODO #240
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -917,6 +925,7 @@ def test_add_roadway_shape(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.travis
 @pytest.mark.roadway
 def test_create_ml_network_shape(request):
@@ -992,7 +1001,7 @@ def test_apply_pycode_roadway(request):
         "AFTER CHANGE...\n",
         net.links_df.loc[net.links_df["lanes"] == 12, ["model_link_id", "lanes"]],
     )
-    #TODO #241
+    # TODO #241
 
 
 @pytest.mark.travis
@@ -1040,7 +1049,8 @@ def test_find_segment(request):
     sel_dict = {"name": "North Mounds Boulevard", "ref": "US 61"}
     seg_df = net.identify_segment(seg_ends[0], seg_ends[1], selection_dict=sel_dict)
     print(seg_df)
-    #TODO #242
+    # TODO #242
+
 
 @pytest.mark.travis
 @pytest.mark.roadway
@@ -1063,9 +1073,7 @@ def test_duplicates_in_ml_network(request):
     shapes_df = ml_net.shapes_df
     nodes_df = ml_net.nodes_df
 
-    duplicate_links_df = links_df[
-        links_df.duplicated(subset=["A", "B"], keep="first")
-    ]
+    duplicate_links_df = links_df[links_df.duplicated(subset=["A", "B"], keep="first")]
 
     duplicate_nodes_df = nodes_df[
         nodes_df.duplicated(subset=["model_node_id"], keep="first")

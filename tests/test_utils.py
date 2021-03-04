@@ -6,9 +6,6 @@ import pandas as pd
 from shapely.geometry import LineString
 
 
-
-
-
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
     {"text": "I'm a roadway", "delim": "_", "answer": "im_a_roadway"},
@@ -61,9 +58,9 @@ def test_time_convert(request):
 @pytest.mark.get_dist
 @pytest.mark.travis
 def test_get_distance_bw_lat_lon(request):
-    
+
     print("\n--Starting:", request.node.name)
-    
+
     from network_wrangler import haversine_distance
 
     start = [-93.0889873, 44.966861]
@@ -116,7 +113,7 @@ def test_location_reference_offset(request):
     print("--Finished:", request.node.name)
 
 
-update_test_list =[
+update_test_list = [
     {
         "method": "update if found",
         "update_fields": ["cb"],
@@ -127,7 +124,7 @@ update_test_list =[
                 "cb": ["a", "bb", "cc", "dd"],
                 "cc": [111, 222, 333, 444],
             }
-        )
+        ),
     },
     {
         "method": "update nan",
@@ -139,7 +136,7 @@ update_test_list =[
                 "cb": ["a", "bb", "c", "dd"],
                 "cc": [111, 222, 333, 444],
             }
-        )
+        ),
     },
     {
         "method": "overwrite all",
@@ -151,7 +148,7 @@ update_test_list =[
                 "cb": [np.NaN, "bb", "cc", "dd"],
                 "cc": [111, 222, 333, 444],
             }
-        )
+        ),
     },
     {
         "method": "update nan",
@@ -164,9 +161,10 @@ update_test_list =[
                 "cc": [111, 222, 333, 444],
                 "zz": [np.NaN, "like", "ice", "cream."],
             }
-        )
+        ),
     },
 ]
+
 
 @pytest.mark.update_df
 @pytest.mark.travis
@@ -196,7 +194,16 @@ def test_update_df(request, update_test):
         }
     )
 
-
-    result_df = update_df(df1, df2, "id", update_fields=update_test['update_fields'], method = update_test['method'])
-    print("UPDATE METHOD: {}\nResulting DF:\n{}\nExpected DF:\n{}".format(update_test['method'], result_df, update_test['expected_result'] ))
-    pd.testing.assert_frame_equal( update_test['expected_result'], result_df)
+    result_df = update_df(
+        df1,
+        df2,
+        "id",
+        update_fields=update_test["update_fields"],
+        method=update_test["method"],
+    )
+    print(
+        "UPDATE METHOD: {}\nResulting DF:\n{}\nExpected DF:\n{}".format(
+            update_test["method"], result_df, update_test["expected_result"]
+        )
+    )
+    pd.testing.assert_frame_equal(update_test["expected_result"], result_df)

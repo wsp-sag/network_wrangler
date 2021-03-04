@@ -39,10 +39,10 @@ class ProjectCard(object):
 
     def __init__(self, attribute_dictonary: dict):
         """
-        Constructor for Project Card object. 
+        Constructor for Project Card object.
 
         args:
-            attribute_dictonary: a nested dictionary of project card attributes. 
+            attribute_dictonary: a nested dictionary of project card attributes.
         """
         # add these first so they are first on write out
         self.project = None
@@ -64,8 +64,8 @@ class ProjectCard(object):
         Reads and validates a Project card
 
         args:
-            card_filename: The path to the project card file. 
-            validate: Boolean indicating if the project card should be validated. Defaults to True. 
+            card_filename: The path to the project card file.
+            validate: Boolean indicating if the project card should be validated. Defaults to True.
 
         Returns a Project Card object
         """
@@ -124,7 +124,7 @@ class ProjectCard(object):
         Reads "normal" wrangler project cards defined in YAML.
 
         Args:
-            card_filename: file location where the project card is. 
+            card_filename: file location where the project card is.
 
         Returns: Attribute Dictionary for Project Card
         """
@@ -141,8 +141,8 @@ class ProjectCard(object):
         Writes project card dictionary to YAML file.
 
         args:
-            out_filename: file location to write the project card object as yml.  
-                If not provided, will write to current directory using the project name as the filename. 
+            out_filename: file location to write the project card object as yml.
+                If not provided, will write to current directory using the project name as the filename.
         """
         if not out_filename:
             from network_wrangler.utils import make_slug
@@ -164,12 +164,11 @@ class ProjectCard(object):
 
     @staticmethod
     def validate_project_card_schema(
-        card_filename: str, 
-        card_schema_filename: str = "project_card.json"
+        card_filename: str, card_schema_filename: str = "project_card.json"
     ) -> bool:
         """
         Tests project card schema validity by evaluating if it conforms to the schemas
-        
+
         args:
             card_filename: location of project card .yml file
             card_schema_filename: location of project card schema to validate against. Defaults to project_card.json.
@@ -195,12 +194,16 @@ class ProjectCard(object):
         except ValidationError as exc:
             WranglerLogger.error("Failed Project Card validation: Validation Error")
             WranglerLogger.error("Project Card File Loc:{}".format(card_filename))
-            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_filename))
+            WranglerLogger.error(
+                "Project Card Schema Loc:{}".format(card_schema_filename)
+            )
             WranglerLogger.error(exc.message)
 
         except SchemaError as exc:
             WranglerLogger.error("Failed Project Card schema validation: Schema Error")
-            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_filename))
+            WranglerLogger.error(
+                "Project Card Schema Loc:{}".format(card_schema_filename)
+            )
             WranglerLogger.error(exc.message)
 
         except yaml.YAMLError as exc:
@@ -233,7 +236,7 @@ class ProjectCard(object):
 
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
 
-        unique_link_ids_sel = list( set(unique_link_ids) & set(selection_keys) )
+        unique_link_ids_sel = list(set(unique_link_ids) & set(selection_keys))
 
         for l in selection["link"]:
             for key, value in l.items():
@@ -241,10 +244,7 @@ class ProjectCard(object):
                 if key in ignore:
                     continue
 
-                if (
-                    unique_link_ids_sel
-                    and key not in unique_link_ids
-                ):
+                if unique_link_ids_sel and key not in unique_link_ids:
                     continue
 
                 count = count + 1
@@ -269,10 +269,7 @@ class ProjectCard(object):
                 ):
                     sel_query = sel_query + " and "
 
-                if (
-                    unique_link_ids_sel
-                    and count != len(unique_link_ids_sel)
-                ):
+                if unique_link_ids_sel and count != len(unique_link_ids_sel):
                     sel_query = sel_query + " and "
 
         if not unique_link_ids_sel:

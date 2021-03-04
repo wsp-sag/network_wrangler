@@ -614,7 +614,9 @@ class Scenario(object):
             change_summary["added_links"] = pd.DataFrame(change.get("links"))
             change_summary["added_nodes"] = pd.DataFrame(change.get("nodes"))
             change_summary["map"] = RoadwayNetwork.addition_map(
-                self.road_net, change.get("links"), change.get("nodes"),
+                self.road_net,
+                change.get("links"),
+                change.get("nodes"),
             )
             return change_summary
 

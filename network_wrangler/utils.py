@@ -14,16 +14,15 @@ from geographiclib.geodesic import Geodesic
 from .logger import WranglerLogger
 
 
-def point_df_to_geojson(
-    df: pd.DataFrame, 
-    properties: list,
-    node_foreign_key = None):
+def point_df_to_geojson(df: pd.DataFrame, properties: list, node_foreign_key=None):
     """
     Author: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/
     """
     from .roadwaynetwork import NODE_FOREIGN_KEY
-    if not node_foreign_key: node_foreign_key = NODE_FOREIGN_KEY
+
+    if not node_foreign_key:
+        node_foreign_key = NODE_FOREIGN_KEY
 
     geojson = {"type": "FeatureCollection", "features": []}
     for _, row in df.iterrows():
@@ -41,7 +40,7 @@ def point_df_to_geojson(
 
 
 def link_df_to_json(df: pd.DataFrame, properties: list):
-    """ Export pandas dataframe as a json object.
+    """Export pandas dataframe as a json object.
 
     Modified from: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/
@@ -223,7 +222,7 @@ def offset_location_reference(location_reference, offset_meters=10):
     return out_location_reference
 
 
-def haversine_distance(origin: list, destination: list, units = "miles"):
+def haversine_distance(origin: list, destination: list, units="miles"):
     """
     Calculates haversine distance between two points
 
@@ -246,7 +245,7 @@ def haversine_distance(origin: list, destination: list, units = "miles"):
     ) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) * math.sin(dlon / 2)
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-    d = {"meters": radius * c } # meters
+    d = {"meters": radius * c}  # meters
     d["miles"] = d["meters"] * 0.000621371  # miles
 
     return d[units]
@@ -296,12 +295,13 @@ def create_line_string(location_reference: list):
 
     return LineString([location_reference[0]["point"], location_reference[1]["point"]])
 
+
 def update_df(
     base_df: pd.DataFrame,
     update_df: pd.DataFrame,
     merge_key: str = None,
     left_on: str = None,
-    right_on: str = None, 
+    right_on: str = None,
     update_fields: Collection = None,
     method: str = "update if found",
 ):
@@ -312,8 +312,8 @@ def update_df(
         base_df: DataFrame to be updated
         update_df: DataFrame with with updated values
         merge_key: column to merge on (i.e. model_link_id). If not specified, must have left_on AND right_on.
-        left_on: key for base_df.  Must also specify right_on. If not specified, must specify merge_key. 
-        right_on: key for update_df.  Must also specify left_on. If not specified, must specify merge_key. 
+        left_on: key for base_df.  Must also specify right_on. If not specified, must specify merge_key.
+        right_on: key for update_df.  Must also specify left_on. If not specified, must specify merge_key.
         update_fields: required list of fields to update values for.  Must be columns in update_df.
         method: string indicating how the dataframe should be updated. One of:
             - "update if found" (default) which will update the values if the update values are not NaN
@@ -322,15 +322,17 @@ def update_df(
 
     Returns: Dataframe with updated values
     """
-    valid_methods = ["update if found", "overwrite all", "update nan"] 
+    valid_methods = ["update if found", "overwrite all", "update nan"]
 
     if method not in valid_methods:
-        raise ValueError("Specified 'method' was: {} but must be one of: {}".format(method, valid_methods))
-    
-    if update_fields is None:
         raise ValueError(
-            "Must specify which fields to update, None specified."
+            "Specified 'method' was: {} but must be one of: {}".format(
+                method, valid_methods
+            )
         )
+
+    if update_fields is None:
+        raise ValueError("Must specify which fields to update, None specified.")
 
     if not set(update_fields).issubset(update_df.columns):
         raise ValueError(
@@ -340,17 +342,23 @@ def update_df(
         )
 
     new_fields = [v for v in update_fields if v not in base_df.columns]
-    update_fields = list(set(update_fields)-set(new_fields))
+    update_fields = list(set(update_fields) - set(new_fields))
 
-    if new_fields: 
+    if new_fields:
         WranglerLogger.debug(
-            "Some update fields: {} not in base_df; adding then as new columns.".format(new_fields)
+            "Some update fields: {} not in base_df; adding then as new columns.".format(
+                new_fields
+            )
         )
-        
+
     if merge_key and left_on or merge_key and right_on:
-        raise ValueError("Only need a merge_key or right_on and left_on but both specified")
+        raise ValueError(
+            "Only need a merge_key or right_on and left_on but both specified"
+        )
     if not merge_key and not (left_on and right_on):
-        raise ValueError("Need either a merge_key or right_on and left_on but neither fully specified")
+        raise ValueError(
+            "Need either a merge_key or right_on and left_on but neither fully specified"
+        )
 
     if merge_key:
         left_on = merge_key
@@ -377,24 +385,28 @@ def update_df(
     merged_df = base_df.merge(
         update_df[update_fields + [(right_on)]],
         left_on=left_on,
-        right_on= right_on,
+        right_on=right_on,
         how="left",
         suffixes=suffixes,
     )
     # print("merged_df:\n",merged_df)
     if method == "overwrite all":
-        merged_df = merged_df.drop(columns=[c + "-orig" for c in update_fields if c + "-orig" in merged_df.columns])
+        merged_df = merged_df.drop(
+            columns=[
+                c + "-orig" for c in update_fields if c + "-orig" in merged_df.columns
+            ]
+        )
         merged_df = merged_df[base_df.columns.tolist()]
     elif method == "update if found":
-        #overwrite if the updated field is not Nan
+        # overwrite if the updated field is not Nan
         for c in update_fields:
-            # selects rows where updated value is not NA; 
+            # selects rows where updated value is not NA;
             merged_df.loc[~merged_df[c + "-update"].isna(), c] = merged_df.loc[
                 ~merged_df[c + "-update"].isna(), c + "-update"
             ]
         merged_df = merged_df.drop(columns=[c + "-update" for c in update_fields])
     elif method == "update nan":
-        #overwrite if the base field IS Nan
+        # overwrite if the base field IS Nan
         for c in update_fields:
             # print(merged_df.apply(lambda row: row[c+"-update"] if not row[c] else row[c],axis=1))
             merged_df.loc[merged_df[c].isna(), c] = merged_df.loc[
@@ -405,9 +417,9 @@ def update_df(
 
     if new_fields:
         merged_df = merged_df.merge(
-            update_df[new_fields+ [(right_on)]],
+            update_df[new_fields + [(right_on)]],
             left_on=left_on,
-            right_on= right_on,
+            right_on=right_on,
             how="left",
         )
     return merged_df
