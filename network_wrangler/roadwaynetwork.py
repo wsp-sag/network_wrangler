@@ -1826,8 +1826,29 @@ class RoadwayNetwork(object):
             if v.get("timeofday"):
                 categories = []
                 for tg in v["timeofday"]:
-                    if (time_spans[0] >= tg["time"][0]) and (
-                        time_spans[1] <= tg["time"][1]
+                    if ((time_spans[0] >= tg["time"][0]) and (
+                        time_spans[1] <= tg["time"][1]) and (
+                        time_spans[0] <= time_spans[1])
+                    ):
+                        if tg.get("category"):
+                            categories += tg["category"]
+                            for c in search_cats:
+                                print("CAT:", c, tg["category"])
+                                if c in tg["category"]:
+                                    # print("Var:", v)
+                                    # print(
+                                    #    "RETURNING:", time_spans, category, tg["value"]
+                                    # )
+                                    return tg["value"]
+                        else:
+                            # print("Var:", v)
+                            # print("RETURNING:", time_spans, category, tg["value"])
+                            return tg["value"]
+
+                    if ((time_spans[0] >= tg["time"][0]) and (
+                        time_spans[1] <= tg["time"][1]) and (
+                        time_spans[0] > time_spans[1]) and (
+                        tg["time"][0] > tg["time"][1])
                     ):
                         if tg.get("category"):
                             categories += tg["category"]
@@ -2052,7 +2073,7 @@ class RoadwayNetwork(object):
         # non_ml_links are links in the network where there is no managed lane.
         # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
 
-        non_ml_links_df = self.links_df[self.links_df["managed"] == 0]
+        non_ml_links_df = self.links_df[self.links_df["managed"] != 1]
         non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis=1)
 
         ml_links_df = self.links_df[self.links_df["managed"] == 1]
