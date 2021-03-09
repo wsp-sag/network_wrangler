@@ -1,6 +1,7 @@
 import os
 import json
 import pytest
+
 from network_wrangler import RoadwayNetwork
 from network_wrangler import TransitNetwork
 from network_wrangler import ProjectCard
@@ -21,10 +22,11 @@ def test_set_roadnet(request):
     print("\n--Starting:", request.node.name)
 
     road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
+        link_filename=os.path.join(STPAUL_DIR, "link.json"),
+        node_filename=os.path.join(STPAUL_DIR, "node.geojson"),
+        shape_filename=os.path.join(STPAUL_DIR, "shape.geojson"),
         fast=True,
+        shape_foreign_key="shape_id",
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.set_roadnet(road_net)
@@ -40,10 +42,11 @@ def test_project_card(request):
     print("\n--Starting:", request.node.name)
 
     road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
+        link_filename=os.path.join(STPAUL_DIR, "link.json"),
+        node_filename=os.path.join(STPAUL_DIR, "node.geojson"),
+        shape_filename=os.path.join(STPAUL_DIR, "shape.geojson"),
         fast=True,
+        shape_foreign_key="shape_id",
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net
@@ -119,10 +122,11 @@ def test_wo_existing(request):
     print("\n--Starting:", request.node.name)
 
     road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
+        link_filename=os.path.join(STPAUL_DIR, "link.json"),
+        node_filename=os.path.join(STPAUL_DIR, "node.geojson"),
+        shape_filename=os.path.join(STPAUL_DIR, "shape.geojson"),
         fast=True,
+        shape_foreign_key="shape_id",
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net

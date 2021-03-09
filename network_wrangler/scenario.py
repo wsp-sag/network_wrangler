@@ -32,9 +32,9 @@ class Scenario(object):
     ::
         my_base_scenario = {
             "road_net": RoadwayNetwork.read(
-                link_file=STPAUL_LINK_FILE,
-                node_file=STPAUL_NODE_FILE,
-                shape_file=STPAUL_SHAPE_FILE,
+                link_filename=STPAUL_LINK_FILE,
+                node_filename=STPAUL_NODE_FILE,
+                shape_filename=STPAUL_SHAPE_FILE,
                 fast=True,
             ),
             "transit_net": TransitNetwork.read(STPAUL_DIR),
@@ -96,6 +96,17 @@ class Scenario(object):
         self.road_net = None
         self.transit_net = None
 
+        if type(base_scenario) is dict:
+            pass
+        elif isinstance(base_scenario, Scenario):
+            base_scenario = base_scenario.__dict__
+        else:
+            msg = "Base scenario should be a dict or instance of Scenario: found {} which is of type:{}".format(
+                base_scenario, type(base_scenario)
+            )
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
         self.base_scenario = base_scenario
 
         # if the base scenario had roadway or transit networks, use them as the basis.
@@ -145,6 +156,7 @@ class Scenario(object):
         roadway_dir: str = "",
         transit_dir: str = "",
         validate: bool = True,
+        **kwargs,
     ) -> Scenario:
         """
         args
@@ -172,10 +184,11 @@ class Scenario(object):
             base_network_node_file = base_node_name
 
         road_net = RoadwayNetwork.read(
-            link_file=base_network_link_file,
-            node_file=base_network_node_file,
-            shape_file=base_network_shape_file,
+            link_filename=base_network_link_file,
+            node_filename=base_network_node_file,
+            shape_filename=base_network_shape_file,
             fast=not validate,
+            **kwargs,
         )
 
         if transit_dir:
@@ -250,16 +263,16 @@ class Scenario(object):
         return scenario
 
     def add_project_card_from_file(
-        self, project_card_file: str, validate: bool = True, tags: list = []
+        self, project_card_filename: str, validate: bool = True, tags: list = []
     ):
 
         WranglerLogger.debug(
-            "Trying to add project card from file: {}".format(project_card_file)
+            "Trying to add project card from file: {}".format(project_card_filename)
         )
-        project_card = ProjectCard.read(project_card_file, validate=validate)
+        project_card = ProjectCard.read(project_card_filename, validate=validate)
 
         if project_card == None:
-            msg = "project card not read: {}".format(project_card_file)
+            msg = "project card not read: {}".format(project_card_filename)
             WranglerLogger.error(msg)
             raise ValueError(msg)
 
@@ -601,7 +614,9 @@ class Scenario(object):
             change_summary["added_links"] = pd.DataFrame(change.get("links"))
             change_summary["added_nodes"] = pd.DataFrame(change.get("nodes"))
             change_summary["map"] = RoadwayNetwork.addition_map(
-                self.road_net, change.get("links"), change.get("nodes"),
+                self.road_net,
+                change.get("links"),
+                change.get("nodes"),
             )
             return change_summary
 
@@ -663,13 +678,13 @@ class Scenario(object):
         report_str += "Base Scenario:\n"
         report_str += "--Road Network:\n"
         report_str += "----Link File: {}\n".format(
-            self.base_scenario["road_net"].link_file
+            self.base_scenario["road_net"].link_filename
         )
         report_str += "----Node File: {}\n".format(
-            self.base_scenario["road_net"].node_file
+            self.base_scenario["road_net"].node_filename
         )
         report_str += "----Shape File: {}\n".format(
-            self.base_scenario["road_net"].shape_file
+            self.base_scenario["road_net"].shape_filename
         )
         report_str += "--Transit Network:\n"
         report_str += "----Feed Path: {}\n".format(

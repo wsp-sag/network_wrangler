@@ -39,20 +39,22 @@ SCRATCH_DIR = os.path.join(
 
 def _read_small_net():
     net = RoadwayNetwork.read(
-        link_file=SMALL_LINK_FILE,
-        node_file=SMALL_NODE_FILE,
-        shape_file=SMALL_SHAPE_FILE,
+        link_filename=SMALL_LINK_FILE,
+        node_filename=SMALL_NODE_FILE,
+        shape_filename=SMALL_SHAPE_FILE,
         fast=True,
+        shape_foreign_key="shape_id",
     )
     return net
 
 
 def _read_stpaul_net():
     net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
+        link_filename=STPAUL_LINK_FILE,
+        node_filename=STPAUL_NODE_FILE,
+        shape_filename=STPAUL_SHAPE_FILE,
         fast=True,
+        shape_foreign_key="shape_id",
     )
     return net
 
@@ -70,17 +72,21 @@ def test_roadway_read_write(request):
     time0 = time.time()
 
     net = RoadwayNetwork.read(
-        link_file=SMALL_LINK_FILE,
-        node_file=SMALL_NODE_FILE,
-        shape_file=SMALL_SHAPE_FILE,
+        link_filename=SMALL_LINK_FILE,
+        node_filename=SMALL_NODE_FILE,
+        shape_filename=SMALL_SHAPE_FILE,
         fast=True,
+        shape_foreign_key="shape_id",
     )
     time1 = time.time()
     print("Writing to: {}".format(SCRATCH_DIR))
     net.write(filename=out_prefix, path=SCRATCH_DIR)
     time2 = time.time()
     net_2 = RoadwayNetwork.read(
-        link_file=out_link_file, node_file=out_node_file, shape_file=out_shape_file
+        link_filename=out_link_file,
+        node_filename=out_node_file,
+        shape_filename=out_shape_file,
+        shape_foreign_key="shape_id",
     )
     time3 = time.time()
 
@@ -112,14 +118,18 @@ def test_quick_roadway_read_write(request):
     out_link_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "link.json")
     out_node_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "node.geojson")
     net = RoadwayNetwork.read(
-        link_file=SMALL_LINK_FILE,
-        node_file=SMALL_NODE_FILE,
-        shape_file=SMALL_SHAPE_FILE,
+        link_filename=SMALL_LINK_FILE,
+        node_filename=SMALL_NODE_FILE,
+        shape_filename=SMALL_SHAPE_FILE,
         fast=True,
+        shape_foreign_key="shape_id",
     )
     net.write(filename=out_prefix, path=SCRATCH_DIR)
     net_2 = RoadwayNetwork.read(
-        link_file=out_link_file, node_file=out_node_file, shape_file=out_shape_file
+        link_filename=out_link_file,
+        node_filename=out_node_file,
+        shape_filename=out_shape_file,
+        shape_foreign_key="shape_id",
     )
     print("--Finished:", request.node.name)
 
@@ -311,7 +321,7 @@ def test_managed_lane_change_functionality(request):
     print("Reading project card ...")
     project_card_name = "test_managed_lanes_change_keyword.yml"
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate = False)
+    project_card = ProjectCard.read(project_card_path, validate=False)
 
     print("Selecting roadway features ...")
     selected_link_indices = net.select_roadway_features(project_card.facility)
@@ -350,7 +360,6 @@ def test_add_adhoc_field(request):
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
 
-@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
@@ -682,12 +691,7 @@ def test_write_model_net(request):
 
     print("Reading network ...")
 
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
+    net = _read_stpaul_net()
 
     print("Reading project card ...")
     project_card_name = "5_managed_lane.yml"
@@ -714,12 +718,7 @@ def test_network_connectivity(request):
 
     print("Reading network ...")
 
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
+    net = _read_stpaul_net()
     print("Checking network connectivity ...")
     print("Drive Network Connected:", net.is_network_connected(mode="drive"))
     print("--Finished:", request.node.name)
@@ -733,20 +732,17 @@ def test_get_modal_network(request):
     mode = "transit"
     print("Reading network. Mode: {} ...".format(mode))
 
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
+    net = _read_stpaul_net()
     _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-        net.links_df, net.nodes_df, modes=[mode],
+        net.links_df,
+        net.nodes_df,
+        modes=[mode],
     )
 
     test_links_of_selection = _links_df["model_link_id"].tolist()
     print("TEST - Number of selected links: {}".format(len(test_links_of_selection)))
 
-    mode_variables = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
+    mode_variables = net.modes_to_network_link_variables[mode]
 
     control_links_of_selection = []
     for m in mode_variables:
@@ -770,17 +766,13 @@ def test_network_connectivity_ignore_single_nodes(request):
 
     print("Reading network ...")
 
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
+    net = _read_stpaul_net()
     print("Assessing network connectivity for walk...")
     _, disconnected_nodes = net.assess_connectivity(mode="walk", ignore_end_nodes=True)
     print("{} Disconnected Subnetworks:".format(len(disconnected_nodes)))
     print("-->\n{}".format("\n".join(list(map(str, disconnected_nodes)))))
     print("--Finished:", request.node.name)
+    # TODO #240
 
 
 @pytest.mark.roadway
@@ -814,12 +806,7 @@ def test_existing_managed_lane_apply(request):
 
     print("Reading network ...")
 
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
+    net = _read_stpaul_net()
 
     print("Reading project card ...")
     project_card_name = "4_simple_managed_lane.yml"
@@ -1014,6 +1001,7 @@ def test_apply_pycode_roadway(request):
         "AFTER CHANGE...\n",
         net.links_df.loc[net.links_df["lanes"] == 12, ["model_link_id", "lanes"]],
     )
+    # TODO #241
 
 
 @pytest.mark.travis
@@ -1049,7 +1037,6 @@ def test_identify_segment_ends(request):
     assert calculated_d == correct_d
 
 
-@pytest.mark.elo
 @pytest.mark.travis
 @pytest.mark.roadway
 def test_find_segment(request):
@@ -1062,3 +1049,42 @@ def test_find_segment(request):
     sel_dict = {"name": "North Mounds Boulevard", "ref": "US 61"}
     seg_df = net.identify_segment(seg_ends[0], seg_ends[1], selection_dict=sel_dict)
     print(seg_df)
+    # TODO #242
+
+
+@pytest.mark.travis
+@pytest.mark.roadway
+def test_duplicates_in_ml_network(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = _read_stpaul_net()
+
+    print("Reading project card ...")
+    project_card_name = "4_simple_managed_lane.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path, validate=False)
+    project_card_dictionary = project_card.__dict__
+
+    net.apply(project_card_dictionary)
+    ml_net = net.create_managed_lane_network()
+
+    links_df = ml_net.links_df
+    shapes_df = ml_net.shapes_df
+    nodes_df = ml_net.nodes_df
+
+    duplicate_links_df = links_df[links_df.duplicated(subset=["A", "B"], keep="first")]
+
+    duplicate_nodes_df = nodes_df[
+        nodes_df.duplicated(subset=["model_node_id"], keep="first")
+    ]
+
+    duplicate_shapes_df = shapes_df[
+        shapes_df.duplicated(subset=[ml_net.shape_foreign_key], keep="first")
+    ]
+
+    assert len(duplicate_links_df) == 0
+    assert len(duplicate_nodes_df) == 0
+    assert len(duplicate_shapes_df) == 0
+
+    print("--Finished:", request.node.name)
