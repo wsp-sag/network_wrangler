@@ -39,10 +39,10 @@ class ProjectCard(object):
 
     def __init__(self, attribute_dictonary: dict):
         """
-        Constructor for Project Card object. 
+        Constructor for Project Card object.
 
         args:
-            attribute_dictonary: a nested dictionary of project card attributes. 
+            attribute_dictonary: a nested dictionary of project card attributes.
         """
         # add these first so they are first on write out
         self.project = None
@@ -64,8 +64,8 @@ class ProjectCard(object):
         Reads and validates a Project card
 
         args:
-            card_filename: The path to the project card file. 
-            validate: Boolean indicating if the project card should be validated. Defaults to True. 
+            card_filename: The path to the project card file.
+            validate: Boolean indicating if the project card should be validated. Defaults to True.
 
         Returns a Project Card object
         """
@@ -124,7 +124,7 @@ class ProjectCard(object):
         Reads "normal" wrangler project cards defined in YAML.
 
         Args:
-            card_filename: file location where the project card is. 
+            card_filename: file location where the project card is.
 
         Returns: Attribute Dictionary for Project Card
         """
@@ -141,8 +141,8 @@ class ProjectCard(object):
         Writes project card dictionary to YAML file.
 
         args:
-            out_filename: file location to write the project card object as yml.  
-                If not provided, will write to current directory using the project name as the filename. 
+            out_filename: file location to write the project card object as yml.
+                If not provided, will write to current directory using the project name as the filename.
         """
         if not out_filename:
             from network_wrangler.utils import make_slug
@@ -164,12 +164,12 @@ class ProjectCard(object):
 
     @staticmethod
     def validate_project_card_schema(
-        card_filename: str, 
+        card_filename: str,
         card_schema_filename: str = "project_card.json"
     ) -> bool:
         """
         Tests project card schema validity by evaluating if it conforms to the schemas
-        
+
         args:
             card_filename: location of project card .yml file
             card_schema_filename: location of project card schema to validate against. Defaults to project_card.json.
@@ -252,15 +252,25 @@ class ProjectCard(object):
                 if isinstance(value, list):
                     sel_query = sel_query + "("
                     v = 1
-                    for i in value:  # building an OR query with each element in list
-                        if isinstance(i, str):
+                    for i in value:
+                        if isinstance(i, str): # building an OR query with each element in list
                             sel_query = sel_query + key + '.str.contains("' + i + '")'
-                        else:
-                            sel_query = sel_query + key + "==" + str(i)
-                        if v != len(value):
-                            sel_query = sel_query + " or "
-                            v = v + 1
-                    sel_query = sel_query + ")"
+                            if v != len(value):
+                                sel_query = sel_query + " or "
+                            else:
+                                sel_query = sel_query + ")"
+                        else:  # building an isin query with each element in list
+                            if v == 1:
+                                sel_query = sel_query + key + '.isin(['
+
+                            sel_query = sel_query + str(i)
+
+                            if v != len(value):
+                                sel_query = sel_query + ","
+                            else:
+                                sel_query = sel_query + "]))"
+
+                        v = v + 1
                 else:
                     sel_query = sel_query + key + "==" + '"' + str(value) + '"'
 
