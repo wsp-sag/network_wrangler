@@ -696,6 +696,8 @@ class TransitNetwork(object):
                 "route_short_name",
                 "route_long_name",
                 "time",
+                "start_time",
+                "end_time"
             ]:
                 if key in trips:
                     trips = trips[trips[key].isin(selection[key])]
