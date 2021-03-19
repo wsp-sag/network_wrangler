@@ -678,7 +678,7 @@ class TransitNetwork(object):
             selection["time"] = parse_time_spans(selection["time"])
         elif selection.get("start_time") and selection.get("end_time"):
             selection["time"] = parse_time_spans(
-                [selection["start_time"], selection["end_time"]]
+                [selection["start_time"][0], selection["end_time"][0]]
             )
             # Filter freq to trips in selection
             freq = freq[freq.trip_id.isin(trips["trip_id"])]
