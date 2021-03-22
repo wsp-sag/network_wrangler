@@ -631,6 +631,27 @@ class TransitNetwork(object):
 
     def select_transit_features(self, selection: dict) -> pd.Series:
         """
+        combines multiple selections
+
+        Args:
+            selection : selection dictionary
+
+        Returns: trip identifiers : list of GTFS trip IDs in the selection
+        """
+        trip_ids = pd.Series()
+
+        if selection.get("route"):
+            for route_dictionary in selection["route"]:
+                trip_ids = trip_ids.append(
+                    self._select_transit_features(route_dictionary)
+                )
+        else:
+            trip_ids = self._select_transit_features(selection)
+
+        return trip_ids
+
+    def _select_transit_features(self, selection: dict) -> pd.Series:
+        """
         Selects transit features that satisfy selection criteria
 
         Args:
