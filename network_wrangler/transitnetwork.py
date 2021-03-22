@@ -678,7 +678,7 @@ class TransitNetwork(object):
             selection["time"] = parse_time_spans(selection["time"])
         elif selection.get("start_time") and selection.get("end_time"):
             selection["time"] = parse_time_spans(
-                [selection["start_time"], selection["end_time"]]
+                [selection["start_time"][0], selection["end_time"][0]]
             )
             # Filter freq to trips in selection
             freq = freq[freq.trip_id.isin(trips["trip_id"])]
@@ -696,6 +696,8 @@ class TransitNetwork(object):
                 "route_short_name",
                 "route_long_name",
                 "time",
+                "start_time",
+                "end_time"
             ]:
                 if key in trips:
                     trips = trips[trips[key].isin(selection[key])]
@@ -883,7 +885,7 @@ class TransitNetwork(object):
                     )
                     # Add new row to stops
                     new_stop_id = str(int(fk_i) + TransitNetwork.ID_SCALAR)
-                    if stop_id in stops["stop_id"].tolist():
+                    if new_stop_id in stops["stop_id"].tolist():
                         WranglerLogger.error("Cannot create a unique new stop_id.")
                     stops.loc[
                         len(stops.index) + 1,
@@ -895,8 +897,8 @@ class TransitNetwork(object):
                         ],
                     ] = [
                         new_stop_id,
-                        nodes_df.loc[int(fk_i), "Y"],
-                        nodes_df.loc[int(fk_i), "X"],
+                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"],
+                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"],
                         fk_i,
                     ]
 
