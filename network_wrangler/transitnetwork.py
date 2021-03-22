@@ -867,8 +867,8 @@ class TransitNetwork(object):
             if properties.get("existing") is not None:
                 # Match list
                 nodes = this_shape[TransitNetwork.SHAPES_FOREIGN_KEY].tolist()
-                index_replacement_starts = nodes.index(properties["existing_shapes"][0])
-                index_replacement_ends = nodes.index(properties["existing_shapes"][-1])
+                index_replacement_starts = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][0]][0]
+                index_replacement_ends = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][-1]][-1]
                 this_shape = pd.concat(
                     [
                         this_shape.iloc[:index_replacement_starts],
