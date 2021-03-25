@@ -612,6 +612,8 @@ class TransitNetwork(object):
                     self.select_transit_features_by_nodes(managed_lane_nodes),
                     managed_lane_nodes,
                 )
+            elif project_dictionary["category"].lower() == "add transit":
+                self.apply_python_calculation(project_dictionary["pycode"])
             elif project_dictionary["category"].lower() == "roadway deletion":
                 WranglerLogger.warning(
                     "Roadway Deletion not yet implemented in Transit; ignoring"
@@ -628,6 +630,18 @@ class TransitNetwork(object):
                 _apply_individual_change(project_dictionary)
         else:
             _apply_individual_change(project_card_dictionary)
+
+    def apply_python_calculation(
+        self, pycode: str, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        """
+        Changes roadway network object by executing pycode.
+
+        Args:
+            pycode: python code which changes values in the roadway network object
+            in_place: update self or return a new roadway network object
+        """
+        exec(pycode)
 
     def select_transit_features(self, selection: dict) -> pd.Series:
         """
