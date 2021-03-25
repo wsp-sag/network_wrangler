@@ -117,9 +117,9 @@ class TransitNetwork(object):
 
         Args:
             feed_path: where to read transit network files from.
-            shapes_foreign_key: foreign key between shapes dataframe and roadway network nodes. Will default to SHAPES_FOREIGN_KEY if not provided. 
-            stops_foreign_key: foreign key between stops dataframe and roadway network nodes. Will defaul to STOPS_FOREIGN_KEY if not provided. 
-            id_scalar: scalar value added to create new stop and shape IDs when necessary. Will default to ID_SCALAR if not provided. 
+            shapes_foreign_key: foreign key between shapes dataframe and roadway network nodes. Will default to SHAPES_FOREIGN_KEY if not provided.
+            stops_foreign_key: foreign key between stops dataframe and roadway network nodes. Will defaul to STOPS_FOREIGN_KEY if not provided.
+            id_scalar: scalar value added to create new stop and shape IDs when necessary. Will default to ID_SCALAR if not provided.
 
         Returns: a TransitNetwork object.
         """
@@ -628,6 +628,8 @@ class TransitNetwork(object):
                     managed_lane_nodes,
                     self.RoadNet.managed_lanes_node_id_scalar,
                 )
+            elif project_dictionary["category"].lower() == "add transit":
+                self.apply_python_calculation(project_dictionary["pycode"])
             elif project_dictionary["category"].lower() == "roadway deletion":
                 WranglerLogger.warning(
                     "Roadway Deletion not yet implemented in Transit; ignoring"
@@ -645,7 +647,40 @@ class TransitNetwork(object):
         else:
             _apply_individual_change(project_card_dictionary)
 
+    def apply_python_calculation(
+        self, pycode: str, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        """
+        Changes roadway network object by executing pycode.
+
+        Args:
+            pycode: python code which changes values in the roadway network object
+            in_place: update self or return a new roadway network object
+        """
+        exec(pycode)
+
     def select_transit_features(self, selection: dict) -> pd.Series:
+        """
+        combines multiple selections
+
+        Args:
+            selection : selection dictionary
+
+        Returns: trip identifiers : list of GTFS trip IDs in the selection
+        """
+        trip_ids = pd.Series()
+
+        if selection.get("route"):
+            for route_dictionary in selection["route"]:
+                trip_ids = trip_ids.append(
+                    self._select_transit_features(route_dictionary)
+                )
+        else:
+            trip_ids = self._select_transit_features(selection)
+
+        return trip_ids
+
+    def _select_transit_features(self, selection: dict) -> pd.Series:
         """
         Selects transit features that satisfy selection criteria
 
@@ -694,7 +729,7 @@ class TransitNetwork(object):
             selection["time"] = parse_time_spans(selection["time"])
         elif selection.get("start_time") and selection.get("end_time"):
             selection["time"] = parse_time_spans(
-                [selection["start_time"], selection["end_time"]]
+                [selection["start_time"][0], selection["end_time"][0]]
             )
             # Filter freq to trips in selection
             freq = freq[freq.trip_id.isin(trips["trip_id"])]
@@ -712,6 +747,8 @@ class TransitNetwork(object):
                 "route_short_name",
                 "route_long_name",
                 "time",
+                "start_time",
+                "end_time"
             ]:
                 if key in trips:
                     trips = trips[trips[key].isin(selection[key])]
@@ -816,7 +853,7 @@ class TransitNetwork(object):
         # Replace shapes records
         trips = self.feed.trips  # create pointer rather than a copy
         shape_ids = trips[trips["trip_id"].isin(trip_ids)].shape_id
-        for shape_id in shape_ids:
+        for shape_id in set(shape_ids):
             # Check if `shape_id` is used by trips that are not in
             # parameter `trip_ids`
             trips_using_shape_id = trips.loc[trips["shape_id"] == shape_id, ["trip_id"]]
@@ -859,8 +896,8 @@ class TransitNetwork(object):
             if properties.get("existing") is not None:
                 # Match list
                 nodes = this_shape[self.shapes_foreign_key].tolist()
-                index_replacement_starts = nodes.index(properties["existing_shapes"][0])
-                index_replacement_ends = nodes.index(properties["existing_shapes"][-1])
+                index_replacement_starts = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][0]][0]
+                index_replacement_ends = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][-1]][-1]
                 this_shape = pd.concat(
                     [
                         this_shape.iloc[:index_replacement_starts],
@@ -896,15 +933,15 @@ class TransitNetwork(object):
                     )
                     # Add new row to stops
                     new_stop_id = str(int(fk_i) + self.id_scalar)
-                    if stop_id in stops["stop_id"].tolist():
+                    if new_stop_id in stops["stop_id"].tolist():
                         WranglerLogger.error("Cannot create a unique new stop_id.")
                     stops.loc[
                         len(stops.index) + 1,
                         ["stop_id", "stop_lat", "stop_lon", self.stops_foreign_key,],
                     ] = [
                         new_stop_id,
-                        nodes_df.loc[int(fk_i), "Y"],
-                        nodes_df.loc[int(fk_i), "X"],
+                        nodes_df.loc[nodes_df[self.stops_foreign_key] == int(fk_i), "Y"],
+                        nodes_df.loc[nodes_df[self.stops_foreign_key] == int(fk_i), "X"],
                         fk_i,
                     ]
 

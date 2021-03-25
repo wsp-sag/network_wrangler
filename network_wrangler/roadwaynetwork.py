@@ -798,9 +798,12 @@ class RoadwayNetwork(object):
         """
         WranglerLogger.debug("starting ox_graph()")
 
-        graph_nodes = nodes_df.copy().drop(
-            ["inboundReferenceIds", "outboundReferenceIds"], axis=1
-        )
+        if "inboundReferenceIds" in nodes_df.columns:
+            graph_nodes = nodes_df.copy().drop(
+                ["inboundReferenceIds", "outboundReferenceIds"], axis=1
+            )
+        else:
+            graph_nodes = nodes_df.copy()
 
         graph_nodes.gdf_name = "network_nodes"
         WranglerLogger.debug("GRAPH NODES: {}".format(graph_nodes.columns))
@@ -809,9 +812,14 @@ class RoadwayNetwork(object):
         graph_nodes["x"] = graph_nodes["X"]
         graph_nodes["y"] = graph_nodes["Y"]
 
-        graph_links = links_df.copy().drop(
-            ["osm_link_id", "locationReferences"], axis=1
-        )
+        if "osm_link_id" in links_df.columns:
+            graph_links = links_df.copy().drop(
+                ["osm_link_id", "locationReferences"], axis=1
+            )
+        else:
+            graph_links = links_df.copy().drop(
+                ["locationReferences"], axis=1
+            )
 
         # have to change this over into u,v b/c this is what osm-nx is expecting
         graph_links["u"] = graph_links[link_foreign_key[0]]
