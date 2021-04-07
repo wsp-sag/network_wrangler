@@ -799,6 +799,72 @@ class TransitNetwork(object):
         # Return pandas.Series of trip_ids
         return self.feed.trips[self.feed.trips.shape_id.isin(shape_ids)].trip_id
 
+    def check_network_connectivity(self, shapes_foreign_key : pd.Series) -> pd.Series:
+        """
+        check if new shapes contain any links that are not in the roadway network
+        """
+        shape_links_df = pd.DataFrame(
+            {
+                "A" : shapes_foreign_key.tolist()[:-1],
+                "B" : shapes_foreign_key.tolist()[1:],
+            }
+        )
+
+        shape_links_df["A"] = shape_links_df["A"].astype(int)
+        shape_links_df["B"] = shape_links_df["B"].astype(int)
+
+        shape_links_df = pd.merge(
+            shape_links_df,
+            self.road_net.links_df[["A", "B", "model_link_id"]],
+            how = "left",
+            on = ["A", "B"]
+        )
+
+        missing_shape_links_df = shape_links_df[shape_links_df["model_link_id"].isnull()]
+
+        if len(missing_shape_links_df) > 0:
+            for index, row in missing_shape_links_df.iterrows():
+                WranglerLogger.warning(
+                    "Missing connections from node {} to node {} for the new routing.".format(int(row.A), int(row.B))
+                )
+
+                complete_node_list = TransitNetwork.route_between_nodes(self.graph, row.A, row.B)
+                complete_node_list = pd.Series([str(int(i)) for i in complete_node_list])
+
+                WranglerLogger.info(
+                    "Routing using default graph from node {} to node {} for missing connections.".format(int(row.A), int(row.B))
+                )
+
+                nodes = shapes_foreign_key.tolist()
+                index_replacement_starts = [i for i,d in enumerate(nodes) if d == str(int(row.A))][0]
+                index_replacement_ends = [i for i,d in enumerate(nodes) if d == str(int(row.B))][-1]
+                shapes_foreign_key = pd.concat(
+                    [
+                        shapes_foreign_key.iloc[:index_replacement_starts],
+                        complete_node_list,
+                        shapes_foreign_key.iloc[index_replacement_ends + 1 :],
+                    ],
+                    ignore_index=True,
+                    sort=False,
+                )
+
+        return shapes_foreign_key
+
+    @staticmethod
+    def route_between_nodes(graph, A, B) -> list:
+        """
+        find complete path when the new shape has connectivity issue
+        """
+
+        node_list = nx.shortest_path(
+            graph,
+            A,
+            B,
+            weight = "length"
+        )
+
+        return node_list
+
     def apply_transit_feature_change(
         self, trip_ids: pd.Series, properties: list, in_place: bool = True
     ) -> Union(None, TransitNetwork):
@@ -890,6 +956,20 @@ class TransitNetwork(object):
                     self.shapes_foreign_key: properties["set_shapes"],
                 }
             )
+
+            check_new_shape_nodes = self.check_network_connectivity(new_shape_rows[self.shapes_foreign_key])
+
+            if len(check_new_shape_nodes) != len(new_shape_rows):
+                new_shape_rows = pd.DataFrame(
+                    {
+                        "shape_id": shape_id,
+                        "shape_pt_lat": None,  # FIXME Populate from self.road_net?
+                        "shape_pt_lon": None,  # FIXME
+                        "shape_osm_node_id": None,  # FIXME
+                        "shape_pt_sequence": None,
+                        self.shapes_foreign_key: check_new_shape_nodes,
+                    }
+                )
 
             # If "existing" is specified, replace only that segment
             # Else, replace the whole thing
