@@ -196,9 +196,9 @@ class Scenario(object):
         base_scenario: dict = {},
         card_directory: str = "",
         tags: [str] = None,
-        project_cards_list=[],
-        glob_search="",
-        validate_project_cards=True,
+        project_cards_list = None,
+        glob_search = "",
+        validate_project_cards = True,
     ) -> Scenario:
         """
         Validates project cards with a specific tag from the specified folder or
@@ -220,12 +220,15 @@ class Scenario(object):
         """
         WranglerLogger.info("Creating Scenario")
 
-        if project_cards_list:
+        if project_cards_list is None:
+            project_cards_list = []
+        else:
             WranglerLogger.debug(
                 "Adding project cards from List.\n{}".format(
                     ",".join([p.project for p in project_cards_list])
                 )
             )
+            
         scenario = Scenario(base_scenario, project_cards=project_cards_list)
 
         if card_directory and tags:
