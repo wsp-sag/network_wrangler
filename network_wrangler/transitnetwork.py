@@ -825,14 +825,14 @@ class TransitNetwork(object):
         if len(missing_shape_links_df) > 0:
             for index, row in missing_shape_links_df.iterrows():
                 WranglerLogger.warning(
-                    "Missing connections from node {} to node {} for the new routing.".format(int(row.A), int(row.B))
+                    "Missing connections from node {} to node {} for the new routing, find complete path using default graph".format(int(row.A), int(row.B))
                 )
 
                 complete_node_list = TransitNetwork.route_between_nodes(self.graph, row.A, row.B)
                 complete_node_list = pd.Series([str(int(i)) for i in complete_node_list])
 
                 WranglerLogger.info(
-                    "Routing using default graph from node {} to node {} for missing connections.".format(int(row.A), int(row.B))
+                    "Routing path from node {} to node {} for missing connections: {}.".format(int(row.A), int(row.B), complete_node_list.tolist())
                 )
 
                 nodes = shapes_foreign_key.tolist()
@@ -970,6 +970,7 @@ class TransitNetwork(object):
                         self.shapes_foreign_key: check_new_shape_nodes,
                     }
                 )
+                properties["set_shapes"] = check_new_shape_nodes.tolist()
 
             # If "existing" is specified, replace only that segment
             # Else, replace the whole thing
