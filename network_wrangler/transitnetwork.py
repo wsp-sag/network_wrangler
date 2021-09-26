@@ -143,6 +143,13 @@ class TransitNetwork(object):
             id_scalar=id_scalar,
         )
         transit_network.feed_path = feed_path
+
+        fare_attributes_df = pd.read_csv(os.path.join(feed_path, 'fare_attributes.txt'))
+        fare_rules_df = pd.read_csv(os.path.join(feed_path, 'fare_rules.txt'))
+
+        transit_network.feed.fare_attributes = fare_attributes_df
+        transit_network.feed.fare_rules = fare_rules_df
+
         return transit_network
 
     @staticmethod
