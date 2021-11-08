@@ -79,6 +79,7 @@ KEEP_SAME_ATTRIBUTES_ML_AND_GP = [
     "segment_id",
     "ft",
     "assignable",
+    'county',
 ]
 
 # Mapping of modes to variables in the network
