@@ -2322,17 +2322,22 @@ class RoadwayNetwork(object):
         link_attributes = self.links_df.columns.values.tolist()
 
         ml_attributes = [i for i in link_attributes if i.startswith("ML_")]
+        non_ml_attributes = [i for i in link_attributes if not i.startswith("ML_")]
+
+        # arrange the attribute list so that ML attributes will be applied at last in the for loop
+        # and does not get overwritten to empty string
+        link_attributes_ordered = non_ml_attributes + ml_attributes
 
         # non_ml_links are links in the network where there is no managed lane.
         # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
 
-        non_ml_links_df = self.links_df[self.links_df["managed"] != 1]
+        non_ml_links_df = self.links_df[self.links_df["managed"] != 1].copy()
         non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis=1)
 
-        ml_links_df = self.links_df[self.links_df["managed"] == 1]
+        ml_links_df = self.links_df[self.links_df["managed"] == 1].copy()
         gp_links_df = ml_links_df.drop(ml_attributes, axis=1)
 
-        for attr in link_attributes:
+        for attr in link_attributes_ordered:
             if attr == "name":
                 ml_links_df["name"] = "Managed Lane " + gp_links_df["name"]
             elif attr in ml_attributes and attr not in ["ML_ACCESS", "ML_EGRESS"]:
