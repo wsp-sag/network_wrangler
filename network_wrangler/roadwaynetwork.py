@@ -3105,8 +3105,7 @@ class RoadwayNetwork(object):
                 ]
             )
         )
-
-        graph_nodes = self.nodes_df.loc[node_list_foreign_keys]
+        graph_nodes = self.nodes_df.loc[self.nodes_df[self.node_foreign_key].isin(node_list_foreign_keys)]
 
         G = RoadwayNetwork.ox_graph(graph_nodes, graph_links)
 
@@ -3210,10 +3209,10 @@ class RoadwayNetwork(object):
         if links is not None:
             link_ids = []
             for link in links:
-                link_ids.append(link.get(RoadwayNetwork.UNIQUE_LINK_KEY))
+                link_ids.append(link.get(self.unique_link_key))
 
             added_links = self.links_df[
-                self.links_df[RoadwayNetwork.UNIQUE_LINK_KEY].isin(link_ids)
+                self.links_df[self.unique_link_key].isin(link_ids)
             ]
             node_list_foreign_keys = list(
                 set(
