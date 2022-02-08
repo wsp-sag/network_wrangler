@@ -2867,7 +2867,7 @@ class RoadwayNetwork(object):
 
         for _, row in selected_links.iterrows():
             pl = ox.folium._make_folium_polyline(
-                edge=row, edge_color="blue", edge_width=5, edge_opacity=0.8
+                geom=row["geometry"], edge=row, edge_color="blue", edge_width=5, edge_opacity=0.8
             )
             pl.add_to(m)
 
