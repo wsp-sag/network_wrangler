@@ -779,17 +779,26 @@ class RoadwayNetwork(object):
         # have to change this over into u,v b/c this is what osm-nx is expecting
         graph_links["u"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[0]]
         graph_links["v"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[1]]
-        graph_links["id"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
         graph_links["key"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
+        # u,v,key should be a multi-index; see https://osmnx.readthedocs.io/en/stable/osmnx.html#osmnx.utils_graph.graph_from_gdfs
+        graph_links.set_index(keys=["u","v","key"], drop=True, inplace=True)
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
         try:
             G = ox.graph_from_gdfs(graph_nodes, graph_links)
-        except:
-            WranglerLogger.debug(
-                "Please upgrade your OSMNX package. For now, using depricated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found"
-            )
-            G = ox.gdfs_to_graph(graph_nodes, graph_links)
+        except AttributeError as attr_error:
+            if attr_error.args[0] == "module 'osmnx' has no attribute 'graph_from_gdfs'":
+                # This is the only exception for which we have a workaround
+                # Does this still work given the u,v,key multi-indexing?
+                WranglerLogger.warn("Please upgrade your OSMNX package. For now, using deprecated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found")
+                G = ox.gdfs_to_graph(graph_nodes, graph_links)
+            
+            else:
+                # for other AttributeErrors, raise further
+                raise attr_error
+        except Exception as e:
+            # for other Exceptions, raise further
+            raise e
 
         WranglerLogger.debug("finished ox.gdfs_to_graph()")
         return G
