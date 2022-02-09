@@ -237,8 +237,10 @@ class ProjectCard(object):
                             sel_query = sel_query + " or "
                             v = v + 1
                     sel_query = sel_query + ")"
-                else:
+                elif isinstance(value, str):
                     sel_query = sel_query + key + "==" + '"' + str(value) + '"'
+                else:
+                    sel_query = sel_query + key + "==" + str(value)
 
                 if not unique_model_link_identifer_exist and count != (
                     len(selection["link"]) - len(ignore)
