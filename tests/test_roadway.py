@@ -412,8 +412,13 @@ def test_add_adhoc_managed_lane_field(request):
     net.links_df["ML_price"].loc[selected_link_indices] = 1.5
     net.links_df["managed"] = 0
     net.links_df["managed"].loc[selected_link_indices] = 1
+    net.links_df["ML_access"] = ""
+    net.links_df["ML_access"].loc[selected_link_indices] = "all"
+    net.links_df["ML_egress"] = ""
+    net.links_df["ML_egress"].loc[selected_link_indices] = "all"
+
     print(
-        "Network with field...\n ",
+        "Network with field...\n",
         net.links_df[
             [
                 "model_link_id",
