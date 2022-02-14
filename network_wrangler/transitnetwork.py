@@ -897,6 +897,12 @@ class TransitNetwork(object):
             elif i["property"] in ["routing"]:
                 self._apply_transit_feature_change_routing(trip_ids, i, in_place)
 
+            elif i["property"] in ["shapes"]:
+                self._apply_transit_feature_change_shapes(trip_ids, i, in_place)
+
+            elif i["property"] in ['no_alightings', 'no_boardings', 'allow_alightings', 'allow_boardings']:
+                self._apply_transit_feature_change_stops(trip_ids, i, in_place)
+
     def _apply_transit_feature_change_routing(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
@@ -1170,6 +1176,267 @@ class TransitNetwork(object):
             in_place=in_place,
         )
 
+    def _apply_transit_feature_change_shapes(
+        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        shapes = self.feed.shapes.copy()
+        stop_times = self.feed.stop_times.copy()
+        stops = self.feed.stops.copy()
+
+        properties["set_shapes"] = [str(abs(i)) for i in properties["set"]]
+        if properties.get("existing") is not None:
+            properties["existing_shapes"] = [
+                str(abs(i)) for i in properties["existing"]
+            ]
+
+        # Replace shapes records
+        trips = self.feed.trips  # create pointer rather than a copy
+        shape_ids = trips[trips["trip_id"].isin(trip_ids)].shape_id
+
+        for shape_id in set(shape_ids):
+            # Check if `shape_id` is used by trips that are not in
+            # parameter `trip_ids`
+            trips_using_shape_id = trips.loc[trips["shape_id"] == shape_id, ["trip_id"]]
+            if not all(trips_using_shape_id.isin(trip_ids)["trip_id"]):
+                # In this case, we need to create a new shape_id so as to leave
+                # the trips not part of the query alone
+                WranglerLogger.warning(
+                    "Trips that were not in your query selection use the "
+                    "same `shape_id` as trips that are in your query. Only "
+                    "the trips' shape in your query will be changed."
+                )
+                old_shape_id = shape_id
+                shape_id = str(int(shape_id) + self.id_scalar)
+                if shape_id in shapes["shape_id"].tolist():
+                    WranglerLogger.error("Cannot create a unique new shape_id.")
+                dup_shape = shapes[shapes.shape_id == old_shape_id].copy()
+                dup_shape["shape_id"] = shape_id
+                shapes = pd.concat([shapes, dup_shape], ignore_index=True)
+                # change the shape_id for the trip record
+                trips.loc[trips["trip_id"].isin(trip_ids), "shape_id"] = shape_id
+
+            # Pop the rows that match shape_id
+            this_shape = shapes[shapes.shape_id == shape_id]
+
+            # Make sure they are ordered by shape_pt_sequence
+            this_shape = this_shape.sort_values(by=["shape_pt_sequence"])
+
+            # Build a pd.DataFrame of new shape records
+            new_shape_rows = pd.DataFrame(
+                {
+                    "shape_id": shape_id,
+                    "shape_pt_lat": None,  # FIXME Populate from self.road_net?
+                    "shape_pt_lon": None,  # FIXME
+                    "shape_osm_node_id": None,  # FIXME
+                    "shape_pt_sequence": None,
+                    self.shapes_foreign_key: properties["set_shapes"],
+                }
+            )
+
+            check_new_shape_nodes = self.check_network_connectivity(new_shape_rows[self.shapes_foreign_key])
+
+            if len(check_new_shape_nodes) != len(new_shape_rows):
+                new_shape_rows = pd.DataFrame(
+                    {
+                        "shape_id": shape_id,
+                        "shape_pt_lat": None,  # FIXME Populate from self.road_net?
+                        "shape_pt_lon": None,  # FIXME
+                        "shape_osm_node_id": None,  # FIXME
+                        "shape_pt_sequence": None,
+                        self.shapes_foreign_key: check_new_shape_nodes,
+                    }
+                )
+                properties["set_shapes"] = check_new_shape_nodes.tolist()
+
+            # If "existing" is specified, replace only that segment
+            # Else, replace the whole thing
+            if properties.get("existing") is not None:
+                # Match list
+                nodes = this_shape[self.shapes_foreign_key].tolist()
+                index_replacement_starts = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][0]][0]
+                index_replacement_ends = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][-1]][-1]
+                this_shape = pd.concat(
+                    [
+                        this_shape.iloc[:index_replacement_starts],
+                        new_shape_rows,
+                        this_shape.iloc[index_replacement_ends + 1 :],
+                    ],
+                    ignore_index=True,
+                    sort=False,
+                )
+            else:
+                this_shape = new_shape_rows
+
+            # Renumber shape_pt_sequence
+            this_shape["shape_pt_sequence"] = np.arange(len(this_shape))
+
+            # Add rows back into shapes
+            shapes = pd.concat(
+                [shapes[shapes.shape_id != shape_id], this_shape],
+                ignore_index=True,
+                sort=False,
+            )
+
+        # Replace self if in_place, else return
+        if in_place:
+            self.feed.shapes = shapes
+        else:
+            updated_network = copy.deepcopy(self)
+            updated_network.feed.shapes = shapes
+            return updated_network
+
+    def _apply_transit_feature_change_stops(
+        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        shapes = self.feed.shapes.copy()
+        stop_times = self.feed.stop_times.copy()
+        stops = self.feed.stops.copy()
+        trips = self.feed.trips.copy()
+        nodes_df = self.road_net.nodes_df.loc[:, [self.stops_foreign_key, "X", "Y"]]
+
+        for node_id in properties['set']:
+
+            # check if new stop node
+            existing_stop_fk_ids = set(stops[self.stops_foreign_key].tolist())
+            if str(node_id) not in existing_stop_fk_ids:
+                WranglerLogger.info(
+                    "Creating a new stop in stops.txt for node ID: {}".format(node_id)
+                )
+                # Add new row to stops
+                new_stop_id = str(int(node_id) + self.id_scalar)
+                if new_stop_id in stops["stop_id"].tolist():
+                    WranglerLogger.error("Cannot create a unique new stop_id.")
+                stops.loc[
+                    len(stops.index) + 1,
+                    ["stop_id", "stop_lat", "stop_lon", self.stops_foreign_key,],
+                ] = [
+                    new_stop_id,
+                    nodes_df.loc[nodes_df[self.stops_foreign_key] == int(node_id), "Y"],
+                    nodes_df.loc[nodes_df[self.stops_foreign_key] == int(node_id), "X"],
+                    str(node_id),
+                ]
+
+            for trip_id in trip_ids:
+                # Pop the rows that match trip_id
+                this_stoptime = stop_times[stop_times.trip_id == trip_id].copy()
+
+                # Merge on node IDs using stop_id (one node ID per stop_id)
+                this_stoptime = this_stoptime.merge(
+                    stops[["stop_id", self.stops_foreign_key]],
+                    how="left",
+                    on="stop_id",
+                )
+
+                # Make sure the stop_times are ordered by stop_sequence
+                this_stoptime = this_stoptime.sort_values(by=["stop_sequence"])
+
+                # get shapes
+                shape_id = trips[trips.trip_id == trip_id].shape_id.iloc[0]
+                
+                this_shape = shapes[shapes.shape_id == shape_id].copy()
+
+                # Make sure the shapes are ordered by shape_sequence
+                this_shape = this_shape.sort_values(by=["shape_pt_sequence"])
+
+                this_shape['is_stop'] = np.where(
+                    (this_shape[self.shapes_foreign_key].isin(this_stoptime[self.stops_foreign_key])) |
+                    (this_shape[self.shapes_foreign_key] == str(node_id)),
+                    1,
+                    0
+                )
+
+                stops_on_this_shape = this_shape[this_shape.is_stop == 1].copy()
+                stops_node_list = stops_on_this_shape[self.shapes_foreign_key].tolist()
+                
+                this_stop_index = stops_node_list.index(str(node_id))
+                
+                # the stop node id before this stop
+                previous_stop_node_id = stops_node_list[this_stop_index - 1]
+                
+                # the stop node id after this stop
+                next_stop_node_id = stops_node_list[this_stop_index + 1]
+
+                stoptime_node_ids = this_stoptime[self.stops_foreign_key].tolist()
+                
+                index_replacement_starts = stoptime_node_ids.index(
+                    previous_stop_node_id
+                )
+                
+                index_replacement_ends = stoptime_node_ids.index(
+                    next_stop_node_id
+                )
+
+                pickup_type = 0
+                drop_off_type = 0
+                if properties['property'] == 'allow_alightings':
+                    pickup_type = 0
+                if properties['property'] == 'no_alightings':
+                    pickup_type = 1
+                if properties['property'] == 'allow_boardings':
+                    drop_off_type = 0
+                if properties['property'] == 'no_boardings':
+                    drop_off_type = 1
+
+                # Build a pd.DataFrame of new shape records from properties
+                new_stoptime_rows = pd.DataFrame(
+                    {
+                        "trip_id": trip_id,
+                        "arrival_time": None,
+                        "departure_time": None,
+                        "pickup_type": pickup_type,
+                        "drop_off_type": drop_off_type,
+                        "stop_distance": None,
+                        "timepoint": None,
+                        "stop_is_skipped": None,
+                        self.stops_foreign_key: [str(node_id)],
+                    }
+                )
+
+                # Merge on stop_id using node IDs (many stop_id per node ID)
+                new_stoptime_rows = (
+                    new_stoptime_rows.merge(
+                        stops[["stop_id", self.stops_foreign_key]],
+                        how="left",
+                        on=self.stops_foreign_key,
+                    )
+                    .groupby([self.stops_foreign_key])
+                    .head(1)
+                )  # pick first
+
+                this_stoptime = pd.concat(
+                    [
+                        this_stoptime.iloc[:index_replacement_starts + 1],
+                        new_stoptime_rows,
+                        this_stoptime.iloc[index_replacement_ends :],
+                    ],
+                    ignore_index=True,
+                    sort=False,
+                )
+
+                # Remove node ID
+                del this_stoptime[self.stops_foreign_key]
+
+                # Renumber stop_sequence
+                this_stoptime["stop_sequence"] = np.arange(len(this_stoptime))
+
+                # Add rows back into stoptime
+                stop_times = pd.concat(
+                    [stop_times[stop_times.trip_id != trip_id], this_stoptime],
+                    ignore_index=True,
+                    sort=False,
+                )
+
+        # Replace self if in_place, else return
+        if in_place:
+            self.feed.shapes = shapes
+            self.feed.stops = stops
+            self.feed.stop_times = stop_times
+        else:
+            updated_network = copy.deepcopy(self)
+            updated_network.feed.shapes = shapes
+            updated_network.feed.stops = stops
+            updated_network.feed.stop_times = stop_times
+            return updated_network
 
 class DotDict(dict):
     """

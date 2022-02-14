@@ -251,3 +251,30 @@ def test_select_transit_features_by_nodes(request):
     )
 
     print("--Finished:", request.node.name)
+
+MTC_DIR = os.path.join(os.getcwd(), "examples", "mtc")
+@pytest.mark.menow
+@pytest.mark.transit
+@pytest.mark.travis
+def test_mtc(request):
+    print("\n--Starting:", request.node.name)
+
+    road_net = RoadwayNetwork.read(
+        link_filename=os.path.join(MTC_DIR, "link.json"),
+        node_filename=os.path.join(MTC_DIR, "node.geojson"),
+        shape_filename=os.path.join(MTC_DIR, "shape.geojson"),
+        fast=True,
+        shape_foreign_key ='id',
+    )
+    transit_net = TransitNetwork.read(MTC_DIR)
+    transit_net.road_net = road_net
+    
+    project_card_path = os.path.join(
+        MTC_DIR, "project_cards", "t_emme_2022-02-14_123600.ems.yml"
+    )
+    project_card = ProjectCard.read(project_card_path)
+    transit_net.apply(project_card.__dict__)
+    
+    transit_net.write(path = SCRATCH_DIR, filename = "build")
+    
+    print("--Finished:", request.node.name)

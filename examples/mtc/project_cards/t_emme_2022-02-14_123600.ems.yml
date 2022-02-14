@@ -1,0 +1,46 @@
+project: emme_tap_transit_network 2022-02-14 modify transit shape and stops
+tags: ''
+dependencies: ''
+changes:
+- category: Transit Service Property Change
+  facility:
+    route_id: '546'
+    direction_id: 1
+    shape_id: '1616'
+    start_time: '6:00'
+    end_time: '10:00'
+  properties:
+  - property: shapes
+    existing:
+    - 2551203
+    - 2577042
+    - 2508478
+    - 2505495
+    - 2577042
+    - 2563241
+    - 2531039
+    - 2605625
+    - 2597848
+    - 2523238
+    - 2507283
+    set:
+    - 2551203
+    - 2577042
+    - 2563241
+    - 2531039
+    - 2605625
+    - 2597848
+    - 2523238
+    - 2547700
+    - 2532026
+    - 2578786
+    - 2561125
+    - 2520014
+    - 2548640
+    - 2593319
+    - 2507283
+  - property: allow_alightings
+    set: [2577042, 2561125]
+  - property: allow_boardings
+    set: [2577042, 2561125]
+valid: false
