@@ -1650,7 +1650,7 @@ class RoadwayNetwork(object):
                 if property in new_dict.keys():
                     if df[property].dtype == np.float64:
                         value = pd.to_numeric(new_dict[property], downcast="float")
-                    elif df[property].dtype == np.int64:
+                    elif (df[property].dtype == np.int64) | (df[property].dtype == np.int32):
                         value = pd.to_numeric(new_dict[property], downcast="integer")
                     else:
                         value = str(new_dict[property])
