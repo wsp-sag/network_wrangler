@@ -1,4 +1,4 @@
-project: emme_tap_transit_network 2022-02-14 modify transit shape and stops
+project: emme_tap_transit_network 2022-02-15 line headway, shape, and stop changes
 tags: ''
 dependencies: ''
 changes:
@@ -10,6 +10,9 @@ changes:
     start_time: '6:00'
     end_time: '10:00'
   properties:
+  - existing: 4800
+    set: 3600.0
+    property: headway_secs
   - property: shapes
     existing:
     - 2551203
@@ -39,12 +42,22 @@ changes:
     - 2548640
     - 2593319
     - 2507283
+  - property: no_alightings
+    set:
+    - 2507283
   - property: allow_alightings
     set:
+    - 2523238
     - 2561125
     - 2577042
+    - 2593319
+  - property: no_boardings
+    set:
+    - 2507283
   - property: allow_boardings
     set:
+    - 2523238
     - 2561125
     - 2577042
+    - 2593319
 valid: false

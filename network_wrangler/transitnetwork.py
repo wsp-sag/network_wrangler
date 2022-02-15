@@ -1315,6 +1315,45 @@ class TransitNetwork(object):
                     nodes_df.loc[nodes_df[self.stops_foreign_key] == int(node_id), "X"],
                     str(node_id),
                 ]
+            else:
+                WranglerLogger.info(
+                    "Modifying existing stop in stop_times.txt for node ID: {}".format(node_id)
+                )
+                for trip_id in trip_ids:
+                    # Pop the rows that match trip_id
+                    this_stoptime = stop_times[stop_times.trip_id == trip_id].copy()
+
+                    # Merge on node IDs using stop_id (one node ID per stop_id)
+                    this_stoptime = this_stoptime.merge(
+                        stops[["stop_id", self.stops_foreign_key]],
+                        how="left",
+                        on="stop_id",
+                    )
+
+                    stop_id = this_stoptime[this_stoptime[self.stops_foreign_key] == str(node_id)]['stop_id'].iloc[0]
+
+                    if properties['property'] == 'allow_alightings':
+                        stop_times.loc[
+                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                            'pickup_type'
+                        ] = 0
+                    if properties['property'] == 'no_alightings':
+                        stop_times.loc[
+                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                            'pickup_type'
+                        ] = 1
+                    if properties['property'] == 'allow_boardings':
+                        stop_times.loc[
+                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                            'drop_off_type'
+                        ] = 0
+                    if properties['property'] == 'no_boardings':
+                        stop_times.loc[
+                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                            'drop_off_type'
+                        ] = 1
+                
+                continue
 
             for trip_id in trip_ids:
                 # Pop the rows that match trip_id

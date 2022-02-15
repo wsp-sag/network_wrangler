@@ -270,7 +270,7 @@ def test_mtc(request):
     transit_net.road_net = road_net
     
     project_card_path = os.path.join(
-        MTC_DIR, "project_cards", "t_emme_2022-02-14_123600.ems.yml"
+        MTC_DIR, "project_cards", "t_emme_2022-02-15_115218.ems.yml"
     )
     project_card = ProjectCard.read(project_card_path)
     transit_net.apply(project_card.__dict__)
