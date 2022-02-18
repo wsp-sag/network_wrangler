@@ -318,6 +318,52 @@ def test_add_adhoc_field(request):
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
 
+@pytest.mark.menow
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_add_default_value(request):
+    """
+    Makes sure we can add a new field with a default value
+    """
+    print("\n--Starting:", request.node.name)
+    net = _read_stpaul_net()
+    project_card_name = "select_all_project_card.yml"
+
+    print("Reading project card", project_card_name, "...")
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+
+    print("Selecting roadway features ...")
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+
+    attributes_to_update = [p["property"] for p in project_card.properties]
+
+    net.apply_roadway_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    print(net.links_df["my_ad_hoc_field_float"].value_counts())
+    print(net.links_df["my_ad_hoc_field_integer"].value_counts())
+    print(net.links_df["my_ad_hoc_field_string"].value_counts())
+
+    assert (
+        net.links_df.loc[net.links_df["my_ad_hoc_field_float"] == 1.2345].shape
+        == net.links_df.shape
+    )
+    assert (
+        net.links_df.loc[net.links_df["my_ad_hoc_field_integer"] == 10].shape
+        == net.links_df.shape
+    )
+    assert (
+        net.links_df.loc[
+            net.links_df["my_ad_hoc_field_string"] == "default value"
+        ].shape
+        == net.links_df.shape
+    )
+
+    print("--Finished:", request.node.name)
+
+
 @pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -354,7 +400,9 @@ def test_add_adhoc_managed_lane_field(request):
     )
     ml_net = net.create_managed_lane_network()
     print("Managed Lane Network")
-    print(ml_net.links_df[["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]])
+    print(
+        ml_net.links_df[["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]]
+    )
     # assert net.links_df["my_ad_hoc_field"][0] == 22.5
     # print("CALCULATED:\n", v_series.loc[selected_link_indices])
 
@@ -394,7 +442,9 @@ def test_add_adhoc_managed_lane_field(request):
     )
     ml_net = net.create_managed_lane_network()
     print("Managed Lane Network")
-    print(ml_net.links_df[["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]])
+    print(
+        ml_net.links_df[["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]]
+    )
     # assert net.links_df["my_ad_hoc_field"][0] == 22.5
     # print("CALCULATED:\n", v_series.loc[selected_link_indices])
 
@@ -704,7 +754,9 @@ def test_get_modal_network(request):
         fast=True,
     )
     _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-        net.links_df, net.nodes_df, modes=[mode],
+        net.links_df,
+        net.nodes_df,
+        modes=[mode],
     )
 
     test_links_of_selection = _links_df["model_link_id"].tolist()
@@ -937,6 +989,7 @@ def test_create_ml_network_shape(request):
 
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.travis
 @pytest.mark.roadway
 def test_dot_wrangler_roadway(request):
@@ -947,7 +1000,11 @@ def test_dot_wrangler_roadway(request):
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path, validate=False)
     print(project_card)
-    assert("self.links_df.loc[self.links_df['lanes'] == 4, 'lanes'] = 12" in project_card.pycode)
+    assert (
+        "self.links_df.loc[self.links_df['lanes'] == 4, 'lanes'] = 12"
+        in project_card.pycode
+    )
+
 
 @pytest.mark.travis
 @pytest.mark.roadway
@@ -958,11 +1015,18 @@ def test_apply_pycode_roadway(request):
     net = _read_stpaul_net()
 
     print("Apply pycode ...")
-    print("BEFORE CHANGE...\n",net.links_df.loc[net.links_df['lanes'] == 4, ['model_link_id','lanes']])
+    print(
+        "BEFORE CHANGE...\n",
+        net.links_df.loc[net.links_df["lanes"] == 4, ["model_link_id", "lanes"]],
+    )
     net.apply(
-        { "category": "Calculated Roadway",
-          "project": "megaroads",
-          "pycode": "self.links_df.loc[self.links_df['lanes'] == 4, 'lanes'] = 12",
+        {
+            "category": "Calculated Roadway",
+            "project": "megaroads",
+            "pycode": "self.links_df.loc[self.links_df['lanes'] == 4, 'lanes'] = 12",
         }
     )
-    print("AFTER CHANGE...\n",net.links_df.loc[net.links_df['lanes'] == 12, ['model_link_id','lanes']])
+    print(
+        "AFTER CHANGE...\n",
+        net.links_df.loc[net.links_df["lanes"] == 12, ["model_link_id", "lanes"]],
+    )

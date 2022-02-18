@@ -486,20 +486,26 @@ class RoadwayNetwork(object):
         errors = ""
 
         if not isinstance(nodes, GeoDataFrame):
-            error_message = "Incompatible nodes type:{}. Must provide a GeoDataFrame.  ".format(
-                type(nodes)
+            error_message = (
+                "Incompatible nodes type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(nodes)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
         if not isinstance(links, GeoDataFrame):
-            error_message = "Incompatible links type:{}. Must provide a GeoDataFrame.  ".format(
-                type(links)
+            error_message = (
+                "Incompatible links type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(links)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
         if not isinstance(shapes, GeoDataFrame):
-            error_message = "Incompatible shapes type:{}. Must provide a GeoDataFrame.  ".format(
-                type(shapes)
+            error_message = (
+                "Incompatible shapes type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(shapes)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
@@ -843,7 +849,7 @@ class RoadwayNetwork(object):
                  A - from node
                  B - to node
                  link - which includes at least a variable for `name` or 'all' if all selected
-            search_mode: will be overridden if 'link':'all' 
+            search_mode: will be overridden if 'link':'all'
 
         Returns: a list of node foreign IDs on shortest path
         """
@@ -869,8 +875,8 @@ class RoadwayNetwork(object):
         self.selections[sel_key] = {}
         self.selections[sel_key]["selection_found"] = False
 
-        unique_model_link_identifer_in_selection = RoadwayNetwork.selection_has_unique_link_id(
-            selection
+        unique_model_link_identifer_in_selection = (
+            RoadwayNetwork.selection_has_unique_link_id(selection)
         )
         if not unique_model_link_identifer_in_selection:
             A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
@@ -1246,9 +1252,7 @@ class RoadwayNetwork(object):
                     project_dictionary.get("links"), project_dictionary.get("nodes")
                 )
             elif project_dictionary["category"].lower() == "calculated roadway":
-                self.apply_python_calculation(
-                    project_dictionary['pycode']
-                )
+                self.apply_python_calculation(project_dictionary["pycode"])
             else:
                 raise (BaseException)
 
@@ -1258,7 +1262,9 @@ class RoadwayNetwork(object):
         else:
             _apply_individual_change(project_card_dictionary)
 
-    def apply_python_calculation(self, pycode: str, in_place: bool = True) -> Union(None, RoadwayNetwork):
+    def apply_python_calculation(
+        self, pycode: str, in_place: bool = True
+    ) -> Union(None, RoadwayNetwork):
         """
         Changes roadway network object by executing pycode.
 
@@ -1942,8 +1948,8 @@ class RoadwayNetwork(object):
         gp_links_df = ml_links_df.drop(ml_attributes, axis=1)
 
         for attr in link_attributes:
-            if attr ==  "name":
-                ml_links_df["name"] = "Managed Lane "+gp_links_df["name"]
+            if attr == "name":
+                ml_links_df["name"] = "Managed Lane " + gp_links_df["name"]
             elif attr in ml_attributes and attr not in ["ML_ACCESS", "ML_EGRESS"]:
                 gp_attr = attr.split("_", 1)[1]
                 ml_links_df.loc[:, gp_attr] = ml_links_df[attr]
@@ -2101,7 +2107,8 @@ class RoadwayNetwork(object):
         for mode in modes:
             if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
                 msg = "mode value should be one of {}, got {}".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()), mode,
+                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()),
+                    mode,
                 )
                 WranglerLogger.error(msg)
                 raise ValueError(msg)
@@ -2168,7 +2175,9 @@ class RoadwayNetwork(object):
             raise ValueError(msg)
 
         _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-            links_df, nodes_df, modes=[mode],
+            links_df,
+            nodes_df,
+            modes=[mode],
         )
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
 
@@ -2197,7 +2206,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.info(
@@ -2243,7 +2254,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.info(
