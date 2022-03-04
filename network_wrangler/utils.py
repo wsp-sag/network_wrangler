@@ -37,7 +37,7 @@ def point_df_to_geojson(df: pd.DataFrame, properties: list):
 
 
 def link_df_to_json(df: pd.DataFrame, properties: list):
-    """ Export pandas dataframe as a json object.
+    """Export pandas dataframe as a json object.
 
     Modified from: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/

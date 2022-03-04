@@ -492,20 +492,26 @@ class RoadwayNetwork(object):
         errors = ""
 
         if not isinstance(nodes, GeoDataFrame):
-            error_message = "Incompatible nodes type:{}. Must provide a GeoDataFrame.  ".format(
-                type(nodes)
+            error_message = (
+                "Incompatible nodes type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(nodes)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
         if not isinstance(links, GeoDataFrame):
-            error_message = "Incompatible links type:{}. Must provide a GeoDataFrame.  ".format(
-                type(links)
+            error_message = (
+                "Incompatible links type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(links)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
         if not isinstance(shapes, GeoDataFrame):
-            error_message = "Incompatible shapes type:{}. Must provide a GeoDataFrame.  ".format(
-                type(shapes)
+            error_message = (
+                "Incompatible shapes type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(shapes)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
@@ -1098,10 +1104,14 @@ class RoadwayNetwork(object):
             selection : dictionary with keys for:
                  A - from node
                  B - to node
-                 link - which includes at least a variable for `name`
+                 link - which includes at least a variable for `name` or 'all' if all selected
+            search_mode: will be overridden if 'link':'all'
 
         Returns: a list of link IDs in selection
         """
+        if selection.get("link") == "all":
+            return self.links_df.index.tolist()
+
         WranglerLogger.debug("validating selection")
         self.validate_selection(selection)
 
@@ -1121,8 +1131,8 @@ class RoadwayNetwork(object):
         self.selections[sel_key] = {}
         self.selections[sel_key]["selection_found"] = False
 
-        unique_model_link_identifer_in_selection = RoadwayNetwork.selection_has_unique_link_id(
-            selection
+        unique_model_link_identifer_in_selection = (
+            RoadwayNetwork.selection_has_unique_link_id(selection)
         )
         if not unique_model_link_identifer_in_selection:
             A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
@@ -2251,7 +2261,8 @@ class RoadwayNetwork(object):
         for mode in modes:
             if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
                 msg = "mode value should be one of {}, got {}".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()), mode,
+                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()),
+                    mode,
                 )
                 WranglerLogger.error(msg)
                 raise ValueError(msg)
@@ -2318,7 +2329,9 @@ class RoadwayNetwork(object):
             raise ValueError(msg)
 
         _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-            links_df, nodes_df, modes=[mode],
+            links_df,
+            nodes_df,
+            modes=[mode],
         )
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
 
@@ -2347,7 +2360,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.info(
@@ -2728,7 +2743,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.warning(
