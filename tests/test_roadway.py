@@ -305,6 +305,38 @@ def test_add_managed_lane_complex(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
+def test_managed_lane_change_functionality(request):
+    print("\n--Starting:", request.node.name)
+    net = _read_stpaul_net()
+    print("Reading project card ...")
+    project_card_name = "test_managed_lanes_change_keyword.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path, validate = False)
+
+    print("Selecting roadway features ...")
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+
+    attributes_to_update = [p["property"] for p in project_card.properties]
+
+    orig_links = net.links_df.loc[
+        selected_link_indices, net.links_df.columns.intersection(attributes_to_update)
+    ]
+    print("Original Links:\n", orig_links)
+
+    net.apply_managed_lane_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
+    print("Revised Links:\n", rev_links)
+
+    rev_links.to_csv(os.path.join(SCRATCH_DIR, "ml_links.csv"), index=False)
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.roadway
+@pytest.mark.travis
 def test_add_adhoc_field(request):
     """
     Makes sure new fields can be added in the API and be saved and read in again.
@@ -1030,3 +1062,78 @@ def test_apply_pycode_roadway(request):
         "AFTER CHANGE...\n",
         net.links_df.loc[net.links_df["lanes"] == 12, ["model_link_id", "lanes"]],
     )
+
+
+@pytest.mark.travis
+@pytest.mark.roadway
+def test_identify_segment_ends(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = _read_stpaul_net()
+
+    _df = net.identify_segment_endpoints()
+
+    calculated_d = _df.groupby("segment_id")["model_node_id"].apply(list).to_dict()
+    correct_d = {
+        0: [4785, 4798],
+        1: [12163, 39484],
+        2: [36271, 50577],
+        3: [45746, 47478],
+        4: [47478, 311086],
+        5: [66416, 347045],
+        6: [75351, 75352],
+        7: [78880, 78885],
+        8: [106815, 241023],
+        9: [106811, 106814],
+        10: [126388, 223962],
+        11: [136296, 136301],
+        12: [147096, 147097],
+        13: [193468, 217752],
+        14: [239877, 239878],
+    }
+
+    print(calculated_d)
+    assert calculated_d == correct_d
+
+
+@pytest.mark.travis
+@pytest.mark.roadway
+def test_find_segment(request):
+    print("\n--Starting:", request.node.name)
+
+    print("Reading network ...")
+    net = _read_stpaul_net()
+
+    seg_ends = [4785, 4798]
+    sel_dict = {"name": "North Mounds Boulevard", "ref": "US 61"}
+    seg_df = net.identify_segment(seg_ends[0], seg_ends[1], selection_dict=sel_dict)
+    print(seg_df)
+
+
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_managed_lane_access_egress(request):
+    print("\n--Starting:", request.node.name)
+    net = _read_stpaul_net()
+    print("Reading project card ...")
+    #project_card_name = "test_managed_lanes_change_keyword.yml"
+    project_card_name = "test_managed_lanes_restricted_access_egress.yml"
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path, validate = False)
+
+    net.apply_managed_lane_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    ml_net = net.create_managed_lane_network()
+
+    # with 'all' as access/egress, there would be total of 8 connector links (4 access, 4 egress)
+    # with restricted access/egress, this project card should create 4 connector links
+    dummy_links = ml_net.links_df[(ml_net.links_df['roadway'].isin(['ml_access','ml_egress']))]
+    dummy_links_count = len(dummy_links)
+
+    assert dummy_links_count == 4
+
+    print("--Finished:", request.node.name)
+

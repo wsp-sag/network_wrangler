@@ -196,9 +196,9 @@ class Scenario(object):
         base_scenario: dict = {},
         card_directory: str = "",
         tags: [str] = None,
-        project_cards_list=[],
-        glob_search="",
-        validate_project_cards=True,
+        project_cards_list = None,
+        glob_search = "",
+        validate_project_cards = True,
     ) -> Scenario:
         """
         Validates project cards with a specific tag from the specified folder or
@@ -220,12 +220,15 @@ class Scenario(object):
         """
         WranglerLogger.info("Creating Scenario")
 
-        if project_cards_list:
+        if project_cards_list is None:
+            project_cards_list = []
+        else:
             WranglerLogger.debug(
                 "Adding project cards from List.\n{}".format(
                     ",".join([p.project for p in project_cards_list])
                 )
             )
+            
         scenario = Scenario(base_scenario, project_cards=project_cards_list)
 
         if card_directory and tags:
@@ -326,17 +329,17 @@ class Scenario(object):
             raise ValueError(msg)
 
         if glob_search:
-            WranglerLogger.debug(
+            WranglerLogger.info(
                 "Adding project cards using glob search: {}".format(glob_search)
             )
             for file in glob.iglob(os.path.join(folder, glob_search)):
-                if not file.endswith(".yml") or file.endswith(".yaml"):
+                if not (file.endswith(".yml") or file.endswith(".yaml") or file.endswith(".wrangler") or file.endswith(".wr")):
                     continue
                 else:
                     self.add_project_card_from_file(file, validate=validate)
         else:
             for file in os.listdir(folder):
-                if not file.endswith(".yml") or file.endswith(".yaml"):
+                if not (file.endswith(".yml") or file.endswith(".yaml") or file.endswith(".wrangler") or file.endswith(".wr")):
                     continue
                 else:
                     self.add_project_card_from_file(
@@ -366,8 +369,9 @@ class Scenario(object):
         else:
             WranglerLogger.debug("Adding project cards using \n-tags: {}".format(tags))
             for file in os.listdir(folder):
-
-                self.add_project_card_from_file(file, tags=tags, validate=validate)
+                self.add_project_card_from_file(
+                    os.path.join(folder, file), tags=tags, validate=validate
+                )
 
     def __str__(self):
         s = ["{}: {}".format(key, value) for key, value in self.__dict__.items()]

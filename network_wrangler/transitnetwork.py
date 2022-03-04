@@ -612,6 +612,8 @@ class TransitNetwork(object):
                     self.select_transit_features_by_nodes(managed_lane_nodes),
                     managed_lane_nodes,
                 )
+            elif project_dictionary["category"].lower() == "add transit":
+                self.apply_python_calculation(project_dictionary["pycode"])
             elif project_dictionary["category"].lower() == "roadway deletion":
                 WranglerLogger.warning(
                     "Roadway Deletion not yet implemented in Transit; ignoring"
@@ -629,7 +631,40 @@ class TransitNetwork(object):
         else:
             _apply_individual_change(project_card_dictionary)
 
+    def apply_python_calculation(
+        self, pycode: str, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        """
+        Changes roadway network object by executing pycode.
+
+        Args:
+            pycode: python code which changes values in the roadway network object
+            in_place: update self or return a new roadway network object
+        """
+        exec(pycode)
+
     def select_transit_features(self, selection: dict) -> pd.Series:
+        """
+        combines multiple selections
+
+        Args:
+            selection : selection dictionary
+
+        Returns: trip identifiers : list of GTFS trip IDs in the selection
+        """
+        trip_ids = pd.Series()
+
+        if selection.get("route"):
+            for route_dictionary in selection["route"]:
+                trip_ids = trip_ids.append(
+                    self._select_transit_features(route_dictionary)
+                )
+        else:
+            trip_ids = self._select_transit_features(selection)
+
+        return trip_ids
+
+    def _select_transit_features(self, selection: dict) -> pd.Series:
         """
         Selects transit features that satisfy selection criteria
 
@@ -678,7 +713,7 @@ class TransitNetwork(object):
             selection["time"] = parse_time_spans(selection["time"])
         elif selection.get("start_time") and selection.get("end_time"):
             selection["time"] = parse_time_spans(
-                [selection["start_time"], selection["end_time"]]
+                [selection["start_time"][0], selection["end_time"][0]]
             )
             # Filter freq to trips in selection
             freq = freq[freq.trip_id.isin(trips["trip_id"])]
@@ -696,6 +731,8 @@ class TransitNetwork(object):
                 "route_short_name",
                 "route_long_name",
                 "time",
+                "start_time",
+                "end_time"
             ]:
                 if key in trips:
                     trips = trips[trips[key].isin(selection[key])]
@@ -844,8 +881,8 @@ class TransitNetwork(object):
             if properties.get("existing") is not None:
                 # Match list
                 nodes = this_shape[TransitNetwork.SHAPES_FOREIGN_KEY].tolist()
-                index_replacement_starts = nodes.index(properties["existing_shapes"][0])
-                index_replacement_ends = nodes.index(properties["existing_shapes"][-1])
+                index_replacement_starts = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][0]][0]
+                index_replacement_ends = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][-1]][-1]
                 this_shape = pd.concat(
                     [
                         this_shape.iloc[:index_replacement_starts],
@@ -883,7 +920,7 @@ class TransitNetwork(object):
                     )
                     # Add new row to stops
                     new_stop_id = str(int(fk_i) + TransitNetwork.ID_SCALAR)
-                    if stop_id in stops["stop_id"].tolist():
+                    if new_stop_id in stops["stop_id"].tolist():
                         WranglerLogger.error("Cannot create a unique new stop_id.")
                     stops.loc[
                         len(stops.index) + 1,
@@ -895,8 +932,8 @@ class TransitNetwork(object):
                         ],
                     ] = [
                         new_stop_id,
-                        nodes_df.loc[int(fk_i), "Y"],
-                        nodes_df.loc[int(fk_i), "X"],
+                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"],
+                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"],
                         fk_i,
                     ]
 
