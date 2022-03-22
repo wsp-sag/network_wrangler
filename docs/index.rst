@@ -6,7 +6,7 @@
 Welcome to Network Wrangler's documentation!
 ============================================
 
-.. note::  This documentation is based on the master branch
+.. note::  This documentation is based on the `Link text <https://github.com/BayAreaMetro/network_wrangler/tree/generic_agency>`_ branch
 
 Objectives
 ------------
