@@ -115,8 +115,11 @@ jobs:
           set -x
           #brname=$(git rev-parse --abbrev-ref HEAD)
           brname="${{github.ref}}"
+          echo "brname:" ${brname}}
           brname="${brname##refs/heads/}"
+          echo "brname:" ${brname}}
           brdir=${brname//\//--}   # replace '/' with '--'
+          echo "brdir:" ${brdir}}
           rm -rf   _gh-pages/branch/${brdir}
           rsync -a _build/dirhtml/ _gh-pages/branch/${brdir}
       # Go through each branch in _gh-pages/branch/, if it's not a
