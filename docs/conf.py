@@ -28,8 +28,8 @@ import network_wrangler
 # -- Project information -----------------------------------------------------
 
 project = "Network Wrangler"
-copyright = "2020, Metropolitan Council"
-author = "Metropolitan Council"
+copyright = "2020-2022, Metropolitan Council, Metropolitan Transportation Commission"
+author = "Metropolitan Council, Metropolitan Transportation Commission"
 
 
 # -- General configuration ---------------------------------------------------
