@@ -65,6 +65,7 @@ jobs:
       - uses: ammaraskar/sphinx-problem-matcher@master
       - name: Build Sphinx docs
         run: |
+          cd docs
           make dirhtml
           # This fixes broken copy button icons, as explained in
           #   https://github.com/coderefinery/sphinx-lesson/issues/50
