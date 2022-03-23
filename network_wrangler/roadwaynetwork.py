@@ -148,6 +148,7 @@ class RoadwayNetwork(object):
 
     # CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
     CRS = 4326  # "EPSG:4326"
+    CRS_alt=4269
 
     NODE_FOREIGN_KEY = "model_node_id"
     LINK_FOREIGN_KEY = ["A", "B"]
@@ -165,7 +166,7 @@ class RoadwayNetwork(object):
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
 
-    UNIQUE_SHAPE_KEY = "shape_id"
+    UNIQUE_SHAPE_KEY = "id"
 
     MANAGED_LANES_REQUIRED_ATTRIBUTES = [
         "A",
