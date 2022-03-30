@@ -36,11 +36,3 @@ __all__ = [
     "net_to_mapbox",
     "update_df",
 ]
-
-setupLogging(
-    log_filename=os.path.join(
-        os.getcwd(),
-        "network_wrangler_{}.log".format(datetime.now().strftime("%Y_%m_%d__%H_%M_%S")),
-    ),
-    log_to_console=True,
-)
