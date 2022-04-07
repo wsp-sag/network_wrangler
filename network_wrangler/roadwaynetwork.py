@@ -188,6 +188,9 @@ class RoadwayNetwork(object):
         "roadway",
         "length",
         "segment_id",
+        "assign_group",
+        "county",
+        "mpo",
     ]
 
     MANAGED_LANES_SCALAR = 500000
