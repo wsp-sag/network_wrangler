@@ -166,7 +166,7 @@ class RoadwayNetwork(object):
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
 
-    UNIQUE_SHAPE_KEY = "id"
+    UNIQUE_SHAPE_KEY = "shape_id"
 
     MANAGED_LANES_REQUIRED_ATTRIBUTES = [
         "A",
