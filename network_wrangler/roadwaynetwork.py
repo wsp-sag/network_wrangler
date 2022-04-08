@@ -780,8 +780,15 @@ class RoadwayNetwork(object):
         graph_links["u"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[0]]
         graph_links["v"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[1]]
         graph_links["key"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
-        # u,v,key should be a multi-index; see https://osmnx.readthedocs.io/en/stable/osmnx.html#osmnx.utils_graph.graph_from_gdfs
-        graph_links.set_index(keys=["u","v","key"], drop=True, inplace=True)
+
+        # Per osmnx u,v,key should be a multi-index; 
+        #     https://osmnx.readthedocs.io/en/stable/osmnx.html#osmnx.utils_graph.graph_from_gdfs
+        # However - if the index is set before hand in osmnx version <1.0 then it fails 
+        #     on the set_index line *within* osmnx.utils_graph.graph_from_gdfs():
+        #           `for (u, v, k), row in gdf_edges.set_index(["u", "v", "key"]).iterrows():`
+        
+        if ox.__version__ > 1.0:
+            graph_links = graph_links.set_index(keys=["u","v","key"], drop=True)
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
         try:
@@ -790,9 +797,9 @@ class RoadwayNetwork(object):
             if attr_error.args[0] == "module 'osmnx' has no attribute 'graph_from_gdfs'":
                 # This is the only exception for which we have a workaround
                 # Does this still work given the u,v,key multi-indexing?
+                # 
                 WranglerLogger.warn("Please upgrade your OSMNX package. For now, using deprecated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found")
                 G = ox.gdfs_to_graph(graph_nodes, graph_links)
-            
             else:
                 # for other AttributeErrors, raise further
                 raise attr_error
