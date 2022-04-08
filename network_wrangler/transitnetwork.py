@@ -404,6 +404,7 @@ class TransitNetwork(object):
 
     @staticmethod
     def shape_ids_in_shapestxt(feed: DotDict) -> Bool:
+    def shape_ids_in_shapestxt(feed: DotDict) -> bool:
         """
         Wherever shape_id occurs, make sure it is in shapes.txt
 
@@ -430,6 +431,7 @@ class TransitNetwork(object):
 
     @staticmethod
     def stop_ids_in_stopstxt(feed: DotDict) -> Bool:
+    def stop_ids_in_stopstxt(feed: DotDict) -> bool:
         """
         Wherever stop_id occurs, make sure it is in stops.txt
 
@@ -515,6 +517,7 @@ class TransitNetwork(object):
         msg = "_graph_shapes() not implemented yet."
         WranglerLogger.error(msg)
         raise NotImplemented(msg)
+        raise NotImplementedError(msg)
         # graphed_shapes = pd.DataFrame()
 
         # for shape_id in shapes:
@@ -534,6 +537,7 @@ class TransitNetwork(object):
         msg = "_graph_stops() not implemented yet."
         WranglerLogger.error(msg)
         raise NotImplemented(msg)
+        raise NotImplementedError(msg)
         # graphed_stops = pd.DataFrame()
 
         # for stop_id in stops:

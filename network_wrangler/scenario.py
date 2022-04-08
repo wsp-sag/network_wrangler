@@ -9,9 +9,13 @@ import copy
 import pprint
 from datetime import datetime
 from typing import Union
+from collections import OrderedDict
+from collections import defaultdict
 
 import pandas as pd
 import geopandas as gpd
+
+from network_wrangler import WranglerLogger
 
 from .projectcard import ProjectCard
 from collections import OrderedDict
@@ -20,6 +24,7 @@ from collections import defaultdict
 from .utils import topological_sort
 from .roadwaynetwork import RoadwayNetwork
 from .transitnetwork import TransitNetwork
+from .utils import topological_sort
 
 
 class Scenario(object):
@@ -290,6 +295,10 @@ class Scenario(object):
             )
             WranglerLogger.error(msg)
             raise ValueError(msg)
+            msg = f"project card with name '{project_card.project}' already in Scenario.\
+                Project names must be unique. Skipping import."
+            WranglerLogger.warning(msg)
+            return
 
         self.requisites_checked = False
         self.conflicts_checked = False

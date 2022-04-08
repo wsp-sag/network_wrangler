@@ -11,6 +11,8 @@ from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 from .logger import WranglerLogger
 
+from network_wrangler import WranglerLogger
+
 UNSPECIFIED_PROJECT_NAMES = ["", "TO DO User Define", "USER TO define"]
 
 

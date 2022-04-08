@@ -37,10 +37,17 @@ __all__ = [
     "update_df",
 ]
 
+now_str = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
+log_filename = f"network_wrangler_{now_str}.log"
+
+log_dir = os.path.join(os.getcwd(), "logs")
+if not os.path.exists(log_dir):
+    os.mkdir("logs")
+
 setupLogging(
     log_filename=os.path.join(
-        os.getcwd(),
-        "network_wrangler_{}.log".format(datetime.now().strftime("%Y_%m_%d__%H_%M_%S")),
+        log_dir,
+        log_filename,
     ),
     log_to_console=True,
 )

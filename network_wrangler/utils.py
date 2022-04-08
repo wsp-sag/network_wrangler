@@ -12,6 +12,7 @@ from shapely.geometry import LineString
 from geographiclib.geodesic import Geodesic
 
 from .logger import WranglerLogger
+from network_wrangler import WranglerLogger
 
 
 def point_df_to_geojson(df: pd.DataFrame, properties: list, node_foreign_key=None):
@@ -92,6 +93,7 @@ def make_slug(text, delimiter: str = "_"):
 
     text = re.sub("[,.;@#?!&$']+", "", text.lower())
     return re.sub("[\ ]+", delimiter, text)
+    return re.sub(r"[\ ]+", delimiter, text)
 
 
 def parse_time_spans(times):

@@ -29,6 +29,8 @@ from jsonschema.exceptions import SchemaError
 from shapely.geometry import Point, LineString
 
 from .logger import WranglerLogger
+from network_wrangler import WranglerLogger
+
 from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .utils import offset_location_reference, haversine_distance, create_unique_shape_id
@@ -199,6 +201,12 @@ class RoadwayNetwork(object):
         crs: int = CRS,
         modes_to_network_link_variables: Mapping[str,Collection] = MODES_TO_NETWORK_LINK_VARIABLES,
         modes_to_network_node_variables: Mapping[str,Collection] = MODES_TO_NETWORK_NODE_VARIABLES,
+        modes_to_network_link_variables: Mapping[
+            str, Collection
+        ] = MODES_TO_NETWORK_LINK_VARIABLES,
+        modes_to_network_node_variables: Mapping[
+            str, Collection
+        ] = MODES_TO_NETWORK_NODE_VARIABLES,
         managed_lanes_link_id_scalar: int = MANAGED_LANES_LINK_ID_SCALAR,
         managed_lanes_node_id_scalar: int = MANAGED_LANES_NODE_ID_SCALAR,
         managed_lanes_required_attributes: list = MANAGED_LANES_REQUIRED_ATTRIBUTES,
@@ -209,6 +217,8 @@ class RoadwayNetwork(object):
         Constructor
         """
         inputs_valid_types = [isinstance(x, GeoDataFrame) for x in (nodes_df, links_df, shapes_df)]
+        inputs_valid_types = [
+            isinstance(x, GeoDataFrame) for x in (nodes_df, links_df, shapes_df)
         if False in inputs_valid_types:
             raise (
                 TypeError(
@@ -242,10 +252,12 @@ class RoadwayNetwork(object):
         self.__dict__.update(kwargs)
 
         #WranglerLogger.debug("SELF.__DICT__: {}".format("\n-".join(self.__dict__)))
+        # WranglerLogger.debug("SELF.__DICT__: {}".format("\n-".join(self.__dict__)))
 
         if not self.validate_uniqueness():
             raise ValueError("IDs in network not unique")
         
+
     @staticmethod
     def read(
         link_filename: str,
@@ -1401,6 +1413,10 @@ class RoadwayNetwork(object):
 
     def apply_roadway_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
+        self,
+        link_idx: list,
+        properties: dict,
+        in_place: bool = True,
     ) -> Union(None, RoadwayNetwork):
         """
         Changes the roadway attributes for the selected features based on the
