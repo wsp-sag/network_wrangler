@@ -17,7 +17,7 @@ SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
 @pytest.mark.roadway
 @pytest.mark.transit
-@pytest.mark.travis
+@pytest.mark.ci
 def test_set_roadnet(request):
     print("\n--Starting:", request.node.name)
 
@@ -36,7 +36,7 @@ def test_set_roadnet(request):
 
 @pytest.mark.roadway
 @pytest.mark.transit
-@pytest.mark.travis
+@pytest.mark.ci
 # @pytest.mark.skip("")
 def test_project_card(request):
     print("\n--Starting:", request.node.name)
@@ -116,7 +116,7 @@ def test_project_card(request):
 
 @pytest.mark.roadway
 @pytest.mark.transit
-@pytest.mark.travis
+@pytest.mark.ci
 # @pytest.mark.skip("need to allow for creating new stops if they don't already exist in stops.txt")
 def test_wo_existing(request):
     print("\n--Starting:", request.node.name)
@@ -170,7 +170,7 @@ def test_wo_existing(request):
 
 @pytest.mark.roadway
 @pytest.mark.transit
-@pytest.mark.travis
+@pytest.mark.ci
 # @pytest.mark.skip("need to update trips and nodes")
 def test_select_transit_features_by_nodes(request):
     print("\n--Starting:", request.node.name)
@@ -213,7 +213,7 @@ def test_select_transit_features_by_nodes(request):
 
 @pytest.mark.roadway
 @pytest.mark.transit
-@pytest.mark.travis
+@pytest.mark.ci
 # @pytest.mark.skip("need to update trips and nodes")
 def test_select_transit_features_by_nodes(request):
     print("\n--Starting:", request.node.name)
