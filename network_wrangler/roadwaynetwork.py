@@ -492,20 +492,26 @@ class RoadwayNetwork(object):
         errors = ""
 
         if not isinstance(nodes, GeoDataFrame):
-            error_message = "Incompatible nodes type:{}. Must provide a GeoDataFrame.  ".format(
-                type(nodes)
+            error_message = (
+                "Incompatible nodes type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(nodes)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
         if not isinstance(links, GeoDataFrame):
-            error_message = "Incompatible links type:{}. Must provide a GeoDataFrame.  ".format(
-                type(links)
+            error_message = (
+                "Incompatible links type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(links)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
         if not isinstance(shapes, GeoDataFrame):
-            error_message = "Incompatible shapes type:{}. Must provide a GeoDataFrame.  ".format(
-                type(shapes)
+            error_message = (
+                "Incompatible shapes type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(shapes)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
@@ -772,33 +778,36 @@ class RoadwayNetwork(object):
                 ["osm_link_id", "locationReferences"], axis=1
             )
         else:
-            graph_links = links_df.copy().drop(
-                ["locationReferences"], axis=1
-            )
+            graph_links = links_df.copy().drop(["locationReferences"], axis=1)
 
         # have to change this over into u,v b/c this is what osm-nx is expecting
         graph_links["u"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[0]]
         graph_links["v"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[1]]
         graph_links["key"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
 
-        # Per osmnx u,v,key should be a multi-index; 
+        # Per osmnx u,v,key should be a multi-index;
         #     https://osmnx.readthedocs.io/en/stable/osmnx.html#osmnx.utils_graph.graph_from_gdfs
-        # However - if the index is set before hand in osmnx version <1.0 then it fails 
+        # However - if the index is set before hand in osmnx version <1.0 then it fails
         #     on the set_index line *within* osmnx.utils_graph.graph_from_gdfs():
         #           `for (u, v, k), row in gdf_edges.set_index(["u", "v", "key"]).iterrows():`
-        
+
         if ox.__version__ > 1.0:
-            graph_links = graph_links.set_index(keys=["u","v","key"], drop=True)
+            graph_links = graph_links.set_index(keys=["u", "v", "key"], drop=True)
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
         try:
             G = ox.graph_from_gdfs(graph_nodes, graph_links)
         except AttributeError as attr_error:
-            if attr_error.args[0] == "module 'osmnx' has no attribute 'graph_from_gdfs'":
+            if (
+                attr_error.args[0]
+                == "module 'osmnx' has no attribute 'graph_from_gdfs'"
+            ):
                 # This is the only exception for which we have a workaround
                 # Does this still work given the u,v,key multi-indexing?
-                # 
-                WranglerLogger.warn("Please upgrade your OSMNX package. For now, using deprecated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found")
+                #
+                WranglerLogger.warn(
+                    "Please upgrade your OSMNX package. For now, using deprecated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found"
+                )
                 G = ox.gdfs_to_graph(graph_nodes, graph_links)
             else:
                 # for other AttributeErrors, raise further
@@ -852,8 +861,7 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def _get_fk_nodes(_links: gpd.GeoDataFrame):
-        """Find the nodes for the candidate links.
-        """
+        """Find the nodes for the candidate links."""
         _n = list(
             set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(_links[fk])])
         )
@@ -1137,8 +1145,8 @@ class RoadwayNetwork(object):
         self.selections[sel_key] = {}
         self.selections[sel_key]["selection_found"] = False
 
-        unique_model_link_identifer_in_selection = RoadwayNetwork.selection_has_unique_link_id(
-            selection
+        unique_model_link_identifer_in_selection = (
+            RoadwayNetwork.selection_has_unique_link_id(selection)
         )
         if not unique_model_link_identifer_in_selection:
             A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
@@ -1483,7 +1491,8 @@ class RoadwayNetwork(object):
                                     {
                                         "category": category,
                                         "time": parse_time_spans(tod["time"]),
-                                        "value": self.links_df.at[idx, attribute] + tod["change"]
+                                        "value": self.links_df.at[idx, attribute]
+                                        + tod["change"],
                                     }
                                 )
 
@@ -1504,14 +1513,15 @@ class RoadwayNetwork(object):
                             attr_value["timeofday"].append(
                                 {
                                     "time": parse_time_spans(tod["time"]),
-                                    "value": tod["set"]
+                                    "value": tod["set"],
                                 }
                             )
                         elif "change" in tod.keys():
                             attr_value["timeofday"].append(
                                 {
                                     "time": parse_time_spans(tod["time"]),
-                                    "value": self.links_df.at[idx, attribute] + tod["change"]
+                                    "value": self.links_df.at[idx, attribute]
+                                    + tod["change"],
                                 }
                             )
                 elif "set" in p.keys():
@@ -1527,7 +1537,9 @@ class RoadwayNetwork(object):
                         # if the attribute already exists
                         # and the attr value we are trying to set is not numeric
                         # then change the attribute type to object
-                        self.links_df[attribute] = self.links_df[attribute].astype(object)
+                        self.links_df[attribute] = self.links_df[attribute].astype(
+                            object
+                        )
 
                     if attribute not in self.links_df.columns:
                         # if it is a new attribute then initialize with NaN values
@@ -1843,9 +1855,10 @@ class RoadwayNetwork(object):
             if v.get("timeofday"):
                 categories = []
                 for tg in v["timeofday"]:
-                    if ((time_spans[0] >= tg["time"][0]) and (
-                        time_spans[1] <= tg["time"][1]) and (
-                        time_spans[0] <= time_spans[1])
+                    if (
+                        (time_spans[0] >= tg["time"][0])
+                        and (time_spans[1] <= tg["time"][1])
+                        and (time_spans[0] <= time_spans[1])
                     ):
                         if tg.get("category"):
                             categories += tg["category"]
@@ -1862,10 +1875,11 @@ class RoadwayNetwork(object):
                             # print("RETURNING:", time_spans, category, tg["value"])
                             return tg["value"]
 
-                    if ((time_spans[0] >= tg["time"][0]) and (
-                        time_spans[1] <= tg["time"][1]) and (
-                        time_spans[0] > time_spans[1]) and (
-                        tg["time"][0] > tg["time"][1])
+                    if (
+                        (time_spans[0] >= tg["time"][0])
+                        and (time_spans[1] <= tg["time"][1])
+                        and (time_spans[0] > time_spans[1])
+                        and (tg["time"][0] > tg["time"][1])
                     ):
                         if tg.get("category"):
                             categories += tg["category"]
@@ -1989,8 +2003,8 @@ class RoadwayNetwork(object):
             [gp_df, ml_df.add_prefix("ML_")], axis=1, join="inner"
         )
 
-        access_set = ml_df.iloc[0]['access']
-        egress_set = ml_df.iloc[0]['egress']
+        access_set = ml_df.iloc[0]["access"]
+        egress_set = ml_df.iloc[0]["egress"]
 
         access_df = gp_df.iloc[0:0, :].copy()
         egress_df = gp_df.iloc[0:0, :].copy()
@@ -2010,7 +2024,7 @@ class RoadwayNetwork(object):
             return out_location_reference
 
         for index, row in gp_ml_links_df.iterrows():
-            if access_set == 'all' or row['A'] in access_set:
+            if access_set == "all" or row["A"] in access_set:
                 access_row = {}
                 access_row["A"] = row["A"]
                 access_row["B"] = row["ML_A"]
@@ -2038,7 +2052,7 @@ class RoadwayNetwork(object):
 
                 access_df = access_df.append(access_row, ignore_index=True)
 
-            if egress_set == 'all' or row['B'] in egress_set:
+            if egress_set == "all" or row["B"] in egress_set:
                 egress_row = {}
                 egress_row["A"] = row["ML_B"]
                 egress_row["B"] = row["B"]
@@ -2175,8 +2189,8 @@ class RoadwayNetwork(object):
         out_links_df = out_links_df.append(egress_links_df)
         out_links_df = out_links_df.append(non_ml_links_df)
 
-        out_links_df = out_links_df.drop(['access', 'egress'], axis = 1)
-        
+        out_links_df = out_links_df.drop(["access", "egress"], axis=1)
+
         # only the ml_links_df has the new nodes added
         added_a_nodes = ml_links_df["A"]
         added_b_nodes = ml_links_df["B"]
@@ -2267,7 +2281,8 @@ class RoadwayNetwork(object):
         for mode in modes:
             if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
                 msg = "mode value should be one of {}, got {}".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()), mode,
+                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()),
+                    mode,
                 )
                 WranglerLogger.error(msg)
                 raise ValueError(msg)
@@ -2334,7 +2349,9 @@ class RoadwayNetwork(object):
             raise ValueError(msg)
 
         _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-            links_df, nodes_df, modes=[mode],
+            links_df,
+            nodes_df,
+            modes=[mode],
         )
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
 
@@ -2363,7 +2380,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.info(
@@ -2455,7 +2474,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.warning(
@@ -2667,7 +2688,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.warning(
@@ -2744,7 +2767,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.warning(
@@ -2874,7 +2899,11 @@ class RoadwayNetwork(object):
 
         for _, row in selected_links.iterrows():
             pl = ox.folium._make_folium_polyline(
-                geom=row["geometry"], edge=row, edge_color="blue", edge_width=5, edge_opacity=0.8
+                geom=row["geometry"],
+                edge=row,
+                edge_color="blue",
+                edge_width=5,
+                edge_opacity=0.8,
             )
             pl.add_to(m)
 

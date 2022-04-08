@@ -311,7 +311,7 @@ def test_managed_lane_change_functionality(request):
     print("Reading project card ...")
     project_card_name = "test_managed_lanes_change_keyword.yml"
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate = False)
+    project_card = ProjectCard.read(project_card_path, validate=False)
 
     print("Selecting roadway features ...")
     selected_link_indices = net.select_roadway_features(project_card.facility)
@@ -350,7 +350,6 @@ def test_add_adhoc_field(request):
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
 
-@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
@@ -745,7 +744,9 @@ def test_get_modal_network(request):
         fast=True,
     )
     _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-        net.links_df, net.nodes_df, modes=[mode],
+        net.links_df,
+        net.nodes_df,
+        modes=[mode],
     )
 
     test_links_of_selection = _links_df["model_link_id"].tolist()
@@ -1054,7 +1055,6 @@ def test_identify_segment_ends(request):
     assert calculated_d == correct_d
 
 
-@pytest.mark.elo
 @pytest.mark.travis
 @pytest.mark.roadway
 def test_find_segment(request):
@@ -1075,10 +1075,10 @@ def test_managed_lane_access_egress(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
     print("Reading project card ...")
-    #project_card_name = "test_managed_lanes_change_keyword.yml"
+    # project_card_name = "test_managed_lanes_change_keyword.yml"
     project_card_name = "test_managed_lanes_restricted_access_egress.yml"
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate = False)
+    project_card = ProjectCard.read(project_card_path, validate=False)
 
     net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
@@ -1088,7 +1088,9 @@ def test_managed_lane_access_egress(request):
 
     # with 'all' as access/egress, there would be total of 8 connector links (4 access, 4 egress)
     # with restricted access/egress, this project card should create 4 connector links
-    dummy_links = ml_net.links_df[(ml_net.links_df['roadway'].isin(['ml_access','ml_egress']))]
+    dummy_links = ml_net.links_df[
+        (ml_net.links_df["roadway"].isin(["ml_access", "ml_egress"]))
+    ]
     dummy_links_count = len(dummy_links)
 
     assert dummy_links_count == 4

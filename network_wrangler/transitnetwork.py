@@ -732,7 +732,7 @@ class TransitNetwork(object):
                 "route_long_name",
                 "time",
                 "start_time",
-                "end_time"
+                "end_time",
             ]:
                 if key in trips:
                     trips = trips[trips[key].isin(selection[key])]
@@ -881,8 +881,16 @@ class TransitNetwork(object):
             if properties.get("existing") is not None:
                 # Match list
                 nodes = this_shape[TransitNetwork.SHAPES_FOREIGN_KEY].tolist()
-                index_replacement_starts = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][0]][0]
-                index_replacement_ends = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][-1]][-1]
+                index_replacement_starts = [
+                    i
+                    for i, d in enumerate(nodes)
+                    if d == properties["existing_shapes"][0]
+                ][0]
+                index_replacement_ends = [
+                    i
+                    for i, d in enumerate(nodes)
+                    if d == properties["existing_shapes"][-1]
+                ][-1]
                 this_shape = pd.concat(
                     [
                         this_shape.iloc[:index_replacement_starts],
@@ -932,8 +940,12 @@ class TransitNetwork(object):
                         ],
                     ] = [
                         new_stop_id,
-                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"],
-                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"],
+                        nodes_df.loc[
+                            nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"
+                        ],
+                        nodes_df.loc[
+                            nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"
+                        ],
                         fk_i,
                     ]
 
