@@ -1,7 +1,9 @@
 import os
 
-import json, yaml
+import json
+
 import pytest
+import yaml
 from jsonschema import validate
 
 SCHEMA_DIR = os.path.join(

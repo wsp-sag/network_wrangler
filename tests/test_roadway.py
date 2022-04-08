@@ -1,13 +1,9 @@
 import os
-import json
-from geopandas import GeoDataFrame
 import pytest
 from network_wrangler import RoadwayNetwork
 from network_wrangler import ProjectCard
 import time
-import numpy as np
 import pandas as pd
-import networkx as nx
 
 pd.set_option("display.max_rows", 500)
 pd.set_option("display.max_columns", 500)
@@ -517,7 +513,6 @@ def test_add_adhoc_field_from_card(request):
     )
     print("--Finished:", request.node.name)
 
-
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_bad_properties_statements(request):
@@ -718,7 +713,7 @@ def test_query_roadway_property_by_time_group(request, variable_query):
     print("CALCULATED:\n", v_series.loc[selected_link_indices])
     print("ORIGINAL:\n", net.links_df.loc[selected_link_indices, variable_query["v"]])
 
-    ## todo make test make sure the values are correct.
+    # TODO make test make sure the values are correct.
 
 
 @pytest.mark.roadway

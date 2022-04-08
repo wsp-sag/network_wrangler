@@ -1,4 +1,3 @@
-import os
 import pytest
 
 from shapely.geometry import LineString

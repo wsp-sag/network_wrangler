@@ -1,6 +1,7 @@
 import os
-import json
+
 import pytest
+
 from network_wrangler import RoadwayNetwork
 from network_wrangler import TransitNetwork
 from network_wrangler import ProjectCard
@@ -114,7 +115,6 @@ def test_project_card(request):
 @pytest.mark.roadway
 @pytest.mark.transit
 @pytest.mark.travis
-# @pytest.mark.skip("need to allow for creating new stops if they don't already exist in stops.txt")
 def test_wo_existing(request):
     print("\n--Starting:", request.node.name)
 
@@ -160,49 +160,6 @@ def test_wo_existing(request):
     ]["stop_id"].tolist()
     answer = ["2609"]  # first matching stop_id in stops.txt
     assert result == answer
-
-    print("--Finished:", request.node.name)
-
-
-@pytest.mark.roadway
-@pytest.mark.transit
-@pytest.mark.travis
-# @pytest.mark.skip("need to update trips and nodes")
-def test_select_transit_features_by_nodes(request):
-    print("\n--Starting:", request.node.name)
-
-    transit_net = TransitNetwork.read(STPAUL_DIR)
-
-    # Any nodes
-    trip_ids = transit_net.select_transit_features_by_nodes(
-        node_ids=["75520", "66380", "57530"]
-    )
-    print(trip_ids)
-    assert set(trip_ids) == set(
-        [
-            "14941148-JUN19-MVS-BUS-Weekday-01",
-            "14941151-JUN19-MVS-BUS-Weekday-01",
-            "14941153-JUN19-MVS-BUS-Weekday-01",
-            "14941163-JUN19-MVS-BUS-Weekday-01",
-            "14944379-JUN19-MVS-BUS-Weekday-01",
-            "14944386-JUN19-MVS-BUS-Weekday-01",
-            "14944413-JUN19-MVS-BUS-Weekday-01",
-            "14944416-JUN19-MVS-BUS-Weekday-01",
-        ]
-    )
-
-    # All nodes
-    trip_ids = transit_net.select_transit_features_by_nodes(
-        node_ids=["75520", "66380"], require_all=True
-    )
-    assert set(trip_ids) == set(
-        [
-            "14941148-JUN19-MVS-BUS-Weekday-01",
-            "14941151-JUN19-MVS-BUS-Weekday-01",
-            "14941153-JUN19-MVS-BUS-Weekday-01",
-            "14941163-JUN19-MVS-BUS-Weekday-01",
-        ]
-    )
 
     print("--Finished:", request.node.name)
 
