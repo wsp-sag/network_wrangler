@@ -9,7 +9,6 @@ from typing import Optional, List
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
-from .logger import WranglerLogger
 
 from network_wrangler import WranglerLogger
 
@@ -38,6 +37,10 @@ class ProjectCard(object):
         "Add New Roadway",
         "Calculated Roadway",
     ]
+
+    EXCLUDE_ON_WRITE = ["valid"]
+
+    WRITE_ORDER = ["project", "tags", "dependencies"]
 
     def __init__(self, attribute_dictonary: dict):
         """
@@ -153,12 +156,12 @@ class ProjectCard(object):
 
         # import collections
         # out_dict = collections.OrderedDict()
-        out_dict = {}
-        out_dict["project"] = None
-        out_dict["tags"] = ""
-        out_dict["dependencies"] = ""
-        out_dict.update(self.__dict__)
+        write_order = ProjectCard.WRITE_ORDER + [
+            k for k in self.__dict__.keys() if k not in ProjectCard.EXCLUDE_ON_WRITE
+        ]
 
+        out_dict = {k: self.__dict__[k] for k in write_order}
+        print("OUT_DICT")
         with open(out_filename, "w") as outfile:
             yaml.dump(out_dict, outfile, default_flow_style=False, sort_keys=False)
 
