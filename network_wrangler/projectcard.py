@@ -4,7 +4,7 @@
 import os
 import yaml
 import json
-from typing import Optional, List
+from typing import List
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -75,9 +75,8 @@ class ProjectCard(object):
         elif card_suffix in ["wrangler", "wr"]:
             attribute_dictionary = ProjectCard.read_wrangler_card(path_to_card)
         else:
-            msg = "Card should have a suffix of yaml, yml, wrangler, or wr. Found suffix: {}".format(
-                card_suffix
-            )
+            msg = f"Card should have a suffix of yaml, yml, wrangler, or wr. \
+                Found suffix: {card_suffix}"
             raise ValueError(msg)
 
         card = ProjectCard(attribute_dictionary)
@@ -205,14 +204,14 @@ class ProjectCard(object):
         sel_query = "("
         count = 0
 
-        selection_keys = [k for l in selection["link"] for k, v in l.items()]
+        selection_keys = [k for li in selection["link"] for k, v in li.items()]
         num_unique_model_link_identifiers = len(
             set(unique_model_link_identifiers).intersection(selection_keys)
         )
         unique_model_link_identifer_exist = num_unique_model_link_identifiers > 0
 
-        for l in selection["link"]:
-            for key, value in l.items():
+        for li in selection["link"]:
+            for key, value in li.items():
 
                 if key in ignore:
                     continue

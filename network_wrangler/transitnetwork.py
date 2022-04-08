@@ -6,7 +6,7 @@ from __future__ import annotations
 import copy
 import os
 import re
-from typing import Tuple, Union
+from typing import Union
 
 import networkx as nx
 import numpy as np
@@ -38,7 +38,8 @@ class TransitNetwork(object):
         graph (nx.MultiDiGraph): Graph for associated roadway network object.
         feed_path (str): Where the feed was read in from.
         validated_frequencies (bool): The frequencies have been validated.
-        validated_road_network_consistency (): The network has been validated against the road network.
+        validated_road_network_consistency (): The network has been validated against
+            the road network.
         SHAPES_FOREIGN_KEY (str): foreign key between shapes dataframe and roadway network nodes
         STOPS_FOREIGN_KEY (str): foreign  key between stops dataframe and roadway network nodes
         ID_SCALAR (int): scalar value added to create new IDs when necessary.
@@ -53,11 +54,11 @@ class TransitNetwork(object):
     SHAPES_FOREIGN_KEY = "shape_model_node_id"
     STOPS_FOREIGN_KEY = "model_node_id"
 
-    ##TODO consolidate these two ^^^ constants if possible
+    # TODO consolidate these two ^^^ constants if possible
 
     ID_SCALAR = 100000000
 
-    ##TODO investigate consolidating this with RoadwayNetwork
+    # TODO investigate consolidating this with RoadwayNetwork
 
     REQUIRED_FILES = [
         "agency.txt",
@@ -96,11 +97,11 @@ class TransitNetwork(object):
 
         .. todo:: fill out this method
         """
-        ##TODO
+        # TODO
 
         msg = "TransitNetwork.empty is not implemented."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
+        raise NotImplementedError(msg)
 
     @staticmethod
     def read(feed_path: str) -> TransitNetwork:
@@ -316,9 +317,8 @@ class TransitNetwork(object):
             # there are shape links which does not exist in the roadway network
             if len(missing_links_df.index) > 0:
                 valid = False
-                msg = "There are links for shape id {} which are missing in the roadway network.".format(
-                    id
-                )
+                msg = f"There are links for shape id {id} which are missing in the \
+                    roadway network."
                 WranglerLogger.error(msg)
 
             transit_not_allowed_df = merged_df.query(
@@ -328,15 +328,14 @@ class TransitNetwork(object):
             # there are shape links where transit is not allowed
             if len(transit_not_allowed_df.index) > 0:
                 valid = False
-                msg = "There are links for shape id {} which does not allow transit in the roadway network.".format(
-                    id
-                )
+                msg = f"There are links for shape id {id} which does not allow transit \
+                    in the roadway network."
                 WranglerLogger.error(msg)
 
         return valid
 
     @staticmethod
-    def route_ids_in_routestxt(feed: DotDict) -> Bool:
+    def route_ids_in_routestxt(feed: DotDict) -> bool:
         """
         Wherever route_id occurs, make sure it is in routes.txt
 
@@ -361,7 +360,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def trip_ids_in_tripstxt(feed: DotDict) -> Bool:
+    def trip_ids_in_tripstxt(feed: DotDict) -> bool:
         """
         Wherever trip_id occurs, make sure it is in trips.txt
 
@@ -388,7 +387,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def shape_ids_in_shapestxt(feed: DotDict) -> Bool:
+    def shape_ids_in_shapestxt(feed: DotDict) -> bool:
         """
         Wherever shape_id occurs, make sure it is in shapes.txt
 
@@ -414,7 +413,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def stop_ids_in_stopstxt(feed: DotDict) -> Bool:
+    def stop_ids_in_stopstxt(feed: DotDict) -> bool:
         """
         Wherever stop_id occurs, make sure it is in stops.txt
 
@@ -455,7 +454,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def validate_network_keys(feed: DotDict) -> Bool:
+    def validate_network_keys(feed: DotDict) -> bool:
         """
         Validates foreign keys are present in all connecting feed files.
 
@@ -499,7 +498,7 @@ class TransitNetwork(object):
         existing_shapes = self.feed.shapes
         msg = "_graph_shapes() not implemented yet."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
+        raise NotImplementedError(msg)
         # graphed_shapes = pd.DataFrame()
 
         # for shape_id in shapes:
@@ -518,7 +517,7 @@ class TransitNetwork(object):
         existing_stops = self.feed.stops
         msg = "_graph_stops() not implemented yet."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
+        raise NotImplementedError(msg)
         # graphed_stops = pd.DataFrame()
 
         # for stop_id in stops:
@@ -895,7 +894,7 @@ class TransitNetwork(object):
                     [
                         this_shape.iloc[:index_replacement_starts],
                         new_shape_rows,
-                        this_shape.iloc[index_replacement_ends + 1 :],
+                        this_shape.iloc[index_replacement_ends + 1:],
                     ],
                     ignore_index=True,
                     sort=False,
@@ -1005,7 +1004,7 @@ class TransitNetwork(object):
                         [
                             this_stoptime.iloc[:index_replacement_starts],
                             new_stoptime_rows,
-                            this_stoptime.iloc[index_replacement_ends + 1 :],
+                            this_stoptime.iloc[index_replacement_ends + 1:],
                         ],
                         ignore_index=True,
                         sort=False,
@@ -1090,7 +1089,8 @@ class TransitNetwork(object):
 class DotDict(dict):
     """
     dot.notation access to dictionary attributes
-    Source: https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary
+    Source:
+        https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary
     """
 
     __getattr__ = dict.__getitem__

@@ -8,6 +8,7 @@ import sys
 import copy
 import numbers
 from random import randint
+from typing import Any, List, Optional, Union
 
 import folium
 import pandas as pd
@@ -25,13 +26,13 @@ from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point
 
 from .logger import WranglerLogger
 from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
-from .utils import offset_location_reference, haversine_distance, create_unique_shape_id
-from .utils import create_location_reference_from_nodes, create_line_string
+from .utils import haversine_distance, create_unique_shape_id, offset_location_reference
+from .utils import create_location_reference_from_nodes, create_line_string, offset_lat_lon
 
 
 class NoPathFound(Exception):
@@ -295,7 +296,8 @@ class RoadwayNetwork(object):
         ]
         links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
         links_df.crs = RoadwayNetwork.CRS
-        # coerce types for booleans which might not have a 1 and are therefore read in as intersection
+        # coerce types for booleans which might not have a 1 and are therefore read in as
+        # intersection
         bool_columns = [
             "rail_only",
             "bus_only",
@@ -408,7 +410,7 @@ class RoadwayNetwork(object):
         """
         return roadway_net.shapes_df
 
-    def validate_uniqueness(self) -> Bool:
+    def validate_uniqueness(self) -> bool:
         """
         Confirms that the unique identifiers are met.
         """
@@ -630,7 +632,7 @@ class RoadwayNetwork(object):
 
         return False
 
-    def validate_selection(self, selection: dict) -> Bool:
+    def validate_selection(self, selection: dict) -> bool:
         """
         Evaluate whetther the selection dictionary contains the
         minimum required values.
@@ -649,15 +651,15 @@ class RoadwayNetwork(object):
             raise KeyError(err_msg)
 
         err = []
-        for l in selection["link"]:
-            for k, v in l.items():
+        for li in selection["link"]:
+            for k, v in li.items():
                 if k not in self.links_df.columns:
                     err.append(
                         "{} specified in link selection but not an attribute in network\n".format(
                             k
                         )
                     )
-        selection_keys = [k for l in selection["link"] for k, v in l.items()]
+        selection_keys = [k for li in selection["link"] for k, v in li.items()]
         unique_link_id = bool(
             set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(
                 set(selection_keys)
@@ -671,9 +673,7 @@ class RoadwayNetwork(object):
                     and k != RoadwayNetwork.NODE_FOREIGN_KEY
                 ):
                     err.append(
-                        "{} specified in A node selection but not an attribute in network\n".format(
-                            k
-                        )
+                        f"{k} specified in A node selection but not an attribute in network."
                     )
             for k, v in selection["B"].items():
                 if (
@@ -681,9 +681,7 @@ class RoadwayNetwork(object):
                     and k != RoadwayNetwork.NODE_FOREIGN_KEY
                 ):
                     err.append(
-                        "{} specified in B node selection but not an attribute in network\n".format(
-                            k
-                        )
+                        f"{k} specified in B node selection but not an attribute in network"
                     )
         if err:
             WranglerLogger.error(
@@ -806,7 +804,8 @@ class RoadwayNetwork(object):
                 # Does this still work given the u,v,key multi-indexing?
                 #
                 WranglerLogger.warn(
-                    "Please upgrade your OSMNX package. For now, using deprecated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found"
+                    "Please upgrade your OSMNX package. For now, using deprecated\
+                         osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found"
                 )
                 G = ox.gdfs_to_graph(graph_nodes, graph_links)
             else:
@@ -830,7 +829,7 @@ class RoadwayNetwork(object):
             a required unique link id.
 
         """
-        selection_keys = [k for l in selection_dict["link"] for k, v in l.items()]
+        selection_keys = [k for li in selection_dict["link"] for k, v in li.items()]
         return bool(
             set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(
                 set(selection_keys)
@@ -885,7 +884,8 @@ class RoadwayNetwork(object):
             D_id: foreign key for end node
             nodes_df: optional nodes df, otherwise will use network instance
             weight_column: column to use as a weight, defaults to "i"
-            weight_factor: any additional weighting to multiply the weight column by, defaults to RoadwayNetwork.SP_WEIGHT_FACTOR
+            weight_factor: any additional weighting to multiply the weight column by, defaults
+                to RoadwayNetwork.SP_WEIGHT_FACTOR
 
         Returns: tuple with length of four
         - Boolean if shortest path found
@@ -894,9 +894,8 @@ class RoadwayNetwork(object):
         - links in shortest path selected from links_df
         """
         WranglerLogger.debug(
-            "Calculating shortest path from {} to {} using {} as weight with a factor of {}".format(
-                O_id, D_id, weight_column, weight_factor
-            )
+            f"Calculating shortest path from {O_id} to {D_id} using {weight_column} as \
+                weight with a factor of {weight_factor}"
         )
 
         # Prep Graph Links
@@ -960,7 +959,8 @@ class RoadwayNetwork(object):
             O_id: origin node foreigh key ID
             D_id: destination node foreigh key ID
             weight_column: column to use for weight of shortest path. Defaults to "i" (iteration)
-            weight_factor: optional weight to multiply the weight column by when finding the shortest path
+            weight_factor: optional weight to multiply the weight column by when finding
+                the shortest path
 
         Returns
 
@@ -986,8 +986,8 @@ class RoadwayNetwork(object):
                 candidate_links : GeoDataFrame
                     updated df with one more degree of added breadth
 
-                node_list_foreign_keys : list of foreign key ids for nodes in the updated candidate links
-                    to test if the A and B nodes are in there.
+                node_list_foreign_keys : list of foreign key ids for nodes in the updated
+                    candidate links to test if the A and B nodes are in there.
             """
             WranglerLogger.debug("-Adding Breadth-")
 
@@ -1067,9 +1067,8 @@ class RoadwayNetwork(object):
 
         if not sp_found:
             WranglerLogger.debug(
-                "No shortest path found with breadth of {}, trying greater breadth until SP found or max breadth {} reached.".format(
-                    i, max_i
-                )
+                "No shortest path found with breadth of {i}, trying greater breadth until SP \
+                    found or max breadth {max_i} reached."
             )
         while not sp_found and i <= RoadwayNetwork.MAX_SEARCH_BREADTH:
             WranglerLogger.debug(
@@ -1181,18 +1180,20 @@ class RoadwayNetwork(object):
 
         if len(candidate_links.index) == 0:
             WranglerLogger.debug(
-                "No candidate links in initial search.\nRetrying query using 'ref' instead of 'name'"
+                "No candidate links in initial search.\nRetrying query using 'ref' instead of \
+                    'name'"
             )
             # if the query doesn't come back with something from 'name'
             # try it again with 'ref' instead
             selection_has_name_key = any("name" in d for d in selection["link"])
 
             if not selection_has_name_key:
-                msg = "Not able to complete search using 'ref' instead of 'name' because 'name' not in search."
+                msg = "Not able to complete search using 'ref' instead of 'name' because 'name' \
+                    not in search."
                 WranglerLogger.error(msg)
                 raise Exception(msg)
 
-            if not "ref" in self.links_df.columns:
+            if "ref" not in self.links_df.columns:
                 msg = "Not able to complete search using 'ref' because 'ref' not in network."
                 WranglerLogger.error(msg)
                 raise Exception(msg)
@@ -1208,7 +1209,8 @@ class RoadwayNetwork(object):
             candidate_links["i"] = 0
 
             if len(candidate_links.index) == 0:
-                msg = "No candidate links in search using either 'name' or 'ref' in query.\nSelection Failed."
+                msg = "No candidate links in search using either 'name' or 'ref' in query.\
+                    Selection Failed."
                 WranglerLogger.error(msg)
                 raise Exception(msg)
 
@@ -1283,36 +1285,32 @@ class RoadwayNetwork(object):
             if p["property"] not in self.links_df.columns:
                 if p.get("change"):
                     validation_error_message.append(
-                        '"Change" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
-                            p["property"]
-                        )
+                        f'"Change" is specified for attribute { p["property"]}, but doesn\'t \
+                            exist in base network'
                     )
 
                 if p.get("existing") and not ignore_existing:
                     validation_error_message.append(
-                        '"Existing" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
-                            p["property"]
-                        )
+                        f'"Existing" is specified for attribute { p["property"]}, but doesn\'t \
+                            exist in base network\n'
                     )
                 elif p.get("existing"):
                     WranglerLogger.warning(
-                        '"Existing" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
-                            p["property"]
-                        )
+                        f'"Existing" is specified for attribute {p["property"]}, but doesn\'t \
+                            exist in base network.'
                     )
 
             if p.get("change") and not p.get("existing"):
                 if require_existing_for_change:
                     validation_error_message.append(
-                        '"Change" is specified for attribute {}, but there isn\'t a value for existing.\nTo proceed, run with the setting require_existing_for_change=False'.format(
-                            p["property"]
-                        )
+                        f'"Change" is specified for attribute {p["property"]}, but there \
+                            isn\'t a value for existing.\nTo proceed, run with the setting \
+                            require_existing_for_change=False'
                     )
                 else:
                     WranglerLogger.warning(
-                        '"Change" is specified for attribute {}, but there isn\'t a value for existing.\n'.format(
-                            p["property"]
-                        )
+                        f'"Change" is specified for attribute {p["property"]}, but there \
+                            isn\'t a value for existing'
                     )
 
         if validation_error_message:
@@ -1640,9 +1638,7 @@ class RoadwayNetwork(object):
             for link in links:
                 for key in RoadwayNetwork.LINK_FOREIGN_KEY:
                     if link.get(key) is None:
-                        msg = "New link to add doesn't contain link foreign key identifier: {}".format(
-                            key
-                        )
+                        msg = "New link to add doesn't contain link foreign key identifier: {key}"
                         WranglerLogger.error(msg)
                         raise ValueError(msg)
 
@@ -1658,18 +1654,16 @@ class RoadwayNetwork(object):
                 if self.nodes_df[
                     self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY] == link["A"]
                 ].empty:
-                    msg = "New link to add has A node = {} but the node does not exist in the network".format(
-                        link["A"]
-                    )
+                    msg = f"New link to add has A node = {link['A']} but the node does not exist \
+                        in the network"
                     WranglerLogger.error(msg)
                     raise ValueError(msg)
 
                 if self.nodes_df[
                     self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY] == link["B"]
                 ].empty:
-                    msg = "New link to add has B node = {} but the node does not exist in the network".format(
-                        link["B"]
-                    )
+                    msg = "New link to add has B node = {link['B']} but the node does \
+                        not exist in the network"
                     WranglerLogger.error(msg)
                     raise ValueError(msg)
 
@@ -1742,9 +1736,8 @@ class RoadwayNetwork(object):
             for key, val in links.items():
                 missing_links = [v for v in val if v not in self.links_df[key].tolist()]
                 if missing_links:
-                    message = "Links attribute {} with values as {} does not exist in the network\n".format(
-                        key, missing_links
-                    )
+                    message = f"Links attribute {key} with values as {missing_links} does not \
+                        exist in the network"
                     if ignore_missing:
                         WranglerLogger.warning(message)
                     else:
@@ -1772,9 +1765,8 @@ class RoadwayNetwork(object):
             for key, val in nodes.items():
                 missing_nodes = [v for v in val if v not in self.nodes_df[key].tolist()]
                 if missing_nodes:
-                    message = "Nodes attribute {} with values as {} does not exist in the network\n".format(
-                        key, missing_links
-                    )
+                    message = f"Nodes attribute {key} with values as {missing_links} \
+                        does not exist in the network."
                     if ignore_missing:
                         WranglerLogger.warning(message)
                     else:
@@ -1847,8 +1839,8 @@ class RoadwayNetwork(object):
                 if "default" in v.keys():
                     return v["default"]
                 else:
-                    WranglerLogger.debug("variable: ".format(v))
-                    msg = "Variable {} is more complex in network than query".format(v)
+                    WranglerLogger.debug(f"variable: {v}")
+                    msg = f"Variable {v} is more complex in network than query"
                     WranglerLogger.error(msg)
                     raise ValueError(msg)
 
@@ -1896,8 +1888,8 @@ class RoadwayNetwork(object):
                             # print("RETURNING:", time_spans, category, tg["value"])
                             return tg["value"]
 
-                    # if there isn't a fully matched time period, see if there is an overlapping one
-                    # right now just return the first overlapping ones
+                    # if there isn't a fully matched time period, see if there is an overlapping
+                    # one right now just return the first overlapping ones
                     # TODO return the time period with the largest overlap
 
                     if (
@@ -1915,30 +1907,26 @@ class RoadwayNetwork(object):
                         # print("OLM",overlap_minutes)
                         if not return_partial_match and overlap_minutes > 0:
                             WranglerLogger.debug(
-                                "Couldn't find time period consistent with {}, but found a partial match: {}. Consider allowing partial matches using 'return_partial_match' keyword or updating query.".format(
-                                    time_spans, tg["time"]
-                                )
+                                f"Couldn't find time period consistent with {time_spans}, but \
+                                    found a partial match: {tg['time']}. Consider allowing \
+                                    partial matches using 'return_partial_match' keyword or \
+                                    updating query."
                             )
                         elif (
                             overlap_minutes < partial_match_minutes
                             and overlap_minutes > 0
                         ):
                             WranglerLogger.debug(
-                                "Time period: {} overlapped less than the minimum number of minutes ({}<{}) to be considered a match with time period in network: {}.".format(
-                                    time_spans,
-                                    overlap_minutes,
-                                    partial_match_minutes,
-                                    tg["time"],
-                                )
+                                f"Time period: {time_spans} overlapped less than the minimum number \
+                                of minutes ({overlap_minutes}<{partial_match_minutes}) to be \
+                                considered a match with time period in network: {tg['time']}."
                             )
                         elif overlap_minutes > 0:
                             WranglerLogger.debug(
-                                "Returning a partial time period match. Time period: {} overlapped the minimum number of minutes ({}>={}) to be considered a match with time period in network: {}.".format(
-                                    time_spans,
-                                    overlap_minutes,
-                                    partial_match_minutes,
-                                    tg["time"],
-                                )
+                                f"Returning a partial time period match. Time period: {time_spans}\
+                                overlapped the minimum number of minutes ({overlap_minutes}>=\
+                                {partial_match_minutes}) to be considered a match with time period\
+                                 in network: {tg['time']}."
                             )
                             if tg.get("category"):
                                 categories += tg["category"]
@@ -2099,7 +2087,8 @@ class RoadwayNetwork(object):
         WranglerLogger.info("Creating network with duplicated managed lanes")
 
         if "ml_access" in self.links_df["roadway"].tolist():
-            msg = "managed lane access links already exist in network; shouldn't be running create managed lane network. Returning network as-is."
+            msg = "managed lane access links already exist in network; shouldn't be running \
+                create managed lane network. Returning network as-is."
             WranglerLogger.error(msg)
             if in_place:
                 return
@@ -2268,8 +2257,9 @@ class RoadwayNetwork(object):
         Args:
             links_df: DataFrame of standard network links
             nodes_df: DataFrame of standard network nodes
-            modes: list of the modes of the network to be kept, must be in `drive`,`transit`,`rail`,`bus`,
-                `walk`, `bike`. For example, if bike and walk are selected, both bike and walk links will be kept.
+            modes: list of the modes of the network to be kept, must be in
+                `drive`,`transit`,`rail`,`bus`,`walk`, `bike`.
+                For example, if bike and walk are selected, both bike and walk links will be kept.
 
         Returns: tuple of DataFrames for links, nodes filtered by mode
 
@@ -2307,20 +2297,20 @@ class RoadwayNetwork(object):
         )
 
         if not set(mode_link_variables).issubset(set(links_df.columns)):
-            msg = "{} not in provided links_df list of columns. Available columns are: \n {}".format(
-                set(mode_link_variables) - set(links_df.columns), links_df.columns
-            )
+            msg = f"""{set(mode_link_variables) - set(links_df.columns)} not in provided links_df \
+                list of columns. Available columns are:
+                {links_df.columns}"""
             WranglerLogger.error(msg)
 
         if not set(mode_node_variables).issubset(set(nodes_df.columns)):
-            msg = "{} not in provided nodes_df list of columns. Available columns are: \n {}".format(
-                set(mode_node_variables) - set(nodes_df.columns), nodes_df.columns
-            )
+            msg = f"""{set(mode_node_variables) - set(nodes_df.columns)} not in provided nodes_df \
+                list of columns. Available columns are:
+                {nodes_df.columns}"""
             WranglerLogger.error(msg)
 
         modal_links_df = links_df.loc[links_df[mode_link_variables].any(axis=1)]
 
-        ##TODO right now we don't filter the nodes because transit-only
+        # TODO right now we don't filter the nodes because transit-only
         # links with walk access are not marked as having walk access
         # Issue discussed in https://github.com/wsp-sag/network_wrangler/issues/145
         # modal_nodes_df = nodes_df[nodes_df[mode_node_variable] == 1]
@@ -2680,7 +2670,9 @@ class RoadwayNetwork(object):
         """
         Args:
             endpoints: list of length of two unique keys of nodes making up endpoints of segment
-            selection_dict: dictionary of link variables to select candidate links from, otherwise will create a graph of ALL links which will be both a RAM hog and could result in odd shortest paths.
+            selection_dict: dictionary of link variables to select candidate links from, otherwise
+                will create a graph of ALL links which will be both a RAM hog and could result in
+                odd shortest paths.
             segment_variables: list of variables to keep
         """
         _nodes_df = nodes_df if nodes_df else self.nodes_df
@@ -2714,7 +2706,8 @@ class RoadwayNetwork(object):
             _candidate_links = _links_df
 
             WranglerLogger.warning(
-                "Not pre-selecting links using selection_dict can use up a lot of RAM and also result in odd segment paths."
+                "Not pre-selecting links using selection_dict can use up a lot of RAM and \
+                    also result in odd segment paths."
             )
 
         WranglerLogger.debug(
@@ -2724,11 +2717,9 @@ class RoadwayNetwork(object):
         )
 
         try:
-            _sp = False
             (G, candidate_links, sp_route, sp_links) = self.path_search(
                 _candidate_links, O_id, D_id
             )
-            _sp = True
         except NoPathFound:
             msg = "Route not found from {} to {} using selection candidates {}".format(
                 O_id, D_id, selection_dict
@@ -2780,15 +2771,6 @@ class RoadwayNetwork(object):
             )
 
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
-        # sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
-        sub_graphs = [
-            s
-            for s in sorted(
-                (G.subgraph(c) for c in nx.strongly_connected_components(G)),
-                key=len,
-                reverse=True,
-            )
-        ]
 
         sub_graph_nodes = [
             list(s)
@@ -2819,8 +2801,8 @@ class RoadwayNetwork(object):
 
         Args:
             G: OSMNX flavored networkX graph.
-            disconnected_subgraph_nodes: List of disconnected subgraphs described by the list of their
-                member nodes (as described by their `model_node_id`).
+            disconnected_subgraph_nodes: List of disconnected subgraphs described by the list
+                of their member nodes (as described by their `model_node_id`).
 
         returns: fig, ax : tuple
         """
@@ -2916,8 +2898,8 @@ class RoadwayNetwork(object):
             return node_marker
 
         if A:
-
-            # WranglerLogger.debug("A: {}\n{}".format(A,self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == A]))
+            msg = f"A: {A}\n{self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == A]}"
+            # WranglerLogger.debug(msg)
             _folium_node(
                 self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == A],
                 color="green",
@@ -2937,10 +2919,6 @@ class RoadwayNetwork(object):
         """
         Shows which links and nodes are deleted from the roadway network
         """
-        # deleted_links = None
-        # deleted_nodes = None
-
-        missing_error_message = []
 
         if links is not None:
             for key, val in links.items():

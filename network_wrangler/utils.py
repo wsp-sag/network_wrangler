@@ -1,13 +1,8 @@
-import os
-import copy
 import hashlib
 import math
-from typing import Union
-
-from shapely.geometry import LineString
 
 import pandas as pd
-import geopandas as gpd
+
 from shapely.geometry import LineString
 from geographiclib.geodesic import Geodesic
 
