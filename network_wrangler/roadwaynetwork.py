@@ -28,7 +28,6 @@ from jsonschema.exceptions import SchemaError
 
 from shapely.geometry import Point, LineString
 
-from .logger import WranglerLogger
 from network_wrangler import WranglerLogger
 
 from .projectcard import ProjectCard
@@ -199,8 +198,6 @@ class RoadwayNetwork(object):
         unique_link_ids: list = UNIQUE_LINK_IDS,
         unique_node_ids: list = UNIQUE_NODE_IDS,
         crs: int = CRS,
-        modes_to_network_link_variables: Mapping[str,Collection] = MODES_TO_NETWORK_LINK_VARIABLES,
-        modes_to_network_node_variables: Mapping[str,Collection] = MODES_TO_NETWORK_NODE_VARIABLES,
         modes_to_network_link_variables: Mapping[
             str, Collection
         ] = MODES_TO_NETWORK_LINK_VARIABLES,
@@ -216,9 +213,9 @@ class RoadwayNetwork(object):
         """
         Constructor
         """
-        inputs_valid_types = [isinstance(x, GeoDataFrame) for x in (nodes_df, links_df, shapes_df)]
         inputs_valid_types = [
             isinstance(x, GeoDataFrame) for x in (nodes_df, links_df, shapes_df)
+        ]
         if False in inputs_valid_types:
             raise (
                 TypeError(
@@ -251,12 +248,10 @@ class RoadwayNetwork(object):
 
         self.__dict__.update(kwargs)
 
-        #WranglerLogger.debug("SELF.__DICT__: {}".format("\n-".join(self.__dict__)))
         # WranglerLogger.debug("SELF.__DICT__: {}".format("\n-".join(self.__dict__)))
 
         if not self.validate_uniqueness():
             raise ValueError("IDs in network not unique")
-        
 
     @staticmethod
     def read(
@@ -294,9 +289,9 @@ class RoadwayNetwork(object):
         )
 
         roadway_network = RoadwayNetwork(
-            nodes=nodes_df,
-            links=links_df,
-            shapes=shapes_df,
+            nodes_df,
+            links_df,
+            shapes_df,
             link_filename=link_filename,
             node_filename=node_filename,
             shape_filename=shape_filename,
@@ -1412,10 +1407,10 @@ class RoadwayNetwork(object):
         exec(pycode)
 
     def apply_roadway_feature_change(
-        self, link_idx: list, properties: dict, in_place: bool = True
         self,
         link_idx: list,
         properties: dict,
+        links_df: DataFrame = None,
         in_place: bool = True,
     ) -> Union(None, RoadwayNetwork):
         """
@@ -1427,9 +1422,12 @@ class RoadwayNetwork(object):
                 lndices of all links to apply change to
             properties : list of dictionarys
                 roadway properties to change
+            links_df : links dataframe to apply change to. Defaults to self.links_df.
             in_place: boolean
                 update self or return a new roadway network object
         """
+        if links_df is None:
+            links_df = self.links_df
 
         # check if there are change or existing commands that that property
         #   exists in the network
@@ -2067,10 +2065,11 @@ class RoadwayNetwork(object):
         )
 
         if use_shapes:
-            _needed_shapes_gdf = self.shapes_df.loc[
-                self.shapes_df[self.shape_foreign_key]
-                in links_df[self.shape_foreign_key]
-            ].copy()
+            _needed_shapes_gdf = self.shapes_df.merge(
+                links_df[self.shape_foreign_key],
+                on=self.shape_foreign_key,
+                how="inner",
+            )
 
             _needed_shapes_gdf = _needed_shapes_gdf.to_crs(epsg=26915)
             _needed_shapes_gdf[network_variable] = (
@@ -2221,9 +2220,9 @@ class RoadwayNetwork(object):
         if not ml_lanes_attributes:
             WranglerLogger.info("No managed lanes attributes found.")
             return False
-        if not links_df[ml_lanes_attributes].max() > 0:
+        if links_df[ml_lanes_attributes].any() is not 0:
             WranglerLogger.info(
-                "Max number of managed lanes is not greater than zero ({}).".format(
+                "Max number of managed lanes is zero ({}).".format(
                     links_df[ml_lanes_attributes].max()
                 )
             )
@@ -2259,8 +2258,8 @@ class RoadwayNetwork(object):
             managed_lanes_link_id_scalar: integer value added to original link IDs to create managed
                 lane unique ids. If not specified, will look for value in the RoadwayNetwork
                 instance.  If not found there, will default to MANAGED_LANES_LINK_ID_SCALAR.
-            in_place: If True, will update self.links_model_df, self.shapes_df, and self.nodes_model_df.
-                Otherwise, will return a tuple with self.links_model_df, self.shapes_df, and self.nodes_model_df.
+            in_place: If True, will update self.model_links_df, self.shapes_df, and self.model_nodes_df.
+                Otherwise, will return a tuple with self.model_links_df, self.shapes_df, and self.model_nodes_df.
 
         returns:
             None if `in_place' True.
@@ -2273,7 +2272,11 @@ class RoadwayNetwork(object):
             if in_place:
                 return
             else:
-                return self
+                return (
+                    self.links_df,
+                    self.nodes_df,
+                    self.shapes_df,
+                )
 
         WranglerLogger.info("Creating network with duplicated managed lanes")
 
