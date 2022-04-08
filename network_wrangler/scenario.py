@@ -18,10 +18,6 @@ import geopandas as gpd
 from network_wrangler import WranglerLogger
 
 from .projectcard import ProjectCard
-from collections import OrderedDict
-from .logger import WranglerLogger
-from collections import defaultdict
-from .utils import topological_sort
 from .roadwaynetwork import RoadwayNetwork
 from .transitnetwork import TransitNetwork
 from .utils import topological_sort
@@ -290,11 +286,6 @@ class Scenario(object):
             return
 
         if project_card.project in self.get_project_names():
-            msg = "project card with name '{}' already in Scenario. Project names must be unique".format(
-                project_card.project
-            )
-            WranglerLogger.error(msg)
-            raise ValueError(msg)
             msg = f"project card with name '{project_card.project}' already in Scenario.\
                 Project names must be unique. Skipping import."
             WranglerLogger.warning(msg)
