@@ -55,7 +55,6 @@ def test_time_convert(request):
     assert_series_equal(df["time"], df["time_results"], check_names=False)
 
 
-@pytest.mark.get_dist
 @pytest.mark.travis
 def test_get_distance_bw_lat_lon(request):
     print("\n--Starting:", request.node.name)

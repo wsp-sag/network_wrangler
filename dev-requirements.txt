@@ -1,8 +1,9 @@
-pytest
+black
 jupyter
 notebook
+pytest
 recommonmark
 sphinx
 sphinx-autodoc-typehints
 sphinx_rtd_theme
-black
+
