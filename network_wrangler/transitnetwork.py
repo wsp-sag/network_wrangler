@@ -15,7 +15,7 @@ import partridge as ptg
 from partridge.config import default_config
 
 from .logger import WranglerLogger
-from .utils import parse_time_spans
+from .utils import parse_time_spans, DotDict
 from .roadwaynetwork import RoadwayNetwork
 
 SHAPES_FOREIGN_KEY = "shape_model_node_id"
@@ -24,7 +24,7 @@ STOPS_FOREIGN_KEY = "model_node_id"
 ID_SCALAR = 100000000
 
 
-class TransitNetwork(object):
+class TransitNetwork:
     """
     Representation of a Transit Network.
 
@@ -42,8 +42,6 @@ class TransitNetwork(object):
         road_net (RoadwayNetwork): Associated roadway network object.
         graph (nx.MultiDiGraph): Graph for associated roadway network object.
         feed_path (str): Where the feed was read in from.
-        validated_frequencies (bool): The frequencies have been validated.
-        validated_road_network_consistency (): The network has been validated against the road network.
         shapes_foreign_key (str): foreign key between shapes dataframe and roadway network nodes.
         stops_foreign_key (str): foreign key between stops dataframe and roadway network nodes.
         id_scalar (int): scalar value added to create new stop and shape IDs when necessary.
@@ -73,6 +71,7 @@ class TransitNetwork(object):
 
         .. todo:: Make graph a reference to associated RoadwayNetwork's graph, not its own thing.
         """
+        self.feed_source = None
         self.feed: DotDict = feed
         self.config: nx.DiGraph = config
 
@@ -80,17 +79,20 @@ class TransitNetwork(object):
         self.shapes_foreign_key = shapes_foreign_key
         self.stops_foreign_key = stops_foreign_key
 
+        self.feed_routes = []
+
         self.road_net: RoadwayNetwork = None
         self.graph: nx.MultiDiGraph = None
-        self.feed_path = None
 
-        self.validated_frequencies = False
-        self.validated_road_network_consistency = False
+    @property
+    def feed_valid(self) -> bool:
+        valid = self.validate_network_keys(self.feed)
+        valid = valid and self.validate_frequencies(self.feed)
+        return valid
 
-        if not self.validate_frequencies():
-            raise ValueError(
-                "Transit lines with non-positive frequencies exist in the network"
-            )
+    @property
+    def road_network_consistent(self) -> bool:
+        return self.validate_road_network_consistencies()
 
     @staticmethod
     def empty() -> TransitNetwork:
@@ -103,7 +105,39 @@ class TransitNetwork(object):
 
         msg = "TransitNetwork.empty is not implemented."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
+        raise NotImplementedError(msg)
+
+    def add_feed(
+        self,
+        feed_path: str,
+    ) -> None:
+        """
+        Read GTFS feed from folder and TransitNetwork object and add to existing TransitNetwork object.
+
+        Args:
+            feed_path: where to read transit network files from.
+        """
+
+        if self.feed_source is not None:
+            raise NotImplementedError(
+                f"TransitNetwork can only handle one gtfs feed and one already exists from: {self.feed_source}."
+            )
+
+        self.feed_source = feed_path
+
+        WranglerLogger.info("Adding transit feed from: {}".format(feed_path))
+        feed = ptg.load_feed(feed_path, config=default_config())
+        updated_config = TransitNetwork.validate_feed(feed, default_config())
+
+        # Read in each feed so we can write over them
+        editable_feed = DotDict()
+        for node in updated_config.nodes.keys():
+            # Load (initiate Partridge's lazy load)
+            editable_feed[node.replace(".txt", "")] = feed.get(node)
+
+        self.feed = editable_feed
+        self.config = updated_config
+        self.feed_routes = list(set(self.feed.routes.route_id.tolist()))
 
     @staticmethod
     def read(
@@ -123,26 +157,15 @@ class TransitNetwork(object):
 
         Returns: a TransitNetwork object.
         """
-        config = default_config()
-        feed = ptg.load_feed(feed_path, config=config)
-        WranglerLogger.info("Read in transit feed from: {}".format(feed_path))
-
-        updated_config = TransitNetwork.validate_feed(feed, config)
-
-        # Read in each feed so we can write over them
-        editable_feed = DotDict()
-        for node in updated_config.nodes.keys():
-            # Load (initiate Partridge's lazy load)
-            editable_feed[node.replace(".txt", "")] = feed.get(node)
 
         transit_network = TransitNetwork(
-            feed=editable_feed,
-            config=updated_config,
             shapes_foreign_key=shapes_foreign_key,
             stops_foreign_key=stops_foreign_key,
             id_scalar=id_scalar,
         )
-        transit_network.feed_path = feed_path
+
+        transit_network.add_feed(feed_path)
+
         return transit_network
 
     @staticmethod
@@ -181,35 +204,30 @@ class TransitNetwork(object):
             )
             WranglerLogger.error(msg)
             raise AttributeError(msg)
-            return False
 
         TransitNetwork.validate_network_keys(feed)
+        TransitNetwork.validate_frequencies(feed)
 
         return updated_config
 
-    def validate_frequencies(self) -> bool:
+    @staticmethod
+    def validate_frequencies(feed) -> bool:
         """
         Validates that there are no transit trips in the feed with zero frequencies.
-
-        Changes state of self.validated_frequencies boolean based on outcome.
 
         Returns:
             boolean indicating if valid or not.
         """
 
-        _valid = True
-        zero_freq = self.feed.frequencies[self.feed.frequencies.headway_secs <= 0]
+        zero_freq = feed.frequencies[feed.frequencies.headway_secs <= 0]
 
         if len(zero_freq.index) > 0:
             _valid = False
-            msg = "Transit lines {} have non-positive frequencies".format(
-                zero_freq.trip_id.to_list()
-            )
+            msg = f"Transit lines {zero_freq.trip_id.to_list()} have non-positive frequencies"
             WranglerLogger.error(msg)
+            return False
 
-        self.validated_frequencies = True
-
-        return _valid
+        return True
 
     def validate_road_network_consistencies(self) -> bool:
         """
@@ -228,8 +246,6 @@ class TransitNetwork(object):
 
         valid_stops = self.validate_transit_stops()
         valid_shapes = self.validate_transit_shapes()
-
-        self.validated_road_network_consistency = True
 
         if not valid_stops or not valid_shapes:
             valid = False
@@ -351,7 +367,7 @@ class TransitNetwork(object):
         return valid
 
     @staticmethod
-    def route_ids_in_routestxt(feed: DotDict) -> Bool:
+    def route_ids_in_routestxt(feed: DotDict) -> bool:
         """
         Wherever route_id occurs, make sure it is in routes.txt
 
@@ -376,9 +392,11 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def trip_ids_in_tripstxt(feed: DotDict) -> Bool:
+    def trip_ids_in_tripstxt(feed: DotDict) -> bool:
         """
-        Wherever trip_id occurs, make sure it is in trips.txt
+        Wherever trip_id occurs, make sure it is in trips.txt.
+        And if a trip is defined in trips.txt and occurs frequencies.txt,
+        it should have entries in stop_times.txt
 
         Args:
             feed: partridge feed object
@@ -391,19 +409,27 @@ class TransitNetwork(object):
             feed.stop_times.trip_id.tolist() + feed.frequencies.trip_id.tolist()
         )
 
-        missing_trips = trip_ids_referenced - trip_ids_tripstxt
+        trip_ids_should_have_stoptimes = trip_ids_tripstxt and set(
+            feed.frequencies.trip_id.tolist()
+        )
+        trips_ids_stoptimestxt = set(feed.stop_times.trip_id.tolist())
 
-        if missing_trips:
-            WranglerLogger.warning(
-                "The following trip_ids are referenced but missing from trips.txt: {}".format(
-                    list(missing_trips)
-                )
-            )
+        missing_trips_in_tripstxt = trip_ids_referenced - trip_ids_tripstxt
+        missing_trips_in_stop_timestxt = (
+            trip_ids_should_have_stoptimes - trips_ids_stoptimestxt
+        )
+
+        msg = ""
+        if missing_trips_in_tripstxt:
+            msg += f"The following trip_ids are referenced but missing from trips.txt: {missing_trips_in_tripstxt}"
+        if missing_trips_in_stop_timestxt:
+            msg += f"The following trip_ids are referenced in trips.txt and frequencies.txt but missing from stop_times.txt: {missing_trips_in_stop_timestxt}"
+        if msg:
+            WranglerLogger.warning(msg)
             return False
         return True
 
     @staticmethod
-    def shape_ids_in_shapestxt(feed: DotDict) -> Bool:
     def shape_ids_in_shapestxt(feed: DotDict) -> bool:
         """
         Wherever shape_id occurs, make sure it is in shapes.txt
@@ -430,7 +456,6 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def stop_ids_in_stopstxt(feed: DotDict) -> Bool:
     def stop_ids_in_stopstxt(feed: DotDict) -> bool:
         """
         Wherever stop_id occurs, make sure it is in stops.txt
@@ -472,7 +497,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def validate_network_keys(feed: DotDict) -> Bool:
+    def validate_network_keys(feed: DotDict) -> bool:
         """
         Validates foreign keys are present in all connecting feed files.
 
@@ -496,6 +521,14 @@ class TransitNetwork(object):
         graph_stops: bool = False,
         validate_consistency: bool = True,
     ) -> None:
+        """[summary]
+
+        Args:
+            road_net (RoadwayNetwork): [description]
+            graph_shapes (bool, optional): [description]. Defaults to False.
+            graph_stops (bool, optional): [description]. Defaults to False.
+            validate_consistency (bool, optional): [description]. Defaults to True.
+        """
         self.road_net: RoadwayNetwork = road_net
         self.graph: nx.MultiDiGraph = RoadwayNetwork.ox_graph(
             road_net.nodes_df, road_net.links_df
@@ -509,14 +542,14 @@ class TransitNetwork(object):
             self.validate_road_network_consistencies()
 
     def _graph_shapes(self) -> None:
-        """
+        """[summary]
 
-        .. todo:: Fill out this method.
+        Raises:
+            NotImplemented: [description]
         """
         existing_shapes = self.feed.shapes
         msg = "_graph_shapes() not implemented yet."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
         raise NotImplementedError(msg)
         # graphed_shapes = pd.DataFrame()
 
@@ -530,13 +563,14 @@ class TransitNetwork(object):
         # self.feed.shapes = graphed_shapes
 
     def _graph_stops(self) -> None:
-        """
-        .. todo:: Fill out this method.
+        """[summary]
+
+        Raises:
+            NotImplemented: [description]
         """
         existing_stops = self.feed.stops
         msg = "_graph_stops() not implemented yet."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
         raise NotImplementedError(msg)
         # graphed_stops = pd.DataFrame()
 
@@ -630,7 +664,7 @@ class TransitNetwork(object):
                 self.apply_transit_managed_lane(
                     self.select_transit_features_by_nodes(managed_lane_nodes),
                     managed_lane_nodes,
-                    self.RoadNet.managed_lanes_node_id_scalar,
+                    self.road_net.managed_lanes_node_id_scalar,
                 )
             elif project_dictionary["category"].lower() == "roadway deletion":
                 WranglerLogger.warning(
@@ -900,7 +934,7 @@ class TransitNetwork(object):
                     )
                     # Add new row to stops
                     new_stop_id = str(int(fk_i) + self.id_scalar)
-                    if stop_id in stops["stop_id"].tolist():
+                    if new_stop_id in stops["stop_id"].tolist():
                         WranglerLogger.error("Cannot create a unique new stop_id.")
                     stops.loc[
                         len(stops.index) + 1,
@@ -1053,20 +1087,3 @@ class TransitNetwork(object):
             },
             in_place=in_place,
         )
-
-
-class DotDict(dict):
-    """
-    dot.notation access to dictionary attributes
-    Source: https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary
-    """
-
-    __getattr__ = dict.__getitem__
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
-
-    def __getattr__(self, key):
-        try:
-            return self[key]
-        except KeyError:
-            raise AttributeError(key)

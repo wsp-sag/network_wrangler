@@ -11,7 +11,6 @@ import geopandas as gpd
 from shapely.geometry import LineString
 from geographiclib.geodesic import Geodesic
 
-from .logger import WranglerLogger
 from network_wrangler import WranglerLogger
 
 
@@ -92,7 +91,6 @@ def make_slug(text, delimiter: str = "_"):
     import re
 
     text = re.sub("[,.;@#?!&$']+", "", text.lower())
-    return re.sub("[\ ]+", delimiter, text)
     return re.sub(r"[\ ]+", delimiter, text)
 
 
@@ -300,7 +298,7 @@ def create_line_string(location_reference: list):
 
 def update_df(
     base_df: pd.DataFrame,
-    update_df: pd.DataFrame,
+    upd_df: pd.DataFrame,
     merge_key: str = None,
     left_on: str = None,
     right_on: str = None,
@@ -312,11 +310,12 @@ def update_df(
 
     Args:
         base_df: DataFrame to be updated
-        update_df: DataFrame with with updated values
+        upd_df: DataFrame with with updated values
         merge_key: column to merge on (i.e. model_link_id). If not specified, must have left_on AND right_on.
         left_on: key for base_df.  Must also specify right_on. If not specified, must specify merge_key.
-        right_on: key for update_df.  Must also specify left_on. If not specified, must specify merge_key.
-        update_fields: required list of fields to update values for.  Must be columns in update_df.
+        right_on: key for upd_df.  Must also specify left_on. If not specified, must specify merge_key.
+        update_fields: list of fields in upd_df to add or update in base_df.  Must exist in upd_df, but
+            will be added to base_df if they don't already exist.
         method: string indicating how the dataframe should be updated. One of:
             - "update if found" (default) which will update the values if the update values are not NaN
             - "overwrite all" will overwrite the current value with the update value even if it is NaN
@@ -336,11 +335,9 @@ def update_df(
     if update_fields is None:
         raise ValueError("Must specify which fields to update, None specified.")
 
-    if not set(update_fields).issubset(update_df.columns):
+    if not set(update_fields).issubset(upd_df.columns):
         raise ValueError(
-            "Update fields: {} not in update_df: {}".format(
-                update_fields, update_df.columns
-            )
+            "Update fields: {} not in upd_df: {}.".format(update_fields, upd_df.columns)
         )
 
     new_fields = [v for v in update_fields if v not in base_df.columns]
@@ -370,9 +367,9 @@ def update_df(
         raise ValueError(
             "Merge key: {} not in base_df: {}".format(right_on, base_df.columns)
         )
-    if not right_on in update_df.columns:
+    if not right_on in upd_df.columns:
         raise ValueError(
-            "Merge key: {} not in update_df: {}".format(right_on, update_df.columns)
+            "Merge key: {} not in upd_df: {}".format(right_on, upd_df.columns)
         )
     # Actual Process
 
@@ -385,7 +382,7 @@ def update_df(
         suffixes = [None, "-update"]
     # print("base_df2:\n",base_df)
     merged_df = base_df.merge(
-        update_df[update_fields + [(right_on)]],
+        upd_df[update_fields + [(right_on)]],
         left_on=left_on,
         right_on=right_on,
         how="left",
@@ -419,9 +416,25 @@ def update_df(
 
     if new_fields:
         merged_df = merged_df.merge(
-            update_df[new_fields + [(right_on)]],
+            upd_df[new_fields + [(right_on)]],
             left_on=left_on,
             right_on=right_on,
             how="left",
         )
     return merged_df
+
+
+class DotDict(dict):
+    """
+    dot.notation access to dictionary attributes
+    Source: https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary
+    """
+
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(key)
