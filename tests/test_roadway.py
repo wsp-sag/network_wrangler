@@ -345,6 +345,94 @@ def test_add_adhoc_field(request):
 
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
+@pytest.mark.menow
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_add_default_value(request):
+    """
+    Makes sure we can add a new field with a default value
+    """
+    print("\n--Starting:", request.node.name)
+    net = _read_stpaul_net()
+    project_card_name = "select_all_project_card.yml"
+
+    print("Reading project card", project_card_name, "...")
+    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card = ProjectCard.read(project_card_path)
+
+    print("Selecting roadway features ...")
+    selected_link_indices = net.select_roadway_features(project_card.facility)
+
+    attributes_to_update = [p["property"] for p in project_card.properties]
+
+    net.apply_roadway_feature_change(
+        net.select_roadway_features(project_card.facility), project_card.properties
+    )
+
+    print(net.links_df["my_ad_hoc_field_float"].value_counts())
+    print(net.links_df["my_ad_hoc_field_integer"].value_counts())
+    print(net.links_df["my_ad_hoc_field_string"].value_counts())
+
+    assert (
+        net.links_df.loc[net.links_df["my_ad_hoc_field_float"] == 1.2345].shape
+        == net.links_df.shape
+    )
+    assert (
+        net.links_df.loc[net.links_df["my_ad_hoc_field_integer"] == 10].shape
+        == net.links_df.shape
+    )
+    assert (
+        net.links_df.loc[
+            net.links_df["my_ad_hoc_field_string"] == "default value"
+        ].shape
+        == net.links_df.shape
+    )
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.elo
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_add_adhoc_managed_lane_field(request):
+    """
+    Makes sure new fields can be added to the network for managed lanes that get moved there.
+    """
+    print("\n--Starting:", request.node.name)
+    net = _read_small_net()
+
+    facility = {"link": [{"model_link_id": 224}]}
+    selected_link_indices = net.select_roadway_features(facility)
+    net.links_df["ML_my_ad_hoc_field"] = 0
+    net.links_df["ML_my_ad_hoc_field"].loc[selected_link_indices] = 22.5
+    net.links_df["ML_lanes"] = 0
+    net.links_df["ML_lanes"].loc[selected_link_indices] = 1
+    net.links_df["ML_price"] = 0
+    net.links_df["ML_price"].loc[selected_link_indices] = 1.5
+    net.links_df["managed"] = 0
+    net.links_df["managed"].loc[selected_link_indices] = 1
+    print(
+        "Network with field...\n ",
+        net.links_df[
+            [
+                "model_link_id",
+                "name",
+                "ML_my_ad_hoc_field",
+                "lanes",
+                "ML_lanes",
+                "ML_price",
+                "managed",
+            ]
+        ],
+    )
+    ml_net = net.create_managed_lane_network()
+    print("Managed Lane Network")
+    print(
+        ml_net.links_df[["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]]
+    )
+    # assert net.links_df["my_ad_hoc_field"][0] == 22.5
+    # print("CALCULATED:\n", v_series.loc[selected_link_indices])
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -1045,3 +1133,4 @@ def test_managed_lane_access_egress(request):
     assert dummy_links_count == 4
 
     print("--Finished:", request.node.name)
+

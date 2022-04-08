@@ -1121,10 +1121,14 @@ class RoadwayNetwork(object):
             selection : dictionary with keys for:
                  A - from node
                  B - to node
-                 link - which includes at least a variable for `name`
+                 link - which includes at least a variable for `name` or 'all' if all selected
+            search_mode: will be overridden if 'link':'all'
 
         Returns: a list of link IDs in selection
         """
+        if selection.get("link") == "all":
+            return self.links_df.index.tolist()
+
         WranglerLogger.debug("validating selection")
         self.validate_selection(selection)
 
