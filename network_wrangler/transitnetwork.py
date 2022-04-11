@@ -18,6 +18,11 @@ from .logger import WranglerLogger
 from .utils import parse_time_spans
 from .roadwaynetwork import RoadwayNetwork
 
+SHAPES_FOREIGN_KEY = "shape_model_node_id"
+STOPS_FOREIGN_KEY = "model_node_id"
+
+ID_SCALAR = 100000000
+
 
 class TransitNetwork(object):
     """
@@ -39,25 +44,11 @@ class TransitNetwork(object):
         feed_path (str): Where the feed was read in from.
         validated_frequencies (bool): The frequencies have been validated.
         validated_road_network_consistency (): The network has been validated against the road network.
-        SHAPES_FOREIGN_KEY (str): foreign key between shapes dataframe and roadway network nodes
-        STOPS_FOREIGN_KEY (str): foreign  key between stops dataframe and roadway network nodes
-        ID_SCALAR (int): scalar value added to create new IDs when necessary.
+        shapes_foreign_key (str): foreign key between shapes dataframe and roadway network nodes.
+        stops_foreign_key (str): foreign key between stops dataframe and roadway network nodes.
+        id_scalar (int): scalar value added to create new stop and shape IDs when necessary.
         REQUIRED_FILES (list[str]): list of files that the transit network requires.
-
-    .. todo::
-      investigate consolidating scalars this with RoadwayNetwork
-      consolidate thes foreign key constants into one if possible
     """
-
-    # PK = primary key, FK = foreign key
-    SHAPES_FOREIGN_KEY = "shape_model_node_id"
-    STOPS_FOREIGN_KEY = "model_node_id"
-
-    ##TODO consolidate these two ^^^ constants if possible
-
-    ID_SCALAR = 100000000
-
-    ##TODO investigate consolidating this with RoadwayNetwork
 
     REQUIRED_FILES = [
         "agency.txt",
@@ -69,7 +60,14 @@ class TransitNetwork(object):
         "trips.txt",
     ]
 
-    def __init__(self, feed: DotDict = None, config: nx.DiGraph = None):
+    def __init__(
+        self,
+        feed: DotDict = None,
+        config: nx.DiGraph = None,
+        shapes_foreign_key: str = None,
+        stops_foreign_key: str = None,
+        id_scalar: int = None,
+    ):
         """
         Constructor
 
@@ -77,6 +75,11 @@ class TransitNetwork(object):
         """
         self.feed: DotDict = feed
         self.config: nx.DiGraph = config
+
+        self.id_scalar = id_scalar
+        self.shapes_foreign_key = shapes_foreign_key
+        self.stops_foreign_key = stops_foreign_key
+
         self.road_net: RoadwayNetwork = None
         self.graph: nx.MultiDiGraph = None
         self.feed_path = None
@@ -103,12 +106,20 @@ class TransitNetwork(object):
         raise NotImplemented(msg)
 
     @staticmethod
-    def read(feed_path: str) -> TransitNetwork:
+    def read(
+        feed_path: str,
+        shapes_foreign_key: str = SHAPES_FOREIGN_KEY,
+        stops_foreign_key: str = STOPS_FOREIGN_KEY,
+        id_scalar: int = ID_SCALAR,
+    ) -> TransitNetwork:
         """
-        Read GTFS feed from folder and TransitNetwork object
+        Read GTFS feed from folder and TransitNetwork object.
 
         Args:
-            feed_path: where to read transit network files from
+            feed_path: where to read transit network files from.
+            shapes_foreign_key: foreign key between shapes dataframe and roadway network nodes. Will default to SHAPES_FOREIGN_KEY if not provided.
+            stops_foreign_key: foreign key between stops dataframe and roadway network nodes. Will defaul to STOPS_FOREIGN_KEY if not provided.
+            id_scalar: scalar value added to create new stop and shape IDs when necessary. Will default to ID_SCALAR if not provided.
 
         Returns: a TransitNetwork object.
         """
@@ -124,8 +135,21 @@ class TransitNetwork(object):
             # Load (initiate Partridge's lazy load)
             editable_feed[node.replace(".txt", "")] = feed.get(node)
 
-        transit_network = TransitNetwork(feed=editable_feed, config=updated_config)
+        transit_network = TransitNetwork(
+            feed=editable_feed,
+            config=updated_config,
+            shapes_foreign_key=shapes_foreign_key,
+            stops_foreign_key=stops_foreign_key,
+            id_scalar=id_scalar,
+        )
         transit_network.feed_path = feed_path
+
+        fare_attributes_df = pd.read_csv(os.path.join(feed_path, 'fare_attributes.txt'))
+        fare_rules_df = pd.read_csv(os.path.join(feed_path, 'fare_rules.txt'))
+
+        transit_network.feed.fare_attributes = fare_attributes_df
+        transit_network.feed.fare_rules = fare_rules_df
+
         return transit_network
 
     @staticmethod
@@ -238,15 +262,15 @@ class TransitNetwork(object):
 
         valid = True
 
-        stop_ids = [int(s) for s in stops[TransitNetwork.STOPS_FOREIGN_KEY].to_list()]
-        node_ids = [int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
+        stop_ids = [int(s) for s in stops[self.stops_foreign_key].to_list()]
+        node_ids = [int(n) for n in nodes[self.road_net.node_foreign_key].to_list()]
 
         if not set(stop_ids).issubset(node_ids):
             valid = False
             missing_stops = list(set(stop_ids) - set(node_ids))
             msg = "Not all transit stops are part of the roadyway network. "
             msg += "Missing stops ({}) from the roadway nodes are {}.".format(
-                TransitNetwork.STOPS_FOREIGN_KEY, missing_stops
+                self.stops_foreign_key, missing_stops
             )
             WranglerLogger.error(msg)
 
@@ -272,24 +296,22 @@ class TransitNetwork(object):
         valid = True
 
         # check if all the node ids exist in the network
-        shape_ids = [
-            int(s) for s in shapes_df[TransitNetwork.SHAPES_FOREIGN_KEY].to_list()
-        ]
-        node_ids = [int(n) for n in nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
+        shape_ids = [int(s) for s in shapes_df[self.shapes_foreign_key].to_list()]
+        node_ids = [int(n) for n in nodes_df[self.road_net.node_foreign_key].to_list()]
 
         if not set(shape_ids).issubset(node_ids):
             valid = False
             missing_shapes = list(set(shape_ids) - set(node_ids))
             msg = "Not all transit shapes are part of the roadyway network. "
             msg += "Missing shapes ({}) from the roadway network are {}.".format(
-                TransitNetwork.SHAPES_FOREIGN_KEY, missing_shapes
+                self.shapes_foreign_key, missing_shapes
             )
             WranglerLogger.error(msg)
             return valid
 
         # check if all the links in transit shapes exist in the network
         # and transit is allowed
-        shapes_df = shapes_df.astype({TransitNetwork.SHAPES_FOREIGN_KEY: int})
+        shapes_df = shapes_df.astype({self.shapes_foreign_key: int})
         unique_shape_ids = shapes_df.shape_id.unique().tolist()
 
         for id in unique_shape_ids:
@@ -304,8 +326,8 @@ class TransitNetwork(object):
                 links_df,
                 how="left",
                 left_on=[
-                    TransitNetwork.SHAPES_FOREIGN_KEY + "_1",
-                    TransitNetwork.SHAPES_FOREIGN_KEY + "_2",
+                    self.shapes_foreign_key + "_1",
+                    self.shapes_foreign_key + "_2",
                 ],
                 right_on=["A", "B"],
                 indicator=True,
@@ -611,6 +633,7 @@ class TransitNetwork(object):
                 self.apply_transit_managed_lane(
                     self.select_transit_features_by_nodes(managed_lane_nodes),
                     managed_lane_nodes,
+                    self.RoadNet.managed_lanes_node_id_scalar,
                 )
             elif project_dictionary["category"].lower() == "add transit":
                 self.apply_python_calculation(project_dictionary["pycode"])
@@ -771,18 +794,83 @@ class TransitNetwork(object):
             shape_ids = (
                 self.feed.shapes.groupby("shape_id").filter(
                     lambda x: all(
-                        i in x[TransitNetwork.SHAPES_FOREIGN_KEY].tolist()
-                        for i in node_ids
+                        i in x[self.shapes_foreign_key].tolist() for i in node_ids
                     )
                 )
             ).shape_id.drop_duplicates()
         else:
             shape_ids = self.feed.shapes[
-                self.feed.shapes[TransitNetwork.SHAPES_FOREIGN_KEY].isin(node_ids)
+                self.feed.shapes[self.shapes_foreign_key].isin(node_ids)
             ].shape_id.drop_duplicates()
 
         # Return pandas.Series of trip_ids
         return self.feed.trips[self.feed.trips.shape_id.isin(shape_ids)].trip_id
+
+    def check_network_connectivity(self, shapes_foreign_key : pd.Series) -> pd.Series:
+        """
+        check if new shapes contain any links that are not in the roadway network
+        """
+        shape_links_df = pd.DataFrame(
+            {
+                "A" : shapes_foreign_key.tolist()[:-1],
+                "B" : shapes_foreign_key.tolist()[1:],
+            }
+        )
+
+        shape_links_df["A"] = shape_links_df["A"].astype(int)
+        shape_links_df["B"] = shape_links_df["B"].astype(int)
+
+        shape_links_df = pd.merge(
+            shape_links_df,
+            self.road_net.links_df[["A", "B", "model_link_id"]],
+            how = "left",
+            on = ["A", "B"]
+        )
+
+        missing_shape_links_df = shape_links_df[shape_links_df["model_link_id"].isnull()]
+
+        if len(missing_shape_links_df) > 0:
+            for index, row in missing_shape_links_df.iterrows():
+                WranglerLogger.warning(
+                    "Missing connections from node {} to node {} for the new routing, find complete path using default graph".format(int(row.A), int(row.B))
+                )
+
+                complete_node_list = TransitNetwork.route_between_nodes(self.graph, row.A, row.B)
+                complete_node_list = pd.Series([str(int(i)) for i in complete_node_list])
+
+                WranglerLogger.info(
+                    "Routing path from node {} to node {} for missing connections: {}.".format(int(row.A), int(row.B), complete_node_list.tolist())
+                )
+
+                nodes = shapes_foreign_key.tolist()
+                index_replacement_starts = [i for i,d in enumerate(nodes) if d == str(int(row.A))][0]
+                index_replacement_ends = [i for i,d in enumerate(nodes) if d == str(int(row.B))][-1]
+                shapes_foreign_key = pd.concat(
+                    [
+                        shapes_foreign_key.iloc[:index_replacement_starts],
+                        complete_node_list,
+                        shapes_foreign_key.iloc[index_replacement_ends + 1 :],
+                    ],
+                    ignore_index=True,
+                    sort=False,
+                )
+
+        return shapes_foreign_key
+
+    @staticmethod
+    def route_between_nodes(graph, A, B) -> list:
+        """
+        find complete path when the new shape has connectivity issue
+        """
+
+        node_list = nx.shortest_path(
+            graph,
+            A,
+            B,
+            weight = "length"
+        )
+
+        return node_list
 
     def apply_transit_feature_change(
         self, trip_ids: pd.Series, properties: list, in_place: bool = True
@@ -808,6 +896,12 @@ class TransitNetwork(object):
 
             elif i["property"] in ["routing"]:
                 self._apply_transit_feature_change_routing(trip_ids, i, in_place)
+
+            elif i["property"] in ["shapes"]:
+                self._apply_transit_feature_change_shapes(trip_ids, i, in_place)
+
+            elif i["property"] in ['no_alightings', 'no_boardings', 'allow_alightings', 'allow_boardings']:
+                self._apply_transit_feature_change_stops(trip_ids, i, in_place)
 
     def _apply_transit_feature_change_routing(
         self, trip_ids: pd.Series, properties: dict, in_place: bool = True
@@ -838,7 +932,7 @@ class TransitNetwork(object):
         # Replace shapes records
         trips = self.feed.trips  # create pointer rather than a copy
         shape_ids = trips[trips["trip_id"].isin(trip_ids)].shape_id
-        for shape_id in shape_ids:
+        for shape_id in set(shape_ids):
             # Check if `shape_id` is used by trips that are not in
             # parameter `trip_ids`
             trips_using_shape_id = trips.loc[trips["shape_id"] == shape_id, ["trip_id"]]
@@ -851,7 +945,7 @@ class TransitNetwork(object):
                     "the trips' shape in your query will be changed."
                 )
                 old_shape_id = shape_id
-                shape_id = str(int(shape_id) + TransitNetwork.ID_SCALAR)
+                shape_id = str(int(shape_id) + self.id_scalar)
                 if shape_id in shapes["shape_id"].tolist():
                     WranglerLogger.error("Cannot create a unique new shape_id.")
                 dup_shape = shapes[shapes.shape_id == old_shape_id].copy()
@@ -872,15 +966,30 @@ class TransitNetwork(object):
                     "shape_pt_lon": None,  # FIXME
                     "shape_osm_node_id": None,  # FIXME
                     "shape_pt_sequence": None,
-                    TransitNetwork.SHAPES_FOREIGN_KEY: properties["set_shapes"],
+                    self.shapes_foreign_key: properties["set_shapes"],
                 }
             )
+
+            check_new_shape_nodes = self.check_network_connectivity(new_shape_rows[self.shapes_foreign_key])
+
+            if len(check_new_shape_nodes) != len(new_shape_rows):
+                new_shape_rows = pd.DataFrame(
+                    {
+                        "shape_id": shape_id,
+                        "shape_pt_lat": None,  # FIXME Populate from self.road_net?
+                        "shape_pt_lon": None,  # FIXME
+                        "shape_osm_node_id": None,  # FIXME
+                        "shape_pt_sequence": None,
+                        self.shapes_foreign_key: check_new_shape_nodes,
+                    }
+                )
+                properties["set_shapes"] = check_new_shape_nodes.tolist()
 
             # If "existing" is specified, replace only that segment
             # Else, replace the whole thing
             if properties.get("existing") is not None:
                 # Match list
-                nodes = this_shape[TransitNetwork.SHAPES_FOREIGN_KEY].tolist()
+                nodes = this_shape[self.shapes_foreign_key].tolist()
                 index_replacement_starts = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][0]][0]
                 index_replacement_ends = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][-1]][-1]
                 this_shape = pd.concat(
@@ -909,31 +1018,24 @@ class TransitNetwork(object):
         if stops_change:
             # If node IDs in properties["set_stops"] are not already
             # in stops.txt, create a new stop_id for them in stops
-            existing_fk_ids = set(stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist())
-            nodes_df = self.road_net.nodes_df.loc[
-                :, [TransitNetwork.STOPS_FOREIGN_KEY, "X", "Y"]
-            ]
+            existing_fk_ids = set(stops[self.stops_foreign_key].tolist())
+            nodes_df = self.road_net.nodes_df.loc[:, [self.stops_foreign_key, "X", "Y"]]
             for fk_i in properties["set_stops"]:
                 if fk_i not in existing_fk_ids:
                     WranglerLogger.info(
                         "Creating a new stop in stops.txt for node ID: {}".format(fk_i)
                     )
                     # Add new row to stops
-                    new_stop_id = str(int(fk_i) + TransitNetwork.ID_SCALAR)
+                    new_stop_id = str(int(fk_i) + self.id_scalar)
                     if new_stop_id in stops["stop_id"].tolist():
                         WranglerLogger.error("Cannot create a unique new stop_id.")
                     stops.loc[
                         len(stops.index) + 1,
-                        [
-                            "stop_id",
-                            "stop_lat",
-                            "stop_lon",
-                            TransitNetwork.STOPS_FOREIGN_KEY,
-                        ],
+                        ["stop_id", "stop_lat", "stop_lon", self.stops_foreign_key,],
                     ] = [
                         new_stop_id,
-                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"],
-                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"],
+                        nodes_df.loc[nodes_df[self.stops_foreign_key] == int(fk_i), "Y"],
+                        nodes_df.loc[nodes_df[self.stops_foreign_key] == int(fk_i), "X"],
                         fk_i,
                     ]
 
@@ -944,7 +1046,7 @@ class TransitNetwork(object):
 
                 # Merge on node IDs using stop_id (one node ID per stop_id)
                 this_stoptime = this_stoptime.merge(
-                    stops[["stop_id", TransitNetwork.STOPS_FOREIGN_KEY]],
+                    stops[["stop_id", self.stops_foreign_key]],
                     how="left",
                     on="stop_id",
                 )
@@ -963,18 +1065,18 @@ class TransitNetwork(object):
                         "stop_distance": None,
                         "timepoint": None,
                         "stop_is_skipped": None,
-                        TransitNetwork.STOPS_FOREIGN_KEY: properties["set_stops"],
+                        self.stops_foreign_key: properties["set_stops"],
                     }
                 )
 
                 # Merge on stop_id using node IDs (many stop_id per node ID)
                 new_stoptime_rows = (
                     new_stoptime_rows.merge(
-                        stops[["stop_id", TransitNetwork.STOPS_FOREIGN_KEY]],
+                        stops[["stop_id", self.stops_foreign_key]],
                         how="left",
-                        on=TransitNetwork.STOPS_FOREIGN_KEY,
+                        on=self.stops_foreign_key,
                     )
-                    .groupby([TransitNetwork.STOPS_FOREIGN_KEY])
+                    .groupby([self.stops_foreign_key])
                     .head(1)
                 )  # pick first
 
@@ -982,7 +1084,7 @@ class TransitNetwork(object):
                 # Else, replace the whole thing
                 if properties.get("existing") is not None:
                     # Match list (remember stops are passed in with node IDs)
-                    nodes = this_stoptime[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
+                    nodes = this_stoptime[self.stops_foreign_key].tolist()
                     index_replacement_starts = nodes.index(
                         properties["existing_stops"][0]
                     )
@@ -1002,7 +1104,7 @@ class TransitNetwork(object):
                     this_stoptime = new_stoptime_rows
 
                 # Remove node ID
-                del this_stoptime[TransitNetwork.STOPS_FOREIGN_KEY]
+                del this_stoptime[self.stops_foreign_key]
 
                 # Renumber stop_sequence
                 this_stoptime["stop_sequence"] = np.arange(len(this_stoptime))
@@ -1059,21 +1161,321 @@ class TransitNetwork(object):
             return updated_network
 
     def apply_transit_managed_lane(
-        self, trip_ids: pd.Series, node_ids: list, in_place: bool = True
+        self, trip_ids: pd.Series, node_ids: list, scalar: int, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         # Traversed nodes without a stop should be negative integers
-        all_stops = self.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
+        all_stops = self.feed.stops[self.stops_foreign_key].tolist()
         node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
 
         self._apply_transit_feature_change_routing(
             trip_ids=trip_ids,
             properties={
                 "existing": node_ids,
-                "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids),
+                "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids, scalar),
             },
             in_place=in_place,
         )
 
+    def _apply_transit_feature_change_shapes(
+        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        shapes = self.feed.shapes.copy()
+        stop_times = self.feed.stop_times.copy()
+        stops = self.feed.stops.copy()
+
+        properties["set_shapes"] = [str(abs(i)) for i in properties["set"]]
+        if properties.get("existing") is not None:
+            properties["existing_shapes"] = [
+                str(abs(i)) for i in properties["existing"]
+            ]
+
+        # Replace shapes records
+        trips = self.feed.trips  # create pointer rather than a copy
+        shape_ids = trips[trips["trip_id"].isin(trip_ids)].shape_id
+
+        for shape_id in set(shape_ids):
+            # Check if `shape_id` is used by trips that are not in
+            # parameter `trip_ids`
+            trips_using_shape_id = trips.loc[trips["shape_id"] == shape_id, ["trip_id"]]
+            if not all(trips_using_shape_id.isin(trip_ids)["trip_id"]):
+                # In this case, we need to create a new shape_id so as to leave
+                # the trips not part of the query alone
+                WranglerLogger.warning(
+                    "Trips that were not in your query selection use the "
+                    "same `shape_id` as trips that are in your query. Only "
+                    "the trips' shape in your query will be changed."
+                )
+                old_shape_id = shape_id
+                shape_id = str(int(shape_id) + self.id_scalar)
+                if shape_id in shapes["shape_id"].tolist():
+                    WranglerLogger.error("Cannot create a unique new shape_id.")
+                dup_shape = shapes[shapes.shape_id == old_shape_id].copy()
+                dup_shape["shape_id"] = shape_id
+                shapes = pd.concat([shapes, dup_shape], ignore_index=True)
+                # change the shape_id for the trip record
+                trips.loc[trips["trip_id"].isin(trip_ids), "shape_id"] = shape_id
+
+            # Pop the rows that match shape_id
+            this_shape = shapes[shapes.shape_id == shape_id]
+
+            # Make sure they are ordered by shape_pt_sequence
+            this_shape = this_shape.sort_values(by=["shape_pt_sequence"])
+
+            # Build a pd.DataFrame of new shape records
+            new_shape_rows = pd.DataFrame(
+                {
+                    "shape_id": shape_id,
+                    "shape_pt_lat": None,  # FIXME Populate from self.road_net?
+                    "shape_pt_lon": None,  # FIXME
+                    "shape_osm_node_id": None,  # FIXME
+                    "shape_pt_sequence": None,
+                    self.shapes_foreign_key: properties["set_shapes"],
+                }
+            )
+
+            check_new_shape_nodes = self.check_network_connectivity(new_shape_rows[self.shapes_foreign_key])
+
+            if len(check_new_shape_nodes) != len(new_shape_rows):
+                new_shape_rows = pd.DataFrame(
+                    {
+                        "shape_id": shape_id,
+                        "shape_pt_lat": None,  # FIXME Populate from self.road_net?
+                        "shape_pt_lon": None,  # FIXME
+                        "shape_osm_node_id": None,  # FIXME
+                        "shape_pt_sequence": None,
+                        self.shapes_foreign_key: check_new_shape_nodes,
+                    }
+                )
+                properties["set_shapes"] = check_new_shape_nodes.tolist()
+
+            # If "existing" is specified, replace only that segment
+            # Else, replace the whole thing
+            if properties.get("existing") is not None:
+                # Match list
+                nodes = this_shape[self.shapes_foreign_key].tolist()
+                index_replacement_starts = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][0]][0]
+                index_replacement_ends = [i for i,d in enumerate(nodes) if d == properties["existing_shapes"][-1]][-1]
+                this_shape = pd.concat(
+                    [
+                        this_shape.iloc[:index_replacement_starts],
+                        new_shape_rows,
+                        this_shape.iloc[index_replacement_ends + 1 :],
+                    ],
+                    ignore_index=True,
+                    sort=False,
+                )
+            else:
+                this_shape = new_shape_rows
+
+            # Renumber shape_pt_sequence
+            this_shape["shape_pt_sequence"] = np.arange(len(this_shape))
+
+            # Add rows back into shapes
+            shapes = pd.concat(
+                [shapes[shapes.shape_id != shape_id], this_shape],
+                ignore_index=True,
+                sort=False,
+            )
+
+        # Replace self if in_place, else return
+        if in_place:
+            self.feed.shapes = shapes
+        else:
+            updated_network = copy.deepcopy(self)
+            updated_network.feed.shapes = shapes
+            return updated_network
+
+    def _apply_transit_feature_change_stops(
+        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        shapes = self.feed.shapes.copy()
+        stop_times = self.feed.stop_times.copy()
+        stops = self.feed.stops.copy()
+        trips = self.feed.trips.copy()
+        nodes_df = self.road_net.nodes_df.loc[:, [self.stops_foreign_key, "X", "Y"]]
+
+        for node_id in properties['set']:
+
+            # check if new stop node
+            existing_stop_fk_ids = set(stops[self.stops_foreign_key].tolist())
+            if str(node_id) not in existing_stop_fk_ids:
+                WranglerLogger.info(
+                    "Creating a new stop in stops.txt for node ID: {}".format(node_id)
+                )
+                # Add new row to stops
+                new_stop_id = str(int(node_id) + self.id_scalar)
+                if new_stop_id in stops["stop_id"].tolist():
+                    WranglerLogger.error("Cannot create a unique new stop_id.")
+                stops.loc[
+                    len(stops.index) + 1,
+                    ["stop_id", "stop_lat", "stop_lon", self.stops_foreign_key,],
+                ] = [
+                    new_stop_id,
+                    nodes_df.loc[nodes_df[self.stops_foreign_key] == int(node_id), "Y"],
+                    nodes_df.loc[nodes_df[self.stops_foreign_key] == int(node_id), "X"],
+                    str(node_id),
+                ]
+            else:
+                WranglerLogger.info(
+                    "Modifying existing stop in stop_times.txt for node ID: {}".format(node_id)
+                )
+                for trip_id in trip_ids:
+                    # Pop the rows that match trip_id
+                    this_stoptime = stop_times[stop_times.trip_id == trip_id].copy()
+
+                    # Merge on node IDs using stop_id (one node ID per stop_id)
+                    this_stoptime = this_stoptime.merge(
+                        stops[["stop_id", self.stops_foreign_key]],
+                        how="left",
+                        on="stop_id",
+                    )
+
+                    stop_id = this_stoptime[this_stoptime[self.stops_foreign_key] == str(node_id)]['stop_id'].iloc[0]
+
+                    if properties['property'] == 'allow_alightings':
+                        stop_times.loc[
+                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                            'pickup_type'
+                        ] = 0
+                    if properties['property'] == 'no_alightings':
+                        stop_times.loc[
+                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                            'pickup_type'
+                        ] = 1
+                    if properties['property'] == 'allow_boardings':
+                        stop_times.loc[
+                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                            'drop_off_type'
+                        ] = 0
+                    if properties['property'] == 'no_boardings':
+                        stop_times.loc[
+                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                            'drop_off_type'
+                        ] = 1
+                
+                continue
+
+            for trip_id in trip_ids:
+                # Pop the rows that match trip_id
+                this_stoptime = stop_times[stop_times.trip_id == trip_id].copy()
+
+                # Merge on node IDs using stop_id (one node ID per stop_id)
+                this_stoptime = this_stoptime.merge(
+                    stops[["stop_id", self.stops_foreign_key]],
+                    how="left",
+                    on="stop_id",
+                )
+
+                # Make sure the stop_times are ordered by stop_sequence
+                this_stoptime = this_stoptime.sort_values(by=["stop_sequence"])
+
+                # get shapes
+                shape_id = trips[trips.trip_id == trip_id].shape_id.iloc[0]
+                
+                this_shape = shapes[shapes.shape_id == shape_id].copy()
+
+                # Make sure the shapes are ordered by shape_sequence
+                this_shape = this_shape.sort_values(by=["shape_pt_sequence"])
+
+                this_shape['is_stop'] = np.where(
+                    (this_shape[self.shapes_foreign_key].isin(this_stoptime[self.stops_foreign_key])) |
+                    (this_shape[self.shapes_foreign_key] == str(node_id)),
+                    1,
+                    0
+                )
+
+                stops_on_this_shape = this_shape[this_shape.is_stop == 1].copy()
+                stops_node_list = stops_on_this_shape[self.shapes_foreign_key].tolist()
+                
+                this_stop_index = stops_node_list.index(str(node_id))
+                
+                # the stop node id before this stop
+                previous_stop_node_id = stops_node_list[this_stop_index - 1]
+                
+                # the stop node id after this stop
+                next_stop_node_id = stops_node_list[this_stop_index + 1]
+
+                stoptime_node_ids = this_stoptime[self.stops_foreign_key].tolist()
+                
+                index_replacement_starts = stoptime_node_ids.index(
+                    previous_stop_node_id
+                )
+                
+                index_replacement_ends = stoptime_node_ids.index(
+                    next_stop_node_id
+                )
+
+                pickup_type = 0
+                drop_off_type = 0
+                if properties['property'] == 'allow_alightings':
+                    pickup_type = 0
+                if properties['property'] == 'no_alightings':
+                    pickup_type = 1
+                if properties['property'] == 'allow_boardings':
+                    drop_off_type = 0
+                if properties['property'] == 'no_boardings':
+                    drop_off_type = 1
+
+                # Build a pd.DataFrame of new shape records from properties
+                new_stoptime_rows = pd.DataFrame(
+                    {
+                        "trip_id": trip_id,
+                        "arrival_time": None,
+                        "departure_time": None,
+                        "pickup_type": pickup_type,
+                        "drop_off_type": drop_off_type,
+                        "stop_distance": None,
+                        "timepoint": None,
+                        "stop_is_skipped": None,
+                        self.stops_foreign_key: [str(node_id)],
+                    }
+                )
+
+                # Merge on stop_id using node IDs (many stop_id per node ID)
+                new_stoptime_rows = (
+                    new_stoptime_rows.merge(
+                        stops[["stop_id", self.stops_foreign_key]],
+                        how="left",
+                        on=self.stops_foreign_key,
+                    )
+                    .groupby([self.stops_foreign_key])
+                    .head(1)
+                )  # pick first
+
+                this_stoptime = pd.concat(
+                    [
+                        this_stoptime.iloc[:index_replacement_starts + 1],
+                        new_stoptime_rows,
+                        this_stoptime.iloc[index_replacement_ends :],
+                    ],
+                    ignore_index=True,
+                    sort=False,
+                )
+
+                # Remove node ID
+                del this_stoptime[self.stops_foreign_key]
+
+                # Renumber stop_sequence
+                this_stoptime["stop_sequence"] = np.arange(len(this_stoptime))
+
+                # Add rows back into stoptime
+                stop_times = pd.concat(
+                    [stop_times[stop_times.trip_id != trip_id], this_stoptime],
+                    ignore_index=True,
+                    sort=False,
+                )
+
+        # Replace self if in_place, else return
+        if in_place:
+            self.feed.shapes = shapes
+            self.feed.stops = stops
+            self.feed.stop_times = stop_times
+        else:
+            updated_network = copy.deepcopy(self)
+            updated_network.feed.shapes = shapes
+            updated_network.feed.stops = stops
+            updated_network.feed.stop_times = stop_times
+            return updated_network
 
 class DotDict(dict):
     """

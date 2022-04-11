@@ -11,6 +11,8 @@ from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 from .logger import WranglerLogger
 
+UNSPECIFIED_PROJECT_NAMES = ["", "TO DO User Define", "USER TO define"]
+
 
 class ProjectCard(object):
     """
@@ -35,14 +37,12 @@ class ProjectCard(object):
         "Calculated Roadway",
     ]
 
-    UNSPECIFIED_PROJECT_NAMES = ["", "TO DO User Define", "USER TO define"]
-
     def __init__(self, attribute_dictonary: dict):
         """
-        Constructor
+        Constructor for Project Card object.
 
         args:
-        attribute_dictonary: a nested dictionary of attributes
+            attribute_dictonary: a nested dictionary of project card attributes.
         """
         # add these first so they are first on write out
         self.project = None
@@ -59,21 +59,22 @@ class ProjectCard(object):
         return "\n".join(s)
 
     @staticmethod
-    def read(path_to_card: str, validate: bool = True):
+    def read(card_filename: str, validate: bool = True):
         """
         Reads and validates a Project card
 
         args:
-        path_to_card: the path to the project card
+            card_filename: The path to the project card file.
+            validate: Boolean indicating if the project card should be validated. Defaults to True.
 
         Returns a Project Card object
         """
-        card_suffix = path_to_card.split(".")[-1].lower()
+        card_suffix = card_filename.split(".")[-1].lower()
 
         if card_suffix in ["yaml", "yml"]:
-            attribute_dictionary = ProjectCard.read_yml(path_to_card)
+            attribute_dictionary = ProjectCard.read_yml(card_filename)
         elif card_suffix in ["wrangler", "wr"]:
-            attribute_dictionary = ProjectCard.read_wrangler_card(path_to_card)
+            attribute_dictionary = ProjectCard.read_wrangler_card(card_filename)
         else:
             msg = "Card should have a suffix of yaml, yml, wrangler, or wr. Found suffix: {}".format(
                 card_suffix
@@ -82,67 +83,71 @@ class ProjectCard(object):
 
         card = ProjectCard(attribute_dictionary)
 
-        if card.project in ProjectCard.UNSPECIFIED_PROJECT_NAMES:
-            msg = "Card must have valid project name: {}".format(path_to_card)
+        if card.project in UNSPECIFIED_PROJECT_NAMES:
+            msg = "Card must have valid project name: {}".format(card_filename)
             WranglerLogger.error(msg)
             raise ValueError(msg)
 
         card.valid = False
         if validate:
-            card.valid = ProjectCard.validate_project_card_schema(path_to_card)
+            card.valid = ProjectCard.validate_project_card_schema(card_filename)
 
         return card
 
     @staticmethod
-    def read_wrangler_card(path_to_card: str) -> dict:
+    def read_wrangler_card(w_card_filename: str) -> dict:
         """
         Reads wrangler project cards with YAML front matter and then python code.
 
         Args:
-            path_to_card: where the project card is
+            w_card_filename: where the project card is
 
         Returns: Attribute Dictionary for Project Card
         """
         WranglerLogger.debug("Reading Wrangler-Style Project Card")
 
-        with open(path_to_card, "r") as cardfile:
+        with open(w_card_filename, "r") as cardfile:
             delim = cardfile.readline()
             WranglerLogger.debug("Using delimiter: {}".format(delim))
             _yaml, _pycode = cardfile.read().split(delim)
             WranglerLogger.debug("_yaml: {}\n_pycode: {}".format(_yaml, _pycode))
 
         attribute_dictionary = yaml.load(_yaml)
-        attribute_dictionary["file"] = path_to_card
+        attribute_dictionary["file"] = w_card_filename
         attribute_dictionary["pycode"] = _pycode.lstrip("\n")
 
         return attribute_dictionary
 
     @staticmethod
-    def read_yml(path_to_card: str) -> dict:
+    def read_yml(card_filename: str) -> dict:
         """
         Reads "normal" wrangler project cards defined in YAML.
 
         Args:
-            path_to_card: where the project card is
+            card_filename: file location where the project card is.
 
         Returns: Attribute Dictionary for Project Card
         """
         WranglerLogger.debug("Reading YAML-Style Project Card")
 
-        with open(path_to_card, "r") as cardfile:
+        with open(card_filename, "r") as cardfile:
             attribute_dictionary = yaml.safe_load(cardfile)
-            attribute_dictionary["file"] = path_to_card
+            attribute_dictionary["file"] = card_filename
 
         return attribute_dictionary
 
-    def write(self, filename: str = None):
+    def write(self, out_filename: str = None):
         """
-        Writes project card dictionary to YAML file
+        Writes project card dictionary to YAML file.
+
+        args:
+            out_filename: file location to write the project card object as yml.
+                If not provided, will write to current directory using the project name as the filename.
         """
-        if not filename:
+        if not out_filename:
             from network_wrangler.utils import make_slug
 
-            filename = make_slug(self.project) + ".yml"
+            out_filename = make_slug(self.project) + ".yml"
 
         # import collections
         # out_dict = collections.OrderedDict()
@@ -152,29 +157,35 @@ class ProjectCard(object):
         out_dict["dependencies"] = ""
         out_dict.update(self.__dict__)
 
-        with open(filename, "w") as outfile:
+        with open(out_filename, "w") as outfile:
             yaml.dump(out_dict, outfile, default_flow_style=False, sort_keys=False)
 
-        WranglerLogger.info("Wrote project card to: {}".format(filename))
+        WranglerLogger.info("Wrote project card to: {}".format(out_filename))
 
     @staticmethod
     def validate_project_card_schema(
-        card_file, card_schema_file: str = "project_card.json"
+        card_filename: str,
+        card_schema_filename: str = "project_card.json"
     ) -> bool:
         """
         Tests project card schema validity by evaluating if it conforms to the schemas
+
+        args:
+            card_filename: location of project card .yml file
+            card_schema_filename: location of project card schema to validate against. Defaults to project_card.json.
+
         returns: boolean
         """
-        if not os.path.exists(card_schema_file):
+        if not os.path.exists(card_schema_filename):
             base_path = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)), "schemas"
             )
-            card_schema_file = os.path.join(base_path, card_schema_file)
+            card_schema_filename = os.path.join(base_path, card_schema_filename)
 
-        with open(card_schema_file) as schema_json_file:
+        with open(card_schema_filename) as schema_json_file:
             schema = json.load(schema_json_file)
 
-        with open(card_file, "r") as card:
+        with open(card_filename, "r") as card:
             card_json = yaml.safe_load(card)
 
         try:
@@ -183,13 +194,13 @@ class ProjectCard(object):
 
         except ValidationError as exc:
             WranglerLogger.error("Failed Project Card validation: Validation Error")
-            WranglerLogger.error("Project Card File Loc:{}".format(card_file))
-            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_file))
+            WranglerLogger.error("Project Card File Loc:{}".format(card_filename))
+            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_filename))
             WranglerLogger.error(exc.message)
 
         except SchemaError as exc:
             WranglerLogger.error("Failed Project Card schema validation: Schema Error")
-            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_file))
+            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_filename))
             WranglerLogger.error(exc.message)
 
         except yaml.YAMLError as exc:
@@ -198,18 +209,31 @@ class ProjectCard(object):
     @staticmethod
     def build_link_selection_query(
         selection: dict,
-        unique_model_link_identifiers: [],
+        unique_link_ids: [],
         mode: List[str] = ["drive_access"],
-        ignore=[],
+        ignore: List[str] = [],
     ):
+        """
+        One line description
+        #todo #239 #238
+
+        args:
+            selection:
+            unique_link_ids:
+            mode:
+            ignore:
+
+        returns:
+
+        usage
+
+        """
         sel_query = "("
         count = 0
 
         selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        num_unique_model_link_identifiers = len(
-            set(unique_model_link_identifiers).intersection(selection_keys)
-        )
-        unique_model_link_identifer_exist = num_unique_model_link_identifiers > 0
+
+        unique_link_ids_sel = list( set(unique_link_ids) & set(selection_keys) )
 
         for l in selection["link"]:
             for key, value in l.items():
@@ -218,8 +242,8 @@ class ProjectCard(object):
                     continue
 
                 if (
-                    unique_model_link_identifer_exist
-                    and key not in unique_model_link_identifiers
+                    unique_link_ids_sel
+                    and key not in unique_link_ids
                 ):
                     continue
 
@@ -228,30 +252,40 @@ class ProjectCard(object):
                 if isinstance(value, list):
                     sel_query = sel_query + "("
                     v = 1
-                    for i in value:  # building an OR query with each element in list
-                        if isinstance(i, str):
+                    for i in value:
+                        if isinstance(i, str): # building an OR query with each element in list
                             sel_query = sel_query + key + '.str.contains("' + i + '")'
-                        else:
-                            sel_query = sel_query + key + "==" + str(i)
-                        if v != len(value):
-                            sel_query = sel_query + " or "
-                            v = v + 1
-                    sel_query = sel_query + ")"
+                            if v != len(value):
+                                sel_query = sel_query + " or "
+                            else:
+                                sel_query = sel_query + ")"
+                        else:  # building an isin query with each element in list
+                            if v == 1:
+                                sel_query = sel_query + key + '.isin(['
+
+                            sel_query = sel_query + str(i)
+
+                            if v != len(value):
+                                sel_query = sel_query + ","
+                            else:
+                                sel_query = sel_query + "]))"
+
+                        v = v + 1
                 else:
                     sel_query = sel_query + key + "==" + '"' + str(value) + '"'
 
-                if not unique_model_link_identifer_exist and count != (
+                if not unique_link_ids_sel and count != (
                     len(selection["link"]) - len(ignore)
                 ):
                     sel_query = sel_query + " and "
 
                 if (
-                    unique_model_link_identifer_exist
-                    and count != num_unique_model_link_identifiers
+                    unique_link_ids_sel
+                    and count != len(unique_link_ids_sel)
                 ):
                     sel_query = sel_query + " and "
 
-        if not unique_model_link_identifer_exist:
+        if not unique_link_ids_sel:
             if count > 0:
                 sel_query = sel_query + " and "
 

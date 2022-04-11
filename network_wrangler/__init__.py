@@ -15,7 +15,7 @@ from .utils import parse_time_spans, offset_location_reference, haversine_distan
 from .utils import create_unique_shape_id
 from .utils import create_location_reference_from_nodes
 from .utils import create_line_string
-
+from .utils import update_df
 
 __all__ = [
     "WranglerLogger",
@@ -34,12 +34,5 @@ __all__ = [
     "create_location_reference_from_nodes",
     "create_line_string",
     "net_to_mapbox",
+    "update_df",
 ]
-
-setupLogging(
-    log_filename=os.path.join(
-        os.getcwd(),
-        "network_wrangler_{}.log".format(datetime.now().strftime("%Y_%m_%d__%H_%M_%S")),
-    ),
-    log_to_console=True,
-)
