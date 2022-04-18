@@ -96,6 +96,17 @@ class Scenario(object):
         self.road_net = None
         self.transit_net = None
 
+        if type(base_scenario) is dict:
+            pass
+        elif isinstance(base_scenario, Scenario):
+            base_scenario = base_scenario.__dict__
+        else:
+            msg = "Base scenario should be a dict or instance of Scenario: found {} which is of type:{}".format(
+                base_scenario, type(base_scenario)
+            )
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
         self.base_scenario = base_scenario
 
         # if the base scenario had roadway or transit networks, use them as the basis.
