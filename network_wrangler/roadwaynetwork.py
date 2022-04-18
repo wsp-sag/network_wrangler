@@ -166,7 +166,7 @@ class RoadwayNetwork(object):
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
 
-    UNIQUE_SHAPE_KEY = "shape_id"
+    UNIQUE_SHAPE_KEY = "id"
 
     MANAGED_LANES_REQUIRED_ATTRIBUTES = [
         "A",
@@ -1620,7 +1620,18 @@ class RoadwayNetwork(object):
                     raise ValueError(msg)
 
             for node in nodes:
+                node["new_node"] = 1
                 self.nodes_df = _add_dict_to_df(self.nodes_df, node)
+            
+            # add geometry for new nodes
+            self.nodes_df["geometry"] = self.nodes_df.apply(
+                lambda x: Point(x["X"], x["Y"])
+                if x["new_node"] == 1
+                else x["geometry"],
+                axis=1,
+            )
+
+            self.nodes_df.drop(["new_node"], axis=1, inplace=True)
 
         if links is not None:
             for link in links:
