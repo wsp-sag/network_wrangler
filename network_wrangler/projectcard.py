@@ -110,7 +110,7 @@ class ProjectCard(object):
             _yaml, _pycode = cardfile.read().split(delim)
             WranglerLogger.debug("_yaml: {}\n_pycode: {}".format(_yaml, _pycode))
 
-        attribute_dictionary = yaml.load(_yaml)
+        attribute_dictionary = yaml.safe_load(_yaml)
         attribute_dictionary["file"] = path_to_card
         attribute_dictionary["pycode"] = _pycode.lstrip("\n")
 
@@ -236,8 +236,10 @@ class ProjectCard(object):
                             sel_query = sel_query + " or "
                             v = v + 1
                     sel_query = sel_query + ")"
-                else:
+                elif isinstance(value, str):
                     sel_query = sel_query + key + "==" + '"' + str(value) + '"'
+                else:
+                    sel_query = sel_query + key + "==" + str(value)
 
                 if not unique_model_link_identifer_exist and count != (
                     len(selection["link"]) - len(ignore)

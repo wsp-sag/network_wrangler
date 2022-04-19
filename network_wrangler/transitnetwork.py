@@ -894,7 +894,7 @@ class TransitNetwork(object):
                     [
                         this_shape.iloc[:index_replacement_starts],
                         new_shape_rows,
-                        this_shape.iloc[index_replacement_ends + 1:],
+                        this_shape.iloc[index_replacement_ends + 1 :],
                     ],
                     ignore_index=True,
                     sort=False,
@@ -1004,7 +1004,7 @@ class TransitNetwork(object):
                         [
                             this_stoptime.iloc[:index_replacement_starts],
                             new_stoptime_rows,
-                            this_stoptime.iloc[index_replacement_ends + 1:],
+                            this_stoptime.iloc[index_replacement_ends + 1 :],
                         ],
                         ignore_index=True,
                         sort=False,
