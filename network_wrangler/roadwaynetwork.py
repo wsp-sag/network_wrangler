@@ -778,9 +778,7 @@ class RoadwayNetwork(object):
                 ["osm_link_id", "locationReferences"], axis=1
             )
         else:
-            graph_links = links_df.copy().drop(
-                ["locationReferences"], axis=1
-            )
+            graph_links = links_df.copy().drop(["locationReferences"], axis=1)
 
         # have to change this over into u,v b/c this is what osm-nx is expecting
         graph_links["u"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[0]]
@@ -842,8 +840,7 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def _get_fk_nodes(_links: gpd.GeoDataFrame):
-        """Find the nodes for the candidate links.
-        """
+        """Find the nodes for the candidate links."""
         _n = list(
             set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(_links[fk])])
         )
@@ -1477,7 +1474,8 @@ class RoadwayNetwork(object):
                                     {
                                         "category": category,
                                         "time": parse_time_spans(tod["time"]),
-                                        "value": self.links_df.at[idx, attribute] + tod["change"]
+                                        "value": self.links_df.at[idx, attribute]
+                                        + tod["change"],
                                     }
                                 )
 
@@ -1498,14 +1496,15 @@ class RoadwayNetwork(object):
                             attr_value["timeofday"].append(
                                 {
                                     "time": parse_time_spans(tod["time"]),
-                                    "value": tod["set"]
+                                    "value": tod["set"],
                                 }
                             )
                         elif "change" in tod.keys():
                             attr_value["timeofday"].append(
                                 {
                                     "time": parse_time_spans(tod["time"]),
-                                    "value": self.links_df.at[idx, attribute] + tod["change"]
+                                    "value": self.links_df.at[idx, attribute]
+                                    + tod["change"],
                                 }
                             )
                 elif "set" in p.keys():
@@ -1521,7 +1520,9 @@ class RoadwayNetwork(object):
                         # if the attribute already exists
                         # and the attr value we are trying to set is not numeric
                         # then change the attribute type to object
-                        self.links_df[attribute] = self.links_df[attribute].astype(object)
+                        self.links_df[attribute] = self.links_df[attribute].astype(
+                            object
+                        )
 
                     if attribute not in self.links_df.columns:
                         # if it is a new attribute then initialize with NaN values
@@ -1837,9 +1838,10 @@ class RoadwayNetwork(object):
             if v.get("timeofday"):
                 categories = []
                 for tg in v["timeofday"]:
-                    if ((time_spans[0] >= tg["time"][0]) and (
-                        time_spans[1] <= tg["time"][1]) and (
-                        time_spans[0] <= time_spans[1])
+                    if (
+                        (time_spans[0] >= tg["time"][0])
+                        and (time_spans[1] <= tg["time"][1])
+                        and (time_spans[0] <= time_spans[1])
                     ):
                         if tg.get("category"):
                             categories += tg["category"]
@@ -1856,10 +1858,11 @@ class RoadwayNetwork(object):
                             # print("RETURNING:", time_spans, category, tg["value"])
                             return tg["value"]
 
-                    if ((time_spans[0] >= tg["time"][0]) and (
-                        time_spans[1] <= tg["time"][1]) and (
-                        time_spans[0] > time_spans[1]) and (
-                        tg["time"][0] > tg["time"][1])
+                    if (
+                        (time_spans[0] >= tg["time"][0])
+                        and (time_spans[1] <= tg["time"][1])
+                        and (time_spans[0] > time_spans[1])
+                        and (tg["time"][0] > tg["time"][1])
                     ):
                         if tg.get("category"):
                             categories += tg["category"]
@@ -1983,8 +1986,8 @@ class RoadwayNetwork(object):
             [gp_df, ml_df.add_prefix("ML_")], axis=1, join="inner"
         )
 
-        access_set = ml_df.iloc[0]['access']
-        egress_set = ml_df.iloc[0]['egress']
+        access_set = ml_df.iloc[0]["access"]
+        egress_set = ml_df.iloc[0]["egress"]
 
         access_df = gp_df.iloc[0:0, :].copy()
         egress_df = gp_df.iloc[0:0, :].copy()
@@ -2004,7 +2007,7 @@ class RoadwayNetwork(object):
             return out_location_reference
 
         for index, row in gp_ml_links_df.iterrows():
-            if access_set == 'all' or row['A'] in access_set:
+            if access_set == "all" or row["A"] in access_set:
                 access_row = {}
                 access_row["A"] = row["A"]
                 access_row["B"] = row["ML_A"]
@@ -2032,7 +2035,7 @@ class RoadwayNetwork(object):
 
                 access_df = access_df.append(access_row, ignore_index=True)
 
-            if egress_set == 'all' or row['B'] in egress_set:
+            if egress_set == "all" or row["B"] in egress_set:
                 egress_row = {}
                 egress_row["A"] = row["ML_B"]
                 egress_row["B"] = row["B"]
@@ -2169,8 +2172,8 @@ class RoadwayNetwork(object):
         out_links_df = out_links_df.append(egress_links_df)
         out_links_df = out_links_df.append(non_ml_links_df)
 
-        out_links_df = out_links_df.drop(['access', 'egress'], axis = 1)
-        
+        out_links_df = out_links_df.drop(["access", "egress"], axis=1)
+
         # only the ml_links_df has the new nodes added
         added_a_nodes = ml_links_df["A"]
         added_b_nodes = ml_links_df["B"]
@@ -2454,7 +2457,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.warning(
@@ -2666,7 +2671,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.warning(

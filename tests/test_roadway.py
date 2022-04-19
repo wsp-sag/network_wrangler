@@ -311,7 +311,7 @@ def test_managed_lane_change_functionality(request):
     print("Reading project card ...")
     project_card_name = "test_managed_lanes_change_keyword.yml"
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate = False)
+    project_card = ProjectCard.read(project_card_path, validate=False)
 
     print("Selecting roadway features ...")
     selected_link_indices = net.select_roadway_features(project_card.facility)
@@ -1117,10 +1117,10 @@ def test_managed_lane_access_egress(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
     print("Reading project card ...")
-    #project_card_name = "test_managed_lanes_change_keyword.yml"
+    # project_card_name = "test_managed_lanes_change_keyword.yml"
     project_card_name = "test_managed_lanes_restricted_access_egress.yml"
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate = False)
+    project_card = ProjectCard.read(project_card_path, validate=False)
 
     net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
@@ -1130,10 +1130,11 @@ def test_managed_lane_access_egress(request):
 
     # with 'all' as access/egress, there would be total of 8 connector links (4 access, 4 egress)
     # with restricted access/egress, this project card should create 4 connector links
-    dummy_links = ml_net.links_df[(ml_net.links_df['roadway'].isin(['ml_access','ml_egress']))]
+    dummy_links = ml_net.links_df[
+        (ml_net.links_df["roadway"].isin(["ml_access", "ml_egress"]))
+    ]
     dummy_links_count = len(dummy_links)
 
     assert dummy_links_count == 4
 
     print("--Finished:", request.node.name)
-

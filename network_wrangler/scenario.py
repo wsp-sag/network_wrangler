@@ -196,9 +196,9 @@ class Scenario(object):
         base_scenario: dict = {},
         card_directory: str = "",
         tags: [str] = None,
-        project_cards_list = None,
-        glob_search = "",
-        validate_project_cards = True,
+        project_cards_list=None,
+        glob_search="",
+        validate_project_cards=True,
     ) -> Scenario:
         """
         Validates project cards with a specific tag from the specified folder or
@@ -228,7 +228,7 @@ class Scenario(object):
                     ",".join([p.project for p in project_cards_list])
                 )
             )
-            
+
         scenario = Scenario(base_scenario, project_cards=project_cards_list)
 
         if card_directory and tags:
@@ -333,13 +333,23 @@ class Scenario(object):
                 "Adding project cards using glob search: {}".format(glob_search)
             )
             for file in glob.iglob(os.path.join(folder, glob_search)):
-                if not (file.endswith(".yml") or file.endswith(".yaml") or file.endswith(".wrangler") or file.endswith(".wr")):
+                if not (
+                    file.endswith(".yml")
+                    or file.endswith(".yaml")
+                    or file.endswith(".wrangler")
+                    or file.endswith(".wr")
+                ):
                     continue
                 else:
                     self.add_project_card_from_file(file, validate=validate)
         else:
             for file in os.listdir(folder):
-                if not (file.endswith(".yml") or file.endswith(".yaml") or file.endswith(".wrangler") or file.endswith(".wr")):
+                if not (
+                    file.endswith(".yml")
+                    or file.endswith(".yaml")
+                    or file.endswith(".wrangler")
+                    or file.endswith(".wr")
+                ):
                     continue
                 else:
                     self.add_project_card_from_file(
