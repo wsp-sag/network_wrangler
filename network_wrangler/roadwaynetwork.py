@@ -30,7 +30,6 @@ from shapely.geometry import Point
 
 from .logger import WranglerLogger
 from .projectcard import ProjectCard
-from .roadwaynetwork import RoadwayNetwork
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .utils import haversine_distance, create_unique_shape_id, offset_location_reference
 from .utils import create_location_reference_from_nodes, create_line_string
