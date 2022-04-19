@@ -33,6 +33,7 @@ from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .utils import haversine_distance, create_unique_shape_id, offset_location_reference
 from .utils import create_location_reference_from_nodes, create_line_string, offset_lat_lon
+from .utils import create_location_reference_from_nodes, create_line_string
 
 
 class NoPathFound(Exception):
@@ -790,6 +791,7 @@ class RoadwayNetwork(object):
         #           `for (u, v, k), row in gdf_edges.set_index(["u", "v", "key"]).iterrows():`
 
         if ox.__version__ > 1.0:
+        if int(ox.__version__.split(".")[0]) >= 1:
             graph_links = graph_links.set_index(keys=["u", "v", "key"], drop=True)
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
@@ -2129,16 +2131,6 @@ class RoadwayNetwork(object):
 
         ml_links_df["managed"] = 1
         gp_links_df["managed"] = 0
-
-        def _update_location_reference(location_reference: list):
-            out_location_reference = copy.deepcopy(location_reference)
-            out_location_reference[0]["point"] = offset_lat_lon(
-                out_location_reference[0]["point"]
-            )
-            out_location_reference[1]["point"] = offset_lat_lon(
-                out_location_reference[1]["point"]
-            )
-            return out_location_reference
 
         ml_links_df["A"] = (
             ml_links_df["A"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
