@@ -512,7 +512,6 @@ def test_add_adhoc_field_from_card(request):
     )
     print("--Finished:", request.node.name)
 
-
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_bad_properties_statements(request):
@@ -1133,4 +1132,3 @@ def test_managed_lane_access_egress(request):
     assert dummy_links_count == 4
 
     print("--Finished:", request.node.name)
-
