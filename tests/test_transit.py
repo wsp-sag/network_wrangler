@@ -314,7 +314,7 @@ def test_invalid_optional_selection_variable(request):
 
     # Correct trip variable
     sel = net.select_transit_features(
-        {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01", "wheelchair_accessible": "1"}
+        {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01", "wheelchair_accessible": 1}
     )
     assert set(sel) == set(["14940701-JUN19-MVS-BUS-Weekday-01"])
 

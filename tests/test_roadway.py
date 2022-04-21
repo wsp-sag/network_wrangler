@@ -355,7 +355,6 @@ def test_add_adhoc_field(request):
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
 
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_default_value(request):
@@ -401,7 +400,6 @@ def test_add_default_value(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
@@ -994,17 +992,69 @@ def test_create_ml_network_shape(request):
     net.apply(project_card_dictionary)
     ml_net = net.create_managed_lane_network()
 
+    base_model_link_ids = project_card.__dict__["facility"]["link"][0]["model_link_id"]
+    ml_model_link_ids = [
+        RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR + x for x in base_model_link_ids
+    ]
+    access_model_link_ids = [
+        sum(x) + 1 for x in zip(base_model_link_ids, ml_model_link_ids)
+    ]
+    egress_model_link_ids = [
+        sum(x) + 2 for x in zip(base_model_link_ids, ml_model_link_ids)
+    ]
+
+    gp_links = ml_net.links_df[
+        ml_net.links_df["model_link_id"].isin(base_model_link_ids)
+    ]
+    ml_links = ml_net.links_df[ml_net.links_df["model_link_id"].isin(ml_model_link_ids)]
+    access_links = ml_net.links_df[
+        ml_net.links_df["model_link_id"].isin(access_model_link_ids)
+    ]
+    egress_links = ml_net.links_df[
+        ml_net.links_df["model_link_id"].isin(egress_model_link_ids)
+    ]
+
     rev_links_count = len(ml_net.links_df)
     rev_shapes_count = len(ml_net.shapes_df)
 
+    ## 1 Num Added links == added shapes
     assert (rev_links_count - orig_links_count) == (
         rev_shapes_count - orig_shapes_count
     )
 
-    # 2 new ML links, each ML link has 2 more access/egress links
+    # 2 new ML links, each ML link has 2 more access/egress links for total of 3 links per ML link
     # total new links for 2 ML links will be 6 (2*3)
+    _display_c = ["model_link_id", "roadway", "A", "B", "shape_id", "name"]
+    assert (
+        len(ml_net.links_df[ml_net.links_df["model_link_id"].isin(ml_model_link_ids)])
+        == 2
+    ), f"\n***ML Links\n{ml_links[_display_c]}\
+        \n***ML Links\n{ml_links[_display_c]}\
+        \n***GP Links\n{gp_links[_display_c]}"
+
+    assert (
+        len(
+            ml_net.links_df[
+                ml_net.links_df["model_link_id"].isin(access_model_link_ids)
+            ]
+        )
+        == 2
+    ), f"\n***Access Links\n{access_links[_display_c]}\
+        \n***ML Links\n{ml_links[_display_c]}\
+        \n***GP Links\n{gp_links[_display_c]}"
+
+    assert (
+        len(
+            ml_net.links_df[
+                ml_net.links_df["model_link_id"].isin(egress_model_link_ids)
+            ]
+        )
+        == 2
+    ), f"\n***Egress Links\n{egress_links[_display_c]}\
+        \n***ML Links\n{ml_links[_display_c]}\
+        \n***GP Links\n{gp_links[_display_c]}"
+
     assert rev_shapes_count == orig_shapes_count + 2 * 3
-    assert rev_links_count == orig_links_count + 2 * 3
 
     print("--Finished:", request.node.name)
 
@@ -1098,9 +1148,10 @@ def test_find_segment(request):
     print(seg_df)
 
 
+@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_managed_lane_access_egress(request):
+def test_managed_lane_restricted_access_egress(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
     print("Reading project card ...")
@@ -1122,7 +1173,67 @@ def test_managed_lane_access_egress(request):
     ]
     dummy_links_count = len(dummy_links)
 
-    assert dummy_links_count == 4
+    base_model_link_ids = project_card.__dict__["facility"]["link"][0]["model_link_id"]
+    ml_model_link_ids = [
+        RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR + x for x in base_model_link_ids
+    ]
+    access_model_link_ids = [
+        sum(x) + 1 for x in zip(base_model_link_ids, ml_model_link_ids)
+    ]
+    egress_model_link_ids = [
+        sum(x) + 2 for x in zip(base_model_link_ids, ml_model_link_ids)
+    ]
+
+    gp_links = ml_net.links_df[
+        ml_net.links_df["model_link_id"].isin(base_model_link_ids)
+    ]
+    ml_links = ml_net.links_df[ml_net.links_df["model_link_id"].isin(ml_model_link_ids)]
+    access_links = ml_net.links_df[
+        ml_net.links_df["model_link_id"].isin(access_model_link_ids)
+    ]
+    egress_links = ml_net.links_df[
+        ml_net.links_df["model_link_id"].isin(egress_model_link_ids)
+    ]
+
+    access_points = [
+        p["set"]
+        for p in project_card.__dict__["properties"]
+        if p["property"] == "ML_access_point"
+    ][0]
+
+    egress_points = [
+        p["set"]
+        for p in project_card.__dict__["properties"]
+        if p["property"] == "ML_egress_point"
+    ][0]
+
+    rev_links_count = len(ml_net.links_df)
+    rev_shapes_count = len(ml_net.shapes_df)
+
+    _display_c = ["model_link_id", "roadway", "A", "B", "shape_id", "name"]
+    assert (
+        len(ml_net.links_df[ml_net.links_df["model_link_id"].isin(ml_model_link_ids)])
+        == 4
+    ), f"\n***ML Links\n{ml_links[_display_c]}\
+        \n***GP Links\n{gp_links[_display_c]}"
+
+    assert len(
+        ml_net.links_df[ml_net.links_df["model_link_id"].isin(access_model_link_ids)]
+    ) == len(
+        access_points
+    ), f"\n***Access Links\n{access_links[_display_c]}\
+        \n***Access Points\n{access_points}\
+        \n***ML Links\n{ml_links[_display_c]}\
+        \n***GP Links\n{gp_links[_display_c]}"
+
+    assert len(
+        ml_net.links_df[ml_net.links_df["model_link_id"].isin(egress_model_link_ids)]
+    ) == len(
+        egress_points
+    ), f"\n***Egress Links\n{egress_links[_display_c]}\
+        \n***Egress Points\n{egress_points}\
+        \n***ML Links\n{ml_links[_display_c]}\
+        \n***GP Links\n{gp_links[_display_c]}"
 
     print("--Finished:", request.node.name)
 

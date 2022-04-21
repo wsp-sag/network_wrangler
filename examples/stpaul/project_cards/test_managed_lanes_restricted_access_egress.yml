@@ -33,8 +33,8 @@ properties:
     set: 5
   - property: HOV
     set: 5
-  - property: ML_access
+  - property: ML_access_point
     set: [38765, 87982]
-  - property: ML_egress
+  - property: ML_egress_point
     set: [87993, 37457]
 notes: Need to adjust normal lanes
