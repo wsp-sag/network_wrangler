@@ -7,6 +7,7 @@ from network_wrangler import RoadwayNetwork
 from network_wrangler import TransitNetwork
 from network_wrangler import Scenario
 from network_wrangler.logger import WranglerLogger
+from network_wrangler.roadwaynetwork import UNIQUE_LINK_IDS
 
 """
 Run just the tests labeled scenario using `pytest -v -m scenario`
@@ -275,7 +276,7 @@ def test_query_builder(request, test_spec):
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection["selection"],
-        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+        unique_model_link_ids=UNIQUE_LINK_IDS,
         ignore=selection["ignore"],
     )
 
@@ -306,10 +307,11 @@ def test_apply_summary_wrappers(request):
 
     base_scenario = {
         "road_net": RoadwayNetwork.read(
-            link_file=STPAUL_LINK_FILE,
-            node_file=STPAUL_NODE_FILE,
-            shape_file=STPAUL_SHAPE_FILE,
+            link_filename=STPAUL_LINK_FILE,
+            node_filename=STPAUL_NODE_FILE,
+            shape_filename=STPAUL_SHAPE_FILE,
             fast=True,
+            shape_foreign_key="shape_id",
         ),
         "transit_net": TransitNetwork.read(STPAUL_DIR),
     }

@@ -197,7 +197,7 @@ class ProjectCard(object):
     @staticmethod
     def build_link_selection_query(
         selection: dict,
-        unique_model_link_identifiers: [],
+        unique_link_ids: [],
         mode: List[str] = ["drive_access"],
         ignore=[],
     ):
@@ -205,10 +205,10 @@ class ProjectCard(object):
         count = 0
 
         selection_keys = [k for li in selection["link"] for k, v in li.items()]
-        num_unique_model_link_identifiers = len(
-            set(unique_model_link_identifiers).intersection(selection_keys)
+        num_unique_link_ids = len(
+            set(unique_link_ids).intersection(selection_keys)
         )
-        unique_model_link_identifer_exist = num_unique_model_link_identifiers > 0
+        unique_link_ids_exist = num_unique_link_ids > 0
 
         for li in selection["link"]:
             for key, value in li.items():
@@ -217,8 +217,8 @@ class ProjectCard(object):
                     continue
 
                 if (
-                    unique_model_link_identifer_exist
-                    and key not in unique_model_link_identifiers
+                    unique_link_ids_exist
+                    and key not in unique_link_ids
                 ):
                     continue
 
@@ -239,18 +239,18 @@ class ProjectCard(object):
                 else:
                     sel_query = sel_query + key + "==" + '"' + str(value) + '"'
 
-                if not unique_model_link_identifer_exist and count != (
+                if not unique_link_ids_exist and count != (
                     len(selection["link"]) - len(ignore)
                 ):
                     sel_query = sel_query + " and "
 
                 if (
-                    unique_model_link_identifer_exist
-                    and count != num_unique_model_link_identifiers
+                    unique_link_ids_exist
+                    and count != num_unique_link_ids
                 ):
                     sel_query = sel_query + " and "
 
-        if not unique_model_link_identifer_exist:
+        if not unique_link_ids_exist:
             if count > 0:
                 sel_query = sel_query + " and "
 

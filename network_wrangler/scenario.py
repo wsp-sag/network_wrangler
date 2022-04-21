@@ -7,7 +7,7 @@ import glob
 import copy
 import pprint
 from datetime import datetime
-from typing import Union
+from typing import Collection,Union
 
 import pandas as pd
 import geopandas as gpd
@@ -83,7 +83,7 @@ class Scenario(object):
             been sorted to make sure cards that are pre-requisites are applied first
     """
 
-    def __init__(self, base_scenario: dict, project_cards: [ProjectCard] = None):
+    def __init__(self, base_scenario: dict, project_cards: Collection[ProjectCard] = None):
         """
         Constructor
 
@@ -144,6 +144,7 @@ class Scenario(object):
         roadway_dir: str = "",
         transit_dir: str = "",
         validate: bool = True,
+        *kwargs,
     ) -> Scenario:
         """
         args
@@ -175,6 +176,7 @@ class Scenario(object):
             node_file=base_network_node_file,
             shape_file=base_network_shape_file,
             fast=not validate,
+            *kwargs,
         )
 
         if transit_dir:
@@ -194,7 +196,7 @@ class Scenario(object):
     def create_scenario(
         base_scenario: dict = {},
         card_directory: str = "",
-        tags: [str] = None,
+        tags: Collection[str] = None,
         project_cards_list=None,
         glob_search="",
         validate_project_cards=True,
@@ -355,7 +357,7 @@ class Scenario(object):
                     )
 
     def add_project_cards_from_tags(
-        self, folder: str, tags: [str] = [], glob_search="", validate=True
+        self, folder: str, tags: Collection[str] = [], glob_search="", validate=True
     ):
         """
         Adds projects cards to the scenario.

@@ -9,10 +9,21 @@ from geographiclib.geodesic import Geodesic
 from .logger import WranglerLogger
 
 
-def point_df_to_geojson(df: pd.DataFrame, properties: list):
+def point_df_to_geojson(
+    df: pd.DataFrame, 
+    properties: list,
+    node_foreign_key: str
+    ) -> str:
     """
-    Author: Geoff Boeing:
+    Converts a pandas dataframe to a geojson object.
+
+    Modified from: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/
+
+    Args:
+        df: Dataframe to export
+        properties: list of properties to export
+        node_foreign_key: foreign key to use for node id
     """
     from .roadwaynetwork import RoadwayNetwork
 
@@ -24,7 +35,7 @@ def point_df_to_geojson(df: pd.DataFrame, properties: list):
             "geometry": {"type": "Point", "coordinates": []},
         }
         feature["geometry"]["coordinates"] = [row["geometry"].x, row["geometry"].y]
-        feature["properties"][RoadwayNetwork.NODE_FOREIGN_KEY] = row.name
+        feature["properties"][node_foreign_key] = row.name
         for prop in properties:
             feature["properties"][prop] = row[prop]
         geojson["features"].append(feature)
