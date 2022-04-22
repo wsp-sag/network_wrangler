@@ -34,9 +34,7 @@ pd.set_option("display.max_rows", 500)
 pd.set_option("display.max_columns", 500)
 pd.set_option("display.width", 50000)
 
-
 pytestmark = pytest.mark.roadway
-
 
 def test_roadway_read_write(request, small_net, tmpdir):
     print("\n--Starting:", request.node.name)
@@ -684,8 +682,8 @@ def test_write_model_net(request, stpaul_net, stpaul_project_cards, tmpdir):
     print("--Finished:", request.node.name)
 
 
-def test_network_connectivity(request):
-    print("\n--Starting:", request.node.name, stpaul_net)
+def test_network_connectivity(request,stpaul_net):
+    print("\n--Starting:", request.node.name)
 
     print("Reading network ...")
 
@@ -695,8 +693,8 @@ def test_network_connectivity(request):
     print("--Finished:", request.node.name)
 
 
-def test_get_modal_network(request):
-    print("\n--Starting:", request.node.name, stpaul_net)
+def test_get_modal_network(request,stpaul_net):
+    print("\n--Starting:", request.node.name)
 
     mode = "transit"
     print("Reading network. Mode: {} ...".format(mode))
