@@ -205,9 +205,7 @@ class ProjectCard(object):
         count = 0
 
         selection_keys = [k for li in selection["link"] for k, v in li.items()]
-        num_unique_link_ids = len(
-            set(unique_link_ids).intersection(selection_keys)
-        )
+        num_unique_link_ids = len(set(unique_link_ids).intersection(selection_keys))
         unique_link_ids_exist = num_unique_link_ids > 0
 
         for li in selection["link"]:
@@ -216,10 +214,7 @@ class ProjectCard(object):
                 if key in ignore:
                     continue
 
-                if (
-                    unique_link_ids_exist
-                    and key not in unique_link_ids
-                ):
+                if unique_link_ids_exist and key not in unique_link_ids:
                     continue
 
                 count = count + 1
@@ -246,10 +241,7 @@ class ProjectCard(object):
                 ):
                     sel_query = sel_query + " and "
 
-                if (
-                    unique_link_ids_exist
-                    and count != num_unique_link_ids
-                ):
+                if unique_link_ids_exist and count != num_unique_link_ids:
                     sel_query = sel_query + " and "
 
         if not unique_link_ids_exist:

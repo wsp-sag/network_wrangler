@@ -10,10 +10,8 @@ from .logger import WranglerLogger
 
 
 def point_df_to_geojson(
-    df: pd.DataFrame, 
-    properties: list,
-    node_foreign_key: str
-    ) -> str:
+    df: pd.DataFrame, properties: list, node_foreign_key: str
+) -> str:
     """
     Converts a pandas dataframe to a geojson object.
 

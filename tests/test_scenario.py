@@ -276,7 +276,7 @@ def test_query_builder(request, test_spec):
 
     sel_query = ProjectCard.build_link_selection_query(
         selection=selection["selection"],
-        unique_model_link_ids=UNIQUE_LINK_IDS,
+        unique_link_ids=UNIQUE_LINK_IDS,
         ignore=selection["ignore"],
     )
 

@@ -502,7 +502,9 @@ class RoadwayNetwork(object):
         property_columns = self.nodes_df.columns.values.tolist()
         property_columns.remove("geometry")
 
-        nodes_geojson = point_df_to_geojson(self.nodes_df, property_columns, self.node_foreign_key)
+        nodes_geojson = point_df_to_geojson(
+            self.nodes_df, property_columns, self.node_foreign_key
+        )
 
         with open(nodes_file, "w") as f:
             json.dump(nodes_geojson, f)
@@ -527,64 +529,25 @@ class RoadwayNetwork(object):
         Confirms that the unique identifiers are met.
         """
         valid = True
-        for c in self.unique_link_ids:
-            if c not in self.links_df.columns:
+
+        uniqueness = \
+            [(self.links_df, c) for c in self.unique_link_ids] \
+            + [(self.nodes_df, c) for c in self.unique_node_ids]
+
+        unique_combos = [
+            (self.links_df, self.link_foreign_key),
+            (self.nodes_df, self.node_foreign_key),
+            (self.shapes_df, self.shape_foreign_key),
+        ]
+
+        for df, column in uniqueness:
+            if not df[column].is_unique:
+                WranglerLogger.error(f"Column {column} is not unique.")
                 valid = False
-                msg = "Network doesn't contain unique link identifier: {}".format(c)
-                WranglerLogger.error(msg)
-            if not self.links_df[c].is_unique:
+        for df, columns in unique_combos:
+            if len(df[columns].value_counts().index.values)<len(df):
+                WranglerLogger.error(f"Columns {columns} are not unique.")
                 valid = False
-                msg = "Unique identifier {} is not unique in network links".format(c)
-                WranglerLogger.error(msg)
-        for c in self.link_foreign_key:
-            if c not in self.links_df.columns:
-                valid = False
-                msg = "Network doesn't contain link foreign key identifier: {}".format(
-                    c
-                )
-                WranglerLogger.error(msg)
-        link_foreign_key = self.links_df[self.link_foreign_key].apply(
-            lambda x: "-".join(x.map(str)), axis=1
-        )
-        if not link_foreign_key.is_unique:
-            valid = False
-            msg = "Foreign key: {} is not unique in network links".format(
-                self.link_foreign_key
-            )
-            WranglerLogger.error(msg)
-        for c in self.unique_node_ids:
-            if c not in self.nodes_df.columns:
-                valid = False
-                msg = "Network doesn't contain unique node identifier: {}".format(c)
-                WranglerLogger.error(msg)
-            if not self.nodes_df[c].is_unique:
-                valid = False
-                msg = "Unique identifier {} is not unique in network nodes".format(c)
-                WranglerLogger.error(msg)
-        if self.node_foreign_key not in self.nodes_df.columns:
-            valid = False
-            msg = "Network doesn't contain node foreign key identifier: {}".format(
-                self.node_foreign_key
-            )
-            WranglerLogger.error(msg)
-        elif not self.nodes_df[self.node_foreign_key].is_unique:
-            valid = False
-            msg = "Foreign key: {} is not unique in network nodes".format(
-                self.node_foreign_key
-            )
-            WranglerLogger.error(msg)
-        if self.shape_foreign_key not in self.shapes_df.columns:
-            valid = False
-            msg = "Network doesn't contain unique shape id: {}".format(
-                self.shape_foreign_key
-            )
-            WranglerLogger.error(msg)
-        elif not self.shapes_df[self.shape_foreign_key].is_unique:
-            valid = False
-            msg = "Unique key: {} is not unique in network shapes".format(
-                self.shape_foreign_key
-            )
-            WranglerLogger.error(msg)
         return valid
 
     @staticmethod
@@ -936,11 +899,11 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def _get_fk_nodes(
-        _links: pd.DataFrame, 
+        _links: pd.DataFrame,
         link_foreign_key: Collection[str],
     ):
         """Find the nodes for the candidate links.
-        
+
         Args:
             _links: GeoDataFrame of links
             link_foreign_key: List of columns which make up link foreign to nodes
@@ -1133,7 +1096,9 @@ class RoadwayNetwork(object):
         #          - OR -
         #   (ii) reach maximum search breadth
         # -----------------------------------
-        WranglerLogger.debug("Initial Num of candidate_links: {}".format(len(candidate_links_df)))
+        WranglerLogger.debug(
+            "Initial Num of candidate_links: {}".format(len(candidate_links_df))
+        )
         WranglerLogger.debug(f"self.link_foreign_key: {self.link_foreign_key}")
         node_list_foreign_keys = RoadwayNetwork._get_fk_nodes(
             candidate_links_df, link_foreign_key=self.link_foreign_key
@@ -2365,8 +2330,8 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def get_modal_links_nodes(
-        links_df: DataFrame, 
-        nodes_df: DataFrame, 
+        links_df: DataFrame,
+        nodes_df: DataFrame,
         modes: list[str] = None,
         modes_to_network_link_variables: dict = MODES_TO_NETWORK_LINK_VARIABLES,
     ) -> tuple(DataFrame, DataFrame):

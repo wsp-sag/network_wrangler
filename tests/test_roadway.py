@@ -39,6 +39,7 @@ def _read_small_net():
         node_filename=SMALL_NODE_FILE,
         shape_filename=SMALL_SHAPE_FILE,
         fast=True,
+        shape_foreign_key="shape_id",
     )
     return net
 
@@ -66,13 +67,7 @@ def test_roadway_read_write(request):
 
     time0 = time.time()
 
-    net = RoadwayNetwork.read(
-        link_filename=SMALL_LINK_FILE,
-        node_filename=SMALL_NODE_FILE,
-        shape_filename=SMALL_SHAPE_FILE,
-        fast=True,
-        shape_foreign_key="shape_id",
-    )
+    net = _read_small_net()
     time1 = time.time()
     print("Writing to: {}".format(SCRATCH_DIR))
     net.write(filename=out_prefix, path=SCRATCH_DIR)
@@ -112,13 +107,7 @@ def test_quick_roadway_read_write(request):
     out_shape_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "shape.geojson")
     out_link_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "link.json")
     out_node_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "node.geojson")
-    net = RoadwayNetwork.read(
-        link_filename=SMALL_LINK_FILE,
-        node_filename=SMALL_NODE_FILE,
-        shape_filename=SMALL_SHAPE_FILE,
-        fast=True,
-        shape_foreign_key="shape_id",
-    )
+    net = _read_small_net()
     net.write(filename=out_prefix, path=SCRATCH_DIR)
     net_2 = RoadwayNetwork.read(
         link_filename=out_link_file,
@@ -750,7 +739,7 @@ def test_write_model_net(request):
 
     print("--Finished:", request.node.name)
 
-
+@pytest.mark.elo
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_network_connectivity(request):
@@ -758,12 +747,7 @@ def test_network_connectivity(request):
 
     print("Reading network ...")
 
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
+    net = _read_stpaul_net()
     print("Checking network connectivity ...")
     print("Drive Network Connected:", net.is_network_connected(mode="drive"))
     print("--Finished:", request.node.name)
@@ -971,7 +955,7 @@ def test_add_roadway_shape(request):
 
     print("--Finished:", request.node.name)
 
-
+@pytest.mark.elo
 @pytest.mark.travis
 @pytest.mark.roadway
 def test_create_ml_network_shape(request):
@@ -994,7 +978,7 @@ def test_create_ml_network_shape(request):
 
     base_model_link_ids = project_card.__dict__["facility"]["link"][0]["model_link_id"]
     ml_model_link_ids = [
-        RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR + x for x in base_model_link_ids
+        net.managed_lanes_link_id_scalar + x for x in base_model_link_ids
     ]
     access_model_link_ids = [
         sum(x) + 1 for x in zip(base_model_link_ids, ml_model_link_ids)
@@ -1148,7 +1132,6 @@ def test_find_segment(request):
     print(seg_df)
 
 
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_managed_lane_restricted_access_egress(request):
@@ -1175,7 +1158,7 @@ def test_managed_lane_restricted_access_egress(request):
 
     base_model_link_ids = project_card.__dict__["facility"]["link"][0]["model_link_id"]
     ml_model_link_ids = [
-        RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR + x for x in base_model_link_ids
+        net.managed_lanes_link_id_scalar + x for x in base_model_link_ids
     ]
     access_model_link_ids = [
         sum(x) + 1 for x in zip(base_model_link_ids, ml_model_link_ids)

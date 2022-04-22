@@ -240,7 +240,7 @@ class TransitNetwork(object):
         valid = True
 
         stop_ids = [int(s) for s in stops[TransitNetwork.STOPS_FOREIGN_KEY].to_list()]
-        node_ids = [int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
+        node_ids = [int(n) for n in nodes[self.road_net.node_foreign_key].to_list()]
 
         if not set(stop_ids).issubset(node_ids):
             valid = False
@@ -276,7 +276,7 @@ class TransitNetwork(object):
         shape_ids = [
             int(s) for s in shapes_df[TransitNetwork.SHAPES_FOREIGN_KEY].to_list()
         ]
-        node_ids = [int(n) for n in nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
+        node_ids = [int(n) for n in nodes_df[self.road_net.node_foreign_key].to_list()]
 
         if not set(shape_ids).issubset(node_ids):
             valid = False
