@@ -10,7 +10,7 @@ install:
   - pip install -r dev-requirements.txt
   - pip install .
 script:
-  - pytest -m travis
+  - pytest -m -noci
 
 after_success:
   - cd docs; make html

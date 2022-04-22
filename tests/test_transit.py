@@ -1,36 +1,48 @@
+"""Transit Tests
+
+Usage
+-----
+Run just the tests in this file run `pytest -m transit`
+
+"""
+
 import os
 import pytest
 from network_wrangler import TransitNetwork
 from network_wrangler import ProjectCard
 from network_wrangler import RoadwayNetwork
+from network_wrangler.conftest import (
+    base_dir,
+    small_dir,
+    small_net,
+    cached_small_net,
+    stpaul_net,
+    cached_stpaul_net,
+    stpaul_transit,
+    cached_stpaul_transit,
+    stpaul_dir,
+    stpaul_project_cards,
+    example_dir,
+)
 
-"""
-Run just the tests labeled transit using `pytest -v -m transit`
-"""
 
-STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
-SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
+pytestmark = pytest.mark.transit
 
 
 @pytest.mark.basic
-@pytest.mark.travis
-@pytest.mark.transit
-def test_transit_read_write(request):
+def test_transit_read_write(request, stpaul_transit, tmpdir):
     print("\n--Starting:", request.node.name)
-    transit_net = TransitNetwork.read(feed_path=STPAUL_DIR)
-    print("Transit Net Directory:", STPAUL_DIR)
+    transit_net = stpaul_transit
 
-    transit_net.write(path=SCRATCH_DIR)
-    print("Transit Write Directory:", SCRATCH_DIR)
+    transit_net.write(tmpdir)
+    print("Transit Write Directory:", tmpdir)
 
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.transit
-def test_select_transit_features(request):
+def test_select_transit_features(request, stpaul_transit):
     print("\n--Starting:", request.node.name)
-    net = TransitNetwork.read(STPAUL_DIR)
+    net = stpaul_transit
 
     test_selections = {
         "1. simple trip_id": {
@@ -62,11 +74,11 @@ def test_select_transit_features(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit
-@pytest.mark.travis
-def test_select_transit_features_from_projectcard(request):
+def test_select_transit_features_from_projectcard(
+    request, stpaul_transit, stpaul_project_cards
+):
     print("\n--Starting:", request.node.name)
-    net = TransitNetwork.read(STPAUL_DIR)
+    net = stpaul_transit
 
     test_selections = [
         {
@@ -156,7 +168,7 @@ def test_select_transit_features_from_projectcard(request):
         print("--->", i)
         print("Reading project card", test["file"], "...")
 
-        project_card_path = os.path.join(STPAUL_DIR, "project_cards", test["file"])
+        project_card_path = os.path.join(stpaul_project_cards, test["file"])
         project_card = ProjectCard.read(project_card_path)
         sel = project_card.facility
 
@@ -166,11 +178,11 @@ def test_select_transit_features_from_projectcard(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit
-@pytest.mark.travis
-def test_apply_transit_feature_change_from_projectcard(request):
+def test_apply_transit_feature_change_from_projectcard(
+    request, stpaul_transit, stpaul_project_cards
+):
     print("\n--Starting:", request.node.name)
-    net = TransitNetwork.read(STPAUL_DIR)
+    net = stpaul_transit
 
     test_selections = [
         {
@@ -222,7 +234,7 @@ def test_apply_transit_feature_change_from_projectcard(request):
         print("--->", i)
         print("Reading project card", test["file"], "...")
 
-        project_card_path = os.path.join(STPAUL_DIR, "project_cards", test["file"])
+        project_card_path = os.path.join(stpaul_project_cards, test["file"])
         project_card = ProjectCard.read(project_card_path)
         net.apply_transit_feature_change(
             net.select_transit_features(project_card.facility), project_card.properties
@@ -243,11 +255,9 @@ def test_apply_transit_feature_change_from_projectcard(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit
-@pytest.mark.travis
-def test_wrong_existing(request):
+def test_wrong_existing(request, stpaul_transit):
     print("\n--Starting:", request.node.name)
-    net = TransitNetwork.read(STPAUL_DIR)
+    net = stpaul_transit
 
     selected_trips = net.select_transit_features(
         {
@@ -266,11 +276,9 @@ def test_wrong_existing(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit
-@pytest.mark.travis
-def test_zero_valid_facilities(request):
+def test_zero_valid_facilities(request, stpaul_transit):
     print("\n--Starting:", request.node.name)
-    net = TransitNetwork.read(STPAUL_DIR)
+    net = stpaul_transit
 
     with pytest.raises(Exception):
         net.select_transit_features(
@@ -283,11 +291,9 @@ def test_zero_valid_facilities(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit
-@pytest.mark.travis
-def test_invalid_selection_key(request):
+def test_invalid_selection_key(request, stpaul_transit):
     print("\n--Starting:", request.node.name)
-    net = TransitNetwork.read(STPAUL_DIR)
+    net = stpaul_transit
 
     with pytest.raises(Exception):
         # trip_ids rather than trip_id should fail
@@ -296,11 +302,9 @@ def test_invalid_selection_key(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit
-@pytest.mark.travis
-def test_invalid_optional_selection_variable(request):
+def test_invalid_optional_selection_variable(request, stpaul_transit):
     print("\n--Starting:", request.node.name)
-    net = TransitNetwork.read(STPAUL_DIR)
+    net = stpaul_transit
 
     with pytest.raises(Exception):
         # `wheelchair` rather than `wheelchair_accessible`
@@ -325,21 +329,10 @@ def test_invalid_optional_selection_variable(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-def test_transit_road_consistencies(request):
+def test_transit_road_consistencies(request, stpaul_transit, stpaul_net):
     print("\n--Starting:", request.node.name)
-    net = TransitNetwork.read(STPAUL_DIR)
-
-    STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
-    STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
-    STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
-
-    road_net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
+    net = stpaul_transit
+    road_net = stpaul_net
 
     net.set_roadnet(road_net=road_net)
 

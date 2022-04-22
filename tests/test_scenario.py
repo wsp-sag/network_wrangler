@@ -1,39 +1,46 @@
+"""Scenario Tests
+
+Usage
+-----
+Run just the tests in this file run `pytest -m scenario`
+
+"""
+
 import os
 import sys
 import subprocess
 import pytest
+
 from network_wrangler import ProjectCard
 from network_wrangler import RoadwayNetwork
 from network_wrangler import TransitNetwork
 from network_wrangler import Scenario
 from network_wrangler.logger import WranglerLogger
 
-"""
-Run just the tests labeled scenario using `pytest -v -m scenario`
-To run with print statments, use `pytest -s -m scenario`
-"""
-
-STPAUL_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "examples", "stpaul"
+from network_wrangler.conftest import (
+    base_dir,
+    small_net,
+    small_dir,
+    cached_small_net,
+    stpaul_net,
+    cached_stpaul_net,
+    stpaul_transit,
+    cached_stpaul_transit,
+    stpaul_dir,
+    stpaul_project_cards,
+    example_dir,
+    stpaul_basic_scenario,
 )
-SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
-STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
-STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
-STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
+pytestmark = pytest.mark.scenario
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
-def test_project_card_read(request):
+def test_project_card_read(request, stpaul_project_cards):
     print("\n--Starting:", request.node.name)
-    in_dir = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
-        "examples",
-        "stpaul",
-        "project_cards",
+
+    in_file = os.path.join(
+        stpaul_project_cards, "1_simple_roadway_attribute_change.yml"
     )
-    in_file = os.path.join(in_dir, "1_simple_roadway_attribute_change.yml")
     project_card = ProjectCard.read(in_file)
     WranglerLogger.info(project_card)
     print(str(project_card))
@@ -41,13 +48,13 @@ def test_project_card_read(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
-def test_project_card_write(request):
+def test_project_card_write(request, stpaul_project_cards, tmpdir):
     print("\n--Starting:", request.node.name)
-    in_dir = os.path.join(STPAUL_DIR, "project_cards")
-    in_file = os.path.join(in_dir, "1_simple_roadway_attribute_change.yml")
-    outfile = os.path.join(SCRATCH_DIR, "t_simple_roadway_attribute_change.yml")
+
+    in_file = os.path.join(
+        stpaul_project_cards, "1_simple_roadway_attribute_change.yml"
+    )
+    outfile = os.path.join(tmpdir, "t_simple_roadway_attribute_change.yml")
     project_card = ProjectCard.read(in_file)
     project_card.write(outfile)
     test_card = ProjectCard.read(in_file)
@@ -55,30 +62,9 @@ def test_project_card_write(request):
         assert v == test_card.__dict__[k]
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
-def test_scenario_conflicts(request):
+def test_scenario_conflicts(request, stpaul_basic_scenario):
 
-    project_cards_list = []
-    project_cards_list.append(
-        ProjectCard.read(
-            os.path.join(STPAUL_DIR, "project_cards", "a_test_project_card.yml")
-        )
-    )
-    project_cards_list.append(
-        ProjectCard.read(
-            os.path.join(STPAUL_DIR, "project_cards", "b_test_project_card.yml")
-        )
-    )
-    project_cards_list.append(
-        ProjectCard.read(
-            os.path.join(STPAUL_DIR, "project_cards", "c_test_project_card.yml")
-        )
-    )
-
-    scen = Scenario.create_scenario(
-        base_scenario={}, project_cards_list=project_cards_list
-    )
+    scen = stpaul_basic_scenario
 
     print(str(scen), "\n")
 
@@ -90,32 +76,9 @@ def test_scenario_conflicts(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
-def test_scenario_requisites(request):
+def test_scenario_requisites(request, stpaul_basic_scenario):
     print("\n--Starting:", request.node.name)
-    base_scenario = {}
-
-    project_cards_list = []
-    project_cards_list.append(
-        ProjectCard.read(
-            os.path.join(STPAUL_DIR, "project_cards", "a_test_project_card.yml")
-        )
-    )
-    project_cards_list.append(
-        ProjectCard.read(
-            os.path.join(STPAUL_DIR, "project_cards", "b_test_project_card.yml")
-        )
-    )
-    project_cards_list.append(
-        ProjectCard.read(
-            os.path.join(STPAUL_DIR, "project_cards", "c_test_project_card.yml")
-        )
-    )
-
-    scen = Scenario.create_scenario(
-        base_scenario=base_scenario, project_cards_list=project_cards_list
-    )
+    scen = stpaul_basic_scenario
 
     print(str(scen), "\n")
 
@@ -127,32 +90,9 @@ def test_scenario_requisites(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
-def test_project_sort(request):
+def test_project_sort(request, stpaul_basic_scenario):
     print("\n--Starting:", request.node.name)
-    base_scenario = {}
-
-    project_cards_list = []
-    project_cards_list.append(
-        ProjectCard.read(
-            os.path.join(STPAUL_DIR, "project_cards", "a_test_project_card.yml")
-        )
-    )
-    project_cards_list.append(
-        ProjectCard.read(
-            os.path.join(STPAUL_DIR, "project_cards", "b_test_project_card.yml")
-        )
-    )
-    project_cards_list.append(
-        ProjectCard.read(
-            os.path.join(STPAUL_DIR, "project_cards", "c_test_project_card.yml")
-        )
-    )
-
-    scen = Scenario.create_scenario(
-        base_scenario=base_scenario, project_cards_list=project_cards_list
-    )
+    scen = stpaul_basic_scenario
     print("\n> Prerequisites:")
     import pprint
 
@@ -166,17 +106,13 @@ def test_project_sort(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.scenario
-@pytest.mark.travis
-def test_managed_lane_project_card(request):
+@pytest.mark.managed
+def test_managed_lane_project_card(request, stpaul_project_cards):
     print("\n--Starting:", request.node.name)
 
     print("Reading project card ...")
     project_card_name = "5_managed_lane.yml"
-    project_card_path = os.path.join(
-        os.getcwd(), "examples", "stpaul", "project_cards", project_card_name
-    )
+    project_card_path = os.path.join(stpaul_project_cards, project_card_name)
     project_card = ProjectCard.read(project_card_path)
     print(project_card)
 
@@ -269,7 +205,6 @@ query_tests = [
 
 
 @pytest.mark.parametrize("test_spec", query_tests)
-@pytest.mark.travis
 def test_query_builder(request, test_spec):
     selection, answer = test_spec
 
@@ -286,9 +221,9 @@ def test_query_builder(request, test_spec):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
-def test_apply_summary_wrappers(request):
+def test_apply_summary_wrappers(
+    request, stpaul_project_cards, stpaul_net, stpaul_dir
+):
     print("\n--Starting:", request.node.name)
 
     card_filenames = [
@@ -297,21 +232,14 @@ def test_apply_summary_wrappers(request):
         "4_simple_managed_lane.yml",
     ]
 
-    project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
-
     project_cards_list = [
-        ProjectCard.read(os.path.join(project_card_directory, filename), validate=False)
-        for filename in card_filenames
+        ProjectCard.read(os.path.join(stpaul_project_cards, f), validate=False)
+        for f in card_filenames
     ]
 
     base_scenario = {
-        "road_net": RoadwayNetwork.read(
-            link_file=STPAUL_LINK_FILE,
-            node_file=STPAUL_NODE_FILE,
-            shape_file=STPAUL_SHAPE_FILE,
-            fast=True,
-        ),
-        "transit_net": TransitNetwork.read(STPAUL_DIR),
+        "road_net": stpaul_net,
+        "transit_net": TransitNetwork.read(stpaul_dir),
     }
 
     my_scenario = Scenario.create_scenario(
@@ -325,14 +253,12 @@ def test_apply_summary_wrappers(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
-def test_scenario_building_from_script(request):
+def test_scenario_building_from_script(request, base_dir, example_dir):
     print("\n--Starting:", request.node.name)
 
-    config_file = os.path.join(os.getcwd(), "examples", "config_1.yml")
-    # config_file = os.path.join(os.getcwd(),"example","config_2.yml")
-    script_to_run = os.path.join(os.getcwd(), "scripts", "build_scenario.py")
+    config_file = os.path.join(example_dir, "config_1.yml")
+    # config_file = os.path.join(example_dir,"config_2.yml")
+    script_to_run = os.path.join(base_dir, "scripts", "build_scenario.py")
 
     # replace backward slash with forward slash
     config_file = config_file.replace(os.sep, "/")

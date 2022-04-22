@@ -6,6 +6,21 @@ from network_wrangler import RoadwayNetwork
 from network_wrangler import TransitNetwork
 from network_wrangler import ProjectCard
 
+from network_wrangler.conftest import (
+    base_dir,
+    small_dir,
+    small_net,
+    cached_small_net,
+    stpaul_net,
+    cached_stpaul_net,
+    stpaul_transit,
+    cached_stpaul_transit,
+    stpaul_dir,
+    stpaul_project_cards,
+    example_dir,
+)
+
+pytestmark = [pytest.mark.highway, pytest.mark.transit]
 
 """
 Run just the tests labeled transit using `pytest -v -m transit`
@@ -15,41 +30,22 @@ STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
 
-@pytest.mark.roadway
-@pytest.mark.transit
-@pytest.mark.travis
-def test_set_roadnet(request):
+def test_set_roadnet(request, stpaul_net, stpaul_transit):
     print("\n--Starting:", request.node.name)
 
-    road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True,
-    )
-    transit_net = TransitNetwork.read(STPAUL_DIR)
-    transit_net.set_roadnet(road_net)
+    transit_net = stpaul_transit
+    transit_net.set_roadnet(stpaul_net)
 
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.transit
-@pytest.mark.travis
-# @pytest.mark.skip("")
-def test_project_card(request):
+def test_project_card(request, stpaul_transit, stpaul_net, stpaul_project_cards):
     print("\n--Starting:", request.node.name)
 
-    road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True,
-    )
-    transit_net = TransitNetwork.read(STPAUL_DIR)
-    transit_net.road_net = road_net
+    transit_net = stpaul_transit
+    transit_net.road_net = stpaul_net
     project_card_path = os.path.join(
-        STPAUL_DIR, "project_cards", "12_transit_shape_change.yml"
+        stpaul_project_cards, "12_transit_shape_change.yml"
     )
     project_card = ProjectCard.read(project_card_path)
     transit_net.apply_transit_feature_change(
@@ -112,20 +108,11 @@ def test_project_card(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.transit
-@pytest.mark.travis
-def test_wo_existing(request):
+def test_wo_existing(request, stpaul_transit, stpaul_net):
     print("\n--Starting:", request.node.name)
 
-    road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True,
-    )
-    transit_net = TransitNetwork.read(STPAUL_DIR)
-    transit_net.road_net = road_net
+    transit_net = stpaul_transit
+    transit_net.road_net = stpaul_net
     # A new node ID (not in stops.txt) should fail right now
     """with pytest.raises(Exception):
         transit_net.apply_transit_feature_change(
@@ -164,14 +151,10 @@ def test_wo_existing(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.transit
-@pytest.mark.travis
-# @pytest.mark.skip("need to update trips and nodes")
-def test_select_transit_features_by_nodes(request):
+def test_select_transit_features_by_nodes(request, stpaul_transit):
     print("\n--Starting:", request.node.name)
 
-    transit_net = TransitNetwork.read(STPAUL_DIR)
+    transit_net = stpaul_transit
 
     # Any nodes
     trip_ids = transit_net.select_transit_features_by_nodes(

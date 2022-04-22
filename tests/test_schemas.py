@@ -1,3 +1,10 @@
+"""Schema Tests
+
+Usage
+-----
+Run just the tests in this file run `pytest -m schema`
+
+"""
 import os
 
 import json
@@ -5,6 +12,8 @@ import json
 import pytest
 import yaml
 from jsonschema import validate
+
+pytestmark = pytest.mark.schema
 
 SCHEMA_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
@@ -17,7 +26,7 @@ STPAUL_EX_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 STPAUL_PC_DIR = os.path.join(os.getcwd(), "examples", "stpaul", "project_cards")
 
 
-@pytest.mark.schema
+@pytest.mark.noci
 @pytest.mark.skip(reason="need to work on this")
 def test_roadway_link_schema():
     schema_filename = os.path.join(SCHEMA_DIR, "roadway_network_link.json")
@@ -32,7 +41,7 @@ def test_roadway_link_schema():
     validate(link_json, schema)
 
 
-@pytest.mark.schema
+@pytest.mark.noci
 @pytest.mark.skip(reason="need to work on this")
 def test_project_card_schema():
     schema_filename = os.path.join(SCHEMA_DIR, "project_card.json")
