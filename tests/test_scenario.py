@@ -57,6 +57,22 @@ def test_project_card_write(request):
 
 @pytest.mark.scenario
 @pytest.mark.travis
+def test_scenario_initialization(request):
+    print("\n--Starting:", request.node.name)
+    card_dir = os.path.join(STPAUL_DIR, "project_cards")
+    card_file = os.path.join(card_dir, "1_simple_roadway_attribute_change.yml")
+
+    project_card = ProjectCard.read(card_file)
+
+    # test initialization using both dict and Scenario instance
+    scenario_A = Scenario({}, [project_card])
+    scenario_B = Scenario(scenario_A, [])
+
+    print("--Finished:", request.node.name)
+
+
+@pytest.mark.scenario
+@pytest.mark.travis
 def test_scenario_conflicts(request):
 
     project_cards_list = []

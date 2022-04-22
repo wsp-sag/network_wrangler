@@ -7,7 +7,7 @@ import glob
 import copy
 import pprint
 from datetime import datetime
-from typing import Union
+from typing import Any, Collection, Mapping, Union
 
 import pandas as pd
 import geopandas as gpd
@@ -83,19 +83,36 @@ class Scenario(object):
             been sorted to make sure cards that are pre-requisites are applied first
     """
 
-    def __init__(self, base_scenario: dict, project_cards: [ProjectCard] = None):
+    def __init__(
+        self,
+        base_scenario: Union[Mapping[str, Any], Scenario],
+        project_cards: Collection[ProjectCard] = None,
+    ):
         """
-        Constructor
+        Constructor for Scenario class.
 
         args:
-        base_scenario: dict the base scenario
-        project_cards: list this scenario's project cards
+            base_scenario: object dictionary for the base scenario (i.e. my_base_scenario.__dict__)
+                or a scenario instance.
+            project_cards: List of project card instances to be applied to the scenario.
+                Defaults to None.
         """
 
         self.road_net = None
         self.transit_net = None
 
+        if isinstance(base_scenario, Scenario):
+            base_scenario = base_scenario.__dict__
+
+        assert (
+            type(base_scenario) == dict
+        ), "base_scenario must be a dictionary, or Scenario inst."
         self.base_scenario = base_scenario
+
+        assert all(
+            isinstance(x, ProjectCard) for x in project_cards
+        ), "project_cards must be a list of ProjectCard instances"
+        self.project_cards = project_cards
 
         # if the base scenario had roadway or transit networks, use them as the basis.
         if self.base_scenario.get("road_net"):
@@ -108,7 +125,6 @@ class Scenario(object):
         if self.base_scenario.get("applied_projects"):
             self.applied_projects = base_scenario["applied_projects"]
 
-        self.project_cards = project_cards
         self.ordered_project_cards = OrderedDict()
 
         self.prerequisites = {}
@@ -146,20 +162,14 @@ class Scenario(object):
         validate: bool = True,
     ) -> Scenario:
         """
-        args
-        -----
-        roadway_dir: optional
-          path to the base scenario roadway network files
-        base_shape_name:
-          filename of the base network shape
-        base_link_name:
-          filename of the base network link
-        base_node_name:
-          filename of the base network node
-        transit_dir: optional
-           path to base scenario transit files
-        validate:
-          boolean indicating whether to validate the base network or not
+        args:
+            base_shape_name: filename of the base network shape file
+            base_link_name: filename of the base network link file
+            base_node_name: filename of the base network node file
+            roadway_dir: path to the base scenario roadway network files. Defaults to "".
+            transit_dir: path to base scenario transit files. Defaults to "".
+            validate: boolean indicating whether to validate the base network or not.
+                Defaults to True.
         """
         if roadway_dir:
             base_network_shape_file = os.path.join(roadway_dir, base_shape_name)
@@ -192,30 +202,30 @@ class Scenario(object):
 
     @staticmethod
     def create_scenario(
-        base_scenario: dict = {},
+        base_scenario: Union[Mapping[str, Any], Scenario] = {},
         card_directory: str = "",
-        tags: [str] = None,
-        project_cards_list=None,
-        glob_search="",
-        validate_project_cards=True,
+        tags: Collection[str] = None,
+        project_cards_list: Collection[ProjectCard] = None,
+        glob_search: str = "",
+        validate_project_cards: bool = True,
     ) -> Scenario:
         """
         Validates project cards with a specific tag from the specified folder or
         list of user specified project cards and
         creates a scenario object with the valid project card.
 
-        args
-        -----
-        base_scenario:
-          object dictionary for the base scenario (i.e. my_base_scenario.__dict__)
-        tags:
-          only project cards with these tags will be read/validated
-        folder:
-          the folder location where the project cards will be
-        project_cards_list:
-          list of project cards to be applied
-        glob_search:
-
+        args:
+            base_scenario: object dictionary for the base scenario (i.e. my_base_scenario.__dict__)
+                or a scenario instance. Defaults to {}.
+            card_directory: Path to the directory where to initiate the project card search.
+                Defaults to "".
+            tags: List of tags to filter project cards by. Only project cards with these
+                tags will be added to the scenario. Defaults to None.
+            project_cards_list: list of project cards instances to be applied. Defaults to None.
+            glob_search: glob search string to search for project cards in the card_directory.
+                Defaults to "".
+            validate_project_cards: boolean indicating whether to validate the project cards
+                or not. Defaults to True.
         """
         WranglerLogger.info("Creating Scenario")
 
