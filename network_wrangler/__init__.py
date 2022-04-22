@@ -34,11 +34,3 @@ __all__ = [
     "create_line_string",
     "net_to_mapbox",
 ]
-
-setupLogging(
-    log_filename=os.path.join(
-        os.getcwd(),
-        "network_wrangler_{}.log".format(datetime.now().strftime("%Y_%m_%d__%H_%M_%S")),
-    ),
-    log_to_console=True,
-)
