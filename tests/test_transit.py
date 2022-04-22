@@ -8,8 +8,23 @@ from network_wrangler import RoadwayNetwork
 Run just the tests labeled transit using `pytest -v -m transit`
 """
 
-STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
+
+STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
+
+STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
+STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
+STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
+
+def _read_stpaul_net():
+    net = RoadwayNetwork.read(
+        link_filename=STPAUL_LINK_FILE,
+        node_filename=STPAUL_NODE_FILE,
+        shape_filename=STPAUL_SHAPE_FILE,
+        fast=True,
+        shape_foreign_key="shape_id",
+    )
+    return net
 
 
 @pytest.mark.basic
@@ -324,22 +339,13 @@ def test_invalid_optional_selection_variable(request):
 
     print("--Finished:", request.node.name)
 
-
+@pytest.mark.elo
 @pytest.mark.travis
 def test_transit_road_consistencies(request):
     print("\n--Starting:", request.node.name)
     net = TransitNetwork.read(STPAUL_DIR)
 
-    STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
-    STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
-    STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
-
-    road_net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
+    road_net = _read_stpaul_net()
 
     net.set_roadnet(road_net=road_net)
 

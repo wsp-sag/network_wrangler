@@ -10,23 +10,33 @@ from network_wrangler import ProjectCard
 """
 Run just the tests labeled transit using `pytest -v -m transit`
 """
-
-STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
+STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 
+STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
+STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
+STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
+
+def _read_stpaul_net():
+    net = RoadwayNetwork.read(
+        link_filename=STPAUL_LINK_FILE,
+        node_filename=STPAUL_NODE_FILE,
+        shape_filename=STPAUL_SHAPE_FILE,
+        fast=True,
+        shape_foreign_key="shape_id",
+    )
+    return net
+
+
+@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.transit
 @pytest.mark.travis
 def test_set_roadnet(request):
     print("\n--Starting:", request.node.name)
 
-    road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True,
-    )
+    road_net =  _read_stpaul_net()
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.set_roadnet(road_net)
 
@@ -40,12 +50,7 @@ def test_set_roadnet(request):
 def test_project_card(request):
     print("\n--Starting:", request.node.name)
 
-    road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True,
-    )
+    road_net = _read_stpaul_net()
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net
     project_card_path = os.path.join(
@@ -118,12 +123,7 @@ def test_project_card(request):
 def test_wo_existing(request):
     print("\n--Starting:", request.node.name)
 
-    road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True,
-    )
+    road_net = _read_stpaul_net()
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net
     # A new node ID (not in stops.txt) should fail right now
