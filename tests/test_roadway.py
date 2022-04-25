@@ -1156,7 +1156,6 @@ def test_find_segment(request):
     print(seg_df)
 
 
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_managed_lane_restricted_access_egress(request):
