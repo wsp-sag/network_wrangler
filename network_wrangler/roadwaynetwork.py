@@ -149,6 +149,7 @@ class RoadwayNetwork(object):
 
     # CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
     CRS = 4326  # "EPSG:4326"
+    CRS_alt=4269
 
     NODE_FOREIGN_KEY = "model_node_id"
     LINK_FOREIGN_KEY = ["A", "B"]
@@ -166,7 +167,7 @@ class RoadwayNetwork(object):
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
 
-    UNIQUE_SHAPE_KEY = "shape_id"
+    UNIQUE_SHAPE_KEY = "id"
 
     MANAGED_LANES_REQUIRED_ATTRIBUTES = [
         "A",
@@ -188,6 +189,9 @@ class RoadwayNetwork(object):
         "roadway",
         "length",
         "segment_id",
+        "assign_group",
+        "county",
+        "mpo",
     ]
 
     MANAGED_LANES_SCALAR = 500000
@@ -794,6 +798,9 @@ class RoadwayNetwork(object):
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
         try:
+            if (int(ox.__version__.split('.')[0]) >= 1):
+                # index required in newer osmnx
+                graph_links = graph_links.set_index(["u", "v", "key"])
             G = ox.graph_from_gdfs(graph_nodes, graph_links)
 
         except AttributeError as attr_error:
@@ -1637,7 +1644,18 @@ class RoadwayNetwork(object):
                     raise ValueError(msg)
 
             for node in nodes:
+                node["new_node"] = 1
                 self.nodes_df = _add_dict_to_df(self.nodes_df, node)
+            
+            # add geometry for new nodes
+            self.nodes_df["geometry"] = self.nodes_df.apply(
+                lambda x: Point(x["X"], x["Y"])
+                if x["new_node"] == 1
+                else x["geometry"],
+                axis=1,
+            )
+
+            self.nodes_df.drop(["new_node"], axis=1, inplace=True)
 
         if links is not None:
             for link in links:
