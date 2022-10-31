@@ -3,7 +3,7 @@ import math
 
 import pandas as pd
 
-from pyproj import Proj,Transformer
+from pyproj import Proj, Transformer
 from shapely.geometry import LineString, Point
 from shapely.ops import transform
 from geographiclib.geodesic import Geodesic
@@ -288,13 +288,13 @@ def create_line_string(location_reference: list):
     return LineString([location_reference[0]["point"], location_reference[1]["point"]])
 
 
-
-# key: ( from espg, to espg) value: pyproj transform object
+# key:value (from espg, to espg): pyproj transform object
 transformers = {}
 
-def point_from_xy(x, y, xy_crs:int = 4326, point_crs:int = 4326):
+
+def point_from_xy(x, y, xy_crs: int = 4326, point_crs: int = 4326):
     """
-    Creates a point geometry from x and y coordinates
+    Creates a point geometry from x and y coordinates.
 
     Args:
         x: x coordinate, in xy_crs
@@ -313,10 +313,9 @@ def point_from_xy(x, y, xy_crs:int = 4326, point_crs:int = 4326):
     if (xy_crs, point_crs) not in transformers:
         # store transformers in dictionary because they are an "expensive" operation
         transformers[(xy_crs, point_crs)] = Transformer.from_proj(
-            Proj(init='epsg:' + str(xy_crs)), 
-            Proj(init='epsg:' + str(point_crs)),
-            always_xy=True, #required b/c Proj v6+ uses lon/lat instead of x/y
+            Proj(init="epsg:" + str(xy_crs)),
+            Proj(init="epsg:" + str(point_crs)),
+            always_xy=True,  # required b/c Proj v6+ uses lon/lat instead of x/y
         )
 
     return transform(transformers[(xy_crs, point_crs)].transform, point)
-

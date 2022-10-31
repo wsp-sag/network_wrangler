@@ -1,9 +1,13 @@
 import os
-import pytest
-from network_wrangler import RoadwayNetwork
-from network_wrangler import ProjectCard
 import time
+
+import pytest
+
 import pandas as pd
+
+from network_wrangler import ProjectCard
+from network_wrangler import RoadwayNetwork
+from network_wrangler import WranglerLogger
 
 pd.set_option("display.max_rows", 500)
 pd.set_option("display.max_columns", 500)
@@ -510,6 +514,7 @@ def test_add_adhoc_field_from_card(request):
         net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_string"] == "three"
     )
     print("--Finished:", request.node.name)
+
 
 @pytest.mark.roadway
 @pytest.mark.travis
@@ -1243,3 +1248,78 @@ def test_managed_lane_restricted_access_egress(request):
         \n***GP Links\n{gp_links[_display_c]}"
 
     print("--Finished:", request.node.name)
+
+
+def test_add_nodes(request):
+    print("\n--Starting:", request.node.name)
+    net = _read_small_net()
+
+    node_properties = {
+        "X": -93.14412,
+        "Y": 44.87497,
+        "bike_node": 1,
+        "drive_node": 1,
+        "transit_node": 0,
+        "walk_node": 1,
+        "model_node_id": 1234567,
+    }
+
+    net.apply(
+        {
+            "category": "add new roadway",
+            "project": "test adding a node",
+            "node": [node_properties],
+        }
+    )
+
+    print(net.nodes_df.loc[net.nodes_df.model_node_id == 1234567])
+
+    assert 1234567 in net.nodes_df.model_node_id.tolist()
+
+    # should fail when adding a node with a model_node_id that already exists
+    bad_node_properties = node_properties.copy()
+    bad_node_properties["model_node_id"] = (3494,)  # should already be in network
+    try:
+        net.apply(
+            {
+                "category": "add new roadway",
+                "project": "test adding a node already in network",
+                "nodes": [bad_node_properties],
+            },
+        )
+    except ValueError:
+        "expected ValueError when adding a node with a model_node_id that already exists"
+
+
+@pytest.mark.menow
+def test_change_node_xy(request):
+    print("\n--Starting:", request.node.name)
+
+    net = _read_small_net()
+
+    _node = net.nodes_df.loc[net.nodes_df.model_node_id == 3230].iloc[0]
+    WranglerLogger.info(f"Original Node:\n{_node}")
+
+    facility = {
+        "node": [
+            {"model_node_id": [3230]},
+        ]
+    }
+    properties = [
+        {"property": "X", "set": -1000},
+        {"property": "Y", "set": 1000000},
+    ]
+
+    net.apply(
+        {
+            "category": "Roadway Property Change",
+            "project": "Update node geometry",
+            "facility": facility,
+            "properties": properties,
+        }
+    )
+
+    _node = net.nodes_df.loc[net.nodes_df.model_node_id == 3230].iloc[0]
+    WranglerLogger.info(f"Updated Node:\n{_node}")
+
+    assert _node.geometry.x == -1000

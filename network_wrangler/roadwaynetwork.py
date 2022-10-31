@@ -6,11 +6,13 @@ from __future__ import annotations
 import os
 import sys
 import copy
+import hashlib
 import numbers
 from random import randint
 from typing import Any, List, Optional, Union
 
 import folium
+from lark import logger
 import pandas as pd
 import geopandas as gpd
 import json
@@ -25,6 +27,7 @@ from pandas.core.frame import DataFrame
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
+from pyparsing import one_of
 
 from shapely.geometry import Point
 
@@ -32,7 +35,11 @@ from .logger import WranglerLogger
 from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .utils import haversine_distance, create_unique_shape_id, offset_location_reference
-from .utils import create_location_reference_from_nodes, create_line_string
+from .utils import (
+    create_location_reference_from_nodes,
+    create_line_string,
+    point_from_xy,
+)
 
 
 class NoPathFound(Exception):
@@ -117,9 +124,6 @@ class RoadwayNetwork(object):
         UNIQUE_NODE_IDENTIFIERS (list(str)): list of all unique identifiers
             for nodes, including the UNIQUE_NODE_KEY
 
-        SELECTION_REQUIRES (list(str))): required attributes in the selection
-            if a unique identifier is not used
-
         SEARCH_BREADTH (int): initial number of links from name-based
             selection that are traveresed before trying another shortest
             path when searching for paths between A and B node
@@ -158,8 +162,6 @@ class RoadwayNetwork(object):
     SP_WEIGHT_FACTOR = 100
     MANAGED_LANES_NODE_ID_SCALAR = 500000
     MANAGED_LANES_LINK_ID_SCALAR = 1000000
-
-    SELECTION_REQUIRES = ["link"]
 
     UNIQUE_LINK_KEY = "model_link_id"
     UNIQUE_NODE_KEY = "model_node_id"
@@ -632,6 +634,120 @@ class RoadwayNetwork(object):
 
         return False
 
+    def _validate_link_selection(self, selection: dict) -> bool:
+        """Validates that link selection is complete/valid for given network.
+
+        Checks:
+        1. selection properties for links, a, and b are in links_df
+        2. either a unique ID or name + A & B are specified
+
+        If selection for links is "all" it is assumed valid.
+
+        Args:
+            selection (dict): selection dictionary
+
+        Returns:
+            bool: True if link selection is valid and complete.
+        """
+        valid = True
+
+        if selection.get("link") == "all":
+            return True
+
+        _link_selection_props = [p for x in selection["links"] for p in x.keys()]
+        _A_selection_props = [p for x in selection.get("A", {}) for p in x.keys()]
+        _B_selection_props = [p for x in selection.get("B", {}) for p in x.keys()]
+
+        _used_link_props = (
+            _link_selection_props + _A_selection_props + _B_selection_props
+        )
+        _missing_link_props = set(_used_link_props) - set(self.link_df.columns)
+
+        if _missing_link_props:
+            WranglerLogger.error(
+                f"Link selection contains properties not found in the link dataframe:\n\
+                {','.join(_missing_link_props)}"
+            )
+            valid = False
+
+        _link_unique_link_id = bool(
+            set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(
+                set(_link_selection_props)
+            )
+        )
+        # if don't have a unique link id, then require A and B nodes
+        _has_alternate_link_id = all(
+            [
+                selection.get("A"),
+                selection.get("B"),
+                selection["links"].get("name"),
+            ]
+        )
+
+        if not _link_unique_link_id and not _has_alternate_link_id:
+            WranglerLogger.error(
+                "Link selection does not contain unique link ID or alternate A and B nodes + 'name'."
+            )
+            valid = False
+        if not valid:
+            raise ValueError("Link Selection is not valid for network.")
+        return True
+
+    def _validate_node_selection(self, selection: dict) -> bool:
+        """Validates that node selection is complete/valid for given network.
+
+        Checks:
+        1. selection properties for nodes are in nodes_df
+        2. Nodes identified by an explicit or implicit unique ID. A warning is given for using
+            a property as an identifier which isn't explicitly unique.
+
+        If selection for nodes is "all" it is assumed valid.
+
+        Args:
+            selection (dict): Project Card selection dictionary
+
+        Returns:
+            bool:True if node selection is valid and complete.
+        """
+        valid = True
+
+        if selection.get("node") == "all":
+            return True
+
+        _node_selection_props = [p for x in selection["node"] for p in x.keys()]
+
+        _missing_node_props = set(_node_selection_props) - set(self.nodes_df.columns)
+
+        if _missing_node_props:
+            WranglerLogger.error(
+                f"Node selection contains properties not found in the node dataframe:\n\
+                {','.join(_missing_node_props)}"
+            )
+            valid = False
+
+        _has_explicit_unique_node_id = bool(
+            set(RoadwayNetwork.UNIQUE_NODE_IDENTIFIERS).intersection(
+                set(_node_selection_props)
+            )
+        )
+
+        if not _has_explicit_unique_node_id:
+            if self.nodes_df[_node_selection_props].get_value_counts().min() == 1:
+                WranglerLogger.warning(
+                    f"Link selection does not contain an explicit unique link ID: \
+                        {RoadwayNetwork.UNIQUE_NODE_IDENTIFIERS}, \
+                        but has properties which sufficiently select a single node. \
+                        This selection may not work on other networks."
+                )
+            else:
+                WranglerLogger.error(
+                    "Link selection does not contain unique link ID or alternate A and B nodes + 'name'."
+                )
+                valid = False
+        if not valid:
+            raise ValueError("Node Selection is not valid for network.")
+        return True
+
     def validate_selection(self, selection: dict) -> bool:
         """
         Evaluate whetther the selection dictionary contains the
@@ -642,62 +758,17 @@ class RoadwayNetwork(object):
 
         Returns: boolean value as to whether the selection dictonary is valid.
         """
-        if not set(RoadwayNetwork.SELECTION_REQUIRES).issubset(selection):
-            err_msg = "Project Card Selection requires: {}".format(
-                ",".join(RoadwayNetwork.SELECTION_REQUIRES)
-            )
-            err_msg += ", but selection only contains: {}".format(",".join(selection))
-            WranglerLogger.error(err_msg)
-            raise KeyError(err_msg)
+        if selection.get("link"):
+            return self._validate_link_selection(selection)
 
-        err = []
-        for li in selection["link"]:
-            for k, v in li.items():
-                if k not in self.links_df.columns:
-                    err.append(
-                        "{} specified in link selection but not an attribute in network\n".format(
-                            k
-                        )
-                    )
-        selection_keys = [k for li in selection["link"] for k, v in li.items()]
-        unique_link_id = bool(
-            set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(
-                set(selection_keys)
-            )
-        )
+        elif selection.get("node"):
+            return self._validate_node_selection(selection)
 
-        if not unique_link_id:
-            for k, v in selection["A"].items():
-                if (
-                    k not in self.nodes_df.columns
-                    and k != RoadwayNetwork.NODE_FOREIGN_KEY
-                ):
-                    err.append(
-                        f"{k} specified in A node selection but not an attribute in network."
-                    )
-            for k, v in selection["B"].items():
-                if (
-                    k not in self.nodes_df.columns
-                    and k != RoadwayNetwork.NODE_FOREIGN_KEY
-                ):
-                    err.append(
-                        f"{k} specified in B node selection but not an attribute in network"
-                    )
-        if err:
-            WranglerLogger.error(
-                "ERROR: Selection variables in project card not found in network"
-            )
-            WranglerLogger.error("\n".join(err))
-            WranglerLogger.error(
-                "--existing node columns:{}".format(" ".join(self.nodes_df.columns))
-            )
-            WranglerLogger.error(
-                "--existing link columns:{}".format(" ".join(self.links_df.columns))
-            )
-            raise ValueError()
-            return False
         else:
-            return True
+            raise ValueError(
+                f"Project Card Selection requires either 'link' or 'node' : \
+                Selection provided: {selection.keys()}"
+            )
 
     def orig_dest_nodes_foreign_key(
         self, selection: dict, node_foreign_key: str = ""
@@ -839,25 +910,16 @@ class RoadwayNetwork(object):
 
     def build_selection_key(self, selection_dict: dict) -> tuple:
         """
-        Selections are stored by a key combining the query and the A and B ids.
-        This method combines the two for you based on the selection dictionary.
+        Selections are stored by a hash of the selection dictionary.
 
         Args:
             selection_dictonary: Selection Dictionary
 
-        Returns: Tuple serving as the selection key.
+        Returns: Hex code for hash
 
         """
-        sel_query = ProjectCard.build_link_selection_query(
-            selection=selection_dict,
-            unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-        )
 
-        if RoadwayNetwork.selection_has_unique_link_id(selection_dict):
-            return sel_query
-
-        A_id, B_id = self.orig_dest_nodes_foreign_key(selection_dict)
-        return (sel_query, A_id, B_id)
+        return hashlib.md5(b"selection_dict").hexdigest()
 
     @staticmethod
     def _get_fk_nodes(_links: gpd.GeoDataFrame):
@@ -1101,7 +1163,7 @@ class RoadwayNetwork(object):
 
     def select_roadway_features(
         self, selection: dict, search_mode="drive", force_search=False
-    ) -> GeoDataFrame:
+    ) -> list:
         """
         Selects roadway features that satisfy selection criteria
 
@@ -1125,17 +1187,89 @@ class RoadwayNetwork(object):
                  link - which includes at least a variable for `name` or 'all' if all selected
             search_mode: will be overridden if 'link':'all'
 
-        Returns: a list of link IDs in selection
+        Returns: a list of indices for the selected links or nodes
         """
-        if selection.get("link") == "all":
-            return self.links_df.index.tolist()
-
         WranglerLogger.debug("validating selection")
         self.validate_selection(selection)
 
         # create a unique key for the selection so that we can cache it
         sel_key = self.build_selection_key(selection)
         WranglerLogger.debug("Selection Key: {}".format(sel_key))
+
+        self.selections[sel_key] = {"selection_found": False}
+
+        if "link" in selection:
+            return self.select_roadway_link_features(
+                selection,
+                sel_key,
+                force_search=force_search,
+                search_mode=search_mode,
+            )
+        if "node" in selection:
+            return self.select_roadway_node_features(
+                selection,
+                sel_key,
+            )
+
+        raise ValueError("Invalid selection type. Must be either 'link' or 'node'.")
+
+    def select_roadway_node_features(
+        self,
+        selection: dict,
+        sel_key: str,
+    ) -> list:
+        """Select Node Features.
+
+        Args:
+            selection (dict): selection dictionary from project card.
+            sel_key (str): key to store selection in self.selections under.
+
+        Returns:
+            List of indices for selected nodes in self.nodes_df
+        """
+        WranglerLogger.debug("Selecting nodes.")
+        if selection.get("node") == "all":
+            return self.nodes_df.index.tolist()
+
+        sel_query = ProjectCard.build_selection_query(
+            selection=selection,
+            type="node",
+            unique_ids=RoadwayNetwork.UNIQUE_NODE_IDENTIFIERS,
+        )
+        WranglerLogger.debug("Selecting node features:\n{}".format(sel_query))
+
+        self.selections[sel_key]["selected_nodes"] = self.nodes_df.query(
+            sel_query, engine="python"
+        )
+
+        if len(self.selections[sel_key]["selected_nodes"]) > 0:
+            self.selections[sel_key]["selection_found"] = True
+        else:
+            raise ValueError(f"No nodes found for selection: {selection}")
+
+        return self.selections[sel_key]["selected_nodes"].index.tolist()
+
+    def select_roadway_link_features(
+        self,
+        selection: dict,
+        sel_key: str,
+        force_search: bool = False,
+        search_mode="drive",
+    ) -> list:
+        """_summary_
+
+        Args:
+            selection (dict): _description_
+            sel_key: selection key hash to store selection in
+            force_search (bool, optional): _description_. Defaults to False.
+            search_mode (str, optional): _description_. Defaults to "drive".
+
+        Returns:
+            List of indices for selected links in self.links_df
+        """
+        WranglerLogger.debug("Selecting links.")
+        if selection.get("link") == "all":
+            return self.links_df.index.tolist()
 
         # if this selection has been queried before, just return the
         # previously selected links
@@ -1146,8 +1280,6 @@ class RoadwayNetwork(object):
                 msg = "Selection previously queried but no selection found"
                 WranglerLogger.error(msg)
                 raise Exception(msg)
-        self.selections[sel_key] = {}
-        self.selections[sel_key]["selection_found"] = False
 
         unique_model_link_identifer_in_selection = (
             RoadwayNetwork.selection_has_unique_link_id(selection)
@@ -1163,10 +1295,11 @@ class RoadwayNetwork(object):
 
         sel_query = ProjectCard.build_link_selection_query(
             selection=selection,
-            unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+            type="link",
+            unique_ids=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
             mode=RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[search_mode],
         )
-        WranglerLogger.debug("Selecting features:\n{}".format(sel_query))
+        WranglerLogger.debug("Selecting link features:\n{}".format(sel_query))
 
         self.selections[sel_key]["candidate_links"] = self.links_df.query(
             sel_query, engine="python"
@@ -1260,11 +1393,17 @@ class RoadwayNetwork(object):
                     "links"
                 ].query(resel_query, engine="python")
 
+            if len(self.selections[sel_key]["selected_links"]) > 0:
+                self.selections[sel_key]["selection_found"] = True
+            else:
+                raise ValueError(f"No links found for selection: {selection}")
+
             self.selections[sel_key]["selection_found"] = True
             return self.selections[sel_key]["selected_links"].index.tolist()
 
     def validate_properties(
         self,
+        df: pd.DataFrame,
         properties: dict,
         ignore_existing: bool = False,
         require_existing_for_change: bool = False,
@@ -1275,6 +1414,7 @@ class RoadwayNetwork(object):
 
         Args:
             properties : properties dictionary to be evaluated
+            df: links_df or nodes_df or shapes_df to check for compatibility with
             ignore_existing: If True, will only warn about properties
                 that specify an "existing" value.  If False, will fail.
             require_existing_for_change: If True, will fail if there isn't
@@ -1284,27 +1424,25 @@ class RoadwayNetwork(object):
         Returns: boolean value as to whether the properties dictonary is valid.
         """
 
-        validation_error_message = []
+        valid = True
 
         for p in properties:
-            if p["property"] not in self.links_df.columns:
-                if p.get("change"):
-                    validation_error_message.append(
-                        f'"Change" is specified for attribute { p["property"]}, but doesn\'t \
+            if p["property"] not in df.columns and p.get("change"):
+                WranglerLogger.error(
+                    f'"Change" is specified for attribute { p["property"]}, but doesn\'t \
                             exist in base network'
-                    )
-
-                if p.get("existing") and not ignore_existing:
-                    validation_error_message.append(
-                        f'"Existing" is specified for attribute { p["property"]}, but doesn\'t \
-                            exist in base network\n'
-                    )
-                elif p.get("existing"):
-                    WranglerLogger.warning(
-                        f'"Existing" is specified for attribute {p["property"]}, but doesn\'t \
-                            exist in base network.'
-                    )
-
+                )
+                valid = False
+            if (
+                p["property"] not in df.columns
+                and p.get("existing")
+                and not ignore_existing
+            ):
+                WranglerLogger.error(
+                    f'"Existing" is specified for attribute { p["property"]}, but doesn\'t \
+                        exist in base network'
+                )
+                valid = False
             if p.get("change") and not p.get("existing"):
                 if require_existing_for_change:
                     validation_error_message.append(
@@ -1312,15 +1450,15 @@ class RoadwayNetwork(object):
                             isn\'t a value for existing.\nTo proceed, run with the setting \
                             require_existing_for_change=False'
                     )
+                    valid = False
                 else:
                     WranglerLogger.warning(
                         f'"Change" is specified for attribute {p["property"]}, but there \
                             isn\'t a value for existing'
                     )
 
-        if validation_error_message:
-            WranglerLogger.error(" ".join(validation_error_message))
-            raise ValueError()
+        if not valid:
+            raise ValueError("Property changes are not valid:\n  {properties")
 
     def apply(self, project_card_dictionary: dict):
         """
@@ -1339,15 +1477,24 @@ class RoadwayNetwork(object):
         )
 
         def _apply_individual_change(project_dictionary: dict):
+            if project_dictionary.get("facility"):
+                WranglerLogger.info(f"Selecting Facility: {project_dictionary['facility']}")
+
+                _geometry_type = list({"link","node"}.intersection(set(project_dictionary["facility"])))
+                assert len(_geometry_type) == 1, "Facility must have exactly one of 'link' or 'node'"
+                _geometry_type = _geometry_type[0]
+                
+                _df_idx = self.select_roadway_features(project_dictionary["facility"])
 
             if project_dictionary["category"].lower() == "roadway property change":
                 self.apply_roadway_feature_change(
-                    self.select_roadway_features(project_dictionary["facility"]),
+                    _df_idx,
                     project_dictionary["properties"],
+                    geometry_type = _geometry_type,
                 )
             elif project_dictionary["category"].lower() == "parallel managed lanes":
                 self.apply_managed_lane_feature_change(
-                    self.select_roadway_features(project_dictionary["facility"]),
+                    _df_idx,
                     project_dictionary["properties"],
                 )
             elif project_dictionary["category"].lower() == "add new roadway":
@@ -1369,6 +1516,33 @@ class RoadwayNetwork(object):
         else:
             _apply_individual_change(project_card_dictionary)
 
+    def update_node_geometry(
+        self, nodes_df: gpd.GeoDataFrame = None
+    ) -> gpd.GeoDataFrame:
+        """Adds or updates the geometry of the nodes in the network based on XY coordinates.
+        Assumes XY are in self.crs.
+
+        Args:
+            nodes_df: Optional. Nodes geodataframe for geometry to be updated.
+                If not provided, will use the whole self.nodes_df.
+
+        Returns:
+           gpd.GeoDataFrame: nodes geodataframe with updated geometry.
+        """
+        if nodes_df is None:
+            nodes_df = self.nodes_df
+
+        nodes_df["geometry"] = nodes_df.apply(
+            lambda x: point_from_xy(
+                x["X"],
+                x["Y"],
+                xy_crs=nodes_df.crs,
+                point_crs=nodes_df.crs,
+            ),
+            axis=1,
+        )
+        return nodes_df
+
     def apply_python_calculation(
         self, pycode: str, in_place: bool = True
     ) -> Union(None, RoadwayNetwork):
@@ -1381,61 +1555,103 @@ class RoadwayNetwork(object):
         """
         exec(pycode)
 
+    def _add_property(self, df: pd.DataFrame,  property_dict: dict) -> pd.DataFrame:
+        """
+        Adds a property to a dataframe. Infers type from the property_dict "set" value.
+
+        Args:
+            df: dataframe to add property to
+            property_dict: dictionary of property to add with "set" value.
+
+        Returns:
+            pd.DataFrame: dataframe with property added filled with NaN.
+        """
+        WranglerLogger.info(f"Adding property: {property_dict['property']}")
+        df[property_dict['property']] = np.nan
+        return df
+
+    def _update_property(self, series: gpd.GeoSeries, property: dict):
+        """_summary_
+
+        Args:
+            df (gpd.GeoDataFrame): _description_
+            property (dict): _description_
+        """
+        if property.get("existing"):
+            if not set(series.tolist()).issubset([property.get("existing")]):
+                WranglerLogger.warning(
+                    "Existing value defined for {} in project card does "
+                    "not match the value in the roadway network for the "
+                    "selected links".format(property["property"])
+                )
+        _updated_series = series.copy()
+
+        if property.get("set"):
+            _updated_series = property["set"]
+        elif property.get("change"):
+            _updated_series = series + property["change"]
+        else:
+            raise ValueError(
+                f"No 'set' or 'change' specified for property {property['property']} \
+                    in Roadway Network Change project card"
+            )
+        return _updated_series
+
     def apply_roadway_feature_change(
-        self, link_idx: list, properties: dict, in_place: bool = True
+        self,
+        df_idx: list,
+        properties: dict,
+        geometry_type="links",
+        in_place: bool = True,
     ) -> Union(None, RoadwayNetwork):
         """
         Changes the roadway attributes for the selected features based on the
         project card information passed
 
         Args:
-            link_idx : list
-                lndices of all links to apply change to
+            df_idx : list
+                lndices of all links or nodes to apply change to
             properties : list of dictionarys
                 roadway properties to change
+            geometry_type: either 'links' or 'nodes'. Defaults to 'link
             in_place: boolean
                 update self or return a new roadway network object
         """
+        _net = self
+        if not in_place:
+            WranglerLogger.debug("Creating copy of network to return")
+            _net = copy.deepcopy(self)
 
-        # check if there are change or existing commands that that property
-        #   exists in the network
-        # if there is a set command, add that property to network
-        self.validate_properties(properties)
+        if geometry_type == "link":
+            WranglerLogger.debug("Updating Links")
+            _df = _net.links_df
+        elif geometry_type == "node":
+            WranglerLogger.debug("Updating Nodes")
+            _df = _net.nodes_df
+        else:
+            raise ValueError("geometry_type must be either 'link' or 'node'")
+        self.validate_properties( _df,properties)
 
-        for i, p in enumerate(properties):
-            attribute = p["property"]
+        for p in properties:
+            
+            if not p["property"] in _df.columns:
+                _df = self._add_property(_df, p)
 
-            # if project card specifies an existing value in the network
-            #   check and see if the existing value in the network matches
-            if p.get("existing"):
-                network_values = self.links_df.loc[link_idx, attribute].tolist()
-                if not set(network_values).issubset([p.get("existing")]):
-                    WranglerLogger.warning(
-                        "Existing value defined for {} in project card does "
-                        "not match the value in the roadway network for the "
-                        "selected links".format(attribute)
-                    )
+            #WranglerLogger.debug(f"****\n{p}\n DF\n{_df[p['property']]}")
+            _df.at[df_idx, p["property"]] = self._update_property(
+                _df.loc[df_idx, p["property"]], p
+            )
 
-            if in_place:
-                if "set" in p.keys():
-                    self.links_df.loc[link_idx, attribute] = p["set"]
-                else:
-                    self.links_df.loc[link_idx, attribute] = (
-                        self.links_df.loc[link_idx, attribute] + p["change"]
-                    )
-            else:
-                if i == 0:
-                    updated_network = copy.deepcopy(self)
+        _property_names = [p["property"] for p in properties]
+        WranglerLogger.info(
+            f"Updated following {geometry_type} properties: \
+            {','.join(_property_names)}"
+        )
 
-                if "set" in p.keys():
-                    updated_network.links_df.loc[link_idx, attribute] = p["set"]
-                else:
-                    updated_network.links_df.loc[link_idx, attribute] = (
-                        updated_network.links_df.loc[link_idx, attribute] + p["change"]
-                    )
+        if geometry_type == "node":
+            _df.at[df_idx] = self.update_node_geometry(nodes_df=_df.loc[[df_idx]])
 
-                if i == len(properties) - 1:
-                    return updated_network
+        return _net
 
     def apply_managed_lane_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
@@ -1571,6 +1787,9 @@ class RoadwayNetwork(object):
                     updated_network.links_df.at[idx, attribute] = attr_value
 
                     if p == len(properties):
+                        updated_network.nodes_df = self.update_node_geometry(
+                            nodes_df=updated_network.nodes_df
+                        )
                         return updated_network
                     else:
                         p = p + 1
@@ -1588,6 +1807,9 @@ class RoadwayNetwork(object):
 
         .. todo:: validate links and nodes dictionary
         """
+        WranglerLogger.debug(
+            f"Adding New Roadway Features...\n-Links:\n{links}\n-Nodes:\n{nodes}"
+        )
 
         def _add_dict_to_df(df, new_dict):
             df_column_names = df.columns
@@ -1638,6 +1860,7 @@ class RoadwayNetwork(object):
 
             for node in nodes:
                 self.nodes_df = _add_dict_to_df(self.nodes_df, node)
+            self.nodes_df = self.update_node_geometry()
 
         if links is not None:
             for link in links:

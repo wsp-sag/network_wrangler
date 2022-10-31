@@ -4,7 +4,7 @@
 import os
 import yaml
 import json
-from typing import List
+from typing import Any, Collection, Mapping
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -195,31 +195,41 @@ class ProjectCard(object):
             WranglerLogger.error(exc.message)
 
     @staticmethod
-    def build_link_selection_query(
-        selection: dict,
-        unique_model_link_identifiers: [],
-        mode: List[str] = ["drive_access"],
-        ignore=[],
+    def build_selection_query(
+        selection: Mapping[str, Any],
+        type: str = "link",
+        unique_ids: Collection[str] = [],
+        mode: Collection[str] = ["drive_access"],
+        ignore: Collection[str] = [],
     ):
+        """Generates the query for selecting links within links_df.
+
+        Args:
+            selection: Selection dictionary from project card.
+            type: one of "link" or "node"
+            unique_ids: Properties which are unique in network and can be used
+                for selecting individual links or nodes without other properties.
+            mode: Limits selection to certain modes.
+                Defaults to ["drive_access"].
+            ignore: _description_. Defaults to [].
+
+        Returns:
+            _type_: _description_
+        """
         sel_query = "("
         count = 0
 
-        selection_keys = [k for li in selection["link"] for k, v in li.items()]
-        num_unique_model_link_identifiers = len(
-            set(unique_model_link_identifiers).intersection(selection_keys)
-        )
-        unique_model_link_identifer_exist = num_unique_model_link_identifiers > 0
+        selection_keys = [k for li in selection[type] for k, v in li.items()]
 
-        for li in selection["link"]:
+        unique_ids_sel = list(set(unique_ids) & set(selection_keys))
+
+        for li in selection[type]:
             for key, value in li.items():
 
                 if key in ignore:
                     continue
 
-                if (
-                    unique_model_link_identifer_exist
-                    and key not in unique_model_link_identifiers
-                ):
+                if unique_ids_sel and key not in unique_ids:
                     continue
 
                 count = count + 1
@@ -241,18 +251,13 @@ class ProjectCard(object):
                 else:
                     sel_query = sel_query + key + "==" + str(value)
 
-                if not unique_model_link_identifer_exist and count != (
-                    len(selection["link"]) - len(ignore)
-                ):
+                if not unique_ids_sel and count != (len(selection[type]) - len(ignore)):
                     sel_query = sel_query + " and "
 
-                if (
-                    unique_model_link_identifer_exist
-                    and count != num_unique_model_link_identifiers
-                ):
+                if unique_ids_sel and count != len(unique_ids_sel):
                     sel_query = sel_query + " and "
 
-        if not unique_model_link_identifer_exist:
+        if not unique_ids_sel:
             if count > 0:
                 sel_query = sel_query + " and "
 
