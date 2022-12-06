@@ -630,17 +630,17 @@ class TransitNetwork(object):
         else:
             _apply_individual_change(project_card_dictionary)
 
-    def apply_python_calculation(
-        self, pycode: str, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
+ 
+    def apply_python_calculation(self, pycode: str) -> "TransitNetwork":
         """
         Changes roadway network object by executing pycode.
 
         Args:
             pycode: python code which changes values in the roadway network object
-            in_place: update self or return a new roadway network object
         """
+        net = copy.deepcopy(self)
         exec(pycode)
+        return net
 
     def select_transit_features(self, selection: dict) -> pd.Series:
         """
@@ -784,36 +784,47 @@ class TransitNetwork(object):
         return self.feed.trips[self.feed.trips.shape_id.isin(shape_ids)].trip_id
 
     def apply_transit_feature_change(
-        self, trip_ids: pd.Series, properties: list, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
+        self,
+        trip_ids: pd.Series,
+        properties: list,
+    ) -> "TransitNetwork":
         """
         Changes the transit attributes for the selected features based on the
         project card information passed
 
         Args:
+            net: transit network to manipulate
             trip_ids : pd.Series
                 all trip_ids to apply change to
             properties : list of dictionaries
                 transit properties to change
-            in_place : bool
-                whether to apply changes in place or return a new network
 
         Returns:
             None
         """
+        net = copy.deepcopy(self)
+
         for i in properties:
             if i["property"] in ["headway_secs"]:
-                self._apply_transit_feature_change_frequencies(trip_ids, i, in_place)
+                net = TransitNetwork._apply_transit_feature_change_frequencies(
+                    net, trip_ids, i
+                )
 
             elif i["property"] in ["routing"]:
-                self._apply_transit_feature_change_routing(trip_ids, i, in_place)
+                net = TransitNetwork._apply_transit_feature_change_routing(
+                    net, trip_ids, i
+                )
 
     def _apply_transit_feature_change_routing(
-        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
-        shapes = self.feed.shapes.copy()
-        stop_times = self.feed.stop_times.copy()
-        stops = self.feed.stops.copy()
+        self,
+        trip_ids: pd.Series,
+        properties: dict,
+    ) -> TransitNetwork:
+
+        net = copy.deepcopy(self)
+        shapes = net.feed.shapes.copy()
+        stop_times = net.feed.stop_times.copy()
+        stops = net.feed.stops.copy()
 
         # A negative sign in "set" indicates a traversed node without a stop
         # If any positive numbers, stops have changed
@@ -835,7 +846,7 @@ class TransitNetwork(object):
             ]
 
         # Replace shapes records
-        trips = self.feed.trips  # create pointer rather than a copy
+        trips = net.feed.trips  # create pointer rather than a copy
         shape_ids = trips[trips["trip_id"].isin(trip_ids)].shape_id
         for shape_id in shape_ids:
             # Check if `shape_id` is used by trips that are not in
@@ -917,7 +928,7 @@ class TransitNetwork(object):
             # If node IDs in properties["set_stops"] are not already
             # in stops.txt, create a new stop_id for them in stops
             existing_fk_ids = set(stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist())
-            nodes_df = self.road_net.nodes_df.loc[
+            nodes_df = net.road_net.nodes_df.loc[
                 :, [TransitNetwork.STOPS_FOREIGN_KEY, "X", "Y"]
             ]
             for fk_i in properties["set_stops"]:
@@ -1025,22 +1036,17 @@ class TransitNetwork(object):
                     sort=False,
                 )
 
-        # Replace self if in_place, else return
-        if in_place:
-            self.feed.shapes = shapes
-            self.feed.stops = stops
-            self.feed.stop_times = stop_times
-        else:
-            updated_network = copy.deepcopy(self)
-            updated_network.feed.shapes = shapes
-            updated_network.feed.stops = stops
-            updated_network.feed.stop_times = stop_times
-            return updated_network
+            net.feed.shapes = shapes
+            net.feed.stops = stops
+            net.feed.stop_times = stop_times
+            return net
 
     def _apply_transit_feature_change_frequencies(
-        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
-        freq = self.feed.frequencies.copy()
+        self, trip_ids: pd.Series, properties: dict
+    ) -> TransitNetwork:
+
+        net = copy.deepcopy(self)
+        freq = net.feed.frequencies.copy()
 
         # Grab only those records matching trip_ids (aka selection)
         freq = freq[freq.trip_id.isin(trip_ids)]
@@ -1060,29 +1066,30 @@ class TransitNetwork(object):
         else:
             build_value = [i + properties["change"] for i in freq.headway_secs]
 
-        # Update self or return a new object
-        q = self.feed.frequencies.trip_id.isin(freq["trip_id"])
-        if in_place:
-            self.feed.frequencies.loc[q, properties["property"]] = build_value
-        else:
-            updated_network = copy.deepcopy(self)
-            updated_network.loc[q, properties["property"]] = build_value
-            return updated_network
+        q = net.feed.frequencies.trip_id.isin(freq["trip_id"])
+
+        net.loc[q, properties["property"]] = build_value
+        return net
 
     def apply_transit_managed_lane(
-        self, trip_ids: pd.Series, node_ids: list, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
+        self,
+        trip_ids: pd.Series,
+        node_ids: list,
+    ) -> TransitNetwork:
+
+        net = copy.deepcopy(self)
+
         # Traversed nodes without a stop should be negative integers
-        all_stops = self.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
+        all_stops = net.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
         node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
 
-        self._apply_transit_feature_change_routing(
+        TransitNetwork._apply_transit_feature_change_routing(
+            net,
             trip_ids=trip_ids,
             properties={
                 "existing": node_ids,
                 "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids),
             },
-            in_place=in_place,
         )
 
 

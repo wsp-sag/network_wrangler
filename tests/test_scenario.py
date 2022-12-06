@@ -190,7 +190,7 @@ query_tests = [
         # SELECTION 1
         {
             "selection": {
-                "link": [{"name": ["6th", "Sixth", "sixth"]}],
+                "links": [{"name": ["6th", "Sixth", "sixth"]}],
                 "A": {"osm_node_id": "187899923"},  # start searching for segments at A
                 "B": {"osm_node_id": "187865924"},  # end at B
             },
@@ -207,7 +207,7 @@ query_tests = [
         # SELECTION 2
         {
             "selection": {
-                "link": [{"name": ["6th", "Sixth", "sixth"]}],
+                "links": [{"name": ["6th", "Sixth", "sixth"]}],
                 "A": {"osm_node_id": "187899923"},  # start searching for segments at A
                 "B": {"osm_node_id": "187865924"},  # end at B
             },
@@ -221,7 +221,7 @@ query_tests = [
         # SELECTION 3
         {
             "selection": {
-                "link": [
+                "links": [
                     {
                         "name": ["6th", "Sixth", "sixth"]
                     },  # find streets that have one of the various forms of 6th
@@ -247,7 +247,7 @@ query_tests = [
         # SELECTION 4
         {
             "selection": {
-                "link": [
+                "links": [
                     {
                         "name": ["6th", "Sixth", "sixth"]
                     },  # find streets that have one of the various forms of 6th
@@ -273,7 +273,7 @@ query_tests = [
 def test_query_builder(request, test_spec):
     selection, answer = test_spec
 
-    sel_query = ProjectCard.build_link_selection_query(
+    sel_query = ProjectCard.build_selection_query(
         selection=selection["selection"],
         unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
         ignore=selection["ignore"],

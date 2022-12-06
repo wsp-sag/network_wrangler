@@ -102,7 +102,7 @@ def test_location_reference_offset(request):
 
     print("--Finished:", request.node.name)
 
-@pytest.mark.menow
+
 def test_point_from_xy(request):
     from network_wrangler.utils import point_from_xy
     from numpy.testing import assert_almost_equal

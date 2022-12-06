@@ -6,7 +6,7 @@ dependencies:
   conflicts: []
 category: Parallel Managed lanes
 facility:
-  link:
+  links:
     - model_link_id:
       - 390239
       - 391206

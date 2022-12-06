@@ -128,28 +128,28 @@ def test_quick_roadway_read_write(request):
     "selection",
     [
         {  # SELECTION 1
-            "link": [{"name": ["6th", "Sixth", "sixth"]}],
+            "links": [{"name": ["6th", "Sixth", "sixth"]}],
             "A": {"osm_node_id": "187899923"},
             "B": {"osm_node_id": "187865924"},
             "answer": ["187899923", "187858777", "187923585", "187865924"],
         },
         {  # SELECTION 2
-            "link": [{"name": ["6th", "Sixth", "sixth"]}],
+            "links": [{"name": ["6th", "Sixth", "sixth"]}],
             "A": {"osm_node_id": "187899923"},  # start searching for segments at A
             "B": {"osm_node_id": "187942339"},
         },
         {  # SELECTION 3
-            "link": [{"name": ["6th", "Sixth", "sixth"]}, {"lanes": [1, 2]}],
+            "links": [{"name": ["6th", "Sixth", "sixth"]}, {"lanes": [1, 2]}],
             "A": {"osm_node_id": "187899923"},  # start searching for segments at A
             "B": {"osm_node_id": "187942339"},
         },
         {  # SELECTION 4
-            "link": [{"name": ["I 35E"]}],
+            "links": [{"name": ["I 35E"]}],
             "A": {"osm_node_id": "961117623"},  # start searching for segments at A
             "B": {"osm_node_id": "2564047368"},
         },
         {  # SELECTION 5
-            "link": [
+            "links": [
                 {"name": ["6th", "Sixth", "sixth"]},
                 {"model_link_id": [2846, 2918]},
                 {"lanes": [1, 2]},
@@ -231,7 +231,7 @@ def test_apply_roadway_feature_change(request, apply_feature_change_project_card
     orig_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
     print("Original Links:\n", orig_links)
 
-    my_net.apply_roadway_feature_change(
+    my_net = my_net.apply_roadway_feature_change(
         my_net.select_roadway_features(project_card.facility), project_card.properties
     )
 
@@ -260,7 +260,7 @@ def test_add_managed_lane(request):
     ]
     print("Original Links:\n", orig_links)
 
-    net.apply_managed_lane_feature_change(
+    net = net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
     )
 
@@ -291,7 +291,7 @@ def test_add_managed_lane_complex(request):
     ]
     print("Original Links:\n", orig_links)
 
-    net.apply_managed_lane_feature_change(
+    net = net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
     )
 
@@ -323,7 +323,7 @@ def test_managed_lane_change_functionality(request):
     ]
     print("Original Links:\n", orig_links)
 
-    net.apply_managed_lane_feature_change(
+    net = net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
     )
 
@@ -369,7 +369,7 @@ def test_add_default_value(request):
 
     attributes_to_update = [p["property"] for p in project_card.properties]
 
-    net.apply_roadway_feature_change(
+    net = net.apply_roadway_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
     )
 
@@ -404,7 +404,7 @@ def test_add_adhoc_managed_lane_field(request):
     print("\n--Starting:", request.node.name)
     net = _read_small_net()
 
-    facility = {"link": [{"model_link_id": 224}]}
+    facility = {"links": [{"model_link_id": 224}]}
     selected_link_indices = net.select_roadway_features(facility)
     net.links_df["ML_my_ad_hoc_field"] = 0
     net.links_df["ML_my_ad_hoc_field"].loc[selected_link_indices] = 22.5
@@ -446,7 +446,7 @@ def test_add_adhoc_managed_lane_field(request):
     print("\n--Starting:", request.node.name)
     net = _read_small_net()
 
-    facility = {"link": [{"model_link_id": 224}]}
+    facility = {"links": [{"model_link_id": 224}]}
     selected_link_indices = net.select_roadway_features(facility)
     net.links_df["ML_my_ad_hoc_field"] = 0
     net.links_df["ML_my_ad_hoc_field"].loc[selected_link_indices] = 22.5
@@ -499,7 +499,7 @@ def test_add_adhoc_field_from_card(request):
 
     attributes_to_update = [p["property"] for p in project_card.properties]
 
-    net.apply_roadway_feature_change(
+    net = net.apply_roadway_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
     )
 
@@ -600,7 +600,7 @@ def test_add_delete_roadway_project_card(request):
                 if m_l:
                     missing_links += m_l
 
-        net.apply(project_card.__dict__)
+        net = net.apply(project_card.__dict__)
 
         rev_links_count = len(net.links_df)
         rev_nodes_count = len(net.nodes_df)
@@ -738,12 +738,12 @@ def test_write_model_net(request):
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path)
 
-    net.apply(project_card.__dict__)
+    net = net.apply(project_card.__dict__)
     net.links_df.to_csv(os.path.join(SCRATCH_DIR, "in_ml_links.csv"), index=False)
     net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "in_ml_nodes.csv"), index=False)
     net.shapes_df.to_csv(os.path.join(SCRATCH_DIR, "in_ml_shape.csv"), index=False)
 
-    ml_net = net.create_managed_lane_network(in_place=False)
+    ml_net = net.create_managed_lane_network()
     ml_net.links_df.to_csv(os.path.join(SCRATCH_DIR, "out_ml_links.csv"), index=False)
     ml_net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "out_ml_nodes.csv"), index=False)
     ml_net.shapes_df.to_csv(os.path.join(SCRATCH_DIR, "out_ml_shape.csv"), index=False)
@@ -882,7 +882,7 @@ def test_existing_managed_lane_apply(request):
 
     print("Existing # of ML links in the network:", existing_ml_links)
 
-    net.apply_managed_lane_feature_change(
+    net = net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
     )
 
@@ -1002,10 +1002,10 @@ def test_create_ml_network_shape(request):
     orig_links_count = len(net.links_df)
     orig_shapes_count = len(net.shapes_df)
 
-    net.apply(project_card_dictionary)
+    net = net.apply(project_card_dictionary)
     ml_net = net.create_managed_lane_network()
 
-    base_model_link_ids = project_card.__dict__["facility"]["link"][0]["model_link_id"]
+    base_model_link_ids = project_card.__dict__["facility"]["links"][0]["model_link_id"]
     ml_model_link_ids = [
         RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR + x for x in base_model_link_ids
     ]
@@ -1101,7 +1101,7 @@ def test_apply_pycode_roadway(request):
         "BEFORE CHANGE...\n",
         net.links_df.loc[net.links_df["lanes"] == 4, ["model_link_id", "lanes"]],
     )
-    net.apply(
+    net = net.apply(
         {
             "category": "Calculated Roadway",
             "project": "megaroads",
@@ -1172,7 +1172,7 @@ def test_managed_lane_restricted_access_egress(request):
     project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path, validate=False)
 
-    net.apply_managed_lane_feature_change(
+    net = net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
     )
 
@@ -1185,7 +1185,7 @@ def test_managed_lane_restricted_access_egress(request):
     ]
     dummy_links_count = len(dummy_links)
 
-    base_model_link_ids = project_card.__dict__["facility"]["link"][0]["model_link_id"]
+    base_model_link_ids = project_card.__dict__["facility"]["links"][0]["model_link_id"]
     ml_model_link_ids = [
         RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR + x for x in base_model_link_ids
     ]
@@ -1264,11 +1264,11 @@ def test_add_nodes(request):
         "model_node_id": 1234567,
     }
 
-    net.apply(
+    net = net.apply(
         {
             "category": "add new roadway",
             "project": "test adding a node",
-            "node": [node_properties],
+            "nodes": [node_properties],
         }
     )
 
@@ -1280,7 +1280,7 @@ def test_add_nodes(request):
     bad_node_properties = node_properties.copy()
     bad_node_properties["model_node_id"] = (3494,)  # should already be in network
     try:
-        net.apply(
+        net = net.apply(
             {
                 "category": "add new roadway",
                 "project": "test adding a node already in network",
@@ -1293,16 +1293,17 @@ def test_add_nodes(request):
 
 @pytest.mark.menow
 def test_change_node_xy(request):
+    """Tests if X and Y property changes from a project card also update the node geometry."""
     print("\n--Starting:", request.node.name)
-
     net = _read_small_net()
 
-    _node = net.nodes_df.loc[net.nodes_df.model_node_id == 3230].iloc[0]
-    WranglerLogger.info(f"Original Node:\n{_node}")
+    _test_node_idx = net.nodes_df.index[0]
+
+    WranglerLogger.info(f"Original Node:\n{net.nodes_df.loc[_test_node_idx]}")
 
     facility = {
-        "node": [
-            {"model_node_id": [3230]},
+        "nodes": [
+            {"model_node_id": [_test_node_idx]},
         ]
     }
     properties = [
@@ -1310,7 +1311,7 @@ def test_change_node_xy(request):
         {"property": "Y", "set": 1000000},
     ]
 
-    net.apply(
+    net = net.apply(
         {
             "category": "Roadway Property Change",
             "project": "Update node geometry",
@@ -1319,7 +1320,6 @@ def test_change_node_xy(request):
         }
     )
 
-    _node = net.nodes_df.loc[net.nodes_df.model_node_id == 3230].iloc[0]
-    WranglerLogger.info(f"Updated Node:\n{_node}")
+    WranglerLogger.info(f"Updated Node:\n{net.nodes_df.loc[_test_node_idx]}")
 
-    assert _node.geometry.x == -1000
+    assert net.nodes_df.loc[_test_node_idx].geometry.x == -1000

@@ -6,7 +6,7 @@ changes:
     - 477533
 - category: Roadway Property Change
   facility:
-    link:
+    links:
     - model_link_id:
       - 224
   properties:
@@ -20,7 +20,7 @@ changes:
     set: 1
 - category: Roadway Property Change
   facility:
-    link:
+    links:
     - model_link_id:
       - 280
       - 282

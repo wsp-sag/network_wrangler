@@ -197,7 +197,7 @@ class ProjectCard(object):
     @staticmethod
     def build_selection_query(
         selection: Mapping[str, Any],
-        type: str = "link",
+        type: str = "links",
         unique_ids: Collection[str] = [],
         mode: Collection[str] = ["drive_access"],
         ignore: Collection[str] = [],
@@ -206,7 +206,7 @@ class ProjectCard(object):
 
         Args:
             selection: Selection dictionary from project card.
-            type: one of "link" or "node"
+            type: one of "links" or "nodes"
             unique_ids: Properties which are unique in network and can be used
                 for selecting individual links or nodes without other properties.
             mode: Limits selection to certain modes.

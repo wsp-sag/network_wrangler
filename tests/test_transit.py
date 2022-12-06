@@ -224,7 +224,7 @@ def test_apply_transit_feature_change_from_projectcard(request):
 
         project_card_path = os.path.join(STPAUL_DIR, "project_cards", test["file"])
         project_card = ProjectCard.read(project_card_path)
-        net.apply_transit_feature_change(
+        net = net.apply_transit_feature_change(
             net.select_transit_features(project_card.facility), project_card.properties
         )
 
@@ -259,7 +259,7 @@ def test_wrong_existing(request):
     )
 
     with pytest.raises(Exception):
-        net.apply_transit_feature_change(
+        net = net.apply_transit_feature_change(
             selected_trips, [{"property": "headway_secs", "existing": 553, "set": 900}]
         )
 

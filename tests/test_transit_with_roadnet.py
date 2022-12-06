@@ -52,7 +52,7 @@ def test_project_card(request):
         STPAUL_DIR, "project_cards", "12_transit_shape_change.yml"
     )
     project_card = ProjectCard.read(project_card_path)
-    transit_net.apply_transit_feature_change(
+    transit_net = transit_net.apply_transit_feature_change(
         transit_net.select_transit_features(project_card.facility),
         project_card.properties,
     )
@@ -126,33 +126,13 @@ def test_wo_existing(request):
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net
-    # A new node ID (not in stops.txt) should fail right now
-    """with pytest.raises(Exception):
-        transit_net.apply_transit_feature_change(
-            trip_ids=transit_net.select_transit_features(
-                {"trip_id": ["14944022-JUN19-MVS-BUS-Weekday-01"]}
-            ),
-            properties=[
-                {
-                    "property": "routing",
-                    "set": [1]
-                }
-            ]
-        )"""
 
-    transit_net.apply_transit_feature_change(
+    transit_net = transit_net.apply_transit_feature_change(
         trip_ids=transit_net.select_transit_features(
             {"trip_id": ["14986385-JUN19-MVS-BUS-Weekday-01"]}
         ),
         properties=[{"property": "routing", "set": [75318]}],
     )
-
-    # Shapes
-    """result = transit_net.feed.shapes[
-        transit_net.feed.shapes["shape_id"] == "210005"
-    ]["shape_model_node_id"].tolist()
-    answer = ["1"]
-    assert result == answer"""
 
     # Stops
     result = transit_net.feed.stop_times[
