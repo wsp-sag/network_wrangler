@@ -8,6 +8,8 @@ from shapely.geometry import LineString, Point
 from shapely.ops import transform
 from geographiclib.geodesic import Geodesic
 
+from typing import Collection, List
+
 from .logger import WranglerLogger
 
 
@@ -245,7 +247,7 @@ def haversine_distance(origin: list, destination: list):
 
 def create_unique_shape_id(line_string: LineString):
     """
-    Creates a unique hash id using the coordinates of the geomtery
+    Creates a unique hash id using the coordinates of the geometry using first and last locations.
 
     Args:
     line_string: Line Geometry as a LineString
@@ -263,29 +265,27 @@ def create_unique_shape_id(line_string: LineString):
     return hash
 
 
-def create_location_reference_from_nodes(node_a, node_b):
+def location_reference_from_nodes(node_list: Collection[pd.Series]):
     """
     Creates a location reference using the node a and node b coordinates
 
     Args:
-    node_a: Node A as Series
-    node_b: Node B as Series
+        node_list: List of nodes represented as series or dicts with "X" and "Y" values.
 
     """
     out_location_reference = [
-        {"sequence": 1, "point": [node_a["X"], node_a["Y"]]},
-        {"sequence": 2, "point": [node_b["X"], node_b["Y"]]},
+        {"sequence": idx+1, "point": [n["X"], n["Y"]]} for idx, n in enumerate(node_list)
     ]
 
     return out_location_reference
 
 
-def create_line_string(location_reference: list):
+def line_string_from_location_references(location_references: list):
     """
-    Creates a geometry as a LineString using location reference
+    Creates a geometry as a LineString using a list of location references.
     """
 
-    return LineString([location_reference[0]["point"], location_reference[1]["point"]])
+    return LineString( [lr["point"] for lr in location_references] )
 
 
 # key:value (from espg, to espg): pyproj transform object
@@ -319,3 +319,15 @@ def point_from_xy(x, y, xy_crs: int = 4326, point_crs: int = 4326):
         )
 
     return transform(transformers[(xy_crs, point_crs)].transform, point)
+
+def update_points_in_linestring(linestring: LineString, updated_coords: List[float], position:int):
+    """Replaces 
+
+    Args:
+        linestring (LineString): _description_
+        point_coords (List[float]): _description_
+        position (int): _description_
+    """    
+    coords = [c for c in linestring.coords]
+    coords[position] = updated_coords
+    return LineString(coords)

@@ -1292,9 +1292,8 @@ def test_add_nodes(request):
 
 
 @pytest.mark.menow
-def test_change_node_xy(request):
+def test_change_node_xy():
     """Tests if X and Y property changes from a project card also update the node geometry."""
-    print("\n--Starting:", request.node.name)
     net = _read_small_net()
 
     _test_node_idx = net.nodes_df.index[0]
