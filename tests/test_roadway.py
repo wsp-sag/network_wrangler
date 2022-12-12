@@ -1296,7 +1296,11 @@ def test_change_node_xy():
     """Tests if X and Y property changes from a project card also update the node geometry."""
     net = _read_small_net()
 
-    _test_node_idx = net.nodes_df.index[0]
+    _test_link = net.links_df[0]
+    _test_link_idx = _test_link.index
+    _test_node = net.nodes_df[_test_link["A"]]
+    _test_node_idx = _test_node.index[0]
+    
 
     WranglerLogger.info(f"Original Node:\n{net.nodes_df.loc[_test_node_idx]}")
 
@@ -1322,3 +1326,5 @@ def test_change_node_xy():
     WranglerLogger.info(f"Updated Node:\n{net.nodes_df.loc[_test_node_idx]}")
 
     assert net.nodes_df.loc[_test_node_idx].geometry.x == -1000
+
+    assert net.links_df.loc[_test_link_idx].geometry.coords[0][0] == -1000

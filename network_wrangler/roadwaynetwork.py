@@ -1553,10 +1553,12 @@ class RoadwayNetwork(object):
         self, updated_nodes: List
     ) -> gpd.GeoDataFrame:
         """Adds or updates the geometry of the nodes in the network based on XY coordinates.
+        
         Assumes XY are in self.crs.
+        Also updates the geometry of links and shapes that reference these nodes.
 
         Args:
-            updated_nodes: List of nodes to udpate.
+            updated_nodes: List of nodes to update.
 
         Returns:
            gpd.GeoDataFrame: nodes geodataframe with updated geometry.
@@ -1576,8 +1578,8 @@ class RoadwayNetwork(object):
             ),
             axis=1,
         )
-        self.nodes_df = self.nodes_df.merge(updated_nodes_df)
-        self._update_link_geometry(updated_nodes)
+        self.nodes_df.update(updated_nodes_df[[RoadwayNetwork.UNIQUE_NODE_KEY,"geometry"]])
+        self._update_link_and_shape_geometry_from_nodes(updated_nodes)
 
     def links_with_nodes(self,node_id_list:list) -> gpd.GeoDataFrame:
         """Returns a links geodataframe which start or end at the nodes in the list.
@@ -1591,11 +1593,15 @@ class RoadwayNetwork(object):
         _selected_links_df = self.links_df.query(_query, engine="python")
         return _selected_links_df
 
-    def _update_link_and_shape_geometry(
+    def _update_link_and_shape_geometry_from_nodes(
         self,
         updated_node_id_list: list,
     ) -> None:
-        """Updates the locationReferences and geometry of the links and shapes in the network.
+        """Updates the locationReferences & geometry for links & shapes for a given node_id list.
+
+        NOTES:
+         - For shapes, this will mutate the geometry of a shape in place for the start and end node
+            ...but not the nodes in-between.  Something to consider...
 
         Args:
             updated_node_id_list: List of nodes with updated geometry.
@@ -1638,8 +1644,8 @@ class RoadwayNetwork(object):
                 axis = 1,
             )
 
-        self.links_df = self.links_df.merge(updated_links_df)
-        self.shapes_df = self.shapes_df.merge(updated_shapes_df)
+        self.links_df.update(updated_links_df[["RoadwayNetwork.LINK_FOREIGN_KEY","geometry","locationReferences"]])
+        self.shapes_df.update(updated_shapes_df[["RoadwayNetwork.SHAPE_FOREIGN_KEY","geometry"]])
 
     def _add_link_geometry(self,added_links_df = None):
         # add location reference and geometry for new links
@@ -1668,8 +1674,9 @@ class RoadwayNetwork(object):
             if x["new_link"] == 1
             else x[RoadwayNetwork.UNIQUE_SHAPE_KEY],
             axis=1,
+        )
 
-        self._add_shapes_from_links()
+        self._add_shapes_from_links(added_links_df)
         
 
     def _add_shapes_from_links(self, added_links_df) -> None:
