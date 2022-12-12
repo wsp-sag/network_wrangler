@@ -12,8 +12,8 @@ from .scenario import net_to_mapbox
 from .utils import point_df_to_geojson, links_df_to_json, make_slug
 from .utils import parse_time_spans, offset_location_reference, haversine_distance
 from .utils import create_unique_shape_id
-from .utils import create_location_reference_from_nodes
-from .utils import create_line_string
+from .utils import location_reference_from_nodes
+from .utils import line_string_from_location_references
 
 
 __all__ = [
@@ -30,8 +30,8 @@ __all__ = [
     "offset_location_reference",
     "haversine_distance",
     "create_unique_shape_id",
-    "create_location_reference_from_nodes",
-    "create_line_string",
+    "location_reference_from_nodes",
+    "line_string_from_location_references",
     "net_to_mapbox",
 ]
 

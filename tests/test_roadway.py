@@ -1296,13 +1296,14 @@ def test_change_node_xy():
     """Tests if X and Y property changes from a project card also update the node geometry."""
     net = _read_small_net()
 
-    _test_link = net.links_df[0]
-    _test_link_idx = _test_link.index
-    _test_node = net.nodes_df[_test_link["A"]]
-    _test_node_idx = _test_node.index[0]
+    _test_link = net.links_df.iloc[0]
+    _test_link_idx = _test_link[RoadwayNetwork.UNIQUE_LINK_KEY]
+    _test_node = net.nodes_df.loc[[_test_link["A"]]].iloc[0]
+    _test_node_idx = _test_node[[RoadwayNetwork.UNIQUE_NODE_KEY]].iloc[0]
     
-
-    WranglerLogger.info(f"Original Node:\n{net.nodes_df.loc[_test_node_idx]}")
+    WranglerLogger.debug(f"Node Index: {_test_node_idx}")
+    WranglerLogger.debug(f"Link Index: {_test_link_idx}")
+    WranglerLogger.info(f"Original Node (Index: {_test_node_idx}):\n{net.nodes_df.loc[_test_node_idx]}")
 
     facility = {
         "nodes": [
@@ -1327,4 +1328,4 @@ def test_change_node_xy():
 
     assert net.nodes_df.loc[_test_node_idx].geometry.x == -1000
 
-    assert net.links_df.loc[_test_link_idx].geometry.coords[0][0] == -1000
+    assert net.links_df.loc[net.links_df[RoadwayNetwork.UNIQUE_LINK_KEY] == 224].geometry[0].coords[0][0] == -1000
