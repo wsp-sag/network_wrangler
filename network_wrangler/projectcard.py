@@ -139,7 +139,7 @@ class ProjectCard(object):
         Writes project card dictionary to YAML file
         """
         if not filename:
-            from network_wrangler.utils import make_slug
+            from network_wrangler.utils.geo import make_slug
 
             filename = make_slug(self.project) + ".yml"
 

@@ -1,5 +1,4 @@
 import os
-import time
 
 import pytest
 
@@ -55,150 +54,6 @@ def _read_stpaul_net():
         fast=True,
     )
     return net
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_roadway_read_write(request):
-    print("\n--Starting:", request.node.name)
-
-    out_prefix = "t_readwrite"
-    out_shape_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "shape.geojson")
-    out_link_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "link.json")
-    out_node_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "node.geojson")
-
-    time0 = time.time()
-
-    net = RoadwayNetwork.read(
-        link_file=SMALL_LINK_FILE,
-        node_file=SMALL_NODE_FILE,
-        shape_file=SMALL_SHAPE_FILE,
-        fast=True,
-    )
-    time1 = time.time()
-    print("Writing to: {}".format(SCRATCH_DIR))
-    net.write(filename=out_prefix, path=SCRATCH_DIR)
-    time2 = time.time()
-    net_2 = RoadwayNetwork.read(
-        link_file=out_link_file, node_file=out_node_file, shape_file=out_shape_file
-    )
-    time3 = time.time()
-
-    read_time1 = time1 - time0
-    read_time2 = time3 - time2
-    write_time = time2 - time1
-
-    print("TIME, read (w/out valdiation, with): {},{}".format(read_time1, read_time2))
-    print("TIME, write:{}".format(write_time))
-    """
-    # right now don't have a good way of ignoring differences in rounding
-    with open(shape_file, 'r') as s1:
-        og_shape = json.loads(s1.read())
-        #og_shape.replace('\r', '').replace('\n', '').replace(' ','')
-    with open(os.path.join('scratch','t_readwrite_shape.geojson'), 'r')  as s2:
-        new_shape = json.loads(s2.read())
-        #new_shape.replace('\r', '').replace('\n', '').replace(' ','')
-    assert(og_shape==new_shape)
-    """
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_quick_roadway_read_write(request):
-    print("\n--Starting:", request.node.name)
-
-    out_prefix = "t_readwrite"
-    out_shape_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "shape.geojson")
-    out_link_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "link.json")
-    out_node_file = os.path.join(SCRATCH_DIR, out_prefix + "_" + "node.geojson")
-    net = RoadwayNetwork.read(
-        link_file=SMALL_LINK_FILE,
-        node_file=SMALL_NODE_FILE,
-        shape_file=SMALL_SHAPE_FILE,
-        fast=True,
-    )
-    net.write(filename=out_prefix, path=SCRATCH_DIR)
-    net_2 = RoadwayNetwork.read(
-        link_file=out_link_file, node_file=out_node_file, shape_file=out_shape_file
-    )
-    print("--Finished:", request.node.name)
-
-
-@pytest.mark.parametrize(
-    "selection",
-    [
-        {  # SELECTION 1
-            "links": [{"name": ["6th", "Sixth", "sixth"]}],
-            "A": {"osm_node_id": "187899923"},
-            "B": {"osm_node_id": "187865924"},
-            "answer": ["187899923", "187858777", "187923585", "187865924"],
-        },
-        {  # SELECTION 2
-            "links": [{"name": ["6th", "Sixth", "sixth"]}],
-            "A": {"osm_node_id": "187899923"},  # start searching for segments at A
-            "B": {"osm_node_id": "187942339"},
-        },
-        {  # SELECTION 3
-            "links": [{"name": ["6th", "Sixth", "sixth"]}, {"lanes": [1, 2]}],
-            "A": {"osm_node_id": "187899923"},  # start searching for segments at A
-            "B": {"osm_node_id": "187942339"},
-        },
-        {  # SELECTION 4
-            "links": [{"name": ["I 35E"]}],
-            "A": {"osm_node_id": "961117623"},  # start searching for segments at A
-            "B": {"osm_node_id": "2564047368"},
-        },
-        {  # SELECTION 5
-            "links": [
-                {"name": ["6th", "Sixth", "sixth"]},
-                {"model_link_id": [2846, 2918]},
-                {"lanes": [1, 2]},
-            ]
-        },
-    ],
-)
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_select_roadway_features(request, selection):
-    print("\n--Starting:", request.node.name)
-    net = _read_stpaul_net()
-    print("--->", selection)
-    net.select_roadway_features(selection)
-
-    print("building a selection key")
-    sel_key = net.build_selection_key(selection)
-
-    print("Features selected:", len(net.selections[sel_key]["selected_links"]))
-    selected_link_indices = net.selections[sel_key]["selected_links"].index.tolist()
-    if "answer" in selection.keys():
-        print("Comparing answer")
-        selected_nodes = [str(selection["A"]["osm_node_id"])] + net.links_df.loc[
-            selected_link_indices, "v"
-        ].tolist()
-        # print("Nodes selected: ",selected_nodes)
-        # print("Expected Answer: ", sel["answer"])
-        assert set(selected_nodes) == set(selection["answer"])
-
-    print("--Finished:", request.node.name)
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_select_roadway_features_from_projectcard(request):
-    print("\n--Starting:", request.node.name)
-    net = _read_stpaul_net()
-    print("Reading project card ...")
-    project_card_name = "3_multiple_roadway_attribute_change.yml"
-
-    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path)
-
-    print("Selecting roadway features ...")
-    sel = project_card.facility
-    selected_link_indices = net.select_roadway_features(sel)
-    print("Features selected:", len(selected_link_indices))
-
-    print("--Finished:", request.node.name)
 
 
 @pytest.mark.parametrize(
@@ -267,9 +122,24 @@ def test_add_managed_lane(request):
     rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
     print("Revised Links:\n", rev_links)
 
-    net.write(filename="test_ml", path=SCRATCH_DIR)
+    net.write(filename="test_ml", model=True, path=SCRATCH_DIR)
 
     print("--Finished:", request.node.name)
+
+
+@pytest.mark.roadway
+@pytest.mark.travis
+def test_add_adhoc_field(request):
+    """
+    Makes sure new fields can be added in the API and be saved and read in again.
+    """
+    print("\n--Starting:", request.node.name)
+    net = _read_stpaul_net()
+    net.links_df["my_ad_hoc_field"] = 22.5
+
+    print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5])
+
+    assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
 
 @pytest.mark.roadway
@@ -337,21 +207,6 @@ def test_managed_lane_change_functionality(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_add_adhoc_field(request):
-    """
-    Makes sure new fields can be added in the API and be saved and read in again.
-    """
-    print("\n--Starting:", request.node.name)
-    net = _read_stpaul_net()
-    net.links_df["my_ad_hoc_field"] = 22.5
-
-    print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5])
-
-    assert net.links_df["my_ad_hoc_field"][0] == 22.5
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_default_value(request):
     """
     Makes sure we can add a new field with a default value
@@ -393,90 +248,6 @@ def test_add_default_value(request):
     )
 
     print("--Finished:", request.node.name)
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_add_adhoc_managed_lane_field(request):
-    """
-    Makes sure new fields can be added to the network for managed lanes that get moved there.
-    """
-    print("\n--Starting:", request.node.name)
-    net = _read_small_net()
-
-    facility = {"links": [{"model_link_id": 224}]}
-    selected_link_indices = net.select_roadway_features(facility)
-    net.links_df["ML_my_ad_hoc_field"] = 0
-    net.links_df["ML_my_ad_hoc_field"].loc[selected_link_indices] = 22.5
-    net.links_df["ML_lanes"] = 0
-    net.links_df["ML_lanes"].loc[selected_link_indices] = 1
-    net.links_df["ML_price"] = 0
-    net.links_df["ML_price"].loc[selected_link_indices] = 1.5
-    net.links_df["managed"] = 0
-    net.links_df["managed"].loc[selected_link_indices] = 1
-    print(
-        "Network with field...\n ",
-        net.links_df[
-            [
-                "model_link_id",
-                "name",
-                "ML_my_ad_hoc_field",
-                "lanes",
-                "ML_lanes",
-                "ML_price",
-                "managed",
-            ]
-        ],
-    )
-    ml_net = net.create_managed_lane_network()
-    print("Managed Lane Network")
-    print(
-        ml_net.links_df[["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]]
-    )
-    # assert net.links_df["my_ad_hoc_field"][0] == 22.5
-    # print("CALCULATED:\n", v_series.loc[selected_link_indices])
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_add_adhoc_managed_lane_field(request):
-    """
-    Makes sure new fields can be added to the network for managed lanes that get moved there.
-    """
-    print("\n--Starting:", request.node.name)
-    net = _read_small_net()
-
-    facility = {"links": [{"model_link_id": 224}]}
-    selected_link_indices = net.select_roadway_features(facility)
-    net.links_df["ML_my_ad_hoc_field"] = 0
-    net.links_df["ML_my_ad_hoc_field"].loc[selected_link_indices] = 22.5
-    net.links_df["ML_lanes"] = 0
-    net.links_df["ML_lanes"].loc[selected_link_indices] = 1
-    net.links_df["ML_price"] = 0
-    net.links_df["ML_price"].loc[selected_link_indices] = 1.5
-    net.links_df["managed"] = 0
-    net.links_df["managed"].loc[selected_link_indices] = 1
-    print(
-        "Network with field...\n ",
-        net.links_df[
-            [
-                "model_link_id",
-                "name",
-                "ML_my_ad_hoc_field",
-                "lanes",
-                "ML_lanes",
-                "ML_price",
-                "managed",
-            ]
-        ],
-    )
-    ml_net = net.create_managed_lane_network()
-    print("Managed Lane Network")
-    print(
-        ml_net.links_df[["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]]
-    )
-    # assert net.links_df["my_ad_hoc_field"][0] == 22.5
-    # print("CALCULATED:\n", v_series.loc[selected_link_indices])
 
 
 @pytest.mark.roadway
@@ -678,159 +449,6 @@ def test_add_delete_roadway_project_card(request):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_export_network_to_csv(request):
-    print("\n--Starting:", request.node.name)
-    net = _read_stpaul_net()
-    net.links_df.to_csv(os.path.join(SCRATCH_DIR, "links_df.csv"), index=False)
-    net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "nodes_df.csv"), index=False)
-
-
-variable_queries = [
-    {"v": "lanes", "category": None, "time_period": ["7:00", "9:00"]},
-    {"v": "ML_price", "category": "sov", "time_period": ["7:00", "9:00"]},
-    {"v": "ML_price", "category": ["hov3", "hov2"], "time_period": ["7:00", "9:00"]},
-]
-
-
-@pytest.mark.parametrize("variable_query", variable_queries)
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_query_roadway_property_by_time_group(request, variable_query):
-    print("\n--Starting:", request.node.name)
-    net = _read_stpaul_net()
-    print("Applying project card...")
-    project_card_path = os.path.join(STPAUL_DIR, "project_cards", "5_managed_lane.yml")
-    project_card = ProjectCard.read(project_card_path, validate=False)
-    net.apply_managed_lane_feature_change(
-        net.select_roadway_features(project_card.facility), project_card.properties
-    )
-    print("Querying Attribute...")
-    print("QUERY:\n", variable_query)
-    v_series = net.get_property_by_time_period_and_group(
-        variable_query["v"],
-        category=variable_query["category"],
-        time_period=variable_query["time_period"],
-    )
-    selected_link_indices = net.select_roadway_features(project_card.facility)
-
-    print("CALCULATED:\n", v_series.loc[selected_link_indices])
-    print("ORIGINAL:\n", net.links_df.loc[selected_link_indices, variable_query["v"]])
-
-    # TODO make test make sure the values are correct.
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_write_model_net(request):
-    print("\n--Starting:", request.node.name)
-
-    print("Reading network ...")
-
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
-
-    print("Reading project card ...")
-    project_card_name = "5_managed_lane.yml"
-    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path)
-
-    net = net.apply(project_card.__dict__)
-    net.links_df.to_csv(os.path.join(SCRATCH_DIR, "in_ml_links.csv"), index=False)
-    net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "in_ml_nodes.csv"), index=False)
-    net.shapes_df.to_csv(os.path.join(SCRATCH_DIR, "in_ml_shape.csv"), index=False)
-
-    ml_net = net.create_managed_lane_network()
-    ml_net.links_df.to_csv(os.path.join(SCRATCH_DIR, "out_ml_links.csv"), index=False)
-    ml_net.nodes_df.to_csv(os.path.join(SCRATCH_DIR, "out_ml_nodes.csv"), index=False)
-    ml_net.shapes_df.to_csv(os.path.join(SCRATCH_DIR, "out_ml_shape.csv"), index=False)
-
-    print("--Finished:", request.node.name)
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_network_connectivity(request):
-    print("\n--Starting:", request.node.name)
-
-    print("Reading network ...")
-
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
-    print("Checking network connectivity ...")
-    print("Drive Network Connected:", net.is_network_connected(mode="drive"))
-    print("--Finished:", request.node.name)
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_get_modal_network(request):
-    print("\n--Starting:", request.node.name)
-
-    mode = "transit"
-    print("Reading network. Mode: {} ...".format(mode))
-
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
-    _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-        net.links_df,
-        net.nodes_df,
-        modes=[mode],
-    )
-
-    test_links_of_selection = _links_df["model_link_id"].tolist()
-    print("TEST - Number of selected links: {}".format(len(test_links_of_selection)))
-
-    mode_variables = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
-
-    control_links_of_selection = []
-    for m in mode_variables:
-        control_links_of_selection.extend(
-            net.links_df.loc[net.links_df[m], "model_link_id"]
-        )
-    print(
-        "CONTROL - Number of selected links: {}".format(len(control_links_of_selection))
-    )
-
-    all_model_link_ids = _links_df["model_link_id"].tolist()
-    print("CONTROL - Number of total links: {}".format(len(all_model_link_ids)))
-
-    assert set(test_links_of_selection) == set(control_links_of_selection)
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_network_connectivity_ignore_single_nodes(request):
-    print("\n--Starting:", request.node.name)
-
-    print("Reading network ...")
-
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
-    print("Assessing network connectivity for walk...")
-    _, disconnected_nodes = net.assess_connectivity(mode="walk", ignore_end_nodes=True)
-    print("{} Disconnected Subnetworks:".format(len(disconnected_nodes)))
-    print("-->\n{}".format("\n".join(list(map(str, disconnected_nodes)))))
-    print("--Finished:", request.node.name)
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
 @pytest.mark.xfail(strict=True)
 def test_add_roadway_links(request):
     print("\n--Starting:", request.node.name)
@@ -989,6 +607,7 @@ def test_add_roadway_shape(request):
 @pytest.mark.roadway
 def test_create_ml_network_shape(request):
     print("\n--Starting:", request.node.name)
+    from network_wrangler.roadway import create_managed_lane_network
 
     print("Reading network ...")
     net = _read_stpaul_net()
@@ -999,11 +618,11 @@ def test_create_ml_network_shape(request):
     project_card = ProjectCard.read(project_card_path, validate=False)
     project_card_dictionary = project_card.__dict__
 
-    orig_links_count = len(net.links_df)
-    orig_shapes_count = len(net.shapes_df)
+    _orig_links_count = len(net.links_df)
+    _orig_shapes_count = len(net.shapes_df)
 
     net = net.apply(project_card_dictionary)
-    ml_net = net.create_managed_lane_network()
+    net = create_managed_lane_network(net)
 
     base_model_link_ids = project_card.__dict__["facility"]["links"][0]["model_link_id"]
     ml_model_link_ids = [
@@ -1016,58 +635,44 @@ def test_create_ml_network_shape(request):
         sum(x) + 2 for x in zip(base_model_link_ids, ml_model_link_ids)
     ]
 
-    gp_links = ml_net.links_df[
-        ml_net.links_df["model_link_id"].isin(base_model_link_ids)
+    gp_links = net.m_links_df[net.m_links_df["model_link_id"].isin(base_model_link_ids)]
+    ml_links = net.m_links_df[net.m_links_df["model_link_id"].isin(ml_model_link_ids)]
+    access_links = net.m_links_df[
+        net.m_links_df["model_link_id"].isin(access_model_link_ids)
     ]
-    ml_links = ml_net.links_df[ml_net.links_df["model_link_id"].isin(ml_model_link_ids)]
-    access_links = ml_net.links_df[
-        ml_net.links_df["model_link_id"].isin(access_model_link_ids)
-    ]
-    egress_links = ml_net.links_df[
-        ml_net.links_df["model_link_id"].isin(egress_model_link_ids)
+    egress_links = net.m_links_df[
+        net.m_links_df["model_link_id"].isin(egress_model_link_ids)
     ]
 
-    rev_links_count = len(ml_net.links_df)
-    rev_shapes_count = len(ml_net.shapes_df)
+    _num_added_links = len(net.links_df) - _orig_links_count
+    _num_added_shapes = len(net.shapes_df) - _orig_shapes_count
 
     ## 1 Num Added links == added shapes
-    assert (rev_links_count - orig_links_count) == (
-        rev_shapes_count - orig_shapes_count
-    )
+    assert _num_added_links == _num_added_shapes
 
     # 2 new ML links, each ML link has 2 more access/egress links for total of 3 links per ML link
     # total new links for 2 ML links will be 6 (2*3)
     _display_c = ["model_link_id", "roadway", "A", "B", "shape_id", "name"]
     assert (
-        len(ml_net.links_df[ml_net.links_df["model_link_id"].isin(ml_model_link_ids)])
+        len(net.m_links_df[net.m_links_df["model_link_id"].isin(ml_model_link_ids)])
         == 2
     ), f"\n***ML Links\n{ml_links[_display_c]}\
         \n***ML Links\n{ml_links[_display_c]}\
         \n***GP Links\n{gp_links[_display_c]}"
 
     assert (
-        len(
-            ml_net.links_df[
-                ml_net.links_df["model_link_id"].isin(access_model_link_ids)
-            ]
-        )
+        len(net.m_links_df[net.m_links_df["model_link_id"].isin(access_model_link_ids)])
         == 2
     ), f"\n***Access Links\n{access_links[_display_c]}\
         \n***ML Links\n{ml_links[_display_c]}\
         \n***GP Links\n{gp_links[_display_c]}"
 
     assert (
-        len(
-            ml_net.links_df[
-                ml_net.links_df["model_link_id"].isin(egress_model_link_ids)
-            ]
-        )
+        len(net.m_links_df[net.m_links_df["model_link_id"].isin(egress_model_link_ids)])
         == 2
     ), f"\n***Egress Links\n{egress_links[_display_c]}\
         \n***ML Links\n{ml_links[_display_c]}\
         \n***GP Links\n{gp_links[_display_c]}"
-
-    assert rev_shapes_count == orig_shapes_count + 2 * 3
 
     print("--Finished:", request.node.name)
 
@@ -1114,142 +719,6 @@ def test_apply_pycode_roadway(request):
     )
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
-def test_identify_segment_ends(request):
-    print("\n--Starting:", request.node.name)
-
-    print("Reading network ...")
-    net = _read_stpaul_net()
-
-    _df = net.identify_segment_endpoints()
-
-    calculated_d = _df.groupby("segment_id")["model_node_id"].apply(list).to_dict()
-    correct_d = {
-        0: [4785, 4798],
-        1: [12163, 39484],
-        2: [36271, 50577],
-        3: [45746, 47478],
-        4: [47478, 311086],
-        5: [66416, 347045],
-        6: [75351, 75352],
-        7: [78880, 78885],
-        8: [106815, 241023],
-        9: [106811, 106814],
-        10: [126388, 223962],
-        11: [136296, 136301],
-        12: [147096, 147097],
-        13: [193468, 217752],
-        14: [239877, 239878],
-    }
-
-    print(calculated_d)
-    assert calculated_d == correct_d
-
-
-@pytest.mark.travis
-@pytest.mark.roadway
-def test_find_segment(request):
-    print("\n--Starting:", request.node.name)
-
-    print("Reading network ...")
-    net = _read_stpaul_net()
-
-    seg_ends = [4785, 4798]
-    sel_dict = {"name": "North Mounds Boulevard", "ref": "US 61"}
-    seg_df = net.identify_segment(seg_ends[0], seg_ends[1], selection_dict=sel_dict)
-    print(seg_df)
-
-
-@pytest.mark.roadway
-@pytest.mark.travis
-def test_managed_lane_restricted_access_egress(request):
-    print("\n--Starting:", request.node.name)
-    net = _read_stpaul_net()
-    print("Reading project card ...")
-    # project_card_name = "test_managed_lanes_change_keyword.yml"
-    project_card_name = "test_managed_lanes_restricted_access_egress.yml"
-    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate=False)
-
-    net = net.apply_managed_lane_feature_change(
-        net.select_roadway_features(project_card.facility), project_card.properties
-    )
-
-    ml_net = net.create_managed_lane_network()
-
-    # with 'all' as access/egress, there would be total of 8 connector links (4 access, 4 egress)
-    # with restricted access/egress, this project card should create 4 connector links
-    dummy_links = ml_net.links_df[
-        (ml_net.links_df["roadway"].isin(["ml_access", "ml_egress"]))
-    ]
-    dummy_links_count = len(dummy_links)
-
-    base_model_link_ids = project_card.__dict__["facility"]["links"][0]["model_link_id"]
-    ml_model_link_ids = [
-        RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR + x for x in base_model_link_ids
-    ]
-    access_model_link_ids = [
-        sum(x) + 1 for x in zip(base_model_link_ids, ml_model_link_ids)
-    ]
-    egress_model_link_ids = [
-        sum(x) + 2 for x in zip(base_model_link_ids, ml_model_link_ids)
-    ]
-
-    gp_links = ml_net.links_df[
-        ml_net.links_df["model_link_id"].isin(base_model_link_ids)
-    ]
-    ml_links = ml_net.links_df[ml_net.links_df["model_link_id"].isin(ml_model_link_ids)]
-    access_links = ml_net.links_df[
-        ml_net.links_df["model_link_id"].isin(access_model_link_ids)
-    ]
-    egress_links = ml_net.links_df[
-        ml_net.links_df["model_link_id"].isin(egress_model_link_ids)
-    ]
-
-    access_points = [
-        p["set"]
-        for p in project_card.__dict__["properties"]
-        if p["property"] == "ML_access_point"
-    ][0]
-
-    egress_points = [
-        p["set"]
-        for p in project_card.__dict__["properties"]
-        if p["property"] == "ML_egress_point"
-    ][0]
-
-    rev_links_count = len(ml_net.links_df)
-    rev_shapes_count = len(ml_net.shapes_df)
-
-    _display_c = ["model_link_id", "roadway", "A", "B", "shape_id", "name"]
-    assert (
-        len(ml_net.links_df[ml_net.links_df["model_link_id"].isin(ml_model_link_ids)])
-        == 4
-    ), f"\n***ML Links\n{ml_links[_display_c]}\
-        \n***GP Links\n{gp_links[_display_c]}"
-
-    assert len(
-        ml_net.links_df[ml_net.links_df["model_link_id"].isin(access_model_link_ids)]
-    ) == len(
-        access_points
-    ), f"\n***Access Links\n{access_links[_display_c]}\
-        \n***Access Points\n{access_points}\
-        \n***ML Links\n{ml_links[_display_c]}\
-        \n***GP Links\n{gp_links[_display_c]}"
-
-    assert len(
-        ml_net.links_df[ml_net.links_df["model_link_id"].isin(egress_model_link_ids)]
-    ) == len(
-        egress_points
-    ), f"\n***Egress Links\n{egress_links[_display_c]}\
-        \n***Egress Points\n{egress_points}\
-        \n***ML Links\n{ml_links[_display_c]}\
-        \n***GP Links\n{gp_links[_display_c]}"
-
-    print("--Finished:", request.node.name)
-
-
 def test_add_nodes(request):
     print("\n--Starting:", request.node.name)
     net = _read_small_net()
@@ -1291,7 +760,6 @@ def test_add_nodes(request):
         "expected ValueError when adding a node with a model_node_id that already exists"
 
 
-@pytest.mark.menow
 def test_change_node_xy():
     """Tests if X and Y property changes from a project card also update the node geometry."""
     net = _read_small_net()
@@ -1300,10 +768,12 @@ def test_change_node_xy():
     _test_link_idx = _test_link[RoadwayNetwork.UNIQUE_LINK_KEY]
     _test_node = net.nodes_df.loc[[_test_link["A"]]].iloc[0]
     _test_node_idx = _test_node[[RoadwayNetwork.UNIQUE_NODE_KEY]].iloc[0]
-    
+
     WranglerLogger.debug(f"Node Index: {_test_node_idx}")
     WranglerLogger.debug(f"Link Index: {_test_link_idx}")
-    WranglerLogger.info(f"Original Node (Index: {_test_node_idx}):\n{net.nodes_df.loc[_test_node_idx]}")
+    WranglerLogger.info(
+        f"Original Node (Index: {_test_node_idx}):\n{net.nodes_df.loc[_test_node_idx]}"
+    )
 
     facility = {
         "nodes": [
@@ -1328,4 +798,9 @@ def test_change_node_xy():
 
     assert net.nodes_df.loc[_test_node_idx].geometry.x == -1000
 
-    assert net.links_df.loc[net.links_df[RoadwayNetwork.UNIQUE_LINK_KEY] == 224].geometry[0].coords[0][0] == -1000
+    assert (
+        net.links_df.loc[net.links_df[RoadwayNetwork.UNIQUE_LINK_KEY] == 224]
+        .geometry[0]
+        .coords[0][0]
+        == -1000
+    )

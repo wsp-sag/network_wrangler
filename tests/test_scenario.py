@@ -275,7 +275,7 @@ def test_query_builder(request, test_spec):
 
     sel_query = ProjectCard.build_selection_query(
         selection=selection["selection"],
-        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+        unique_ids=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
         ignore=selection["ignore"],
     )
 

@@ -16,7 +16,7 @@ from .projectcard import ProjectCard
 from collections import OrderedDict
 from .logger import WranglerLogger
 from collections import defaultdict
-from .utils import topological_sort
+from .utils.geo import topological_sort
 from .roadwaynetwork import RoadwayNetwork
 from .transitnetwork import TransitNetwork
 

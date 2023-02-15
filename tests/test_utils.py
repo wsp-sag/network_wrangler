@@ -2,9 +2,9 @@ import pytest
 
 from shapely.geometry import LineString
 
-from network_wrangler import haversine_distance
-from network_wrangler import create_unique_shape_id
-from network_wrangler import offset_location_reference
+from network_wrangler.utils import haversine_distance
+from network_wrangler.utils import create_unique_shape_id
+from network_wrangler.utils import offset_location_reference
 
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
