@@ -126,6 +126,10 @@ class RoadwayNetwork(object):
         UNIQUE_MODEL_LINK_IDENTIFIERS (list(str)): list of all unique
             identifiers for links, including the UNIQUE_LINK_KEY
 
+        EXPLICIT_LINK_IDENTIFIERS (list(str)): list of identifiers which are explicit enough
+            to use in project selection by themselves. Includes UNIQUE_MODEL_LINK_IDENFIERS as
+            well as some identifiers which may be split across model links such as osm_link_id.
+
         UNIQUE_NODE_IDENTIFIERS (list(str)): list of all unique identifiers
             for nodes, including the UNIQUE_NODE_KEY
 
@@ -172,7 +176,8 @@ class RoadwayNetwork(object):
     UNIQUE_SHAPE_KEY = "shape_id"
 
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
-    UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
+    EXPLICIT_LINK_IDENTIFIERS = UNIQUE_MODEL_LINK_IDENTIFIERS + ["osm_link_id"]
+    UNIQUE_NODE_IDENTIFIERS = ["model_node_id","osm_node_id"]
 
     GEOMETRY_PROPERTIES = ["X", "Y"]
 
@@ -720,12 +725,12 @@ class RoadwayNetwork(object):
             )
             valid = False
 
-        _link_unique_link_id = bool(
-            set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(
+        _link_explicit_link_id = bool(
+            set(RoadwayNetwork.EXPLICIT_LINK_IDENTIFIERS).intersection(
                 set(_link_selection_props)
             )
         )
-        # if don't have a unique link id, then require A and B nodes
+        # if don't have an explicit link id, then require A and B nodes
         _has_alternate_link_id = all(
             [
                 selection.get("A"),
@@ -734,7 +739,7 @@ class RoadwayNetwork(object):
             ]
         )
 
-        if not _link_unique_link_id and not _has_alternate_link_id:
+        if not _link_explicit_link_id and not _has_alternate_link_id:
             WranglerLogger.error(
                 "Link selection does not contain unique link ID or alternate A and B nodes + 'name'."
             )
