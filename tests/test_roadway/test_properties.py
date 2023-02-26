@@ -14,12 +14,10 @@ pd.set_option("display.max_columns", 500)
 pd.set_option("display.width", 50000)
 
 """
-Run just the tests labeled basic using `pytest -m roadway`
-To run with print statments, use `pytest -s -m roadway`
+Run just the tests labeled basic using `pytest tests/test_roadway/test_properties.py
+To run with print statments, use `pytest -s tests/test_roadway/test_properties.py`
 """
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_network_connectivity(request,stpaul_net):
     print("\n--Starting:", request.node.name)
 
@@ -31,8 +29,6 @@ def test_network_connectivity(request,stpaul_net):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_network_connectivity_ignore_single_nodes(request,stpaul_net):
     print("\n--Starting:", request.node.name)
 

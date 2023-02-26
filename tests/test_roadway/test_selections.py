@@ -14,8 +14,8 @@ pd.set_option("display.max_columns", 500)
 pd.set_option("display.width", 50000)
 
 """
-Run just the tests labeled basic using `pytest -m roadway`
-To run with print statments, use `pytest -s -m roadway`
+Run just the tests labeled basic using `pytest tests/test_roadway/test_selections.py`
+To run with print statments, use `pytest -s tests/test_roadway/test_selections.py`
 """
 
 @pytest.mark.parametrize(
@@ -51,7 +51,6 @@ To run with print statments, use `pytest -s -m roadway`
         },
     ],
 )
-@pytest.mark.roadway
 def test_select_roadway_features(request, selection, stpaul_net):
     print("\n--Starting:", request.node.name)
     net = stpaul_net
@@ -75,8 +74,6 @@ def test_select_roadway_features(request, selection, stpaul_net):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_select_roadway_features_from_projectcard(request,stpaul_net,stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
     net = stpaul_net
@@ -102,7 +99,6 @@ variable_queries = [
 
 
 @pytest.mark.parametrize("variable_query",variable_queries)
-@pytest.mark.roadway
 def test_query_roadway_property_by_time_group(request, variable_query,stpaul_net,stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
     net = stpaul_net
@@ -127,8 +123,6 @@ def test_query_roadway_property_by_time_group(request, variable_query,stpaul_net
     # TODO make test make sure the values are correct.
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_get_modal_network(request,stpaul_net):
     print("\n--Starting:", request.node.name)
 
@@ -161,9 +155,6 @@ def test_get_modal_network(request,stpaul_net):
 
     assert set(test_links_of_selection) == set(control_links_of_selection)
 
-
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_identify_segment_ends(request,stpaul_net):
     print("\n--Starting:", request.node.name)
 
@@ -194,9 +185,6 @@ def test_identify_segment_ends(request,stpaul_net):
     print(calculated_d)
     assert calculated_d == correct_d
 
-
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_find_segment(request,stpaul_net):
     print("\n--Starting:", request.node.name)
 

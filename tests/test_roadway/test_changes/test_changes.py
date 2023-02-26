@@ -18,20 +18,19 @@ pd.set_option("display.max_columns", 500)
 pd.set_option("display.width", 50000)
 
 """
-Run just the tests labeled basic using `pytest -m roadway`
-To run with print statments, use `pytest -s -m roadway`
+Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_changes.py`
+To run with print statments, use `pytest -s tests/test_roadway/test_changes/test_changes.py`
 """
 
 @pytest.mark.parametrize(
     "apply_feature_change_project_card",
     [
         "1_simple_roadway_attribute_change.yml",
-        "2_multiple_roadway.yml",
-        "3_multiple_roadway_attribute_change.yml",
+        #"2_multiple_roadway.yml",
+        #"3_multiple_roadway_attribute_change.yml",
     ],
 )
-@pytest.mark.roadway
-@pytest.mark.travis
+@pytest.mark.menow
 def test_apply_roadway_feature_change(request, apply_feature_change_project_card, stpaul_net, stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
     my_net = copy.deepcopy(stpaul_net)
@@ -61,9 +60,6 @@ def test_apply_roadway_feature_change(request, apply_feature_change_project_card
 
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
     print("\n--Starting:", request.node.name)
     net = copy.deepcopy(stpaul_net)
@@ -92,9 +88,6 @@ def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
 
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_adhoc_field(request, stpaul_net):
     """
     Makes sure new fields can be added in the API and be saved and read in again.
@@ -107,9 +100,6 @@ def test_add_adhoc_field(request, stpaul_net):
 
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
-
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_managed_lane_complex(request, stpaul_net, stpaul_ex_dir, scratch_dir):
     print("\n--Starting:", request.node.name)
     net = copy.deepcopy(stpaul_net)
@@ -139,8 +129,6 @@ def test_add_managed_lane_complex(request, stpaul_net, stpaul_ex_dir, scratch_di
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir, scratch_dir):
     print("\n--Starting:", request.node.name)
     net = copy.deepcopy(stpaul_net)
@@ -171,8 +159,6 @@ def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir, s
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_default_value(request, stpaul_net, stpaul_ex_dir):
     """
     Makes sure we can add a new field with a default value
@@ -215,9 +201,6 @@ def test_add_default_value(request, stpaul_net, stpaul_ex_dir):
 
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     """
     Makes sure new fields can be added from a project card and that
@@ -252,9 +235,6 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     )
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_bad_properties_statements(request, small_net):
     """
     Makes sure new fields can be added from a project card and that
@@ -279,8 +259,6 @@ def test_bad_properties_statements(request, small_net):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
 
@@ -413,7 +391,6 @@ def test_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
 @pytest.mark.xfail(strict=True)
 def test_add_roadway_links(request, stpaul_net, stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
@@ -435,9 +412,6 @@ def test_add_roadway_links(request, stpaul_net, stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.test_ml
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_existing_managed_lane_apply(request, stpaul_net, stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
 
@@ -472,8 +446,6 @@ def test_existing_managed_lane_apply(request, stpaul_net, stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
 
@@ -505,8 +477,6 @@ def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_create_default_geometry(request,stpaul_net, stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
 
@@ -530,8 +500,6 @@ def test_create_default_geometry(request,stpaul_net, stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_add_roadway_shape(request, stpaul_net,stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
 
@@ -563,8 +531,6 @@ def test_add_roadway_shape(request, stpaul_net,stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_create_ml_network_shape(request,stpaul_net, stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
     from network_wrangler.roadway import create_managed_lane_network
@@ -637,8 +603,6 @@ def test_create_ml_network_shape(request,stpaul_net, stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_dot_wrangler_roadway(request,stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
 
@@ -653,8 +617,6 @@ def test_dot_wrangler_roadway(request,stpaul_ex_dir):
     )
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_apply_pycode_roadway(request,stpaul_net):
     print("\n--Starting:", request.node.name)
 

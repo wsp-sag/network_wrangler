@@ -21,11 +21,10 @@ pd.set_option("display.max_columns", 500)
 pd.set_option("display.width", 50000)
 
 """
-Run just the tests labeled basic using `pytest -m roadway`
-To run with print statments, use `pytest -s -m roadway`
+Run just the tests labeled basic using `pytest tests/test_roadway/test_model_roadway.py`
+To run with print statments, use `pytest -s tests/test_roadway/test_model_roadway.py`
 """
 
-@pytest.mark.roadway
 def test_add_adhoc_managed_lane_field(request,small_net):
     """
     Makes sure new fields can be added to the network for managed lanes that get moved there.
@@ -63,8 +62,7 @@ def test_add_adhoc_managed_lane_field(request,small_net):
 
     assert _managed_lane_record["my_ad_hoc_field"] == AD_HOC_VALUE
 
-@pytest.mark.menow
-@pytest.mark.roadway
+
 def test_create_ml_network_shape(request, small_net):
     print("\n--Starting:", request.node.name)
     from network_wrangler.roadway import create_managed_lane_network
@@ -179,7 +177,6 @@ def test_create_ml_network_shape(request, small_net):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
 def test_managed_lane_restricted_access_egress(request,stpaul_net,stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
     net = copy.deepcopy(stpaul_net)

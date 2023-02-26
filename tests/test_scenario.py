@@ -9,8 +9,8 @@ from network_wrangler import Scenario
 from network_wrangler.logger import WranglerLogger
 
 """
-Run just the tests labeled scenario using `pytest -v -m scenario`
-To run with print statments, use `pytest -s -m scenario`
+Run just the tests labeled scenario using `pytest tests/test_scenario.py`
+To run with print statments, use `pytest -s tests/test_scenario.py`
 """
 
 STPAUL_DIR = os.path.join(
@@ -23,8 +23,6 @@ STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
 STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
 def test_project_card_read(request):
     print("\n--Starting:", request.node.name)
     in_dir = os.path.join(
@@ -55,8 +53,6 @@ def test_project_card_write(request):
         assert v == test_card.__dict__[k]
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
 def test_scenario_conflicts(request):
 
     project_cards_list = []
@@ -89,9 +85,6 @@ def test_scenario_conflicts(request):
     print("Conflict checks done:", scen.conflicts_checked)
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.scenario
-@pytest.mark.travis
 def test_scenario_requisites(request):
     print("\n--Starting:", request.node.name)
     base_scenario = {}
@@ -127,8 +120,6 @@ def test_scenario_requisites(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
 def test_project_sort(request):
     print("\n--Starting:", request.node.name)
     base_scenario = {}
@@ -165,10 +156,6 @@ def test_project_sort(request):
     print("Ordered Projects:", scen.get_project_names())
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.roadway
-@pytest.mark.scenario
-@pytest.mark.travis
 def test_managed_lane_project_card(request):
     print("\n--Starting:", request.node.name)
 
@@ -269,7 +256,6 @@ query_tests = [
 
 
 @pytest.mark.parametrize("test_spec", query_tests)
-@pytest.mark.travis
 def test_query_builder(request, test_spec):
     selection, answer = test_spec
 
@@ -286,8 +272,6 @@ def test_query_builder(request, test_spec):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
 def test_apply_summary_wrappers(request):
     print("\n--Starting:", request.node.name)
 
@@ -325,8 +309,6 @@ def test_apply_summary_wrappers(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
 def test_scenario_building_from_script(request):
     print("\n--Starting:", request.node.name)
 
