@@ -181,15 +181,18 @@ class ProjectCard(object):
             return True
 
         except ValidationError as exc:
-            WranglerLogger.error("Failed Project Card validation: Validation Error")
-            WranglerLogger.error("Project Card File Loc:{}".format(card_file))
-            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_file))
-            WranglerLogger.error(exc.message)
+            msg = "Failed Project Card validation: Validation Error\n"
+            msg += f"   Project Card File Loc:{card_file}\n"
+            msg += f"   Project Card Schema Loc:{card_schema_file}\n"
+            msg += f"      {exc.message}\n"
+            WranglerLogger.error(msg)
 
         except SchemaError as exc:
-            WranglerLogger.error("Failed Project Card schema validation: Schema Error")
-            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_file))
-            WranglerLogger.error(exc.message)
+            msg = "Failed Project Card schema validation: Schema Error"
+            msg += f"   Project Card Schema Loc:{card_schema_file}"
+            msg += f"      {exc.message}\n"
+            WranglerLogger.error(msg)
+
 
         except yaml.YAMLError as exc:
             WranglerLogger.error(exc.message)
