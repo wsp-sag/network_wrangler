@@ -18,45 +18,6 @@ Run just the tests labeled basic using `pytest -m roadway`
 To run with print statments, use `pytest -s -m roadway`
 """
 
-STPAUL_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "examples", "stpaul"
-)
-STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
-STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
-STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
-
-SMALL_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "examples", "single"
-)
-SMALL_SHAPE_FILE = os.path.join(SMALL_DIR, "shape.geojson")
-SMALL_LINK_FILE = os.path.join(SMALL_DIR, "link.json")
-SMALL_NODE_FILE = os.path.join(SMALL_DIR, "node.geojson")
-
-SCRATCH_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "scratch"
-)
-
-
-def _read_small_net():
-    net = RoadwayNetwork.read(
-        link_file=SMALL_LINK_FILE,
-        node_file=SMALL_NODE_FILE,
-        shape_file=SMALL_SHAPE_FILE,
-        fast=True,
-    )
-    return net
-
-
-def _read_stpaul_net():
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
-    return net
-
-
 @pytest.mark.parametrize(
     "selection",
     [
@@ -91,10 +52,9 @@ def _read_stpaul_net():
     ],
 )
 @pytest.mark.roadway
-@pytest.mark.travis
-def test_select_roadway_features(request, selection):
+def test_select_roadway_features(request, selection, stpaul_net):
     print("\n--Starting:", request.node.name)
-    net = _read_stpaul_net()
+    net = stpaul_net
     print("--->", selection)
     net.select_roadway_features(selection)
 
@@ -117,13 +77,13 @@ def test_select_roadway_features(request, selection):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_select_roadway_features_from_projectcard(request):
+def test_select_roadway_features_from_projectcard(request,stpaul_net,stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
-    net = _read_stpaul_net()
+    net = stpaul_net
     print("Reading project card ...")
     project_card_name = "3_multiple_roadway_attribute_change.yml"
 
-    project_card_path = os.path.join(STPAUL_DIR, "project_cards", project_card_name)
+    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path)
 
     print("Selecting roadway features ...")
@@ -141,14 +101,13 @@ variable_queries = [
 ]
 
 
-@pytest.mark.parametrize("variable_query", variable_queries)
+@pytest.mark.parametrize("variable_query",variable_queries)
 @pytest.mark.roadway
-@pytest.mark.travis
-def test_query_roadway_property_by_time_group(request, variable_query):
+def test_query_roadway_property_by_time_group(request, variable_query,stpaul_net,stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
-    net = _read_stpaul_net()
+    net = stpaul_net
     print("Applying project card...")
-    project_card_path = os.path.join(STPAUL_DIR, "project_cards", "5_managed_lane.yml")
+    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", "5_managed_lane.yml")
     project_card = ProjectCard.read(project_card_path, validate=False)
     net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
@@ -170,18 +129,13 @@ def test_query_roadway_property_by_time_group(request, variable_query):
 
 @pytest.mark.roadway
 @pytest.mark.travis
-def test_get_modal_network(request):
+def test_get_modal_network(request,stpaul_net):
     print("\n--Starting:", request.node.name)
 
     mode = "transit"
     print("Reading network. Mode: {} ...".format(mode))
 
-    net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
-    )
+    net = stpaul_net
     _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
         net.links_df,
         net.nodes_df,
@@ -210,11 +164,11 @@ def test_get_modal_network(request):
 
 @pytest.mark.travis
 @pytest.mark.roadway
-def test_identify_segment_ends(request):
+def test_identify_segment_ends(request,stpaul_net):
     print("\n--Starting:", request.node.name)
 
     print("Reading network ...")
-    net = _read_stpaul_net()
+    net = stpaul_net
 
     _df = net.identify_segment_endpoints()
 
@@ -243,11 +197,11 @@ def test_identify_segment_ends(request):
 
 @pytest.mark.travis
 @pytest.mark.roadway
-def test_find_segment(request):
+def test_find_segment(request,stpaul_net):
     print("\n--Starting:", request.node.name)
 
     print("Reading network ...")
-    net = _read_stpaul_net()
+    net = stpaul_net
 
     seg_ends = [4785, 4798]
     sel_dict = {"name": "North Mounds Boulevard", "ref": "US 61"}

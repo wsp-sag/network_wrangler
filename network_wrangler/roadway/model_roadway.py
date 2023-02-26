@@ -28,28 +28,24 @@ def create_managed_lane_network(net: RoadwayNetwork) -> RoadwayNetwork:
         m_links_df
         m_shapes_df
     """
-
-    if net.m_links_df is not None:
-        WranglerLogger.debug("Model network with separate manged lanes already exists.")
-        return net
-
+    #WranglerLogger.debug(f"1-net.nodes_df: \n {net.nodes_df[['model_node_id']]}")
     WranglerLogger.info("Creating model network with separate managed lanes")
     net.m_links_df, net.m_nodes_df = _create_separate_managed_lane_links_nodes(net)
-
+    #WranglerLogger.debug(f"1-net.m_links_df: \n {net.m_links_df[['model_link_id','name']]}")
+    #WranglerLogger.debug(f"1-net.m_nodes_df: \n {net.m_nodes_df[['model_node_id']]}")
     # Adds dummy connector links
     access_egress_links_df = _create_dummy_connector_links(net)
     net.m_links_df = pd.concat([net.m_links_df, access_egress_links_df])
+    #WranglerLogger.debug(f"2-net.m_links_df: \n {net.m_links_df[['model_link_id','name']]}")
+    #WranglerLogger.debug(f"2-net.m_nodes_df: \n {net.m_nodes_df[['model_node_id']]}")
 
     net.m_shapes_df = copy.deepcopy(net.shapes_df)
 
-    WranglerLogger.debug(
-        f"Input network:\n  {len(net.links_df)}    links\n\
-      {len(net.nodes_df)} nodes\n    {len(net.shapes_df)} shapes"
-    )
-    WranglerLogger.debug(
-        f"Managed lane network:\n  {len(net.m_links_df)}   links\n\
-      {len(net.m_nodes_df)} nodes\n    {len(net.m_shapes_df)} shapes"
-    )
+    _compare_table =   "\nProperty |  Input network | Managed Lane Network\n"+"="*48+"\n"
+    _compare_table += f"links:   | {len(net.links_df):14} | {len(net.m_links_df):14}\n"
+    _compare_table += f"nodes:   | {len(net.nodes_df):14} | {len(net.m_nodes_df):14}\n"
+    _compare_table += f"shapes:  | {len(net.shapes_df):14} | {len(net.m_shapes_df):14}\n"
+    WranglerLogger.debug(_compare_table)
 
     WranglerLogger.debug(
         f"Managed Lane Links:\n {net.m_links_df[net.m_links_df['managed']==1]}"
@@ -116,7 +112,7 @@ def _create_separate_managed_lane_links_nodes(
     )
 
     _ref_gp_node_list = list(set(list(ml_links_df["GP_A"]) + list(ml_links_df["GP_B"])))
-
+    WranglerLogger.debug(f"_ref_gp_node_list: \n{_ref_gp_node_list}")
     # update geometry and location references
     ml_links_df["locationReferences"] = ml_links_df["locationReferences"].apply(
         # lambda x: _update_location_reference(x)
@@ -129,33 +125,42 @@ def _create_separate_managed_lane_links_nodes(
 
     # Get new node,link and shape IDs for managed lane mirrors
     ml_nodes_df = copy.deepcopy(net.nodes_df.loc[_ref_gp_node_list])
-
+    WranglerLogger.debug(f"1-ml_nodes_df: \n{ml_nodes_df}")
     ml_nodes_df["GP_" + RoadwayNetwork.UNIQUE_NODE_KEY] = ml_nodes_df[
         RoadwayNetwork.UNIQUE_NODE_KEY
     ]
-
+    WranglerLogger.debug(f"2-ml_nodes_df: \n{ml_nodes_df}")
     ml_nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY] = ml_nodes_df[
         RoadwayNetwork.UNIQUE_NODE_KEY
     ].apply(lambda x: _node_id_to_managed_lane_node_id(x))
-
+    ml_nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY + "_idx"] = ml_nodes_df[
+            RoadwayNetwork.UNIQUE_NODE_KEY
+        ]
+    ml_nodes_df.set_index(RoadwayNetwork.UNIQUE_NODE_KEY + "_idx", inplace=True)
+    WranglerLogger.debug(f"3-ml_nodes_df: \n{ml_nodes_df[['model_node_id']]}")
     ml_links_df[RoadwayNetwork.UNIQUE_LINK_KEY] = ml_links_df[
         RoadwayNetwork.UNIQUE_LINK_KEY
     ].apply(lambda x: _link_id_to_managed_lane_link_id(x))
 
+    ml_links_df[RoadwayNetwork.UNIQUE_LINK_KEY + "_idx"] = ml_links_df[
+            RoadwayNetwork.UNIQUE_LINK_KEY
+        ]
+    ml_links_df.set_index(RoadwayNetwork.UNIQUE_LINK_KEY + "_idx", inplace=True)
     ml_links_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = ml_links_df["geometry"].apply(
         lambda x: create_unique_shape_id(x)
     )
 
     # Adds any missing A-nodes or B-nodes
     a_nodes_df = net._nodes_from_link(ml_links_df[["A", "geometry"]], 0, "A")
+    #WranglerLogger.debug(f"a_nodes_df:\n {a_nodes_df}")
     ml_nodes_df = ml_nodes_df.combine_first(a_nodes_df)
-
+    #WranglerLogger.debug(f"4-ml_nodes_df: \n{ml_nodes_df[['model_node_id']]}")
     b_nodes_df = net._nodes_from_link(ml_links_df[["B", "geometry"]], -1, "B")
     ml_nodes_df = ml_nodes_df.combine_first(b_nodes_df)
-
+    #WranglerLogger.debug(f"5-ml_nodes_df: \n{ml_nodes_df[['model_node_id']]}")
     m_links_df = pd.concat([ml_links_df, gp_links_df, no_ml_links_df])
     m_nodes_df = pd.concat([net.nodes_df, ml_nodes_df])
-
+    #WranglerLogger.debug(f"6-ml_nodes_df: \n{ml_nodes_df[['model_node_id']]}")
     WranglerLogger.debug(
         f"Added {len(ml_nodes_df)} additional managed lane nodes\
         to the {len(net.nodes_df)} in net.nodes_df"
@@ -260,6 +265,10 @@ def _create_dummy_connector_links(net: RoadwayNetwork) -> gpd.GeoDataFrame:
     access_df["model_link_id"] = access_df["model_link_id_GP"].apply(
         _access_model_link_id
     )
+    access_df[RoadwayNetwork.UNIQUE_LINK_KEY + "_idx"] = access_df[
+            RoadwayNetwork.UNIQUE_LINK_KEY
+        ]
+    access_df.set_index(RoadwayNetwork.UNIQUE_LINK_KEY + "_idx", inplace=True)
     access_df["name"] = "Access Dummy " + access_df["name_GP"]
     access_df["roadway"] = "ml_access"
 
@@ -269,9 +278,15 @@ def _create_dummy_connector_links(net: RoadwayNetwork) -> gpd.GeoDataFrame:
     egress_df["model_link_id"] = egress_df["model_link_id_GP"].apply(
         _egress_model_link_id
     )
+    egress_df[RoadwayNetwork.UNIQUE_LINK_KEY + "_idx"] = egress_df[
+            RoadwayNetwork.UNIQUE_LINK_KEY
+        ]
+    egress_df.set_index(RoadwayNetwork.UNIQUE_LINK_KEY + "_idx", inplace=True)
     egress_df["name"] = "Egress Dummy " + egress_df["name_GP"]
     egress_df["roadway"] = "ml_egress"
 
+
+    # combine to one dataframe
     access_egress_df = pd.concat([access_df, egress_df])
 
     # 3 - Determine property values
@@ -293,6 +308,7 @@ def _create_dummy_connector_links(net: RoadwayNetwork) -> gpd.GeoDataFrame:
         "drive_access",
         "ref",
     ]
+    _keep_ae_cols = [c for c in _keep_ae_cols if c in access_egress_df.columns]
     access_egress_df = access_egress_df[_keep_ae_cols]
 
     # 4 - Create various geometry fields from A and B nodes

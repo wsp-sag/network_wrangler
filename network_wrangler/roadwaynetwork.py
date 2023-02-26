@@ -326,6 +326,12 @@ class RoadwayNetwork(object):
         ]
         for bc in list(set(bool_columns) & set(links_df.columns)):
             links_df[bc] = links_df[bc].astype(bool)
+
+        links_df[RoadwayNetwork.UNIQUE_LINK_KEY + "_idx"] = links_df[
+            RoadwayNetwork.UNIQUE_LINK_KEY
+        ]
+        links_df.set_index(RoadwayNetwork.UNIQUE_LINK_KEY + "_idx", inplace=True)
+
         WranglerLogger.info(f"Read {len(links_df)} links.")
         return links_df
 
@@ -1650,6 +1656,8 @@ class RoadwayNetwork(object):
     ) -> None:
         """Updates the locationReferences & geometry for given links & shapes for a given node_id list.
 
+        Should be called by any function that changes a node location.
+
         NOTES:
          - For shapes, this will mutate the geometry of a shape in place for the start and end node
             ...but not the nodes in-between.  Something to consider...
@@ -1657,7 +1665,13 @@ class RoadwayNetwork(object):
         Args:
             updated_node_id_list: List of nodes with updated geometry.
         """
-        # WranglerLogger.debug(f"updated_node_id_list: {updated_node_id_list}")
+        #WranglerLogger.debug(f"updated_node_id_list: {updated_node_id_list}")
+
+        # assert that A and B nodes exist 
+        _ab_nodes = self.nodes_df.loc[
+                    self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].isin(updated_node_id_list)
+                ][RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].tolist()
+        
         updated_links_df = copy.deepcopy(self.links_with_nodes(updated_node_id_list))
 
         updated_links_df["locationReferences"] = updated_links_df.apply(
@@ -1676,19 +1690,19 @@ class RoadwayNetwork(object):
             axis=1,
         )
 
-        updated_links_df["geometry"] = updated_links_df.apply(
-            lambda x: line_string_from_location_references(x["locationReferences"]),
-            axis=1,
+        updated_links_df["geometry"] = updated_links_df["locationReferences"].apply(
+            line_string_from_location_references,
         )
 
+        #find which shapes should be updated based on updated links
         updated_shapes_df = self.shapes_df.merge(
             updated_links_df[[RoadwayNetwork.LINK_FOREIGN_KEY_TO_SHAPE, "geometry"]],
-            how="right",
+            how="inner",
             left_on=RoadwayNetwork.LINK_FOREIGN_KEY_TO_SHAPE,
             right_on=RoadwayNetwork.UNIQUE_SHAPE_KEY,
             suffixes=("", "_link"),
         )
-
+        #WranglerLogger.debug(f"updated_shapes_df:\n {updated_shapes_df}")
         # update the first and last coordinates for the shape
         for position in [0, -1]:
             updated_shapes_df["geometry"] = updated_shapes_df.apply(
@@ -2416,24 +2430,30 @@ class RoadwayNetwork(object):
         Args:
             links_df (gpd.GeoDataFrame): subset of self.links_df or similar which needs nodes created
             link_pos (int): Position within geometry collection to use for geometry
-            node_key_field (str): field name to use for gnerating index and node key
+            node_key_field (str): field name to use for generating index and node key
 
         Returns:
             gpd.GeoDataFrame: _description_
         """
-
+       
         nodes_df = copy.deepcopy(
             links_df[[node_key_field, "geometry"]].drop_duplicates()
         )
+        #WranglerLogger.debug(f"ct1: nodes_df:\n{nodes_df}")
         nodes_df = nodes_df.rename(
             columns={node_key_field: RoadwayNetwork.UNIQUE_NODE_KEY}
         )
+        #WranglerLogger.debug(f"ct2: nodes_df:\n{nodes_df}")
         nodes_df["geometry"] = nodes_df["geometry"].apply(
             get_point_geometry_from_linestring, pos=link_pos
         )
         nodes_df["X"] = nodes_df.geometry.x
         nodes_df["Y"] = nodes_df.geometry.y
-        nodes_df = nodes_df.set_index(RoadwayNetwork.UNIQUE_NODE_KEY)
+        nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY + "_idx"] = nodes_df[
+            RoadwayNetwork.UNIQUE_NODE_KEY
+        ]
+        nodes_df.set_index(RoadwayNetwork.UNIQUE_NODE_KEY + "_idx", inplace=True)
+        #WranglerLogger.debug(f"ct3: nodes_df:\n{nodes_df}")
         return nodes_df
 
     @staticmethod

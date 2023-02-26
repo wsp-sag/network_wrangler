@@ -67,7 +67,6 @@ def test_get_distance_bw_lat_lon(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.test_hash
 @pytest.mark.roadway
 def test_get_unique_shape_id(request):
     geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])

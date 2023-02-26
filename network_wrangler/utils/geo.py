@@ -136,10 +136,13 @@ def location_reference_from_nodes(node_list: Collection[pd.Series]):
         node_list: List of nodes represented as series or dicts with "X" and "Y" values.
 
     """
+    
     out_location_references = [
         {"sequence": idx + 1, "point": [n["X"], n["Y"]]}
         for idx, n in enumerate(node_list)
     ]
+
+    #WranglerLogger.debug(f"out_location_references: {out_location_references}")
 
     return out_location_references
 
@@ -148,7 +151,9 @@ def line_string_from_location_references(location_references: list):
     """
     Creates a geometry as a LineString using a list of location references.
     """
-
+    #WranglerLogger.debug(
+    #    f"line_string_from_location_references.location_references: {[lr['point'] for lr in location_references]}."
+    #    )
     return LineString([lr["point"] for lr in location_references])
 
 
@@ -201,10 +206,10 @@ def update_points_in_linestring(
 
 
 def get_point_geometry_from_linestring(polyline_geometry, pos: int = 0):
-    WranglerLogger.debug(
-        f"get_point_geometry_from_linestring.polyline_geometry.coords[0]: \
-        {polyline_geometry.coords[0]}."
-    )
+    #WranglerLogger.debug(
+    #    f"get_point_geometry_from_linestring.polyline_geometry.coords[0]: \
+    #    {polyline_geometry.coords[0]}."
+    #)
     return point_from_xy(*polyline_geometry.coords[pos])
 
 
