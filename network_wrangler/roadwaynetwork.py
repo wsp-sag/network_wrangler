@@ -538,48 +538,41 @@ class RoadwayNetwork(object):
         for c in RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS:
             if c not in self.links_df.columns:
                 valid = False
-                msg = "Network doesn't contain unique link identifier: {}".format(c)
+                msg = f"Network doesn't contain unique link identifier: {c}"
                 WranglerLogger.error(msg)
             if not self.links_df[c].is_unique:
                 valid = False
-                msg = "Unique identifier {} is not unique in network links".format(c)
+                msg = f"Unique identifier {c} is not unique in network links"
                 WranglerLogger.error(msg)
         for c in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE:
             if c not in self.links_df.columns:
                 valid = False
-                msg = "Network doesn't contain link foreign key identifier: {}".format(
-                    c
-                )
+                msg = f"Network doesn't contain link foreign key identifier: {c}"
                 WranglerLogger.error(msg)
         link_foreign_key = self.links_df[RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE].apply(
             lambda x: "-".join(x.map(str)), axis=1
         )
         if not link_foreign_key.is_unique:
             valid = False
-            msg = "Foreign key: {} is not unique in network links".format(
-                RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE
-            )
+            msg = f"Foreign key: {RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE} is not unique in network links"
+
             WranglerLogger.error(msg)
         for c in RoadwayNetwork.UNIQUE_NODE_IDENTIFIERS:
             if c not in self.nodes_df.columns:
                 valid = False
-                msg = "Network doesn't contain unique node identifier: {}".format(c)
+                msg = f"Network doesn't contain unique node identifier: {c}"
                 WranglerLogger.error(msg)
             if not self.nodes_df[c].is_unique:
                 valid = False
-                msg = "Unique identifier {} is not unique in network nodes".format(c)
+                msg = f"Unique identifier {c} is not unique in network nodes"
                 WranglerLogger.error(msg)
         if RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK not in self.nodes_df.columns:
             valid = False
-            msg = "Network doesn't contain node foreign key identifier: {}".format(
-                RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK
-            )
+            msg = f"Network doesn't contain node foreign key identifier: {RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK}"
             WranglerLogger.error(msg)
         elif not self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].is_unique:
             valid = False
-            msg = "Foreign key: {} is not unique in network nodes".format(
-                RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK
-            )
+            msg = f"Foreign key: {RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK} is not unique in network nodes"
             WranglerLogger.error(msg)
         if RoadwayNetwork.UNIQUE_SHAPE_KEY not in self.shapes_df.columns:
             valid = False

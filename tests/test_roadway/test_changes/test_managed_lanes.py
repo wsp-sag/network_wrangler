@@ -273,18 +273,18 @@ def test_existing_managed_lane_apply(request, stpaul_net, stpaul_ex_dir):
     _1_selected_link_idx = net.select_roadway_features(_facility_1)
     _2_selected_link_idx = net.select_roadway_features(_facility_2)
 
-    _base_ML_links = copy(net.num_managed_lane_links)
+    _base_ML_links = copy.deepcopy(net.num_managed_lane_links)
 
     net = net.apply_managed_lane_feature_change(
         net.select_roadway_features(_facility_1), _properties
     )
-    _change_1_ML_links = copy(net.num_managed_lane_links)
+    _change_1_ML_links = copy.deepcopy((net.num_managed_lane_links)
 
     net = net.apply_managed_lane_feature_change(
         net.select_roadway_features(_facility_2), _properties
     )
 
-    _change_2_ML_links = copy(net.num_managed_lane_links)
+    _change_2_ML_links = copy.deepcopy((net.num_managed_lane_links)
 
     assert _change_1_ML_links  == _base_ML_links+ len(_1_selected_link_idx)
     assert _change_2_ML_links  == _change_1_ML_links+ len(_2_selected_link_idx)
