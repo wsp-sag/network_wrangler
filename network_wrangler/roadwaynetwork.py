@@ -1805,28 +1805,29 @@ class RoadwayNetwork(object):
             existing_facilities_df: selected existing facility df
             property (dict): project property update
         """
-        if property.get("existing"):
-            if not set(existing_facilities_df.tolist()).issubset(
-                [property.get("existing")]
-            ):
+        #WranglerLogger.debug(f"property:\n{property}")
+        #WranglerLogger.debug(f"existing_facilities_df:\n{existing_facilities_df}")
+        if "existing" in property:
+            if not existing_facilities_df[property['property']].eq(property["existing"]).all():
                 WranglerLogger.warning(
                     "Existing value defined for {} in project card does "
                     "not match the value in the roadway network for the "
                     "selected links".format(property["property"])
                 )
 
-        if property.get("set"):
+        if "set" in property:
             _updated_series = pd.Series(
                 property["set"],
                 name=property["property"],
                 index=existing_facilities_df.index,
             )
 
-        elif property.get("change"):
+        elif "change" in property:
             _updated_series = (
                 existing_facilities_df[property["property"]] + property["change"]
             )
         else:
+            WranglerLogger.debug(f"Property: \n {property}")
             raise ValueError(
                 f"No 'set' or 'change' specified for property {property['property']} \
                     in Roadway Network Change project card"

@@ -22,44 +22,142 @@ Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/t
 To run with print statments, use `pytest -s tests/test_roadway/test_changes/test_changes.py`
 """
 
-@pytest.mark.parametrize(
-    "apply_feature_change_project_card",
-    [
-        "1_simple_roadway_attribute_change.yml",
-        #"2_multiple_roadway.yml",
-        #"3_multiple_roadway_attribute_change.yml",
-    ],
-)
-@pytest.mark.menow
-def test_apply_roadway_feature_change(request, apply_feature_change_project_card, stpaul_net, stpaul_ex_dir):
+def test_change_roadway_existing_and_change_single_link(request,stpaul_net):
     print("\n--Starting:", request.node.name)
-    my_net = copy.deepcopy(stpaul_net)
-    print("Reading project card", apply_feature_change_project_card, "...")
-    project_card_path = os.path.join(
-       stpaul_ex_dir, "project_cards", apply_feature_change_project_card
-    )
-    project_card = ProjectCard.read(project_card_path)
+    net = copy.deepcopy(stpaul_net)
+    
+    #Set facility selection
+    _facility = {
+        "links":[{"osm_link_id": ['223371529']}],
+        "A": {"osm_node_id": '187854529'}, # Jackson St
+        "B": {"osm_node_id": '187899923'},  # Robert St N    
+    }
+    _properties = [{
+        'property':'lanes',  #changes number of lanes 3 to 2 (reduction of 1)
+        'existing': 2,
+        'change': -1
+    }]
 
-    print("Selecting roadway features ...")
-    selected_link_indices = my_net.select_roadway_features(project_card.facility)
+    _selected_link_idx = net.select_roadway_features(_facility)
+    _p_to_track = ["name"]+ [p["property"] for p in _properties ]
 
-    attributes_to_update = [
-        p["property"]
-        for p in project_card.properties
-        if p["property"] in my_net.links_df.columns
+    WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
+
+    _orig_links = pd.DataFrame(copy.deepcopy(net.links_df))
+    _orig_links = _orig_links.loc[_selected_link_idx,_p_to_track]
+    WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
+
+    # apply change
+    net = net.apply_roadway_feature_change(_selected_link_idx, _properties)
+
+    _rev_links = pd.DataFrame(net.links_df)
+    _rev_links = _rev_links.loc[_selected_link_idx,_p_to_track]
+    WranglerLogger.debug(f"_rev_links:\n{_rev_links}")
+    
+    WranglerLogger.debug(f"ORIGINAL to REVISED Comparison\n {_orig_links.compare(_rev_links)}")
+
+    for p in _properties:
+        _expected_value = p['existing']+p['change']
+        WranglerLogger.debug(f"Expected_value of {p['property']}:{_expected_value}")
+        assert _rev_links[p['property']].eq(_expected_value).all()
+
+def test_change_multiple_properties_multiple_links(request,stpaul_net):
+    print("\n--Starting:", request.node.name)
+    net = copy.deepcopy(stpaul_net)
+    #Set facility selection
+    _facility = {
+        "links":[{"name": ['6th','Sixth','sixth']}],
+        "A": {"osm_node_id": '187899923'}, # Jackson St
+        "B": {"osm_node_id": '187865924'},  # Robert St N    
+    }
+    _properties = [
+        {
+            'property':'lanes', 
+            'set': 2,
+        },
+        {
+            'property':'bus_only', 
+            'set': 1,
+        },
+        {
+            'property':'drive_access', 
+            'set': 0,
+        },
     ]
-    orig_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
-    print("Original Links:\n", orig_links)
 
-    my_net = my_net.apply_roadway_feature_change(
-        my_net.select_roadway_features(project_card.facility), project_card.properties
-    )
+    _selected_link_idx = net.select_roadway_features(_facility)
+    _p_to_track = ["name"]+ [p["property"] for p in _properties ]
 
-    rev_links = my_net.links_df.loc[selected_link_indices, attributes_to_update]
-    print("Revised Links:\n", rev_links)
+    WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
 
-    print("--Finished:", request.node.name)
+    _orig_links = pd.DataFrame(copy.deepcopy(net.links_df))
+    _orig_links = _orig_links.loc[_selected_link_idx,_p_to_track]
+    WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
 
+    # apply change
+    net = net.apply_roadway_feature_change(_selected_link_idx, _properties)
+
+    _rev_links = pd.DataFrame(net.links_df)
+    _rev_links = _rev_links.loc[_selected_link_idx,_p_to_track]
+    WranglerLogger.debug(f"_rev_links:\n{_rev_links}")
+    
+    WranglerLogger.debug(f"ORIGINAL to REVISED Comparison\n {_orig_links.compare(_rev_links)}")
+
+    for p in _properties:
+        _expected_value = p['set']
+        WranglerLogger.debug(f"Expected_value of {p['property']}:{_expected_value}")
+        assert _rev_links[p['property']].eq(_expected_value).all()
+
+
+def test_change_multiple_properties_multiple_links_existing_set(request,stpaul_net):
+    print("\n--Starting:", request.node.name)
+    net = copy.deepcopy(stpaul_net)
+    #Set facility selection
+    _facility = {
+        "links":[{"name": ['6th','Sixth','sixth']}],
+        "A": {"osm_node_id": '187899923'}, # Jackson St
+        "B": {"osm_node_id": '187865924'},  # Robert St N    
+    }
+    _properties = [
+        {
+            'property':'lanes', 
+            'existing':1,
+            'set': 2,
+        },
+        {
+            'property':'bus_only', 
+            'set': 1,
+        },
+        {
+            'property':'drive_access', 
+            'set': 0,
+        },
+    ]
+
+    _selected_link_idx = net.select_roadway_features(_facility)
+    _p_to_track = ["name"]+ [p["property"] for p in _properties ]
+
+    WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
+
+    _orig_links = pd.DataFrame(copy.deepcopy(net.links_df))
+    _orig_links = _orig_links.loc[_selected_link_idx,_p_to_track]
+    WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
+
+    # apply change
+    net = net.apply_roadway_feature_change(_selected_link_idx, _properties)
+
+    _rev_links = pd.DataFrame(net.links_df)
+    _rev_links = _rev_links.loc[_selected_link_idx,_p_to_track]
+    WranglerLogger.debug(f"_rev_links:\n{_rev_links}")
+    
+    WranglerLogger.debug(f"ORIGINAL to REVISED Comparison\n {_orig_links.compare(_rev_links)}")
+
+    for p in _properties:
+        _expected_value = p['set']
+        WranglerLogger.debug(f"Expected_value of {p['property']}:{_expected_value}")
+        assert _rev_links[p['property']].eq(_expected_value).all()
+
+@pytest.mark.menow
 def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
     print("\n--Starting:", request.node.name)
     net = copy.deepcopy(stpaul_net)
