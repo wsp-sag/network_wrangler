@@ -31,15 +31,19 @@ from shapely.geometry import Point
 
 from .logger import WranglerLogger
 from .projectcard import ProjectCard
-from .utils import point_df_to_geojson, links_df_to_json, parse_time_spans
-from .utils import haversine_distance, create_unique_shape_id, offset_location_reference
+
 from .utils import (
+    create_unique_shape_id,
     location_reference_from_nodes,
     line_string_from_location_references,
+    links_df_to_json,
+    parse_time_spans,
     point_from_xy,
+    point_df_to_geojson,
     update_points_in_linestring,
     get_point_geometry_from_linestring,
 )
+
 
 
 class NoPathFound(Exception):
@@ -429,10 +433,11 @@ class RoadwayNetwork(object):
             shapes_file = os.path.join(path, "shape.geojson")
 
         if model:
-            self.create_managed_lane_network()
-            links_df = self.m_links_df
-            nodes_df = self.m_nodes_df
-            shapes_df = self.m_shapes_df
+            from .roadway import create_managed_lane_network
+            net = create_managed_lane_network(self)
+            links_df = net.m_links_df
+            nodes_df = net.m_nodes_df
+            shapes_df = net.m_shapes_df
         else:
             links_df = self.links_df
             nodes_df = self.nodes_df
@@ -692,6 +697,13 @@ class RoadwayNetwork(object):
             WranglerLogger.error(json.dumps(exc.message, indent=2))
 
         return False
+
+    @property
+    def num_managed_lane_links(self):
+        if "managed" in self.links_df.columns:
+            return len((self.links_df[self.links_df["managed"] == 1]).index)
+        else:
+            return 0
 
     def _validate_link_selection(self, selection: dict) -> bool:
         """Validates that link selection is complete/valid for given network.
