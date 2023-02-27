@@ -158,7 +158,7 @@ def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
     _rev_links = net.links_df.loc[_selected_link_idx,  _p_to_track]
     WranglerLogger.debug(f"_rev_links:\n{_rev_links}")
 
-    for p,_expected_value in _expected_property_values:
+    for p,_expected_value in _expected_property_values.items():
         WranglerLogger.debug(f"Expected_value of {p}:{_expected_value}")
         assert _rev_links[p].eq(_expected_value).all()
 
@@ -200,7 +200,7 @@ def test_add_managed_lane_complex(request, stpaul_net, stpaul_ex_dir, scratch_di
         }
     }
 
-    for p,_expected_value in _expected_property_values:
+    for p,_expected_value in _expected_property_values.items():
         WranglerLogger.debug(f"Expected_value of {p}:{_expected_value}")
         assert _rev_links[p].eq(_expected_value).all()
 
@@ -237,7 +237,7 @@ def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir, s
         'ML_HOV':5, 
     }
 
-    for p,_expected_value in _expected_property_values:
+    for p,_expected_value in _expected_property_values.items():
         WranglerLogger.debug(f"Expected_value of {p}:{_expected_value}")
         assert _rev_links[p].eq(_expected_value).all()
 

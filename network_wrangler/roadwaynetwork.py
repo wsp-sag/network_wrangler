@@ -110,6 +110,12 @@ class RoadwayNetwork(object):
 
         selections (dict): dictionary storing selections in case they are made repeatedly
 
+        BOOL_PROPERTIES (list): list of properties which should be coerced to booleans
+
+        STR_PROPERTIES (list): list of properties which should be coerced to strings
+
+        INT_PROPERTIES (list): list of properties which should be coerced to integers
+
         CRS (str): coordinate reference system in PROJ4 format.
             See https://proj.org/operations/projections/index.html#
 
@@ -182,6 +188,31 @@ class RoadwayNetwork(object):
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
     EXPLICIT_LINK_IDENTIFIERS = UNIQUE_MODEL_LINK_IDENTIFIERS + ["osm_link_id"]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id","osm_node_id"]
+
+
+    BOOL_PROPERTIES = [
+        "rail_only",
+        "bus_only",
+        "drive_access",
+        "bike_access",
+        "walk_access",
+        "truck_access",
+    ]
+
+    STR_PROPERTIES = [
+        "model_link_id",
+        "model_node_id",
+        "osm_link_id",
+        "osm_node_id",
+        "shape_id",
+        "A",
+        "B"
+    ]
+
+    INT_PROPERTIES = [
+        "lanes",
+        "ML_lanes"
+    ]
 
     GEOMETRY_PROPERTIES = ["X", "Y"]
 
@@ -305,6 +336,33 @@ class RoadwayNetwork(object):
         return roadway_network
 
     @classmethod
+    def coerce_types(cls,df: pd.DataFrame,cols:Collection[str] = None) -> pd.DataFrame:
+        """Coerces types to bool, str and int which might default to other types based on values.
+
+        Uses BOOL_PROPERTIES, INT_PROPERTIES and STR_PROPERTIES.
+
+        Args:
+            df: Dataframe to coerce type of
+            cols: optional list of fields to check and coerce. Defaults to all fields. 
+
+        Returns:
+            pd.DataFrame: Dataframe with types coerced
+        """
+        if cols is None: cols = df.columns
+
+        for c in list(set(cls.BOOL_PROPERTIES) & set(cols)):
+            df[c] = df[c].astype(bool)
+
+        for c in list(set(cls.STR_PROPERTIES) & set(cols)):
+            df[c] = df[c].astype(str)
+
+        for c in list(set(cls.INT_PROPERTIES) & set(cols)):
+            df[c] = df[c].astype(int)
+
+        return df
+
+
+    @classmethod
     def read_links(cls, filename: str) -> gpd.GeoDataFrame:
         """Reads links and returns a geodataframe of links.
 
@@ -323,18 +381,8 @@ class RoadwayNetwork(object):
         links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
         links_df.crs = RoadwayNetwork.CRS
         links_df.gdf_name = "network_links"
-        # coerce types for booleans which might not have a 1 and are therefore read in as
-        # intersection
-        bool_columns = [
-            "rail_only",
-            "bus_only",
-            "drive_access",
-            "bike_access",
-            "walk_access",
-            "truck_access",
-        ]
-        for bc in list(set(bool_columns) & set(links_df.columns)):
-            links_df[bc] = links_df[bc].astype(bool)
+
+        links_df = RoadwayNetwork.coerce_types(links_df)
 
         links_df[RoadwayNetwork.UNIQUE_LINK_KEY + "_idx"] = links_df[
             RoadwayNetwork.UNIQUE_LINK_KEY
@@ -380,6 +428,8 @@ class RoadwayNetwork(object):
         nodes_df.crs = RoadwayNetwork.CRS
         nodes_df["X"] = nodes_df["geometry"].apply(lambda g: g.x)
         nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.y)
+
+        nodes_df = RoadwayNetwork.coerce_types(nodes_df)
         WranglerLogger.info(f"Read {len(nodes_df)} nodes.")
         return nodes_df
 
@@ -442,6 +492,10 @@ class RoadwayNetwork(object):
             links_df = self.links_df
             nodes_df = self.nodes_df
             shapes_df = self.shapes_df
+
+        # Make sure types are correct
+        nodes_df = RoadwayNetwork.coerce_types(nodes_df)
+        links_df = RoadwayNetwork.coerce_types(links_df)
 
         link_property_columns = links_df.columns.values.tolist()
         link_property_columns.remove("geometry")
