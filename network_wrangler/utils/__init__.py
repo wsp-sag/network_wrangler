@@ -1,7 +1,7 @@
 from .utils import point_df_to_geojson
 from .utils import links_df_to_json
 from .utils import make_slug
-from .utils import parse_time_spans
+from .utils import parse_time_spans_to_secs
 from .utils import topological_sort
 from .geo import offset_location_reference
 from .geo import haversine_distance
@@ -16,7 +16,7 @@ from .geo import update_points_in_linestring
 __all__ = [
     "links_df_to_json",
     "make_slug",
-    "parse_time_spans",
+    "parse_time_spans_to_secs",
     "offset_location_reference",
     "haversine_distance",
     "create_unique_shape_id",

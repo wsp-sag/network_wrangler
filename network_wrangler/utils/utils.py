@@ -80,7 +80,7 @@ def make_slug(text, delimiter: str = "_"):
     return re.sub("[\ ]+", delimiter, text)
 
 
-def parse_time_spans(times):
+def parse_time_spans_to_secs(times):
     """
     parse time spans into tuples of seconds from midnight
     can also be used as an apply function for a pandas series

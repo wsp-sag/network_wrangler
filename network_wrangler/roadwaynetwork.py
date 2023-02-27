@@ -37,7 +37,7 @@ from .utils import (
     location_reference_from_nodes,
     line_string_from_location_references,
     links_df_to_json,
-    parse_time_spans,
+    parse_time_spans_to_secs,
     point_from_xy,
     point_df_to_geojson,
     update_points_in_linestring,
@@ -200,18 +200,18 @@ class RoadwayNetwork(object):
     ]
 
     STR_PROPERTIES = [
-        "model_link_id",
-        "model_node_id",
         "osm_link_id",
         "osm_node_id",
         "shape_id",
-        "A",
-        "B"
     ]
 
     INT_PROPERTIES = [
+        "model_link_id",
+        "model_node_id",
         "lanes",
-        "ML_lanes"
+        "ML_lanes",
+        "A",
+        "B"
     ]
 
     GEOMETRY_PROPERTIES = ["X", "Y"]
@@ -2032,7 +2032,7 @@ class RoadwayNetwork(object):
                                 attr_value["timeofday"].append(
                                     {
                                         "category": category,
-                                        "time": parse_time_spans(tod["time"]),
+                                        "time": parse_time_spans_to_secs(tod["time"]),
                                         "value": tod["set"],
                                     }
                                 )
@@ -2040,7 +2040,7 @@ class RoadwayNetwork(object):
                                 attr_value["timeofday"].append(
                                     {
                                         "category": category,
-                                        "time": parse_time_spans(tod["time"]),
+                                        "time": parse_time_spans_to_secs(tod["time"]),
                                         "value": self.links_df.at[idx, attribute]
                                         + tod["change"],
                                     }
@@ -2062,14 +2062,14 @@ class RoadwayNetwork(object):
                         if "set" in tod.keys():
                             attr_value["timeofday"].append(
                                 {
-                                    "time": parse_time_spans(tod["time"]),
+                                    "time": parse_time_spans_to_secs(tod["time"]),
                                     "value": tod["set"],
                                 }
                             )
                         elif "change" in tod.keys():
                             attr_value["timeofday"].append(
                                 {
-                                    "time": parse_time_spans(tod["time"]),
+                                    "time": parse_time_spans_to_secs(tod["time"]),
                                     "value": self.links_df.at[idx, attribute]
                                     + tod["change"],
                                 }
@@ -2479,7 +2479,7 @@ class RoadwayNetwork(object):
                         )
                     )
 
-        time_spans = parse_time_spans(time_period)
+        time_spans = parse_time_spans_to_secs(time_period)
 
         return self.links_df[property].apply(
             _get_property, time_spans=time_spans, category=category

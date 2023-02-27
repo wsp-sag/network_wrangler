@@ -15,7 +15,7 @@ import partridge as ptg
 from partridge.config import default_config
 
 from .logger import WranglerLogger
-from .utils import parse_time_spans
+from .utils import parse_time_spans_to_secs
 from .roadwaynetwork import RoadwayNetwork
 
 
@@ -712,9 +712,9 @@ class TransitNetwork(object):
 
         # If a time key exists, filter trips using frequency table
         if selection.get("time"):
-            selection["time"] = parse_time_spans(selection["time"])
+            selection["time"] = parse_time_spans_to_secs(selection["time"])
         elif selection.get("start_time") and selection.get("end_time"):
-            selection["time"] = parse_time_spans(
+            selection["time"] = parse_time_spans_to_secs(
                 [selection["start_time"][0], selection["end_time"][0]]
             )
             # Filter freq to trips in selection

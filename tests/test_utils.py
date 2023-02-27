@@ -46,9 +46,9 @@ def test_time_convert(request):
     df = DataFrame(time_tests, columns=["time", "time_results"])
     print("Original Time Series", df)
 
-    from network_wrangler.utils import parse_time_spans
+    from network_wrangler.utils import parse_time_spans_to_secs
 
-    df["time"] = df["time"].apply(parse_time_spans)
+    df["time"] = df["time"].apply(parse_time_spans_to_secs)
     print("Result Time Series", df)
     from pandas.testing import assert_series_equal
 
