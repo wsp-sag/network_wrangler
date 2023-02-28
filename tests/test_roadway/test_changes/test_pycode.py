@@ -14,7 +14,6 @@ pd.set_option("display.width", 50000)
 
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_pycode.py`
-To run with print statments, use `pytest -s tests/test_roadway/test_changes/test_pycode.py`
 """
 
 def test_read_dot_wrangler_roadway(request,stpaul_ex_dir):

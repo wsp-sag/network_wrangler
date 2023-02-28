@@ -20,7 +20,6 @@ pd.set_option("display.width", 50000)
 
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_managed_lanes.py`
-To run with print statments, use `pytest -s tests/test_roadway/test_changes/test_managed_lanes.py`
 """
 
 _am_period = parse_time_spans_to_secs(['6:00', '9:00'])
