@@ -53,18 +53,16 @@ To run with print statments, use `pytest -s tests/test_roadway/test_selections.p
     ],
 )
 def test_select_roadway_features(request, selection, stpaul_net):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = stpaul_net
     print("--->", selection)
     net.select_roadway_features(selection)
 
-    print("building a selection key")
     sel_key = net.build_selection_key(selection)
-
-    print("Features selected:", len(net.selections[sel_key]["selected_links"]))
+    
+    WranglerLogger.debug(f"Features selected: {len(net.selections[sel_key]['selected_links'])}")
     selected_link_indices = net.selections[sel_key]["selected_links"].index.tolist()
     if "answer" in selection.keys():
-        print("Comparing answer")
         selected_nodes = [str(selection["A"]["osm_node_id"])] + net.links_df.loc[
             selected_link_indices, "v"
         ].tolist()
@@ -72,25 +70,28 @@ def test_select_roadway_features(request, selection, stpaul_net):
         # print("Expected Answer: ", sel["answer"])
         assert set(selected_nodes) == set(selection["answer"])
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_select_roadway_features_from_projectcard(request, stpaul_net, stpaul_ex_dir):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = stpaul_net
-    print("Reading project card ...")
-    project_card_name = "3_multiple_roadway_attribute_change.yml"
 
+    project_card_name = "3_multiple_roadway_attribute_change.yml"
+    _expected_answer = ["187899923", "187858777", "187923585", "187865924"]
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path)
 
-    print("Selecting roadway features ...")
-    sel = project_card.facility
-    selected_link_indices = net.select_roadway_features(sel)
-    print("Features selected:", len(selected_link_indices))
+    _facility = project_card.facility
+    selected_link_idx = net.select_roadway_features(_facility)
+    WranglerLogger.debug(f"Features selected: {len(selected_link_idx)}")
 
-    print("--Finished:", request.node.name)
+    selected_nodes = \
+        [str(_facility["A"]["osm_node_id"])] \
+        + net.links_df.loc[selected_link_idx, "v"].tolist()
+    assert set(selected_nodes) == set(_expected_answer)
 
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 variable_queries = [
     {"v": "lanes", "category": None, "time_period": ["7:00", "9:00"]},
@@ -98,14 +99,14 @@ variable_queries = [
     {"v": "ML_price", "category": ["hov3", "hov2"], "time_period": ["7:00", "9:00"]},
 ]
 
-
+@pytest.mark.menow
 @pytest.mark.parametrize("variable_query", variable_queries)
 def test_query_roadway_property_by_time_group(
     request, variable_query, stpaul_net, stpaul_ex_dir
 ):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = stpaul_net
-    print("Applying project card...")
+
     project_card_path = os.path.join(
         stpaul_ex_dir, "project_cards", "5_managed_lane.yml"
     )
@@ -113,8 +114,8 @@ def test_query_roadway_property_by_time_group(
     net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
     )
-    print("Querying Attribute...")
-    print("QUERY:\n", variable_query)
+
+    WranglerLogger.debug(f"QUERY:\n{variable_query}")
     v_series = net.get_property_by_time_period_and_group(
         variable_query["v"],
         category=variable_query["category"],
@@ -122,17 +123,17 @@ def test_query_roadway_property_by_time_group(
     )
     selected_link_indices = net.select_roadway_features(project_card.facility)
 
-    print("CALCULATED:\n", v_series.loc[selected_link_indices])
-    print("ORIGINAL:\n", net.links_df.loc[selected_link_indices, variable_query["v"]])
+    WranglerLogger.debug(f"CALCULATED:\n{v_series.loc[selected_link_indices]}")
+    WranglerLogger.debug(f"ORIGINAL:\n{net.links_df.loc[selected_link_indices, variable_query['v']]}")
 
     # TODO make test make sure the values are correct.
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_get_modal_network(request, stpaul_net):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
 
     mode = "transit"
-    print("Reading network. Mode: {} ...".format(mode))
 
     net = stpaul_net
     _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
@@ -142,7 +143,7 @@ def test_get_modal_network(request, stpaul_net):
     )
 
     test_links_of_selection = _links_df["model_link_id"].tolist()
-    print("TEST - Number of selected links: {}".format(len(test_links_of_selection)))
+    WranglerLogger.debug(f"TEST - Number of selected links: {len(test_links_of_selection)}")
 
     mode_variables = RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[mode]
 
@@ -151,20 +152,18 @@ def test_get_modal_network(request, stpaul_net):
         control_links_of_selection.extend(
             net.links_df.loc[net.links_df[m], "model_link_id"]
         )
-    print(
-        "CONTROL - Number of selected links: {}".format(len(control_links_of_selection))
-    )
+    WranglerLogger.debug(f"CONTROL - Number of selected links: {len(control_links_of_selection)}")
 
     all_model_link_ids = _links_df["model_link_id"].tolist()
-    print("CONTROL - Number of total links: {}".format(len(all_model_link_ids)))
+    WranglerLogger.debug(f"CONTROL - Number of total links: {len(all_model_link_ids)}")
 
     assert set(test_links_of_selection) == set(control_links_of_selection)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_identify_segment_ends(request, stpaul_net):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    print("Reading network ...")
     net = stpaul_net
 
     _df = net.identify_segment_endpoints()
@@ -187,18 +186,22 @@ def test_identify_segment_ends(request, stpaul_net):
         13: [193468, 217752],
         14: [239877, 239878],
     }
+    WranglerLogger.debug(f"Expected segment: {correct_d}")
+    WranglerLogger.debug(f"Calculated segment: {calculated_d}")
 
-    print(calculated_d)
     assert calculated_d == correct_d
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_find_segment(request, stpaul_net):
-    print("\n--Starting:", request.node.name)
+    "TODO: add assert"
+    WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    print("Reading network ...")
     net = stpaul_net
 
     seg_ends = [4785, 4798]
     sel_dict = {"name": "North Mounds Boulevard", "ref": "US 61"}
     seg_df = net.identify_segment(seg_ends[0], seg_ends[1], selection_dict=sel_dict)
-    print(seg_df)
+
+    WranglerLogger.debug(f"seg_df:\n{seg_df}")
+    WranglerLogger.info(f"--Finished: {request.node.name}")
