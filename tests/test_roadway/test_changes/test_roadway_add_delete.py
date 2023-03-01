@@ -200,9 +200,8 @@ def test_add_nodes(request, small_net):
         "expected ValueError when adding a node with a model_node_id that already exists"
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
-@pytest.mark.menow
 def test_change_node_xy(request, small_net):
-    """Tests if X and Y property changes from a project card also update the node geometry."""
+    """Tests if X and Y property changes from a project card also update the node/link geometry."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_net)
 
@@ -238,15 +237,19 @@ def test_change_node_xy(request, small_net):
         }
     )
 
-    WranglerLogger.info(f"Updated Node:\n{_test_node[['X','Y','geometry']]}")
+    _updated_node = net.nodes_df.loc[_test_node_idx]
+    _updated_link = net.links_df.loc[_test_link_idx]
+    _first_point = _updated_link.geometry.coords[0]
+
+    WranglerLogger.info(f"Updated Node:\n{_updated_node[[RoadwayNetwork.UNIQUE_NODE_KEY,'X','Y','geometry']]}")
     WranglerLogger.info(
-        f"Updated Link Geometry for ({_test_link.A}-->{_test_link.B}):\n{_test_link.geometry}"
+        f"Updated Link Geometry for ({_updated_link.A}-->{_updated_link.B}):\n{_updated_link[['geometry']]}"
     )
 
-    assert _test_node.geometry.x == _expected_X
-    assert _test_node.geometry.y == _expected_X
-    assert _test_node.X == _expected_X
-    assert _test_node.Y == _expected_Y
-    assert _test_link.geometry[0].coords[0][0] == _expected_X
-
+    assert _updated_node.geometry.x == _expected_X
+    assert _updated_node.geometry.y == _expected_Y
+    assert _updated_node.X == _expected_X
+    assert _updated_node.Y == _expected_Y
+    assert _first_point[0] == _expected_X
+    assert _first_point[1] == _expected_Y
     WranglerLogger.info(f"--Finished: {request.node.name}")

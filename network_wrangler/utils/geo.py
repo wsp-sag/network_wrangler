@@ -210,6 +210,9 @@ def get_point_geometry_from_linestring(polyline_geometry, pos: int = 0):
     #    f"get_point_geometry_from_linestring.polyline_geometry.coords[0]: \
     #    {polyline_geometry.coords[0]}."
     # )
+
+    # Note: when upgrading to shapely 2.0, will need to use following command
+    # _point_coords = get_coordinates(polyline_geometry).tolist()[pos]
     return point_from_xy(*polyline_geometry.coords[pos])
 
 

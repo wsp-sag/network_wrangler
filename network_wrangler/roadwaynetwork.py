@@ -1697,6 +1697,9 @@ class RoadwayNetwork(object):
             updated_nodes_df = copy.deepcopy(self.nodes_df)
             updated_nodes = self.nodes_df.index.values.tolist()
 
+        if len(updated_nodes_df)<25:
+            WranglerLogger.debug(f"Original Nodes:\n{updated_nodes_df[['X','Y','geometry']]}")
+
         updated_nodes_df["geometry"] = updated_nodes_df.apply(
             lambda x: point_from_xy(
                 x["X"],
@@ -1707,10 +1710,15 @@ class RoadwayNetwork(object):
             axis=1,
         )
         WranglerLogger.debug(f"{len(self.nodes_df)} nodes in network before update")
+        if len(updated_nodes_df)<25:
+            WranglerLogger.debug(f"Updated Nodes:\n{updated_nodes_df[['X','Y','geometry']]}")
         self.nodes_df.update(
             updated_nodes_df[[RoadwayNetwork.UNIQUE_NODE_KEY, "geometry"]]
         )
         WranglerLogger.debug(f"{len(self.nodes_df)} nodes in network after update")
+        if len(self.nodes_df)<25:
+            WranglerLogger.debug(f"Updated self.nodes_df:\n{self.nodes_df[['X','Y','geometry']]}")
+            
         self._update_node_geometry_in_links_shapes(updated_nodes_df)
 
     @staticmethod
