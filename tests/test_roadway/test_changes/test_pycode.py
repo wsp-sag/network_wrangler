@@ -16,7 +16,8 @@ pd.set_option("display.width", 50000)
 Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_pycode.py`
 """
 
-def test_read_dot_wrangler_roadway(request,stpaul_ex_dir):
+
+def test_read_dot_wrangler_roadway(request, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     project_card_name = "add_highway_lanes.wrangler"
@@ -29,8 +30,9 @@ def test_read_dot_wrangler_roadway(request,stpaul_ex_dir):
     )
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
+
 @pytest.mark.failing
-def test_apply_pycode_roadway(request,small_net):
+def test_apply_pycode_roadway(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     net = copy.deepcopy(small_net)
@@ -38,7 +40,7 @@ def test_apply_pycode_roadway(request,small_net):
     _link_sel = net.links_df.loc[net.links_df["lanes"] == 5]
     _expected_value = 12
     _show_fields = ["model_link_id", "lanes"]
-    
+
     WranglerLogger.debug(f"Before Change:\n{_link_sel[_show_fields]}")
 
     net = net.apply(

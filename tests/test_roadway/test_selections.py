@@ -18,6 +18,7 @@ Run just the tests labeled basic using `pytest tests/test_roadway/test_selection
 To run with print statments, use `pytest -s tests/test_roadway/test_selections.py`
 """
 
+
 @pytest.mark.parametrize(
     "selection",
     [
@@ -74,7 +75,7 @@ def test_select_roadway_features(request, selection, stpaul_net):
     print("--Finished:", request.node.name)
 
 
-def test_select_roadway_features_from_projectcard(request,stpaul_net,stpaul_ex_dir):
+def test_select_roadway_features_from_projectcard(request, stpaul_net, stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
     net = stpaul_net
     print("Reading project card ...")
@@ -98,12 +99,16 @@ variable_queries = [
 ]
 
 
-@pytest.mark.parametrize("variable_query",variable_queries)
-def test_query_roadway_property_by_time_group(request, variable_query,stpaul_net,stpaul_ex_dir):
+@pytest.mark.parametrize("variable_query", variable_queries)
+def test_query_roadway_property_by_time_group(
+    request, variable_query, stpaul_net, stpaul_ex_dir
+):
     print("\n--Starting:", request.node.name)
     net = stpaul_net
     print("Applying project card...")
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", "5_managed_lane.yml")
+    project_card_path = os.path.join(
+        stpaul_ex_dir, "project_cards", "5_managed_lane.yml"
+    )
     project_card = ProjectCard.read(project_card_path, validate=False)
     net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
@@ -123,7 +128,7 @@ def test_query_roadway_property_by_time_group(request, variable_query,stpaul_net
     # TODO make test make sure the values are correct.
 
 
-def test_get_modal_network(request,stpaul_net):
+def test_get_modal_network(request, stpaul_net):
     print("\n--Starting:", request.node.name)
 
     mode = "transit"
@@ -155,7 +160,8 @@ def test_get_modal_network(request,stpaul_net):
 
     assert set(test_links_of_selection) == set(control_links_of_selection)
 
-def test_identify_segment_ends(request,stpaul_net):
+
+def test_identify_segment_ends(request, stpaul_net):
     print("\n--Starting:", request.node.name)
 
     print("Reading network ...")
@@ -185,7 +191,8 @@ def test_identify_segment_ends(request,stpaul_net):
     print(calculated_d)
     assert calculated_d == correct_d
 
-def test_find_segment(request,stpaul_net):
+
+def test_find_segment(request, stpaul_net):
     print("\n--Starting:", request.node.name)
 
     print("Reading network ...")

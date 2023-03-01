@@ -25,7 +25,8 @@ Run just the tests labeled basic using `pytest tests/test_roadway/test_model_roa
 To run with print statments, use `pytest -s tests/test_roadway/test_model_roadway.py`
 """
 
-def test_add_adhoc_managed_lane_field(request,small_net):
+
+def test_add_adhoc_managed_lane_field(request, small_net):
     """
     Makes sure new fields can be added to the network for managed lanes that get moved there.
     """
@@ -44,19 +45,30 @@ def test_add_adhoc_managed_lane_field(request,small_net):
 
     _model_link_id = net.links_df["model_link_id"].iloc[SELECTED_LINK_INDEX]
     _ml_model_link_id = _link_id_to_managed_lane_link_id(_model_link_id)
-    WranglerLogger.debug(f"model_link_id: {_model_link_id}\nml_model_link_id: {_ml_model_link_id}")
+    WranglerLogger.debug(
+        f"model_link_id: {_model_link_id}\nml_model_link_id: {_ml_model_link_id}"
+    )
 
-
-    _display_cols = ['model_link_id', "name", "ML_my_ad_hoc_field", "lanes", "ML_lanes","ML_price","managed"]
+    _display_cols = [
+        "model_link_id",
+        "name",
+        "ML_my_ad_hoc_field",
+        "lanes",
+        "ML_lanes",
+        "ML_price",
+        "managed",
+    ]
     WranglerLogger.debug(f"Network with field.\n{net.links_df[ _display_cols]}")
 
     net = create_managed_lane_network(net)
 
-    _display_cols = ['model_link_id', "name", "my_ad_hoc_field", "lanes", "price"]
+    _display_cols = ["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]
     WranglerLogger.debug(f"Managed Lane Network\n{net.m_links_df[_display_cols]}")
 
-    _managed_lane_record = net.m_links_df.loc[net.m_links_df["model_link_id"]==_ml_model_link_id]
-    _managed_lane_record =  _managed_lane_record.iloc[0]
+    _managed_lane_record = net.m_links_df.loc[
+        net.m_links_df["model_link_id"] == _ml_model_link_id
+    ]
+    _managed_lane_record = _managed_lane_record.iloc[0]
 
     WranglerLogger.debug(f"Managed Lane Record\n{_managed_lane_record[_display_cols]}")
 
@@ -69,34 +81,33 @@ def test_create_ml_network_shape(request, small_net):
 
     net = copy.deepcopy(small_net)
 
-    #Set facility selection
+    # Set facility selection
     _model_link_ids = net.links_df["model_link_id"].iloc[1:2].tolist()
-    _facility = {"links":[{"model_link_id": _model_link_ids}]}
-    
-    #Set ML Properties
+    _facility = {"links": [{"model_link_id": _model_link_ids}]}
+
+    # Set ML Properties
     _lanes_p = {
-        'property': 'lanes',
-        'set': 3,
-        'timeofday': [{
-            'time': ['6:00', '9:00'],
-            'set': 2
-        }],
+        "property": "lanes",
+        "set": 3,
+        "timeofday": [{"time": ["6:00", "9:00"], "set": 2}],
     }
 
     _ML_lanes_p = {
-        'property': 'lanes',
-        'set': 0,
-        'timeofday': [{
-            'time': ['6:00', '9:00'],
-            'set': 1,
-        }],
+        "property": "lanes",
+        "set": 0,
+        "timeofday": [
+            {
+                "time": ["6:00", "9:00"],
+                "set": 1,
+            }
+        ],
     }
-   
-    _segment_id_p = {'property':'segment_id','set': 5}
-    _ML_HOV_p = {'property':'ML_HOV','set': 5}
-    _HOV_p = {'property':'HOV','set': 5}
-    _ML_access_p = {'property':'ML_access','set': 'all'}
-    _ML_egress_p = {'property':'ML_egress','set': 'all'}
+
+    _segment_id_p = {"property": "segment_id", "set": 5}
+    _ML_HOV_p = {"property": "ML_HOV", "set": 5}
+    _HOV_p = {"property": "HOV", "set": 5}
+    _ML_access_p = {"property": "ML_access", "set": "all"}
+    _ML_egress_p = {"property": "ML_egress", "set": "all"}
 
     _properties = [
         _lanes_p,
@@ -109,10 +120,10 @@ def test_create_ml_network_shape(request, small_net):
     ]
 
     project_card_dictionary = {
-        'project': 'test managed lane project',
-        'category': 'Parallel Managed lanes',
-        'facility': _facility,
-        'properties':_properties,
+        "project": "test managed lane project",
+        "category": "Parallel Managed lanes",
+        "facility": _facility,
+        "properties": _properties,
     }
 
     _orig_links_count = len(net.links_df)
@@ -121,10 +132,10 @@ def test_create_ml_network_shape(request, small_net):
     net = net.apply(project_card_dictionary)
     net = create_managed_lane_network(net)
 
-    base_model_link_ids = project_card_dictionary["facility"]["links"][0]["model_link_id"]
-    ml_model_link_ids = [
-        MANAGED_LANES_LINK_ID_SCALAR + x for x in base_model_link_ids
+    base_model_link_ids = project_card_dictionary["facility"]["links"][0][
+        "model_link_id"
     ]
+    ml_model_link_ids = [MANAGED_LANES_LINK_ID_SCALAR + x for x in base_model_link_ids]
     access_model_link_ids = [
         sum(x) + 1 for x in zip(base_model_link_ids, ml_model_link_ids)
     ]
@@ -159,25 +170,22 @@ def test_create_ml_network_shape(request, small_net):
         \n***Egress Link IDs\n{egress_model_link_ids}\
         \n***Egress Links\n{egress_links[_display_c]}"
     )
-    assert (
-        len(net.m_links_df[net.m_links_df["model_link_id"].isin(ml_model_link_ids)])
-        == len(ml_model_link_ids)
-    )
+    assert len(
+        net.m_links_df[net.m_links_df["model_link_id"].isin(ml_model_link_ids)]
+    ) == len(ml_model_link_ids)
 
-    assert (
-        len(net.m_links_df[net.m_links_df["model_link_id"].isin(access_model_link_ids)])
-        == len(access_model_link_ids)
-    )
+    assert len(
+        net.m_links_df[net.m_links_df["model_link_id"].isin(access_model_link_ids)]
+    ) == len(access_model_link_ids)
 
-    assert (
-        len(net.m_links_df[net.m_links_df["model_link_id"].isin(egress_model_link_ids)])
-        == len(egress_model_link_ids)
-    )
+    assert len(
+        net.m_links_df[net.m_links_df["model_link_id"].isin(egress_model_link_ids)]
+    ) == len(egress_model_link_ids)
 
     print("--Finished:", request.node.name)
 
 
-def test_managed_lane_restricted_access_egress(request,stpaul_net,stpaul_ex_dir):
+def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_dir):
     print("\n--Starting:", request.node.name)
     net = copy.deepcopy(stpaul_net)
     print("Reading project card ...")

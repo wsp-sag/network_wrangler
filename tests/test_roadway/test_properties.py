@@ -18,7 +18,8 @@ Run just the tests labeled basic using `pytest tests/test_roadway/test_propertie
 To run with print statments, use `pytest -s tests/test_roadway/test_properties.py`
 """
 
-def test_network_connectivity(request,stpaul_net):
+
+def test_network_connectivity(request, stpaul_net):
     print("\n--Starting:", request.node.name)
 
     print("Reading network ...")
@@ -29,13 +30,13 @@ def test_network_connectivity(request,stpaul_net):
     print("--Finished:", request.node.name)
 
 
-def test_network_connectivity_ignore_single_nodes(request,stpaul_net):
+def test_network_connectivity_ignore_single_nodes(request, stpaul_net):
     print("\n--Starting:", request.node.name)
 
     print("Reading network ...")
 
     net = stpaul_net
-    
+
     print("Assessing network connectivity for walk...")
     _, disconnected_nodes = net.assess_connectivity(mode="walk", ignore_end_nodes=True)
     print("{} Disconnected Subnetworks:".format(len(disconnected_nodes)))

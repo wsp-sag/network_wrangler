@@ -85,6 +85,7 @@ def test_scenario_conflicts(request):
     print("Conflict checks done:", scen.conflicts_checked)
     print("--Finished:", request.node.name)
 
+
 def test_scenario_requisites(request):
     print("\n--Starting:", request.node.name)
     base_scenario = {}
@@ -155,6 +156,7 @@ def test_project_sort(request):
     scen.order_project_cards()
     print("Ordered Projects:", scen.get_project_names())
     print("--Finished:", request.node.name)
+
 
 def test_managed_lane_project_card(request):
     print("\n--Starting:", request.node.name)

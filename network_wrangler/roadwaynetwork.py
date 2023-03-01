@@ -45,7 +45,6 @@ from .utils import (
 )
 
 
-
 class NoPathFound(Exception):
     """Raised when can't find path."""
 
@@ -187,8 +186,7 @@ class RoadwayNetwork(object):
 
     UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
     EXPLICIT_LINK_IDENTIFIERS = UNIQUE_MODEL_LINK_IDENTIFIERS + ["osm_link_id"]
-    UNIQUE_NODE_IDENTIFIERS = ["model_node_id","osm_node_id"]
-
+    UNIQUE_NODE_IDENTIFIERS = ["model_node_id", "osm_node_id"]
 
     BOOL_PROPERTIES = [
         "rail_only",
@@ -205,14 +203,7 @@ class RoadwayNetwork(object):
         "shape_id",
     ]
 
-    INT_PROPERTIES = [
-        "model_link_id",
-        "model_node_id",
-        "lanes",
-        "ML_lanes",
-        "A",
-        "B"
-    ]
+    INT_PROPERTIES = ["model_link_id", "model_node_id", "lanes", "ML_lanes", "A", "B"]
 
     GEOMETRY_PROPERTIES = ["X", "Y"]
 
@@ -229,18 +220,16 @@ class RoadwayNetwork(object):
         "walk_access",
         "bike_access",
         "locationReferences",
-        "geometry"
+        "geometry",
     ]
 
     MIN_NODE_REQUIRED_PROPS_DEFAULT = [
-        "model_node_id"
+        "model_node_id",
         "transit_node",
         "drive_node",
         "walk_node",
         "bike_node",
-        "outboundReferenceIds",
-        "inboundReferenceIds"
-        "geometry"
+        "geometry",
     ]
 
     MANAGED_LANES_REQUIRED_ATTRIBUTES = [
@@ -363,19 +352,22 @@ class RoadwayNetwork(object):
         return roadway_network
 
     @classmethod
-    def coerce_types(cls,df: pd.DataFrame,cols:Collection[str] = None) -> pd.DataFrame:
+    def coerce_types(
+        cls, df: pd.DataFrame, cols: Collection[str] = None
+    ) -> pd.DataFrame:
         """Coerces types to bool, str and int which might default to other types based on values.
 
         Uses BOOL_PROPERTIES, INT_PROPERTIES and STR_PROPERTIES.
 
         Args:
             df: Dataframe to coerce type of
-            cols: optional list of fields to check and coerce. Defaults to all fields. 
+            cols: optional list of fields to check and coerce. Defaults to all fields.
 
         Returns:
             pd.DataFrame: Dataframe with types coerced
         """
-        if cols is None: cols = df.columns
+        if cols is None:
+            cols = df.columns
 
         for c in list(set(cls.BOOL_PROPERTIES) & set(cols)):
             df[c] = df[c].astype(bool)
@@ -387,7 +379,6 @@ class RoadwayNetwork(object):
             df[c] = df[c].astype(int)
 
         return df
-
 
     @classmethod
     def read_links(cls, filename: str) -> gpd.GeoDataFrame:
@@ -511,6 +502,7 @@ class RoadwayNetwork(object):
 
         if model:
             from .roadway import create_managed_lane_network
+
             net = create_managed_lane_network(self)
             links_df = net.m_links_df
             nodes_df = net.m_nodes_df
@@ -1668,13 +1660,13 @@ class RoadwayNetwork(object):
             )
         elif _category == "add new roadway":
             return self.add_new_roadway_feature_change(
-                project_dictionary.get("links",[]),
-                project_dictionary.get("nodes",[]),
+                project_dictionary.get("links", []),
+                project_dictionary.get("nodes", []),
             )
         elif _category == "roadway deletion":
             return self.delete_roadway_feature_change(
-                project_dictionary.get("links",[]),
-                project_dictionary.get("nodes",[]),
+                project_dictionary.get("links", []),
+                project_dictionary.get("nodes", []),
             )
         elif _category == "calculated roadway":
             return self.apply_python_calculation(
@@ -1721,24 +1713,25 @@ class RoadwayNetwork(object):
         WranglerLogger.debug(f"{len(self.nodes_df)} nodes in network after update")
         self._update_node_geometry_in_links_shapes(updated_nodes_df)
 
-    def links_with_nodes(self, node_id_list: list) -> gpd.GeoDataFrame:
+    @staticmethod
+    def links_with_nodes(
+        links_df: pd.DataFrame, node_id_list: list
+    ) -> gpd.GeoDataFrame:
         """Returns a links geodataframe which start or end at the nodes in the list.
 
         Args:
+            links_df: dataframe of links to search for nodes in
             node_id_list (list): List of nodes to find links for.  Nodes should be identified
                 by the foreign key - the one that is referenced in LINK_FOREIGN_KEY.
         """
-        # WranglerLogger.debug(f"node_id_list: {node_id_list}")
-        if len(set(node_id_list)) == len(self.nodes_df):
-            return self.links_df
-
+        WranglerLogger.debug(f"node_id_list: {node_id_list}")
         _query_parts = [
             f"{prop} == {str(n)}"
             for prop in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE
             for n in node_id_list
         ]
         _query = " or ".join(_query_parts)
-        _selected_links_df = self.links_df.query(_query, engine="python")
+        _selected_links_df = links_df.query(_query, engine="python")
         return _selected_links_df
 
     def _update_node_geometry_in_links_shapes(
@@ -1757,19 +1750,26 @@ class RoadwayNetwork(object):
             updated_nodes_df: gdf of nodes with updated geometry.
         """
         _node_ids = updated_nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].tolist()
-        updated_links_df = copy.deepcopy(self.links_with_nodes(_node_ids))
+        updated_links_df = copy.deepcopy(
+            RoadwayNetwork.links_with_nodes(self.links_df, _node_ids)
+        )
 
         _shape_ids = updated_links_df[RoadwayNetwork.LINK_FOREIGN_KEY_TO_SHAPE].tolist()
-        updated_shapes_df = copy.deepcopy(self.shapes_df.loc[self.shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY].isin(_shape_ids)])
+        updated_shapes_df = copy.deepcopy(
+            self.shapes_df.loc[
+                self.shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY].isin(_shape_ids)
+            ]
+        )
 
-        updated_links_df["locationReferences"] = self._create_link_locationreferences(updated_links_df)
+        updated_links_df["locationReferences"] = self._create_link_locationreferences(
+            updated_links_df
+        )
         updated_links_df["geometry"] = updated_links_df["locationReferences"].apply(
             line_string_from_location_references,
         )
 
         updated_shapes_df["geometry"] = self._update_existing_shape_geometry_from_nodes(
-            updated_shapes_df,
-            updated_links_df
+            updated_shapes_df, updated_links_df
         )
 
         self.links_df.update(
@@ -1781,7 +1781,7 @@ class RoadwayNetwork(object):
             updated_shapes_df[[RoadwayNetwork.UNIQUE_SHAPE_KEY, "geometry"]]
         )
 
-    def _create_link_locationreferences(self,links_df:pd.DataFrame)->pd.Series:
+    def _create_link_locationreferences(self, links_df: pd.DataFrame) -> pd.Series:
         locationreferences_s = links_df.apply(
             lambda x: location_reference_from_nodes(
                 [
@@ -1799,38 +1799,40 @@ class RoadwayNetwork(object):
         )
         return locationreferences_s
 
-    def _add_link_geometry_from_nodes(self,links_df:pd.DataFrame)->gpd.GeoDataFrame:
+    def _add_link_geometry_from_nodes(self, links_df: pd.DataFrame) -> gpd.GeoDataFrame:
         links_df["locationReferences"] = self._create_link_locationreferences(links_df)
         links_df["geometry"] = links_df["locationReferences"].apply(
             line_string_from_location_references,
         )
         links_df = gpd.GeoDataFrame(links_df)
         return links_df
-        
-    def _update_existing_shape_geometry_from_nodes(self,updated_shapes_df,updated_links_df)->gpd.GeoSeries:
-        #WranglerLogger.debug(f"updated_shapes_df:\n {updated_shapes_df}")
+
+    def _update_existing_shape_geometry_from_nodes(
+        self, updated_shapes_df, updated_links_df
+    ) -> gpd.GeoSeries:
+        # WranglerLogger.debug(f"updated_shapes_df:\n {updated_shapes_df}")
         # update the first and last coordinates for the shape
 
         _df = updated_shapes_df[[RoadwayNetwork.UNIQUE_SHAPE_KEY, "geometry"]].merge(
-            updated_links_df[[RoadwayNetwork.LINK_FOREIGN_KEY_TO_SHAPE,"geometry"]],
+            updated_links_df[[RoadwayNetwork.LINK_FOREIGN_KEY_TO_SHAPE, "geometry"]],
             left_on=RoadwayNetwork.UNIQUE_SHAPE_KEY,
             right_on=RoadwayNetwork.LINK_FOREIGN_KEY_TO_SHAPE,
-            suffixes = ['_old_shape','_link'],
-            how = "left",
+            suffixes=["_old_shape", "_link"],
+            how="left",
         )
 
         for position in [0, -1]:
-            _df["geometry"] =_df.apply(
+            _df["geometry"] = _df.apply(
                 lambda x: update_points_in_linestring(
                     x["geometry_old_shape"],
-                    _df["geometry_link"].coords[position],
+                    _df["geometry_link"][0].coords[position],
                     position,
                 ),
                 axis=1,
             )
         return _df["geometry"]
 
-    def _create_new_link_geometry(self,new_links_df:pd.DataFrame)->gpd.GeoDataFrame:
+    def _create_new_link_geometry(self, new_links_df: pd.DataFrame) -> gpd.GeoDataFrame:
         new_links_df = self._add_link_geometry_from_nodes(new_links_df)
         new_links_df[RoadwayNetwork.UNIQUE_SHAPE_KEY] = new_links_df["geometry"].apply(
             create_unique_shape_id
@@ -1839,7 +1841,9 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def _create_new_shapes_from_links(links_df: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-        new_shapes_df = copy.deepcopy(links_df[[RoadwayNetwork.UNIQUE_SHAPE_KEY,"geometry"]])
+        new_shapes_df = copy.deepcopy(
+            links_df[[RoadwayNetwork.UNIQUE_SHAPE_KEY, "geometry"]]
+        )
         return new_shapes_df
 
     def apply_python_calculation(self, pycode: str) -> "RoadwayNetwork":
@@ -1875,10 +1879,14 @@ class RoadwayNetwork(object):
             existing_facilities_df: selected existing facility df
             property (dict): project property update
         """
-        #WranglerLogger.debug(f"property:\n{property}")
-        #WranglerLogger.debug(f"existing_facilities_df:\n{existing_facilities_df}")
+        # WranglerLogger.debug(f"property:\n{property}")
+        # WranglerLogger.debug(f"existing_facilities_df:\n{existing_facilities_df}")
         if "existing" in property:
-            if not existing_facilities_df[property['property']].eq(property["existing"]).all():
+            if (
+                not existing_facilities_df[property["property"]]
+                .eq(property["existing"])
+                .all()
+            ):
                 WranglerLogger.warning(
                     "Existing value defined for {} in project card does "
                     "not match the value in the roadway network for the "
@@ -2112,8 +2120,7 @@ class RoadwayNetwork(object):
         )
         return self
 
-
-    def _create_links(self,new_links: Collection[dict]=[]):
+    def _create_links(self, new_links: Collection[dict] = []):
 
         new_links_df = pd.DataFrame(new_links)
 
@@ -2124,11 +2131,13 @@ class RoadwayNetwork(object):
 
         new_links_df = self._create_new_link_geometry(new_links_df)
 
-        WranglerLogger.debug(f"4-New Links:\n{new_links_df}")
+        WranglerLogger.debug(
+            f"New Links:\n{new_links_df[[RoadwayNetwork.UNIQUE_LINK_KEY,'name']]}"
+        )
         assert self.new_links_valid(new_links_df)
         return new_links_df
- 
-    def _create_nodes(self,new_nodes: Collection[dict]=[]):
+
+    def _create_nodes(self, new_nodes: Collection[dict] = []):
 
         new_nodes_df = pd.DataFrame(new_nodes)
 
@@ -2136,12 +2145,26 @@ class RoadwayNetwork(object):
         new_nodes_df[_idx_c] = new_nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY]
         new_nodes_df.set_index(_idx_c, inplace=True)
         new_nodes_df = RoadwayNetwork.coerce_types(new_nodes_df)
+
+        new_nodes_df["geometry"] = new_nodes_df.apply(
+            lambda x: point_from_xy(
+                x["X"],
+                x["Y"],
+                xy_crs=RoadwayNetwork.CRS,
+                point_crs=RoadwayNetwork.CRS,
+            ),
+            axis=1,
+        )
+
+        new_nodes_df = gpd.GeoDataFrame(new_nodes_df)
         WranglerLogger.debug(f"New Nodes:\n{new_nodes_df}")
 
-        assert self.nodes_valid(new_nodes_df)
+        assert self.new_nodes_valid(new_nodes_df)
         return new_nodes_df
 
-    def add_new_roadway_feature_change(self, add_links: Collection[dict]=[], add_nodes: Collection[dict]=[]) -> None:
+    def add_new_roadway_feature_change(
+        self, add_links: Collection[dict] = [], add_nodes: Collection[dict] = []
+    ) -> None:
         """
         Add the new roadway features defined in the project card.
 
@@ -2162,28 +2185,42 @@ class RoadwayNetwork(object):
         )
         if add_nodes:
             _new_nodes_df = self._create_nodes(add_nodes)
-            self.nodes_df = pd.concat([self.nodes_df,_new_nodes_df])
+            self.nodes_df = pd.concat([self.nodes_df, _new_nodes_df])
 
         if add_links:
             _new_links_df = self._create_links(add_links)
-            self.links_df = pd.concat([self.links_df,_new_links_df])
-            
+            self.links_df = pd.concat([self.links_df, _new_links_df])
+
             _new_shapes_df = RoadwayNetwork._create_new_shapes_from_links(_new_links_df)
-            self.shapes_df = pd.concat([self.shapes_df,_new_shapes_df])
+            self.shapes_df = pd.concat([self.shapes_df, _new_shapes_df])
         return self
 
-    def nodes_valid(self, nodes_df: pd.DataFrame) -> bool:
+    def new_nodes_valid(self, new_nodes_df: pd.DataFrame) -> bool:
 
         # Check to see if same node is already in the network
-        _existing_nodes = nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].apply(self.has_node)
+        _existing_nodes = new_nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].apply(
+            self.has_node
+        )
         if _existing_nodes.any():
-            msg = f"Node already exists between nodes:\n {nodes_df[_existing_nodes,RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK]}."
+            msg = f"Node already exists between nodes:\n {new_nodes_df[_existing_nodes,RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK]}."
+            raise ValueError(msg)
+
+        # Check to see if there are missing required columns
+        _missing_cols = [
+            c
+            for c in RoadwayNetwork.MIN_NODE_REQUIRED_PROPS_DEFAULT
+            if c not in new_nodes_df.columns
+        ]
+        if _missing_cols:
+            msg = f"Missing required link properties:{_missing_cols}"
             raise ValueError(msg)
 
         # Check to see if there are missing required values
-        _missing_values = nodes_df[[RoadwayNetwork.MIN_NODE_REQUIRED_PROPS_DEFAULT]].isna()
-        if _missing_values.any():
-            msg = f"Missing values for required node properties:\n{nodes_df.loc[_missing_values]}"
+        _missing_values = new_nodes_df[
+            RoadwayNetwork.MIN_NODE_REQUIRED_PROPS_DEFAULT
+        ].isna()
+        if _missing_values.any().any():
+            msg = f"Missing values for required node properties:\n{new_nodes_df.loc[_missing_values]}"
             WranglerLogger.Warning(msg)
 
         return True
@@ -2209,7 +2246,9 @@ class RoadwayNetwork(object):
         """
 
         # A-B combinations are unique within new_links_df
-        _new_fk_id = pd.Series(zip(*[new_links_df[c] for c in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE]))
+        _new_fk_id = pd.Series(
+            zip(*[new_links_df[c] for c in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE])
+        )
         if not _new_fk_id.is_unique:
             msg = f"Duplicate ABs in new links."
             raise ValueError(msg)
@@ -2226,10 +2265,12 @@ class RoadwayNetwork(object):
             raise ValueError(msg)
 
         # Doesn't overlap with an existing UNIQUE_LINK_ID in self.links_df
-        _ids = pd.concat([
-            self.links_df[RoadwayNetwork.UNIQUE_LINK_KEY],
-            new_links_df[RoadwayNetwork.UNIQUE_LINK_KEY],
-        ])
+        _ids = pd.concat(
+            [
+                self.links_df[RoadwayNetwork.UNIQUE_LINK_KEY],
+                new_links_df[RoadwayNetwork.UNIQUE_LINK_KEY],
+            ]
+        )
         if not _ids.is_unique:
             msg = f"Link ID already exists:\n{_ids.loc[_ids.duplicated()]}."
             raise ValueError(msg)
@@ -2238,21 +2279,25 @@ class RoadwayNetwork(object):
         for fk_prop in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE:
             _has_node = new_links_df[fk_prop].apply(self.has_node)
             if not _has_node.all():
-                if len(self.nodes)<25:
+                if len(self.nodes) < 25:
                     WranglerLogger.debug(f"self.nodes_df:\n{self.nodes_df}")
-                msg = (
-                    f"New link specifies non existant node {fk_prop} = {new_links_df.loc[_has_node,fk_prop]}."
-                )
+                msg = f"New link specifies non existant node {fk_prop} = {new_links_df.loc[_has_node,fk_prop]}."
                 raise ValueError(msg)
 
         # Check to see if there are missing required columns
-        _missing_cols = [c for c in RoadwayNetwork.MIN_LINK_REQUIRED_PROPS_DEFAULT if c not in new_links_df.columns]
+        _missing_cols = [
+            c
+            for c in RoadwayNetwork.MIN_LINK_REQUIRED_PROPS_DEFAULT
+            if c not in new_links_df.columns
+        ]
         if _missing_cols:
             msg = f"Missing required link properties:{_missing_cols}"
             raise ValueError(msg)
 
         # Check to see if there are missing required values
-        _missing_values = new_links_df[RoadwayNetwork.MIN_LINK_REQUIRED_PROPS_DEFAULT].isna()
+        _missing_values = new_links_df[
+            RoadwayNetwork.MIN_LINK_REQUIRED_PROPS_DEFAULT
+        ].isna()
         if _missing_values.any().any():
             msg = f"Missing values for required link properties:\n{new_links_df.loc[_missing_values]}"
             WranglerLogger.Warning(msg)
@@ -2266,8 +2311,10 @@ class RoadwayNetwork(object):
             unique_node_id (_type_): value of RoadwayNetwork.UNIQUE_NODE_KEY
         """
 
-        has_node = self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY].isin([unique_node_id]).any()
-        
+        has_node = (
+            self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY].isin([unique_node_id]).any()
+        )
+
         return has_node
 
     def has_link(self, link_key_values: tuple) -> bool:
@@ -2285,6 +2332,99 @@ class RoadwayNetwork(object):
         _links = self.links_df.query(_query, engine="python")
 
         return bool(len(_links))
+
+    def _shapes_without_links(self) -> pd.Series:
+        """Returns shape ids that don't have associated links."""
+
+        _ids_in_shapes = self.links_df[RoadwayNetwork.UNIQUE_SHAPE_KEY]
+        _ids_in_links = self.links_df[RoadwayNetwork.LINK_FOREIGN_KEY_TO_SHAPE]
+
+        shapes_missing_links = _ids_in_shapes[~_ids_in_shapes.isin(_ids_in_links)]
+        return shapes_missing_links
+
+    def delete_links(self, del_links, dict, ignore_missing=True) -> None:
+        """
+        Delete the roadway links based on del_links dictionary selecting links by properties.
+
+        Also deletes shapes which no longer have links associated with them.
+
+        Args:
+            del_links: Dictionary identified shapes to delete by properties.  Links will be selected
+                if *any* of the properties are equal to *any* of the values.
+            ignore_missing: If True, will only warn if try to delete a links that isn't in network.
+                If False, it will fail on missing links. Defaults to True.
+        """
+        # if RoadwayNetwork.UNIQUE_LINK_ID is used to select, flag links that weren't in network.
+        if RoadwayNetwork.UNIQUE_LINK_KEY in del_links:
+            _del_link_ids = pd.Series(del_links[RoadwayNetwork.UNIQUE_LINK_KEY])
+            _missing_links = _del_link_ids[
+                ~_del_link_ids.isin(self.links_df[RoadwayNetwork.UNIQUE_LINK_KEY])
+            ]
+            msg = f"Following links cannot be deleted because they are not in the network: {_missing_links}"
+            if len(_missing_links) and ignore_missing:
+                WranglerLogger.warning(msg)
+            elif len(_missing_links):
+                raise ValueError(msg)
+
+        _del_links_mask = self.links_df.isin(del_links).any(axis=1)
+        if not _del_links_mask.any():
+            WranglerLogger.warning("No links found matching criteria to delete.")
+            return
+        WranglerLogger.debug(
+            f"Deleting following links:\n{self.links_df.loc[_del_links_mask][['A','B','model_link_id']]}"
+        )
+        self.links_df = self.links_df.loc[~_del_links_mask]
+
+        # Delete shapes which no longer have links associated with them
+        _shapes_without_links = self._shapes_without_links()
+        if len(_shapes_without_links):
+            WranglerLogger.debug(f"Shapes without links:\n {_shapes_without_links}")
+            self.shapes_df = self.shapes_df.loc[~_shapes_without_links]
+            WranglerLogger.debug(f"self.shapes_df reduced to:\n {self.shapes_df}")
+
+    def delete_nodes(self, del_nodes: dict, ignore_missing: bool = True) -> None:
+        """
+        Delete the roadway nodes based on del_nodes dictionary selecting nodes by properties.
+
+        Will fail if try to delete node that is currently being used by a link.
+
+        Args:
+            del_nodes : Dictionary identified nodes to delete by properties.  Nodes will be selected
+                if *any* of the properties are equal to *any* of the values.
+            ignore_missing: If True, will only warn if try to delete a node that isn't in network.
+                If False, it will fail on missing nodes. Defaults to True.
+        """
+        _del_nodes_mask = self.nodes_df.isin(del_nodes).any(axis=1)
+        _del_nodes_df = self.nodes_df.loc[_del_nodes_mask]
+
+        if not _del_nodes_mask.any():
+            WranglerLogger.warning("No nodes found matching criteria to delete.")
+            return
+
+        WranglerLogger.debug(f"Deleting Nodes:\n{_del_nodes_df}")
+        # Check if node used in an existing link
+        _links_with_nodes = RoadwayNetwork.links_with_nodes(
+            self.links_df,
+            _del_nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].tolist(),
+        )
+        if len(_links_with_nodes):
+            WranglerLogger.error(
+                f"Node deletion failed because being used in following links:\n{_links_with_nodes[RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE]}"
+            )
+            raise ValueError
+        x
+        # Check if node is in network
+        if RoadwayNetwork.UNIQUE_NODE_KEY in del_nodes:
+            _del_node_ids = pd.Series(del_nodes[RoadwayNetwork.UNIQUE_NODE_KEY])
+            _missing_nodes = _del_node_ids[
+                ~_del_node_ids.isin(self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY])
+            ]
+            msg = f"Following nodes cannot be deleted because they are not in the network: {_missing_nodes}"
+            if len(_missing_nodes) and ignore_missing:
+                WranglerLogger.warning(msg)
+            elif len(_missing_nodes):
+                raise ValueError(msg)
+        self.nodes_df = self.nodes_df.loc[~_del_nodes_mask]
 
     def delete_roadway_feature_change(
         self,
@@ -2305,52 +2445,17 @@ class RoadwayNetwork(object):
                 network but specified to "delete" in project card
                 If False, will fail.
         """
-        missing_error_message = []
 
-        if del_links is not None:
-            del_shapes = []
-            for key, val in del_links.items():
-                missing_links = [v for v in val if v not in self.links_df[key].tolist()]
-                if missing_links:
-                    message = f"Links attribute {key} with values as {missing_links} does not \
-                        exist in the network"
-                    if ignore_missing:
-                        WranglerLogger.warning(message)
-                    else:
-                        missing_error_message.append(message)
+        WranglerLogger.debug(
+            f"Deleting Roadway Features:\n-Links:\n{del_links}\n-Nodes:\n{del_nodes}"
+        )
 
-                deleted_links = self.links_df[self.links_df[key].isin(val)]
-                del_shapes.extend(
-                    deleted_links[RoadwayNetwork.UNIQUE_SHAPE_KEY].tolist()
-                )
+        if del_links:
+            self.delete_links(del_links, ignore_missing)
 
-                self.links_df.drop(
-                    self.links_df.index[self.links_df[key].isin(val)], inplace=True
-                )
+        if del_nodes:
+            self.delete_nodes(del_nodes, ignore_missing)
 
-            self.shapes_df.drop(
-                self.shapes_df.index[
-                    self.shapes_df[RoadwayNetwork.UNIQUE_SHAPE_KEY].isin(del_shapes)
-                ],
-                inplace=True,
-            )
-
-        if del_nodes is not None:
-            for key, val in del_nodes.items():
-                missing_nodes = [v for v in val if v not in self.nodes_df[key].tolist()]
-                if missing_nodes:
-                    message = f"Nodes attribute {key} with values as {missing_links} \
-                        does not exist in the network."
-                    if ignore_missing:
-                        WranglerLogger.warning(message)
-                    else:
-                        missing_error_message.append(message)
-
-                self.nodes_df = self.nodes_df[~self.nodes_df[key].isin(val)]
-
-        if missing_error_message:
-            WranglerLogger.error(" ".join(missing_error_message))
-            raise ValueError()
         return self
 
     def get_property_by_time_period_and_group(
@@ -2566,15 +2671,15 @@ class RoadwayNetwork(object):
         Returns:
             gpd.GeoDataFrame: _description_
         """
-       
+
         nodes_df = copy.deepcopy(
             links_df[[node_key_field, "geometry"]].drop_duplicates()
         )
-        #WranglerLogger.debug(f"ct1: nodes_df:\n{nodes_df}")
+        # WranglerLogger.debug(f"ct1: nodes_df:\n{nodes_df}")
         nodes_df = nodes_df.rename(
             columns={node_key_field: RoadwayNetwork.UNIQUE_NODE_KEY}
         )
-        #WranglerLogger.debug(f"ct2: nodes_df:\n{nodes_df}")
+        # WranglerLogger.debug(f"ct2: nodes_df:\n{nodes_df}")
         nodes_df["geometry"] = nodes_df["geometry"].apply(
             get_point_geometry_from_linestring, pos=link_pos
         )
@@ -2584,7 +2689,7 @@ class RoadwayNetwork(object):
             RoadwayNetwork.UNIQUE_NODE_KEY
         ]
         nodes_df.set_index(RoadwayNetwork.UNIQUE_NODE_KEY + "_idx", inplace=True)
-        #WranglerLogger.debug(f"ct3: nodes_df:\n{nodes_df}")
+        # WranglerLogger.debug(f"ct3: nodes_df:\n{nodes_df}")
         return nodes_df
 
     @staticmethod

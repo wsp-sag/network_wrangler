@@ -193,7 +193,6 @@ class ProjectCard(object):
             msg += f"      {exc.message}\n"
             WranglerLogger.error(msg)
 
-
         except yaml.YAMLError as exc:
             WranglerLogger.error(exc.message)
 

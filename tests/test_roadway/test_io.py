@@ -17,6 +17,7 @@ Run just the tests labeled basic using `pytest tests/test_roadway/test_io.py`
 To run with print statments, use `pytest -s tests/test_roadway/test_io.py`
 """
 
+
 def test_roadway_read_write(request, small_net, scratch_dir):
     print("\n--Starting:", request.node.name)
 
@@ -52,6 +53,7 @@ def test_roadway_read_write(request, small_net, scratch_dir):
         #new_shape.replace('\r', '').replace('\n', '').replace(' ','')
     assert(og_shape==new_shape)
     """
+
 
 def test_quick_roadway_read_write(request, scratch_dir, small_net):
     print("\n--Starting:", request.node.name)
