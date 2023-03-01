@@ -129,7 +129,6 @@ def test_query_roadway_property_by_time_group(
     # TODO make test make sure the values are correct.
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
-
 def test_get_modal_network(request, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -159,7 +158,6 @@ def test_get_modal_network(request, stpaul_net):
 
     assert set(test_links_of_selection) == set(control_links_of_selection)
     WranglerLogger.info(f"--Finished: {request.node.name}")
-
 
 def test_identify_segment_ends(request, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -191,7 +189,6 @@ def test_identify_segment_ends(request, stpaul_net):
 
     assert calculated_d == correct_d
     WranglerLogger.info(f"--Finished: {request.node.name}")
-
 
 def test_find_segment(request, stpaul_net):
     "TODO: add assert"

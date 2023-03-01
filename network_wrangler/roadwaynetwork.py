@@ -1718,8 +1718,26 @@ class RoadwayNetwork(object):
         WranglerLogger.debug(f"{len(self.nodes_df)} nodes in network after update")
         if len(self.nodes_df)<25:
             WranglerLogger.debug(f"Updated self.nodes_df:\n{self.nodes_df[['X','Y','geometry']]}")
-            
+
         self._update_node_geometry_in_links_shapes(updated_nodes_df)
+
+    @staticmethod
+    def nodes_in_links(
+        links_df: pd.DataFrame,
+    ) -> Collection:
+        """Returns a list of nodes that are contained in the links.
+
+        Args:
+            links_df: Links which to return node list for
+        """
+        if len(links_df) < 25:
+            WranglerLogger.debug(f"Links:\n{links_df[RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE]}")
+        nodes_list = list(set(
+            pd.concat([links_df[c] for c in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE]).tolist()
+        ))
+        if len(nodes_list) < 25:
+            WranglerLogger.debug(f"_node_list:\n{nodes_list}")
+        return nodes_list
 
     @staticmethod
     def links_with_nodes(
@@ -1732,14 +1750,32 @@ class RoadwayNetwork(object):
             node_id_list (list): List of nodes to find links for.  Nodes should be identified
                 by the foreign key - the one that is referenced in LINK_FOREIGN_KEY.
         """
-        WranglerLogger.debug(f"node_id_list: {node_id_list}")
+        #If nodes are equal to all the nodes in the links, return all the links
+        _nodes_in_links = RoadwayNetwork.nodes_in_links(links_df)
+        WranglerLogger.debug(f"# Nodes: {len(node_id_list)}\nNodes in links:{len(_nodes_in_links)}")
+        if len( set(node_id_list) - set(_nodes_in_links) ) == 0:
+                return links_df
+
+        WranglerLogger.debug(f"Finding links assocated with {len(node_id_list)} nodes.")
+        if len(node_id_list) < 25:
+            WranglerLogger.debug(f"node_id_list: {node_id_list}")
+
+        _selected_links_df = links_df[
+            links_df.isin({c:node_id_list for c in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE})
+        ]
+        WranglerLogger.debug(f"Temp Selected {len(_sl.sum())} associated with {len(node_id_list)} nodes.")
+        """
         _query_parts = [
             f"{prop} == {str(n)}"
             for prop in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE
             for n in node_id_list
         ]
+        
         _query = " or ".join(_query_parts)
         _selected_links_df = links_df.query(_query, engine="python")
+        """
+        WranglerLogger.debug(f"Selected {len(_selected_links_df)} associated with {len(node_id_list)} nodes.")
+
         return _selected_links_df
 
     def _update_node_geometry_in_links_shapes(
@@ -2122,10 +2158,7 @@ class RoadwayNetwork(object):
                 self.links_df.at[idx, attribute] = attr_value
 
         WranglerLogger.debug(f"{len(self.nodes_df)} Nodes in Network")
-        self.update_node_geometry()
-        WranglerLogger.debug(
-            f"{len(self.nodes_df)} Nodes in Network after updating node geometry"
-        )
+
         return self
 
     def _create_links(self, new_links: Collection[dict] = []):
