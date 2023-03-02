@@ -32,7 +32,7 @@ from .logger import WranglerLogger
 from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .utils import haversine_distance, create_unique_shape_id, offset_location_reference
-from .utils import create_location_reference_from_nodes, create_line_string
+from .utils import create_location_reference_from_nodes, create_line_string,class_vars
 
 
 class NoPathFound(Exception):
@@ -163,7 +163,7 @@ class RoadwayNetwork(object):
 
     UNIQUE_LINK_KEY = "model_link_id"
     UNIQUE_NODE_KEY = "model_node_id"
-    UNIQUE_MODEL_LINK_IDENTIFIERS = ["model_link_id"]
+    UNIQUE_MODEL_LINK_IDENTIFIERS = [UNIQUE_LINK_KEY]
     UNIQUE_NODE_IDENTIFIERS = ["model_node_id"]
 
     UNIQUE_SHAPE_KEY = "shape_id"
@@ -171,9 +171,9 @@ class RoadwayNetwork(object):
     MANAGED_LANES_REQUIRED_ATTRIBUTES = [
         "A",
         "B",
-        "model_link_id",
         "locationReferences",
-    ]
+    ] + [UNIQUE_LINK_KEY]
+
 
     KEEP_SAME_ATTRIBUTES_ML_AND_GP = [
         "distance",
@@ -236,7 +236,7 @@ class RoadwayNetwork(object):
 
     @staticmethod
     def read(
-        link_file: str, node_file: str, shape_file: str, fast: bool = True
+        link_file: str, node_file: str, shape_file: str, fast: bool = True,**kwargs,
     ) -> RoadwayNetwork:
         """
         Reads a network from the roadway network standard
@@ -247,6 +247,8 @@ class RoadwayNetwork(object):
             node_file: full path to the node file
             shape_file: full path to the shape file
             fast: boolean that will skip validation to speed up read time
+            kwargs: any additional kwargs which will update class-level variables.
+                 e.g. "unique_shape_key" = "id"
 
         Returns: a RoadwayNetwork instance
 
@@ -258,7 +260,18 @@ class RoadwayNetwork(object):
                 link_file, node_file, shape_file
             )
         )
-
+        """
+        Update Class Variables
+        """
+        _class_vars = class_vars(RoadwayNetwork)
+        for k,v in kwargs.items():
+            if k.upper() not in _class_vars:
+                WranglerLogger.warning(f"{k} specified in RoadwayNetwork kwargs but does not match a Class-level variable.")
+                continue
+            WranglerLogger.debug(f"Updating RoadwayNetwork.{k.upper()} to: {v}")
+            setattr(RoadwayNetwork,k.upper(),v)
+            WranglerLogger.debug(f"RoadwayNetwork.{k.upper()} updated to: {v}")
+                
         """
         Validate Input
         """
@@ -347,7 +360,7 @@ class RoadwayNetwork(object):
         WranglerLogger.info("Read %s shapes from %s" % (len(shapes_df), shape_file))
 
         roadway_network = RoadwayNetwork(
-            nodes=nodes_df, links=links_df, shapes=shapes_df
+            nodes=nodes_df, links=links_df, shapes=shapes_df,
         )
 
         roadway_network.link_file = link_file
