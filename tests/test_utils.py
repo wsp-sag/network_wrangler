@@ -15,7 +15,7 @@ slug_test_list = [
 ]
 
 
-@pytest.mark.travis
+
 @pytest.mark.parametrize("slug_test", slug_test_list)
 def test_get_slug(request, slug_test):
     print("\n--Starting:", request.node.name)
@@ -29,7 +29,7 @@ def test_get_slug(request, slug_test):
     assert slug == slug_test["answer"]
 
 
-@pytest.mark.travis
+
 def test_time_convert(request):
     print("\n--Starting:", request.node.name)
 
@@ -57,7 +57,7 @@ def test_time_convert(request):
 
 
 @pytest.mark.get_dist
-@pytest.mark.travis
+
 def test_get_distance_bw_lat_lon(request):
     print("\n--Starting:", request.node.name)
 
@@ -81,7 +81,7 @@ def test_get_unique_shape_id(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
+
 def test_location_reference_offset(request):
     print("\n--Starting:", request.node.name)
 

@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/wsp-sag/network_wrangler.svg?branch=master)](https://travis-ci.org/wsp-sag/network_wrangler)
-
 # network_wrangler
 
 Network Wrangler is a Python library for managing travel model network scenarios.
@@ -23,7 +21,7 @@ conda config --add channels conda-forge
 conda create python=3.7 rtree geopandas osmnx -n <my_wrangler_environment>
 conda activate <my_wrangler_environment>
 pip install network-wrangler
-pytest -s -m travis
+pytest
 ```
 
 Network wrangler can be installed in several ways depending on the user's needs. Installing from github is the simplest method and is appropriate when the user does not anticipate needing to update network wrangler. An update will require rebuilding the network wrangler environment. Installing from clone is slightly more involved and requires the user to have a git manager on their machine, but permits the user to install network wrangler with the `-e`, edit, option so that their network wrangler installation can be updated through pulling new commits from the network wrangler repo without a full reinstallation.
