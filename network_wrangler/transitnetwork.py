@@ -15,7 +15,7 @@ import partridge as ptg
 from partridge.config import default_config
 
 from .logger import WranglerLogger
-from .utils import parse_time_spans
+from .utils import parse_time_spans,class_vars
 from .roadwaynetwork import RoadwayNetwork
 
 
@@ -104,15 +104,18 @@ class TransitNetwork(object):
         raise NotImplementedError(msg)
 
     @staticmethod
-    def read(feed_path: str) -> TransitNetwork:
+    def read(feed_path: str, **kwargs) -> TransitNetwork:
         """
         Read GTFS feed from folder and TransitNetwork object
 
         Args:
             feed_path: where to read transit network files from
+            kwargs: any additional kwargs which will update class-level variables.
+                 e.g. "unique_shape_key" = "id"
 
         Returns: a TransitNetwork object.
         """
+
         config = default_config()
         feed = ptg.load_feed(feed_path, config=config)
         WranglerLogger.info("Read in transit feed from: {}".format(feed_path))
@@ -124,6 +127,19 @@ class TransitNetwork(object):
         for node in updated_config.nodes.keys():
             # Load (initiate Partridge's lazy load)
             editable_feed[node.replace(".txt", "")] = feed.get(node)
+
+        """
+        Update Class Variables
+        """
+        _class_vars = class_vars(TransitNetwork)
+        for k,v in kwargs.items():
+            if k.upper() not in _class_vars:
+                WranglerLogger.warning(f"{k} specified in TransitNetwork kwargs but does not match a Class-level variable.")
+                continue
+            WranglerLogger.debug(f"Updating TransityNetwork.{k.upper()} to: {v}")
+            setattr(RoadwayNetwork,k.upper(),v)
+            WranglerLogger.debug(f"TransitNetwork.{k.upper()} updated to: {v}")
+
 
         transit_network = TransitNetwork(feed=editable_feed, config=updated_config)
         transit_network.feed_path = feed_path

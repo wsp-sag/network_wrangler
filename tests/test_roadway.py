@@ -2,6 +2,7 @@ import os
 import pytest
 from network_wrangler import RoadwayNetwork
 from network_wrangler import ProjectCard
+from network_wrangler import WranglerLogger
 import time
 import pandas as pd
 
@@ -1155,8 +1156,6 @@ def test_find_segment(request):
     seg_df = net.identify_segment(seg_ends[0], seg_ends[1], selection_dict=sel_dict)
     print(seg_df)
 
-
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_managed_lane_restricted_access_egress(request):
@@ -1244,3 +1243,24 @@ def test_managed_lane_restricted_access_egress(request):
         \n***GP Links\n{gp_links[_display_c]}"
 
     print("--Finished:", request.node.name)
+
+@pytest.mark.menow
+def test_kwarg_instantiation(request):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+
+    update_values = {
+        'unique_link_key':'different_link_id'
+    }
+
+    net = RoadwayNetwork.read(
+        link_file=SMALL_LINK_FILE,
+        node_file=SMALL_NODE_FILE,
+        shape_file=SMALL_SHAPE_FILE,
+        fast=True,
+        **update_values
+    )
+
+    WranglerLogger.debug(f"RoadwayNetwork.UNIQUE_LINK_KEY: {RoadwayNetwork.UNIQUE_LINK_KEY}")
+    assert RoadwayNetwork.UNIQUE_LINK_KEY == update_values['unique_link_key']
+
+    WranglerLogger.info(f"--Finished: {request.node.name}")

@@ -8,6 +8,14 @@ from geographiclib.geodesic import Geodesic
 
 from .logger import WranglerLogger
 
+def class_vars(my_class)->list:
+    """Returns a list of variables in a class
+
+    Args:
+        my_class: class to get variables for
+    """
+    return [attr for attr in dir(my_class) if not callable(getattr(my_class, attr)) and not attr.startswith("__")]
+
 
 def point_df_to_geojson(df: pd.DataFrame, properties: list):
     """
