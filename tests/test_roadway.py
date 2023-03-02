@@ -511,6 +511,7 @@ def test_add_adhoc_field_from_card(request):
     )
     print("--Finished:", request.node.name)
 
+
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_bad_properties_statements(request):
@@ -1156,7 +1157,6 @@ def test_find_segment(request):
     print(seg_df)
 
 
-@pytest.mark.menow
 @pytest.mark.roadway
 @pytest.mark.travis
 def test_managed_lane_restricted_access_egress(request):
