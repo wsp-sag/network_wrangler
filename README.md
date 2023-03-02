@@ -103,8 +103,10 @@ This will take a few minutes because it is also installing all the prerequisites
 
 ```bash
 cd network_wrangler
-pip install -e .
+pip install -e .[tests]
 ```
+
+Note: the `[tests]` flag makes sure to install the testing and development requirements as listed in `requirements.tests.txt`
 
 There will be a lot of messy output, but it should end with something like:
 
@@ -118,11 +120,8 @@ Successfully installed Rtree-0.8.3 attrs-19.1.0 cchardet-2.1.4 chardet-3.0.4 cli
 You can test that network wrangler was properly installed by running the tests as follows:
 
 ```bash
-pytest -s  -m  travis
+pytest
 ```
-
-Using the `-s` flag will run all the tests in "noisy" mode.
-The `-m travis` flag runs only tests that are marked as for "travis" continuous  integration
 
 Note: if you are not part of the project team and want to contribute code back to the project, please fork before you clone and then add the original repository to your upstream origin list per [these directions on github](https://help.github.com/en/articles/fork-a-repo).
 
