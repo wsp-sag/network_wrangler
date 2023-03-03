@@ -539,7 +539,9 @@ class Scenario(object):
             p = p.__dict__
 
         if p.get("project"):
-            WranglerLogger.info("Applying {}".format(p["project"]))
+             WranglerLogger.info(f"Applying [{p['file']}]:{ p['project']}")
+
+        # for changes, iterate through the changes by calling this method for each change
 
         if p.get("changes"):
             for pc in p["changes"]:
