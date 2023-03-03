@@ -6,17 +6,12 @@ import pytest
 import pandas as pd
 
 from network_wrangler import ProjectCard
-from network_wrangler import RoadwayNetwork
 from network_wrangler import WranglerLogger
 from network_wrangler.utils import parse_time_spans_to_secs
 
 from network_wrangler.roadway.model_roadway import (
     MANAGED_LANES_LINK_ID_SCALAR,
 )
-
-pd.set_option("display.max_rows", 500)
-pd.set_option("display.max_columns", 500)
-pd.set_option("display.width", 50000)
 
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_managed_lanes.py`

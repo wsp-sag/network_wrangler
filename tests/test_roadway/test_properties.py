@@ -1,3 +1,4 @@
+import copy
 import os
 import time
 
@@ -9,9 +10,6 @@ from network_wrangler import ProjectCard
 from network_wrangler import RoadwayNetwork
 from network_wrangler import WranglerLogger
 
-pd.set_option("display.max_rows", 500)
-pd.set_option("display.max_columns", 500)
-pd.set_option("display.width", 50000)
 
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_properties.py
@@ -19,26 +17,26 @@ To run with print statments, use `pytest -s tests/test_roadway/test_properties.p
 """
 
 
-def test_network_connectivity(request, stpaul_net):
-    print("\n--Starting:", request.node.name)
-
-    print("Reading network ...")
-
-    net = stpaul_net
-    print("Checking network connectivity ...")
-    print("Drive Network Connected:", net.is_network_connected(mode="drive"))
-    print("--Finished:", request.node.name)
+def test_network_connectivity(request, small_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    MODE = 'drive'
+    net = copy.deepcopy(small_net)
+    connected = net.is_network_connected(mode=MODE)
+   
+    WranglerLogger.info(f"{MODE} Network Connected:{connected}")
+    assert connected
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_network_connectivity_ignore_single_nodes(request, stpaul_net):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    MODE = 'walk'
+    net = copy.deepcopy(stpaul_net)
 
-    print("Reading network ...")
+    WranglerLogger.debug(f"Assessing network connectivity for {MODE}.")
 
-    net = stpaul_net
-
-    print("Assessing network connectivity for walk...")
-    _, disconnected_nodes = net.assess_connectivity(mode="walk", ignore_end_nodes=True)
-    print("{} Disconnected Subnetworks:".format(len(disconnected_nodes)))
-    print("-->\n{}".format("\n".join(list(map(str, disconnected_nodes)))))
-    print("--Finished:", request.node.name)
+    _, disconnected_nodes = net.assess_connectivity(mode= MODE, ignore_end_nodes=True)
+    _nl = '\n'
+    WranglerLogger.debug(f"{len(disconnected_nodes)} Disconnected Subnetworks:")
+    WranglerLogger.debug(f"-->\n{_nl.join(list(map(str, disconnected_nodes)))}")
+    WranglerLogger.info(f"--Finished: {request.node.name}")
