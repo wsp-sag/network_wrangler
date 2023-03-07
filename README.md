@@ -196,9 +196,19 @@ my_network.apply_project_card(...) # returns
 my_network.write_roadway_network(...) # returns
 
 ## Scenario Building
-my_scenario = scenario_from_network(roadway_network, transit_network)
-my_scenario.add_projects(directory, keyword)
-my_scenario.write_networks(directory, format)
+my_scenario = Scenario.create_scenario(
+          base_scenario=my_base_scenario,
+          card_search_dir=project_card_directory,
+          tags = ["baseline-2050"]
+        )
+my_scenario.apply_all_projects()
+my_scenario.write("my_project/baseline", "baseline-2050")
+my_scenario.summarize(outfile="scenario_summary_baseline.txt")
+
+my_scenario.add_projects_from_files(list_of_build_project_card_files)
+my_scenario.queued_projects
+my_scenario.apply_all_projects()
+my_scenario.write("my_project/build", "baseline")
 
 ```
 ## Attribution  
