@@ -817,6 +817,7 @@ class TransitNetwork(object):
                 net = TransitNetwork._apply_transit_feature_change_routing(
                     net, trip_ids, i
                 )
+        return net
 
     def _apply_transit_feature_change_routing(
         self,
@@ -1071,7 +1072,7 @@ class TransitNetwork(object):
 
         q = net.feed.frequencies.trip_id.isin(freq["trip_id"])
 
-        net.loc[q, properties["property"]] = build_value
+        net.feed.frequencies.loc[q, properties["property"]] = build_value
         return net
 
     def apply_transit_managed_lane(

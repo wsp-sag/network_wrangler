@@ -1573,7 +1573,6 @@ class RoadwayNetwork(object):
         """
 
         valid = True
-        validation_error_message = ""
         for p in properties:
             if p["property"] not in df.columns and p.get("change"):
                 WranglerLogger.error(
@@ -1593,7 +1592,7 @@ class RoadwayNetwork(object):
                 valid = False
             if p.get("change") and not p.get("existing"):
                 if require_existing_for_change:
-                    validation_error_message.append(
+                    WranglerLogger.error(
                         f'"Change" is specified for attribute {p["property"]}, but there \
                             isn\'t a value for existing.\nTo proceed, run with the setting \
                             require_existing_for_change=False'
