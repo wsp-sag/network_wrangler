@@ -31,16 +31,16 @@ def test_read_dot_wrangler_roadway(request, stpaul_ex_dir):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.failing
 def test_apply_pycode_roadway(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     net = copy.deepcopy(small_net)
     _pycode = "self.links_df.loc[self.links_df['lanes'] == 5, 'lanes'] = 12"
     _link_sel = net.links_df.loc[net.links_df["lanes"] == 5]
+    _link_sel_idx = _link_sel["model_link_id"].squeeze()
     _expected_value = 12
     _show_fields = ["model_link_id", "lanes"]
-
+ 
     WranglerLogger.debug(f"Before Change:\n{_link_sel[_show_fields]}")
 
     net = net.apply(
@@ -50,6 +50,7 @@ def test_apply_pycode_roadway(request, small_net):
             "pycode": _pycode,
         }
     )
+    _link_sel = net.links_df.loc[net.links_df["model_link_id"] == _link_sel_idx]
     WranglerLogger.debug(f"After Change:\n{_link_sel[_show_fields]}")
 
     assert _link_sel["lanes"].eq(_expected_value).all()
