@@ -883,7 +883,7 @@ class TransitNetwork(object):
                     )
                     # Add new row to stops
                     new_stop_id = str(int(fk_i) + TransitNetwork.ID_SCALAR)
-                    if stop_id in stops["stop_id"].tolist():
+                    if new_stop_id in stops["stop_id"].tolist():
                         WranglerLogger.error("Cannot create a unique new stop_id.")
                     stops.loc[
                         len(stops.index) + 1,
