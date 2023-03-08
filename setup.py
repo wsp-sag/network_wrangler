@@ -17,10 +17,10 @@ with open("README.md") as f:
 with open("requirements.txt") as f:
     install_requires = [r.strip() for r in f.readlines()]
 
-EXTRAS = ["tests"]
+EXTRAS = ["tests","viz","docs"]
 extras_require = {}
 for e in EXTRAS:
-    with open("requirements.{e}.txt") as f:
+    with open(f"requirements.{e}.txt") as f:
         extras_require[e]=[r.strip() for r in f.readlines()]
 
 

@@ -6,3 +6,4 @@ partridge >= 1.1
 pyyaml
 geojson
 jsonschema
+folium
