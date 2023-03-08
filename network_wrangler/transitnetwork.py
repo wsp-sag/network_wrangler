@@ -1042,7 +1042,7 @@ class TransitNetwork(object):
             net.feed.shapes = shapes
             net.feed.stops = stops
             net.feed.stop_times = stop_times
-            return net
+        return net
 
     def _apply_transit_feature_change_frequencies(
         self, trip_ids: pd.Series, properties: dict
@@ -1080,8 +1080,6 @@ class TransitNetwork(object):
         node_ids: list,
     ) -> TransitNetwork:
 
-        net = copy.deepcopy(self)
-
         # Traversed nodes without a stop should be negative integers
         all_stops = net.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
         node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
@@ -1094,6 +1092,7 @@ class TransitNetwork(object):
                 "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids),
             },
         )
+        return net
 
 
 class DotDict(dict):

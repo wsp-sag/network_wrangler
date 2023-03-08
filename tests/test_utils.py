@@ -101,14 +101,14 @@ def test_location_reference_offset(request):
 
     print("--Finished:", request.node.name)
 
-
+@pytest.mark.menow
 def test_point_from_xy(request):
     from network_wrangler.utils import point_from_xy
     from numpy.testing import assert_almost_equal
 
     in_xy = (871106.53, 316284.46)  # Minnesota Science Museum
     xy_crs = 26993  # Minnesota State Plane South, Meter
-    out_crs = 4326  # WGS84
+    out_crs = 4269  # https://epsg.io/4269
 
     out_point = point_from_xy(*in_xy, xy_crs=xy_crs, point_crs=out_crs)
     out_xy = (out_point.x, out_point.y)
