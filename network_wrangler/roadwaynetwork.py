@@ -8,6 +8,7 @@ import sys
 import copy
 import numbers
 from random import randint
+from typing import List, Optional, Any, Union
 
 import folium
 import pandas as pd
@@ -31,7 +32,7 @@ from .logger import WranglerLogger
 from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .utils import offset_location_reference, haversine_distance, create_unique_shape_id
-from .utils import create_location_reference_from_nodes, create_line_string
+from .utils import create_location_reference_from_nodes, create_line_string,offset_lat_lon
 
 
 class RoadwayNetwork(object):
@@ -402,7 +403,7 @@ class RoadwayNetwork(object):
         """
         return roadway_net.shapes_df
 
-    def validate_uniqueness(self) -> Bool:
+    def validate_uniqueness(self) -> bool:
         """
         Confirms that the unique identifiers are met.
         """
@@ -618,7 +619,7 @@ class RoadwayNetwork(object):
 
         return False
 
-    def validate_selection(self, selection: dict) -> Bool:
+    def validate_selection(self, selection: dict) -> bool:
         """
         Evaluate whetther the selection dictionary contains the
         minimum required values.
@@ -932,7 +933,7 @@ class RoadwayNetwork(object):
                 WranglerLogger.error(msg)
                 raise Exception(msg)
 
-        def _add_breadth(candidate_links: DataFrame, nodes: Data, links, i):
+        def _add_breadth(candidate_links: DataFrame, nodes: DataFrame, links, i):
             """
             Add outbound and inbound reference IDs to candidate links
             from existing nodes
@@ -1322,7 +1323,7 @@ class RoadwayNetwork(object):
 
     def apply_managed_lane_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
-    ) -> Union(None, RoadwayNetwork):
+    ) -> Union[None, 'RoadwayNetwork']:
         """
         Apply the managed lane feature changes to the roadway network
 
@@ -1334,7 +1335,7 @@ class RoadwayNetwork(object):
 
         .. todo:: decide on connectors info when they are more specific in project card
         """
-
+        i=0
         # add ML flag
         if "managed" in self.links_df.columns:
             self.links_df.loc[link_idx, "managed"] = 1

@@ -336,7 +336,7 @@ class TransitNetwork(object):
         return valid
 
     @staticmethod
-    def route_ids_in_routestxt(feed: DotDict) -> Bool:
+    def route_ids_in_routestxt(feed: DotDict) -> bool:
         """
         Wherever route_id occurs, make sure it is in routes.txt
 
@@ -361,7 +361,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def trip_ids_in_tripstxt(feed: DotDict) -> Bool:
+    def trip_ids_in_tripstxt(feed: DotDict) -> bool:
         """
         Wherever trip_id occurs, make sure it is in trips.txt
 
@@ -388,7 +388,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def shape_ids_in_shapestxt(feed: DotDict) -> Bool:
+    def shape_ids_in_shapestxt(feed: DotDict) -> bool:
         """
         Wherever shape_id occurs, make sure it is in shapes.txt
 
@@ -414,7 +414,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def stop_ids_in_stopstxt(feed: DotDict) -> Bool:
+    def stop_ids_in_stopstxt(feed: DotDict) -> bool:
         """
         Wherever stop_id occurs, make sure it is in stops.txt
 
@@ -455,7 +455,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def validate_network_keys(feed: DotDict) -> Bool:
+    def validate_network_keys(feed: DotDict) -> bool:
         """
         Validates foreign keys are present in all connecting feed files.
 
