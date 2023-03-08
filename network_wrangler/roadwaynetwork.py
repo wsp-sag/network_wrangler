@@ -32,7 +32,7 @@ from .logger import WranglerLogger
 from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
 from .utils import offset_location_reference, haversine_distance, create_unique_shape_id
-from .utils import create_location_reference_from_nodes, create_line_string,offset_lat_lon
+from .utils import create_location_reference_from_nodes, create_line_string
 
 
 class RoadwayNetwork(object):
@@ -1958,10 +1958,10 @@ class RoadwayNetwork(object):
 
         def _update_location_reference(location_reference: list):
             out_location_reference = copy.deepcopy(location_reference)
-            out_location_reference[0]["point"] = offset_lat_lon(
+            out_location_reference[0]["point"] = offset_location_reference(
                 out_location_reference[0]["point"]
             )
-            out_location_reference[1]["point"] = offset_lat_lon(
+            out_location_reference[1]["point"] = offset_location_reference(
                 out_location_reference[1]["point"]
             )
             return out_location_reference
