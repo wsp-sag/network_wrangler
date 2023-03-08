@@ -6,8 +6,10 @@ import os
 import glob
 import copy
 import pprint
-from pathlib import Path
+
+from collections import deque
 from datetime import datetime
+from pathlib import Path
 from typing import Union, Mapping, Collection
 
 import pandas as pd
@@ -21,8 +23,7 @@ from .utils import topological_sort
 from .roadwaynetwork import RoadwayNetwork
 from .transitnetwork import TransitNetwork
 
-##NEXT
-# do lazy evaluation of queued projects including evaluating conflicts, etc.
+
 class Scenario(object):
     """
     Holds information about a scenario.
@@ -124,10 +125,11 @@ class Scenario(object):
 
     @property
     def queued_projects(self):
-        if self._queued_projects is not None:
+        """Returns a list version of _queued_projects queue."""
+        if self._queued_projects is None:
             self._check_projects_requirements_satisfied(self._planned_projects)
             self._queued_projects = self.order_projects(self._planned_projects)
-        return self._queued_projects
+        return list(self._queued_projects)
 
     def __str__(self):
         s = ["{}: {}".format(key, value) for key, value in self.__dict__.items()]
@@ -419,14 +421,14 @@ class Scenario(object):
             WranglerLogger.debug(f"Problematic Conflicts:\n{_conf_dict}")
             raise ValueError(f"Found {len(_conflicts)} conflicts: {_conflict_problems}")
 
-    def order_projects(self, project_list: Collection[str]) -> Collection[str]:
+    def order_projects(self, project_list: Collection[str]) -> deque:
         """
-        Orders a list of projects based on moving up pre-requisites.
+        Orders a list of projects based on moving up pre-requisites into a deque.
 
         args:
             project_list: list of projects to order
 
-        Returns: ordered list of project cards based on pre-requisites
+        Returns: deque for applying projects.
         """
         project_list = [p.lower() for p in project_list]
         assert self._check_projects_have_project_cards(project_list)
@@ -446,23 +448,31 @@ class Scenario(object):
                     adjacency_list[prereq.lower()] = [project]
 
         # sorted_project_names is topological sorted project card names (based on prerequsiite)
-        ordered_projects = topological_sort(
+        _ordered_projects = topological_sort(
             adjacency_list=adjacency_list, visited_list=visited_list
         )
 
-        if not set(ordered_projects) == set(project_list):
-            _missing = list(set(project_list) - set(ordered_projects))
+        if not set(_ordered_projects) == set(project_list):
+            _missing = list(set(project_list) - set(_ordered_projects))
             raise ValueError(f"Project sort resulted in missing projects:_missing")
 
-        WranglerLogger.debug(f"Ordered Projects:\n{ordered_projects}")
+        project_deque = deque(_ordered_projects)
 
-        return ordered_projects
+        WranglerLogger.debug(f"Ordered Projects:\n{project_deque}")
+
+        return project_deque
 
     def apply_all_projects(self):
         """Applies all planned projects in the queue."""
+        # Call this to make sure projects are appropriately queued in hidden variable.
+        self.queued_projects
 
-        for p in self.queued_projects:
-            self._apply_project(p)
+        # Use hidden variable.
+        while self._queued_projects:
+            self._apply_project(self._queued_projects.popleft())
+
+        # set this so it will trigger re-queuing any more projects.
+        self._queued_projects = None
 
     def _apply_change(self, change: dict) -> None:
         """Applies a specific change specified in a project card.
@@ -515,6 +525,7 @@ class Scenario(object):
         else:
             self._apply_change(p)
 
+        self._planned_projects.remove(project_name)
         self.applied_projects.append(project_name)
 
     def apply_projects(self, project_list: Collection[str]):
@@ -531,10 +542,14 @@ class Scenario(object):
         project_list = [p.lower() for p in project_list]
 
         self._check_projects_requirements_satisfied(project_list)
-        ordered_projects = self.order_projects(project_list)
+        ordered_project_queue = self.order_projects(project_list)
 
-        for p in ordered_projects:
-            self._apply_project(p)
+        while ordered_project_queue:
+            self._apply_project(ordered_project_queue.popleft())
+
+        # Set so that when called again it will retrigger queueing from planned projects.
+        self._ordered_projects = None
+
 
     def write(self, path: Union(Path, str), name: str) -> None:
         """_summary_
