@@ -1762,7 +1762,7 @@ class RoadwayNetwork(object):
         _selected_links_df = links_df[
             links_df.isin({c:node_id_list for c in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE})
         ]
-        WranglerLogger.debug(f"Temp Selected {len(_sl.sum())} associated with {len(node_id_list)} nodes.")
+        WranglerLogger.debug(f"Temp Selected {len(_selected_links_df)} associated with {len(node_id_list)} nodes.")
         """
         _query_parts = [
             f"{prop} == {str(n)}"
@@ -2452,7 +2452,7 @@ class RoadwayNetwork(object):
                 f"Node deletion failed because being used in following links:\n{_links_with_nodes[RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE]}"
             )
             raise ValueError
-        x
+        
         # Check if node is in network
         if RoadwayNetwork.UNIQUE_NODE_KEY in del_nodes:
             _del_node_ids = pd.Series(del_nodes[RoadwayNetwork.UNIQUE_NODE_KEY])
