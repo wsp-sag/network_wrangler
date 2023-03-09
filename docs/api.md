@@ -2,12 +2,12 @@
 
 ## Base Classes
 
-::: nework_wrangler.ProjectCard
-::: nework_wrangler.Scenario
-::: nework_wrangler.RoadwayNetwork
-::: nework_wrangler.TransitNetwork
+::: network_wrangler.ProjectCard
+::: network_wrangler.Scenario
+::: network_wrangler.RoadwayNetwork
+::: network_wrangler.TransitNetwork
 
 ## Utils and Functions
 
-::: nework_wrangler.utils
-::: nework_wrangler.logger
+::: network_wrangler.utils
+::: network_wrangler.logger
