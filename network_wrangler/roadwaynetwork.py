@@ -1371,7 +1371,7 @@ class RoadwayNetwork(object):
 
     def apply_python_calculation(
         self, pycode: str, in_place: bool = True
-    ) -> Union(None, RoadwayNetwork):
+    ) -> Union(None, 'RoadwayNetwork'):
         """
         Changes roadway network object by executing pycode.
 
@@ -1383,7 +1383,7 @@ class RoadwayNetwork(object):
 
     def apply_roadway_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
-    ) -> Union(None, RoadwayNetwork):
+    ) -> Union(None, 'RoadwayNetwork'):
         """
         Changes the roadway attributes for the selected features based on the
         project card information passed
@@ -1439,7 +1439,7 @@ class RoadwayNetwork(object):
 
     def apply_managed_lane_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
-    ) -> Union(None, RoadwayNetwork):
+    ) -> Union[None, 'RoadwayNetwork']:
         """
         Apply the managed lane feature changes to the roadway network
 
@@ -1451,7 +1451,7 @@ class RoadwayNetwork(object):
 
         .. todo:: decide on connectors info when they are more specific in project card
         """
-
+        i=0
         # add ML flag
         if "managed" in self.links_df.columns:
             self.links_df.loc[link_idx, "managed"] = 1

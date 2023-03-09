@@ -54,7 +54,7 @@ def _read_stpaul_net():
 
 
 @pytest.mark.roadway
-@pytest.mark.travis
+
 def test_roadway_read_write(request):
     print("\n--Starting:", request.node.name)
 
@@ -98,8 +98,6 @@ def test_roadway_read_write(request):
     """
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_quick_roadway_read_write(request):
     print("\n--Starting:", request.node.name)
 
@@ -153,8 +151,7 @@ def test_quick_roadway_read_write(request):
         },
     ],
 )
-@pytest.mark.roadway
-@pytest.mark.travis
+
 def test_select_roadway_features(request, selection):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -178,8 +175,6 @@ def test_select_roadway_features(request, selection):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_select_roadway_features_from_projectcard(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -205,8 +200,7 @@ def test_select_roadway_features_from_projectcard(request):
         "3_multiple_roadway_attribute_change.yml",
     ],
 )
-@pytest.mark.roadway
-@pytest.mark.travis
+
 def test_apply_roadway_feature_change(request, apply_feature_change_project_card):
     print("\n--Starting:", request.node.name)
     my_net = _read_stpaul_net()
@@ -237,8 +231,6 @@ def test_apply_roadway_feature_change(request, apply_feature_change_project_card
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_managed_lane(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -268,8 +260,6 @@ def test_add_managed_lane(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_managed_lane_complex(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -299,8 +289,6 @@ def test_add_managed_lane_complex(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_managed_lane_change_functionality(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -331,8 +319,6 @@ def test_managed_lane_change_functionality(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_adhoc_field(request):
     """
     Makes sure new fields can be added in the API and be saved and read in again.
@@ -346,8 +332,6 @@ def test_add_adhoc_field(request):
     assert net.links_df["my_ad_hoc_field"][0] == 22.5
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_default_value(request):
     """
     Makes sure we can add a new field with a default value
@@ -391,8 +375,6 @@ def test_add_default_value(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
     """
     Makes sure new fields can be added to the network for managed lanes that get moved there.
@@ -433,8 +415,6 @@ def test_add_adhoc_managed_lane_field(request):
     # print("CALCULATED:\n", v_series.loc[selected_link_indices])
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_adhoc_managed_lane_field(request):
     """
     Makes sure new fields can be added to the network for managed lanes that get moved there.
@@ -475,8 +455,6 @@ def test_add_adhoc_managed_lane_field(request):
     # print("CALCULATED:\n", v_series.loc[selected_link_indices])
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_add_adhoc_field_from_card(request):
     """
     Makes sure new fields can be added from a project card and that
@@ -511,8 +489,6 @@ def test_add_adhoc_field_from_card(request):
     )
     print("--Finished:", request.node.name)
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_bad_properties_statements(request):
     """
     Makes sure new fields can be added from a project card and that
@@ -537,8 +513,6 @@ def test_bad_properties_statements(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_add_delete_roadway_project_card(request):
     print("\n--Starting:", request.node.name)
 
@@ -671,8 +645,6 @@ def test_add_delete_roadway_project_card(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_export_network_to_csv(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -688,8 +660,6 @@ variable_queries = [
 
 
 @pytest.mark.parametrize("variable_query", variable_queries)
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_query_roadway_property_by_time_group(request, variable_query):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()
@@ -714,8 +684,6 @@ def test_query_roadway_property_by_time_group(request, variable_query):
     # TODO make test make sure the values are correct.
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_write_model_net(request):
     print("\n--Starting:", request.node.name)
 
@@ -747,7 +715,7 @@ def test_write_model_net(request):
 
 
 @pytest.mark.roadway
-@pytest.mark.travis
+
 def test_network_connectivity(request):
     print("\n--Starting:", request.node.name)
 
@@ -764,8 +732,6 @@ def test_network_connectivity(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_get_modal_network(request):
     print("\n--Starting:", request.node.name)
 
@@ -803,9 +769,6 @@ def test_get_modal_network(request):
 
     assert set(test_links_of_selection) == set(control_links_of_selection)
 
-
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_network_connectivity_ignore_single_nodes(request):
     print("\n--Starting:", request.node.name)
 
@@ -824,8 +787,6 @@ def test_network_connectivity_ignore_single_nodes(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.travis
 @pytest.mark.xfail(strict=True)
 def test_add_roadway_links(request):
     print("\n--Starting:", request.node.name)
@@ -847,9 +808,6 @@ def test_add_roadway_links(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.test_ml
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_existing_managed_lane_apply(request):
     print("\n--Starting:", request.node.name)
 
@@ -889,8 +847,6 @@ def test_existing_managed_lane_apply(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_delete_roadway_shape(request):
     print("\n--Starting:", request.node.name)
 
@@ -922,8 +878,6 @@ def test_delete_roadway_shape(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_create_default_geometry(request):
     print("\n--Starting:", request.node.name)
 
@@ -947,8 +901,6 @@ def test_create_default_geometry(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_add_roadway_shape(request):
     print("\n--Starting:", request.node.name)
 
@@ -980,8 +932,6 @@ def test_add_roadway_shape(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_create_ml_network_shape(request):
     print("\n--Starting:", request.node.name)
 
@@ -1067,7 +1017,6 @@ def test_create_ml_network_shape(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
 @pytest.mark.roadway
 def test_dot_wrangler_roadway(request):
     print("\n--Starting:", request.node.name)
@@ -1083,8 +1032,6 @@ def test_dot_wrangler_roadway(request):
     )
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_apply_pycode_roadway(request):
     print("\n--Starting:", request.node.name)
 
@@ -1109,8 +1056,6 @@ def test_apply_pycode_roadway(request):
     )
 
 
-@pytest.mark.travis
-@pytest.mark.roadway
 def test_identify_segment_ends(request):
     print("\n--Starting:", request.node.name)
 
@@ -1156,9 +1101,6 @@ def test_find_segment(request):
     print(seg_df)
 
 
-@pytest.mark.menow
-@pytest.mark.roadway
-@pytest.mark.travis
 def test_managed_lane_restricted_access_egress(request):
     print("\n--Starting:", request.node.name)
     net = _read_stpaul_net()

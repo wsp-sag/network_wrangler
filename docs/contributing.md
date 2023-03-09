@@ -19,6 +19,12 @@ Documentation is produced by Sphinx and can be run by executing the following fr
 make html
 ```
 
+Note: to make sure you have the correct packages, run:
+
+```bash
+pip install -r requirements.docs.txt
+```
+
 ## Roadmap
 
 - [Issue List](https://github.com/wsp-sag/network_wrangler/issues)  
@@ -34,4 +40,4 @@ pytest
 
 ## Continuous Integration
 
-Continuous integration is set up in [Travis CI](https://travis-ci.org/wsp-sag/network_wrangler).
+Continuous integration is run in Github Actions.
