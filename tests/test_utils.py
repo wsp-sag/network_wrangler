@@ -2,9 +2,9 @@ import pytest
 
 from shapely.geometry import LineString
 
-from network_wrangler import haversine_distance
-from network_wrangler import create_unique_shape_id
-from network_wrangler import offset_location_reference
+from network_wrangler.utils import haversine_distance
+from network_wrangler.utils import create_unique_shape_id
+from network_wrangler.utils import offset_location_reference
 
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
@@ -42,9 +42,9 @@ def test_time_convert(request):
     df = DataFrame(time_tests, columns=["time", "time_results"])
     print("Original Time Series", df)
 
-    from network_wrangler.utils import parse_time_spans
+    from network_wrangler.utils import parse_time_spans_to_secs
 
-    df["time"] = df["time"].apply(parse_time_spans)
+    df["time"] = df["time"].apply(parse_time_spans_to_secs)
     print("Result Time Series", df)
     from pandas.testing import assert_series_equal
 
@@ -90,3 +90,18 @@ def test_location_reference_offset(request):
     assert new_location_reference == expected_location_reference
 
     print("--Finished:", request.node.name)
+
+@pytest.mark.menow
+def test_point_from_xy(request):
+    from network_wrangler.utils import point_from_xy
+    from numpy.testing import assert_almost_equal
+
+    in_xy = (871106.53, 316284.46)  # Minnesota Science Museum
+    xy_crs = 26993  # Minnesota State Plane South, Meter
+    out_crs = 4269  # https://epsg.io/4269
+
+    out_point = point_from_xy(*in_xy, xy_crs=xy_crs, point_crs=out_crs)
+    out_xy = (out_point.x, out_point.y)
+    wgs_xy_science_museum = (-93.099, 44.943)
+
+    assert_almost_equal(out_xy, wgs_xy_science_museum, decimal=2)

@@ -4,7 +4,7 @@ tags:
 changes:
   - category: Roadway Property Change
     facility:
-       link:
+       links:
          - name:
             - '6th'
             - 'Sixth'
@@ -18,7 +18,7 @@ changes:
         set: 1
   - category: Roadway Property Change
     facility:
-       link:
+       links:
          - name:
             - '5th'
        A:

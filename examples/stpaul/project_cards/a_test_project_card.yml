@@ -9,7 +9,7 @@ dependencies:
   corequisites: []
   conflicts: []
 facility:
-   link:
+   links:
      - name:
         - '6th'
         - 'Sixth'

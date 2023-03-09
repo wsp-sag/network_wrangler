@@ -71,7 +71,7 @@
       "oneOf": [
         {
           "required": [
-            "link"
+            "links"
           ]
         },
         {
@@ -96,7 +96,7 @@
         }
       ],
       "properties": {
-        "link": {
+        "links": {
           "type": "array",
           "title": "Road Name or Link ID",
           "oneOf": [

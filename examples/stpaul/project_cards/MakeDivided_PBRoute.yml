@@ -245,7 +245,7 @@ changes:
     B:
       travelModelId:
       - 83809
-    link:
+    links:
       model_link_id:
       - 166734
   properties:
@@ -293,7 +293,7 @@ changes:
     B:
       travelModelId:
       - 65718
-    link:
+    links:
       model_link_id:
       - 182586
   properties:

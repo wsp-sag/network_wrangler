@@ -7,7 +7,7 @@ changes:
   nodes: []
 - category: Roadway Property Change
   facility:
-    link:
+    links:
     - model_link_id:
       - 224
   properties:
