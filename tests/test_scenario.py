@@ -23,8 +23,6 @@ STPAUL_LINK_FILE = os.path.join(STPAUL_DIR, "link.json")
 STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
 
 
-@pytest.mark.scenario
-
 def test_project_card_read(request):
     print("\n--Starting:", request.node.name)
     in_dir = os.path.join(
@@ -41,8 +39,6 @@ def test_project_card_read(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-
 def test_project_card_write(request):
     print("\n--Starting:", request.node.name)
     in_dir = os.path.join(STPAUL_DIR, "project_cards")
@@ -53,9 +49,6 @@ def test_project_card_write(request):
     test_card = ProjectCard.read(in_file)
     for k, v in project_card.__dict__.items():
         assert v == test_card.__dict__[k]
-
-
-@pytest.mark.scenario
 
 def test_scenario_conflicts(request):
 
@@ -89,8 +82,6 @@ def test_scenario_conflicts(request):
     print("Conflict checks done:", scen.conflicts_checked)
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.scenario
 
 def test_scenario_requisites(request):
     print("\n--Starting:", request.node.name)
@@ -126,8 +117,6 @@ def test_scenario_requisites(request):
     print("Requisite checks done:", scen.requisites_checked)
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.scenario
 
 def test_project_sort(request):
     print("\n--Starting:", request.node.name)
@@ -165,9 +154,6 @@ def test_project_sort(request):
     print("Ordered Projects:", scen.get_project_names())
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.roadway
-@pytest.mark.scenario
 
 def test_managed_lane_project_card(request):
     print("\n--Starting:", request.node.name)
@@ -286,8 +272,6 @@ def test_query_builder(request, test_spec):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-
 def test_apply_summary_wrappers(request):
     print("\n--Starting:", request.node.name)
 
@@ -324,8 +308,6 @@ def test_apply_summary_wrappers(request):
 
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.scenario
 
 def test_scenario_building_from_script(request):
     print("\n--Starting:", request.node.name)
