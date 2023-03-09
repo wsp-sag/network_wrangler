@@ -9,3 +9,4 @@ mkdocs-macros-plugin
 mkdocs-material
 mkdocstrings
 mkdocstrings-python
+fontawesome_markdown
