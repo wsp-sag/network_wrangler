@@ -12,9 +12,6 @@ STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
 
-@pytest.mark.basic
-@pytest.mark.travis
-@pytest.mark.transit
 def test_transit_read_write(request):
     print("\n--Starting:", request.node.name)
     transit_net = TransitNetwork.read(feed_path=STPAUL_DIR)
@@ -26,8 +23,6 @@ def test_transit_read_write(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.travis
-@pytest.mark.transit
 def test_select_transit_features(request):
     print("\n--Starting:", request.node.name)
     net = TransitNetwork.read(STPAUL_DIR)
@@ -62,8 +57,6 @@ def test_select_transit_features(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit
-@pytest.mark.travis
 def test_select_transit_features_from_projectcard(request):
     print("\n--Starting:", request.node.name)
     net = TransitNetwork.read(STPAUL_DIR)
@@ -166,8 +159,6 @@ def test_select_transit_features_from_projectcard(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit
-@pytest.mark.travis
 def test_apply_transit_feature_change_from_projectcard(request):
     print("\n--Starting:", request.node.name)
     net = TransitNetwork.read(STPAUL_DIR)
@@ -243,8 +234,6 @@ def test_apply_transit_feature_change_from_projectcard(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit
-@pytest.mark.travis
 def test_wrong_existing(request):
     print("\n--Starting:", request.node.name)
     net = TransitNetwork.read(STPAUL_DIR)
@@ -266,8 +255,6 @@ def test_wrong_existing(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.transit
-@pytest.mark.travis
 def test_zero_valid_facilities(request):
     print("\n--Starting:", request.node.name)
     net = TransitNetwork.read(STPAUL_DIR)
@@ -282,9 +269,6 @@ def test_zero_valid_facilities(request):
 
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.transit
-@pytest.mark.travis
 def test_invalid_selection_key(request):
     print("\n--Starting:", request.node.name)
     net = TransitNetwork.read(STPAUL_DIR)
@@ -295,9 +279,6 @@ def test_invalid_selection_key(request):
 
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.transit
-@pytest.mark.travis
 def test_invalid_optional_selection_variable(request):
     print("\n--Starting:", request.node.name)
     net = TransitNetwork.read(STPAUL_DIR)
@@ -324,8 +305,6 @@ def test_invalid_optional_selection_variable(request):
 
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.travis
 def test_transit_road_consistencies(request):
     print("\n--Starting:", request.node.name)
     net = TransitNetwork.read(STPAUL_DIR)

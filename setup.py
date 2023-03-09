@@ -15,12 +15,14 @@ with open("README.md") as f:
     long_description = f.read()
 
 with open("requirements.txt") as f:
-    requirements = f.readlines()
+    install_requires = [r.strip() for r in f.readlines()]
 
-with open("dev-requirements.txt") as f:
-    requirements += f.readlines()
+EXTRAS = ["tests","viz","docs"]
+extras_require = {}
+for e in EXTRAS:
+    with open(f"requirements.{e}.txt") as f:
+        extras_require[e]=[r.strip() for r in f.readlines()]
 
-install_requires = [r.strip() for r in requirements]
 
 setup(
     name="network_wrangler",
@@ -34,4 +36,5 @@ setup(
     packages=["network_wrangler"],
     include_package_data=True,
     install_requires=install_requires,
+    extras_require = extras_require,
 )

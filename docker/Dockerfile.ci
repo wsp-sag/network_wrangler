@@ -13,7 +13,7 @@ RUN apt-get update \
 COPY requirements.txt /tmp/
 RUN pip install --no-cache-dir --requirement /tmp/requirements.txt
 
-COPY dev-requirements.txt /tmp/
+COPY requirements.dev.txt /tmp/
 RUN pip install --no-cache-dir --requirement /tmp/requirements.txt
 
 COPY . .

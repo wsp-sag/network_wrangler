@@ -15,9 +15,6 @@ STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
 SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
 
-@pytest.mark.roadway
-@pytest.mark.transit
-@pytest.mark.travis
 def test_set_roadnet(request):
     print("\n--Starting:", request.node.name)
 
@@ -33,10 +30,6 @@ def test_set_roadnet(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.transit
-@pytest.mark.travis
-# @pytest.mark.skip("")
 def test_project_card(request):
     print("\n--Starting:", request.node.name)
 
@@ -112,9 +105,6 @@ def test_project_card(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.transit
-@pytest.mark.travis
 def test_wo_existing(request):
     print("\n--Starting:", request.node.name)
 
@@ -144,10 +134,45 @@ def test_wo_existing(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.roadway
-@pytest.mark.transit
-@pytest.mark.travis
-# @pytest.mark.skip("need to update trips and nodes")
+def test_select_transit_features_by_nodes(request):
+    print("\n--Starting:", request.node.name)
+
+    transit_net = TransitNetwork.read(STPAUL_DIR)
+
+    # Any nodes
+    trip_ids = transit_net.select_transit_features_by_nodes(
+        node_ids=["75520", "66380", "57530"]
+    )
+    print(trip_ids)
+    assert set(trip_ids) == set(
+        [
+            "14941148-JUN19-MVS-BUS-Weekday-01",
+            "14941151-JUN19-MVS-BUS-Weekday-01",
+            "14941153-JUN19-MVS-BUS-Weekday-01",
+            "14941163-JUN19-MVS-BUS-Weekday-01",
+            "14944379-JUN19-MVS-BUS-Weekday-01",
+            "14944386-JUN19-MVS-BUS-Weekday-01",
+            "14944413-JUN19-MVS-BUS-Weekday-01",
+            "14944416-JUN19-MVS-BUS-Weekday-01",
+        ]
+    )
+
+    # All nodes
+    trip_ids = transit_net.select_transit_features_by_nodes(
+        node_ids=["75520", "66380"], require_all=True
+    )
+    assert set(trip_ids) == set(
+        [
+            "14941148-JUN19-MVS-BUS-Weekday-01",
+            "14941151-JUN19-MVS-BUS-Weekday-01",
+            "14941153-JUN19-MVS-BUS-Weekday-01",
+            "14941163-JUN19-MVS-BUS-Weekday-01",
+        ]
+    )
+
+    print("--Finished:", request.node.name)
+
+
 def test_select_transit_features_by_nodes(request):
     print("\n--Starting:", request.node.name)
 
