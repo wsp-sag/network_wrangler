@@ -1,4 +1,3 @@
-import os
 import pytest
 
 from shapely.geometry import LineString
@@ -14,8 +13,6 @@ slug_test_list = [
     {"text": "I am a roadway", "delim": "", "answer": "iamaroadway"},
 ]
 
-
-
 @pytest.mark.parametrize("slug_test", slug_test_list)
 def test_get_slug(request, slug_test):
     print("\n--Starting:", request.node.name)
@@ -27,8 +24,6 @@ def test_get_slug(request, slug_test):
     print("From: {} \nTo: {}".format(slug_test["text"], slug))
     print("Expected: {}".format(slug_test["answer"]))
     assert slug == slug_test["answer"]
-
-
 
 def test_time_convert(request):
     print("\n--Starting:", request.node.name)
@@ -55,9 +50,6 @@ def test_time_convert(request):
 
     assert_series_equal(df["time"], df["time_results"], check_names=False)
 
-
-@pytest.mark.get_dist
-
 def test_get_distance_bw_lat_lon(request):
     print("\n--Starting:", request.node.name)
 
@@ -68,9 +60,6 @@ def test_get_distance_bw_lat_lon(request):
     assert dist == 0.34151200885686445
     print("--Finished:", request.node.name)
 
-
-@pytest.mark.test_hash
-@pytest.mark.roadway
 def test_get_unique_shape_id(request):
     geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
 
@@ -79,8 +68,6 @@ def test_get_unique_shape_id(request):
     assert shape_id == "72ceb24e2c632c02f7eae5e33ed12702"
 
     print("--Finished:", request.node.name)
-
-
 
 def test_location_reference_offset(request):
     print("\n--Starting:", request.node.name)

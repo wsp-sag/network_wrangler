@@ -1,7 +1,6 @@
 __version__ = "0.0.0"
 
 import os
-import sys
 from datetime import datetime
 
 from .logger import WranglerLogger, setupLogging

@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 import os
-import sys
 import glob
 import copy
 import pprint
@@ -196,7 +195,7 @@ class Scenario(object):
         base_scenario: dict = {},
         card_directory: str = "",
         tags: [str] = None,
-        project_cards_list=[],
+        project_cards_list=None,
         glob_search="",
         validate_project_cards=True,
     ) -> Scenario:
@@ -220,12 +219,15 @@ class Scenario(object):
         """
         WranglerLogger.info("Creating Scenario")
 
-        if project_cards_list:
+        if project_cards_list is None:
+            project_cards_list = []
+        else:
             WranglerLogger.debug(
                 "Adding project cards from List.\n{}".format(
                     ",".join([p.project for p in project_cards_list])
                 )
             )
+
         scenario = Scenario(base_scenario, project_cards=project_cards_list)
 
         if card_directory and tags:
@@ -258,7 +260,7 @@ class Scenario(object):
         )
         project_card = ProjectCard.read(project_card_file, validate=validate)
 
-        if project_card == None:
+        if project_card is None:
             msg = "project card not read: {}".format(project_card_file)
             WranglerLogger.error(msg)
             raise ValueError(msg)
@@ -272,9 +274,8 @@ class Scenario(object):
             return
 
         if project_card.project in self.get_project_names():
-            msg = "project card with name '{}' already in Scenario. Project names must be unique".format(
-                project_card.project
-            )
+            msg = f"project card with name '{project_card.project}' already in Scenario. \
+                Project names must be unique"
             WranglerLogger.error(msg)
             raise ValueError(msg)
 
@@ -326,17 +327,27 @@ class Scenario(object):
             raise ValueError(msg)
 
         if glob_search:
-            WranglerLogger.debug(
+            WranglerLogger.info(
                 "Adding project cards using glob search: {}".format(glob_search)
             )
             for file in glob.iglob(os.path.join(folder, glob_search)):
-                if not file.endswith(".yml") or file.endswith(".yaml"):
+                if not (
+                    file.endswith(".yml")
+                    or file.endswith(".yaml")
+                    or file.endswith(".wrangler")
+                    or file.endswith(".wr")
+                ):
                     continue
                 else:
                     self.add_project_card_from_file(file, validate=validate)
         else:
             for file in os.listdir(folder):
-                if not file.endswith(".yml") or file.endswith(".yaml"):
+                if not (
+                    file.endswith(".yml")
+                    or file.endswith(".yaml")
+                    or file.endswith(".wrangler")
+                    or file.endswith(".wr")
+                ):
                     continue
                 else:
                     self.add_project_card_from_file(
@@ -348,11 +359,13 @@ class Scenario(object):
     ):
         """
         Adds projects cards to the scenario.
-        A folder is provided to look for project cards that have a matching tag that is passed to the method.
+        A folder is provided to look for project cards that have a matching tag that
+        is passed to the method.
 
         args:
         folder: the folder location where the project cards will be
-        tags: only project cards with these tags will be validated and added to the returning scenario
+        tags: only project cards with these tags will be validated and added to the
+            returning scenario
         """
 
         if glob_search:
@@ -366,8 +379,9 @@ class Scenario(object):
         else:
             WranglerLogger.debug("Adding project cards using \n-tags: {}".format(tags))
             for file in os.listdir(folder):
-
-                self.add_project_card_from_file(file, tags=tags, validate=validate)
+                self.add_project_card_from_file(
+                    os.path.join(folder, file), tags=tags, validate=validate
+                )
 
     def __str__(self):
         s = ["{}: {}".format(key, value) for key, value in self.__dict__.items()]
@@ -382,7 +396,8 @@ class Scenario(object):
     def check_scenario_conflicts(self) -> bool:
         """
         Checks if there are any conflicting projects in the scenario
-        Fail if the project A specifies that project B is a conflict and project B is included in the scenario
+        Fail if the project A specifies that project B is a conflict and project B is included
+        in the scenario
 
         Returns: boolean indicating if the check was successful or returned an error
         """
@@ -408,7 +423,8 @@ class Scenario(object):
     def check_scenario_requisites(self) -> bool:
         """
         Checks if there are any missing pre- or co-requisite projects in the scenario
-        Fail if the project A specifies that project B is a pre- or co-requisite and project B is not included in the scenario
+        Fail if the project A specifies that project B is a pre- or co-requisite and project B is
+        not included in the scenario
 
         Returns: boolean indicating if the checks were successful or returned an error
         """
@@ -423,8 +439,8 @@ class Scenario(object):
                 for name in coreq:
                     if name not in scenario_projects:
                         WranglerLogger.error(
-                            "Projects %s has %s as corequisite project which is missing for the scenario"
-                            % (project, name)
+                            f"Projects {project} has {name} as corequisite project which is \
+                                missing for the scenario"
                         )
                         self.has_requisite_error = True
 
@@ -433,8 +449,8 @@ class Scenario(object):
                 for name in prereq:
                     if name not in scenario_projects:
                         WranglerLogger.error(
-                            "Projects %s has %s as prerequisite project which is missing for the scenario"
-                            % (project, name)
+                            f"Projects{project} has {name} as prerequisite project which is \
+                                missing for the scenario"
                         )
                         self.has_requisite_error = True
 
@@ -460,9 +476,9 @@ class Scenario(object):
             if not self.prerequisites.get(project):
                 continue
             for prereq in self.prerequisites[project]:
-                if (
-                    prereq.lower() in scenario_projects
-                ):  # this will always be true, else would have been flagged in missing prerequsite check, but just in case
+                # this will always be true, else would have been flagged in missing \
+                # prerequsite check, but just in case
+                if prereq.lower() in scenario_projects:
                     adjacency_list[prereq.lower()] = [project]
 
         # sorted_project_names is topological sorted project card names (based on prerequsiite)
@@ -526,7 +542,6 @@ class Scenario(object):
             WranglerLogger.info("Applying {}".format(p["project"]))
 
         if p.get("changes"):
-            part = 1
             for pc in p["changes"]:
                 pc["project"] = p["project"]
                 self.apply_project(pc)
@@ -557,7 +572,8 @@ class Scenario(object):
         Create a summary of applied project card and what they changed for the scenario.
 
         Args:
-            project_card_dictionary: dictionary representation of the values of a project card (i.e. ProjectCard.__dict__ )
+            project_card_dictionary: dictionary representation of the values of a project card
+                (i.e. ProjectCard.__dict__ )
 
         Returns:
             A dict of project summary change dictionaries for each change
@@ -600,7 +616,9 @@ class Scenario(object):
             change_summary["added_links"] = pd.DataFrame(change.get("links"))
             change_summary["added_nodes"] = pd.DataFrame(change.get("nodes"))
             change_summary["map"] = RoadwayNetwork.addition_map(
-                self.road_net, change.get("links"), change.get("nodes"),
+                self.road_net,
+                change.get("links"),
+                change.get("nodes"),
             )
             return change_summary
 
@@ -715,10 +733,12 @@ def net_to_mapbox(
 
     # test for mapbox token
     try:
-        token = os.getenv("MAPBOX_ACCESS_TOKEN")
+        os.getenv("MAPBOX_ACCESS_TOKEN")
     except:
         raise (
-            "NEED TO SET MAPBOX ACCESS TOKEN IN ENVIRONMENT VARIABLES/n In command line: >>export MAPBOX_ACCESS_TOKEN='pk.0000.1111' # replace value with your mapbox public access token"
+            "NEED TO SET MAPBOX ACCESS TOKEN IN ENVIRONMENT VARIABLES/n \
+                In command line: >>export MAPBOX_ACCESS_TOKEN='pk.0000.1111' # \
+                replace value with your mapbox public access token"
         )
 
     if type(transit) != gpd.GeoDataFrame:
@@ -742,11 +762,12 @@ def net_to_mapbox(
                 " ".join(tippe_options_list)
             )
         )
-        tippe_out = subprocess.run(["tippecanoe"] + tippe_options_list)
+        subprocess.run(["tippecanoe"] + tippe_options_list)
     except:
         WranglerLogger.error()
         raise (
-            "If tippecanoe isn't installed, try `brew install tippecanoe` or visit https://github.com/mapbox/tippecanoe"
+            "If tippecanoe isn't installed, try `brew install tippecanoe` or \
+                visit https://github.com/mapbox/tippecanoe"
         )
 
     try:
@@ -755,11 +776,10 @@ def net_to_mapbox(
                 " ".join(tippe_options_list)
             )
         )
-        mbview_out = subprocess.run(
-            ["mbview", "--port", port, ",/{}".format(mbtiles_out)]
-        )
+        subprocess.run(["mbview", "--port", port, ",/{}".format(mbtiles_out)])
     except:
         WranglerLogger.error()
         raise (
-            "If mbview isn't installed, try `npm install -g @mapbox/mbview` or visit https://github.com/mapbox/mbview"
+            "If mbview isn't installed, try `npm install -g @mapbox/mbview` or \
+                visit https://github.com/mapbox/mbview"
         )

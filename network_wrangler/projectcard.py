@@ -4,7 +4,7 @@
 import os
 import yaml
 import json
-from typing import Optional, List
+from typing import List
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -21,7 +21,7 @@ class ProjectCard(object):
         valid: Boolean indicating if data conforms to project card data schema
     """
 
-    TRANSIT_CATEGORIES = ["Transit Service Property Change"]
+    TRANSIT_CATEGORIES = ["Transit Service Property Change", "Add Transit"]
 
     # categories that may affect transit, but only as a secondary
     # effect of changing roadways
@@ -70,12 +70,13 @@ class ProjectCard(object):
         """
         card_suffix = path_to_card.split(".")[-1].lower()
 
-        if card_suffix in ["yaml",'yml']:
+        if card_suffix in ["yaml", "yml"]:
             attribute_dictionary = ProjectCard.read_yml(path_to_card)
-        elif card_suffix in ["wrangler",'wr']:
+        elif card_suffix in ["wrangler", "wr"]:
             attribute_dictionary = ProjectCard.read_wrangler_card(path_to_card)
         else:
-            msg = "Card should have a suffix of yaml, yml, wrangler, or wr. Found suffix: {}".format(card_suffix)
+            msg = f"Card should have a suffix of yaml, yml, wrangler, or wr. \
+                Found suffix: {card_suffix}"
             raise ValueError(msg)
 
         card = ProjectCard(attribute_dictionary)
@@ -106,15 +107,14 @@ class ProjectCard(object):
         with open(path_to_card, "r") as cardfile:
             delim = cardfile.readline()
             WranglerLogger.debug("Using delimiter: {}".format(delim))
-            _yaml,_pycode = cardfile.read().split(delim)
+            _yaml, _pycode = cardfile.read().split(delim)
             WranglerLogger.debug("_yaml: {}\n_pycode: {}".format(_yaml, _pycode))
 
-        attribute_dictionary = yaml.load(_yaml)
+        attribute_dictionary = yaml.safe_load(_yaml)
         attribute_dictionary["file"] = path_to_card
         attribute_dictionary["pycode"] = _pycode.lstrip("\n")
 
         return attribute_dictionary
-
 
     @staticmethod
     def read_yml(path_to_card: str) -> dict:
@@ -204,14 +204,14 @@ class ProjectCard(object):
         sel_query = "("
         count = 0
 
-        selection_keys = [k for l in selection["link"] for k, v in l.items()]
+        selection_keys = [k for li in selection["link"] for k, v in li.items()]
         num_unique_model_link_identifiers = len(
             set(unique_model_link_identifiers).intersection(selection_keys)
         )
         unique_model_link_identifer_exist = num_unique_model_link_identifiers > 0
 
-        for l in selection["link"]:
-            for key, value in l.items():
+        for li in selection["link"]:
+            for key, value in li.items():
 
                 if key in ignore:
                     continue
@@ -236,8 +236,10 @@ class ProjectCard(object):
                             sel_query = sel_query + " or "
                             v = v + 1
                     sel_query = sel_query + ")"
-                else:
+                elif isinstance(value, str):
                     sel_query = sel_query + key + "==" + '"' + str(value) + '"'
+                else:
+                    sel_query = sel_query + key + "==" + str(value)
 
                 if not unique_model_link_identifer_exist and count != (
                     len(selection["link"]) - len(ignore)

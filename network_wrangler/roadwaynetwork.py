@@ -8,7 +8,7 @@ import sys
 import copy
 import numbers
 from random import randint
-from typing import List, Optional, Any, Union
+from typing import Any, List, Optional, Union
 
 import folium
 import pandas as pd
@@ -26,13 +26,19 @@ from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point
 
 from .logger import WranglerLogger
 from .projectcard import ProjectCard
 from .utils import point_df_to_geojson, link_df_to_json, parse_time_spans
-from .utils import offset_location_reference, haversine_distance, create_unique_shape_id
+from .utils import haversine_distance, create_unique_shape_id, offset_location_reference
 from .utils import create_location_reference_from_nodes, create_line_string
+
+
+class NoPathFound(Exception):
+    """Raised when can't find path."""
+
+    pass
 
 
 class RoadwayNetwork(object):
@@ -290,7 +296,8 @@ class RoadwayNetwork(object):
         ]
         links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
         links_df.crs = RoadwayNetwork.CRS
-        # coerce types for booleans which might not have a 1 and are therefore read in as intersection
+        # coerce types for booleans which might not have a 1 and are therefore read in as
+        # intersection
         bool_columns = [
             "rail_only",
             "bus_only",
@@ -487,20 +494,26 @@ class RoadwayNetwork(object):
         errors = ""
 
         if not isinstance(nodes, GeoDataFrame):
-            error_message = "Incompatible nodes type:{}. Must provide a GeoDataFrame.  ".format(
-                type(nodes)
+            error_message = (
+                "Incompatible nodes type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(nodes)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
         if not isinstance(links, GeoDataFrame):
-            error_message = "Incompatible links type:{}. Must provide a GeoDataFrame.  ".format(
-                type(links)
+            error_message = (
+                "Incompatible links type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(links)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
         if not isinstance(shapes, GeoDataFrame):
-            error_message = "Incompatible shapes type:{}. Must provide a GeoDataFrame.  ".format(
-                type(shapes)
+            error_message = (
+                "Incompatible shapes type:{}. Must provide a GeoDataFrame.  ".format(
+                    type(shapes)
+                )
             )
             WranglerLogger.error(error_message)
             errors.append(error_message)
@@ -638,15 +651,15 @@ class RoadwayNetwork(object):
             raise KeyError(err_msg)
 
         err = []
-        for l in selection["link"]:
-            for k, v in l.items():
+        for li in selection["link"]:
+            for k, v in li.items():
                 if k not in self.links_df.columns:
                     err.append(
                         "{} specified in link selection but not an attribute in network\n".format(
                             k
                         )
                     )
-        selection_keys = [k for l in selection["link"] for k, v in l.items()]
+        selection_keys = [k for li in selection["link"] for k, v in li.items()]
         unique_link_id = bool(
             set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(
                 set(selection_keys)
@@ -660,9 +673,7 @@ class RoadwayNetwork(object):
                     and k != RoadwayNetwork.NODE_FOREIGN_KEY
                 ):
                     err.append(
-                        "{} specified in A node selection but not an attribute in network\n".format(
-                            k
-                        )
+                        f"{k} specified in A node selection but not an attribute in network."
                     )
             for k, v in selection["B"].items():
                 if (
@@ -670,9 +681,7 @@ class RoadwayNetwork(object):
                     and k != RoadwayNetwork.NODE_FOREIGN_KEY
                 ):
                     err.append(
-                        "{} specified in B node selection but not an attribute in network\n".format(
-                            k
-                        )
+                        f"{k} specified in B node selection but not an attribute in network"
                     )
         if err:
             WranglerLogger.error(
@@ -748,9 +757,12 @@ class RoadwayNetwork(object):
         """
         WranglerLogger.debug("starting ox_graph()")
 
-        graph_nodes = nodes_df.copy().drop(
-            ["inboundReferenceIds", "outboundReferenceIds"], axis=1
-        )
+        if "inboundReferenceIds" in nodes_df.columns:
+            graph_nodes = nodes_df.copy().drop(
+                ["inboundReferenceIds", "outboundReferenceIds"], axis=1
+            )
+        else:
+            graph_nodes = nodes_df.copy()
 
         graph_nodes.gdf_name = "network_nodes"
         WranglerLogger.debug("GRAPH NODES: {}".format(graph_nodes.columns))
@@ -759,24 +771,50 @@ class RoadwayNetwork(object):
         graph_nodes["x"] = graph_nodes["X"]
         graph_nodes["y"] = graph_nodes["Y"]
 
-        graph_links = links_df.copy().drop(
-            ["osm_link_id", "locationReferences"], axis=1
-        )
+        if "osm_link_id" in links_df.columns:
+            graph_links = links_df.copy().drop(
+                ["osm_link_id", "locationReferences"], axis=1
+            )
+        else:
+            graph_links = links_df.copy().drop(["locationReferences"], axis=1)
 
         # have to change this over into u,v b/c this is what osm-nx is expecting
         graph_links["u"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[0]]
         graph_links["v"] = graph_links[RoadwayNetwork.LINK_FOREIGN_KEY[1]]
-        graph_links["id"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
         graph_links["key"] = graph_links[RoadwayNetwork.UNIQUE_LINK_KEY]
+
+        # Per osmnx u,v,key should be a multi-index;
+        #     https://osmnx.readthedocs.io/en/stable/osmnx.html#osmnx.utils_graph.graph_from_gdfs
+        # However - if the index is set before hand in osmnx version <1.0 then it fails
+        #     on the set_index line *within* osmnx.utils_graph.graph_from_gdfs():
+        #           `for (u, v, k), row in gdf_edges.set_index(["u", "v", "key"]).iterrows():`
+
+        if int(ox.__version__.split(".")[0]) >= 1:
+            graph_links = graph_links.set_index(keys=["u", "v", "key"], drop=True)
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
         try:
             G = ox.graph_from_gdfs(graph_nodes, graph_links)
-        except:
-            WranglerLogger.debug(
-                "Please upgrade your OSMNX package. For now, using depricated osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found"
-            )
-            G = ox.gdfs_to_graph(graph_nodes, graph_links)
+
+        except AttributeError as attr_error:
+            if (
+                attr_error.args[0]
+                == "module 'osmnx' has no attribute 'graph_from_gdfs'"
+            ):
+                # This is the only exception for which we have a workaround
+                # Does this still work given the u,v,key multi-indexing?
+                #
+                WranglerLogger.warn(
+                    "Please upgrade your OSMNX package. For now, using deprecated\
+                         osmnx.gdfs_to_graph because osmnx.graph_from_gdfs not found"
+                )
+                G = ox.gdfs_to_graph(graph_nodes, graph_links)
+            else:
+                # for other AttributeErrors, raise further
+                raise attr_error
+        except Exception as e:
+            # for other Exceptions, raise further
+            raise e
 
         WranglerLogger.debug("finished ox.gdfs_to_graph()")
         return G
@@ -790,8 +828,9 @@ class RoadwayNetwork(object):
 
         Returns: A boolean indicating if the selection dictionary contains
             a required unique link id.
+
         """
-        selection_keys = [k for l in selection_dict["link"] for k, v in l.items()]
+        selection_keys = [k for li in selection_dict["link"] for k, v in li.items()]
         return bool(
             set(RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS).intersection(
                 set(selection_keys)
@@ -820,6 +859,246 @@ class RoadwayNetwork(object):
         A_id, B_id = self.orig_dest_nodes_foreign_key(selection_dict)
         return (sel_query, A_id, B_id)
 
+    @staticmethod
+    def _get_fk_nodes(_links: gpd.GeoDataFrame):
+        """Find the nodes for the candidate links."""
+        _n = list(
+            set([i for fk in RoadwayNetwork.LINK_FOREIGN_KEY for i in list(_links[fk])])
+        )
+        # WranglerLogger.debug("Node foreign key list: {}".format(_n))
+        return _n
+
+    def shortest_path(
+        self,
+        graph_links_df: gpd.GeoDataFrame,
+        O_id,
+        D_id,
+        nodes_df: gpd.GeoDataFrame = None,
+        weight_column: str = "i",
+        weight_factor: float = 1.0,
+    ) -> tuple:
+        """
+
+        Args:
+            graph_links_df:
+            O_id: foreign key for start node
+            D_id: foreign key for end node
+            nodes_df: optional nodes df, otherwise will use network instance
+            weight_column: column to use as a weight, defaults to "i"
+            weight_factor: any additional weighting to multiply the weight column by, defaults
+                to RoadwayNetwork.SP_WEIGHT_FACTOR
+
+        Returns: tuple with length of four
+        - Boolean if shortest path found
+        - nx Directed graph of graph links
+        - route of shortest path nodes as List
+        - links in shortest path selected from links_df
+        """
+        WranglerLogger.debug(
+            f"Calculating shortest path from {O_id} to {D_id} using {weight_column} as \
+                weight with a factor of {weight_factor}"
+        )
+
+        # Prep Graph Links
+        if weight_column not in graph_links_df.columns:
+            WranglerLogger.warning(
+                "{} not in graph_links_df so adding and initializing to 1.".format(
+                    weight_column
+                )
+            )
+            graph_links_df[weight_column] = 1
+
+        graph_links_df.loc[:, "weight"] = 1 + (
+            graph_links_df[weight_column] * weight_factor
+        )
+
+        # Select Graph Nodes
+        node_list_foreign_keys = RoadwayNetwork._get_fk_nodes(graph_links_df)
+
+        if O_id not in node_list_foreign_keys:
+            msg = "O_id: {} not in Graph for finding shortest Path".format(O_id)
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+        if D_id not in node_list_foreign_keys:
+            msg = "D_id: {} not in Graph for finding shortest Path".format(D_id)
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+
+        if not nodes_df:
+            nodes_df = self.nodes_df
+        graph_nodes_df = nodes_df.loc[node_list_foreign_keys]
+
+        # Create Graph
+        WranglerLogger.debug("Creating network graph")
+        G = RoadwayNetwork.ox_graph(graph_nodes_df, graph_links_df)
+
+        try:
+            sp_route = nx.shortest_path(G, O_id, D_id, weight="weight")
+            WranglerLogger.debug("Shortest path successfully routed")
+        except nx.NetworkXNoPath:
+            WranglerLogger.debug("No SP from {} to {} Found.".format(O_id, D_id))
+            return False, G, graph_links_df, None, None
+
+        sp_links = graph_links_df[
+            graph_links_df["A"].isin(sp_route) & graph_links_df["B"].isin(sp_route)
+        ]
+
+        return True, G, graph_links_df, sp_route, sp_links
+
+    def path_search(
+        self,
+        candidate_links_df: gpd.GeoDataFrame,
+        O_id,
+        D_id,
+        weight_column: str = "i",
+        weight_factor: float = 1.0,
+    ):
+        """
+
+        Args:
+            candidate_links: selection of links geodataframe with links likely to be part of path
+            O_id: origin node foreigh key ID
+            D_id: destination node foreigh key ID
+            weight_column: column to use for weight of shortest path. Defaults to "i" (iteration)
+            weight_factor: optional weight to multiply the weight column by when finding
+                the shortest path
+
+        Returns
+
+        """
+
+        def _add_breadth(
+            _candidate_links_df: gpd.GeoDataFrame,
+            _nodes_df: gpd.GeoDataFrame,
+            _links_df: gpd.GeoDataFrame,
+            i: int = None,
+        ):
+            """
+            Add outbound and inbound reference IDs to candidate links
+            from existing nodes
+
+            Args:
+                _candidate_links_df : df with the links from the previous iteration
+                _nodes_df : df of all nodes in the full network
+                _links_df : df of all links in the full network
+                i : iteration of adding breadth
+
+            Returns:
+                candidate_links : GeoDataFrame
+                    updated df with one more degree of added breadth
+
+                node_list_foreign_keys : list of foreign key ids for nodes in the updated
+                    candidate links to test if the A and B nodes are in there.
+            """
+            WranglerLogger.debug("-Adding Breadth-")
+
+            if not i:
+                WranglerLogger.warning("i not specified in _add_breadth, using 1")
+                i = 1
+
+            _candidate_nodes_df = _nodes_df.loc[
+                RoadwayNetwork._get_fk_nodes(_candidate_links_df)
+            ]
+            WranglerLogger.debug("Candidate Nodes: {}".format(len(_candidate_nodes_df)))
+
+            # Identify links to add based on outbound and inbound links from nodes
+            _links_shstRefId_to_add = list(
+                set(
+                    sum(_candidate_nodes_df["outboundReferenceIds"].tolist(), [])
+                    + sum(_candidate_nodes_df["inboundReferenceIds"].tolist(), [])
+                )
+                - set(_candidate_links_df["shstReferenceId"].tolist())
+                - set([""])
+            )
+            _links_to_add_df = _links_df[
+                _links_df.shstReferenceId.isin(_links_shstRefId_to_add)
+            ]
+
+            WranglerLogger.debug("Adding {} links.".format(_links_to_add_df.shape[0]))
+
+            # Add information about what iteration the link was added in
+            _links_df[_links_df.model_link_id.isin(_links_shstRefId_to_add)]["i"] = i
+
+            # Append links and update node list
+            _candidate_links_df = _candidate_links_df.append(_links_to_add_df)
+            _node_list_foreign_keys = RoadwayNetwork._get_fk_nodes(_candidate_links_df)
+
+            return _candidate_links_df, _node_list_foreign_keys
+
+        # -----------------------------------
+        # Set search breadth to zero + set max
+        # -----------------------------------
+        i = 0
+        max_i = RoadwayNetwork.SEARCH_BREADTH
+        # -----------------------------------
+        # Add links to the graph until
+        #   (i) the A and B nodes are in the
+        #       foreign key list
+        #          - OR -
+        #   (ii) reach maximum search breadth
+        # -----------------------------------
+        node_list_foreign_keys = RoadwayNetwork._get_fk_nodes(candidate_links_df)
+        WranglerLogger.debug("Initial set of nodes: {}".format(node_list_foreign_keys))
+        while (
+            O_id not in node_list_foreign_keys or D_id not in node_list_foreign_keys
+        ) and i <= max_i:
+            WranglerLogger.debug(
+                "Adding breadth - i: {}, Max i: {}] - {} and {} not found in node list.".format(
+                    i, max_i, O_id, D_id
+                )
+            )
+            i += 1
+            candidate_links_df, node_list_foreign_keys = _add_breadth(
+                candidate_links_df, self.nodes_df, self.links_df, i=i
+            )
+        # -----------------------------------
+        #  Once have A and B in graph,
+        #  Try calculating shortest path
+        # -----------------------------------
+        WranglerLogger.debug("calculating shortest path from graph")
+        (
+            sp_found,
+            graph,
+            candidate_links_df,
+            shortest_path_route,
+            shortest_path_links,
+        ) = self.shortest_path(candidate_links_df, O_id, D_id)
+        if sp_found:
+            return graph, candidate_links_df, shortest_path_route, shortest_path_links
+
+        if not sp_found:
+            WranglerLogger.debug(
+                "No shortest path found with breadth of {i}, trying greater breadth until SP \
+                    found or max breadth {max_i} reached."
+            )
+        while not sp_found and i <= RoadwayNetwork.MAX_SEARCH_BREADTH:
+            WranglerLogger.debug(
+                "Adding breadth, with shortest path iteration. i: {} Max i: {}".format(
+                    i, max_i
+                )
+            )
+            i += 1
+            candidate_links_df, node_list_foreign_keys = _add_breadth(
+                candidate_links_df, self.nodes_df, self.links_df, i=i
+            )
+            (
+                sp_found,
+                graph,
+                candidate_links_df,
+                route,
+                shortest_path_links,
+            ) = self.shortest_path(candidate_links_df, O_id, D_id)
+
+        if sp_found:
+            return graph, candidate_links_df, route, shortest_path_links
+
+        if not sp_found:
+            msg = "Couldn't find path from {} to {} after adding {} links in breadth".format(
+                O_id, D_id, i
+            )
+            WranglerLogger.error(msg)
+            raise NoPathFound(msg)
+
     def select_roadway_features(
         self, selection: dict, search_mode="drive", force_search=False
     ) -> GeoDataFrame:
@@ -843,10 +1122,14 @@ class RoadwayNetwork(object):
             selection : dictionary with keys for:
                  A - from node
                  B - to node
-                 link - which includes at least a variable for `name`
+                 link - which includes at least a variable for `name` or 'all' if all selected
+            search_mode: will be overridden if 'link':'all'
 
-        Returns: a list of node foreign IDs on shortest path
+        Returns: a list of link IDs in selection
         """
+        if selection.get("link") == "all":
+            return self.links_df.index.tolist()
+
         WranglerLogger.debug("validating selection")
         self.validate_selection(selection)
 
@@ -866,8 +1149,8 @@ class RoadwayNetwork(object):
         self.selections[sel_key] = {}
         self.selections[sel_key]["selection_found"] = False
 
-        unique_model_link_identifer_in_selection = RoadwayNetwork.selection_has_unique_link_id(
-            selection
+        unique_model_link_identifer_in_selection = (
+            RoadwayNetwork.selection_has_unique_link_id(selection)
         )
         if not unique_model_link_identifer_in_selection:
             A_id, B_id = self.orig_dest_nodes_foreign_key(selection)
@@ -902,18 +1185,20 @@ class RoadwayNetwork(object):
 
         if len(candidate_links.index) == 0:
             WranglerLogger.debug(
-                "No candidate links in initial search.\nRetrying query using 'ref' instead of 'name'"
+                "No candidate links in initial search.\nRetrying query using 'ref' instead of \
+                    'name'"
             )
             # if the query doesn't come back with something from 'name'
             # try it again with 'ref' instead
             selection_has_name_key = any("name" in d for d in selection["link"])
 
             if not selection_has_name_key:
-                msg = "Not able to complete search using 'ref' instead of 'name' because 'name' not in search."
+                msg = "Not able to complete search using 'ref' instead of 'name' because 'name' \
+                    not in search."
                 WranglerLogger.error(msg)
                 raise Exception(msg)
 
-            if not "ref" in self.links_df.columns:
+            if "ref" not in self.links_df.columns:
                 msg = "Not able to complete search using 'ref' because 'ref' not in network."
                 WranglerLogger.error(msg)
                 raise Exception(msg)
@@ -929,218 +1214,53 @@ class RoadwayNetwork(object):
             candidate_links["i"] = 0
 
             if len(candidate_links.index) == 0:
-                msg = "No candidate links in search using either 'name' or 'ref' in query.\nSelection Failed."
+                msg = "No candidate links in search using either 'name' or 'ref' in query.\
+                    Selection Failed."
                 WranglerLogger.error(msg)
                 raise Exception(msg)
 
-        def _add_breadth(candidate_links: DataFrame, nodes: DataFrame, links, i):
-            """
-            Add outbound and inbound reference IDs to candidate links
-            from existing nodes
-
-            Args:
-            candidate_links : GeoDataFrame
-                df with the links from the previous iteration that we
-                want to add on to
-
-            nodes : GeoDataFrame
-                df of all nodes in the full network
-
-            links : GeoDataFrame
-                df of all links in the full network
-
-            i : int
-                iteration of adding breadth
-
-            Returns:
-                candidate_links : GeoDataFrame
-                    updated df with one more degree of added breadth
-
-                node_list_foreign_keys : list
-                    list of foreign key ids for nodes in the updated candidate links
-                    to test if the A and B nodes are in there.
-
-            ..todo:: Make unique ID for links in the settings
-            """
-            WranglerLogger.debug("-Adding Breadth-")
-
-            node_list_foreign_keys = list(
-                set(
-                    [
-                        i
-                        for fk in RoadwayNetwork.LINK_FOREIGN_KEY
-                        for i in list(candidate_links[fk])
-                    ]
-                )
-                # set(list(candidate_links["u"]) + list(candidate_links["v"]))
-            )
-            candidate_nodes = nodes.loc[node_list_foreign_keys]
-            WranglerLogger.debug("Candidate Nodes: {}".format(len(candidate_nodes)))
-            links_shstRefId_to_add = list(
-                set(
-                    sum(candidate_nodes["outboundReferenceIds"].tolist(), [])
-                    + sum(candidate_nodes["inboundReferenceIds"].tolist(), [])
-                )
-                - set(candidate_links["shstReferenceId"].tolist())
-                - set([""])
-            )
-            ##TODO make unique ID for links in the settings
-            # print("Link IDs to add: {}".format(links_shstRefId_to_add))
-            # print("Links: ", links_id_to_add)
-            links_to_add = links[links.shstReferenceId.isin(links_shstRefId_to_add)]
-            # print("Adding Links:",links_to_add)
-            WranglerLogger.debug("Adding {} links.".format(links_to_add.shape[0]))
-            links[links.model_link_id.isin(links_shstRefId_to_add)]["i"] = i
-            candidate_links = candidate_links.append(links_to_add)
-            node_list_foreign_keys = list(
-                set(
-                    [
-                        i
-                        for fk in RoadwayNetwork.LINK_FOREIGN_KEY
-                        for i in list(candidate_links[fk])
-                    ]
-                )
-                # set(list(candidate_links["u"]) + list(candidate_links["v"]))
-            )
-
-            return candidate_links, node_list_foreign_keys
-
-        def _shortest_path():
-            WranglerLogger.debug(
-                "_shortest_path(): calculating shortest path from graph"
-            )
-            candidate_links.loc[:, "weight"] = 1 + (
-                candidate_links["i"] * RoadwayNetwork.SP_WEIGHT_FACTOR
-            )
-
-            node_list_foreign_keys = list(
-                set(
-                    [
-                        i
-                        for fk in RoadwayNetwork.LINK_FOREIGN_KEY
-                        for i in list(candidate_links[fk])
-                    ]
-                )
-                # set(list(candidate_links["u"]) + list(candidate_links["v"]))
-            )
-
-            candidate_nodes = self.nodes_df.loc[node_list_foreign_keys]
-
-            WranglerLogger.debug("creating network graph")
-            G = RoadwayNetwork.ox_graph(candidate_nodes, candidate_links)
-            self.selections[sel_key]["graph"] = G
-            self.selections[sel_key]["candidate_links"] = candidate_links
-
-            try:
-                WranglerLogger.debug(
-                    "Calculating NX shortest path from A_id: {} to B_id: {}".format(
-                        A_id, B_id
-                    )
-                )
-                sp_route = nx.shortest_path(G, A_id, B_id, weight="weight")
-                WranglerLogger.debug("Shortest path successfully routed")
-
-            except nx.NetworkXNoPath:
-                return False
-
-            sp_links = candidate_links[
-                candidate_links["A"].isin(sp_route)
-                & candidate_links["B"].isin(sp_route)
-            ]
-
-            self.selections[sel_key]["route"] = sp_route
-            self.selections[sel_key]["links"] = sp_links
-
-            return True
-
-        if not unique_model_link_identifer_in_selection:
-            # find the node ids for the candidate links
-            WranglerLogger.debug("Not a unique ID selection, conduct search")
-            node_list_foreign_keys = list(
-                set(
-                    [
-                        i
-                        for fk in RoadwayNetwork.LINK_FOREIGN_KEY
-                        for i in list(candidate_links[fk])
-                    ]
-                )
-                # set(list(candidate_links["u"]) + list(candidate_links["v"]))
-            )
-            WranglerLogger.debug("Foreign key list: {}".format(node_list_foreign_keys))
-            i = 0
-
-            max_i = RoadwayNetwork.SEARCH_BREADTH
-
-            while (
-                A_id not in node_list_foreign_keys
-                and B_id not in node_list_foreign_keys
-                and i <= max_i
-            ):
-                WranglerLogger.debug(
-                    "Adding breadth, no shortest path. i: {}, Max i: {}".format(
-                        i, max_i
-                    )
-                )
-                i += 1
-                candidate_links, node_list_foreign_keys = _add_breadth(
-                    candidate_links, self.nodes_df, self.links_df, i
-                )
-            WranglerLogger.debug("calculating shortest path from graph")
-            sp_found = _shortest_path()
-            if not sp_found:
-                WranglerLogger.info(
-                    "No shortest path found with {}, trying greater breadth until SP found".format(
-                        i
-                    )
-                )
-            while not sp_found and i <= RoadwayNetwork.MAX_SEARCH_BREADTH:
-                WranglerLogger.debug(
-                    "Adding breadth, with shortest path iteration. i: {} Max i: {}".format(
-                        i, max_i
-                    )
-                )
-                i += 1
-                candidate_links, node_list_foreign_keys = _add_breadth(
-                    candidate_links, self.nodes_df, self.links_df, i
-                )
-                sp_found = _shortest_path()
-
-            if sp_found:
-                # reselect from the links in the shortest path, the ones with
-                # the desired values....ignoring name.
-                if len(selection["link"]) > 1:
-                    resel_query = ProjectCard.build_link_selection_query(
-                        selection=selection,
-                        unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
-                        mode=RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[
-                            search_mode
-                        ],
-                        ignore=["name"],
-                    )
-                    WranglerLogger.info("Reselecting features:\n{}".format(resel_query))
-                    self.selections[sel_key]["selected_links"] = self.selections[
-                        sel_key
-                    ]["links"].query(resel_query, engine="python")
-                else:
-                    self.selections[sel_key]["selected_links"] = self.selections[
-                        sel_key
-                    ]["links"]
-
-                self.selections[sel_key]["selection_found"] = True
-                # Return pandas.Series of links_ids
-                return self.selections[sel_key]["selected_links"].index.tolist()
-            else:
-                WranglerLogger.error(
-                    "Couldn't find path from {} to {}".format(A_id, B_id)
-                )
-                raise ValueError
-        else:
+        if unique_model_link_identifer_in_selection:
             # unique identifier exists and no need to go through big search
             self.selections[sel_key]["selected_links"] = self.selections[sel_key][
                 "candidate_links"
             ]
             self.selections[sel_key]["selection_found"] = True
 
+            return self.selections[sel_key]["selected_links"].index.tolist()
+
+        else:
+            WranglerLogger.debug("Not a unique ID selection, conduct search.")
+            (
+                self.selections[sel_key]["graph"],
+                self.selections[sel_key]["candidate_links"],
+                self.selections[sel_key]["route"],
+                self.selections[sel_key]["links"],
+            ) = self.path_search(
+                self.selections[sel_key]["candidate_links"],
+                A_id,
+                B_id,
+                weight_factor=RoadwayNetwork.SP_WEIGHT_FACTOR,
+            )
+
+            if len(selection["link"]) == 1:
+                self.selections[sel_key]["selected_links"] = self.selections[sel_key][
+                    "links"
+                ]
+
+            # Conduct a "selection on the selection" if have additional requirements to satisfy
+            else:
+                resel_query = ProjectCard.build_link_selection_query(
+                    selection=selection,
+                    unique_model_link_identifiers=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+                    mode=RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[search_mode],
+                    ignore=["name"],
+                )
+                WranglerLogger.debug("Reselecting features:\n{}".format(resel_query))
+                self.selections[sel_key]["selected_links"] = self.selections[sel_key][
+                    "links"
+                ].query(resel_query, engine="python")
+
+            self.selections[sel_key]["selection_found"] = True
             return self.selections[sel_key]["selected_links"].index.tolist()
 
     def validate_properties(
@@ -1170,36 +1290,32 @@ class RoadwayNetwork(object):
             if p["property"] not in self.links_df.columns:
                 if p.get("change"):
                     validation_error_message.append(
-                        '"Change" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
-                            p["property"]
-                        )
+                        f'"Change" is specified for attribute { p["property"]}, but doesn\'t \
+                            exist in base network'
                     )
 
                 if p.get("existing") and not ignore_existing:
                     validation_error_message.append(
-                        '"Existing" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
-                            p["property"]
-                        )
+                        f'"Existing" is specified for attribute { p["property"]}, but doesn\'t \
+                            exist in base network\n'
                     )
                 elif p.get("existing"):
                     WranglerLogger.warning(
-                        '"Existing" is specified for attribute {}, but doesn\'t exist in base network\n'.format(
-                            p["property"]
-                        )
+                        f'"Existing" is specified for attribute {p["property"]}, but doesn\'t \
+                            exist in base network.'
                     )
 
             if p.get("change") and not p.get("existing"):
                 if require_existing_for_change:
                     validation_error_message.append(
-                        '"Change" is specified for attribute {}, but there isn\'t a value for existing.\nTo proceed, run with the setting require_existing_for_change=False'.format(
-                            p["property"]
-                        )
+                        f'"Change" is specified for attribute {p["property"]}, but there \
+                            isn\'t a value for existing.\nTo proceed, run with the setting \
+                            require_existing_for_change=False'
                     )
                 else:
                     WranglerLogger.warning(
-                        '"Change" is specified for attribute {}, but there isn\'t a value for existing.\n'.format(
-                            p["property"]
-                        )
+                        f'"Change" is specified for attribute {p["property"]}, but there \
+                            isn\'t a value for existing'
                     )
 
         if validation_error_message:
@@ -1243,9 +1359,7 @@ class RoadwayNetwork(object):
                     project_dictionary.get("links"), project_dictionary.get("nodes")
                 )
             elif project_dictionary["category"].lower() == "calculated roadway":
-                self.apply_python_calculation(
-                    project_dictionary['pycode']
-                )
+                self.apply_python_calculation(project_dictionary["pycode"])
             else:
                 raise (BaseException)
 
@@ -1255,7 +1369,9 @@ class RoadwayNetwork(object):
         else:
             _apply_individual_change(project_card_dictionary)
 
-    def apply_python_calculation(self, pycode: str, in_place: bool = True) -> Union(None, RoadwayNetwork):
+    def apply_python_calculation(
+        self, pycode: str, in_place: bool = True
+    ) -> Union(None, 'RoadwayNetwork'):
         """
         Changes roadway network object by executing pycode.
 
@@ -1267,7 +1383,7 @@ class RoadwayNetwork(object):
 
     def apply_roadway_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
-    ) -> Union(None, RoadwayNetwork):
+    ) -> Union(None, 'RoadwayNetwork'):
         """
         Changes the roadway attributes for the selected features based on the
         project card information passed
@@ -1343,85 +1459,121 @@ class RoadwayNetwork(object):
             self.links_df["managed"] = 0
             self.links_df.loc[link_idx, "managed"] = 1
 
+        p = 1
+
         for p in properties:
             attribute = p["property"]
+            attr_value = ""
 
-            if "group" in p.keys():
-                attr_value = {}
-                attr_value["default"] = p["set"]
-                attr_value["timeofday"] = []
-                for g in p["group"]:
-                    category = g["category"]
-                    for tod in g["timeofday"]:
-                        attr_value["timeofday"].append(
-                            {
-                                "category": category,
-                                "time": parse_time_spans(tod["time"]),
-                                "value": tod["set"],
-                            }
+            for idx in link_idx:
+                if "group" in p.keys():
+                    attr_value = {}
+
+                    if "set" in p.keys():
+                        attr_value["default"] = p["set"]
+                    elif "change" in p.keys():
+                        attr_value["default"] = (
+                            self.links_df.at[idx, attribute] + p["change"]
                         )
 
-            elif "timeofday" in p.keys():
-                attr_value = {}
-                attr_value["default"] = p["set"]
-                attr_value["timeofday"] = []
-                for tod in p["timeofday"]:
-                    attr_value["timeofday"].append(
-                        {"time": parse_time_spans(tod["time"]), "value": tod["set"]}
-                    )
+                    attr_value["timeofday"] = []
 
-            elif "set" in p.keys():
-                attr_value = p["set"]
+                    for g in p["group"]:
+                        category = g["category"]
+                        for tod in g["timeofday"]:
+                            if "set" in tod.keys():
+                                attr_value["timeofday"].append(
+                                    {
+                                        "category": category,
+                                        "time": parse_time_spans(tod["time"]),
+                                        "value": tod["set"],
+                                    }
+                                )
+                            elif "change" in tod.keys():
+                                attr_value["timeofday"].append(
+                                    {
+                                        "category": category,
+                                        "time": parse_time_spans(tod["time"]),
+                                        "value": self.links_df.at[idx, attribute]
+                                        + tod["change"],
+                                    }
+                                )
 
-            else:
-                attr_value = ""
+                elif "timeofday" in p.keys():
+                    attr_value = {}
 
-            # TODO: decide on connectors info when they are more specific in project card
-            if attribute == "ML_ACCESS" and attr_value == "all":
-                attr_value = 1
+                    if "set" in p.keys():
+                        attr_value["default"] = p["set"]
+                    elif "change" in p.keys():
+                        attr_value["default"] = (
+                            self.links_df.at[idx, attribute] + p["change"]
+                        )
 
-            if attribute == "ML_EGRESS" and attr_value == "all":
-                attr_value = 1
+                    attr_value["timeofday"] = []
 
-            if in_place:
-                if attribute in self.links_df.columns and not isinstance(
-                    attr_value, numbers.Number
-                ):
-                    # if the attribute already exists
-                    # and the attr value we are trying to set is not numeric
-                    # then change the attribute type to object
-                    self.links_df[attribute] = self.links_df[attribute].astype(object)
+                    for tod in p["timeofday"]:
+                        if "set" in tod.keys():
+                            attr_value["timeofday"].append(
+                                {
+                                    "time": parse_time_spans(tod["time"]),
+                                    "value": tod["set"],
+                                }
+                            )
+                        elif "change" in tod.keys():
+                            attr_value["timeofday"].append(
+                                {
+                                    "time": parse_time_spans(tod["time"]),
+                                    "value": self.links_df.at[idx, attribute]
+                                    + tod["change"],
+                                }
+                            )
+                elif "set" in p.keys():
+                    attr_value = p["set"]
 
-                if attribute not in self.links_df.columns:
-                    # if it is a new attribute then initiate with NaN values
-                    self.links_df[attribute] = "NaN"
+                elif "change" in p.keys():
+                    attr_value = self.links_df.at[idx, attribute] + p["change"]
 
-                for idx in link_idx:
+                if in_place:
+                    if attribute in self.links_df.columns and not isinstance(
+                        attr_value, numbers.Number
+                    ):
+                        # if the attribute already exists
+                        # and the attr value we are trying to set is not numeric
+                        # then change the attribute type to object
+                        self.links_df[attribute] = self.links_df[attribute].astype(
+                            object
+                        )
+
+                    if attribute not in self.links_df.columns:
+                        # if it is a new attribute then initialize with NaN values
+                        self.links_df[attribute] = "NaN"
+
                     self.links_df.at[idx, attribute] = attr_value
 
-            else:
-                if i == 0:
-                    updated_network = copy.deepcopy(self)
+                else:
+                    if i == 1:
+                        updated_network = copy.deepcopy(self)
 
-                if attribute in self.links_df.columns and not isinstance(
-                    attr_value, numbers.Number
-                ):
-                    # if the attribute already exists
-                    # and the attr value we are trying to set is not numeric
-                    # then change the attribute type to object
-                    updated_network.links_df[attribute] = updated_network.links_df[
-                        attribute
-                    ].astype(object)
+                    if attribute in self.links_df.columns and not isinstance(
+                        attr_value, numbers.Number
+                    ):
+                        # if the attribute already exists
+                        # and the attr value we are trying to set is not numeric
+                        # then change the attribute type to object
+                        updated_network.links_df[attribute] = updated_network.links_df[
+                            attribute
+                        ].astype(object)
 
-                if attribute not in updated_network.links_df.columns:
-                    # if it is a new attribute then initiate with NaN values
-                    updated_network.links_df[attribute] = "NaN"
+                    if attribute not in updated_network.links_df.columns:
+                        # if it is a new attribute then initialize with NaN values
+                        updated_network.links_df[attribute] = "NaN"
 
-                for idx in link_idx:
                     updated_network.links_df.at[idx, attribute] = attr_value
 
-                if i == len(properties) - 1:
-                    return updated_network
+                    if p == len(properties):
+                        return updated_network
+                    else:
+                        p = p + 1
 
     def add_new_roadway_feature_change(self, links: dict, nodes: dict) -> None:
         """
@@ -1491,9 +1643,7 @@ class RoadwayNetwork(object):
             for link in links:
                 for key in RoadwayNetwork.LINK_FOREIGN_KEY:
                     if link.get(key) is None:
-                        msg = "New link to add doesn't contain link foreign key identifier: {}".format(
-                            key
-                        )
+                        msg = "New link to add doesn't contain link foreign key identifier: {key}"
                         WranglerLogger.error(msg)
                         raise ValueError(msg)
 
@@ -1509,18 +1659,16 @@ class RoadwayNetwork(object):
                 if self.nodes_df[
                     self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY] == link["A"]
                 ].empty:
-                    msg = "New link to add has A node = {} but the node does not exist in the network".format(
-                        link["A"]
-                    )
+                    msg = f"New link to add has A node = {link['A']} but the node does not exist \
+                        in the network"
                     WranglerLogger.error(msg)
                     raise ValueError(msg)
 
                 if self.nodes_df[
                     self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY] == link["B"]
                 ].empty:
-                    msg = "New link to add has B node = {} but the node does not exist in the network".format(
-                        link["B"]
-                    )
+                    msg = "New link to add has B node = {link['B']} but the node does \
+                        not exist in the network"
                     WranglerLogger.error(msg)
                     raise ValueError(msg)
 
@@ -1593,9 +1741,8 @@ class RoadwayNetwork(object):
             for key, val in links.items():
                 missing_links = [v for v in val if v not in self.links_df[key].tolist()]
                 if missing_links:
-                    message = "Links attribute {} with values as {} does not exist in the network\n".format(
-                        key, missing_links
-                    )
+                    message = f"Links attribute {key} with values as {missing_links} does not \
+                        exist in the network"
                     if ignore_missing:
                         WranglerLogger.warning(message)
                     else:
@@ -1623,9 +1770,8 @@ class RoadwayNetwork(object):
             for key, val in nodes.items():
                 missing_nodes = [v for v in val if v not in self.nodes_df[key].tolist()]
                 if missing_nodes:
-                    message = "Nodes attribute {} with values as {} does not exist in the network\n".format(
-                        key, missing_links
-                    )
+                    message = f"Nodes attribute {key} with values as {missing_links} \
+                        does not exist in the network."
                     if ignore_missing:
                         WranglerLogger.warning(message)
                     else:
@@ -1698,16 +1844,18 @@ class RoadwayNetwork(object):
                 if "default" in v.keys():
                     return v["default"]
                 else:
-                    WranglerLogger.debug("variable: ".format(v))
-                    msg = "Variable {} is more complex in network than query".format(v)
+                    WranglerLogger.debug(f"variable: {v}")
+                    msg = f"Variable {v} is more complex in network than query"
                     WranglerLogger.error(msg)
                     raise ValueError(msg)
 
             if v.get("timeofday"):
                 categories = []
                 for tg in v["timeofday"]:
-                    if (time_spans[0] >= tg["time"][0]) and (
-                        time_spans[1] <= tg["time"][1]
+                    if (
+                        (time_spans[0] >= tg["time"][0])
+                        and (time_spans[1] <= tg["time"][1])
+                        and (time_spans[0] <= time_spans[1])
                     ):
                         if tg.get("category"):
                             categories += tg["category"]
@@ -1724,8 +1872,29 @@ class RoadwayNetwork(object):
                             # print("RETURNING:", time_spans, category, tg["value"])
                             return tg["value"]
 
-                    # if there isn't a fully matched time period, see if there is an overlapping one
-                    # right now just return the first overlapping ones
+                    if (
+                        (time_spans[0] >= tg["time"][0])
+                        and (time_spans[1] <= tg["time"][1])
+                        and (time_spans[0] > time_spans[1])
+                        and (tg["time"][0] > tg["time"][1])
+                    ):
+                        if tg.get("category"):
+                            categories += tg["category"]
+                            for c in search_cats:
+                                print("CAT:", c, tg["category"])
+                                if c in tg["category"]:
+                                    # print("Var:", v)
+                                    # print(
+                                    #    "RETURNING:", time_spans, category, tg["value"]
+                                    # )
+                                    return tg["value"]
+                        else:
+                            # print("Var:", v)
+                            # print("RETURNING:", time_spans, category, tg["value"])
+                            return tg["value"]
+
+                    # if there isn't a fully matched time period, see if there is an overlapping
+                    # one right now just return the first overlapping ones
                     # TODO return the time period with the largest overlap
 
                     if (
@@ -1743,30 +1912,26 @@ class RoadwayNetwork(object):
                         # print("OLM",overlap_minutes)
                         if not return_partial_match and overlap_minutes > 0:
                             WranglerLogger.debug(
-                                "Couldn't find time period consistent with {}, but found a partial match: {}. Consider allowing partial matches using 'return_partial_match' keyword or updating query.".format(
-                                    time_spans, tg["time"]
-                                )
+                                f"Couldn't find time period consistent with {time_spans}, but \
+                                    found a partial match: {tg['time']}. Consider allowing \
+                                    partial matches using 'return_partial_match' keyword or \
+                                    updating query."
                             )
                         elif (
                             overlap_minutes < partial_match_minutes
                             and overlap_minutes > 0
                         ):
                             WranglerLogger.debug(
-                                "Time period: {} overlapped less than the minimum number of minutes ({}<{}) to be considered a match with time period in network: {}.".format(
-                                    time_spans,
-                                    overlap_minutes,
-                                    partial_match_minutes,
-                                    tg["time"],
-                                )
+                                f"Time period: {time_spans} overlapped less than the minimum number \
+                                of minutes ({overlap_minutes}<{partial_match_minutes}) to be \
+                                considered a match with time period in network: {tg['time']}."
                             )
                         elif overlap_minutes > 0:
                             WranglerLogger.debug(
-                                "Returning a partial time period match. Time period: {} overlapped the minimum number of minutes ({}>={}) to be considered a match with time period in network: {}.".format(
-                                    time_spans,
-                                    overlap_minutes,
-                                    partial_match_minutes,
-                                    tg["time"],
-                                )
+                                f"Returning a partial time period match. Time period: {time_spans}\
+                                overlapped the minimum number of minutes ({overlap_minutes}>=\
+                                {partial_match_minutes}) to be considered a match with time period\
+                                 in network: {tg['time']}."
                             )
                             if tg.get("category"):
                                 categories += tg["category"]
@@ -1834,69 +1999,91 @@ class RoadwayNetwork(object):
         access_df = gp_df.iloc[0:0, :].copy()
         egress_df = gp_df.iloc[0:0, :].copy()
 
-        def _get_connector_references(ref_1: list, ref_2: list, type: str):
-            if type == "access":
+        def _get_connector_references(ref_1: list, ref_2: list, link_type: str):
+            if link_type == "access_link":
                 out_location_reference = [
                     {"sequence": 1, "point": ref_1[0]["point"]},
                     {"sequence": 2, "point": ref_2[0]["point"]},
                 ]
 
-            if type == "egress":
+            elif link_type == "egress_link":
                 out_location_reference = [
                     {"sequence": 1, "point": ref_2[1]["point"]},
                     {"sequence": 2, "point": ref_1[1]["point"]},
                 ]
+
+            else:
+                raise ValueError(
+                    f"Unknown connector link type: {link_type}. \
+                    Should be one of [access_link,egress_link]"
+                )
             return out_location_reference
 
+        free_access = True if "ML_access_point" not in gp_ml_links_df.columns else False
+        free_egress = True if "ML_egress_point" not in gp_ml_links_df.columns else False
+
         for index, row in gp_ml_links_df.iterrows():
-            access_row = {}
-            access_row["A"] = row["A"]
-            access_row["B"] = row["ML_A"]
-            access_row["lanes"] = 1
-            access_row["model_link_id"] = (
-                row["model_link_id"] + row["ML_model_link_id"] + 1
-            )
-            access_row["access"] = row["ML_access"]
-            access_row["drive_access"] = row["drive_access"]
+            if not free_access:
+                if row["A"] not in row["ML_access_point"]:
+                    continue
+            access_row = {
+                "A": row["A"],
+                "B": row["ML_A"],
+                "model_link_id": row["model_link_id"] + row["ML_model_link_id"] + 1,
+                "name": "Access Dummy " + row["name"],
+                "roadway": "ml_access",
+                "lanes": 1,
+                "access": row["ML_access"],
+                "drive_access": row["ML_drive_access"],
+                "ref": "",
+            }
+
             access_row["locationReferences"] = _get_connector_references(
-                row["locationReferences"], row["ML_locationReferences"], "access"
+                row["locationReferences"], row["ML_locationReferences"], "access_link"
             )
+
             access_row["distance"] = haversine_distance(
                 access_row["locationReferences"][0]["point"],
                 access_row["locationReferences"][1]["point"],
             )
-            access_row["roadway"] = "ml_access"
-            access_row["name"] = "Access Dummy " + row["name"]
+
             # ref is not a *required* attribute, so make conditional:
             if "ref" in gp_ml_links_df.columns:
                 access_row["ref"] = row["ref"]
-            else:
-                access_row["ref"] = ""
+
             access_df = access_df.append(access_row, ignore_index=True)
 
-            egress_row = {}
-            egress_row["A"] = row["ML_B"]
-            egress_row["B"] = row["B"]
-            egress_row["lanes"] = 1
-            egress_row["model_link_id"] = (
-                row["model_link_id"] + row["ML_model_link_id"] + 2
-            )
-            egress_row["access"] = row["ML_access"]
-            egress_row["drive_access"] = row["drive_access"]
+        for index, row in gp_ml_links_df.iterrows():
+            if not free_egress:
+                if row["B"] not in row["ML_egress_point"]:
+                    continue
+            egress_row = {
+                "A": row["ML_B"],
+                "B": row["B"],
+                "name": "Egress Dummy " + row["name"],
+                "model_link_id": row["model_link_id"] + row["ML_model_link_id"] + 2,
+                "roadway": "ml_egress",
+                "lanes": 1,
+                "access": row["ML_access"],
+                "drive_access": row["ML_drive_access"],
+                "ref": "",
+            }
+
             egress_row["locationReferences"] = _get_connector_references(
-                row["locationReferences"], row["ML_locationReferences"], "egress"
+                row["locationReferences"],
+                row["ML_locationReferences"],
+                "egress_link",
             )
+
             egress_row["distance"] = haversine_distance(
                 egress_row["locationReferences"][0]["point"],
                 egress_row["locationReferences"][1]["point"],
             )
-            egress_row["roadway"] = "ml_egress"
-            egress_row["name"] = "Egress Dummy " + row["name"]
+
             # ref is not a *required* attribute, so make conditional:
             if "ref" in gp_ml_links_df.columns:
                 egress_row["ref"] = row["ref"]
-            else:
-                egress_row["ref"] = ""
+
             egress_df = egress_df.append(egress_row, ignore_index=True)
 
         return (access_df, egress_df)
@@ -1918,7 +2105,8 @@ class RoadwayNetwork(object):
         WranglerLogger.info("Creating network with duplicated managed lanes")
 
         if "ml_access" in self.links_df["roadway"].tolist():
-            msg = "managed lane access links already exist in network; shouldn't be running create managed lane network. Returning network as-is."
+            msg = "managed lane access links already exist in network; shouldn't be running \
+                create managed lane network. Returning network as-is."
             WranglerLogger.error(msg)
             if in_place:
                 return
@@ -1932,15 +2120,15 @@ class RoadwayNetwork(object):
         # non_ml_links are links in the network where there is no managed lane.
         # gp_links are the gp lanes and ml_links are ml lanes respectively for the ML roadways.
 
-        non_ml_links_df = self.links_df[self.links_df["managed"] == 0]
+        non_ml_links_df = self.links_df[self.links_df["managed"] != 1]
         non_ml_links_df = non_ml_links_df.drop(ml_attributes, axis=1)
 
         ml_links_df = self.links_df[self.links_df["managed"] == 1]
         gp_links_df = ml_links_df.drop(ml_attributes, axis=1)
 
         for attr in link_attributes:
-            if attr ==  "name":
-                ml_links_df["name"] = "Managed Lane "+gp_links_df["name"]
+            if attr == "name":
+                ml_links_df["name"] = "Managed Lane " + gp_links_df["name"]
             elif attr in ml_attributes and attr not in ["ML_ACCESS", "ML_EGRESS"]:
                 gp_attr = attr.split("_", 1)[1]
                 ml_links_df.loc[:, gp_attr] = ml_links_df[attr]
@@ -1955,16 +2143,6 @@ class RoadwayNetwork(object):
 
         ml_links_df["managed"] = 1
         gp_links_df["managed"] = 0
-
-        def _update_location_reference(location_reference: list):
-            out_location_reference = copy.deepcopy(location_reference)
-            out_location_reference[0]["point"] = offset_location_reference(
-                out_location_reference[0]["point"]
-            )
-            out_location_reference[1]["point"] = offset_location_reference(
-                out_location_reference[1]["point"]
-            )
-            return out_location_reference
 
         ml_links_df["A"] = (
             ml_links_df["A"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
@@ -2085,8 +2263,9 @@ class RoadwayNetwork(object):
         Args:
             links_df: DataFrame of standard network links
             nodes_df: DataFrame of standard network nodes
-            modes: list of the modes of the network to be kept, must be in `drive`,`transit`,`rail`,`bus`,
-                `walk`, `bike`. For example, if bike and walk are selected, both bike and walk links will be kept.
+            modes: list of the modes of the network to be kept, must be in
+                `drive`,`transit`,`rail`,`bus`,`walk`, `bike`.
+                For example, if bike and walk are selected, both bike and walk links will be kept.
 
         Returns: tuple of DataFrames for links, nodes filtered by mode
 
@@ -2098,7 +2277,8 @@ class RoadwayNetwork(object):
         for mode in modes:
             if mode not in RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys():
                 msg = "mode value should be one of {}, got {}".format(
-                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()), mode,
+                    list(RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES.keys()),
+                    mode,
                 )
                 WranglerLogger.error(msg)
                 raise ValueError(msg)
@@ -2123,20 +2303,20 @@ class RoadwayNetwork(object):
         )
 
         if not set(mode_link_variables).issubset(set(links_df.columns)):
-            msg = "{} not in provided links_df list of columns. Available columns are: \n {}".format(
-                set(mode_link_variables) - set(links_df.columns), links_df.columns
-            )
+            msg = f"""{set(mode_link_variables) - set(links_df.columns)} not in provided links_df \
+                list of columns. Available columns are:
+                {links_df.columns}"""
             WranglerLogger.error(msg)
 
         if not set(mode_node_variables).issubset(set(nodes_df.columns)):
-            msg = "{} not in provided nodes_df list of columns. Available columns are: \n {}".format(
-                set(mode_node_variables) - set(nodes_df.columns), nodes_df.columns
-            )
+            msg = f"""{set(mode_node_variables) - set(nodes_df.columns)} not in provided nodes_df \
+                list of columns. Available columns are:
+                {nodes_df.columns}"""
             WranglerLogger.error(msg)
 
         modal_links_df = links_df.loc[links_df[mode_link_variables].any(axis=1)]
 
-        ##TODO right now we don't filter the nodes because transit-only
+        # TODO right now we don't filter the nodes because transit-only
         # links with walk access are not marked as having walk access
         # Issue discussed in https://github.com/wsp-sag/network_wrangler/issues/145
         # modal_nodes_df = nodes_df[nodes_df[mode_node_variable] == 1]
@@ -2165,7 +2345,9 @@ class RoadwayNetwork(object):
             raise ValueError(msg)
 
         _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-            links_df, nodes_df, modes=[mode],
+            links_df,
+            nodes_df,
+            modes=[mode],
         )
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
 
@@ -2194,7 +2376,9 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
             WranglerLogger.info(
@@ -2210,6 +2394,346 @@ class RoadwayNetwork(object):
         is_connected = nx.is_strongly_connected(G)
 
         return is_connected
+
+    @staticmethod
+    def add_incident_link_data_to_nodes(
+        links_df: DataFrame = None,
+        nodes_df: DataFrame = None,
+        link_variables: list = [],
+    ) -> DataFrame:
+        """
+        Add data from links going to/from nodes to node.
+
+        Args:
+            links_df: if specified, will assess connectivity of this
+                links list rather than self.links_df
+            nodes_df: if specified, will assess connectivity of this
+                nodes list rather than self.nodes_df
+            link_variables: list of columns in links dataframe to add to incident nodes
+
+        Returns:
+            nodes DataFrame with link data where length is N*number of links going in/out
+        """
+        WranglerLogger.debug("Adding following link data to nodes: ".format())
+
+        _link_vals_to_nodes = [x for x in link_variables if x in links_df.columns]
+        if link_variables not in _link_vals_to_nodes:
+            WranglerLogger.warning(
+                "Following columns not in links_df and wont be added to nodes: {} ".format(
+                    list(set(link_variables) - set(_link_vals_to_nodes))
+                )
+            )
+
+        _nodes_from_links_A = nodes_df.merge(
+            links_df[["A"] + _link_vals_to_nodes],
+            how="outer",
+            left_on=RoadwayNetwork.UNIQUE_NODE_KEY,
+            right_on="A",
+        )
+        _nodes_from_links_B = nodes_df.merge(
+            links_df[["B"] + _link_vals_to_nodes],
+            how="outer",
+            left_on=RoadwayNetwork.UNIQUE_NODE_KEY,
+            right_on="B",
+        )
+        _nodes_from_links_ab = pd.concat([_nodes_from_links_A, _nodes_from_links_B])
+
+        return _nodes_from_links_ab
+
+    def identify_segment_endpoints(
+        self,
+        mode: str = "",
+        links_df: DataFrame = None,
+        nodes_df: DataFrame = None,
+        min_connecting_links: int = 10,
+        min_distance: float = None,
+        max_link_deviation: int = 2,
+    ):
+        """
+
+        Args:
+            mode:  list of modes of the network, one of `drive`,`transit`,
+                `walk`, `bike`
+            links_df: if specified, will assess connectivity of this
+                links list rather than self.links_df
+            nodes_df: if specified, will assess connectivity of this
+                nodes list rather than self.nodes_df
+
+        """
+        SEGMENT_IDENTIFIERS = ["name", "ref"]
+
+        NAME_PER_NODE = 4
+        REF_PER_NODE = 2
+
+        _nodes_df = nodes_df if nodes_df else self.nodes_df
+        _links_df = links_df if links_df else self.links_df
+
+        if mode:
+            _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
+                _links_df,
+                _nodes_df,
+                modes=[mode],
+            )
+        else:
+            WranglerLogger.warning(
+                "Assessing connectivity without a mode\
+                specified. This may have limited value in interpretation.\
+                To add mode specificity, add the keyword `mode =` to calling\
+                this method"
+            )
+
+        _nodes_df = RoadwayNetwork.add_incident_link_data_to_nodes(
+            links_df=_links_df,
+            nodes_df=_nodes_df,
+            link_variables=SEGMENT_IDENTIFIERS + ["distance"],
+        )
+        WranglerLogger.debug("Node/Link table elements: {}".format(len(_nodes_df)))
+
+        # Screen out segments that have blank name AND refs
+        _nodes_df = _nodes_df.replace(r"^\s*$", np.nan, regex=True).dropna(
+            subset=["name", "ref"]
+        )
+
+        WranglerLogger.debug(
+            "Node/Link table elements after dropping empty name AND ref : {}".format(
+                len(_nodes_df)
+            )
+        )
+
+        # Screen out segments that aren't likely to be long enough
+        # Minus 1 in case ref or name is missing on an intermediate link
+        _min_ref_in_table = REF_PER_NODE * (min_connecting_links - max_link_deviation)
+        _min_name_in_table = NAME_PER_NODE * (min_connecting_links - max_link_deviation)
+
+        _nodes_df["ref_freq"] = _nodes_df["ref"].map(_nodes_df["ref"].value_counts())
+        _nodes_df["name_freq"] = _nodes_df["name"].map(_nodes_df["name"].value_counts())
+
+        _nodes_df = _nodes_df.loc[
+            (_nodes_df["ref_freq"] >= _min_ref_in_table)
+            & (_nodes_df["name_freq"] >= _min_name_in_table)
+        ]
+
+        WranglerLogger.debug(
+            "Node/Link table has n = {} after screening segments for min length:\n{}".format(
+                len(_nodes_df),
+                _nodes_df[
+                    [
+                        RoadwayNetwork.UNIQUE_NODE_KEY,
+                        "name",
+                        "ref",
+                        "distance",
+                        "ref_freq",
+                        "name_freq",
+                    ]
+                ],
+            )
+        )
+        # ----------------------------------------
+        # Find nodes that are likely endpoints
+        # ----------------------------------------
+
+        # - Likely have one incident link and one outgoing link
+        _max_ref_endpoints = REF_PER_NODE / 2
+        _max_name_endpoints = NAME_PER_NODE / 2
+        # - Attach frequency  of node/ref
+        _nodes_df = _nodes_df.merge(
+            _nodes_df.groupby(by=[RoadwayNetwork.UNIQUE_NODE_KEY, "ref"])
+            .size()
+            .rename("ref_N_freq"),
+            on=[RoadwayNetwork.UNIQUE_NODE_KEY, "ref"],
+        )
+        # WranglerLogger.debug("_ref_count+_nodes:\n{}".format(_nodes_df[["model_node_id","ref","name","ref_N_freq"]]))
+        # - Attach frequency  of node/name
+        _nodes_df = _nodes_df.merge(
+            _nodes_df.groupby(by=[RoadwayNetwork.UNIQUE_NODE_KEY, "name"])
+            .size()
+            .rename("name_N_freq"),
+            on=[RoadwayNetwork.UNIQUE_NODE_KEY, "name"],
+        )
+        # WranglerLogger.debug("_name_count+_nodes:\n{}".format(_nodes_df[["model_node_id","ref","name","name_N_freq"]]))
+
+        WranglerLogger.debug(
+            "Possible segment endpoints:\n{}".format(
+                _nodes_df[
+                    [
+                        RoadwayNetwork.UNIQUE_NODE_KEY,
+                        "name",
+                        "ref",
+                        "distance",
+                        "ref_N_freq",
+                        "name_N_freq",
+                    ]
+                ]
+            )
+        )
+        # - Filter possible endpoint list based on node/name node/ref frequency
+        _nodes_df = _nodes_df.loc[
+            (_nodes_df["ref_N_freq"] <= _max_ref_endpoints)
+            | (_nodes_df["name_N_freq"] <= _max_name_endpoints)
+        ]
+        WranglerLogger.debug(
+            "{} Likely segment endpoints with req_ref<= {} or freq_name<={} \n{}".format(
+                len(_nodes_df),
+                _max_ref_endpoints,
+                _max_name_endpoints,
+                _nodes_df[
+                    [
+                        RoadwayNetwork.UNIQUE_NODE_KEY,
+                        "name",
+                        "ref",
+                        "ref_N_freq",
+                        "name_N_freq",
+                    ]
+                ],
+            )
+        )
+        # ----------------------------------------
+        # Assign a segment id
+        # ----------------------------------------
+        _nodes_df["segment_id"], _segments = pd.factorize(
+            _nodes_df.name + _nodes_df.ref
+        )
+        WranglerLogger.debug("{} Segments:\n{}".format(len(_segments), _segments))
+
+        # ----------------------------------------
+        # Drop segments without at least two nodes
+        # ----------------------------------------
+
+        # https://stackoverflow.com/questions/13446480/python-pandas-remove-entries-based-on-the-number-of-occurrences
+        _nodes_df = _nodes_df[
+            _nodes_df.groupby(["segment_id", RoadwayNetwork.UNIQUE_NODE_KEY])[
+                RoadwayNetwork.UNIQUE_NODE_KEY
+            ].transform(len)
+            > 1
+        ]
+
+        WranglerLogger.debug(
+            "{} Segments with at least nodes:\n{}".format(
+                len(_nodes_df),
+                _nodes_df[
+                    [RoadwayNetwork.UNIQUE_NODE_KEY, "name", "ref", "segment_id"]
+                ],
+            )
+        )
+
+        # ----------------------------------------
+        # For segments with more than two nodes, find farthest apart pairs
+        # ----------------------------------------
+
+        def _max_segment_distance(row):
+            _segment_nodes = _nodes_df.loc[_nodes_df["segment_id"] == row["segment_id"]]
+            dist = _segment_nodes.geometry.distance(row.geometry)
+            return max(dist.dropna())
+
+        _nodes_df["seg_distance"] = _nodes_df.apply(_max_segment_distance, axis=1)
+        _nodes_df = _nodes_df.merge(
+            _nodes_df.groupby("segment_id")
+            .seg_distance.agg(max)
+            .rename("max_seg_distance"),
+            on="segment_id",
+        )
+
+        _nodes_df = _nodes_df.loc[
+            (_nodes_df["max_seg_distance"] == _nodes_df["seg_distance"])
+            & (_nodes_df["seg_distance"] > 0)
+        ].drop_duplicates(subset=[RoadwayNetwork.UNIQUE_NODE_KEY, "segment_id"])
+
+        # ----------------------------------------
+        # Reassign segment id for final segments
+        # ----------------------------------------
+        _nodes_df["segment_id"], _segments = pd.factorize(
+            _nodes_df.name + _nodes_df.ref
+        )
+
+        WranglerLogger.debug(
+            "{} Segments:\n{}".format(
+                len(_segments),
+                _nodes_df[
+                    [
+                        RoadwayNetwork.UNIQUE_NODE_KEY,
+                        "name",
+                        "ref",
+                        "segment_id",
+                        "seg_distance",
+                    ]
+                ],
+            )
+        )
+
+        return _nodes_df[
+            ["segment_id", RoadwayNetwork.UNIQUE_NODE_KEY, "geometry", "name", "ref"]
+        ]
+
+    def identify_segment(
+        self,
+        O_id,
+        D_id,
+        selection_dict: dict = {},
+        mode=None,
+        nodes_df=None,
+        links_df=None,
+    ):
+        """
+        Args:
+            endpoints: list of length of two unique keys of nodes making up endpoints of segment
+            selection_dict: dictionary of link variables to select candidate links from, otherwise
+                will create a graph of ALL links which will be both a RAM hog and could result in
+                odd shortest paths.
+            segment_variables: list of variables to keep
+        """
+        _nodes_df = nodes_df if nodes_df else self.nodes_df
+        _links_df = links_df if links_df else self.links_df
+
+        if mode:
+            _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
+                _links_df,
+                _nodes_df,
+                modes=[mode],
+            )
+        else:
+            WranglerLogger.warning(
+                "Assessing connectivity without a mode\
+                specified. This may have limited value in interpretation.\
+                To add mode specificity, add the keyword `mode =` to calling\
+                this method"
+            )
+
+        if selection_dict:
+            _query = " or ".join(
+                [f"{k} == {repr(v)}" for k, v in selection_dict.items()]
+            )
+            _candidate_links = _links_df.query(_query)
+            WranglerLogger.debug(
+                "Found {} candidate links from {} total links using following query:\n{}".format(
+                    len(_candidate_links), len(_links_df), _query
+                )
+            )
+        else:
+            _candidate_links = _links_df
+
+            WranglerLogger.warning(
+                "Not pre-selecting links using selection_dict can use up a lot of RAM and \
+                    also result in odd segment paths."
+            )
+
+        WranglerLogger.debug(
+            "_candidate links for segment: \n{}".format(
+                _candidate_links[["u", "v", "A", "B", "name", "ref"]]
+            )
+        )
+
+        try:
+            (G, candidate_links, sp_route, sp_links) = self.path_search(
+                _candidate_links, O_id, D_id
+            )
+        except NoPathFound:
+            msg = "Route not found from {} to {} using selection candidates {}".format(
+                O_id, D_id, selection_dict
+            )
+            WranglerLogger.warning(msg)
+            sp_links = pd.DataFrame()
+
+        return sp_links
 
     def assess_connectivity(
         self,
@@ -2240,10 +2764,12 @@ class RoadwayNetwork(object):
 
         if mode:
             _links_df, _nodes_df = RoadwayNetwork.get_modal_links_nodes(
-                _links_df, _nodes_df, modes=[mode],
+                _links_df,
+                _nodes_df,
+                modes=[mode],
             )
         else:
-            WranglerLogger.info(
+            WranglerLogger.warning(
                 "Assessing connectivity without a mode\
                 specified. This may have limited value in interpretation.\
                 To add mode specificity, add the keyword `mode =` to calling\
@@ -2251,15 +2777,6 @@ class RoadwayNetwork(object):
             )
 
         G = RoadwayNetwork.ox_graph(_nodes_df, _links_df)
-        # sub_graphs = [s for s in sorted(nx.strongly_connected_component_subgraphs(G), key=len, reverse=True)]
-        sub_graphs = [
-            s
-            for s in sorted(
-                (G.subgraph(c) for c in nx.strongly_connected_components(G)),
-                key=len,
-                reverse=True,
-            )
-        ]
 
         sub_graph_nodes = [
             list(s)
@@ -2290,8 +2807,8 @@ class RoadwayNetwork(object):
 
         Args:
             G: OSMNX flavored networkX graph.
-            disconnected_subgraph_nodes: List of disconnected subgraphs described by the list of their
-                member nodes (as described by their `model_node_id`).
+            disconnected_subgraph_nodes: List of disconnected subgraphs described by the list
+                of their member nodes (as described by their `model_node_id`).
 
         returns: fig, ax : tuple
         """
@@ -2370,7 +2887,11 @@ class RoadwayNetwork(object):
 
         for _, row in selected_links.iterrows():
             pl = ox.folium._make_folium_polyline(
-                edge=row, edge_color="blue", edge_width=5, edge_opacity=0.8
+                geom=row["geometry"],
+                edge=row,
+                edge_color="blue",
+                edge_width=5,
+                edge_opacity=0.8,
             )
             pl.add_to(m)
 
@@ -2383,8 +2904,8 @@ class RoadwayNetwork(object):
             return node_marker
 
         if A:
-
-            # WranglerLogger.debug("A: {}\n{}".format(A,self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == A]))
+            msg = f"A: {A}\n{self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == A]}"
+            # WranglerLogger.debug(msg)
             _folium_node(
                 self.nodes_df[self.nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY] == A],
                 color="green",
@@ -2404,10 +2925,6 @@ class RoadwayNetwork(object):
         """
         Shows which links and nodes are deleted from the roadway network
         """
-        # deleted_links = None
-        # deleted_nodes = None
-
-        missing_error_message = []
 
         if links is not None:
             for key, val in links.items():

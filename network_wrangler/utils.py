@@ -1,13 +1,8 @@
-import os
-import copy
 import hashlib
 import math
-from typing import Union
-
-from shapely.geometry import LineString
 
 import pandas as pd
-import geopandas as gpd
+
 from shapely.geometry import LineString
 from geographiclib.geodesic import Geodesic
 
@@ -37,7 +32,7 @@ def point_df_to_geojson(df: pd.DataFrame, properties: list):
 
 
 def link_df_to_json(df: pd.DataFrame, properties: list):
-    """ Export pandas dataframe as a json object.
+    """Export pandas dataframe as a json object.
 
     Modified from: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/
@@ -189,7 +184,7 @@ def offset_point_with_distance_and_bearing(lat, lon, distance, bearing):
 def offset_location_reference(location_reference, offset_meters=10):
     """
     Creates a new location reference
-    using the node a and node b of given location reference,
+    using the first and last nodes of given location reference,
     offseting it by 90 degree to the bearing of given location reference
     and distance equals to offset_meters
 
@@ -197,8 +192,8 @@ def offset_location_reference(location_reference, offset_meters=10):
     """
     lon_1 = location_reference[0]["point"][0]
     lat_1 = location_reference[0]["point"][1]
-    lon_2 = location_reference[1]["point"][0]
-    lat_2 = location_reference[1]["point"][1]
+    lon_2 = location_reference[-1]["point"][0]
+    lat_2 = location_reference[-1]["point"][1]
 
     bearing = get_bearing(lat_1, lon_1, lat_2, lon_2)
     # adding 90 degrees (1.57 radians) to the current bearing

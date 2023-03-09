@@ -6,7 +6,7 @@ from __future__ import annotations
 import copy
 import os
 import re
-from typing import Tuple, Union
+from typing import Union
 
 import networkx as nx
 import numpy as np
@@ -38,7 +38,8 @@ class TransitNetwork(object):
         graph (nx.MultiDiGraph): Graph for associated roadway network object.
         feed_path (str): Where the feed was read in from.
         validated_frequencies (bool): The frequencies have been validated.
-        validated_road_network_consistency (): The network has been validated against the road network.
+        validated_road_network_consistency (): The network has been validated against
+            the road network.
         SHAPES_FOREIGN_KEY (str): foreign key between shapes dataframe and roadway network nodes
         STOPS_FOREIGN_KEY (str): foreign  key between stops dataframe and roadway network nodes
         ID_SCALAR (int): scalar value added to create new IDs when necessary.
@@ -53,11 +54,11 @@ class TransitNetwork(object):
     SHAPES_FOREIGN_KEY = "shape_model_node_id"
     STOPS_FOREIGN_KEY = "model_node_id"
 
-    ##TODO consolidate these two ^^^ constants if possible
+    # TODO consolidate these two ^^^ constants if possible
 
     ID_SCALAR = 100000000
 
-    ##TODO investigate consolidating this with RoadwayNetwork
+    # TODO investigate consolidating this with RoadwayNetwork
 
     REQUIRED_FILES = [
         "agency.txt",
@@ -96,11 +97,11 @@ class TransitNetwork(object):
 
         .. todo:: fill out this method
         """
-        ##TODO
+        # TODO
 
         msg = "TransitNetwork.empty is not implemented."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
+        raise NotImplementedError(msg)
 
     @staticmethod
     def read(feed_path: str) -> TransitNetwork:
@@ -316,9 +317,8 @@ class TransitNetwork(object):
             # there are shape links which does not exist in the roadway network
             if len(missing_links_df.index) > 0:
                 valid = False
-                msg = "There are links for shape id {} which are missing in the roadway network.".format(
-                    id
-                )
+                msg = f"There are links for shape id {id} which are missing in the \
+                    roadway network."
                 WranglerLogger.error(msg)
 
             transit_not_allowed_df = merged_df.query(
@@ -328,9 +328,8 @@ class TransitNetwork(object):
             # there are shape links where transit is not allowed
             if len(transit_not_allowed_df.index) > 0:
                 valid = False
-                msg = "There are links for shape id {} which does not allow transit in the roadway network.".format(
-                    id
-                )
+                msg = f"There are links for shape id {id} which does not allow transit \
+                    in the roadway network."
                 WranglerLogger.error(msg)
 
         return valid
@@ -499,7 +498,7 @@ class TransitNetwork(object):
         existing_shapes = self.feed.shapes
         msg = "_graph_shapes() not implemented yet."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
+        raise NotImplementedError(msg)
         # graphed_shapes = pd.DataFrame()
 
         # for shape_id in shapes:
@@ -518,7 +517,7 @@ class TransitNetwork(object):
         existing_stops = self.feed.stops
         msg = "_graph_stops() not implemented yet."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
+        raise NotImplementedError(msg)
         # graphed_stops = pd.DataFrame()
 
         # for stop_id in stops:
@@ -612,6 +611,8 @@ class TransitNetwork(object):
                     self.select_transit_features_by_nodes(managed_lane_nodes),
                     managed_lane_nodes,
                 )
+            elif project_dictionary["category"].lower() == "add transit":
+                self.apply_python_calculation(project_dictionary["pycode"])
             elif project_dictionary["category"].lower() == "roadway deletion":
                 WranglerLogger.warning(
                     "Roadway Deletion not yet implemented in Transit; ignoring"
@@ -629,7 +630,40 @@ class TransitNetwork(object):
         else:
             _apply_individual_change(project_card_dictionary)
 
+    def apply_python_calculation(
+        self, pycode: str, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        """
+        Changes roadway network object by executing pycode.
+
+        Args:
+            pycode: python code which changes values in the roadway network object
+            in_place: update self or return a new roadway network object
+        """
+        exec(pycode)
+
     def select_transit_features(self, selection: dict) -> pd.Series:
+        """
+        combines multiple selections
+
+        Args:
+            selection : selection dictionary
+
+        Returns: trip identifiers : list of GTFS trip IDs in the selection
+        """
+        trip_ids = pd.Series()
+
+        if selection.get("route"):
+            for route_dictionary in selection["route"]:
+                trip_ids = trip_ids.append(
+                    self._select_transit_features(route_dictionary)
+                )
+        else:
+            trip_ids = self._select_transit_features(selection)
+
+        return trip_ids
+
+    def _select_transit_features(self, selection: dict) -> pd.Series:
         """
         Selects transit features that satisfy selection criteria
 
@@ -678,7 +712,7 @@ class TransitNetwork(object):
             selection["time"] = parse_time_spans(selection["time"])
         elif selection.get("start_time") and selection.get("end_time"):
             selection["time"] = parse_time_spans(
-                [selection["start_time"], selection["end_time"]]
+                [selection["start_time"][0], selection["end_time"][0]]
             )
             # Filter freq to trips in selection
             freq = freq[freq.trip_id.isin(trips["trip_id"])]
@@ -696,6 +730,8 @@ class TransitNetwork(object):
                 "route_short_name",
                 "route_long_name",
                 "time",
+                "start_time",
+                "end_time",
             ]:
                 if key in trips:
                     trips = trips[trips[key].isin(selection[key])]
@@ -844,8 +880,16 @@ class TransitNetwork(object):
             if properties.get("existing") is not None:
                 # Match list
                 nodes = this_shape[TransitNetwork.SHAPES_FOREIGN_KEY].tolist()
-                index_replacement_starts = nodes.index(properties["existing_shapes"][0])
-                index_replacement_ends = nodes.index(properties["existing_shapes"][-1])
+                index_replacement_starts = [
+                    i
+                    for i, d in enumerate(nodes)
+                    if d == properties["existing_shapes"][0]
+                ][0]
+                index_replacement_ends = [
+                    i
+                    for i, d in enumerate(nodes)
+                    if d == properties["existing_shapes"][-1]
+                ][-1]
                 this_shape = pd.concat(
                     [
                         this_shape.iloc[:index_replacement_starts],
@@ -895,8 +939,12 @@ class TransitNetwork(object):
                         ],
                     ] = [
                         new_stop_id,
-                        nodes_df.loc[int(fk_i), "Y"],
-                        nodes_df.loc[int(fk_i), "X"],
+                        nodes_df.loc[
+                            nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"
+                        ],
+                        nodes_df.loc[
+                            nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"
+                        ],
                         fk_i,
                     ]
 
@@ -1041,7 +1089,8 @@ class TransitNetwork(object):
 class DotDict(dict):
     """
     dot.notation access to dictionary attributes
-    Source: https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary
+    Source:
+        https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary
     """
 
     __getattr__ = dict.__getitem__
