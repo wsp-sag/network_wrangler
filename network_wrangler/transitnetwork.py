@@ -23,13 +23,12 @@ class TransitNetwork(object):
     """
     Representation of a Transit Network.
 
-    .. highlight:: python
-
     Typical usage example:
-    ::
-        import network_wrangler as wr
-        stpaul = r'/home/jovyan/work/example/stpaul'
-        tc=wr.TransitNetwork.read(path=stpaul)
+    ``` py
+    import network_wrangler as wr
+    stpaul = r'/home/jovyan/work/example/stpaul'
+    tc=wr.TransitNetwork.read(path=stpaul)
+    ```
 
     Attributes:
         feed (DotDict): Partridge feed mapping dataframes.

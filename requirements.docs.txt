@@ -1,4 +1,12 @@
-recommonmark
-sphinx
-sphinx-autodoc-typehints
-sphinx_rtd_theme
+jupyter
+markdown == 3.3.1 # needs to be compatible with mkdocs, which needs > markdown 3.2.1
+mike
+mkdocs
+mkdocs-autorefs
+mkdocs-awesome-pages-plugin
+mkdocs-jupyter
+mkdocs-macros-plugin
+mkdocs-material
+mkdocstrings
+mkdocstrings-python
+fontawesome_markdown
