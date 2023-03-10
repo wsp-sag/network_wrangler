@@ -620,7 +620,6 @@
   </a>
 
 
-<p><a href="https://travis-ci.org/wsp-sag/network_wrangler"><img alt="Build Status" src="https://travis-ci.org/wsp-sag/network_wrangler.svg?branch=master" /></a></p>
 <h1 id="network_wrangler">network_wrangler<a class="headerlink" href="#network_wrangler" title="Permanent link"> ¶</a></h1>
 <p>Network Wrangler is a Python library for managing travel model network scenarios.</p>
 <h2 id="system-requirements">System Requirements<a class="headerlink" href="#system-requirements" title="Permanent link"> ¶</a></h2>
@@ -635,7 +634,7 @@
 conda<span class="w"> </span>create<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7<span class="w"> </span>rtree<span class="w"> </span>geopandas<span class="w"> </span>osmnx<span class="w"> </span>-n<span class="w"> </span>&lt;my_wrangler_environment&gt;
 conda<span class="w"> </span>activate<span class="w"> </span>&lt;my_wrangler_environment&gt;
 pip<span class="w"> </span>install<span class="w"> </span>network-wrangler
-pytest<span class="w"> </span>-s<span class="w"> </span>-m<span class="w"> </span>travis
+pytest
 </code></pre></div>
 <p>Network wrangler can be installed in several ways depending on the user&rsquo;s needs. Installing from github is the simplest method and is appropriate when the user does not anticipate needing to update network wrangler. An update will require rebuilding the network wrangler environment. Installing from clone is slightly more involved and requires the user to have a git manager on their machine, but permits the user to install network wrangler with the <code>-e</code>, edit, option so that their network wrangler installation can be updated through pulling new commits from the network wrangler repo without a full reinstallation.</p>
 <h3 id="from-github">From GitHub<a class="headerlink" href="#from-github" title="Permanent link"> ¶</a></h3>
@@ -683,18 +682,17 @@ Resolving<span class="w"> </span>deltas:<span class="w"> </span><span class="m">
 <p>Navigate your command prompt into the network wrangler folder and then install network wrangler in editable mode.
 This will take a few minutes because it is also installing all the prerequisites.</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>network_wrangler
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>tests<span class="o">]</span>
 </code></pre></div>
+<p>Note: the <code>[tests]</code> flag makes sure to install the testing and development requirements as listed in <code>requirements.tests.txt</code></p>
 <p>There will be a lot of messy output, but it should end with something like:</p>
 <div class="highlight"><pre><span></span><code>Running<span class="w"> </span>setup.py<span class="w"> </span>develop<span class="w"> </span><span class="k">for</span><span class="w"> </span>network-wrangler
 Successfully<span class="w"> </span>installed<span class="w"> </span>Rtree-0.8.3<span class="w"> </span>attrs-19.1.0<span class="w"> </span>cchardet-2.1.4<span class="w"> </span>chardet-3.0.4<span class="w"> </span>click-7.0<span class="w"> </span>click-plugins-1.1.1<span class="w"> </span>cligj-0.5.0<span class="w"> </span>cycler-0.10.0<span class="w"> </span>decorator-4.4.0<span class="w"> </span>descartes-1.1.0<span class="w"> </span>fiona-1.8.6<span class="w"> </span>geojson-2.4.1<span class="w"> </span>geopandas-0.5.1<span class="w"> </span>idna-2.8<span class="w"> </span>isoweek-1.3.3<span class="w"> </span>jsonschema-3.0.2<span class="w"> </span>kiwisolver-1.1.0<span class="w"> </span>matplotlib-3.1.1<span class="w"> </span>munch-2.3.2<span class="w"> </span>network-wrangler<span class="w"> </span>networkx-2.3<span class="w"> </span>numpy-1.17.0<span class="w"> </span>osmnx-0.10<span class="w"> </span>pandas-0.25.0<span class="w"> </span>partridge-1.1.0<span class="w"> </span>pyparsing-2.4.2<span class="w"> </span>pyproj-2.2.1<span class="w"> </span>pyrsistent-0.15.4<span class="w"> </span>python-dateutil-2.8.0<span class="w"> </span>pytz-2019.2<span class="w"> </span>pyyaml-5.1.2<span class="w"> </span>requests-2.22.0<span class="w"> </span>shapely-1.6.4.post2<span class="w"> </span>six-1.12.0<span class="w"> </span>urllib3-1.25.3
 </code></pre></div>
 <p><strong>6. Test the Installation</strong></p>
 <p>You can test that network wrangler was properly installed by running the tests as follows:</p>
-<div class="highlight"><pre><span></span><code>pytest<span class="w"> </span>-s<span class="w">  </span>-m<span class="w">  </span>travis
+<div class="highlight"><pre><span></span><code>pytest
 </code></pre></div>
-<p>Using the <code>-s</code> flag will run all the tests in &ldquo;noisy&rdquo; mode.
-The <code>-m travis</code> flag runs only tests that are marked as for &ldquo;travis&rdquo; continuous  integration</p>
 <p>Note: if you are not part of the project team and want to contribute code back to the project, please fork before you clone and then add the original repository to your upstream origin list per <a href="https://help.github.com/en/articles/fork-a-repo">these directions on github</a>.</p>
 <h3 id="using-docker">Using Docker<a class="headerlink" href="#using-docker" title="Permanent link"> ¶</a></h3>
 <ol>
