@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/wsp-sag/network_wrangler.svg?branch=master)](https://travis-ci.org/wsp-sag/network_wrangler)
-
 # network_wrangler
 
 Network Wrangler is a Python library for managing travel model network scenarios.
@@ -23,7 +21,7 @@ conda config --add channels conda-forge
 conda create python=3.7 rtree geopandas osmnx -n <my_wrangler_environment>
 conda activate <my_wrangler_environment>
 pip install network-wrangler
-pytest -s -m travis
+pytest
 ```
 
 Network wrangler can be installed in several ways depending on the user's needs. Installing from github is the simplest method and is appropriate when the user does not anticipate needing to update network wrangler. An update will require rebuilding the network wrangler environment. Installing from clone is slightly more involved and requires the user to have a git manager on their machine, but permits the user to install network wrangler with the `-e`, edit, option so that their network wrangler installation can be updated through pulling new commits from the network wrangler repo without a full reinstallation.
@@ -103,8 +101,10 @@ This will take a few minutes because it is also installing all the prerequisites
 
 ```bash
 cd network_wrangler
-pip install -e .
+pip install -e .[tests]
 ```
+
+Note: the `[tests]` flag makes sure to install the testing and development requirements as listed in `requirements.tests.txt`
 
 There will be a lot of messy output, but it should end with something like:
 
@@ -118,11 +118,8 @@ Successfully installed Rtree-0.8.3 attrs-19.1.0 cchardet-2.1.4 chardet-3.0.4 cli
 You can test that network wrangler was properly installed by running the tests as follows:
 
 ```bash
-pytest -s  -m  travis
+pytest
 ```
-
-Using the `-s` flag will run all the tests in "noisy" mode.
-The `-m travis` flag runs only tests that are marked as for "travis" continuous  integration
 
 Note: if you are not part of the project team and want to contribute code back to the project, please fork before you clone and then add the original repository to your upstream origin list per [these directions on github](https://help.github.com/en/articles/fork-a-repo).
 

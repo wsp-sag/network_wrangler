@@ -1,5 +1,0 @@
-pytest
-jupyter
-notebook
-pre-commit
-black

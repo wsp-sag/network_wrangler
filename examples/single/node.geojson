@@ -83,6 +83,33 @@
         "geometry": {
             "type": "Point",
             "coordinates": [
+                -93.1035758,
+                44.95007489999999
+            ]
+        },
+        "properties": {
+            "model_node_id": 71972,
+            "osm_node_id": "945523342",
+            "shstReferenceId": "e81b4f1069134883f10f4ffe0b8fd19c",
+            "drive_node": 1,
+            "walk_node": 0,
+            "bike_node": 0,
+            "bus_only": 0,
+            "rail_only": 0,
+            "outboundReferenceIds": [
+                "780b6a83285f9acdbf566951917206a7"
+            ],
+            "inboundReferenceIds": [
+                "bca1c628bf960d75ae9f08083324f788",
+                "82fe1b2ab8df2c5811b30629f3cf7dfc"
+            ]
+        }
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [
                 -93.0832419,
                 44.962943199999984
             ]

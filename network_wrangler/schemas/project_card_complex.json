@@ -80,7 +80,7 @@
 			"title": "Open Street Map Way ID",
 			"type": "string"
 		},
-		"link": {
+		"links": {
 			"type": "array",
 			"additionalProperties": false,
 			"title": "Road Name or Link ID",
@@ -98,7 +98,7 @@
 			"title": "Facility Selection",
 			"oneOf": [{
 					"required": [
-						"link",
+						"links",
 						"A",
 						"B"
 					]

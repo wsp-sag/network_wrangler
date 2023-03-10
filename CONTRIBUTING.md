@@ -13,9 +13,9 @@
 2. Make sure you have [git](https://git-scm.com/downloads), a terminal (e.g. Mac Terminal, CygWin, etc.), and a text editor installed on your local machine.  Optionally, you will likely find it easier to use [GitHub Desktop](https://desktop.github.com/), an IDE instead of a simple text editor like [VSCode](https://code.visualstudio.com/), [Eclipse](https://www.eclipse.org/), [Sublime Text](https://www.sublimetext.com/), etc.  
 3. [Fork the repository](https://github.com/wsp-sag/network_wrangler/fork) into your own GitHub account and [clone it locally](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).  
 4. Install your `network_wrangler` clone in development mode: `pip install . -e`
-5. Install development requirements: `pip install -r dev-requirements.txt`
 5. Install documentation requirements: `pip install -r requirements.docs.txt`
-6. \[Optional\] [Install act](https://github.com/nektos/act) to run github actions locally.  
+6. Install development requirements: `pip install -r requirements.tests.txt`
+7. \[Optional\] [Install act](https://github.com/nektos/act) to run github actions locally.  
 
 ### Development Workflow
 

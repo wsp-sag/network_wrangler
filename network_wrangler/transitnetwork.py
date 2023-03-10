@@ -6,7 +6,7 @@ from __future__ import annotations
 import copy
 import os
 import re
-from typing import Tuple, Union
+from typing import Union
 
 import networkx as nx
 import numpy as np
@@ -15,7 +15,7 @@ import partridge as ptg
 from partridge.config import default_config
 
 from .logger import WranglerLogger
-from .utils import parse_time_spans
+from .utils import parse_time_spans_to_secs
 from .roadwaynetwork import RoadwayNetwork
 
 
@@ -37,7 +37,8 @@ class TransitNetwork(object):
         graph (nx.MultiDiGraph): Graph for associated roadway network object.
         feed_path (str): Where the feed was read in from.
         validated_frequencies (bool): The frequencies have been validated.
-        validated_road_network_consistency (): The network has been validated against the road network.
+        validated_road_network_consistency (): The network has been validated against
+            the road network.
         SHAPES_FOREIGN_KEY (str): foreign key between shapes dataframe and roadway network nodes
         STOPS_FOREIGN_KEY (str): foreign  key between stops dataframe and roadway network nodes
         ID_SCALAR (int): scalar value added to create new IDs when necessary.
@@ -52,11 +53,11 @@ class TransitNetwork(object):
     SHAPES_FOREIGN_KEY = "shape_model_node_id"
     STOPS_FOREIGN_KEY = "model_node_id"
 
-    ##TODO consolidate these two ^^^ constants if possible
+    # TODO consolidate these two ^^^ constants if possible
 
     ID_SCALAR = 100000000
 
-    ##TODO investigate consolidating this with RoadwayNetwork
+    # TODO investigate consolidating this with RoadwayNetwork
 
     REQUIRED_FILES = [
         "agency.txt",
@@ -95,11 +96,11 @@ class TransitNetwork(object):
 
         .. todo:: fill out this method
         """
-        ##TODO
+        # TODO
 
         msg = "TransitNetwork.empty is not implemented."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
+        raise NotImplementedError(msg)
 
     @staticmethod
     def read(feed_path: str) -> TransitNetwork:
@@ -238,7 +239,9 @@ class TransitNetwork(object):
         valid = True
 
         stop_ids = [int(s) for s in stops[TransitNetwork.STOPS_FOREIGN_KEY].to_list()]
-        node_ids = [int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
+        node_ids = [
+            int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].to_list()
+        ]
 
         if not set(stop_ids).issubset(node_ids):
             valid = False
@@ -274,7 +277,9 @@ class TransitNetwork(object):
         shape_ids = [
             int(s) for s in shapes_df[TransitNetwork.SHAPES_FOREIGN_KEY].to_list()
         ]
-        node_ids = [int(n) for n in nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
+        node_ids = [
+            int(n) for n in nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].to_list()
+        ]
 
         if not set(shape_ids).issubset(node_ids):
             valid = False
@@ -315,9 +320,8 @@ class TransitNetwork(object):
             # there are shape links which does not exist in the roadway network
             if len(missing_links_df.index) > 0:
                 valid = False
-                msg = "There are links for shape id {} which are missing in the roadway network.".format(
-                    id
-                )
+                msg = f"There are links for shape id {id} which are missing in the \
+                    roadway network."
                 WranglerLogger.error(msg)
 
             transit_not_allowed_df = merged_df.query(
@@ -327,15 +331,14 @@ class TransitNetwork(object):
             # there are shape links where transit is not allowed
             if len(transit_not_allowed_df.index) > 0:
                 valid = False
-                msg = "There are links for shape id {} which does not allow transit in the roadway network.".format(
-                    id
-                )
+                msg = f"There are links for shape id {id} which does not allow transit \
+                    in the roadway network."
                 WranglerLogger.error(msg)
 
         return valid
 
     @staticmethod
-    def route_ids_in_routestxt(feed: DotDict) -> Bool:
+    def route_ids_in_routestxt(feed: DotDict) -> bool:
         """
         Wherever route_id occurs, make sure it is in routes.txt
 
@@ -360,7 +363,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def trip_ids_in_tripstxt(feed: DotDict) -> Bool:
+    def trip_ids_in_tripstxt(feed: DotDict) -> bool:
         """
         Wherever trip_id occurs, make sure it is in trips.txt
 
@@ -387,7 +390,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def shape_ids_in_shapestxt(feed: DotDict) -> Bool:
+    def shape_ids_in_shapestxt(feed: DotDict) -> bool:
         """
         Wherever shape_id occurs, make sure it is in shapes.txt
 
@@ -413,7 +416,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def stop_ids_in_stopstxt(feed: DotDict) -> Bool:
+    def stop_ids_in_stopstxt(feed: DotDict) -> bool:
         """
         Wherever stop_id occurs, make sure it is in stops.txt
 
@@ -454,7 +457,7 @@ class TransitNetwork(object):
         return True
 
     @staticmethod
-    def validate_network_keys(feed: DotDict) -> Bool:
+    def validate_network_keys(feed: DotDict) -> bool:
         """
         Validates foreign keys are present in all connecting feed files.
 
@@ -498,7 +501,7 @@ class TransitNetwork(object):
         existing_shapes = self.feed.shapes
         msg = "_graph_shapes() not implemented yet."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
+        raise NotImplementedError(msg)
         # graphed_shapes = pd.DataFrame()
 
         # for shape_id in shapes:
@@ -517,7 +520,7 @@ class TransitNetwork(object):
         existing_stops = self.feed.stops
         msg = "_graph_stops() not implemented yet."
         WranglerLogger.error(msg)
-        raise NotImplemented(msg)
+        raise NotImplementedError(msg)
         # graphed_stops = pd.DataFrame()
 
         # for stop_id in stops:
@@ -547,7 +550,7 @@ class TransitNetwork(object):
                 df.to_csv(outpath, index=False)
 
     @staticmethod
-    def transit_net_to_gdf(transit: Union(TransitNetwork, pd.DataFrame)):
+    def transit_net_to_gdf(transit: Union("TransitNetwork", pd.DataFrame)):
         """
         Returns a geodataframe given a TransitNetwork or a valid Shapes DataFrame.
 
@@ -611,6 +614,8 @@ class TransitNetwork(object):
                     self.select_transit_features_by_nodes(managed_lane_nodes),
                     managed_lane_nodes,
                 )
+            elif project_dictionary["category"].lower() == "add transit":
+                self.apply_python_calculation(project_dictionary["pycode"])
             elif project_dictionary["category"].lower() == "roadway deletion":
                 WranglerLogger.warning(
                     "Roadway Deletion not yet implemented in Transit; ignoring"
@@ -628,7 +633,39 @@ class TransitNetwork(object):
         else:
             _apply_individual_change(project_card_dictionary)
 
+    def apply_python_calculation(self, pycode: str) -> "TransitNetwork":
+        """
+        Changes roadway network object by executing pycode.
+
+        Args:
+            pycode: python code which changes values in the roadway network object
+        """
+        net = copy.deepcopy(self)
+        exec(pycode)
+        return net
+
     def select_transit_features(self, selection: dict) -> pd.Series:
+        """
+        combines multiple selections
+
+        Args:
+            selection : selection dictionary
+
+        Returns: trip identifiers : list of GTFS trip IDs in the selection
+        """
+        trip_ids = pd.Series()
+
+        if selection.get("route"):
+            for route_dictionary in selection["route"]:
+                trip_ids = trip_ids.append(
+                    self._select_transit_features(route_dictionary)
+                )
+        else:
+            trip_ids = self._select_transit_features(selection)
+
+        return trip_ids
+
+    def _select_transit_features(self, selection: dict) -> pd.Series:
         """
         Selects transit features that satisfy selection criteria
 
@@ -674,10 +711,10 @@ class TransitNetwork(object):
 
         # If a time key exists, filter trips using frequency table
         if selection.get("time"):
-            selection["time"] = parse_time_spans(selection["time"])
+            selection["time"] = parse_time_spans_to_secs(selection["time"])
         elif selection.get("start_time") and selection.get("end_time"):
-            selection["time"] = parse_time_spans(
-                [selection["start_time"], selection["end_time"]]
+            selection["time"] = parse_time_spans_to_secs(
+                [selection["start_time"][0], selection["end_time"][0]]
             )
             # Filter freq to trips in selection
             freq = freq[freq.trip_id.isin(trips["trip_id"])]
@@ -695,6 +732,8 @@ class TransitNetwork(object):
                 "route_short_name",
                 "route_long_name",
                 "time",
+                "start_time",
+                "end_time",
             ]:
                 if key in trips:
                     trips = trips[trips[key].isin(selection[key])]
@@ -747,36 +786,48 @@ class TransitNetwork(object):
         return self.feed.trips[self.feed.trips.shape_id.isin(shape_ids)].trip_id
 
     def apply_transit_feature_change(
-        self, trip_ids: pd.Series, properties: list, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
+        self,
+        trip_ids: pd.Series,
+        properties: list,
+    ) -> "TransitNetwork":
         """
         Changes the transit attributes for the selected features based on the
         project card information passed
 
         Args:
+            net: transit network to manipulate
             trip_ids : pd.Series
                 all trip_ids to apply change to
             properties : list of dictionaries
                 transit properties to change
-            in_place : bool
-                whether to apply changes in place or return a new network
 
         Returns:
             None
         """
+        net = copy.deepcopy(self)
+
         for i in properties:
             if i["property"] in ["headway_secs"]:
-                self._apply_transit_feature_change_frequencies(trip_ids, i, in_place)
+                net = TransitNetwork._apply_transit_feature_change_frequencies(
+                    net, trip_ids, i
+                )
 
             elif i["property"] in ["routing"]:
-                self._apply_transit_feature_change_routing(trip_ids, i, in_place)
+                net = TransitNetwork._apply_transit_feature_change_routing(
+                    net, trip_ids, i
+                )
+        return net
 
     def _apply_transit_feature_change_routing(
-        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
-        shapes = self.feed.shapes.copy()
-        stop_times = self.feed.stop_times.copy()
-        stops = self.feed.stops.copy()
+        self,
+        trip_ids: pd.Series,
+        properties: dict,
+    ) -> TransitNetwork:
+
+        net = copy.deepcopy(self)
+        shapes = net.feed.shapes.copy()
+        stop_times = net.feed.stop_times.copy()
+        stops = net.feed.stops.copy()
 
         # A negative sign in "set" indicates a traversed node without a stop
         # If any positive numbers, stops have changed
@@ -798,7 +849,7 @@ class TransitNetwork(object):
             ]
 
         # Replace shapes records
-        trips = self.feed.trips  # create pointer rather than a copy
+        trips = net.feed.trips  # create pointer rather than a copy
         shape_ids = trips[trips["trip_id"].isin(trip_ids)].shape_id
         for shape_id in shape_ids:
             # Check if `shape_id` is used by trips that are not in
@@ -843,8 +894,16 @@ class TransitNetwork(object):
             if properties.get("existing") is not None:
                 # Match list
                 nodes = this_shape[TransitNetwork.SHAPES_FOREIGN_KEY].tolist()
-                index_replacement_starts = nodes.index(properties["existing_shapes"][0])
-                index_replacement_ends = nodes.index(properties["existing_shapes"][-1])
+                index_replacement_starts = [
+                    i
+                    for i, d in enumerate(nodes)
+                    if d == properties["existing_shapes"][0]
+                ][0]
+                index_replacement_ends = [
+                    i
+                    for i, d in enumerate(nodes)
+                    if d == properties["existing_shapes"][-1]
+                ][-1]
                 this_shape = pd.concat(
                     [
                         this_shape.iloc[:index_replacement_starts],
@@ -872,7 +931,7 @@ class TransitNetwork(object):
             # If node IDs in properties["set_stops"] are not already
             # in stops.txt, create a new stop_id for them in stops
             existing_fk_ids = set(stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist())
-            nodes_df = self.road_net.nodes_df.loc[
+            nodes_df = net.road_net.nodes_df.loc[
                 :, [TransitNetwork.STOPS_FOREIGN_KEY, "X", "Y"]
             ]
             for fk_i in properties["set_stops"]:
@@ -882,7 +941,7 @@ class TransitNetwork(object):
                     )
                     # Add new row to stops
                     new_stop_id = str(int(fk_i) + TransitNetwork.ID_SCALAR)
-                    if stop_id in stops["stop_id"].tolist():
+                    if new_stop_id in stops["stop_id"].tolist():
                         WranglerLogger.error("Cannot create a unique new stop_id.")
                     stops.loc[
                         len(stops.index) + 1,
@@ -894,8 +953,12 @@ class TransitNetwork(object):
                         ],
                     ] = [
                         new_stop_id,
-                        nodes_df.loc[int(fk_i), "Y"],
-                        nodes_df.loc[int(fk_i), "X"],
+                        nodes_df.loc[
+                            nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"
+                        ],
+                        nodes_df.loc[
+                            nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"
+                        ],
                         fk_i,
                     ]
 
@@ -976,22 +1039,17 @@ class TransitNetwork(object):
                     sort=False,
                 )
 
-        # Replace self if in_place, else return
-        if in_place:
-            self.feed.shapes = shapes
-            self.feed.stops = stops
-            self.feed.stop_times = stop_times
-        else:
-            updated_network = copy.deepcopy(self)
-            updated_network.feed.shapes = shapes
-            updated_network.feed.stops = stops
-            updated_network.feed.stop_times = stop_times
-            return updated_network
+            net.feed.shapes = shapes
+            net.feed.stops = stops
+            net.feed.stop_times = stop_times
+        return net
 
     def _apply_transit_feature_change_frequencies(
-        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
-        freq = self.feed.frequencies.copy()
+        self, trip_ids: pd.Series, properties: dict
+    ) -> TransitNetwork:
+
+        net = copy.deepcopy(self)
+        freq = net.feed.frequencies.copy()
 
         # Grab only those records matching trip_ids (aka selection)
         freq = freq[freq.trip_id.isin(trip_ids)]
@@ -1011,36 +1069,38 @@ class TransitNetwork(object):
         else:
             build_value = [i + properties["change"] for i in freq.headway_secs]
 
-        # Update self or return a new object
-        q = self.feed.frequencies.trip_id.isin(freq["trip_id"])
-        if in_place:
-            self.feed.frequencies.loc[q, properties["property"]] = build_value
-        else:
-            updated_network = copy.deepcopy(self)
-            updated_network.loc[q, properties["property"]] = build_value
-            return updated_network
+        q = net.feed.frequencies.trip_id.isin(freq["trip_id"])
+
+        net.feed.frequencies.loc[q, properties["property"]] = build_value
+        return net
 
     def apply_transit_managed_lane(
-        self, trip_ids: pd.Series, node_ids: list, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
+        self,
+        trip_ids: pd.Series,
+        node_ids: list,
+    ) -> TransitNetwork:
+
         # Traversed nodes without a stop should be negative integers
-        all_stops = self.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
+        net = copy.deepcopy(self)
+        all_stops = net.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
         node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
 
-        self._apply_transit_feature_change_routing(
+        TransitNetwork._apply_transit_feature_change_routing(
+            net,
             trip_ids=trip_ids,
             properties={
                 "existing": node_ids,
                 "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids),
             },
-            in_place=in_place,
         )
+        return net
 
 
 class DotDict(dict):
     """
     dot.notation access to dictionary attributes
-    Source: https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary
+    Source:
+        https://stackoverflow.com/questions/2352181/how-to-use-a-dot-to-access-members-of-dictionary
     """
 
     __getattr__ = dict.__getitem__

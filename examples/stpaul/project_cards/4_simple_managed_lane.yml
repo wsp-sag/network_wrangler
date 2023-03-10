@@ -7,7 +7,7 @@ dependencies:
   corequisites: []
   conflicts: []
 facility:
-  link:
+  links:
     - model_link_id:
       - 385534
       - 412227

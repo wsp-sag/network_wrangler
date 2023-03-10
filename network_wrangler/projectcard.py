@@ -4,7 +4,7 @@
 import os
 import yaml
 import json
-from typing import Optional, List
+from typing import Any, Collection, Mapping
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -21,7 +21,7 @@ class ProjectCard(object):
         valid: Boolean indicating if data conforms to project card data schema
     """
 
-    TRANSIT_CATEGORIES = ["Transit Service Property Change"]
+    TRANSIT_CATEGORIES = ["Transit Service Property Change", "Add Transit"]
 
     # categories that may affect transit, but only as a secondary
     # effect of changing roadways
@@ -70,12 +70,13 @@ class ProjectCard(object):
         """
         card_suffix = path_to_card.split(".")[-1].lower()
 
-        if card_suffix in ["yaml",'yml']:
+        if card_suffix in ["yaml", "yml"]:
             attribute_dictionary = ProjectCard.read_yml(path_to_card)
-        elif card_suffix in ["wrangler",'wr']:
+        elif card_suffix in ["wrangler", "wr"]:
             attribute_dictionary = ProjectCard.read_wrangler_card(path_to_card)
         else:
-            msg = "Card should have a suffix of yaml, yml, wrangler, or wr. Found suffix: {}".format(card_suffix)
+            msg = f"Card should have a suffix of yaml, yml, wrangler, or wr. \
+                Found suffix: {card_suffix}"
             raise ValueError(msg)
 
         card = ProjectCard(attribute_dictionary)
@@ -106,15 +107,14 @@ class ProjectCard(object):
         with open(path_to_card, "r") as cardfile:
             delim = cardfile.readline()
             WranglerLogger.debug("Using delimiter: {}".format(delim))
-            _yaml,_pycode = cardfile.read().split(delim)
+            _yaml, _pycode = cardfile.read().split(delim)
             WranglerLogger.debug("_yaml: {}\n_pycode: {}".format(_yaml, _pycode))
 
-        attribute_dictionary = yaml.load(_yaml)
+        attribute_dictionary = yaml.safe_load(_yaml)
         attribute_dictionary["file"] = path_to_card
         attribute_dictionary["pycode"] = _pycode.lstrip("\n")
 
         return attribute_dictionary
-
 
     @staticmethod
     def read_yml(path_to_card: str) -> dict:
@@ -139,7 +139,7 @@ class ProjectCard(object):
         Writes project card dictionary to YAML file
         """
         if not filename:
-            from network_wrangler.utils import make_slug
+            from network_wrangler.utils.geo import make_slug
 
             filename = make_slug(self.project) + ".yml"
 
@@ -181,45 +181,57 @@ class ProjectCard(object):
             return True
 
         except ValidationError as exc:
-            WranglerLogger.error("Failed Project Card validation: Validation Error")
-            WranglerLogger.error("Project Card File Loc:{}".format(card_file))
-            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_file))
-            WranglerLogger.error(exc.message)
+            msg = "Failed Project Card validation: Validation Error\n"
+            msg += f"   Project Card File Loc:{card_file}\n"
+            msg += f"   Project Card Schema Loc:{card_schema_file}\n"
+            msg += f"      {exc.message}\n"
+            WranglerLogger.error(msg)
 
         except SchemaError as exc:
-            WranglerLogger.error("Failed Project Card schema validation: Schema Error")
-            WranglerLogger.error("Project Card Schema Loc:{}".format(card_schema_file))
-            WranglerLogger.error(exc.message)
+            msg = "Failed Project Card schema validation: Schema Error"
+            msg += f"   Project Card Schema Loc:{card_schema_file}"
+            msg += f"      {exc.message}\n"
+            WranglerLogger.error(msg)
 
         except yaml.YAMLError as exc:
             WranglerLogger.error(exc.message)
 
     @staticmethod
-    def build_link_selection_query(
-        selection: dict,
-        unique_model_link_identifiers: [],
-        mode: List[str] = ["drive_access"],
-        ignore=[],
+    def build_selection_query(
+        selection: Mapping[str, Any],
+        type: str = "links",
+        unique_ids: Collection[str] = [],
+        mode: Collection[str] = ["drive_access"],
+        ignore: Collection[str] = [],
     ):
+        """Generates the query for selecting links within links_df.
+
+        Args:
+            selection: Selection dictionary from project card.
+            type: one of "links" or "nodes"
+            unique_ids: Properties which are unique in network and can be used
+                for selecting individual links or nodes without other properties.
+            mode: Limits selection to certain modes.
+                Defaults to ["drive_access"].
+            ignore: _description_. Defaults to [].
+
+        Returns:
+            _type_: _description_
+        """
         sel_query = "("
         count = 0
 
-        selection_keys = [k for l in selection["link"] for k, v in l.items()]
-        num_unique_model_link_identifiers = len(
-            set(unique_model_link_identifiers).intersection(selection_keys)
-        )
-        unique_model_link_identifer_exist = num_unique_model_link_identifiers > 0
+        selection_keys = [k for li in selection[type] for k, v in li.items()]
 
-        for l in selection["link"]:
-            for key, value in l.items():
+        unique_ids_sel = list(set(unique_ids) & set(selection_keys))
+
+        for li in selection[type]:
+            for key, value in li.items():
 
                 if key in ignore:
                     continue
 
-                if (
-                    unique_model_link_identifer_exist
-                    and key not in unique_model_link_identifiers
-                ):
+                if unique_ids_sel and key not in unique_ids:
                     continue
 
                 count = count + 1
@@ -236,21 +248,18 @@ class ProjectCard(object):
                             sel_query = sel_query + " or "
                             v = v + 1
                     sel_query = sel_query + ")"
-                else:
+                elif isinstance(value, str):
                     sel_query = sel_query + key + "==" + '"' + str(value) + '"'
+                else:
+                    sel_query = sel_query + key + "==" + str(value)
 
-                if not unique_model_link_identifer_exist and count != (
-                    len(selection["link"]) - len(ignore)
-                ):
+                if not unique_ids_sel and count != (len(selection[type]) - len(ignore)):
                     sel_query = sel_query + " and "
 
-                if (
-                    unique_model_link_identifer_exist
-                    and count != num_unique_model_link_identifiers
-                ):
+                if unique_ids_sel and count != len(unique_ids_sel):
                     sel_query = sel_query + " and "
 
-        if not unique_model_link_identifer_exist:
+        if not unique_ids_sel:
             if count > 0:
                 sel_query = sel_query + " and "
 
