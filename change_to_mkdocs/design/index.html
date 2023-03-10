@@ -263,7 +263,9 @@
           
             
               
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" hidden>
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -405,6 +407,8 @@
             
             
               
+                
+              
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
@@ -453,13 +457,15 @@
 <h1 id="design">Design<a class="headerlink" href="#design" title="Permanent link"> ¶</a></h1>
 <h2 id="atomic-parts">Atomic Parts<a class="headerlink" href="#atomic-parts" title="Permanent link"> ¶</a></h2>
 <p>NetworkWrangler deals with four primary atomic parts:</p>
-<p><strong>1. <a href="_generated/network_wrangler.Scenario.html"><code>Scenario</code></a></strong> objects describe a Roadway Network, Transit Network, and collection of Projects. Scenarios manage the addition and construction of projects on the network via projct cards. Scenarios can be based on or tiered from other scenarios.</p>
-<p><strong>2. <a href="_generated/network_wrangler.RoadwayNetwork.html"><code>RoadwayNetwork</code></a></strong> objects stores information about roadway nodes, directed links between nodes, and the shapes of links (note that the same shape can be shared between two or more links). Network Wrangler reads/writes roadway network objects from/to three files: <code>links.json</code>, <code>shapes.geojson</code>, and <code>nodes.geojson</code>. Their data is stored as GeoDataFrames in the object.</p>
-<p><strong>3. <a href="_generated/network_wrangler.TransitNetwork.html"><code>TransitNetwork</code></a></strong> objects contain information about stops, routes, trips, shapes, stoptimes, and frequencies. Network Wrangler reads/writes transit network information from/to gtfs csv files and stores them as DataFrames within a
+<p><strong>1. <a href="/network_wrangler/api/#network_wrangler.Scenario"><code>Scenario</code></a></strong> objects describe a Roadway Network, Transit Network, and collection of Projects. Scenarios manage the addition and construction of projects on the network via projct cards. Scenarios can be based on or tiered from other scenarios.</p>
+<p><strong>2. <a href="/network_wrangler/api/#network_wrangler.RoadwayNetwork"><code>RoadwayNetwork</code></a></strong> objects stores information about roadway nodes, directed links between nodes, and the shapes of links (note that the same shape can be shared between two or more links). Network Wrangler reads/writes roadway network objects from/to three files: <code>links.json</code>, <code>shapes.geojson</code>, and <code>nodes.geojson</code>. Their data is stored as GeoDataFrames in the object.</p>
+<p><strong>3. <a href="/network_wrangler/api/#network_wrangler.TransitNetwork"><code>TransitNetwork</code></a></strong> objects contain information about stops, routes, trips, shapes, stoptimes, and frequencies. Network Wrangler reads/writes transit network information from/to gtfs csv files and stores them as DataFrames within a
 <code>Partridge</code> <code>feed</code> object.  Transit networks can be associated with Roadway networks.</p>
-<p><strong>4.<a href="_generated/network_wrangler.ProjectCard.html"><code>ProjectCard</code></a></strong> objects store infromation (including  metadata) about changes to the network.  Network Wtanglr reads project cards from .yml files validates them, and manages them within a <code>Scenario</code> object.</p>
+<p><strong>4.<a href="/network_wrangler/api/#network_wrangler.ProjectCard"><code>ProjectCard</code></a></strong> objects store infromation (including  metadata) about changes to the network.  Network Wtanglr reads project cards from .yml files validates them, and manages them within a <code>Scenario</code> object.</p>
 
 
+
+  
 
 
 
@@ -476,6 +482,8 @@
       
         <footer class="md-footer">
   
+    
+      
     
     <nav class="md-footer__inner md-grid" aria-label="Footer" >
       
