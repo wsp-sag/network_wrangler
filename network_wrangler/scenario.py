@@ -11,8 +11,8 @@ from typing import Union, List
 
 import pandas as pd
 import geopandas as gpd
+from projectcard import ProjectCard
 
-from .projectcard import ProjectCard
 from collections import OrderedDict
 from .logger import WranglerLogger
 from collections import defaultdict

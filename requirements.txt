@@ -8,3 +8,4 @@ pyyaml
 geojson
 jsonschema
 folium
+git+https://github.com/network-wrangler/projectcard@main#egg=projectcard
