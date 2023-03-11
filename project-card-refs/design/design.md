@@ -16,5 +16,5 @@ NetworkWrangler deals with four primary atomic parts:
 **3. [`TransitNetwork`](/network_wrangler/api/#network_wrangler.TransitNetwork)** objects contain information about stops, routes, trips, shapes, stoptimes, and frequencies. Network Wrangler reads/writes transit network information from/to gtfs csv files and stores them as DataFrames within a
 `Partridge` `feed` object.  Transit networks can be associated with Roadway networks.
 
-**4.[`ProjectCard`](/network_wrangler/api/#network_wrangler.ProjectCard)** objects store infromation (including  metadata) about changes to the network.  Network Wtanglr reads project cards from .yml files validates them, and manages them within a `Scenario` object.
+**4.`ProjectCard`** objects store infromation (including  metadata) about changes to the network.  Network Wrangler uses the [`projectcard` package](http://github.com/network-wrangler/projectcard) to reads project cards from .yml files and validate them. Project card objects are managed within a `Scenario` object.
 
