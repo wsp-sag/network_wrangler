@@ -90,8 +90,8 @@
               "drive_node",
               "walk_node",
               "bike_node",
-              "outboundReferenceId",
-              "inboundReferenceId"
+              "outboundReferenceIds",
+              "inboundReferenceIds"
             ],
             "properties": {
               "id": {
@@ -159,12 +159,12 @@
                   0
                 ]
               },
-              "outboundReferenceId": {
-                "$id": "#/properties/features/items/properties/properties/properties/outboundReferenceId",
+              "outboundReferenceIds": {
+                "$id": "#/properties/features/items/properties/properties/properties/outboundReferenceIds",
                 "type": "array",
-                "title": "The Outboundreferenceid Schema",
+                "title": "The Outboundreferenceids Schema",
                 "items": {
-                  "$id": "#/properties/features/items/properties/properties/properties/outboundReferenceId/items",
+                  "$id": "#/properties/features/items/properties/properties/properties/outboundReferenceIds/items",
                   "type": "string",
                   "title": "The Items Schema",
                   "default": "",
@@ -174,12 +174,12 @@
                   "pattern": "^(.*)$"
                 }
               },
-              "inboundReferenceId": {
-                "$id": "#/properties/features/items/properties/properties/properties/inboundReferenceId",
+              "inboundReferenceIds": {
+                "$id": "#/properties/features/items/properties/properties/properties/inboundReferenceIds",
                 "type": "array",
-                "title": "The Inboundreferenceid Schema",
+                "title": "The Inboundreferenceids Schema",
                 "items": {
-                  "$id": "#/properties/features/items/properties/properties/properties/inboundReferenceId/items",
+                  "$id": "#/properties/features/items/properties/properties/properties/inboundReferenceIds/items",
                   "type": "string",
                   "title": "The Items Schema",
                   "default": "",

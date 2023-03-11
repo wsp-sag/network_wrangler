@@ -7,7 +7,7 @@ dependencies:
   corequisites: []
   conflicts: []
 facility:
-  link:
+  links:
     - name:
       - 'I 35E'
   A:

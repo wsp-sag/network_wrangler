@@ -15,7 +15,7 @@ import partridge as ptg
 from partridge.config import default_config
 
 from .logger import WranglerLogger
-from .utils import parse_time_spans
+from .utils import parse_time_spans_to_secs
 from .roadwaynetwork import RoadwayNetwork
 
 
@@ -23,13 +23,12 @@ class TransitNetwork(object):
     """
     Representation of a Transit Network.
 
-    .. highlight:: python
-
     Typical usage example:
-    ::
-        import network_wrangler as wr
-        stpaul = r'/home/jovyan/work/example/stpaul'
-        tc=wr.TransitNetwork.read(path=stpaul)
+    ``` py
+    import network_wrangler as wr
+    stpaul = r'/home/jovyan/work/example/stpaul'
+    tc=wr.TransitNetwork.read(path=stpaul)
+    ```
 
     Attributes:
         feed (DotDict): Partridge feed mapping dataframes.
@@ -240,7 +239,9 @@ class TransitNetwork(object):
         valid = True
 
         stop_ids = [int(s) for s in stops[TransitNetwork.STOPS_FOREIGN_KEY].to_list()]
-        node_ids = [int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
+        node_ids = [
+            int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].to_list()
+        ]
 
         if not set(stop_ids).issubset(node_ids):
             valid = False
@@ -276,7 +277,9 @@ class TransitNetwork(object):
         shape_ids = [
             int(s) for s in shapes_df[TransitNetwork.SHAPES_FOREIGN_KEY].to_list()
         ]
-        node_ids = [int(n) for n in nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY].to_list()]
+        node_ids = [
+            int(n) for n in nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].to_list()
+        ]
 
         if not set(shape_ids).issubset(node_ids):
             valid = False
@@ -547,7 +550,7 @@ class TransitNetwork(object):
                 df.to_csv(outpath, index=False)
 
     @staticmethod
-    def transit_net_to_gdf(transit: Union(TransitNetwork, pd.DataFrame)):
+    def transit_net_to_gdf(transit: Union("TransitNetwork", pd.DataFrame)):
         """
         Returns a geodataframe given a TransitNetwork or a valid Shapes DataFrame.
 
@@ -630,17 +633,16 @@ class TransitNetwork(object):
         else:
             _apply_individual_change(project_card_dictionary)
 
-    def apply_python_calculation(
-        self, pycode: str, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
+    def apply_python_calculation(self, pycode: str) -> "TransitNetwork":
         """
         Changes roadway network object by executing pycode.
 
         Args:
             pycode: python code which changes values in the roadway network object
-            in_place: update self or return a new roadway network object
         """
+        net = copy.deepcopy(self)
         exec(pycode)
+        return net
 
     def select_transit_features(self, selection: dict) -> pd.Series:
         """
@@ -709,9 +711,9 @@ class TransitNetwork(object):
 
         # If a time key exists, filter trips using frequency table
         if selection.get("time"):
-            selection["time"] = parse_time_spans(selection["time"])
+            selection["time"] = parse_time_spans_to_secs(selection["time"])
         elif selection.get("start_time") and selection.get("end_time"):
-            selection["time"] = parse_time_spans(
+            selection["time"] = parse_time_spans_to_secs(
                 [selection["start_time"][0], selection["end_time"][0]]
             )
             # Filter freq to trips in selection
@@ -784,36 +786,48 @@ class TransitNetwork(object):
         return self.feed.trips[self.feed.trips.shape_id.isin(shape_ids)].trip_id
 
     def apply_transit_feature_change(
-        self, trip_ids: pd.Series, properties: list, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
+        self,
+        trip_ids: pd.Series,
+        properties: list,
+    ) -> "TransitNetwork":
         """
         Changes the transit attributes for the selected features based on the
         project card information passed
 
         Args:
+            net: transit network to manipulate
             trip_ids : pd.Series
                 all trip_ids to apply change to
             properties : list of dictionaries
                 transit properties to change
-            in_place : bool
-                whether to apply changes in place or return a new network
 
         Returns:
             None
         """
+        net = copy.deepcopy(self)
+
         for i in properties:
             if i["property"] in ["headway_secs"]:
-                self._apply_transit_feature_change_frequencies(trip_ids, i, in_place)
+                net = TransitNetwork._apply_transit_feature_change_frequencies(
+                    net, trip_ids, i
+                )
 
             elif i["property"] in ["routing"]:
-                self._apply_transit_feature_change_routing(trip_ids, i, in_place)
+                net = TransitNetwork._apply_transit_feature_change_routing(
+                    net, trip_ids, i
+                )
+        return net
 
     def _apply_transit_feature_change_routing(
-        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
-        shapes = self.feed.shapes.copy()
-        stop_times = self.feed.stop_times.copy()
-        stops = self.feed.stops.copy()
+        self,
+        trip_ids: pd.Series,
+        properties: dict,
+    ) -> TransitNetwork:
+
+        net = copy.deepcopy(self)
+        shapes = net.feed.shapes.copy()
+        stop_times = net.feed.stop_times.copy()
+        stops = net.feed.stops.copy()
 
         # A negative sign in "set" indicates a traversed node without a stop
         # If any positive numbers, stops have changed
@@ -835,7 +849,7 @@ class TransitNetwork(object):
             ]
 
         # Replace shapes records
-        trips = self.feed.trips  # create pointer rather than a copy
+        trips = net.feed.trips  # create pointer rather than a copy
         shape_ids = trips[trips["trip_id"].isin(trip_ids)].shape_id
         for shape_id in shape_ids:
             # Check if `shape_id` is used by trips that are not in
@@ -917,7 +931,7 @@ class TransitNetwork(object):
             # If node IDs in properties["set_stops"] are not already
             # in stops.txt, create a new stop_id for them in stops
             existing_fk_ids = set(stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist())
-            nodes_df = self.road_net.nodes_df.loc[
+            nodes_df = net.road_net.nodes_df.loc[
                 :, [TransitNetwork.STOPS_FOREIGN_KEY, "X", "Y"]
             ]
             for fk_i in properties["set_stops"]:
@@ -1025,22 +1039,17 @@ class TransitNetwork(object):
                     sort=False,
                 )
 
-        # Replace self if in_place, else return
-        if in_place:
-            self.feed.shapes = shapes
-            self.feed.stops = stops
-            self.feed.stop_times = stop_times
-        else:
-            updated_network = copy.deepcopy(self)
-            updated_network.feed.shapes = shapes
-            updated_network.feed.stops = stops
-            updated_network.feed.stop_times = stop_times
-            return updated_network
+            net.feed.shapes = shapes
+            net.feed.stops = stops
+            net.feed.stop_times = stop_times
+        return net
 
     def _apply_transit_feature_change_frequencies(
-        self, trip_ids: pd.Series, properties: dict, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
-        freq = self.feed.frequencies.copy()
+        self, trip_ids: pd.Series, properties: dict
+    ) -> TransitNetwork:
+
+        net = copy.deepcopy(self)
+        freq = net.feed.frequencies.copy()
 
         # Grab only those records matching trip_ids (aka selection)
         freq = freq[freq.trip_id.isin(trip_ids)]
@@ -1060,30 +1069,31 @@ class TransitNetwork(object):
         else:
             build_value = [i + properties["change"] for i in freq.headway_secs]
 
-        # Update self or return a new object
-        q = self.feed.frequencies.trip_id.isin(freq["trip_id"])
-        if in_place:
-            self.feed.frequencies.loc[q, properties["property"]] = build_value
-        else:
-            updated_network = copy.deepcopy(self)
-            updated_network.loc[q, properties["property"]] = build_value
-            return updated_network
+        q = net.feed.frequencies.trip_id.isin(freq["trip_id"])
+
+        net.feed.frequencies.loc[q, properties["property"]] = build_value
+        return net
 
     def apply_transit_managed_lane(
-        self, trip_ids: pd.Series, node_ids: list, in_place: bool = True
-    ) -> Union(None, TransitNetwork):
+        self,
+        trip_ids: pd.Series,
+        node_ids: list,
+    ) -> TransitNetwork:
+
         # Traversed nodes without a stop should be negative integers
-        all_stops = self.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
+        net = copy.deepcopy(self)
+        all_stops = net.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
         node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
 
-        self._apply_transit_feature_change_routing(
+        TransitNetwork._apply_transit_feature_change_routing(
+            net,
             trip_ids=trip_ids,
             properties={
                 "existing": node_ids,
                 "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids),
             },
-            in_place=in_place,
         )
+        return net
 
 
 class DotDict(dict):

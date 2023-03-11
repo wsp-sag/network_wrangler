@@ -550,7 +550,6 @@ class Scenario(object):
         # Set so that when called again it will retrigger queueing from planned projects.
         self._ordered_projects = None
 
-
     def write(self, path: Union(Path, str), name: str) -> None:
         """_summary_
 

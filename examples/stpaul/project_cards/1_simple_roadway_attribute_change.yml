@@ -7,7 +7,7 @@ dependencies:
   corequisites: []
   conflicts: []
 facility:
-   link:
+   links:
      - osm_link_id:
         - '223371529' # 6th St E
    A:
