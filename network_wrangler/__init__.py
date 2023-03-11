@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 from .logger import WranglerLogger, setupLogging
-from .projectcard import ProjectCard
 from .roadwaynetwork import RoadwayNetwork
 from .transitnetwork import TransitNetwork
 from .scenario import Scenario
@@ -13,7 +12,6 @@ from .scenario import net_to_mapbox
 __all__ = [
     "WranglerLogger",
     "setupLogging",
-    "ProjectCard",
     "RoadwayNetwork",
     "TransitNetwork",
     "Scenario",

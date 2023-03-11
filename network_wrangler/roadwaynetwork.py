@@ -30,7 +30,7 @@ from jsonschema.exceptions import SchemaError
 from shapely.geometry import Point
 
 from .logger import WranglerLogger
-from .projectcard import ProjectCard
+from .selection import build_selection_query
 
 from .utils import (
     create_unique_shape_id,
@@ -1381,7 +1381,7 @@ class RoadwayNetwork(object):
         if selection.get("nodes") == "all":
             return self.nodes_df.index.tolist()
 
-        sel_query = ProjectCard.build_selection_query(
+        sel_query = build_selection_query(
             selection=selection,
             type="nodes",
             unique_ids=RoadwayNetwork.UNIQUE_NODE_IDENTIFIERS,
@@ -1440,7 +1440,7 @@ class RoadwayNetwork(object):
         WranglerLogger.debug("Building selection query")
         # build a selection query based on the selection dictionary
 
-        sel_query = ProjectCard.build_selection_query(
+        sel_query = build_selection_query(
             selection=selection,
             type="links",
             unique_ids=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
@@ -1529,7 +1529,7 @@ class RoadwayNetwork(object):
 
             # Conduct a "selection on the selection" if have additional requirements to satisfy
             else:
-                resel_query = ProjectCard.build_selection_query(
+                resel_query = build_selection_query(
                     selection=selection,
                     unique_ids=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
                     mode=RoadwayNetwork.MODES_TO_NETWORK_LINK_VARIABLES[search_mode],

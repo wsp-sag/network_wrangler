@@ -32,7 +32,6 @@ if __name__ == "__main__":
     base_node_name = config_dict.get("base_network").get("node_file_name")
     validate_base_network = config_dict.get("base_network").get("validate_network")
 
-    project_cards_filenames = config_dict.get("scenario").get("project_cards_filenames")
     card_directory = config_dict.get("scenario").get("card_directory")
     glob_search = config_dict.get("scenario").get("glob_search")
     project_tags = config_dict.get("scenario").get("tags")
@@ -57,17 +56,11 @@ if __name__ == "__main__":
         transit_dir=base_network_dir,
     )
 
-    # Create Scenaro Network
-    project_cards_list = [
-        ProjectCard.read(filename, validate=False)
-        for filename in project_cards_filenames
-    ]
 
     my_scenario = Scenario.create_scenario(
         base_scenario=base_scenario,
-        card_directory=card_directory,
         tags=project_tags,
-        project_cards_list=project_cards_list,
+        card_search_dir=card_directory,
         glob_search=glob_search,
     )
 
@@ -77,5 +70,4 @@ if __name__ == "__main__":
     my_scenario.apply_all_projects()
 
     if write_out:
-        my_scenario.road_net.write(filename=out_prefix, path=out_dir)
-        my_scenario.transit_net.write(filename=out_prefix, path=out_dir)
+        my_scenario.write(filename=out_prefix, path=out_dir)

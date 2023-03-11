@@ -6,7 +6,6 @@ hide:
 
 ## Base Classes
 
-::: network_wrangler.ProjectCard
 ::: network_wrangler.Scenario
 ::: network_wrangler.RoadwayNetwork
 ::: network_wrangler.TransitNetwork

@@ -1,38 +1,7 @@
-import os
-import sys
-import subprocess
-import pytest
-from network_wrangler import ProjectCard
-from network_wrangler import RoadwayNetwork
-from network_wrangler import TransitNetwork
-from network_wrangler import Scenario
 from network_wrangler.selection import build_selection_query
 from network_wrangler.logger import WranglerLogger
-from projectcard import read_cards
-
-"""
-Run just the tests labeled scenario using `pytest tests/test_scenario.py`
-To run with print statments, use `pytest -s tests/test_scenario.py`
-"""
-
-def test_scenario_conflicts(request,stpaul_ex_dir):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    card_filelist_ok = [
-        "a_test_project_card.yml",
-        "b_test_project_card.yml",
-        "c_test_project_card.yml"
-    ]
-    card_pathlist = [os.path.join(stpaul_ex_dir, "project_cards", c) for c in card_filelist_ok]
-    
-    scen = Scenario.create_scenario(
-        base_scenario={},
-        project_card_file_list=card_pathlist
-    )
-
-    scen._check_projects_requirements_satisfied(scen.planned_projects)
-
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
+from network_wrangler.RoadwayNetwork import UNIQUE_MODEL_LINK_IDENTIFIERS
+import pytest
 
 # selection, answer
 query_tests = [
@@ -126,69 +95,12 @@ def test_query_builder(request, test_spec):
     
     sel_query = build_selection_query(
         selection=selection["selection"],
-        unique_ids=RoadwayNetwork.UNIQUE_MODEL_LINK_IDENTIFIERS,
+        unique_ids=UNIQUE_MODEL_LINK_IDENTIFIERS,
         ignore=selection["ignore"],
     )
 
     print("\nsel_query:\n", sel_query)
     print("\nanswer:\n", answer)
     assert sel_query == answer
-
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-def test_apply_summary_wrappers(request):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-
-    card_filenames = [
-        "3_multiple_roadway_attribute_change.yml",
-        "multiple_changes.yml",
-        "4_simple_managed_lane.yml",
-    ]
-
-    project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
-
-    project_cards_list = [
-        ProjectCard.read(os.path.join(project_card_directory, filename), validate=False)
-        for filename in card_filenames
-    ]
-
-    base_scenario = {
-        "road_net": RoadwayNetwork.read(
-            link_file=STPAUL_LINK_FILE,
-            node_file=STPAUL_NODE_FILE,
-            shape_file=STPAUL_SHAPE_FILE,
-            fast=True,
-        ),
-        "transit_net": TransitNetwork.read(STPAUL_DIR),
-    }
-
-    my_scenario = Scenario.create_scenario(
-        base_scenario=base_scenario, project_cards_list=project_cards_list
-    )
-
-    my_scenario.apply_all_projects()
-
-    my_scenario.scenario_summary()
-
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-def test_scenario_building_from_script(request):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-
-    config_file = os.path.join(os.getcwd(), "examples", "config_1.yml")
-    # config_file = os.path.join(os.getcwd(),"example","config_2.yml")
-    script_to_run = os.path.join(os.getcwd(), "scripts", "build_scenario.py")
-
-    # replace backward slash with forward slash
-    config_file = config_file.replace(os.sep, "/")
-    script_to_run = script_to_run.replace(os.sep, "/")
-
-    # print(config_file)
-    # print(script_to_run)
-
-    p = subprocess.Popen([sys.executable, script_to_run, config_file])
-    p.communicate()  # wait for the subprocess call to finish
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

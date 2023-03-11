@@ -14,7 +14,7 @@ from typing import Union, Mapping, Collection
 
 import pandas as pd
 import geopandas as gpd
-from projectcard import ProjectCard
+from projectcard import ProjectCard,read_cards
 
 from collections import OrderedDict
 from .logger import WranglerLogger
@@ -23,6 +23,19 @@ from .utils import topological_sort
 from .roadwaynetwork import RoadwayNetwork
 from .transitnetwork import TransitNetwork
 
+TRANSIT_CATEGORIES = ["Transit Service Property Change", "Add Transit"]
+
+# categories that may affect transit, but only as a secondary
+# effect of changing roadways
+SECONDARY_TRANSIT_CATEGORIES = ["Roadway Deletion", "Parallel Managed Lanes"]
+
+ROADWAY_CATEGORIES = [
+    "Roadway Property Change",
+    "Roadway Deletion",
+    "Parallel Managed lanes",
+    "Add New Roadway",
+    "Calculated Roadway",
+]
 
 class Scenario(object):
     """
@@ -245,7 +258,7 @@ class Scenario(object):
             return
 
         if validate:
-            project_card.validate()
+            project_card.valid
 
         WranglerLogger.info(f"Adding {project_name} to scenario.")
         self.project_cards[project_name] = project_card
@@ -278,34 +291,6 @@ class Scenario(object):
         for p in project_card_list:
             self._add_project(p, validate=validate, filter_tags=filter_tags)
 
-    def add_projects_from_files(
-        self,
-        project_card_file_list: Collection[str],
-        validate: bool = True,
-        filter_tags: Collection[str] = [],
-    ) -> None:
-        """Adds a list of ProjectCard files  to the Scenario.
-
-        Creates ProjectCard instances from each file.
-        Checks that a project of same name is not already in scenario.
-        If selected, will validate ProjectCard before adding.
-        If provided, will only add ProjectCard if it matches at least one filter_tags.
-
-        Args:
-            project_card_file_list (Collection[str]): List of project card files to add to scenario.
-            validate (bool, optional): If True, will require each ProjectCard is validated before
-                being added to scenario. Defaults to True.
-            filter_tags (Collection[str], optional): If used, will filter ProjectCard instances
-                and only add those whose tags match one or more of these filter_tags. Defaults to []
-                which means no tag-filtering will occur.
-        """
-        _project_card_list = [
-            ProjectCard.read(_pc_file) for _pc_file in project_card_file_list
-        ]
-        self.add_project_cards(
-            _project_card_list, validate=validate, filter_tags=filter_tags
-        )
-
     def add_projects_from_directory(
         self,
         search_dir: str,
@@ -331,11 +316,11 @@ class Scenario(object):
                 and only add those whse tags match one or more of these filter_tags. Defaults to []
                 which means no tag-filtering will occur.
         """
-        _project_card_file_list = project_card_files_from_directory(
-            search_dir, glob_search
-        )
-        self.add_projects_from_files(
-            _project_card_file_list, validate=validate, filter_tags=filter_tags
+        if glob_search: search_dir = os.path.join(search_dir,glob_search)
+        _project_card_dict = read_cards(search_dir, filter_tags=filter_tags)
+
+        self.add_project_cards(
+            _project_card_dict.values(), validate=validate, 
         )
 
     def _check_projects_requirements_satisfied(self, project_list: Collection[str]):
@@ -484,23 +469,23 @@ class Scenario(object):
         Args:
             change (dict): dictionary of a project card change
         """
-        if change["category"] in ProjectCard.ROADWAY_CATEGORIES:
+        if change["category"] in ROADWAY_CATEGORIES:
             if not self.road_net:
                 raise ("Missing Roadway Network")
             self.road_net.apply(change)
-        if change["category"] in ProjectCard.TRANSIT_CATEGORIES:
+        if change["category"] in TRANSIT_CATEGORIES:
             if not self.transit_net:
                 raise ("Missing Transit Network")
             self.transit_net.apply(change)
         if (
-            change["category"] in ProjectCard.SECONDARY_TRANSIT_CATEGORIES
+            change["category"] in SECONDARY_TRANSIT_CATEGORIES
             and self.transit_net
         ):
             self.transit_net.apply(change)
 
         if (
             change["category"]
-            not in ProjectCard.TRANSIT_CATEGORIES + ProjectCard.ROADWAY_CATEGORIES
+            not in TRANSIT_CATEGORIES + ROADWAY_CATEGORIES
         ):
             raise ValueError(f"Don't understand project category: {change['category']}")
 
