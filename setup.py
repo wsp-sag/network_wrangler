@@ -17,11 +17,11 @@ with open("README.md") as f:
 with open("requirements.txt") as f:
     install_requires = [r.strip() for r in f.readlines()]
 
-EXTRAS = ["tests","viz","docs"]
+EXTRAS = ["tests", "viz", "docs"]
 extras_require = {}
 for e in EXTRAS:
     with open(f"requirements.{e}.txt") as f:
-        extras_require[e]=[r.strip() for r in f.readlines()]
+        extras_require[e] = [r.strip() for r in f.readlines()]
 
 
 setup(
@@ -36,5 +36,5 @@ setup(
     packages=["network_wrangler"],
     include_package_data=True,
     install_requires=install_requires,
-    extras_require = extras_require,
+    extras_require=extras_require,
 )

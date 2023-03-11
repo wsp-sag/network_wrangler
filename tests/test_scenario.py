@@ -50,6 +50,7 @@ def test_project_card_write(request):
     for k, v in project_card.__dict__.items():
         assert v == test_card.__dict__[k]
 
+
 def test_scenario_conflicts(request):
     project_cards_list = []
     project_cards_list.append(
