@@ -40,7 +40,7 @@ def test_apply_pycode_roadway(request, small_net):
     _link_sel_idx = _link_sel["model_link_id"].squeeze()
     _expected_value = 12
     _show_fields = ["model_link_id", "lanes"]
- 
+
     WranglerLogger.debug(f"Before Change:\n{_link_sel[_show_fields]}")
 
     net = net.apply(
