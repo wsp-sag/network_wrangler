@@ -9,10 +9,6 @@ from network_wrangler import ProjectCard
 from network_wrangler import RoadwayNetwork
 from network_wrangler import WranglerLogger
 
-pd.set_option("display.max_rows", 500)
-pd.set_option("display.max_columns", 500)
-pd.set_option("display.width", 50000)
-
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_roadway_add_delete.py`
 """

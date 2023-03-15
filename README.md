@@ -187,6 +187,8 @@ import network_wrangler
 
 ##todo this is just an example for now
 
+network_wrangler.setup_logging()
+
 ## Network Manipulation
 my_network = network_wrangler.read_roadway_network(...) # returns
 my_network.apply_project_card(...) # returns
