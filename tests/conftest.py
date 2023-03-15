@@ -31,7 +31,8 @@ def test_dir():
 @pytest.fixture(scope="session")
 def test_out_dir(test_dir):
     _test_out_dir = os.path.join(test_dir,"out")
-    if not os.path.exists: os.mkdir(_test_out_dir)
+    if not os.path.exists(_test_out_dir): 
+        os.mkdir(_test_out_dir)
     return _test_out_dir
 
 @pytest.fixture(scope="session")
