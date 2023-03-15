@@ -16,9 +16,6 @@ from network_wrangler.roadway.model_roadway import (
 )
 from network_wrangler import WranglerLogger
 
-pd.set_option("display.max_rows", 500)
-pd.set_option("display.max_columns", 500)
-pd.set_option("display.width", 50000)
 
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_model_roadway.py`
@@ -30,10 +27,13 @@ def test_add_adhoc_managed_lane_field(request, small_net):
     """
     Makes sure new fields can be added to the network for managed lanes that get moved there.
     """
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    
     AD_HOC_VALUE = 22.5
-    print("\n--Running:", request.node.name)
-    net = copy.deepcopy(small_net)
     SELECTED_LINK_INDEX = 1
+    
+    net = copy.deepcopy(small_net)
+    
     net.links_df["ML_my_ad_hoc_field"] = 0
     net.links_df["ML_my_ad_hoc_field"].iloc[SELECTED_LINK_INDEX] = AD_HOC_VALUE
     net.links_df["ML_lanes"] = 0
@@ -73,10 +73,11 @@ def test_add_adhoc_managed_lane_field(request, small_net):
     WranglerLogger.debug(f"Managed Lane Record\n{_managed_lane_record[_display_cols]}")
 
     assert _managed_lane_record["my_ad_hoc_field"] == AD_HOC_VALUE
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_create_ml_network_shape(request, small_net):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     from network_wrangler.roadway import create_managed_lane_network
 
     net = copy.deepcopy(small_net)
@@ -182,13 +183,13 @@ def test_create_ml_network_shape(request, small_net):
         net.m_links_df[net.m_links_df["model_link_id"].isin(egress_model_link_ids)]
     ) == len(egress_model_link_ids)
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_dir):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
-    print("Reading project card ...")
+
     # project_card_name = "test_managed_lanes_change_keyword.yml"
     project_card_name = "test_managed_lanes_restricted_access_egress.yml"
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
@@ -257,4 +258,4 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
         expected_egress_link_ids
     )
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
