@@ -55,39 +55,37 @@ class RoadwayNetwork(object):
     """
     Representation of a Roadway Network.
 
-    .. highlight:: python
-
     Typical usage example:
-    ::
+    
+    ```py
+    net = RoadwayNetwork.read(
+        link_file=MY_LINK_FILE,
+        node_file=MY_NODE_FILE,
+        shape_file=MY_SHAPE_FILE,
+    )
+    my_selection = {
+        "link": [{"name": ["I 35E"]}],
+        "A": {"osm_node_id": "961117623"},  # start searching for segments at A
+        "B": {"osm_node_id": "2564047368"},
+    }
+    net.select_roadway_features(my_selection)
 
-        net = RoadwayNetwork.read(
-            link_file=MY_LINK_FILE,
-            node_file=MY_NODE_FILE,
-            shape_file=MY_SHAPE_FILE,
-        )
-        my_selection = {
-            "links": [{"name": ["I 35E"]}],
-            "A": {"osm_node_id": "961117623"},  # start searching for segments at A
-            "B": {"osm_node_id": "2564047368"},
-        }
-        net.select_roadway_features(my_selection)
+    my_change = [
+        {
+            'property': 'lanes',
+            'existing': 1,
+            'set': 2,
+        },
+        {
+            'property': 'drive_access',
+            'set': 0,
+        },
+    ]
 
-        my_change = [
-            {
-                'property': 'lanes',
-                'existing': 1,
-                'set': 2,
-             },
-             {
-                'property': 'drive_access',
-                'set': 0,
-              },
-        ]
-
-        my_net.apply_roadway_feature_change(
-            my_net.select_roadway_features(my_selection),
-            my_change
-        )
+    my_net.apply_roadway_feature_change(
+        my_net.select_roadway_features(my_selection),
+        my_change
+    )
 
         net = create_managed_lane_network(net)
         net.is_network_connected(mode="drive", nodes=self.m_nodes_df, links=self.m_links_df)
@@ -98,6 +96,7 @@ class RoadwayNetwork(object):
             links=self.m_links_df
         )
         net.write(filename=my_out_prefix, path=my_dir, for_model = True)
+    ```
 
     Attributes:
         nodes_df (GeoDataFrame): node data
@@ -1573,7 +1572,6 @@ class RoadwayNetwork(object):
         """
 
         valid = True
-        validation_error_message = ""
         for p in properties:
             if p["property"] not in df.columns and p.get("change"):
                 WranglerLogger.error(
@@ -1593,7 +1591,7 @@ class RoadwayNetwork(object):
                 valid = False
             if p.get("change") and not p.get("existing"):
                 if require_existing_for_change:
-                    validation_error_message.append(
+                    WranglerLogger.error(
                         f'"Change" is specified for attribute {p["property"]}, but there \
                             isn\'t a value for existing.\nTo proceed, run with the setting \
                             require_existing_for_change=False'
@@ -1763,7 +1761,7 @@ class RoadwayNetwork(object):
         _selected_links_df = links_df[
             links_df.isin({c:node_id_list for c in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE})
         ]
-        WranglerLogger.debug(f"Temp Selected {len(_sl.sum())} associated with {len(node_id_list)} nodes.")
+        WranglerLogger.debug(f"Temp Selected {len(_selected_links_df)} associated with {len(node_id_list)} nodes.")
         """
         _query_parts = [
             f"{prop} == {str(n)}"
@@ -2453,7 +2451,7 @@ class RoadwayNetwork(object):
                 f"Node deletion failed because being used in following links:\n{_links_with_nodes[RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE]}"
             )
             raise ValueError
-        x
+        
         # Check if node is in network
         if RoadwayNetwork.UNIQUE_NODE_KEY in del_nodes:
             _del_node_ids = pd.Series(del_nodes[RoadwayNetwork.UNIQUE_NODE_KEY])

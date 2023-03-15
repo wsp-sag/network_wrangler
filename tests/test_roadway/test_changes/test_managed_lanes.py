@@ -6,6 +6,7 @@ import pytest
 import pandas as pd
 
 from network_wrangler import ProjectCard
+from network_wrangler import RoadwayNetwork
 from network_wrangler import WranglerLogger
 from network_wrangler.utils import parse_time_spans_to_secs
 

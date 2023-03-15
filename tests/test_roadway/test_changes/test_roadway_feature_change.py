@@ -19,7 +19,7 @@ To run with print statments, use `pytest -s tests/test_roadway/test_changes/test
 
 
 def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
 
     # Set facility selection
@@ -61,9 +61,11 @@ def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
         WranglerLogger.debug(f"Expected_value of {p['property']}:{_expected_value}")
         assert _rev_links[p["property"]].eq(_expected_value).all()
 
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
 
 def test_change_multiple_properties_multiple_links(request, stpaul_net):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
     # Set facility selection
     _facility = {
@@ -110,10 +112,10 @@ def test_change_multiple_properties_multiple_links(request, stpaul_net):
         _expected_value = p["set"]
         WranglerLogger.debug(f"Expected_value of {p['property']}:{_expected_value}")
         assert _rev_links[p["property"]].eq(_expected_value).all()
-
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 def test_change_multiple_properties_multiple_links_existing_set(request, stpaul_net):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
     # Set facility selection
     _facility = {
@@ -167,39 +169,34 @@ def test_add_adhoc_field(request, small_net):
     """
     Makes sure new fields can be added in the API and be saved and read in again.
     """
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_net)
     net.links_df["my_ad_hoc_field"] = 22.5
 
-    print("Network with field...\n ", net.links_df["my_ad_hoc_field"][0:5])
+    WranglerLogger.debug(f"Network with field...\n{net.links_df['my_ad_hoc_field'].iloc[0:5]}")
 
-    assert net.links_df["my_ad_hoc_field"][0] == 22.5
+    assert net.links_df["my_ad_hoc_field"].iloc[0] == 22.5
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_add_default_value(request, stpaul_net, stpaul_ex_dir):
     """
     Makes sure we can add a new field with a default value
     """
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
     project_card_name = "select_all_project_card.yml"
 
-    print("Reading project card", project_card_name, "...")
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path)
-
-    print("Selecting roadway features ...")
-    selected_link_indices = net.select_roadway_features(project_card.facility)
-
-    attributes_to_update = [p["property"] for p in project_card.properties]
 
     net = net.apply_roadway_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
     )
 
-    print(net.links_df["my_ad_hoc_field_float"].value_counts())
-    print(net.links_df["my_ad_hoc_field_integer"].value_counts())
-    print(net.links_df["my_ad_hoc_field_string"].value_counts())
+    WranglerLogger.debug(f"{net.links_df['my_ad_hoc_field_float'].value_counts()}")
+    WranglerLogger.debug(f"{net.links_df['my_ad_hoc_field_integer'].value_counts()}")
+    WranglerLogger.debug(f"{net.links_df['my_ad_hoc_field_string'].value_counts()}")
 
     assert (
         net.links_df.loc[net.links_df["my_ad_hoc_field_float"] == 1.2345].shape
@@ -216,7 +213,7 @@ def test_add_default_value(request, stpaul_net, stpaul_ex_dir):
         == net.links_df.shape
     )
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
@@ -224,15 +221,13 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     Makes sure new fields can be added from a project card and that
     they will be the right type.
     """
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
     project_card_name = "new_fields_project_card.yml"
 
-    print("Reading project card", project_card_name, "...")
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
     project_card = ProjectCard.read(project_card_path)
 
-    print("Selecting roadway features ...")
     selected_link_indices = net.select_roadway_features(project_card.facility)
 
     attributes_to_update = [p["property"] for p in project_card.properties]
@@ -243,15 +238,15 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
 
     rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
     rev_types = [(a, net.links_df[a].dtypes) for a in attributes_to_update]
-    # rev_types = net.links_df[[attributes_to_update]].dtypes
-    print("Revised Links:\n", rev_links, "\nNew Property Types:\n", rev_types)
+
+    WranglerLogger.debug(f"Revised Links:\n{rev_links}\nNew Property Types:\n{rev_types}")
 
     assert net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_float"] == 1.1
     assert net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_integer"] == 2
     assert (
         net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_string"] == "three"
     )
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_bad_properties_statements(request, small_net):
@@ -260,19 +255,19 @@ def test_bad_properties_statements(request, small_net):
     they will be the right type.
     """
 
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_net)
     ok_properties_change = [{"property": "lanes", "change": 1}]
     bad_properties_change = [{"property": "my_random_var", "change": 1}]
     bad_properties_existing = [{"property": "my_random_var", "existing": 1}]
 
     with pytest.raises(ValueError):
-        net.validate_properties(bad_properties_change)
+        net.validate_properties(net.links_df,bad_properties_change)
 
     with pytest.raises(ValueError):
-        net.validate_properties(ok_properties_change, require_existing_for_change=True)
+        net.validate_properties(net.links_df,ok_properties_change, require_existing_for_change=True)
 
     with pytest.raises(ValueError):
-        net.validate_properties(bad_properties_existing, ignore_existing=False)
+        net.validate_properties(net.links_df,bad_properties_existing, ignore_existing=False)
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")

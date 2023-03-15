@@ -23,13 +23,12 @@ class TransitNetwork(object):
     """
     Representation of a Transit Network.
 
-    .. highlight:: python
-
     Typical usage example:
-    ::
-        import network_wrangler as wr
-        stpaul = r'/home/jovyan/work/example/stpaul'
-        tc=wr.TransitNetwork.read(path=stpaul)
+    ``` py
+    import network_wrangler as wr
+    stpaul = r'/home/jovyan/work/example/stpaul'
+    tc=wr.TransitNetwork.read(path=stpaul)
+    ```
 
     Attributes:
         feed (DotDict): Partridge feed mapping dataframes.
@@ -817,6 +816,7 @@ class TransitNetwork(object):
                 net = TransitNetwork._apply_transit_feature_change_routing(
                     net, trip_ids, i
                 )
+        return net
 
     def _apply_transit_feature_change_routing(
         self,
@@ -1042,7 +1042,7 @@ class TransitNetwork(object):
             net.feed.shapes = shapes
             net.feed.stops = stops
             net.feed.stop_times = stop_times
-            return net
+        return net
 
     def _apply_transit_feature_change_frequencies(
         self, trip_ids: pd.Series, properties: dict
@@ -1071,7 +1071,7 @@ class TransitNetwork(object):
 
         q = net.feed.frequencies.trip_id.isin(freq["trip_id"])
 
-        net.loc[q, properties["property"]] = build_value
+        net.feed.frequencies.loc[q, properties["property"]] = build_value
         return net
 
     def apply_transit_managed_lane(
@@ -1080,9 +1080,8 @@ class TransitNetwork(object):
         node_ids: list,
     ) -> TransitNetwork:
 
-        net = copy.deepcopy(self)
-
         # Traversed nodes without a stop should be negative integers
+        net = copy.deepcopy(self)
         all_stops = net.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
         node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
 
@@ -1094,6 +1093,7 @@ class TransitNetwork(object):
                 "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids),
             },
         )
+        return net
 
 
 class DotDict(dict):

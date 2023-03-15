@@ -39,8 +39,6 @@ def test_project_card_read(request):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.scenario
-@pytest.mark.travis
 def test_project_card_write(request):
     print("\n--Starting:", request.node.name)
     in_dir = os.path.join(STPAUL_DIR, "project_cards")
@@ -54,7 +52,6 @@ def test_project_card_write(request):
 
 
 def test_scenario_conflicts(request):
-
     project_cards_list = []
     project_cards_list.append(
         ProjectCard.read(

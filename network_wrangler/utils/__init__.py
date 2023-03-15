@@ -26,5 +26,6 @@ __all__ = [
     "get_point_geometry_from_linestring",
     "point_df_to_geojson",
     "point_from_xy",
-    "topological_sort" "update_points_in_linestring",
+    "topological_sort",
+    "update_points_in_linestring",
 ]
