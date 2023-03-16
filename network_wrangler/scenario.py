@@ -31,7 +31,7 @@ class Scenario(object):
     Typical usage example:
 
     ```python
-    my_base_scenario = {
+    my_base_year_scenario = {
         "road_net": RoadwayNetwork.read(
             link_file=STPAUL_LINK_FILE,
             node_file=STPAUL_NODE_FILE,
@@ -41,29 +41,32 @@ class Scenario(object):
         "transit_net": TransitNetwork.read(STPAUL_DIR),
     }
 
-    card_filenames = [
+    # create a future baseline scenario from a base by searching for all cards in a dir w/ baseline tag
+    project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
+    my_scenario = Scenario.create_scenario(
+        base_scenario=my_base_year_scenario,
+        card_search_dir=project_card_directory,
+        filter_tags = [ "baseline2050" ]
+    )
+
+    # check project card queue and then apply the projects
+    my_scenario.queued_projects
+    my_scenario.apply_all_projects()
+
+    # check applied projects, write it out, and create a summary report.
+    my_scenario.applied_projects
+    my_scenario.write("baseline")
+    my_scenario.summarize(outfile = "baseline2050summary.txt")
+
+    # Add some projects to create a build scenario based on a list of files.
+    build_card_filenames = [
         "3_multiple_roadway_attribute_change.yml",
         "multiple_changes.yml",
         "4_simple_managed_lane.yml",
     ]
-
-    project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
-
-    my_scenario = Scenario.create_scenario(
-        base_scenario=my_base_scenario,
-        card_search_dir=project_card_directory,
-    )
-
-    #check project card queue
-    my_scenario.queued_projects
-
-    #apply the projects
-    my_scenario.apply_all_projects()
-
-    #check applied projects
-    my_scenario.applied_projects
-    my_scenario.write("my_scenario","optionA")
-    my_scenario.summarize()
+    my_scenario.add_projects_from_files(build_card_filenames)
+    my_scenario.write("build2050")
+    my_scenario.summarize(outfile = "build2050summary.txt")
     ```
 
     Attributes:
