@@ -18,7 +18,3 @@ hide:
 
 ## Schemas
 
-### `roadway_network_node.json`
-``` json
-{{ include_file('network_wrangler\\schemas\\roadway_network_node.json', downshift_h1= False) }}
-```

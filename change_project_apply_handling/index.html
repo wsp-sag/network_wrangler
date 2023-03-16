@@ -46,6 +46,8 @@
     
       <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.13.0/css/all.css">
     
+      <link rel="stylesheet" href="css/extra.css">
+    
     <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -627,7 +629,7 @@
 <p>Network Wrangler uses Python 3.6 and above.  Requirements are stored in <code>requirements.txt</code> but are automatically installed when using <code>pip</code>.</p>
 <p>If you are managing multiple python versions, we suggest using <a href="https://virtualenv.pypa.io/en/latest/"><code>virtualenv</code></a> or <a href="https://conda.io/en/latest/"><code>conda</code></a> virtual environments. <code>conda</code> is the environment manager that is contained within both the Anaconda and mini-conda applications. Do not add Anaconda to the system path during installation. This may cause problems with other programs that require python 2.7 to be placed in the system path.</p>
 <p>Example installing and running tests using conda in the command line:</p>
-<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
+<div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
 conda<span class="w"> </span>create<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7<span class="w"> </span>rtree<span class="w"> </span>geopandas<span class="w"> </span>osmnx<span class="w"> </span>-n<span class="w"> </span>&lt;my_wrangler_environment&gt;
 conda<span class="w"> </span>activate<span class="w"> </span>&lt;my_wrangler_environment&gt;
 pip<span class="w"> </span>install<span class="w"> </span>network-wrangler
@@ -636,7 +638,7 @@ pytest
 <p>Network wrangler can be installed in several ways depending on the user&rsquo;s needs. Installing from github is the simplest method and is appropriate when the user does not anticipate needing to update network wrangler. An update will require rebuilding the network wrangler environment. Installing from clone is slightly more involved and requires the user to have a git manager on their machine, but permits the user to install network wrangler with the <code>-e</code>, edit, option so that their network wrangler installation can be updated through pulling new commits from the network wrangler repo without a full reinstallation.</p>
 <h3 id="from-github">From GitHub<a class="headerlink" href="#from-github" title="Permanent link"> ¶</a></h3>
 <p>Use the package manager <a href="https://pip.pypa.io/en/stable/">pip</a> to install Network Wrangler from the source on GitHub.</p>
-<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
+<div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
 conda<span class="w"> </span>create<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7<span class="w"> </span>rtree<span class="w"> </span>geopandas<span class="w"> </span>osmnx<span class="w"> </span>-n<span class="w"> </span>&lt;my_wrangler_environment&gt;
 conda<span class="w"> </span>activate<span class="w"> </span>&lt;my_wrangler_environment&gt;
 pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/wsp-sag/network_wrangler.git@master#egg<span class="o">=</span>network_wrangler
@@ -648,26 +650,26 @@ pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com
 <p><strong>1. Open a terminal to get a command prompt.</strong></p>
 <p><strong>2. Consider using a virtual environment manager like conda.</strong></p>
 <p>Create a new environment by typing the following commands into the command prompt (it might take a few minutes).  </p>
-<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>create<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7<span class="w"> </span>-n<span class="w"> </span>wrangler_env
+<div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>create<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7<span class="w"> </span>-n<span class="w"> </span>wrangler_env
 conda<span class="w"> </span>activate<span class="w"> </span>wrangler_env
 </code></pre></div>
 <p>I chose <code>wrangler_env</code> as the name of my environment, but you could choose something else&hellip;just remember it so that you can access it later.</p>
 <p><strong>NOTE</strong> in order to get back to &ldquo;this&rdquo; conda environment (i.e. after you close this command prompt), you will need to access it from the command line by using the following command:</p>
-<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>activate<span class="w"> </span>wrangler_env
+<div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>activate<span class="w"> </span>wrangler_env
 </code></pre></div>
 <p><strong>3. Install finicky Requirements</strong></p>
 <p>Some requirements are best installed using conda rather than &ldquo;pip&rdquo;</p>
-<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
+<div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
 conda<span class="w"> </span>install<span class="w"> </span>rtree<span class="w"> </span>geopandas<span class="w"> </span>osmnx
 </code></pre></div>
 <p><strong>4. &ldquo;Clone&rdquo; (aka download) network wrangler from Github on to your machine</strong></p>
 <p>If you have <a href="https://desktop.github.com/">GitHub desktop</a> installed, you can either do this by using the GitHub user interface by clicking on the green button &ldquo;clone or download&rdquo; in the <a href="https://github.com/wsp-sag/network_wrangler">main network wrangler repository page</a>.</p>
 <p>Otherwise, you can use the command prompt to navigate to the directory that you would like to store your network wrangler clone and then using a <a href="https://git-scm.com/downloads">git command</a> to clone it.</p>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>path<span class="w"> </span>to<span class="w"> </span>where<span class="w"> </span>you<span class="w"> </span>want<span class="w"> </span>to<span class="w"> </span>put<span class="w"> </span>wrangler
+<div class="language-bash highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>path<span class="w"> </span>to<span class="w"> </span>where<span class="w"> </span>you<span class="w"> </span>want<span class="w"> </span>to<span class="w"> </span>put<span class="w"> </span>wrangler
 git<span class="w"> </span>clone<span class="w"> </span>https://github.com/wsp-sag/network_wrangler
 </code></pre></div>
 <p>Expected output:</p>
-<div class="highlight"><pre><span></span><code>cloning<span class="w"> </span>into<span class="w"> </span>network_wrangler...
+<div class="language-bash highlight"><pre><span></span><code>cloning<span class="w"> </span>into<span class="w"> </span>network_wrangler...
 remote:<span class="w"> </span>Enumerating<span class="w"> </span>objects:<span class="w"> </span><span class="m">53</span>,<span class="w"> </span><span class="k">done</span>.
 remote:<span class="w"> </span>Counting<span class="w"> </span>objects:<span class="w"> </span><span class="m">100</span>%<span class="w"> </span><span class="o">(</span><span class="m">53</span>/53<span class="o">)</span>,<span class="w"> </span><span class="k">done</span>.
 remote:<span class="w"> </span>Compressing<span class="w"> </span>objects:<span class="w"> </span><span class="m">100</span>%<span class="w"> </span><span class="o">(</span><span class="m">34</span>/34<span class="o">)</span>,<span class="w"> </span><span class="k">done</span>.
@@ -678,17 +680,17 @@ Resolving<span class="w"> </span>deltas:<span class="w"> </span><span class="m">
 <p><strong>5. Install Network Wrangler in &ldquo;develop&rdquo; mode.</strong></p>
 <p>Navigate your command prompt into the network wrangler folder and then install network wrangler in editable mode.
 This will take a few minutes because it is also installing all the prerequisites.</p>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>network_wrangler
+<div class="language-bash highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>network_wrangler
 pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>tests<span class="o">]</span>
 </code></pre></div>
 <p>Note: the <code>[tests]</code> flag makes sure to install the testing and development requirements as listed in <code>requirements.tests.txt</code></p>
 <p>There will be a lot of messy output, but it should end with something like:</p>
-<div class="highlight"><pre><span></span><code>Running<span class="w"> </span>setup.py<span class="w"> </span>develop<span class="w"> </span><span class="k">for</span><span class="w"> </span>network-wrangler
+<div class="language-bash highlight"><pre><span></span><code>Running<span class="w"> </span>setup.py<span class="w"> </span>develop<span class="w"> </span><span class="k">for</span><span class="w"> </span>network-wrangler
 Successfully<span class="w"> </span>installed<span class="w"> </span>Rtree-0.8.3<span class="w"> </span>attrs-19.1.0<span class="w"> </span>cchardet-2.1.4<span class="w"> </span>chardet-3.0.4<span class="w"> </span>click-7.0<span class="w"> </span>click-plugins-1.1.1<span class="w"> </span>cligj-0.5.0<span class="w"> </span>cycler-0.10.0<span class="w"> </span>decorator-4.4.0<span class="w"> </span>descartes-1.1.0<span class="w"> </span>fiona-1.8.6<span class="w"> </span>geojson-2.4.1<span class="w"> </span>geopandas-0.5.1<span class="w"> </span>idna-2.8<span class="w"> </span>isoweek-1.3.3<span class="w"> </span>jsonschema-3.0.2<span class="w"> </span>kiwisolver-1.1.0<span class="w"> </span>matplotlib-3.1.1<span class="w"> </span>munch-2.3.2<span class="w"> </span>network-wrangler<span class="w"> </span>networkx-2.3<span class="w"> </span>numpy-1.17.0<span class="w"> </span>osmnx-0.10<span class="w"> </span>pandas-0.25.0<span class="w"> </span>partridge-1.1.0<span class="w"> </span>pyparsing-2.4.2<span class="w"> </span>pyproj-2.2.1<span class="w"> </span>pyrsistent-0.15.4<span class="w"> </span>python-dateutil-2.8.0<span class="w"> </span>pytz-2019.2<span class="w"> </span>pyyaml-5.1.2<span class="w"> </span>requests-2.22.0<span class="w"> </span>shapely-1.6.4.post2<span class="w"> </span>six-1.12.0<span class="w"> </span>urllib3-1.25.3
 </code></pre></div>
 <p><strong>6. Test the Installation</strong></p>
 <p>You can test that network wrangler was properly installed by running the tests as follows:</p>
-<div class="highlight"><pre><span></span><code>pytest
+<div class="language-bash highlight"><pre><span></span><code>pytest
 </code></pre></div>
 <p>Note: if you are not part of the project team and want to contribute code back to the project, please fork before you clone and then add the original repository to your upstream origin list per <a href="https://help.github.com/en/articles/fork-a-repo">these directions on github</a>.</p>
 <h3 id="using-docker">Using Docker<a class="headerlink" href="#using-docker" title="Permanent link"> ¶</a></h3>
@@ -714,15 +716,15 @@ Successfully<span class="w"> </span>installed<span class="w"> </span>Rtree-0.8.3
 If you are using MacOS, you might need to update your <a href="https://developer.apple.com/downloads/">xcode command line tools and headers</a></p>
 <p><strong>Issue: <code>OSError: Could not find libspatialindex_c library file</code></strong>*
 Try installing rtree on its own from the Anaconda cloud</p>
-<p><div class="highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>rtree
+<p><div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>rtree
 </code></pre></div>
 <strong>Issue: Shapely, a pre-requisite, doesn&rsquo;t install propertly because it is missing GEOS module</strong>
 Try installing shapely on its own from the Anaconda cloud</p>
-<p><div class="highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>shapely
+<p><div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>shapely
 </code></pre></div>
 <strong>Issue: Conda is unable to install a library or to update to a specific library version</strong>
 Try installing libraries from conda-forge</p>
-<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>*library*
+<div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>*library*
 </code></pre></div>
 <p><strong>Issue: User does not have permission to install in directories</strong>
 Try running Anaconda Prompt as an administrator.</p>
@@ -733,7 +735,7 @@ Try running Anaconda Prompt as an administrator.</p>
 <h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link"> ¶</a></h2>
 <p>Documentation can be built from the <code>/docs</code> folder using the command: <code>make html</code></p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link"> ¶</a></h2>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">network_wrangler</span>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">network_wrangler</span>
 
 <span class="c1">##todo this is just an example for now</span>
 
