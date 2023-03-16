@@ -3604,7 +3604,7 @@ Defaults to [&ldquo;drive_access&rdquo;].</p></td>
   
       <p>Holds information about a scenario.</p>
 <p>Typical usage example:</p>
-<div class="language-python highlight"><pre><span></span><code><span class="n">my_base_scenario</span> <span class="o">=</span> <span class="p">{</span>
+<div class="language-python highlight"><pre><span></span><code><span class="n">my_base_year_scenario</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;road_net&quot;</span><span class="p">:</span> <span class="n">RoadwayNetwork</span><span class="o">.</span><span class="n">read</span><span class="p">(</span>
         <span class="n">link_file</span><span class="o">=</span><span class="n">STPAUL_LINK_FILE</span><span class="p">,</span>
         <span class="n">node_file</span><span class="o">=</span><span class="n">STPAUL_NODE_FILE</span><span class="p">,</span>
@@ -3614,29 +3614,32 @@ Defaults to [&ldquo;drive_access&rdquo;].</p></td>
     <span class="s2">&quot;transit_net&quot;</span><span class="p">:</span> <span class="n">TransitNetwork</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">STPAUL_DIR</span><span class="p">),</span>
 <span class="p">}</span>
 
-<span class="n">card_filenames</span> <span class="o">=</span> <span class="p">[</span>
+<span class="c1"># create a future baseline scenario from a base by searching for all cards in a dir w/ baseline tag</span>
+<span class="n">project_card_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">STPAUL_DIR</span><span class="p">,</span> <span class="s2">&quot;project_cards&quot;</span><span class="p">)</span>
+<span class="n">my_scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="o">.</span><span class="n">create_scenario</span><span class="p">(</span>
+    <span class="n">base_scenario</span><span class="o">=</span><span class="n">my_base_year_scenario</span><span class="p">,</span>
+    <span class="n">card_search_dir</span><span class="o">=</span><span class="n">project_card_directory</span><span class="p">,</span>
+    <span class="n">filter_tags</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;baseline2050&quot;</span> <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># check project card queue and then apply the projects</span>
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">queued_projects</span>
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_all_projects</span><span class="p">()</span>
+
+<span class="c1"># check applied projects, write it out, and create a summary report.</span>
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">applied_projects</span>
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;baseline&quot;</span><span class="p">)</span>
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="n">outfile</span> <span class="o">=</span> <span class="s2">&quot;baseline2050summary.txt&quot;</span><span class="p">)</span>
+
+<span class="c1"># Add some projects to create a build scenario based on a list of files.</span>
+<span class="n">build_card_filenames</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;3_multiple_roadway_attribute_change.yml&quot;</span><span class="p">,</span>
     <span class="s2">&quot;multiple_changes.yml&quot;</span><span class="p">,</span>
     <span class="s2">&quot;4_simple_managed_lane.yml&quot;</span><span class="p">,</span>
 <span class="p">]</span>
-
-<span class="n">project_card_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">STPAUL_DIR</span><span class="p">,</span> <span class="s2">&quot;project_cards&quot;</span><span class="p">)</span>
-
-<span class="n">my_scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="o">.</span><span class="n">create_scenario</span><span class="p">(</span>
-    <span class="n">base_scenario</span><span class="o">=</span><span class="n">my_base_scenario</span><span class="p">,</span>
-    <span class="n">card_search_dir</span><span class="o">=</span><span class="n">project_card_directory</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1">#check project card queue</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">queued_projects</span>
-
-<span class="c1">#apply the projects</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_all_projects</span><span class="p">()</span>
-
-<span class="c1">#check applied projects</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">applied_projects</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;my_scenario&quot;</span><span class="p">,</span><span class="s2">&quot;optionA&quot;</span><span class="p">)</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">summarize</span><span class="p">()</span>
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">add_projects_from_files</span><span class="p">(</span><span class="n">build_card_filenames</span><span class="p">)</span>
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;build2050&quot;</span><span class="p">)</span>
+<span class="n">my_scenario</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="n">outfile</span> <span class="o">=</span> <span class="s2">&quot;build2050summary.txt&quot;</span><span class="p">)</span>
 </code></pre></div>
 
   <p><strong>Attributes:</strong></p>
@@ -4302,14 +4305,17 @@ in this collecton once they are moved to applied.</p></td>
 <span class="normal">609</span>
 <span class="normal">610</span>
 <span class="normal">611</span>
-<span class="normal">612</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Scenario</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Scenario</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Holds information about a scenario.</span>
 
 <span class="sd">    Typical usage example:</span>
 
 <span class="sd">    ```python</span>
-<span class="sd">    my_base_scenario = {</span>
+<span class="sd">    my_base_year_scenario = {</span>
 <span class="sd">        &quot;road_net&quot;: RoadwayNetwork.read(</span>
 <span class="sd">            link_file=STPAUL_LINK_FILE,</span>
 <span class="sd">            node_file=STPAUL_NODE_FILE,</span>
@@ -4319,29 +4325,32 @@ in this collecton once they are moved to applied.</p></td>
 <span class="sd">        &quot;transit_net&quot;: TransitNetwork.read(STPAUL_DIR),</span>
 <span class="sd">    }</span>
 
-<span class="sd">    card_filenames = [</span>
+<span class="sd">    # create a future baseline scenario from a base by searching for all cards in a dir w/ baseline tag</span>
+<span class="sd">    project_card_directory = os.path.join(STPAUL_DIR, &quot;project_cards&quot;)</span>
+<span class="sd">    my_scenario = Scenario.create_scenario(</span>
+<span class="sd">        base_scenario=my_base_year_scenario,</span>
+<span class="sd">        card_search_dir=project_card_directory,</span>
+<span class="sd">        filter_tags = [ &quot;baseline2050&quot; ]</span>
+<span class="sd">    )</span>
+
+<span class="sd">    # check project card queue and then apply the projects</span>
+<span class="sd">    my_scenario.queued_projects</span>
+<span class="sd">    my_scenario.apply_all_projects()</span>
+
+<span class="sd">    # check applied projects, write it out, and create a summary report.</span>
+<span class="sd">    my_scenario.applied_projects</span>
+<span class="sd">    my_scenario.write(&quot;baseline&quot;)</span>
+<span class="sd">    my_scenario.summarize(outfile = &quot;baseline2050summary.txt&quot;)</span>
+
+<span class="sd">    # Add some projects to create a build scenario based on a list of files.</span>
+<span class="sd">    build_card_filenames = [</span>
 <span class="sd">        &quot;3_multiple_roadway_attribute_change.yml&quot;,</span>
 <span class="sd">        &quot;multiple_changes.yml&quot;,</span>
 <span class="sd">        &quot;4_simple_managed_lane.yml&quot;,</span>
 <span class="sd">    ]</span>
-
-<span class="sd">    project_card_directory = os.path.join(STPAUL_DIR, &quot;project_cards&quot;)</span>
-
-<span class="sd">    my_scenario = Scenario.create_scenario(</span>
-<span class="sd">        base_scenario=my_base_scenario,</span>
-<span class="sd">        card_search_dir=project_card_directory,</span>
-<span class="sd">    )</span>
-
-<span class="sd">    #check project card queue</span>
-<span class="sd">    my_scenario.queued_projects</span>
-
-<span class="sd">    #apply the projects</span>
-<span class="sd">    my_scenario.apply_all_projects()</span>
-
-<span class="sd">    #check applied projects</span>
-<span class="sd">    my_scenario.applied_projects</span>
-<span class="sd">    my_scenario.write(&quot;my_scenario&quot;,&quot;optionA&quot;)</span>
-<span class="sd">    my_scenario.summarize()</span>
+<span class="sd">    my_scenario.add_projects_from_files(build_card_filenames)</span>
+<span class="sd">    my_scenario.write(&quot;build2050&quot;)</span>
+<span class="sd">    my_scenario.summarize(outfile = &quot;build2050summary.txt&quot;)</span>
 <span class="sd">    ```</span>
 
 <span class="sd">    Attributes:</span>
@@ -4941,10 +4950,7 @@ in this collecton once they are moved to applied.</p></td>
 
       <details class="quote">
         <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 84</span>
-<span class="normal"> 85</span>
-<span class="normal"> 86</span>
-<span class="normal"> 87</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 87</span>
 <span class="normal"> 88</span>
 <span class="normal"> 89</span>
 <span class="normal"> 90</span>
@@ -4977,7 +4983,10 @@ in this collecton once they are moved to applied.</p></td>
 <span class="normal">117</span>
 <span class="normal">118</span>
 <span class="normal">119</span>
-<span class="normal">120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">base_scenario</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Scenario</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span>
     <span class="n">project_card_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -5087,10 +5096,7 @@ which means no tag-filtering will occur.</p></td>
 
       <details class="quote">
         <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">260</span>
 <span class="normal">261</span>
 <span class="normal">262</span>
 <span class="normal">263</span>
@@ -5109,7 +5115,10 @@ which means no tag-filtering will occur.</p></td>
 <span class="normal">276</span>
 <span class="normal">277</span>
 <span class="normal">278</span>
-<span class="normal">279</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_project_cards</span><span class="p">(</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_project_cards</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">project_card_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">],</span>
     <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -5217,10 +5226,7 @@ which means no tag-filtering will occur.</p></td>
 
       <details class="quote">
         <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">309</span>
-<span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">312</span>
 <span class="normal">313</span>
 <span class="normal">314</span>
 <span class="normal">315</span>
@@ -5247,7 +5253,10 @@ which means no tag-filtering will occur.</p></td>
 <span class="normal">336</span>
 <span class="normal">337</span>
 <span class="normal">338</span>
-<span class="normal">339</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_projects_from_directory</span><span class="p">(</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_projects_from_directory</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">search_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">glob_search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
@@ -5351,10 +5360,7 @@ which means no tag-filtering will occur.</p></td>
 
       <details class="quote">
         <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">284</span>
 <span class="normal">285</span>
 <span class="normal">286</span>
 <span class="normal">287</span>
@@ -5377,7 +5383,10 @@ which means no tag-filtering will occur.</p></td>
 <span class="normal">304</span>
 <span class="normal">305</span>
 <span class="normal">306</span>
-<span class="normal">307</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_projects_from_files</span><span class="p">(</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_projects_from_files</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">project_card_file_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -5426,17 +5435,17 @@ which means no tag-filtering will occur.</p></td>
 
       <details class="quote">
         <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">465</span>
-<span class="normal">466</span>
-<span class="normal">467</span>
-<span class="normal">468</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">468</span>
 <span class="normal">469</span>
 <span class="normal">470</span>
 <span class="normal">471</span>
 <span class="normal">472</span>
 <span class="normal">473</span>
 <span class="normal">474</span>
-<span class="normal">475</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply_all_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply_all_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Applies all planned projects in the queue.&quot;&quot;&quot;</span>
     <span class="c1"># Call this to make sure projects are appropriately queued in hidden variable.</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">queued_projects</span>
@@ -5495,10 +5504,7 @@ which means no tag-filtering will occur.</p></td>
 
       <details class="quote">
         <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">531</span>
-<span class="normal">532</span>
-<span class="normal">533</span>
-<span class="normal">534</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">534</span>
 <span class="normal">535</span>
 <span class="normal">536</span>
 <span class="normal">537</span>
@@ -5515,7 +5521,10 @@ which means no tag-filtering will occur.</p></td>
 <span class="normal">548</span>
 <span class="normal">549</span>
 <span class="normal">550</span>
-<span class="normal">551</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Applies a specific list of projects from the planned project queue.</span>
 
@@ -5654,10 +5663,7 @@ being adding it to the scenario. Defaults to True.</p></td>
 
       <details class="quote">
         <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">141</span>
 <span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
@@ -5706,7 +5712,10 @@ being adding it to the scenario. Defaults to True.</p></td>
 <span class="normal">187</span>
 <span class="normal">188</span>
 <span class="normal">189</span>
-<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">create_scenario</span><span class="p">(</span>
     <span class="n">base_scenario</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Scenario&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
     <span class="n">project_card_list</span><span class="o">=</span><span class="p">[],</span>
@@ -5805,10 +5814,7 @@ being adding it to the scenario. Defaults to True.</p></td>
 
       <details class="quote">
         <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">427</span>
 <span class="normal">428</span>
 <span class="normal">429</span>
 <span class="normal">430</span>
@@ -5844,7 +5850,10 @@ being adding it to the scenario. Defaults to True.</p></td>
 <span class="normal">460</span>
 <span class="normal">461</span>
 <span class="normal">462</span>
-<span class="normal">463</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">order_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">deque</span><span class="p">:</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">order_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">deque</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Orders a list of projects based on moving up pre-requisites into a deque.</span>
 
@@ -5968,10 +5977,7 @@ being adding it to the scenario. Defaults to True.</p></td>
 
       <details class="quote">
         <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">564</span>
-<span class="normal">565</span>
-<span class="normal">566</span>
-<span class="normal">567</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">567</span>
 <span class="normal">568</span>
 <span class="normal">569</span>
 <span class="normal">570</span>
@@ -6016,7 +6022,10 @@ being adding it to the scenario. Defaults to True.</p></td>
 <span class="normal">609</span>
 <span class="normal">610</span>
 <span class="normal">611</span>
-<span class="normal">612</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">project_detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -6121,16 +6130,16 @@ being adding it to the scenario. Defaults to True.</p></td>
 
       <details class="quote">
         <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">553</span>
-<span class="normal">554</span>
-<span class="normal">555</span>
-<span class="normal">556</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">556</span>
 <span class="normal">557</span>
 <span class="normal">558</span>
 <span class="normal">559</span>
 <span class="normal">560</span>
 <span class="normal">561</span>
-<span class="normal">562</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">(</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">(</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;_summary_</span>
 
 <span class="sd">    Args:</span>
