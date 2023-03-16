@@ -23,8 +23,7 @@ profile_default/
 ipython_config.py
 
 # Built Documentation
-docs/_build/
-docs/_generated/
+site/
 
 # System Errata
 .DS_Store

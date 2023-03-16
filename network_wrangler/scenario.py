@@ -28,43 +28,43 @@ class Scenario(object):
     """
     Holds information about a scenario.
 
-    .. highlight:: python
-
     Typical usage example:
-    ::
-        my_base_scenario = {
-            "road_net": RoadwayNetwork.read(
-                link_file=STPAUL_LINK_FILE,
-                node_file=STPAUL_NODE_FILE,
-                shape_file=STPAUL_SHAPE_FILE,
-                fast=True,
-            ),
-            "transit_net": TransitNetwork.read(STPAUL_DIR),
-        }
 
-        card_filenames = [
-            "3_multiple_roadway_attribute_change.yml",
-            "multiple_changes.yml",
-            "4_simple_managed_lane.yml",
-        ]
+    ```python
+    my_base_scenario = {
+        "road_net": RoadwayNetwork.read(
+            link_file=STPAUL_LINK_FILE,
+            node_file=STPAUL_NODE_FILE,
+            shape_file=STPAUL_SHAPE_FILE,
+            fast=True,
+        ),
+        "transit_net": TransitNetwork.read(STPAUL_DIR),
+    }
 
-        project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
+    card_filenames = [
+        "3_multiple_roadway_attribute_change.yml",
+        "multiple_changes.yml",
+        "4_simple_managed_lane.yml",
+    ]
 
-        my_scenario = Scenario.create_scenario(
-          base_scenario=my_base_scenario,
-          card_search_dir=project_card_directory,
-        )
+    project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
 
-        #check project card queue
-        my_scenario.queued_projects
+    my_scenario = Scenario.create_scenario(
+        base_scenario=my_base_scenario,
+        card_search_dir=project_card_directory,
+    )
 
-        #apply the projects
-        my_scenario.apply_all_projects()
+    #check project card queue
+    my_scenario.queued_projects
 
-        #check applied projects
-        my_scenario.applied_projects
-        my_scenario.write("my_scenario","optionA")
-        my_scenario.summarize()
+    #apply the projects
+    my_scenario.apply_all_projects()
+
+    #check applied projects
+    my_scenario.applied_projects
+    my_scenario.write("my_scenario","optionA")
+    my_scenario.summarize()
+    ```
 
     Attributes:
         base_scenario: dictionary representation of a scenario
