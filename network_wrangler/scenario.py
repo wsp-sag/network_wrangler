@@ -25,42 +25,43 @@ class Scenario(object):
     """
     Holds information about a scenario.
 
-    .. highlight:: python
-
     Typical usage example:
-    ::
-        my_base_scenario = {
-            "road_net": RoadwayNetwork.read(
-                link_file=STPAUL_LINK_FILE,
-                node_file=STPAUL_NODE_FILE,
-                shape_file=STPAUL_SHAPE_FILE,
-                fast=True,
-            ),
-            "transit_net": TransitNetwork.read(STPAUL_DIR),
-        }
+    
+    ```python
+    my_base_scenario = {
+        "road_net": RoadwayNetwork.read(
+            link_file=STPAUL_LINK_FILE,
+            node_file=STPAUL_NODE_FILE,
+            shape_file=STPAUL_SHAPE_FILE,
+            fast=True,
+        ),
+        "transit_net": TransitNetwork.read(STPAUL_DIR),
+    }
 
-        card_filenames = [
-            "3_multiple_roadway_attribute_change.yml",
-            "multiple_changes.yml",
-            "4_simple_managed_lane.yml",
-        ]
+    card_filenames = [
+        "3_multiple_roadway_attribute_change.yml",
+        "multiple_changes.yml",
+        "4_simple_managed_lane.yml",
+    ]
 
-        project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
+    project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
 
-        project_cards_list = [
-            ProjectCard.read(os.path.join(project_card_directory, filename), validate=False)
-            for filename in card_filenames
-        ]
+    project_cards_list = [
+        ProjectCard.read(os.path.join(project_card_directory, filename), validate=False)
+        for filename in card_filenames
+    ]
 
-        my_scenario = Scenario.create_scenario(
-          base_scenario=my_base_scenario,
-          project_cards_list=project_cards_list,
-        )
-        my_scenario.check_scenario_requisites()
+    my_scenario = Scenario.create_scenario(
+        base_scenario=my_base_scenario,
+        project_cards_list=project_cards_list,
+    )
+    my_scenario.check_scenario_requisites()
 
-        my_scenario.apply_all_projects()
+    my_scenario.apply_all_projects()
 
-        my_scenario.scenario_summary()
+    my_scenario.scenario_summary()
+    ```
+       
 
     Attributes:
         base_scenario: dictionary representation of a scenario

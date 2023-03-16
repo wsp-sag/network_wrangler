@@ -43,10 +43,11 @@ plugins:
             show_source: true
             heading_level: 3
       custom_templates: templates
-      watch:
-        - network_wrangler
   - search
   - macros
+
+watch: 
+ - network_wrangler
 
 extra:
   version:
@@ -58,12 +59,12 @@ extra_javascript:
 
 extra_css:
   - https://use.fontawesome.com/releases/v5.13.0/css/all.css
+  - css/extra.css
 
 markdown_extensions:
   - admonition
   - codehilite:
       linenums: true
-  - fontawesome_markdown
   - meta
   - pymdownx.inlinehilite
   - pymdownx.tasklist:
@@ -76,6 +77,9 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_div_format
   - pymdownx.smartsymbols
+  - pymdownx.highlight:
+      use_pygments: true
+      pygments_lang_class: true
   - smarty
   - toc:
       # insert a blank space before the character
