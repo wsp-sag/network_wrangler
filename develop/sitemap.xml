@@ -2,22 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://wsp-sag.github.io/network_wrangler/develop/</loc>
-         <lastmod>2023-03-15</lastmod>
+         <lastmod>2023-03-16</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://wsp-sag.github.io/network_wrangler/develop/api/</loc>
-         <lastmod>2023-03-15</lastmod>
+         <lastmod>2023-03-16</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://wsp-sag.github.io/network_wrangler/develop/design/</loc>
-         <lastmod>2023-03-15</lastmod>
+         <lastmod>2023-03-16</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://wsp-sag.github.io/network_wrangler/develop/development/</loc>
-         <lastmod>2023-03-15</lastmod>
+         <lastmod>2023-03-16</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
