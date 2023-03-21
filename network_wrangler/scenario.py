@@ -23,6 +23,7 @@ from .utils import topological_sort
 from .roadwaynetwork import RoadwayNetwork
 from .transitnetwork import TransitNetwork
 
+BASE_SCENARIO_REQUIRES = ["applied_projects","conflicts"]
 
 class Scenario(object):
     """
@@ -87,15 +88,17 @@ class Scenario(object):
     def __init__(
         self,
         base_scenario: Union[Scenario, dict],
-        project_card_list: list[ProjectCard] = None,
+        project_card_list: list[ProjectCard] = [],
         name="",
     ):
         """
         Constructor
 
         args:
-        base_scenario: dict the base scenario
-        project_card_list: list of ProjectCard instances
+        base_scenario: A base scenario object to base this isntance off of, or a dict which 
+            describes the scenario attributes including applied projects and respective conflicts.
+            `{"applied_projects": [],"conflicts":{...}}`
+        project_card_list: Optional list of ProjectCard instances to add to planned projects. 
         """
         WranglerLogger.info(
             f"Creating Scenario with {len(project_card_list)} project cards"
@@ -103,6 +106,9 @@ class Scenario(object):
 
         if type(base_scenario) == "Scenario":
             base_scenario = base_scenario.__dict__
+
+        if not set(BASE_SCENARIO_REQUIRES) <= set(base_scenario.keys()):
+            raise ValueError(f"base_scenario must contain {BASE_SCENARIO_REQUIRES}")
 
         self.base_scenario = base_scenario
         self.name = name
@@ -113,11 +119,11 @@ class Scenario(object):
         self.project_cards = {}
         self._planned_projects = []
         self._queued_projects = None
-        self.applied_projects = self.base_scenario.get("applied_projects", [])
+        self.applied_projects = self.base_scenario["applied_projects"]
 
         self.prerequisites = self.base_scenario.get("prerequisites", {})
         self.corequisites = self.base_scenario.get("corequisites", {})
-        self.conflicts = self.base_scenario.get("conflicts", {})
+        self.conflicts = self.base_scenario["conflicts"]
 
         for p in project_card_list:
             self._add_project(p)
