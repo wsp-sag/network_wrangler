@@ -240,14 +240,14 @@ class Scenario(object):
 
         """
         project_name = project_card.project.lower()
-        filter_tags = map(str.lower, filter_tags)
+        filter_tags = list(map(str.lower, filter_tags))
 
         if project_name in self.projects:
             raise ValueError(
                 f"Names not unique from existing scenario projects: {project_card.project}"
             )
 
-        if filter_tags and project_card.tags.isdisjoint(filter_tags):
+        if filter_tags and set(project_card.tags).isdisjoint(set(filter_tags)):
             WranglerLogger.debug(
                 f"Skipping {project_name} - no overlapping tags with {filter_tags}."
             )
