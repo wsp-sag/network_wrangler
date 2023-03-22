@@ -48,8 +48,8 @@ class ProjectCard(object):
         """
         # add these first so they are first on write out
         self.project = None
-        self.tags = ""
-        self.dependencies = ""
+        self.tags = []
+        self.dependencies = {}
 
         self.__dict__.update(attribute_dictonary)
         self.valid = False
@@ -93,7 +93,6 @@ class ProjectCard(object):
             card.valid = ProjectCard.validate_project_card_schema(path_to_card)
 
         return card
-
 
     @staticmethod
     def read_wrangler_card(path_to_card: str) -> dict:

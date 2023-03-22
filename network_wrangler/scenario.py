@@ -10,20 +10,40 @@ import pprint
 from collections import deque
 from datetime import datetime
 from pathlib import Path
-from typing import Union, Mapping, Collection
+from typing import Union, Collection
 
-import pandas as pd
 import geopandas as gpd
 
 from .projectcard import ProjectCard
-from collections import OrderedDict
 from .logger import WranglerLogger
 from collections import defaultdict
 from .utils import topological_sort
 from .roadwaynetwork import RoadwayNetwork
 from .transitnetwork import TransitNetwork
 
-BASE_SCENARIO_REQUIRES = ["applied_projects","conflicts"]
+BASE_SCENARIO_SUGGESTED_PROPS = [
+    "road_net",
+    "transit_net",
+    "applied_projects",
+    "conflicts",
+]
+
+
+class ScenarioConflictError(Exception):
+    pass
+
+
+class ScenarioCorequisiteError(Exception):
+    pass
+
+
+class ScenarioPrerequisiteError(Exception):
+    pass
+
+
+class ProjectCardError(Exception):
+    pass
+
 
 class Scenario(object):
     """
@@ -42,7 +62,7 @@ class Scenario(object):
         "transit_net": TransitNetwork.read(STPAUL_DIR),
     }
 
-    # create a future baseline scenario from a base by searching for all cards in a dir w/ baseline tag
+    # create a future baseline scenario from base by searching for all cards in dir w/ baseline tag
     project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
     my_scenario = Scenario.create_scenario(
         base_scenario=my_base_year_scenario,
@@ -76,8 +96,8 @@ class Scenario(object):
         transit_net: instance of TransitNetwork for the scenario
         project_cards: Mapping[ProjectCard.name,ProjectCard] Storage of all project cards by name.
         queued_projects: Projects which are "shovel ready" - have had pre-requisits checked and
-            done any required re-ordering. Similar to a git staging, project cards aren't recognized
-            in this collecton once they are moved to applied.
+            done any required re-ordering. Similar to a git staging, project cards aren't
+            recognized in this collecton once they are moved to applied.
         applied_projects: list of project names that have been applied
         projects: list of all projects either planned, queued, or applied
         prerequisites:  dictionary storing prerequiste information
@@ -95,20 +115,20 @@ class Scenario(object):
         Constructor
 
         args:
-        base_scenario: A base scenario object to base this isntance off of, or a dict which 
+        base_scenario: A base scenario object to base this isntance off of, or a dict which
             describes the scenario attributes including applied projects and respective conflicts.
             `{"applied_projects": [],"conflicts":{...}}`
-        project_card_list: Optional list of ProjectCard instances to add to planned projects. 
+        project_card_list: Optional list of ProjectCard instances to add to planned projects.
         """
-        WranglerLogger.info(
-            f"Creating Scenario with {len(project_card_list)} project cards"
-        )
+        WranglerLogger.info("Creating Scenario")
 
         if type(base_scenario) == "Scenario":
             base_scenario = base_scenario.__dict__
 
-        if not set(BASE_SCENARIO_REQUIRES) <= set(base_scenario.keys()):
-            raise ValueError(f"base_scenario must contain {BASE_SCENARIO_REQUIRES}")
+        if not set(BASE_SCENARIO_SUGGESTED_PROPS) <= set(base_scenario.keys()):
+            WranglerLogger.warning(
+                f"Base_scenario doesn't contain {BASE_SCENARIO_SUGGESTED_PROPS}"
+            )
 
         self.base_scenario = base_scenario
         self.name = name
@@ -119,18 +139,18 @@ class Scenario(object):
         self.project_cards = {}
         self._planned_projects = []
         self._queued_projects = None
-        self.applied_projects = self.base_scenario["applied_projects"]
+        self.applied_projects = self.base_scenario.get("applied_projects", [])
 
         self.prerequisites = self.base_scenario.get("prerequisites", {})
         self.corequisites = self.base_scenario.get("corequisites", {})
-        self.conflicts = self.base_scenario["conflicts"]
+        self.conflicts = self.base_scenario.get("conflicts", {})
 
         for p in project_card_list:
             self._add_project(p)
 
     @property
     def projects(self):
-        return self.applied_projects + self.queued_projects
+        return self.applied_projects + self._planned_projects
 
     @property
     def queued_projects(self):
@@ -151,7 +171,7 @@ class Scenario(object):
         project_card_file_list=[],
         card_search_dir: str = "",
         glob_search="",
-        filter_tags: Collection[str] = None,
+        filter_tags: Collection[str] = [],
         validate=True,
     ) -> Scenario:
         """
@@ -206,14 +226,13 @@ class Scenario(object):
 
         Args:
             project_name: name of project you are adding dependencies for.
-            dependencies: Dictionary of depndencies by dependency type and list of associated projects.
+            dependencies: Dictionary of depndencies by dependency type and list of associated
+                projects.
         """
         project_name = project_name.lower()
         WranglerLogger.debug(f"Adding {project_name} dependencies:\n{dependencies}")
-        for d in ["prerequisites", "corequisites", "conflicts"]:
-            if d not in dependencies:
-                continue
-            _dep = {k.lower(): list(map(str.lower, v)) for k, v in dependencies[d].items()}
+        for d, v in dependencies.items():
+            _dep = list(map(str.lower, v))
             self.__dict__[d].update({project_name: _dep})
 
     def _add_project(
@@ -243,7 +262,7 @@ class Scenario(object):
         filter_tags = list(map(str.lower, filter_tags))
 
         if project_name in self.projects:
-            raise ValueError(
+            raise ProjectCardError(
                 f"Names not unique from existing scenario projects: {project_card.project}"
             )
 
@@ -254,14 +273,18 @@ class Scenario(object):
             return
 
         if validate:
+            if not project_card.__dict__.get("file", None):
+                WranglerLogger.warning(
+                    f"Could not validate Project Card {project_card.project} because no file specified"
+                )
+                return
             project_card.validate_project_card_schema(project_card.file)
 
         WranglerLogger.info(f"Adding {project_name} to scenario.")
         self.project_cards[project_name] = project_card
         self._planned_projects.append(project_name)
         self._queued_projects = None
-        if "dependencies" in project_card:
-            self._add_dependencies(project_name, project_card.dependencies)
+        self._add_dependencies(project_name, project_card.dependencies)
 
     def add_project_cards(
         self,
@@ -281,8 +304,8 @@ class Scenario(object):
             validate (bool, optional): If True, will require each ProjectCard is validated before
                 being added to scenario. Defaults to True.
             filter_tags (Collection[str], optional): If used, will filter ProjectCard instances
-                and only add those whose tags match one or more of these filter_tags. Defaults to []
-                which means no tag-filtering will occur.
+                and only add those whose tags match one or more of these filter_tags.
+                Defaults to [] - which means no tag-filtering will occur.
         """
         for p in project_card_list:
             self._add_project(p, validate=validate, filter_tags=filter_tags)
@@ -301,12 +324,13 @@ class Scenario(object):
         If provided, will only add ProjectCard if it matches at least one filter_tags.
 
         Args:
-            project_card_file_list (Collection[str]): List of project card files to add to scenario.
+            project_card_file_list (Collection[str]): List of project card files to add to
+                scenario.
             validate (bool, optional): If True, will require each ProjectCard is validated before
                 being added to scenario. Defaults to True.
             filter_tags (Collection[str], optional): If used, will filter ProjectCard instances
-                and only add those whose tags match one or more of these filter_tags. Defaults to []
-                which means no tag-filtering will occur.
+                and only add those whose tags match one or more of these filter_tags.
+                Defaults to [] - which means no tag-filtering will occur.
         """
         _project_card_list = [
             ProjectCard.read(_pc_file) for _pc_file in project_card_file_list
@@ -358,7 +382,8 @@ class Scenario(object):
 
         Args:
             project_name (str): name of project.
-            co_applied_project_list (Collection[str]): List of projects that will be applied with this project.
+            co_applied_project_list (Collection[str]): List of projects that will be applied
+                with this project.
         """
         self._check_projects_planned(project_list)
         self._check_projects_have_project_cards(project_list)
@@ -374,7 +399,8 @@ class Scenario(object):
         if _missing_ps:
             raise ValueError(
                 f"Projects are not in planned projects:\n {_missing_ps}. Add them by \
-                using add_project_cards(), add_projects_from_files(), or add_projects_from_directory()."
+                using add_project_cards(), add_projects_from_files(), or \
+                add_projects_from_directory()."
             )
 
     def _check_projects_have_project_cards(self, project_list: Collection[str]) -> bool:
@@ -388,47 +414,63 @@ class Scenario(object):
         return True
 
     def _check_projects_prerequisites(self, project_names: str) -> None:
-        """Checks that a list of projects' pre-requisites have been or will be applied to scenario."""
-        if set(project_names).isdisjoint(set(self.prerequisites)):
+        """Checks that list of projects' pre-requisites have been or will be applied to scenario."""
+        if set(project_names).isdisjoint(set(self.prerequisites.keys())):
             return
-        _prereqs = set(
-            [self.prerequisites[p] for p in project_names if p in self.prerequisites]
-        )
-        _projects_applied = set(self.applied_projects + project_names)
-        _missing = list(_prereqs - _projects_applied)
+        _prereqs = []
+        for p in project_names:
+            _prereqs += self.prerequisites.get(p, [])
+        _projects_applied = self.applied_projects + project_names
+        _missing = list(set(_prereqs) - set(_projects_applied))
         if _missing:
-            raise ValueError(f"Missing {len(_missing)} pre-requites: {_missing}")
+            WranglerLogger.debug(
+                f"project_names: {project_names}\nprojects_have_or_will_be_applied:{_projects_applied}\nmissing: {_missing}"
+            )
+            raise ScenarioPrerequisiteError(
+                f"Missing {len(_missing)} pre-requisites: {_missing}"
+            )
 
     def _check_projects_corequisites(self, project_names: str) -> None:
         """Checks that a list of projects' co-requisites have been or will be applied to scenario."""
-        if set(project_names).isdisjoint(set(self.corequisites)):
+        if set(project_names).isdisjoint(set(self.corequisites.keys())):
             return
-        _coreqs = set(
-            [self.corequisites[p] for p in project_names if p in self.corequisites]
-        )
-        _projects_applied = set(self.applied_projects + project_names)
-        _missing = list(_coreqs - _projects_applied)
+        _coreqs = []
+        for p in project_names:
+            _coreqs += self.corequisites.get(p, [])
+        _projects_applied = self.applied_projects + project_names
+        _missing = list(set(_coreqs) - set(_projects_applied))
         if _missing:
-            raise ValueError(f"Missing {len(_missing)} corequites: {_missing}")
+            WranglerLogger.debug(
+                f"project_names: {project_names}\nprojects_have_or_will_be_applied:{_projects_applied}\nmissing: {_missing}"
+            )
+            raise ScenarioCorequisiteError(
+                f"Missing {len(_missing)} corequisites: {_missing}"
+            )
 
     def _check_projects_conflicts(self, project_names: str) -> None:
-        """Checks that a list of projects' conflicts have not been or will be applied to scenario."""
+        """Checks that list of projects' conflicts have not been or will be applied to scenario."""
+        # WranglerLogger.debug("Checking Conflicts...")
         projects_to_check = project_names + self.applied_projects
-        if set(projects_to_check).isdisjoint(set(self.conflicts)):
+        # WranglerLogger.debug(f"\nprojects_to_check:{projects_to_check}\nprojects_with_conflicts:{set(self.conflicts.keys())}")
+        if set(projects_to_check).isdisjoint(set(self.conflicts.keys())):
+            # WranglerLogger.debug("Projects have no conflicts to check")
             return
-        _conflicts = list(
-            set([self.conflicts[p] for p in projects_to_check if p in self.conflicts])
-        )
+        _conflicts = []
+        for p in project_names:
+            _conflicts += self.conflicts.get(p, [])
         _conflict_problems = [p for p in _conflicts if p in projects_to_check]
         if _conflict_problems:
             WranglerLogger.warning(f"Conflict Problems: \n{_conflict_problems}")
             _conf_dict = {
                 k: v
                 for k, v in self.conflicts.items()
-                if k in projects_to_check and not set(v).isdisjoint(set(_conflict_problems))
+                if k in projects_to_check
+                and not set(v).isdisjoint(set(_conflict_problems))
             }
             WranglerLogger.debug(f"Problematic Conflicts:\n{_conf_dict}")
-            raise ValueError(f"Found {len(_conflicts)} conflicts: {_conflict_problems}")
+            raise ScenarioConflictError(
+                f"Found {len(_conflicts)} conflicts: {_conflict_problems}"
+            )
 
     def order_projects(self, project_list: Collection[str]) -> deque:
         """
@@ -463,7 +505,7 @@ class Scenario(object):
 
         if not set(_ordered_projects) == set(project_list):
             _missing = list(set(project_list) - set(_ordered_projects))
-            raise ValueError(f"Project sort resulted in missing projects:_missing")
+            raise ValueError(f"Project sort resulted in missing projects:{_missing}")
 
         project_deque = deque(_ordered_projects)
 
@@ -511,7 +553,9 @@ class Scenario(object):
             change["category"]
             not in ProjectCard.TRANSIT_CATEGORIES + ProjectCard.ROADWAY_CATEGORIES
         ):
-            raise ValueError(f"Don't understand project category: {change['category']}")
+            raise ProjectCardError(
+                f"Don't understand project category: {change['category']}"
+            )
 
     def _apply_project(self, project_name: str) -> None:
         """Applies project card to scenario.
@@ -546,7 +590,8 @@ class Scenario(object):
         NOTE: does not check co-requisites b/c that isn't possible when applying a sin
 
         Args:
-            project_list: List of projects to be applied. All need to be in the planned project queue.
+            project_list: List of projects to be applied. All need to be in the planned project
+                queue.
         """
         project_list = [p.lower() for p in project_list]
 
@@ -707,7 +752,7 @@ def project_card_files_from_directory(
 
     project_card_files = []
     if not Path(search_dir).exists():
-        raise ValueError(
+        raise FileNotFoundError(
             "Cannot find specified directory to find project cards: {search_dir}"
         )
 

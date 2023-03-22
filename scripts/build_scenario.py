@@ -58,17 +58,19 @@ if __name__ == "__main__":
     )
 
     # Create Scenaro Network
-    project_cards_list = [
+    project_card_list = [
         ProjectCard.read(filename, validate=False)
         for filename in project_cards_filenames
     ]
 
+
     my_scenario = Scenario.create_scenario(
         base_scenario=base_scenario,
-        card_directory=card_directory,
-        tags=project_tags,
-        project_cards_list=project_cards_list,
+        card_search_directory=card_directory,
+        filter_tags=project_tags,
+        project_card_list=project_card_list,
         glob_search=glob_search,
+        validate = False,
     )
 
     print("Applying these projects to the base scenario ...")
