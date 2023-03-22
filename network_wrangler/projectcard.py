@@ -94,6 +94,7 @@ class ProjectCard(object):
 
         return card
 
+
     @staticmethod
     def read_wrangler_card(path_to_card: str) -> dict:
         """
@@ -131,7 +132,7 @@ class ProjectCard(object):
         WranglerLogger.debug("Reading YAML-Style Project Card")
 
         with open(path_to_card, "r") as cardfile:
-            attribute_dictionary = yaml.safe_load(cardfile.read().lower())
+            attribute_dictionary = yaml.safe_load(cardfile.read())
             attribute_dictionary["file"] = path_to_card
 
         return attribute_dictionary

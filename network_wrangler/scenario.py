@@ -254,7 +254,7 @@ class Scenario(object):
             return
 
         if validate:
-            project_card.validate()
+            project_card.validate_project_card_schema(project_card.file)
 
         WranglerLogger.info(f"Adding {project_name} to scenario.")
         self.project_cards[project_name] = project_card
