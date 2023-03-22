@@ -135,7 +135,7 @@ class Scenario(object):
     @property
     def queued_projects(self):
         """Returns a list version of _queued_projects queue."""
-        if self._queued_projects is None:
+        if not self._queued_projects:
             self._check_projects_requirements_satisfied(self._planned_projects)
             self._queued_projects = self.order_projects(self._planned_projects)
         return list(self._queued_projects)
@@ -213,7 +213,7 @@ class Scenario(object):
         for d in ["prerequisites", "corequisites", "conflicts"]:
             if d not in dependencies:
                 continue
-            _dep = {k.lower(): map(str.lower, v) for k, v in dependencies[d].items()}
+            _dep = {k.lower(): list(map(str.lower, v)) for k, v in dependencies[d].items()}
             self.__dict__[d].update({project_name: _dep})
 
     def _add_project(
@@ -369,7 +369,7 @@ class Scenario(object):
     def _check_projects_planned(self, project_names: Collection[str]) -> None:
         """Checks that a list of projects are in the scenario's planned projects."""
         _missing_ps = [
-            p for p in self.planned_projects if p not in self.planned_projects
+            p for p in self._planned_projects if p not in self._planned_projects
         ]
         if _missing_ps:
             raise ValueError(
@@ -389,7 +389,7 @@ class Scenario(object):
 
     def _check_projects_prerequisites(self, project_names: str) -> None:
         """Checks that a list of projects' pre-requisites have been or will be applied to scenario."""
-        if project_names.is_disjoint(self.prerequisites):
+        if set(project_names).isdisjoint(set(self.prerequisites)):
             return
         _prereqs = set(
             [self.prerequisites[p] for p in project_names if p in self.prerequisites]
@@ -401,7 +401,7 @@ class Scenario(object):
 
     def _check_projects_corequisites(self, project_names: str) -> None:
         """Checks that a list of projects' co-requisites have been or will be applied to scenario."""
-        if project_names.is_disjoint(self.corequisites):
+        if set(project_names).isdisjoint(set(self.corequisites)):
             return
         _coreqs = set(
             [self.corequisites[p] for p in project_names if p in self.corequisites]
@@ -414,7 +414,7 @@ class Scenario(object):
     def _check_projects_conflicts(self, project_names: str) -> None:
         """Checks that a list of projects' conflicts have not been or will be applied to scenario."""
         projects_to_check = project_names + self.applied_projects
-        if projects_to_check.is_disjoint(self.conflicts):
+        if set(projects_to_check).isdisjoint(set(self.conflicts)):
             return
         _conflicts = list(
             set([self.conflicts[p] for p in projects_to_check if p in self.conflicts])
@@ -425,7 +425,7 @@ class Scenario(object):
             _conf_dict = {
                 k: v
                 for k, v in self.conflicts.items()
-                if k in projects_to_check and not v.is_disjoint(_conflict_problems)
+                if k in projects_to_check and not set(v).isdisjoint(set(_conflict_problems))
             }
             WranglerLogger.debug(f"Problematic Conflicts:\n{_conf_dict}")
             raise ValueError(f"Found {len(_conflicts)} conflicts: {_conflict_problems}")
