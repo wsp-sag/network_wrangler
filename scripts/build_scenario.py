@@ -5,6 +5,7 @@ import warnings
 
 from network_wrangler import ProjectCard
 from network_wrangler import Scenario
+from network_wrangler.scenario import create_base_scenario
 
 
 warnings.filterwarnings("ignore")
@@ -48,7 +49,7 @@ if __name__ == "__main__":
         project_cards_filenames = []
 
     # Create Base Network
-    base_scenario = Scenario.create_base_scenario(
+    base_scenario = create_base_scenario(
         highway_dir=base_network_dir,
         base_shape_name=base_shape_name,
         base_link_name=base_link_name,
