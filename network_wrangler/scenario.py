@@ -757,9 +757,10 @@ def project_card_files_from_directory(
         )
 
     if glob_search:
-        WranglerLogger.debug(f"Finding project cards using glob search: {glob_search}")
+        WranglerLogger.debug(f"Finding project cards using glob search: {glob_search} in {search_dir}")
         for f in glob.iglob(os.path.join(search_dir, glob_search)):
-            if not Path(f).suffix in ProjectCard.FILE_TYPES:
+            # Path.suffix returns string starting with .
+            if not Path(f).suffix[1:] in ProjectCard.FILE_TYPES:
                 continue
             else:
                 project_card_files.append(f)
