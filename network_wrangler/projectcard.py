@@ -104,7 +104,7 @@ class ProjectCard(object):
 
         Returns: Attribute Dictionary for Project Card
         """
-        WranglerLogger.debug("Reading Wrangler-Style Project Card")
+        WranglerLogger.debug(f"Reading Wrangler-Style Project Card {path_to_card}")
 
         with open(path_to_card, "r") as cardfile:
             delim = cardfile.readline()
@@ -128,7 +128,7 @@ class ProjectCard(object):
 
         Returns: Attribute Dictionary for Project Card
         """
-        WranglerLogger.debug("Reading YAML-Style Project Card")
+        WranglerLogger.debug(f"Reading YAML-Style Project Card {path_to_card}")
 
         with open(path_to_card, "r") as cardfile:
             attribute_dictionary = yaml.safe_load(cardfile.read())
