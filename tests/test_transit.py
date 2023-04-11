@@ -269,6 +269,7 @@ def test_zero_valid_facilities(request):
 
     print("--Finished:", request.node.name)
 
+
 def test_invalid_selection_key(request):
     print("\n--Starting:", request.node.name)
     net = TransitNetwork.read(STPAUL_DIR)
@@ -278,6 +279,7 @@ def test_invalid_selection_key(request):
         net.select_transit_features({"trip_ids": ["14941433-JUN19-MVS-BUS-Weekday-01"]})
 
     print("--Finished:", request.node.name)
+
 
 def test_invalid_optional_selection_variable(request):
     print("\n--Starting:", request.node.name)
@@ -304,6 +306,7 @@ def test_invalid_optional_selection_variable(request):
     assert set(sel) == set(["14978409-JUN19-MVS-BUS-Weekday-01"])
 
     print("--Finished:", request.node.name)
+
 
 def test_transit_road_consistencies(request):
     print("\n--Starting:", request.node.name)

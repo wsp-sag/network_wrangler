@@ -227,7 +227,6 @@ class ProjectCard(object):
 
         for li in selection[type]:
             for key, value in li.items():
-
                 if key in ignore:
                     continue
 

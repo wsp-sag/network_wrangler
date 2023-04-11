@@ -145,7 +145,6 @@ class TransitNetwork(object):
         updated_config = copy.deepcopy(config)
         files_not_found = []
         for node in config.nodes.keys():
-
             n = feed.get(node)
             WranglerLogger.debug("...{}:\n{}".format(node, n[:10]))
             if n.shape[0] == 0:
@@ -538,7 +537,6 @@ class TransitNetwork(object):
         """
         WranglerLogger.info("Writing transit to directory: {}".format(path))
         for node in self.config.nodes.keys():
-
             df = self.feed.get(node.replace(".txt", ""))
             if not df.empty:
                 if filename:
@@ -823,7 +821,6 @@ class TransitNetwork(object):
         trip_ids: pd.Series,
         properties: dict,
     ) -> TransitNetwork:
-
         net = copy.deepcopy(self)
         shapes = net.feed.shapes.copy()
         stop_times = net.feed.stop_times.copy()
@@ -1047,7 +1044,6 @@ class TransitNetwork(object):
     def _apply_transit_feature_change_frequencies(
         self, trip_ids: pd.Series, properties: dict
     ) -> TransitNetwork:
-
         net = copy.deepcopy(self)
         freq = net.feed.frequencies.copy()
 
@@ -1079,7 +1075,6 @@ class TransitNetwork(object):
         trip_ids: pd.Series,
         node_ids: list,
     ) -> TransitNetwork:
-
         # Traversed nodes without a stop should be negative integers
         net = copy.deepcopy(self)
         all_stops = net.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()

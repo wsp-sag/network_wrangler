@@ -26,7 +26,7 @@ class Scenario(object):
     Holds information about a scenario.
 
     Typical usage example:
-    
+
     ```python
     my_base_scenario = {
         "road_net": RoadwayNetwork.read(
@@ -61,7 +61,7 @@ class Scenario(object):
 
     my_scenario.scenario_summary()
     ```
-       
+
 
     Attributes:
         base_scenario: dictionary representation of a scenario
@@ -255,7 +255,6 @@ class Scenario(object):
     def add_project_card_from_file(
         self, project_card_file: str, validate: bool = True, tags: list = []
     ):
-
         WranglerLogger.debug(
             "Trying to add project card from file: {}".format(project_card_file)
         )
@@ -522,7 +521,6 @@ class Scenario(object):
         return sorted_project_cards
 
     def apply_all_projects(self):
-
         # Get everything in order
 
         if not self.requisites_checked:
@@ -587,7 +585,6 @@ class Scenario(object):
         }
 
         def _summarize_change_roadway(change: dict, change_summary: dict):
-
             sel_key = RoadwayNetwork.build_selection_key(
                 self.road_net, change["facility"]
             )
