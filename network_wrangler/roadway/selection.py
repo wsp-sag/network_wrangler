@@ -14,7 +14,25 @@ class SelectionFormatError(Exception):
     pass
 
 class SelectionError(Exception):
+    pass
 
+MODES_TO_NETWORK_LINK_VARIABLES = {
+    "drive": ["drive_access"],
+    "bus": ["bus_only", "drive_access"],
+    "rail": ["rail_only"],
+    "transit": ["bus_only", "rail_only", "drive_access"],
+    "walk": ["walk_access"],
+    "bike": ["bike_access"],
+}
+
+MODES_TO_NETWORK_NODE_VARIABLES = {
+    "drive": ["drive_node"],
+    "rail": ["rail_only", "drive_node"],
+    "bus": ["bus_only", "drive_node"],
+    "transit": ["bus_only", "rail_only", "drive_node"],
+    "walk": ["walk_node"],
+    "bike": ["bike_node"],
+}
 class RoadwaySelection():
     """_summary_
 
@@ -25,8 +43,8 @@ class RoadwaySelection():
 
     """
 
-    def __init__(self,net,selection_dict:dict,additional_requirements = {"drive_access": True},ignore = []):
-        self.net
+    def __init__(self,net:'RoadwayNetwork',selection_dict:dict,additional_requirements = {"drive_access": True},ignore = []):
+        self.net = net
 
         # This should make it compatible with old and new project card types
         self.selection_dict = selection_dict.update(selection_dict.get("links",{}))
@@ -93,7 +111,153 @@ class RoadwaySelection():
             WranglerLogger.error(f"Expected one of: {self.net.UNIQUE_MODEL_LINK_IDENTIFIERS} or A, B, name or O, D, name")
             raise SelectionFormatError("Don't believe selection is valid - can't find a unique id or A, B, Name or O,D name")
 
-    
+    def _validate_link_selection(self, selection: dict) -> bool:
+        """Validates that link selection is complete/valid for given network.
+
+        Checks:
+        1. selection properties for links, a, and b are in links_df
+        2. either a unique ID or name + A & B are specified
+
+        If selection for links is "all" it is assumed valid.
+
+        Args:
+            selection (dict): selection dictionary
+
+        Returns:
+            bool: True if link selection is valid and complete.
+        """
+
+        if selection.get("links") == "all":
+            return True
+
+        valid = True
+
+        _link_selection_props = [p for x in selection["links"] for p in x.keys()]
+
+        _missing_link_props = set(_link_selection_props) - set(self.links_df.columns)
+
+        if _missing_link_props:
+            WranglerLogger.error(
+                f"Link selection contains properties not found in the link dataframe:\n\
+                {','.join(_missing_link_props)}"
+            )
+            valid = False
+
+        _link_explicit_link_id = bool(
+            set(RoadwayNetwork.EXPLICIT_LINK_IDENTIFIERS).intersection(
+                set(_link_selection_props)
+            )
+        )
+        # if don't have an explicit link id, then require A and B nodes
+        _has_alternate_link_id = all(
+            [
+                selection.get("A"),
+                selection.get("B"),
+                any([x.get("name") for x in selection["links"]]),
+            ]
+        )
+
+        if not _link_explicit_link_id and not _has_alternate_link_id:
+            WranglerLogger.error(
+                "Link selection does not contain unique link ID or alternate A and B nodes + 'name'."
+            )
+            valid = False
+
+        _node_selection_props = list(
+            set(
+                list(selection.get("A", {}).keys())
+                + list(selection.get("B", {}).keys())
+            )
+        )
+        _missing_node_props = set(_node_selection_props) - set(self.nodes_df.columns)
+
+        if _missing_node_props:
+            WranglerLogger.error(
+                f"Node selection contains properties not found in the node dataframe:\n\
+                {','.join(_missing_node_props)}"
+            )
+            valid = False
+
+        if not valid:
+            raise ValueError("Link Selection is not valid for network.")
+        return True
+
+    def _validate_node_selection(self, selection: dict) -> bool:
+        """Validates that node selection is complete/valid for given network.
+
+        Checks:
+        1. selection properties for nodes are in nodes_df
+        2. Nodes identified by an explicit or implicit unique ID. A warning is given for using
+            a property as an identifier which isn't explicitly unique.
+
+        If selection for nodes is "all" it is assumed valid.
+
+        Args:
+            selection (dict): Project Card selection dictionary
+
+        Returns:
+            bool:True if node selection is valid and complete.
+        """
+        valid = True
+
+        if selection.get("nodse") == "all":
+            return True
+
+        _node_selection_props = [p for x in selection["nodes"] for p in x.keys()]
+
+        _missing_node_props = set(_node_selection_props) - set(self.nodes_df.columns)
+
+        if _missing_node_props:
+            WranglerLogger.error(
+                f"Node selection contains properties not found in the node dataframe:\n\
+                {','.join(_missing_node_props)}"
+            )
+            valid = False
+
+        _has_explicit_unique_node_id = bool(
+            set(self.net.UNIQUE_NODE_IDENTIFIERS).intersection(
+                set(_node_selection_props)
+            )
+        )
+
+        if not _has_explicit_unique_node_id:
+            if self.net.nodes_df[_node_selection_props].get_value_counts().min() == 1:
+                WranglerLogger.warning(
+                    f"Link selection does not contain an explicit unique link ID: \
+                        {self.net.UNIQUE_NODE_IDENTIFIERS}, \
+                        but has properties which sufficiently select a single node. \
+                        This selection may not work on other networks."
+                )
+            else:
+                WranglerLogger.error(
+                    "Link selection does not contain unique link ID or alternate A and B nodes + 'name'."
+                )
+                valid = False
+        if not valid:
+            raise ValueError("Node Selection is not valid for network.")
+        return True
+
+    def validate_selection(self, selection: dict) -> bool:
+        """
+        Evaluate whetther the selection dictionary contains the
+        minimum required values.
+
+        Args:
+            selection: selection dictionary to be evaluated
+
+        Returns: boolean value as to whether the selection dictonary is valid.
+        """
+        if selection.get("links"):
+            return self._validate_link_selection(selection)
+
+        elif selection.get("nodes"):
+            return self._validate_node_selection(selection)
+
+        else:
+            raise ValueError(
+                f"Project Card Selection requires either 'links' or 'nodes' : \
+                Selection provided: {selection.keys()}"
+            )
 
     def _select_unique_link_id(
         self,
@@ -206,3 +370,60 @@ class RoadwaySelection():
 
         self.selections[sel_key]["selection_found"] = True
         return self.selections[sel_key]["selected_links"].index.tolist()
+
+
+def filter_links_nodes_by_mode(
+    links_df: pd.DataFrame, nodes_df: pd.DataFrame, modes: list[str] = None
+) -> tuple(pd.DataFrame, pd.DataFrame):
+    """Returns nodes and link dataframes for specific mode.
+
+    Args:
+        links_df: DataFrame of standard network links
+        nodes_df: DataFrame of standard network nodes
+        modes: list of the modes of the network to be kept, must be in
+            `drive`,`transit`,`rail`,`bus`,`walk`, `bike`.
+            For example, if bike and walk are selected, both bike and walk links will be kept.
+
+    Returns: tuple of DataFrames for links, nodes filtered by mode
+
+    .. todo:: Right now we don't filter the nodes because transit-only
+    links with walk access are not marked as having walk access
+    Issue discussed in https://github.com/wsp-sag/network_wrangler/issues/145
+    modal_nodes_df = nodes_df[nodes_df[mode_node_variable] == 1]
+    """
+
+    if not set(modes).issubset(list(MODES_TO_NETWORK_LINK_VARIABLES.keys())):
+        raise SelectionFormatError(f"Modes: {modes} not all in network: {MODES_TO_NETWORK_LINK_VARIABLES.keys()}")
+  
+    if not set(modes).issubset(list(MODES_TO_NETWORK_NODE_VARIABLES.keys())):
+        raise SelectionFormatError(f"Modes: {modes} not all in network: {MODES_TO_NETWORK_LINK_VARIABLES.keys()}")
+  
+
+    _mode_link_props = list(
+        set(
+            [
+                m
+                for m in modes
+                for m in MODES_TO_NETWORK_LINK_VARIABLES[m]
+            ]
+        )
+    )
+    _mode_node_props = list(
+        set(
+            [
+                m
+                for m in modes
+                for m in MODES_TO_NETWORK_NODE_VARIABLES[m]
+            ]
+        )
+    )
+
+    modal_links_df = links_df.loc[links_df[_mode_link_props].any(axis=1)]
+
+    # TODO right now we don't filter the nodes because transit-only
+    # links with walk access are not marked as having walk access
+    # Issue discussed in https://github.com/wsp-sag/network_wrangler/issues/145
+    # modal_nodes_df = nodes_df[nodes_df[mode_node_variable] == 1]
+    modal_nodes_df = nodes_df
+
+    return modal_links_df, modal_nodes_df

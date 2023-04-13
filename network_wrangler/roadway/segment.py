@@ -1,8 +1,10 @@
 import copy
 
+import numpy as np
 import pandas as pd
 from geopandas import GeoDataFrame
 
+from .selection import filter_links_nodes_by_mode
 from .graph import links_nodes_to_ox_graph, shortest_path
 from ..logger import WranglerLogger
 
@@ -272,3 +274,207 @@ class Segment:
             return False
 
         return True
+
+
+def identify_segment_endpoints(
+    net,
+    mode: str,
+    min_connecting_links: int = 10,
+    min_distance: float = None,
+    max_link_deviation: int = 2,
+):
+    """
+
+    Args:
+        mode:  list of modes of the network, one of `drive`,`transit`,
+            `walk`, `bike`
+        links_df: if specified, will assess connectivity of this
+            links list rather than self.links_df
+        nodes_df: if specified, will assess connectivity of this
+            nodes list rather than self.nodes_df
+
+    """
+    SEGMENT_IDENTIFIERS = ["name", "ref"]
+
+    NAME_PER_NODE = 4
+    REF_PER_NODE = 2
+
+    _links_df, _nodes_df = filter_links_nodes_by_mode(
+        net.links_df, net.nodes_df, modes=[mode]
+    )
+
+    _nodes_df = RoadwayNetwork.add_incident_link_data_to_nodes(
+        links_df=_links_df,
+        nodes_df=_nodes_df,
+        link_variables=SEGMENT_IDENTIFIERS + ["distance"],
+    )
+    WranglerLogger.debug("Node/Link table elements: {}".format(len(_nodes_df)))
+
+    # Screen out segments that have blank name AND refs
+    _nodes_df = _nodes_df.replace(r"^\s*$", np.nan, regex=True).dropna(
+        subset=["name", "ref"]
+    )
+
+    WranglerLogger.debug(
+        "Node/Link table elements after dropping empty name AND ref : {}".format(
+            len(_nodes_df)
+        )
+    )
+
+    # Screen out segments that aren't likely to be long enough
+    # Minus 1 in case ref or name is missing on an intermediate link
+    _min_ref_in_table = REF_PER_NODE * (min_connecting_links - max_link_deviation)
+    _min_name_in_table = NAME_PER_NODE * (min_connecting_links - max_link_deviation)
+
+    _nodes_df["ref_freq"] = _nodes_df["ref"].map(_nodes_df["ref"].value_counts())
+    _nodes_df["name_freq"] = _nodes_df["name"].map(_nodes_df["name"].value_counts())
+
+    _nodes_df = _nodes_df.loc[
+        (_nodes_df["ref_freq"] >= _min_ref_in_table)
+        & (_nodes_df["name_freq"] >= _min_name_in_table)
+    ]
+
+    WranglerLogger.debug(
+        "Node/Link table has n = {} after screening segments for min length:\n{}".format(
+            len(_nodes_df),
+            _nodes_df[
+                [
+                    RoadwayNetwork.UNIQUE_NODE_KEY,
+                    "name",
+                    "ref",
+                    "distance",
+                    "ref_freq",
+                    "name_freq",
+                ]
+            ],
+        )
+    )
+    # ----------------------------------------
+    # Find nodes that are likely endpoints
+    # ----------------------------------------
+
+    # - Likely have one incident link and one outgoing link
+    _max_ref_endpoints = REF_PER_NODE / 2
+    _max_name_endpoints = NAME_PER_NODE / 2
+    # - Attach frequency  of node/ref
+    _nodes_df = _nodes_df.merge(
+        _nodes_df.groupby(by=[RoadwayNetwork.UNIQUE_NODE_KEY, "ref"])
+        .size()
+        .rename("ref_N_freq"),
+        on=[RoadwayNetwork.UNIQUE_NODE_KEY, "ref"],
+    )
+    # WranglerLogger.debug("_ref_count+_nodes:\n{}".format(_nodes_df[["model_node_id","ref","name","ref_N_freq"]]))
+    # - Attach frequency  of node/name
+    _nodes_df = _nodes_df.merge(
+        _nodes_df.groupby(by=[RoadwayNetwork.UNIQUE_NODE_KEY, "name"])
+        .size()
+        .rename("name_N_freq"),
+        on=[RoadwayNetwork.UNIQUE_NODE_KEY, "name"],
+    )
+    # WranglerLogger.debug("_name_count+_nodes:\n{}".format(_nodes_df[["model_node_id","ref","name","name_N_freq"]]))
+
+    WranglerLogger.debug(
+        "Possible segment endpoints:\n{}".format(
+            _nodes_df[
+                [
+                    RoadwayNetwork.UNIQUE_NODE_KEY,
+                    "name",
+                    "ref",
+                    "distance",
+                    "ref_N_freq",
+                    "name_N_freq",
+                ]
+            ]
+        )
+    )
+    # - Filter possible endpoint list based on node/name node/ref frequency
+    _nodes_df = _nodes_df.loc[
+        (_nodes_df["ref_N_freq"] <= _max_ref_endpoints)
+        | (_nodes_df["name_N_freq"] <= _max_name_endpoints)
+    ]
+    WranglerLogger.debug(
+        "{} Likely segment endpoints with req_ref<= {} or freq_name<={} \n{}".format(
+            len(_nodes_df),
+            _max_ref_endpoints,
+            _max_name_endpoints,
+            _nodes_df[
+                [
+                    RoadwayNetwork.UNIQUE_NODE_KEY,
+                    "name",
+                    "ref",
+                    "ref_N_freq",
+                    "name_N_freq",
+                ]
+            ],
+        )
+    )
+    # ----------------------------------------
+    # Assign a segment id
+    # ----------------------------------------
+    _nodes_df["segment_id"], _segments = pd.factorize(_nodes_df.name + _nodes_df.ref)
+    WranglerLogger.debug("{} Segments:\n{}".format(len(_segments), _segments))
+
+    # ----------------------------------------
+    # Drop segments without at least two nodes
+    # ----------------------------------------
+
+    # https://stackoverflow.com/questions/13446480/python-pandas-remove-entries-based-on-the-number-of-occurrences
+    _nodes_df = _nodes_df[
+        _nodes_df.groupby(["segment_id", RoadwayNetwork.UNIQUE_NODE_KEY])[
+            RoadwayNetwork.UNIQUE_NODE_KEY
+        ].transform(len)
+        > 1
+    ]
+
+    WranglerLogger.debug(
+        "{} Segments with at least nodes:\n{}".format(
+            len(_nodes_df),
+            _nodes_df[[RoadwayNetwork.UNIQUE_NODE_KEY, "name", "ref", "segment_id"]],
+        )
+    )
+
+    # ----------------------------------------
+    # For segments with more than two nodes, find farthest apart pairs
+    # ----------------------------------------
+
+    def _max_segment_distance(row):
+        _segment_nodes = _nodes_df.loc[_nodes_df["segment_id"] == row["segment_id"]]
+        dist = _segment_nodes.geometry.distance(row.geometry)
+        return max(dist.dropna())
+
+    _nodes_df["seg_distance"] = _nodes_df.apply(_max_segment_distance, axis=1)
+    _nodes_df = _nodes_df.merge(
+        _nodes_df.groupby("segment_id")
+        .seg_distance.agg(max)
+        .rename("max_seg_distance"),
+        on="segment_id",
+    )
+
+    _nodes_df = _nodes_df.loc[
+        (_nodes_df["max_seg_distance"] == _nodes_df["seg_distance"])
+        & (_nodes_df["seg_distance"] > 0)
+    ].drop_duplicates(subset=[RoadwayNetwork.UNIQUE_NODE_KEY, "segment_id"])
+
+    # ----------------------------------------
+    # Reassign segment id for final segments
+    # ----------------------------------------
+    _nodes_df["segment_id"], _segments = pd.factorize(_nodes_df.name + _nodes_df.ref)
+
+    WranglerLogger.debug(
+        "{} Segments:\n{}".format(
+            len(_segments),
+            _nodes_df[
+                [
+                    RoadwayNetwork.UNIQUE_NODE_KEY,
+                    "name",
+                    "ref",
+                    "segment_id",
+                    "seg_distance",
+                ]
+            ],
+        )
+    )
+
+    return _nodes_df[
+        ["segment_id", RoadwayNetwork.UNIQUE_NODE_KEY, "geometry", "name", "ref"]
+    ]

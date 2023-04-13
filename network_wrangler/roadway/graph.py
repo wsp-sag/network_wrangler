@@ -7,34 +7,9 @@ import osmnx as ox
 
 from pandas import DataFrame
 from geopandas import GeoDataFrame
+
+from .selection import get_modal_links_nodes
 from ..logger import WranglerLogger
-
-
-"""
-(str): default column to use as weights in the shortest path calculations.
-"""
-SP_WEIGHT_COL = "i"
-
-"""
-Union(int, float)): default penalty assigned for each
-    degree of distance between a link and a link with the searched-for
-    name when searching for paths between A and B node
-"""
-SP_WEIGHT_FACTOR = 100
-
-"""
-(int): default for initial number of links from name-based
-    selection that are traveresed before trying another shortest
-    path when searching for paths between A and B node
-"""
-SEARCH_BREADTH = 5
-
-"""
-(int): default for maximum number of links traversed between
-    links that match the searched name when searching for paths
-    between A and B node
-"""
-MAX_SEARCH_BREADTH = 10
 
 
 ox_major_version = int(ox.__version__.split(".")[0])
@@ -189,6 +164,27 @@ def links_nodes_to_ox_graph(
     return G
 
 
+def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
+    """Converts a network to a MultiDiGraph
+
+    Args:
+        net: RoadwayNetwork object
+        mode: mode of the network, one of `drive`,`transit`,
+            `walk`, `bike`
+
+    Returns: networkx: osmnx: DiGraph  of network
+    """
+
+    _links_df, _nodes_df = get_modal_links_nodes(
+        net.links_df,
+        net.nodes_df,
+        modes=[mode],
+    )
+    G = links_nodes_to_ox_graph(_links_df, _nodes_df)
+
+    return G
+
+
 def shortest_path(
     self, G: ox.MultiDiGraph, O_id, D_id, sp_weight_property="weight"
 ) -> tuple:
@@ -218,3 +214,47 @@ def shortest_path(
         raise e
 
     return sp_route
+
+
+def assess_connectivity(
+    net: "RoadwayNetwork",
+    mode: str = "",
+    ignore_end_nodes: bool = True,
+):
+    """Returns a network graph and list of disconnected subgraphs
+    as described by a list of their member nodes.
+
+    Args:
+        mode:  list of modes of the network, one of `drive`,`transit`,
+            `walk`, `bike`
+        ignore_end_nodes: if True, ignores stray singleton nodes
+
+    Returns: Tuple of
+        Network Graph (osmnx flavored networkX DiGraph)
+        List of disconnected subgraphs described by the list of their
+            member nodes (as described by their `model_node_id`)
+    """
+    G = net.graph[mode]
+
+    sub_graph_nodes = [
+        list(s)
+        for s in sorted(nx.strongly_connected_components(G), key=len, reverse=True)
+    ]
+
+    # sorted on decreasing length, dropping the main sub-graph
+    disconnected_sub_graph_nodes = sub_graph_nodes[1:]
+
+    # dropping the sub-graphs with only 1 node
+    if ignore_end_nodes:
+        disconnected_sub_graph_nodes = [
+            list(s) for s in disconnected_sub_graph_nodes if len(s) > 1
+        ]
+
+    WranglerLogger.info(
+        "{} for disconnected networks for mode = {}:\n{}".format(
+            net.UNIQUE_NODE_KEY,
+            mode,
+            "\n".join(list(map(str, disconnected_sub_graph_nodes))),
+        )
+    )
+    return G, disconnected_sub_graph_nodes
