@@ -4,8 +4,8 @@
 import os
 import yaml
 import json
-from typing import Any, Collection, Mapping
-
+from typing import List, Collection, Mapping, Any
+from pathlib import Path
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
@@ -20,6 +20,8 @@ class ProjectCard(object):
         __dict__: Dictionary of project card attributes
         valid: Boolean indicating if data conforms to project card data schema
     """
+
+    FILE_TYPES = ["wr", "wrangler", "yml", "yaml"]
 
     TRANSIT_CATEGORIES = ["Transit Service Property Change", "Add Transit"]
 
@@ -46,8 +48,8 @@ class ProjectCard(object):
         """
         # add these first so they are first on write out
         self.project = None
-        self.tags = ""
-        self.dependencies = ""
+        self.tags = []
+        self.dependencies = {}
 
         self.__dict__.update(attribute_dictonary)
         self.valid = False
@@ -102,7 +104,7 @@ class ProjectCard(object):
 
         Returns: Attribute Dictionary for Project Card
         """
-        WranglerLogger.debug("Reading Wrangler-Style Project Card")
+        WranglerLogger.debug(f"Reading Wrangler-Style Project Card {path_to_card}")
 
         with open(path_to_card, "r") as cardfile:
             delim = cardfile.readline()
@@ -110,7 +112,7 @@ class ProjectCard(object):
             _yaml, _pycode = cardfile.read().split(delim)
             WranglerLogger.debug("_yaml: {}\n_pycode: {}".format(_yaml, _pycode))
 
-        attribute_dictionary = yaml.safe_load(_yaml)
+        attribute_dictionary = yaml.safe_load(_yaml.lower())
         attribute_dictionary["file"] = path_to_card
         attribute_dictionary["pycode"] = _pycode.lstrip("\n")
 
@@ -126,10 +128,10 @@ class ProjectCard(object):
 
         Returns: Attribute Dictionary for Project Card
         """
-        WranglerLogger.debug("Reading YAML-Style Project Card")
+        WranglerLogger.debug(f"Reading YAML-Style Project Card {path_to_card}")
 
         with open(path_to_card, "r") as cardfile:
-            attribute_dictionary = yaml.safe_load(cardfile)
+            attribute_dictionary = yaml.safe_load(cardfile.read())
             attribute_dictionary["file"] = path_to_card
 
         return attribute_dictionary
@@ -195,6 +197,19 @@ class ProjectCard(object):
 
         except yaml.YAMLError as exc:
             WranglerLogger.error(exc.message)
+
+    def has_any_tags(self, tags: Collection[str]) -> bool:
+        """Returns true if ProjectCard has at lest one tag in tags list.
+
+        args:
+            tags: list of tags to search for
+        """
+        if tags and set(tags).isdisjoint(self.tags):
+            WranglerLogger.debug(
+                f"Project card tags: {self.tags} don't match search tags: {tags}"
+            )
+            return False
+        return True
 
     @staticmethod
     def build_selection_query(
@@ -270,53 +285,3 @@ class ProjectCard(object):
         sel_query = sel_query + ")"
 
         return sel_query
-
-    def roadway_attribute_change(self, card: dict):
-        """
-        Probably delete.
-        Reads a Roadway Attribute Change card.
-
-        args:
-        card: the project card stored in a dictionary
-        """
-        WranglerLogger.info(card.get("Category"))
-
-    def new_roadway(self, card: dict):
-        """
-        Probably delete.
-        Reads a New Roadway card.
-
-        args:
-        card: the project card stored in a dictionary
-        """
-        WranglerLogger.info(card.get("Category"))
-
-    def transit_attribute_change(self, card: dict):
-        """
-        Probably delete.
-        Reads a Transit Service Attribute Change card.
-
-        args:
-        card: the project card stored in a dictionary
-        """
-        WranglerLogger.info(card.get("Category"))
-
-    def new_transit_right_of_way(self, card: dict):
-        """
-        Probably delete.
-        Reads a New Transit Dedicated Right of Way card.
-
-        args:
-        card: the project card stored in a dictionary
-        """
-        WranglerLogger.info(card.get("Category"))
-
-    def parallel_managed_lanes(self, card: dict):
-        """
-        Probably delete.
-        Reads a Parallel Managed lanes card.
-
-        args:
-        card: the project card stored in a dictionary
-        """
-        WranglerLogger.info(card.get("Category"))

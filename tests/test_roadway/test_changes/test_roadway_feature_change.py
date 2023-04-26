@@ -114,6 +114,7 @@ def test_change_multiple_properties_multiple_links(request, stpaul_net):
         assert _rev_links[p["property"]].eq(_expected_value).all()
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
+
 def test_change_multiple_properties_multiple_links_existing_set(request, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
@@ -173,7 +174,9 @@ def test_add_adhoc_field(request, small_net):
     net = copy.deepcopy(small_net)
     net.links_df["my_ad_hoc_field"] = 22.5
 
-    WranglerLogger.debug(f"Network with field...\n{net.links_df['my_ad_hoc_field'].iloc[0:5]}")
+    WranglerLogger.debug(
+        f"Network with field...\n{net.links_df['my_ad_hoc_field'].iloc[0:5]}"
+    )
 
     assert net.links_df["my_ad_hoc_field"].iloc[0] == 22.5
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -239,7 +242,9 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
     rev_types = [(a, net.links_df[a].dtypes) for a in attributes_to_update]
 
-    WranglerLogger.debug(f"Revised Links:\n{rev_links}\nNew Property Types:\n{rev_types}")
+    WranglerLogger.debug(
+        f"Revised Links:\n{rev_links}\nNew Property Types:\n{rev_types}"
+    )
 
     assert net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_float"] == 1.1
     assert net.links_df.loc[selected_link_indices[0], "my_ad_hoc_field_integer"] == 2
@@ -262,12 +267,16 @@ def test_bad_properties_statements(request, small_net):
     bad_properties_existing = [{"property": "my_random_var", "existing": 1}]
 
     with pytest.raises(ValueError):
-        net.validate_properties(net.links_df,bad_properties_change)
+        net.validate_properties(net.links_df, bad_properties_change)
 
     with pytest.raises(ValueError):
-        net.validate_properties(net.links_df,ok_properties_change, require_existing_for_change=True)
+        net.validate_properties(
+            net.links_df, ok_properties_change, require_existing_for_change=True
+        )
 
     with pytest.raises(ValueError):
-        net.validate_properties(net.links_df,bad_properties_existing, ignore_existing=False)
+        net.validate_properties(
+            net.links_df, bad_properties_existing, ignore_existing=False
+        )
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

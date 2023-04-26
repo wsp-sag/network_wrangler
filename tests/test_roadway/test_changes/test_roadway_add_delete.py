@@ -68,6 +68,7 @@ def test_add_roadway_link_project_card(request, small_net):
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
+
 def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -88,13 +89,14 @@ def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     assert net_links == expected_net_links
     assert net_nodes == expected_net_nodes
 
+
 def test_multiple_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     net = copy.deepcopy(stpaul_net)
     card_name = "11_multiple_roadway_add_and_delete_change.yml"
     expected_net_links = -2 + 2
-    expected_net_nodes = +1 -1 + 1
+    expected_net_nodes = +1 - 1 + 1
 
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", card_name)
     project_card = ProjectCard.read(project_card_path, validate=False)
@@ -107,6 +109,7 @@ def test_multiple_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex
 
     assert net_links == expected_net_links
     assert net_nodes == expected_net_nodes
+
 
 @pytest.mark.xfail(strict=True)
 def test_add_roadway_links(request, stpaul_net, stpaul_ex_dir):
@@ -129,6 +132,7 @@ def test_add_roadway_links(request, stpaul_net, stpaul_ex_dir):
 
     print("--Finished:", request.node.name)
 
+
 def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -144,7 +148,7 @@ def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
     project_card = ProjectCard.read(project_card_path, validate=False)
 
     orig_links_count = len(net.links_df)
-   
+
     net = net.apply(project_card.__dict__)
     net_links = len(net.links_df) - orig_links_count
 
@@ -196,6 +200,7 @@ def test_add_nodes(request, small_net):
         "expected ValueError when adding a node with a model_node_id that already exists"
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
+
 def test_change_node_xy(request, small_net):
     """Tests if X and Y property changes from a project card also update the node/link geometry."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -237,7 +242,9 @@ def test_change_node_xy(request, small_net):
     _updated_link = net.links_df.loc[_test_link_idx]
     _first_point = _updated_link.geometry.coords[0]
 
-    WranglerLogger.info(f"Updated Node:\n{_updated_node[[RoadwayNetwork.UNIQUE_NODE_KEY,'X','Y','geometry']]}")
+    WranglerLogger.info(
+        f"Updated Node:\n{_updated_node[[RoadwayNetwork.UNIQUE_NODE_KEY,'X','Y','geometry']]}"
+    )
     WranglerLogger.info(
         f"Updated Link Geometry for ({_updated_link.A}-->{_updated_link.B}):\n{_updated_link[['geometry']]}"
     )

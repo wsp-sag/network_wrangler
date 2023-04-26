@@ -28,12 +28,12 @@ def test_add_adhoc_managed_lane_field(request, small_net):
     Makes sure new fields can be added to the network for managed lanes that get moved there.
     """
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    
+
     AD_HOC_VALUE = 22.5
     SELECTED_LINK_INDEX = 1
-    
+
     net = copy.deepcopy(small_net)
-    
+
     net.links_df["ML_my_ad_hoc_field"] = 0
     net.links_df["ML_my_ad_hoc_field"].iloc[SELECTED_LINK_INDEX] = AD_HOC_VALUE
     net.links_df["ML_lanes"] = 0
