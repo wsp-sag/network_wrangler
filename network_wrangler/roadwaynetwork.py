@@ -3,42 +3,24 @@
 
 from __future__ import annotations
 
-import os
-import sys
-import copy
-from collections import defaultdict
-from random import randint
-from typing import Any, Collection, List, Optional, Union, Tuple
-
-import pandas as pd
-import geopandas as gpd
 import json
+import os
+import copy
+
+from collections import defaultdict
+from typing import Collection
+
+import geopandas as gpd
 import networkx as nx
-import numpy as np
-import osmnx as ox
+import pandas as pd
 
 from geopandas.geodataframe import GeoDataFrame
-
 from pandas.core.frame import DataFrame
 
-from jsonschema import validate
-from jsonschema.exceptions import ValidationError
-from jsonschema.exceptions import SchemaError
+import .projects
 
-
-from shapely.geometry import Point
-
-import projects
 from .logger import WranglerLogger
-from .projectcard import ProjectCard
-from .roadway.model_roadway import ModelRoadwayNetwork
-from .roadway.graph import net_to_graph
-from .roadway.links import read_links
-from .roadway.nodes import read_nodes
-from .roadway.shapes import read_shapes
-from .selection import Selection, MODES_TO_NETWORK_LINK_VARIABLES
 from .utils import (
-    create_unique_shape_id,
     location_reference_from_nodes,
     line_string_from_location_references,
     links_df_to_json,
@@ -48,6 +30,12 @@ from .utils import (
     update_points_in_linestring,
     get_point_geometry_from_linestring,
 )
+from .roadway.model_roadway import ModelRoadwayNetwork
+from .roadway.graph import net_to_graph
+from .roadway.links import read_links, LinksParams
+from .roadway.nodes import read_nodes, NodesParams
+from .roadway.shapes import read_shapes, ShapesParams
+from .roadway.selection import Selection, MODES_TO_NETWORK_LINK_VARIABLES
 
 
 class RoadwayNetwork(object):
@@ -203,9 +191,9 @@ class RoadwayNetwork(object):
         links_file: str,
         nodes_file: str,
         shapes_file: str = None,
-        links_params: "LinksParams" = None,
-        nodes_params: "NodesParams" = None,
-        shapes_params: "ShapesParams" = None,
+        links_params: LinksParams = None,
+        nodes_params: NodesParams = None,
+        shapes_params: ShapesParams = None,
         crs: int = DEFAULT_CRS,
         read_shapes: bool = False,
     ) -> RoadwayNetwork:
@@ -838,6 +826,122 @@ class RoadwayNetwork(object):
 
         shapes_missing_links = _ids_in_shapes[~_ids_in_shapes.isin(_ids_in_links)]
         return shapes_missing_links
+
+    def delete_links(self, del_links, dict, ignore_missing=True) -> None:
+        """
+        Delete the roadway links based on del_links dictionary selecting links by properties.
+
+        Also deletes shapes which no longer have links associated with them.
+
+        Args:
+            del_links: Dictionary identified shapes to delete by properties.  Links will be selected
+                if *any* of the properties are equal to *any* of the values.
+            ignore_missing: If True, will only warn if try to delete a links that isn't in network.
+                If False, it will fail on missing links. Defaults to True.
+        """
+        # if RoadwayNetwork.UNIQUE_LINK_ID is used to select, flag links that weren't in network.
+        if RoadwayNetwork.UNIQUE_LINK_KEY in del_links:
+            _del_link_ids = pd.Series(del_links[RoadwayNetwork.UNIQUE_LINK_KEY])
+            _missing_links = _del_link_ids[
+                ~_del_link_ids.isin(self.links_df[RoadwayNetwork.UNIQUE_LINK_KEY])
+            ]
+            msg = f"Following links cannot be deleted because they are not in the network: {_missing_links}"
+            if len(_missing_links) and ignore_missing:
+                WranglerLogger.warning(msg)
+            elif len(_missing_links):
+                raise ValueError(msg)
+
+        _del_links_mask = self.links_df.isin(del_links).any(axis=1)
+        if not _del_links_mask.any():
+            WranglerLogger.warning("No links found matching criteria to delete.")
+            return
+        WranglerLogger.debug(
+            f"Deleting following links:\n{self.links_df.loc[_del_links_mask][['A','B','model_link_id']]}"
+        )
+        self.links_df = self.links_df.loc[~_del_links_mask]
+
+        # Delete shapes which no longer have links associated with them
+        _shapes_without_links = self._shapes_without_links()
+        if len(_shapes_without_links):
+            WranglerLogger.debug(f"Shapes without links:\n {_shapes_without_links}")
+            self.shapes_df = self.shapes_df.loc[~_shapes_without_links]
+            WranglerLogger.debug(f"self.shapes_df reduced to:\n {self.shapes_df}")
+
+    def delete_nodes(self, del_nodes: dict, ignore_missing: bool = True) -> None:
+        """
+        Delete the roadway nodes based on del_nodes dictionary selecting nodes by properties.
+
+        Will fail if try to delete node that is currently being used by a link.
+
+        Args:
+            del_nodes : Dictionary identified nodes to delete by properties.  Nodes will be selected
+                if *any* of the properties are equal to *any* of the values.
+            ignore_missing: If True, will only warn if try to delete a node that isn't in network.
+                If False, it will fail on missing nodes. Defaults to True.
+        """
+        _del_nodes_mask = self.nodes_df.isin(del_nodes).any(axis=1)
+        _del_nodes_df = self.nodes_df.loc[_del_nodes_mask]
+
+        if not _del_nodes_mask.any():
+            WranglerLogger.warning("No nodes found matching criteria to delete.")
+            return
+
+        WranglerLogger.debug(f"Deleting Nodes:\n{_del_nodes_df}")
+        # Check if node used in an existing link
+        _links_with_nodes = RoadwayNetwork.links_with_nodes(
+            self.links_df,
+            _del_nodes_df[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].tolist(),
+        )
+        if len(_links_with_nodes):
+            WranglerLogger.error(
+                f"Node deletion failed because being used in following links:\n{_links_with_nodes[RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE]}"
+            )
+            raise ValueError
+
+        # Check if node is in network
+        if RoadwayNetwork.UNIQUE_NODE_KEY in del_nodes:
+            _del_node_ids = pd.Series(del_nodes[RoadwayNetwork.UNIQUE_NODE_KEY])
+            _missing_nodes = _del_node_ids[
+                ~_del_node_ids.isin(self.nodes_df[RoadwayNetwork.UNIQUE_NODE_KEY])
+            ]
+            msg = f"Following nodes cannot be deleted because they are not in the network: {_missing_nodes}"
+            if len(_missing_nodes) and ignore_missing:
+                WranglerLogger.warning(msg)
+            elif len(_missing_nodes):
+                raise ValueError(msg)
+        self.nodes_df = self.nodes_df.loc[~_del_nodes_mask]
+
+    def delete_roadway_feature_change(
+        self,
+        del_links: dict = None,
+        del_nodes: dict = None,
+        ignore_missing=True,
+    ) -> "RoadwayNetwork":
+        """
+        Delete the roadway links or nodes defined in the project card.
+
+        Corresponding shapes to the deleted links are also deleted if they are not used elsewhere.
+
+        Args:
+            del_links : dictionary of identified links to delete
+            del_nodes : dictionary of identified nodes to delete
+            ignore_missing: bool
+                If True, will only warn about links/nodes that are missing from
+                network but specified to "delete" in project card
+                If False, will fail.
+        """
+
+        WranglerLogger.debug(
+            f"Deleting Roadway Features:\n-Links:\n{del_links}\n-Nodes:\n{del_nodes}"
+        )
+
+        if del_links:
+            self.delete_links(del_links, ignore_missing)
+
+        if del_nodes:
+            self.delete_nodes(del_nodes, ignore_missing)
+
+        return self
 
     def get_property_by_time_period_and_group(
         self, property, time_period=None, category=None

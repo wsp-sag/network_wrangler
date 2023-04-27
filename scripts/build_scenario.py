@@ -5,6 +5,7 @@ import warnings
 
 from network_wrangler import ProjectCard
 from network_wrangler import Scenario
+from network_wrangler.scenario import create_base_scenario
 
 
 warnings.filterwarnings("ignore")
@@ -47,7 +48,7 @@ if __name__ == "__main__":
         project_cards_filenames = []
 
     # Create Base Network
-    base_scenario = Scenario.create_base_scenario(
+    base_scenario = create_base_scenario(
         highway_dir=base_network_dir,
         base_shape_name=base_shape_name,
         base_link_name=base_link_name,
@@ -57,17 +58,19 @@ if __name__ == "__main__":
     )
 
     # Create Scenaro Network
-    project_cards_list = [
+    project_card_list = [
         ProjectCard.read(filename, validate=False)
         for filename in project_cards_filenames
     ]
 
+
     my_scenario = Scenario.create_scenario(
         base_scenario=base_scenario,
-        card_directory=card_directory,
-        tags=project_tags,
-        project_cards_list=project_cards_list,
+        card_search_directory=card_directory,
+        filter_tags=project_tags,
+        project_card_list=project_card_list,
         glob_search=glob_search,
+        validate = False,
     )
 
     print("Applying these projects to the base scenario ...")
