@@ -3,6 +3,7 @@ from .utils import links_df_to_json
 from .utils import make_slug
 from .utils import parse_time_spans_to_secs
 from .utils import topological_sort
+from .utils import delete_keys_from_dict
 from .geo import offset_location_reference
 from .geo import haversine_distance
 from .geo import create_unique_shape_id
@@ -14,6 +15,7 @@ from .geo import update_points_in_linestring
 
 
 __all__ = [
+    "delete_keys_from_dict",
     "links_df_to_json",
     "make_slug",
     "parse_time_spans_to_secs",

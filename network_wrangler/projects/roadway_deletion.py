@@ -1,5 +1,7 @@
 from typing import Collection
 
+import pandas as pd
+
 from ..logger import WranglerLogger
 
 apply_roadway_deletion
@@ -55,10 +57,12 @@ def _delete_links(
             If False, it will fail on missing links. Defaults to True.
     """
     # if RoadwayNetwork.UNIQUE_LINK_ID is used to select, flag links that weren't in network.
-    if roadway_net.UNIQUE_LINK_KEY in del_links:
-        _del_link_ids = pd.Series(del_links[roadway_net.UNIQUE_LINK_KEY])
+    if roadway_net.links_df.params.primary_key in del_links:
+        _del_link_ids = pd.Series(del_links[roadway_net.links_df.params.primary_key])
         _missing_links = _del_link_ids[
-            ~_del_link_ids.isin(roadway_net.links_df[roadway_net.UNIQUE_LINK_KEY])
+            ~_del_link_ids.isin(
+                roadway_net.links_df[roadway_net.links_df.params.primary_key]
+            )
         ]
         msg = f"Following links cannot be deleted because they are not in the network: {_missing_links}"
         if len(_missing_links) and ignore_missing:
@@ -99,8 +103,8 @@ def _delete_nodes(
         ignore_missing: If True, will only warn if try to delete a node that isn't in network.
             If False, it will fail on missing nodes. Defaults to True.
     """
-    _del_nodes_mask = self.nodes_df.isin(del_nodes).any(axis=1)
-    _del_nodes_df = self.nodes_df.loc[_del_nodes_mask]
+    _del_nodes_mask = roadway_net.nodes_df.isin(del_nodes).any(axis=1)
+    _del_nodes_df = roadway_net.nodes_df.loc[_del_nodes_mask]
 
     if not _del_nodes_mask.any():
         WranglerLogger.warning("No nodes found matching criteria to delete.")
@@ -110,19 +114,21 @@ def _delete_nodes(
     # Check if node used in an existing link
     _links_with_nodes = roadway_net.links_with_nodes(
         roadway_net.links_df,
-        _del_nodes_df[roadway_net.NODE_FOREIGN_KEY_TO_LINK].tolist(),
+        _del_nodes_df[roadway_net.nodes_df.params.primary_key].tolist(),
     )
     if len(_links_with_nodes):
         WranglerLogger.error(
-            f"Node deletion failed because being used in following links:\n{_links_with_nodes[RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE]}"
+            f"Node deletion failed because being used in following links:\n{_links_with_nodes[roadway_net.links_df.params.fks_to_nodes]}"
         )
         raise ValueError
 
     # Check if node is in network
-    if roadway_net.UNIQUE_NODE_KEY in del_nodes:
-        _del_node_ids = pd.Series(del_nodes[roadway_net.UNIQUE_NODE_KEY])
+    if roadway_net.nodes_df.params.primary_key in del_nodes:
+        _del_node_ids = pd.Series(del_nodes[roadway_net.nodes_df.params.primary_key])
         _missing_nodes = _del_node_ids[
-            ~_del_node_ids.isin(roadway_net.nodes_df[roadway_net.UNIQUE_NODE_KEY])
+            ~_del_node_ids.isin(
+                roadway_net.nodes_df[roadway_net.nodes_df.params.primary_key]
+            )
         ]
         msg = f"Following nodes cannot be deleted because they are not in the network: {_missing_nodes}"
         if len(_missing_nodes) and ignore_missing:

@@ -52,15 +52,15 @@ def apply_new_roadway(
 def _create_links(roadway_net: "RoadwayNetwork", new_links: Collection[dict] = []):
     new_links_df = pd.DataFrame(new_links)
 
-    _idx_c = roadway_net.UNIQUE_LINK_KEY + "_idx"
-    new_links_df[_idx_c] = new_links_df[roadway_net.UNIQUE_LINK_KEY]
+    _idx_c = roadway_net.links_df.params.primary_key + "_idx"
+    new_links_df[_idx_c] = new_links_df[roadway_net.links_df.params.primary_key]
     new_links_df.set_index(_idx_c, inplace=True)
     new_links_df = roadway_net.coerce_types(new_links_df)
 
     new_links_df = roadway_net._create_new_link_geometry(new_links_df)
 
     WranglerLogger.debug(
-        f"New Links:\n{new_links_df[[roadway_net.UNIQUE_LINK_KEY,'name']]}"
+        f"New Links:\n{new_links_df[[roadway_net.links_df.params.primary_key,'name']]}"
     )
     assert new_links_valid(roadway_net, new_links_df)
     return new_links_df
@@ -69,8 +69,8 @@ def _create_links(roadway_net: "RoadwayNetwork", new_links: Collection[dict] = [
 def _create_nodes(roadway_net: "RoadwayNetwork", new_nodes: Collection[dict] = []):
     new_nodes_df = pd.DataFrame(new_nodes)
 
-    _idx_c = roadway_net.UNIQUE_NODE_KEY + "_idx"
-    new_nodes_df[_idx_c] = new_nodes_df[roadway_net.UNIQUE_NODE_KEY]
+    _idx_c = roadway_net.nodes_df.params_primary_key + "_idx"
+    new_nodes_df[_idx_c] = new_nodes_df[roadway_net.nodes_df.params_primary_key]
     new_nodes_df.set_index(_idx_c, inplace=True)
     new_nodes_df = roadway_net.coerce_types(new_nodes_df)
 
@@ -93,11 +93,11 @@ def _create_nodes(roadway_net: "RoadwayNetwork", new_nodes: Collection[dict] = [
 
 def new_nodes_valid(roadway_net: "RoadwayNetwork", new_nodes_df: pd.DataFrame) -> bool:
     # Check to see if same node is already in the network
-    _existing_nodes = new_nodes_df[roadway_net.NODE_FOREIGN_KEY_TO_LINK].apply(
+    _existing_nodes = new_nodes_df[roadway_net.nodes_df.params.primary_key].apply(
         roadway_net.has_node
     )
     if _existing_nodes.any():
-        msg = f"Node already exists between nodes:\n {new_nodes_df[_existing_nodes,roadway_net.NODE_FOREIGN_KEY_TO_LINK]}."
+        msg = f"Node already exists between nodes:\n {new_nodes_df[_existing_nodes,roadway_net.nodes_df.params.primary_key]}."
         raise ValueError(msg)
 
     # Check to see if there are missing required columns
@@ -141,14 +141,14 @@ def new_links_valid(roadway_net: "RoadwayNetwork", new_links_df: pd.DataFrame) -
 
     # A-B combinations are unique within new_links_df
     _new_fk_id = pd.Series(
-        zip(*[new_links_df[c] for c in roadway_net.LINK_FOREIGN_KEY_TO_NODE])
+        zip(*[new_links_df[c] for c in roadway_net.links_df.params.fks_to_nodes])
     )
     if not _new_fk_id.is_unique:
         msg = f"Duplicate ABs in new links."
         raise ValueError(msg)
 
     # UNIQUE_LINK_ID is unique within new_links_df
-    if not new_links_df[roadway_net.UNIQUE_LINK_KEY].is_unique:
+    if not new_links_df[roadway_net.links_df.params.primary_key].is_unique:
         msg = f"Duplicate link IDs in new links."
         raise ValueError(msg)
 
@@ -161,16 +161,21 @@ def new_links_valid(roadway_net: "RoadwayNetwork", new_links_df: pd.DataFrame) -
     # Doesn't overlap with an existing UNIQUE_LINK_ID in self.links_df
     _ids = pd.concat(
         [
-            roadway_net.links_df[roadway_net.UNIQUE_LINK_KEY],
-            new_links_df[roadway_net.UNIQUE_LINK_KEY],
+            roadway_net.links_df[roadway_net.links_df.params.primary_key],
+            new_links_df[roadway_net.links_df.params.primary_key],
         ]
     )
     if not _ids.is_unique:
         msg = f"Link ID already exists:\n{_ids.loc[_ids.duplicated()]}."
         raise ValueError(msg)
 
+    _fk_props = [
+        roadway_net.links_df.params.primary_key.from_node,
+        roadway_net.links_df.params.primary_key.to_node,
+    ]
+
     # A and B nodes are in self.nodes_df
-    for fk_prop in roadway_net.LINK_FOREIGN_KEY_TO_NODE:
+    for fk_prop in _fk_props:
         _has_node = new_links_df[fk_prop].apply(self.has_node)
         if not _has_node.all():
             if len(roadway_net.nodes_df) < 25:
@@ -223,5 +228,7 @@ def _add_link_geometry_from_nodes(
 def _create_new_shapes_from_links(
     roadway_net, links_df: gpd.GeoDataFrame
 ) -> gpd.GeoDataFrame:
-    new_shapes_df = copy.deepcopy(links_df[[roadway_net.UNIQUE_SHAPE_KEY, "geometry"]])
+    new_shapes_df = copy.deepcopy(
+        links_df[[roadway_net.shapes_df.params.primary_key, "geometry"]]
+    )
     return new_shapes_df

@@ -8,7 +8,7 @@ import osmnx as ox
 from pandas import DataFrame
 from geopandas import GeoDataFrame
 
-from .selection import get_modal_links_nodes
+from .selection import filter_links_by_mode, nodes_in_links
 from ..logger import WranglerLogger
 
 
@@ -45,7 +45,7 @@ def _nodes_to_graph_nodes(nodes_df: GeoDataFrame) -> GeoDataFrame:
 
     Args:
         nodes_df (GeoDataFrame): nodes geodataframe from RoadwayNetwork instance and index of
-            the UNIQUE_NODE_KEY
+            the nodes_df.params.primary_key
     """
 
     graph_nodes_df = copy.deepcopy(nodes_df)
@@ -63,17 +63,17 @@ def _nodes_to_graph_nodes(nodes_df: GeoDataFrame) -> GeoDataFrame:
 
 def _links_to_graph_links(
     links_df: GeoDataFrame,
-    link_foreign_key_to_node: Collection,
-    sp_weight_col: str = SP_WEIGHT_COL,
-    sp_weight_factor: float = SP_WEIGHT_FACTOR,
+    sp_weight_col: str = "distance",
+    sp_weight_factor: float = 1,
 ) -> GeoDataFrame:
     """Transformes RoadwayNetwork links_df into format osmnx is expecting.
 
     OSMNX is expecting:
 
-
     Args:
         links_df (GeoDataFrame): links geodataframe from RoadwayNetwork instance
+        sp_weight_col: column to use for weights. Defaults to `distance`.
+        sp_weight_factor: multiple to apply to the weights. Defaults to 1.
     """
     graph_links_df = copy.deepcopy(links_df)
 
@@ -91,7 +91,7 @@ def _links_to_graph_links(
 
     # have to change this over into u,v b/c this is what osm-nx is expecting
     graph_links_df = graph_links_df.rename(
-        {link_foreign_key_to_node[0]: "u", link_foreign_key_to_node[1]: "v"}
+        {links_df.params.from_node: "u", links_df.params.to_node: "v"}
     )
 
     graph_links_df["key"] = graph_links_df.index
@@ -110,9 +110,8 @@ def _links_to_graph_links(
 def links_nodes_to_ox_graph(
     links_df: GeoDataFrame,
     nodes_df: GeoDataFrame,
-    link_foreign_key_to_node=("A", "B"),
-    sp_weight_col: str = SP_WEIGHT_COL,
-    sp_weight_factor: float = SP_WEIGHT_FACTOR,
+    sp_weight_col: str = "distance",
+    sp_weight_factor: float = 1,
 ):
     """
     create an osmnx-flavored network graph from nodes and links dfs
@@ -124,10 +123,8 @@ def links_nodes_to_ox_graph(
     Args:
         links_df: links_df from RoadwayNetwork
         nodes_df: nodes_df from RoadwayNetwork
-        link_foreign_key_to_node: Tuple specifying link properties with A and B node foreign keys.
-            Defaults to (A,B)
-        sp_weight_col: column to use for weights. Defaults to "i".
-        sp_weight_factor: multiple to apply to the weights. Defaults to SP_WEIGHT_FACTOR.
+        sp_weight_col: column to use for weights. Defaults to `distance`.
+        sp_weight_factor: multiple to apply to the weights. Defaults to 1.
 
     Returns: a networkx multidigraph
     """
@@ -135,7 +132,6 @@ def links_nodes_to_ox_graph(
     graph_nodes_df = _nodes_to_graph_nodes(nodes_df)
     graph_links_df = _links_to_graph_links(
         links_df,
-        link_foreign_key_to_node=link_foreign_key_to_node,
         sp_weight_col=sp_weight_col,
         sp_weight_factor=sp_weight_factor,
     )
@@ -175,11 +171,16 @@ def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
     Returns: networkx: osmnx: DiGraph  of network
     """
 
-    _links_df, _nodes_df = get_modal_links_nodes(
+    _links_df = filter_links_by_mode(
         net.links_df,
-        net.nodes_df,
         modes=[mode],
     )
+
+    _nodes_df = nodes_in_links(
+        net.links_df,
+        net.nodes_df,
+    )
+
     G = links_nodes_to_ox_graph(_links_df, _nodes_df)
 
     return G
@@ -192,8 +193,8 @@ def shortest_path(
 
     Args:
         G: osmnx MultiDiGraph, created using links_nodes_to_ox_graph
-        O_id: foreign key for start node
-        D_id: foreign key for end node
+        O_id: primary key for start node
+        D_id: primary key for end node
         sp_weight_property: link property to use as weight in finding shortest path.
             Defaults to "weight".
 
@@ -252,7 +253,7 @@ def assess_connectivity(
 
     WranglerLogger.info(
         "{} for disconnected networks for mode = {}:\n{}".format(
-            net.UNIQUE_NODE_KEY,
+            net.nodes_df.params.primary_key,
             mode,
             "\n".join(list(map(str, disconnected_sub_graph_nodes))),
         )

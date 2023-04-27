@@ -80,6 +80,31 @@ def make_slug(text, delimiter: str = "_"):
     return re.sub("[\ ]+", delimiter, text)
 
 
+def delete_keys_from_dict(dictionary: dict, keys: list) -> dict:
+    """Removes list of keys from potentially nested dictionary.
+
+    SOURCE: https://stackoverflow.com/questions/3405715/elegant-way-to-remove-fields-from-nested-dictionaries
+    User: @mseifert
+
+    Args:
+        dictionary: dictionary to remove keys from
+        keys: list of keys to remove
+
+    """
+    keys_set = set(keys)  # Just an optimization for the "if key in keys" lookup.
+
+    modified_dict = {}
+    for key, value in dictionary.items():
+        if key not in keys_set:
+            if isinstance(value, dict):
+                modified_dict[key] = delete_keys_from_dict(value, keys_set)
+            else:
+                modified_dict[
+                    key
+                ] = value  # or copy.deepcopy(value) if a copy is desired for non-dicts.
+    return modified_dict
+
+
 def parse_time_spans_to_secs(times):
     """
     parse time spans into tuples of seconds from midnight

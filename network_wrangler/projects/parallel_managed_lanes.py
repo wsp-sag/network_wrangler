@@ -4,6 +4,7 @@ from ..logger import WranglerLogger
 from ..utils import parse_time_spans_to_secs
 
 
+
 def apply_parallel_managed_lanes(
     roadway_net: "RoadwayNetwork",
     link_idx: list,

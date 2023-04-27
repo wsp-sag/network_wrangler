@@ -7,6 +7,7 @@ import pandas as pd
 
 from network_wrangler import ProjectCard
 from network_wrangler import RoadwayNetwork
+from network_wrangler.roadway import ModelRoadway
 from network_wrangler.roadway import create_managed_lane_network
 from network_wrangler.roadway.model_roadway import (
     _link_id_to_managed_lane_link_id,
@@ -60,13 +61,13 @@ def test_add_adhoc_managed_lane_field(request, small_net):
     ]
     WranglerLogger.debug(f"Network with field.\n{net.links_df[ _display_cols]}")
 
-    net = create_managed_lane_network(net)
+    m_net = ModelRoadway(net)
 
     _display_cols = ["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]
-    WranglerLogger.debug(f"Managed Lane Network\n{net.m_links_df[_display_cols]}")
+    WranglerLogger.debug(f"Managed Lane Network\n{m_net.m_links_df[_display_cols]}")
 
-    _managed_lane_record = net.m_links_df.loc[
-        net.m_links_df["model_link_id"] == _ml_model_link_id
+    _managed_lane_record = m_net.m_links_df.loc[
+        m_net.m_links_df["model_link_id"] == _ml_model_link_id
     ]
     _managed_lane_record = _managed_lane_record.iloc[0]
 
@@ -78,7 +79,6 @@ def test_add_adhoc_managed_lane_field(request, small_net):
 
 def test_create_ml_network_shape(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    from network_wrangler.roadway import create_managed_lane_network
 
     net = copy.deepcopy(small_net)
 
@@ -131,7 +131,7 @@ def test_create_ml_network_shape(request, small_net):
     _orig_shapes_count = len(net.shapes_df)
 
     net = net.apply(project_card_dictionary)
-    net = create_managed_lane_network(net)
+    m_net = ModelRoadway(net)
 
     base_model_link_ids = project_card_dictionary["facility"]["links"][0][
         "model_link_id"

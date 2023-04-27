@@ -207,9 +207,9 @@ def test_change_node_xy(request, small_net):
     net = copy.deepcopy(small_net)
 
     _test_link = net.links_df.iloc[0]
-    _test_link_idx = _test_link[RoadwayNetwork.UNIQUE_LINK_KEY]
-    _test_node = net.nodes_df.loc[[_test_link["A"]]].iloc[0]
-    _test_node_idx = _test_node[[RoadwayNetwork.UNIQUE_NODE_KEY]].iloc[0]
+    _test_link_idx = _test_link[net.links_df.params.primary_key]
+    _test_node = net.nodes_df.loc[[_test_link[net.links_df.params.from_node]]].iloc[0]
+    _test_node_idx = _test_node[[net.nodes_df.params.primary_key]].iloc[0]
 
     WranglerLogger.debug(f"Node Index: {_test_node_idx}")
     WranglerLogger.debug(f"Link Index: {_test_link_idx}")
@@ -243,7 +243,7 @@ def test_change_node_xy(request, small_net):
     _first_point = _updated_link.geometry.coords[0]
 
     WranglerLogger.info(
-        f"Updated Node:\n{_updated_node[[RoadwayNetwork.UNIQUE_NODE_KEY,'X','Y','geometry']]}"
+        f"Updated Node:\n{_updated_node[[net.nodes_df.params.primary_key,'X','Y','geometry']]}"
     )
     WranglerLogger.info(
         f"Updated Link Geometry for ({_updated_link.A}-->{_updated_link.B}):\n{_updated_link[['geometry']]}"
