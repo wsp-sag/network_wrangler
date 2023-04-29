@@ -1,11 +1,8 @@
 import os
-import time
 
 import pytest
 
-import pandas as pd
-
-from network_wrangler import ProjectCard
+from projectcard import ProjectCard
 from network_wrangler import RoadwayNetwork
 from network_wrangler import WranglerLogger
 
@@ -97,6 +94,7 @@ variable_queries = [
     {"v": "ML_price", "category": "sov", "time_period": ["7:00", "9:00"]},
     {"v": "ML_price", "category": ["hov3", "hov2"], "time_period": ["7:00", "9:00"]},
 ]
+
 
 @pytest.mark.parametrize("variable_query", variable_queries)
 def test_query_roadway_property_by_time_group(
@@ -209,6 +207,7 @@ def test_find_segment(request, stpaul_net):
 
     WranglerLogger.debug(f"seg_df:\n{seg_df}")
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
 
 # selection, answer
 query_tests = [

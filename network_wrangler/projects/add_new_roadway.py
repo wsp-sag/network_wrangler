@@ -97,7 +97,8 @@ def new_nodes_valid(roadway_net: "RoadwayNetwork", new_nodes_df: pd.DataFrame) -
         roadway_net.has_node
     )
     if _existing_nodes.any():
-        msg = f"Node already exists between nodes:\n {new_nodes_df[_existing_nodes,roadway_net.nodes_df.params.primary_key]}."
+        _ns = new_nodes_df[_existing_nodes, roadway_net.nodes_df.params.primary_key]
+        msg = f"Node already exists between nodes:\n {_ns}."
         raise ValueError(msg)
 
     # Check to see if there are missing required columns
@@ -144,12 +145,12 @@ def new_links_valid(roadway_net: "RoadwayNetwork", new_links_df: pd.DataFrame) -
         zip(*[new_links_df[c] for c in roadway_net.links_df.params.fks_to_nodes])
     )
     if not _new_fk_id.is_unique:
-        msg = f"Duplicate ABs in new links."
+        msg = "Duplicate ABs in new links."
         raise ValueError(msg)
 
     # UNIQUE_LINK_ID is unique within new_links_df
     if not new_links_df[roadway_net.links_df.params.primary_key].is_unique:
-        msg = f"Duplicate link IDs in new links."
+        msg = "Duplicate link IDs in new links."
         raise ValueError(msg)
 
     # Doesn't overlap with an existing A-B link in self.links_df
@@ -176,11 +177,12 @@ def new_links_valid(roadway_net: "RoadwayNetwork", new_links_df: pd.DataFrame) -
 
     # A and B nodes are in self.nodes_df
     for fk_prop in _fk_props:
-        _has_node = new_links_df[fk_prop].apply(self.has_node)
+        _has_node = new_links_df[fk_prop].apply(roadway_net.has_node)
         if not _has_node.all():
             if len(roadway_net.nodes_df) < 25:
                 WranglerLogger.debug(f"self.nodes_df:\n{roadway_net.nodes_df}")
-            msg = f"New link specifies non existant node {fk_prop} = {new_links_df.loc[_has_node,fk_prop]}."
+            msg = f"New link specifies non existant node \
+                {fk_prop} = {new_links_df.loc[_has_node,fk_prop]}."
             raise ValueError(msg)
 
     # Check to see if there are missing required columns

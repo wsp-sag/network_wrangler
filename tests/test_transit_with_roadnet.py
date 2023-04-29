@@ -1,11 +1,8 @@
 import os
 
-import pytest
-
+from projectcard import ProjectCard
 from network_wrangler import RoadwayNetwork
 from network_wrangler import TransitNetwork
-from network_wrangler import ProjectCard
-
 
 """
 Run just the tests labeled transit using `pytest -v -m transit`
@@ -19,10 +16,9 @@ def test_set_roadnet(request):
     print("\n--Starting:", request.node.name)
 
     road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True,
+        links_file=os.path.join(STPAUL_DIR, "link.json"),
+        nodes_file=os.path.join(STPAUL_DIR, "node.geojson"),
+        shapes_file=os.path.join(STPAUL_DIR, "shape.geojson"),
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.set_roadnet(road_net)
@@ -34,10 +30,9 @@ def test_project_card(request):
     print("\n--Starting:", request.node.name)
 
     road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True,
+        links_file=os.path.join(STPAUL_DIR, "link.json"),
+        nodes_file=os.path.join(STPAUL_DIR, "node.geojson"),
+        shapes_file=os.path.join(STPAUL_DIR, "shape.geojson"),
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net
@@ -109,10 +104,9 @@ def test_wo_existing(request):
     print("\n--Starting:", request.node.name)
 
     road_net = RoadwayNetwork.read(
-        link_file=os.path.join(STPAUL_DIR, "link.json"),
-        node_file=os.path.join(STPAUL_DIR, "node.geojson"),
-        shape_file=os.path.join(STPAUL_DIR, "shape.geojson"),
-        fast=True,
+        links_file=os.path.join(STPAUL_DIR, "link.json"),
+        nodes_file=os.path.join(STPAUL_DIR, "node.geojson"),
+        shapes_file=os.path.join(STPAUL_DIR, "shape.geojson"),
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
     transit_net.road_net = road_net
@@ -130,45 +124,6 @@ def test_wo_existing(request):
     ]["stop_id"].tolist()
     answer = ["2609"]  # first matching stop_id in stops.txt
     assert result == answer
-
-    print("--Finished:", request.node.name)
-
-
-def test_select_transit_features_by_nodes(request):
-    print("\n--Starting:", request.node.name)
-
-    transit_net = TransitNetwork.read(STPAUL_DIR)
-
-    # Any nodes
-    trip_ids = transit_net.select_transit_features_by_nodes(
-        node_ids=["75520", "66380", "57530"]
-    )
-    print(trip_ids)
-    assert set(trip_ids) == set(
-        [
-            "14941148-JUN19-MVS-BUS-Weekday-01",
-            "14941151-JUN19-MVS-BUS-Weekday-01",
-            "14941153-JUN19-MVS-BUS-Weekday-01",
-            "14941163-JUN19-MVS-BUS-Weekday-01",
-            "14944379-JUN19-MVS-BUS-Weekday-01",
-            "14944386-JUN19-MVS-BUS-Weekday-01",
-            "14944413-JUN19-MVS-BUS-Weekday-01",
-            "14944416-JUN19-MVS-BUS-Weekday-01",
-        ]
-    )
-
-    # All nodes
-    trip_ids = transit_net.select_transit_features_by_nodes(
-        node_ids=["75520", "66380"], require_all=True
-    )
-    assert set(trip_ids) == set(
-        [
-            "14941148-JUN19-MVS-BUS-Weekday-01",
-            "14941151-JUN19-MVS-BUS-Weekday-01",
-            "14941153-JUN19-MVS-BUS-Weekday-01",
-            "14941163-JUN19-MVS-BUS-Weekday-01",
-        ]
-    )
 
     print("--Finished:", request.node.name)
 

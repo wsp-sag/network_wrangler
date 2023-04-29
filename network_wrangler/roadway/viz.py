@@ -1,7 +1,5 @@
 import randint
 
-from typing import Any, List, Optional
-
 import folium
 import osmnx as ox
 
@@ -10,13 +8,13 @@ from .graph import links_nodes_to_ox_graph
 
 
 def selection_map(
-    selection: "Selection",
+    selection: "RoadwaySelection",
 ) -> folium.map:
     """
     Shows which links are selected based on a selection instance.
 
     Args:
-        selection: Selection instance
+        selection: RoadwaySelectioninstance
     """
 
     if selection.type == "segment_search":

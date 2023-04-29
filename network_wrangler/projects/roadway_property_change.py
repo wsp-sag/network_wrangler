@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from .logger import WranglerLogger
+from ..logger import WranglerLogger
 
 
 def apply_roadway_property_change(
@@ -52,7 +52,7 @@ def _apply_nodes_feature_change(
     roadway_net.validate_properties(roadway_net.nodes_df, properties)
     for p in properties:
         if not p["property"] in roadway_net.nodes_df.columns:
-            _df = roadway_net._add_property(roadway_net.nodes_df, p)
+            roadway_net.nodes_df = roadway_net._add_property(roadway_net.nodes_df, p)
 
         _updated_nodes_df = roadway_net._update_property(
             roadway_net.nodes_df.loc[node_idx], p

@@ -1,10 +1,6 @@
 import os
 import time
 
-import pytest
-
-import pandas as pd
-
 from network_wrangler import RoadwayNetwork
 from network_wrangler import WranglerLogger
 
@@ -30,7 +26,7 @@ def test_roadway_read_write(request, small_net, scratch_dir):
     net.write(filename=out_prefix, path=scratch_dir)
     time2 = time.time()
     net_2 = RoadwayNetwork.read(
-        link_file=out_link_file, node_file=out_node_file, shape_file=out_shape_file
+        links_file=out_link_file, nodes_file=out_node_file, shapes_file=out_shape_file
     )
     time3 = time.time()
 
@@ -62,7 +58,7 @@ def test_quick_roadway_read_write(request, scratch_dir, small_net):
     net = small_net
     net.write(filename=out_prefix, path=scratch_dir)
     net_2 = RoadwayNetwork.read(
-        link_file=out_link_file, node_file=out_node_file, shape_file=out_shape_file
+        links_file=out_link_file, nodes_file=out_node_file, shapes_file=out_shape_file
     )
     WranglerLogger.info(f"--Finished: {request.node.name}")
 

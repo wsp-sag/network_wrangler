@@ -1,16 +1,3 @@
-import copy
-import os
-import time
-
-import pytest
-
-import pandas as pd
-
-from network_wrangler import ProjectCard
-from network_wrangler import RoadwayNetwork
-from network_wrangler import WranglerLogger
-
-
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_properties.py
 To run with print statments, use `pytest -s tests/test_roadway/test_properties.py`

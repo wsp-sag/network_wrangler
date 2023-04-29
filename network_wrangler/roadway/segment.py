@@ -5,9 +5,8 @@ import pandas as pd
 
 from typing import Union
 
-from .selection import filter_links_by_mode, nodes_in_links, SelectionError
 from .subnet import Subnet
-from .graph import links_nodes_to_ox_graph, shortest_path
+from .graph import shortest_path
 from ..logger import WranglerLogger
 
 
@@ -76,7 +75,7 @@ class Segment:
 
     attr:
         net: Associated RoadwayNetwork object
-        selection_dict: segment selection dictionary
+        selection: segment selection
         start_node_pk: value of the primary key (usually model_node_id) for segment start node
         end_node_pk: value of the primary key (usually model_node_id) for segment end node
         subnet: Subnet object (and associated graph) on which to do shortest path search
@@ -93,7 +92,7 @@ class Segment:
     def __init__(
         self,
         net: "RoadwayNetwork",
-        selection_dict: dict,
+        selection: 'RoadwaySelection',
         sp_weight_col: str = SP_WEIGHT_COL,
         sp_weight_factor: int = SP_WEIGHT_FACTOR,
         max_search_breadth: int = MAX_SEARCH_BREADTH,
@@ -102,14 +101,7 @@ class Segment:
 
         Args:
             net (RoadwayNetwork): Associated RoadwayNetwork object
-            selection_dict (dict): Segment selection dictionary. Example:
-                ```
-                    {
-                        "links": {"name":['6th','Sixth','sixth']},
-                        "start": {"osm_node_id": '187899923'},
-                        "end": {"osm_node_id": '187865924'}
-                    }
-                ```
+            selection (RoadwaySelection): Selection of type `segment_search`.
             sp_weight_col (str, optional): Column to use for weights in shortest path.  Will not
                 likely need to be changed. Defaults to SP_WEIGHT_COL which defaults to `i`.
             sp_weight_factor (int, optional): Factor to multiply sp_weight_col by to use for
@@ -122,7 +114,10 @@ class Segment:
         """
 
         self.net = net
-        self.selection_dict = selection_dict
+        if not selection.type == "segment_search":
+            raise SegmentFormatError("Selection object passed to Segment must be of type\
+                                      `segment_search`")
+        self.selection = selection
 
         self.start_node_pk = self._start_node_pk()
         self.end_node_pk = self._end_node_pk()
@@ -202,8 +197,8 @@ class Segment:
         _search_keys = ["A", "O", "start"]
         _node_dict = None
         for k in _search_keys:
-            if self.selection_dict.get(k):
-                _node_dict = self.selection_dict[k]
+            if self.selection.selection_dict.get(k):
+                _node_dict = self.selection.selection_dict[k]
         if not _node_dict:
             raise SegmentFormatError("Can't find start node in selection dict.")
         if len(_node_dict) > 1:
@@ -217,8 +212,8 @@ class Segment:
         _search_keys = ["B", "D", "end"]
         _node_dict = None
         for k in _search_keys:
-            if self.selection_dict.get(k):
-                _node_dict = self.selection_dict[k]
+            if self.selection.selection_dict.get(k):
+                _node_dict = self.selection.selection_dict[k]
         if not _node_dict:
             raise SegmentFormatError("Can't find end node in selection dict.")
         if len(_node_dict) > 1:
@@ -253,10 +248,10 @@ class Segment:
         First will search based on "name" in selection_dict but if not found, will search
         using the "ref" field instead.
         """
-        _selection_dict = copy.deepcopy(self.selection_dict)
+        _selection_dict = copy.deepcopy(self.selection.selection_dict)
         # First search for initial set of links using "name" field, combined with values from "ref"
 
-        if "ref" in self.selection_dict:
+        if "ref" in self.selection.selection_dict:
             _selection_dict["name"] += _selection_dict["ref"]
             del _selection_dict["ref"]
 
@@ -275,12 +270,12 @@ class Segment:
             subnet = Subnet(selection_dict=_selection_dict)
             _selection_dict = copy.deepcopy(self.selection_dict)
 
-        # i is iteration # for an iterative search for connected paths with progressively larger subnet
+        # i is iteration # for an iterative search for connected paths with larger subnet
         if subnet.num_links == 0:
             WranglerLogger.error(
                 f"Selection didn't return subnet links: {_selection_dict}"
             )
-            raise SelectionError("No links found with selection.")
+            raise SegmentSelectionError("No links found with selection.")
         return subnet
 
     def _find_subnet_shortest_path(
@@ -297,7 +292,8 @@ class Segment:
         """
 
         WranglerLogger.debug(
-            f"Calculating shortest path from {self.start_node_pk} to {self.end_node_pk} using {self._sp_weight_col} as \
+            f"Calculating shortest path from {self.start_node_pk} to {self.end_node_pk}\
+                using {self._sp_weight_col} as \
                 weight with a factor of {self._sp_weight_factor}"
         )
         self.subnet._sp_weight_col = self._sp_weight_col
@@ -339,8 +335,8 @@ def identify_segment_endpoints(
     NAME_PER_NODE = 4
     REF_PER_NODE = 2
 
-    _links_df = filter_links_by_mode(net.links_df, modes=[mode])
-    _nodes_df = nodes_in_links(
+    _links_df = net.links_df.mode_query(mode)
+    _nodes_df = net.nodes_in_links(
         _links_df,
         net.nodes_df,
     )

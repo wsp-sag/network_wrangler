@@ -56,6 +56,7 @@ KEEP_SAME_ATTRIBUTES_ML_AND_GP = [
     "segment_id",
 ]
 
+
 class ModelRoadwayNetwork:
     """Roadway Network Object compatible with travel modeling.
 
@@ -157,7 +158,7 @@ class ModelRoadwayNetwork:
             f"Wrote ModelRoadwayNetwork to files:\n - {links_file}\n - {nodes_file}"
         )
 
-    def model_links_nodes_from_net(self) -> tuple(pd.DataFrame, pd.DataFrame):
+    def model_links_nodes_from_net(self, net) -> tuple[pd.DataFrame]:
         """Create a roadway network with managed lanes links separated out.
 
         Add new parallel managed lane links, access/egress links,
@@ -169,24 +170,24 @@ class ModelRoadwayNetwork:
             m_links_df
         """
         WranglerLogger.info("Creating model network with separate managed lanes")
-        m_links_df, m_nodes_df = self._create_separate_managed_lane_links_nodes(
-            self.net
-        )
+        m_links_df, m_nodes_df = self._create_separate_managed_lane_links_nodes(net)
 
         # Adds dummy connector links
-        access_egress_links_df = self._create_dummy_connector_links(self.net)
+        access_egress_links_df = self._create_dummy_connector_links(net)
         m_links_df = pd.concat([m_links_df, access_egress_links_df])
-   
+
         WranglerLogger.debug(
             f"Managed Lane Links:\n {self.m_links_df[self].m_links_df['managed']==1}"
         )
         WranglerLogger.debug(
-            f"Managed Lane Access Links:\n {self.m_links_dfs[self.m_links_df['roadway']=='ml_access']}"
+            f"Managed Lane Access Links:\n \
+                {self.m_links_dfs[self.m_links_df['roadway']=='ml_access']}"
         )
         WranglerLogger.debug(
-            f"Managed Lane Egress Links:\n {self.m_links_df[self.m_links_df['roadway']=='ml_egress']}"
+            f"Managed Lane Egress Links:\n \
+                {self.m_links_df[self.m_links_df['roadway']=='ml_egress']}"
         )
-        _compare_table = basic_compare_networks(self.net,self)
+        _compare_table = basic_compare_networks(self.net, self)
         WranglerLogger.info(_compare_table)
 
         return m_links_df, m_nodes_df
@@ -237,17 +238,24 @@ class ModelRoadwayNetwork:
         ml_links_df["managed"] = 1
         gp_links_df["managed"] = -1
 
-        ml_links_df[f"GP_{self.net.links_df.params.from_node}"] = ml_links_df[self.net.links_df.params.from_node]
-        ml_links_df[self.net.links_df.params.from_node] = ml_links_df[self.net.links_df.params.from_node].apply(
-            lambda x: self._node_id_to_managed_lane_node_id(x)
-        )
-        ml_links_df[f"GP_{self.net.links_df.params.to_node}"] = ml_links_df[self.net.links_df.params.to_node]
-        ml_links_df[self.net.links_df.params.to_node] = ml_links_df[self.net.links_df.params.to_node].apply(
-            lambda x: self._node_id_to_managed_lane_node_id(x)
-        )
+        ml_links_df[f"GP_{self.net.links_df.params.from_node}"] = ml_links_df[
+            self.net.links_df.params.from_node
+        ]
+        ml_links_df[self.net.links_df.params.from_node] = ml_links_df[
+            self.net.links_df.params.from_node
+        ].apply(lambda x: self._node_id_to_managed_lane_node_id(x))
+        ml_links_df[f"GP_{self.net.links_df.params.to_node}"] = ml_links_df[
+            self.net.links_df.params.to_node
+        ]
+        ml_links_df[self.net.links_df.params.to_node] = ml_links_df[
+            self.net.links_df.params.to_node
+        ].apply(lambda x: self._node_id_to_managed_lane_node_id(x))
 
         _ref_gp_node_list = list(
-            set(list(ml_links_df[f"GP_{self.net.links_df.params.from_node}"]) + list(ml_links_df[f"GP_{self.net.links_df.params.to_node}"]))
+            set(
+                list(ml_links_df[f"GP_{self.net.links_df.params.from_node}"])
+                + list(ml_links_df[f"GP_{self.net.links_df.params.to_node}"])
+            )
         )
         WranglerLogger.debug(f"_ref_gp_node_list: \n{_ref_gp_node_list}")
         # update geometry and location references
@@ -273,28 +281,36 @@ class ModelRoadwayNetwork:
         ml_nodes_df[self.net.nodes_df.params.idx_col] = ml_nodes_df[
             self.net.nodes_df.params.primary_key
         ]
-        ml_nodes_df.set_index(
-            self.net.nodes_df.params.idx_col, inplace=True
+        ml_nodes_df.set_index(self.net.nodes_df.params.idx_col, inplace=True)
+        WranglerLogger.debug(
+            f"3-ml_nodes_df: \n{ml_nodes_df[[self.net.nodes_df.params.primary_key]]}"
         )
-        WranglerLogger.debug(f"3-ml_nodes_df: \n{ml_nodes_df[[self.net.nodes_df.params.primary_key]]}")
         ml_links_df[self.net.links_df.params.primary_key] = ml_links_df[
-            self.net.links_df.params.primary_key]
+            self.net.links_df.params.primary_key
         ].apply(lambda x: self._link_id_to_managed_lane_link_id(x))
 
         ml_links_df[self.net.nodes_df.params.idx_col] = ml_links_df[
             self.net.nodes_df.params.primary_key
         ]
         ml_links_df.set_index(self.net.links_df.params.idx_col, inplace=True)
-        ml_links_df[self.net.links_df.params.fk_to_shape] = ml_links_df["geometry"].apply(
-            lambda x: create_unique_shape_id(x)
-        )
+        ml_links_df[self.net.links_df.params.fk_to_shape] = ml_links_df[
+            "geometry"
+        ].apply(lambda x: create_unique_shape_id(x))
 
         # Adds any missing A-nodes or B-nodes
-        a_nodes_df = self.net._nodes_from_link(ml_links_df[[self.net.links_df.params.from_node, "geometry"]], 0, self.net.links_df.params.from_node)
+        a_nodes_df = self.net._nodes_from_link(
+            ml_links_df[[self.net.links_df.params.from_node, "geometry"]],
+            0,
+            self.net.links_df.params.from_node,
+        )
         # WranglerLogger.debug(f"a_nodes_df:\n {a_nodes_df}")
         ml_nodes_df = ml_nodes_df.combine_first(a_nodes_df)
         # WranglerLogger.debug(f"4-ml_nodes_df: \n{ml_nodes_df[['model_node_id']]}")
-        b_nodes_df = self.net._nodes_from_link(ml_links_df[[self.net.links_df.params.to_node, "geometry"]], -1, self.net.links_df.params.to_node)
+        b_nodes_df = self.net._nodes_from_link(
+            ml_links_df[[self.net.links_df.params.to_node, "geometry"]],
+            -1,
+            self.net.links_df.params.to_node,
+        )
         ml_nodes_df = ml_nodes_df.combine_first(b_nodes_df)
         # WranglerLogger.debug(f"5-ml_nodes_df: \n{ml_nodes_df[['model_node_id']]}")
         m_links_df = pd.concat([ml_links_df, gp_links_df, no_ml_links_df])
@@ -479,38 +495,41 @@ class ModelRoadwayNetwork:
 
         return access_egress_df
 
-def basic_compare_networks(net_1,net_2,net_1_name:str = "Network 1",net_2_name:str = "Network 2"):
+
+def basic_compare_networks(
+    net_1, net_2, net_1_name: str = "Network 1", net_2_name: str = "Network 2"
+):
     """Basic comparison of values of links and nodes between two networks.
-    
+
     args:
-        net_1: First RoadwayNetwork or ModelRoadwayNetwork object 
-        net_2: Second RoadwayNetwork or ModelRoadwayNetwork object 
+        net_1: First RoadwayNetwork or ModelRoadwayNetwork object
+        net_2: Second RoadwayNetwork or ModelRoadwayNetwork object
         net_1_name: Name of first network. Defaults to `Network 1`.
         net_2_name: Name of second network. Defaults to `Network 2`.
     """
-    _col1len = min(14,len(net_1_name)+2)
-    _col2len = min(14,len(net_2_name)+2)
+    _col1len = min(14, len(net_1_name) + 2)
+    _col2len = min(14, len(net_2_name) + 2)
 
     def _links_nodes_shapes_from_net(net):
-        if isinstance(net,ModelRoadwayNetwork):
+        if isinstance(net, ModelRoadwayNetwork):
             links = net.m_links_df
             nodes = net.m_nodes_df
-            shapes= None
+            shapes = None
         else:
             links = net.links_df
             nodes = net.nodes_df
             shapes = net.shapes_df
-        return links,nodes,shapes
+        return links, nodes, shapes
 
-    links_1,nodes_1,shapes_1 = _links_nodes_shapes_from_net(net_1)
-    links_2,nodes_2,shapes_2 = _links_nodes_shapes_from_net(net_2)
+    links_1, nodes_1, shapes_1 = _links_nodes_shapes_from_net(net_1)
+    links_2, nodes_2, shapes_2 = _links_nodes_shapes_from_net(net_2)
 
-    t= "\nProperty |  {net_1_name:_col1len} | {net_2_name:_col2len}\n" 
-    t += "=" * 10+_col1len+_col2len + "\n"  
+    t = "\nProperty |  {net_1_name:_col1len} | {net_2_name:_col2len}\n"
+    t += "=" * 10 + _col1len + _col2len + "\n"
     t += f"links:   | {len(links_1):_col1len} | {len(links_2):_col2len}\n"
     t += f"nodes:   | {len(nodes_1):_col1len} | {len(links_2):_col2len}\n"
 
     if shapes_1 is not None and shapes_2 is not None:
         t += f"shapes:  | {len(shapes_1):_col1len} | {len(shapes_2):_col2len}\n"
-    
+
     return t

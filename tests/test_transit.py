@@ -1,7 +1,7 @@
 import os
 import pytest
 from network_wrangler import TransitNetwork
-from network_wrangler import ProjectCard
+from projectcard import ProjectCard
 from network_wrangler import RoadwayNetwork
 
 """
@@ -317,10 +317,9 @@ def test_transit_road_consistencies(request):
     STPAUL_NODE_FILE = os.path.join(STPAUL_DIR, "node.geojson")
 
     road_net = RoadwayNetwork.read(
-        link_file=STPAUL_LINK_FILE,
-        node_file=STPAUL_NODE_FILE,
-        shape_file=STPAUL_SHAPE_FILE,
-        fast=True,
+        links_file=STPAUL_LINK_FILE,
+        nodes_file=STPAUL_NODE_FILE,
+        shapes_file=STPAUL_SHAPE_FILE,
     )
 
     net.set_roadnet(road_net=road_net)

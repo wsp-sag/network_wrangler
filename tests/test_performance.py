@@ -16,10 +16,9 @@ SHAPES = os.path.join(EX_DIR, "shape.geojson")
 def read_ex_net(benchmark):
     benchmark(
         RoadwayNetwork.read(
-            link_file=LINKS,
-            node_file=NODES,
-            shape_file=SHAPES,
-            fast=True,
+            links_file=LINKS,
+            nodes_file=NODES,
+            shapes_file=SHAPES,
         )
     )
 
@@ -35,7 +34,6 @@ def test_read_net_speed(benchmark):
         link_file=LINKS,
         node_file=NODES,
         shape_file=SHAPES,
-        fast=True,
     )
     print("read net")
     net2 = benchmark(copy_net(net))

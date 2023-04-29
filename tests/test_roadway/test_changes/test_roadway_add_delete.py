@@ -3,14 +3,11 @@ import os
 
 import pytest
 
-import pandas as pd
-
-from network_wrangler import ProjectCard
-from network_wrangler import RoadwayNetwork
+from projectcard import ProjectCard
 from network_wrangler import WranglerLogger
 
 """
-Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_roadway_add_delete.py`
+Usage:  `pytest tests/test_roadway/test_changes/test_roadway_add_delete.py`
 """
 
 

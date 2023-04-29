@@ -1,12 +1,8 @@
 import copy
 import os
 
-import pytest
-
-import pandas as pd
-
 from network_wrangler import WranglerLogger
-from network_wrangler import ProjectCard
+from projectcard  import ProjectCard
 
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_pycode.py`

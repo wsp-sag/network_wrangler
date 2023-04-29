@@ -497,7 +497,6 @@ class TransitNetwork(object):
 
         .. todo:: Fill out this method.
         """
-        existing_shapes = self.feed.shapes
         msg = "_graph_shapes() not implemented yet."
         WranglerLogger.error(msg)
         raise NotImplementedError(msg)
@@ -516,7 +515,6 @@ class TransitNetwork(object):
         """
         .. todo:: Fill out this method.
         """
-        existing_stops = self.feed.stops
         msg = "_graph_stops() not implemented yet."
         WranglerLogger.error(msg)
         raise NotImplementedError(msg)
@@ -905,7 +903,7 @@ class TransitNetwork(object):
                     [
                         this_shape.iloc[:index_replacement_starts],
                         new_shape_rows,
-                        this_shape.iloc[index_replacement_ends + 1 :],
+                        this_shape.iloc[index_replacement_ends + 1:],
                     ],
                     ignore_index=True,
                     sort=False,
@@ -1015,7 +1013,7 @@ class TransitNetwork(object):
                         [
                             this_stoptime.iloc[:index_replacement_starts],
                             new_stoptime_rows,
-                            this_stoptime.iloc[index_replacement_ends + 1 :],
+                            this_stoptime.iloc[index_replacement_ends + 1:],
                         ],
                         ignore_index=True,
                         sort=False,

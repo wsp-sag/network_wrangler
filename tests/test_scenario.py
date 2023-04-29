@@ -4,9 +4,7 @@ import subprocess
 
 import pytest
 
-from network_wrangler import ProjectCard
-from network_wrangler import RoadwayNetwork
-from network_wrangler import TransitNetwork
+from projectcard import ProjectCard
 from network_wrangler import Scenario
 from network_wrangler.scenario import (
     ScenarioConflictError,
@@ -103,7 +101,9 @@ def test_scenario_corequisites(request):
 
 @pytest.mark.menow
 def test_scenario_prerequisites(request):
-    """Shouldn't be able to apply projects if they don't have their pre-requisites applied first."""
+    """
+    Shouldn't be able to apply projects if they don't have their pre-requisites applied first
+    """
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     project_a = ProjectCard(
@@ -119,8 +119,6 @@ def test_scenario_prerequisites(request):
     project_d = ProjectCard(
         {"project": "project d", "dependencies": {"prerequisites": ["project b"]}}
     )
-
-    expected_project_queue = ["project c", "project b", "project a", "project d"]
     scen = Scenario.create_scenario(
         base_scenario={}, project_card_list=[project_a], validate=False
     )
@@ -173,8 +171,9 @@ def test_project_sort(request):
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
+
 @pytest.mark.menow
-def test_apply_summary_wrappers(request, stpaul_card_dir,stpaul_base_scenario):
+def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_base_scenario):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     card_files = [
@@ -184,14 +183,12 @@ def test_apply_summary_wrappers(request, stpaul_card_dir,stpaul_base_scenario):
     ]
 
     project_card_path_list = [
-        os.path.join(stpaul_card_dir, filename)
-        for filename in card_files
+        os.path.join(stpaul_card_dir, filename) for filename in card_files
     ]
 
-    
-
     my_scenario = Scenario.create_scenario(
-        base_scenario=stpaul_base_scenario, project_card_file_list=project_card_path_list
+        base_scenario=stpaul_base_scenario,
+        project_card_file_list=project_card_path_list,
     )
 
     my_scenario.apply_all_projects()

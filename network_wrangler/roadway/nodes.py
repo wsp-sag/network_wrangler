@@ -1,8 +1,8 @@
 import json
 import os
 
-from dataclasses import asdict, dataclass, field
-from typing import Union
+from dataclasses import dataclass, field
+from typing import Union, Optional
 
 import geopandas as gpd
 import pandas as pd
@@ -11,19 +11,19 @@ import pandera as pa
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
-from pandas import Series
 from pandera import check_input, check_output, DataFrameModel
+from pandera.typing import Series
+from pandera.typing.geopandas import GeoSeries
 from shapely.geometry import Point
 
 from ..logger import WranglerLogger
-from ..utils import line_string_from_location_references
 
 
 @dataclass
 class NodesParams:
     primary_key: str = field(default="model_node_id")
-    _addtl_unique_ids: list[str] = field(default_factory=list, default=["osm_node_id"])
-    source_file: str
+    _addtl_unique_ids: list[str] = field(default_factory= lambda: ["osm_node_id"])
+    source_file: str = field(default = None)
 
     @property
     def idx_col(self):
@@ -46,11 +46,11 @@ class NodesSchema(DataFrameModel):
     drive_node: Series[bool] = pa.Field(coerce=True)
     walk_node: Series[bool] = pa.Field(coerce=True)
     bike_node: Series[bool] = pa.Field(coerce=True)
-    geometry: Series = pa.Field(required=True)
-    X: Series[float] = pa.Field(required=True)
-    Y: Series[float] = pa.Field(required=True)
+    geometry: GeoSeries
+    X: Series[float] = pa.Field(coerce=True)
+    Y: Series[float] = pa.Field(coerce=True)
 
-    osm_node_id: Series[str] = pa.Field(coerce=True, required=False, unique=True)
+    osm_node_id: Optional[Series[str]] = pa.Field(coerce=True, unique=True)
 
     @pa.dataframe_check
     def unique_ab(cls, df: pd.DataFrame) -> bool:
@@ -80,8 +80,8 @@ def read_nodes(
         Point(g["geometry"]["coordinates"]) for g in node_geojson["features"]
     ]
     nodes_df = gpd.GeoDataFrame(node_properties, geometry=node_geometries)
-    nodes_params.source_file = filename
     nodes_df = df_to_nodes_df(nodes_df, crs=crs, nodes_params=nodes_params)
+    nodes_params.source_file = filename
 
     return nodes_df
 

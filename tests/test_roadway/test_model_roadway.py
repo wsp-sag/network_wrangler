@@ -1,20 +1,8 @@
 import copy
 import os
 
-import pytest
-
-import pandas as pd
-
-from network_wrangler import ProjectCard
-from network_wrangler import RoadwayNetwork
-from network_wrangler.roadway import ModelRoadway
-from network_wrangler.roadway import create_managed_lane_network
-from network_wrangler.roadway.model_roadway import (
-    _link_id_to_managed_lane_link_id,
-    _access_model_link_id,
-    _egress_model_link_id,
-    MANAGED_LANES_LINK_ID_SCALAR,
-)
+from projectcard import ProjectCard
+from network_wrangler.roadway import ModelRoadwayNetwork
 from network_wrangler import WranglerLogger
 
 
@@ -45,7 +33,7 @@ def test_add_adhoc_managed_lane_field(request, small_net):
     net.links_df["managed"].iloc[SELECTED_LINK_INDEX] = 1
 
     _model_link_id = net.links_df["model_link_id"].iloc[SELECTED_LINK_INDEX]
-    _ml_model_link_id = _link_id_to_managed_lane_link_id(_model_link_id)
+    
     WranglerLogger.debug(
         f"model_link_id: {_model_link_id}\nml_model_link_id: {_ml_model_link_id}"
     )
@@ -61,7 +49,8 @@ def test_add_adhoc_managed_lane_field(request, small_net):
     ]
     WranglerLogger.debug(f"Network with field.\n{net.links_df[ _display_cols]}")
 
-    m_net = ModelRoadway(net)
+    m_net = net.model_net
+    _ml_model_link_id = m_net._link_id_to_managed_lane_link_id(_model_link_id)
 
     _display_cols = ["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]
     WranglerLogger.debug(f"Managed Lane Network\n{m_net.m_links_df[_display_cols]}")
@@ -131,12 +120,11 @@ def test_create_ml_network_shape(request, small_net):
     _orig_shapes_count = len(net.shapes_df)
 
     net = net.apply(project_card_dictionary)
-    m_net = ModelRoadway(net)
 
     base_model_link_ids = project_card_dictionary["facility"]["links"][0][
         "model_link_id"
     ]
-    ml_model_link_ids = [MANAGED_LANES_LINK_ID_SCALAR + x for x in base_model_link_ids]
+    ml_model_link_ids = [net.model_net.managed_lanes_link_id_scalar+ x for x in base_model_link_ids]
     access_model_link_ids = [
         sum(x) + 1 for x in zip(base_model_link_ids, ml_model_link_ids)
     ]
@@ -144,19 +132,23 @@ def test_create_ml_network_shape(request, small_net):
         sum(x) + 2 for x in zip(base_model_link_ids, ml_model_link_ids)
     ]
 
-    gp_links = net.m_links_df[net.m_links_df["model_link_id"].isin(base_model_link_ids)]
-    ml_links = net.m_links_df[net.m_links_df["model_link_id"].isin(ml_model_link_ids)]
+    gp_links = net.model_net.m_links_df[
+        net.model_net.m_links_df["model_link_id"].isin(base_model_link_ids)
+    ]
+    ml_links = net.model_net.m_links_df[
+        net.model_net.m_links_df["model_link_id"].isin(ml_model_link_ids)
+    ]
     access_links = net.m_links_df[
-        net.m_links_df["model_link_id"].isin(access_model_link_ids)
+        net.model_net.m_links_df["model_link_id"].isin(access_model_link_ids)
     ]
     egress_links = net.m_links_df[
-        net.m_links_df["model_link_id"].isin(egress_model_link_ids)
+        net.model_net.m_links_df["model_link_id"].isin(egress_model_link_ids)
     ]
 
     _num_added_links = len(net.links_df) - _orig_links_count
     _num_added_shapes = len(net.shapes_df) - _orig_shapes_count
 
-    ## 1 Num Added links == added shapes
+    # 1 Num Added links == added shapes
     assert _num_added_links == _num_added_shapes
 
     # 2 new ML links, each ML link has 2 more access/egress links for total of 3 links per ML link
@@ -172,15 +164,21 @@ def test_create_ml_network_shape(request, small_net):
         \n***Egress Links\n{egress_links[_display_c]}"
     )
     assert len(
-        net.m_links_df[net.m_links_df["model_link_id"].isin(ml_model_link_ids)]
+        net.model_net.m_links_df[
+            net.model_net.m_links_df["model_link_id"].isin(ml_model_link_ids)
+        ]
     ) == len(ml_model_link_ids)
 
     assert len(
-        net.m_links_df[net.m_links_df["model_link_id"].isin(access_model_link_ids)]
+        net.model_net.m_links_df[
+            net.model_net.m_links_df["model_link_id"].isin(access_model_link_ids)
+        ]
     ) == len(access_model_link_ids)
 
     assert len(
-        net.m_links_df[net.m_links_df["model_link_id"].isin(egress_model_link_ids)]
+        net.model_net.m_links_df[
+            net.model_net.m_links_df["model_link_id"].isin(egress_model_link_ids)
+        ]
     ) == len(egress_model_link_ids)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -199,15 +197,14 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
         net.select_roadway_features(project_card.facility), project_card.properties
     )
     WranglerLogger.debug(f"{len(net.nodes_df)} Nodes in network")
-    net = create_managed_lane_network(net)
 
     # with 'all' as access/egress, there would be total of 8 connector links (4 access, 4 egress)
     # with restricted access/egress, this project card should create 4 connector links
 
     dummy_links_df = net.m_links_df[
-        (net.m_links_df["roadway"].isin(["ml_access", "ml_egress"]))
+        (net.model_net.m_links_df["roadway"].isin(["ml_access", "ml_egress"]))
     ]
-    dummy_links_count = len(dummy_links_df)
+
     WranglerLogger.debug(f"Dummy Links:\n {dummy_links_df}")
 
     pcard_gp_link_ids = project_card.__dict__["facility"]["links"][0]["model_link_id"]
@@ -224,15 +221,19 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
     ][0]
 
     expected_ml_link_ids = [
-        _link_id_to_managed_lane_link_id(x) for x in pcard_gp_link_ids
+        net.model_net._link_id_to_managed_lane_link_id(x) for x in pcard_gp_link_ids
     ]
-    expected_access_link_ids = [_access_model_link_id(x) for x in pcard_gp_link_ids]
-    expected_egress_link_ids = [_egress_model_link_id(x) for x in pcard_gp_link_ids]
+    expected_access_link_ids = [net.model_net._access_model_link_id(x) for x in pcard_gp_link_ids]
+    expected_egress_link_ids = [net.model_net._egress_model_link_id(x) for x in pcard_gp_link_ids]
 
-    net_gp_links = net.m_links_df.loc[net.m_links_df["managed"] == -1]
-    net_ml_links = net.m_links_df.loc[net.m_links_df["managed"] == 1]
-    net_access_links = net.m_links_df.loc[net.m_links_df["roadway"] == "ml_access"]
-    net_egress_links = net.m_links_df.loc[net.m_links_df["roadway"] == "ml_egress"]
+    net_gp_links = net.model_net.m_links_df.loc[net.m_links_df["managed"] == -1]
+    net_ml_links = net.model_net.m_links_df.loc[net.m_links_df["managed"] == 1]
+    net_access_links = net.model_netm_links_df.loc[
+        net.m_links_df["roadway"] == "ml_access"
+    ]
+    net_egress_links = net.model_netm_links_df.loc[
+        net.m_links_df["roadway"] == "ml_egress"
+    ]
 
     _display_c = ["model_link_id", "roadway", "A", "B", "shape_id", "name"]
 

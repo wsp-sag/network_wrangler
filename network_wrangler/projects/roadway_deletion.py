@@ -1,10 +1,6 @@
-from typing import Collection
-
 import pandas as pd
 
 from ..logger import WranglerLogger
-
-apply_roadway_deletion
 
 
 def apply_roadway_deletion(
@@ -64,7 +60,8 @@ def _delete_links(
                 roadway_net.links_df[roadway_net.links_df.params.primary_key]
             )
         ]
-        msg = f"Following links cannot be deleted because they are not in the network: {_missing_links}"
+        msg = f"Following links cannot be deleted because they are not in the network:\
+              {_missing_links}"
         if len(_missing_links) and ignore_missing:
             WranglerLogger.warning(msg)
         elif len(_missing_links):
@@ -75,7 +72,8 @@ def _delete_links(
         WranglerLogger.warning("No links found matching criteria to delete.")
         return
     WranglerLogger.debug(
-        f"Deleting following links:\n{roadway_net.links_df.loc[_del_links_mask][['A','B','model_link_id']]}"
+        f"Deleting following links:\n\
+            {roadway_net.links_df.loc[_del_links_mask][['A','B','model_link_id']]}"
     )
     roadway_net.links_df = roadway_net.links_df.loc[~_del_links_mask]
 
@@ -118,7 +116,8 @@ def _delete_nodes(
     )
     if len(_links_with_nodes):
         WranglerLogger.error(
-            f"Node deletion failed because being used in following links:\n{_links_with_nodes[roadway_net.links_df.params.fks_to_nodes]}"
+            f"Node deletion failed because being used in following links:\
+            \n{_links_with_nodes[roadway_net.links_df.params.fks_to_nodes]}"
         )
         raise ValueError
 
@@ -130,7 +129,8 @@ def _delete_nodes(
                 roadway_net.nodes_df[roadway_net.nodes_df.params.primary_key]
             )
         ]
-        msg = f"Following nodes cannot be deleted because they are not in the network: {_missing_nodes}"
+        msg = f"Following nodes cannot be deleted because they are not in the network:\
+              {_missing_nodes}"
         if len(_missing_nodes) and ignore_missing:
             WranglerLogger.warning(msg)
         elif len(_missing_nodes):

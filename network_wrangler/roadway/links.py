@@ -1,8 +1,8 @@
 import json
 import os
 
-from dataclasses import asdict, dataclass, field
-from typing import Union
+from dataclasses import dataclass, field
+from typing import Union, Mapping, Any, Optional
 
 import geopandas as gpd
 import pandas as pd
@@ -11,8 +11,10 @@ import pandera as pa
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
-from pandas import Series
+
 from pandera import check_input, check_output, DataFrameModel
+from pandera.typing import Series
+from pandera.typing.geopandas import GeoSeries
 
 from ..logger import WranglerLogger
 from ..utils import line_string_from_location_references
@@ -21,14 +23,14 @@ from ..utils import line_string_from_location_references
 @dataclass
 class LinksParams:
     primary_key: str = field(default="model_link_id")
-    _addtl_unique_ids: list[str] = field(default_factory=list, default=[])
+    _addtl_unique_ids: list[str] = field(default_factory=lambda: [])
     _addtl_explicit_ids: list[str] = field(
-        default_factory=list, default=["osm_link_id"]
+        default_factory= lambda: ["osm_link_id"]
     )
     from_node: str = field(default="A")
     to_node: str = field(default="B")
     fk_to_shape: str = field(default="shape_id")
-    source_file: str
+    source_file: str = field(default=None)
 
     @property
     def idx_col(self):
@@ -46,15 +48,23 @@ class LinksParams:
     def explicit_ids(self):
         return list(set(self.unique_ids + self.p_addtl_explicit_ids))
 
+MODES_TO_NETWORK_LINK_VARIABLES = {
+    "drive": ["drive_access"],
+    "bus": ["bus_only", "drive_access"],
+    "rail": ["rail_only"],
+    "transit": ["bus_only", "rail_only", "drive_access"],
+    "walk": ["walk_access"],
+    "bike": ["bike_access"],
+}
 
 class LinksSchema(DataFrameModel):
     """Datamodel used to validate if links_df is of correct format and types."""
 
     model_link_id: Series[int] = pa.Field(coerce=True, unique=True)
-    A: Series = pa.Field()
-    B: Series = pa.Field()
-    geometry: Series = pa.Field(required=True)
-    name: Series[str] = pa.Field(required=True)
+    A: Series[Any] = pa.Field()
+    B: Series[Any] = pa.Field()
+    geometry: GeoSeries = pa.Field()
+    name: Series[str] = pa.Field()
     rail_only: Series[bool] = pa.Field(coerce=True)
     bus_only: Series[bool] = pa.Field(coerce=True)
     drive_access: Series[bool] = pa.Field(coerce=True)
@@ -65,9 +75,9 @@ class LinksSchema(DataFrameModel):
     roadway: Series[str] = pa.Field()
     lanes: Series[int] = pa.Field(coerce=True)
 
-    osm_link_id: Series[str] = pa.Field(coerce=True, required=False)
-    locationReferences: Series[list] = pa.Field(required=False)
-    shape_id: Series[bool] = pa.Field(coerce=True, required=False, unique=True)
+    osm_link_id: Optional[Series[str]] = pa.Field(coerce=True)
+    locationReferences: Optional[Series]
+    shape_id: Optional[Series[bool]] = pa.Field(coerce=True, unique=True)
 
     @pa.dataframe_check
     def unique_ab(cls, df: pd.DataFrame) -> bool:
@@ -96,8 +106,8 @@ def read_links(
         line_string_from_location_references(g["locationReferences"]) for g in link_json
     ]
     links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
-    links_params.source_file = filename
     links_df = df_to_links_df(links_df, crs=crs, links_params=links_params)
+    links_params.source_file = filename
 
     return links_df
 
@@ -124,10 +134,10 @@ def df_to_links_df(
     links_df.gdf_name = "network_links"
 
     # make link parameters available as a dataframe property
-    if link_params is None:
-        link_params = LinksParams()
+    if links_params is None:
+        links_params = LinksParams()
 
-    links_df.__dict__["params"] = link_params
+    links_df.__dict__["params"] = links_params
 
     links_df[links_df.params.idx_col] = links_df[links_df.primary_key]
     links_df.set_index(links_df.params.idx_col, inplace=True)
@@ -166,3 +176,64 @@ def validate_wrangler_links_file(
         WranglerLogger.error(json.dumps(exc.message, indent=2))
 
     return False
+
+@pd.api.extensions.register_dataframe_accessor("mode_query")
+class ModeLinkAccessor:
+    def __init__(self, pandas_obj):
+        self._obj = pandas_obj
+
+    def __call__(self,modes:list,str):
+        # filter the rows where drive_access is True
+        if isinstance(modes,str):
+            modes = [modes]
+        _mode_link_props = list(
+            set([m for m in modes for m in MODES_TO_NETWORK_LINK_VARIABLES[m]])
+        )
+        modal_links_df = self._obj.loc[self._obj[_mode_link_props].any(axis=1)]
+        return  modal_links_df
+
+@pd.api.extensions.register_dataframe_accessor("dict_query")
+class DictQueryAccessor:
+    def __init__(self, pandas_obj):
+        self._obj = pandas_obj
+
+    def __call__(self,selection_dict:dict):
+        # filter the rows where drive_access is True
+        _sel_query = dict_to_query(selection_dict)
+        q_links_df = self.net.links_df.query(_sel_query, engine="python")
+        if len(q_links_df) == 0:
+            WranglerLogger.warning(f"No links found using selection: {selection_dict}")
+        return q_links_df
+
+
+def dict_to_query(
+    selection_dict: Mapping[str, Any],
+) -> str:
+    """Generates the query of from selection_dict.
+
+    Args:
+        selection_dict: selection dictionary
+
+    Returns:
+        _type_: Query value
+    """
+    WranglerLogger.debug("Building selection query")
+
+    def _kv_to_query_part(k, v, _q_part=""):
+        if isinstance(v, list):
+            _q_part += "(" + " or ".join([_kv_to_query_part(k, i) for i in v]) + ")"
+            return _q_part
+        if isinstance(v, str):
+            return k + '.str.contains("' + v + '")'
+        else:
+            return k + "==" + str(v)
+
+    query = (
+        "("
+        + " and ".join([_kv_to_query_part(k, v) for k, v in selection_dict.items()])
+        + ")"
+    )
+    WranglerLogger.debug(f"Selection query:\n{query}")
+    return query
+
+

@@ -1,28 +1,28 @@
 import json
 import os
 
-from dataclasses import asdict, dataclass, field
-from typing import Union
+from dataclasses import dataclass, field
+from typing import Union, Any
 
 import geopandas as gpd
-import pandas as pd
 import pandera as pa
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
-from pandas import Series
+
 from pandera import check_input, check_output, DataFrameModel
+from pandera.typing import Series
+from pandera.typing.geopandas import GeoSeries
 
 from ..logger import WranglerLogger
-from ..utils import line_string_from_location_references
 
 
 @dataclass
 class ShapesParams:
     primary_key: str = field(default="shape_id")
-    _addtl_unique_ids: list[str] = field(default_factory=list, default=[])
-    source_file: str
+    _addtl_unique_ids: list[str] = field(default_factory= lambda: [])
+    source_file: str = field(default = None)
 
     @property
     def idx_col(self):
@@ -36,7 +36,8 @@ class ShapesParams:
 class ShapesSchema(DataFrameModel):
     """Datamodel used to validate if links_df is of correct format and types."""
 
-    shape_id: Series = pa.Field(coerce=True, unique=True, default="shape_id")
+    shape_id: Series[Any] = pa.Field(unique=True)
+    geometry: GeoSeries
 
 
 @check_output(ShapesSchema)
@@ -55,10 +56,10 @@ def read_shapes(
     """
     WranglerLogger.info(f"Reading shapes from {filename}.")
     with open(filename) as f:
-        shapes_df = gpd.read_file(filename)
+        shapes_df = gpd.read_file(f)
     shapes_df.dropna(subset=["geometry", "id"], inplace=True)
-    shapes_params.source_file = filename
     shapes_df = df_to_shapes_df(shapes_df, crs=crs, shapes_params=shapes_params)
+    shapes_params.source_file = filename
 
     return shapes_df
 

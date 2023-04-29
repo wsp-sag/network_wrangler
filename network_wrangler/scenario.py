@@ -54,10 +54,9 @@ class Scenario(object):
     ```python
     my_base_year_scenario = {
         "road_net": RoadwayNetwork.read(
-            link_file=STPAUL_LINK_FILE,
-            node_file=STPAUL_NODE_FILE,
-            shape_file=STPAUL_SHAPE_FILE,
-            fast=True,
+            links_file=STPAUL_LINK_FILE,
+            nodes_file=STPAUL_NODE_FILE,
+            shapes_file=STPAUL_SHAPE_FILE,
         ),
         "transit_net": TransitNetwork.read(STPAUL_DIR),
     }
@@ -289,7 +288,8 @@ class Scenario(object):
         if validate:
             if not project_card.__dict__.get("file", None):
                 WranglerLogger.warning(
-                    f"Could not validate Project Card {project_card.project} because no file specified"
+                    f"Could not validate Project Card {project_card.project} because \
+                        no file specified"
                 )
                 return
             project_card.validate_project_card_schema(project_card.file)
@@ -386,7 +386,8 @@ class Scenario(object):
         )
 
     def _check_projects_requirements_satisfied(self, project_list: Collection[str]):
-        """Checks that all requirements are satisified to apply this specific set of projects including:
+        """Checks that all requirements are satisified to apply this specific set of projects
+        including:
 
         1. has an associaed project card
         2. is in scenario's planned projects
@@ -428,7 +429,8 @@ class Scenario(object):
         return True
 
     def _check_projects_prerequisites(self, project_names: str) -> None:
-        """Checks that list of projects' pre-requisites have been or will be applied to scenario."""
+        """Checks that list of projects' pre-requisites have been or will be applied to scenario.
+        """
         if set(project_names).isdisjoint(set(self.prerequisites.keys())):
             return
         _prereqs = []
@@ -438,14 +440,16 @@ class Scenario(object):
         _missing = list(set(_prereqs) - set(_projects_applied))
         if _missing:
             WranglerLogger.debug(
-                f"project_names: {project_names}\nprojects_have_or_will_be_applied:{_projects_applied}\nmissing: {_missing}"
+                f"project_names: {project_names}\nprojects_have_or_will_be_applied:\
+                    {_projects_applied}\nmissing: {_missing}"
             )
             raise ScenarioPrerequisiteError(
                 f"Missing {len(_missing)} pre-requisites: {_missing}"
             )
 
     def _check_projects_corequisites(self, project_names: str) -> None:
-        """Checks that a list of projects' co-requisites have been or will be applied to scenario."""
+        """Checks that a list of projects' co-requisites have been or will be applied to scenario.
+        """
         if set(project_names).isdisjoint(set(self.corequisites.keys())):
             return
         _coreqs = []
@@ -455,7 +459,8 @@ class Scenario(object):
         _missing = list(set(_coreqs) - set(_projects_applied))
         if _missing:
             WranglerLogger.debug(
-                f"project_names: {project_names}\nprojects_have_or_will_be_applied:{_projects_applied}\nmissing: {_missing}"
+                f"project_names: {project_names}\nprojects_have_or_will_be_applied:\
+                    {_projects_applied}\nmissing: {_missing}"
             )
             raise ScenarioCorequisiteError(
                 f"Missing {len(_missing)} corequisites: {_missing}"
@@ -771,7 +776,9 @@ def project_card_files_from_directory(
         )
 
     if glob_search:
-        WranglerLogger.debug(f"Finding project cards using glob search: {glob_search} in {search_dir}")
+        WranglerLogger.debug(
+            f"Finding project cards using glob search: {glob_search} in {search_dir}"
+        )
         for f in glob.iglob(os.path.join(search_dir, glob_search)):
             # Path.suffix returns string starting with .
             if not Path(f).suffix[1:] in ProjectCard.FILE_TYPES:
@@ -821,10 +828,9 @@ def create_base_scenario(
         base_network_node_file = base_node_name
 
     road_net = RoadwayNetwork.read(
-        link_file=base_network_link_file,
-        node_file=base_network_node_file,
-        shape_file=base_network_shape_file,
-        fast=not validate,
+        links_file=base_network_link_file,
+        nodes_file=base_network_node_file,
+        shapes_file=base_network_shape_file,
     )
 
     if transit_dir:

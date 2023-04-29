@@ -152,7 +152,8 @@ def line_string_from_location_references(location_references: list):
     Creates a geometry as a LineString using a list of location references.
     """
     # WranglerLogger.debug(
-    #    f"line_string_from_location_references.location_references: {[lr['point'] for lr in location_references]}."
+    #    f"line_string_from_location_references.location_references: {[lr['point'] for lr in\
+    #  location_references]}."
     #    )
     return LineString([lr["point"] for lr in location_references])
 
@@ -169,7 +170,8 @@ def point_from_xy(x, y, xy_crs: int = 4326, point_crs: int = 4326):
         x: x coordinate, in xy_crs
         y: y coordinate, in xy_crs
         xy_crs: coordinate reference system in ESPG code for x/y inputs. Defaults to 4326 (WGS84)
-        point_crs: coordinate reference system in ESPG code for point output. Defaults to 4326 (WGS84)
+        point_crs: coordinate reference system in ESPG code for point output. 
+            Defaults to 4326 (WGS84)
 
     Returns: Shapely Point in point_crs
     """

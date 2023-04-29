@@ -2,13 +2,14 @@ import copy
 
 import pandas as pd
 
-from .segment import SP_WEIGHT_COL, SP_WEIGHT_FACTOR, MAX_SEARCH_BREADTH
-from .selection import dict_to_query
 from .graph import links_nodes_to_ox_graph
 from ..logger import WranglerLogger
 
 
 class SubnetExpansionError(Exception):
+    pass
+
+class SubnetCreationError(Exception):
     pass
 
 
@@ -52,9 +53,9 @@ class Subnet:
         subnet_links_df: pd.DataFrame = None,
         selection_dict: dict = None,
         i: int = 0,
-        sp_weight_col: str = SP_WEIGHT_COL,
-        sp_weight_factor=SP_WEIGHT_FACTOR,
-        max_search_breadth=MAX_SEARCH_BREADTH,
+        sp_weight_col: str = "weight",
+        sp_weight_factor=1,
+        max_search_breadth=10,
     ):
         """Generates and returns a Subnet object.
 
@@ -63,7 +64,7 @@ class Subnet:
             subnet_links_df (pd.DataFrame, optional): Initial links to include in subnet.
                 Optional if define a selection_dict and will default to result of
                 self.generate_subnet_from_selection_dict(selection_dict)
-            selection_dict (dict, optional): Selection dictionary for initial links to include in
+            selection_dict (dict optional): RoadwaySelection dictionary for initial links to include in
                 subnet.
 
                 Example:
@@ -78,14 +79,12 @@ class Subnet:
             i (int, optional): Expansion iteration number. Shouldn't need to change this.
                 Defaults to 0.
             sp_weight_col (str, optional): Column to use for weights in shortest path.  Will not
-                likely need to be changed. Defaults to SP_WEIGHT_COL which defaults to `i`.
+                likely need to be changed. Defaults to "weight"".
             sp_weight_factor (int, optional): Factor to multiply sp_weight_col by to use for
-                weights in shortest path.  Will not likely need to be changed. Defaults to
-                SP_WEIGHT_FACTOR which defaults to `100`.
+                weights in shortest path.  Will not likely need to be changed. Defaults to 1`.
             max_search_breadth (int, optional):Maximum expansions of the subnet network to find
                 the shortest path after the initial selection based on `name`. Will not likely
-                need to be changed unless network contains a lot of ambiguity. Defaults to
-                MAX_SEARCH_BREADTH which defaults to 10.
+                need to be changed unless network contains a lot of ambiguity. Defaults to 10.
 
         Raises:
             ValueError: _description_
@@ -96,9 +95,8 @@ class Subnet:
 
         if self.subnet_links_df is None:
             if self.selection_dict is None:
-                raise ValueError(
-                    "Must specify either subnet_links_df or selection_dict"
-                )
+                raise SubnetCreationError("Cannot create a subnet without one of subnet_links_df\
+                                           or seleciton_dict")
             self.subnet_links_df = self.generate_subnet_from_selection_dict(
                 selection_dict
             )
@@ -138,7 +136,7 @@ class Subnet:
             raise ValueError(
                 "Must set self.subnet_links_df before accessing subnet_nodes."
             )
-        return self.net.nodes_in_links(self.subnet_links_df)
+        return self.net.node_ids_in_links(self.subnet_links_df)
 
     @property
     def subnet_nodes_df(self):
@@ -150,8 +148,7 @@ class Subnet:
     ) -> "Subnet":
         WranglerLogger.debug("Generating subnet from selection dict.")
 
-        _sel_query = dict_to_query(selection_dict)
-        _subnet_links_df = self.net.links_df.query(_sel_query, engine="python")
+        _subnet_links_df = copy.deepcopy(self.net.links_df.dict_query(selection_dict))
         _subnet_links_df["i"] = 0
         if len(_subnet_links_df) == 0:
             WranglerLogger.warning(f"No links found using selection: {selection_dict}")

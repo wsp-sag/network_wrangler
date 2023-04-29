@@ -1,19 +1,12 @@
 import pandas as pd
-from geopandas import GeoDataFrame
 
 import copy
 import hashlib
-from typing import Any, Collection, Mapping
+from typing import Any, Mapping
 
 from ..logger import WranglerLogger
 from ..utils import delete_keys_from_dict
 from .segment import Segment
-from .graph import (
-    shortest_path,
-    links_nodes_to_ox_graph,
-    SP_WEIGHT_COL,
-    SP_WEIGHT_FACTOR,
-)
 
 
 class SelectionFormatError(Exception):
@@ -33,15 +26,6 @@ LINK_PROJECT_CARD_KEYS = [
     "link",
 ]
 
-MODES_TO_NETWORK_LINK_VARIABLES = {
-    "drive": ["drive_access"],
-    "bus": ["bus_only", "drive_access"],
-    "rail": ["rail_only"],
-    "transit": ["bus_only", "rail_only", "drive_access"],
-    "walk": ["walk_access"],
-    "bike": ["bike_access"],
-}
-
 MODES_TO_NETWORK_NODE_VARIABLES = {
     "drive": ["drive_node"],
     "rail": ["rail_only", "drive_node"],
@@ -50,7 +34,6 @@ MODES_TO_NETWORK_NODE_VARIABLES = {
     "walk": ["walk_node"],
     "bike": ["bike_node"],
 }
-
 
 class RoadwaySelection:
     """_summary_
@@ -101,8 +84,8 @@ class RoadwaySelection:
 
     @property
     def segment(self):
-        if self._segment is None and self.type is "segment_search":
-            self._segment = Segment(self.net, self.selection_dict)
+        if self._segment is None and self.type == "segment_search":
+            self._segment = Segment(self.net, self)
         return self._segment
 
     @property
@@ -116,7 +99,7 @@ class RoadwaySelection:
             if isinstance(i, dict):
                 _props += list(i.keys())
             if isinstance(i, list):
-                props += [x for d in i for x in d.keys()]
+                _props += [x for d in i for x in d.keys()]
         return list(set(_props))
 
     @property
@@ -132,7 +115,7 @@ class RoadwaySelection:
             if isinstance(i, dict):
                 _props += list(i.keys())
             if isinstance(i, list):
-                props += [x for d in i for x in d.keys()]
+                _props += [x for d in i for x in d.keys()]
         return list(set(_props))
 
     @staticmethod
@@ -179,21 +162,22 @@ class RoadwaySelection:
                 f"Expected one of: {net.links_df.params.unique_ids} or A, B, name or O, D, name"
             )
             raise SelectionFormatError(
-                "Don't believe selection is valid - can't find a unique id or A, B, Name or O,D name"
+                "Don't believe selection is valid - can't find a unique id or A, B, \
+                    Name or O,D name"
             )
 
     def select_links(self):
-        if self.selection_type is "unique_link_id":
+        if self.selection_type == "unique_link_id":
             _initial_selected_links_df = self._select_unique_link_id()
-        elif self.selection_type is "segment_search":
+        elif self.selection_type == "segment_search":
             _initial_selected_links_df = copy.deepcopy(self.segment.segment_links_df)
-        elif self.selecton_type is "all_links":
+        elif self.selecton_type == "all_links":
             _initial_selected_links_df = copy.deepcopy(self.net.links_df)
         else:
             raise SelectionFormatError("Doesn't have known link selection type")
 
         self.selected_links_df = copy.deepcopy(
-            self.property_selection(_initial_selected_links_df, self.selection_dict)
+            _initial_selected_links_df.dict_query(self.selection_dict)
         )
 
     def _validate_node_selection(self) -> bool:
@@ -281,106 +265,3 @@ class RoadwaySelection:
         WranglerLogger.debug(f"Property selection dict:{property_selection_dict}")
         return property_selection_dict
 
-    def property_selection(
-        self, df: pd.DataFrame, selection_dict: dict
-    ) -> pd.DataFrame:
-        """Use selection dictionary w/out non identifying attributesto select dataframe features.
-
-        Args:
-            df: Dataframe of links or nodes to perform property selection on
-            selection_dict): Selection dictionary to use for property selection
-
-        Returns:
-            dict: _description_
-        """
-        _property_selection_dict = self._property_selection_dict(selection_dict)
-        _resel_query = self._dict_to_query(_property_selection_dict)
-
-        WranglerLogger.debug("Selecting based on property:\n{_resel_query}")
-        _selected_df = df.query(_resel_query, engine="python")
-
-        WranglerLogger.debug(f"Selected {len(_selected_df)} of {len(df)}")
-        if len(_selected_df) is 0:
-            raise SelectionError(f"No links found for selection: {selection_dict}")
-        return _selected_df
-
-
-def dict_to_query(
-    selection_dict: Mapping[str, Any],
-) -> str:
-    """Generates the query of from selection_dict.
-
-    Args:
-        selection_dict: selection dictionary
-
-    Returns:
-        _type_: Query value
-    """
-    WranglerLogger.debug("Building selection query")
-
-    def _kv_to_query_part(k, v, _q_part=""):
-        if isinstance(v, list):
-            _q_part += "(" + " or ".join([_kv_to_query_part(k, i) for i in v]) + ")"
-            return _q_part
-        if isinstance(v, str):
-            return k + '.str.contains("' + v + '")'
-        else:
-            return k + "==" + str(v)
-
-    query = (
-        "("
-        + " and ".join([_kv_to_query_part(k, v) for k, v in selection_dict.items()])
-        + ")"
-    )
-    WranglerLogger.debug(f"Selection query:\n{query}")
-    return query
-
-
-def filter_links_by_mode(
-    links_df: pd.DataFrame, modes: list[str] = None
-) -> pd.DataFrame:
-    """Returns nodes and link dataframes for specific mode.
-
-    Args:
-        links_df: DataFrame of standard network links
-        modes: list of the modes of the network to be kept, must be in
-            `drive`,`transit`,`rail`,`bus`,`walk`, `bike`.
-            For example, if bike and walk are selected, both bike and walk links will be kept.
-
-    Returns: DataFrames for links filtered by mode
-    """
-    if not set(modes).issubset(list(MODES_TO_NETWORK_LINK_VARIABLES.keys())):
-        raise SelectionFormatError(
-            f"Modes: {modes} not all in network: {MODES_TO_NETWORK_LINK_VARIABLES.keys()}"
-        )
-
-    _mode_link_props = list(
-        set([m for m in modes for m in MODES_TO_NETWORK_LINK_VARIABLES[m]])
-    )
-    modal_links_df = links_df.loc[links_df[_mode_link_props].any(axis=1)]
-    WranglerLogger.debug(
-        f"Selected {len( modal_links_df )} of {len(links_df)} links that on of modes: {modes}."
-    )
-    return modal_links_df
-
-
-def nodes_in_links(
-    links_df: pd.DataFrame,
-    nodes_df: pd.DataFrame,
-) -> pd.DataFrame:
-    """Filters dataframe for nodes that are in links
-
-    Args:
-        links_df: DataFrame of standard network links
-        nodes_df: DataFrame of standard network nodes
-
-    """
-    _used_nodes = list(
-        set(
-            links_df[links_df.params.from_node].tolist()
-            + links_df[links_df.params.to_node].tolist()
-        )
-    )
-    nodes_in_links = nodes_df.index.isin(_used_nodes)
-    WranglerLogger.debug(f"Selected {len(nodes_in_links)} of {len(nodes_df)} nodes.")
-    return nodes_in_links

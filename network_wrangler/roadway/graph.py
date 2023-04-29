@@ -1,14 +1,11 @@
 import copy
 
-from typing import Collection
-
 import networkx as nx
 import osmnx as ox
 
 from pandas import DataFrame
 from geopandas import GeoDataFrame
 
-from .selection import filter_links_by_mode, nodes_in_links
 from ..logger import WranglerLogger
 
 
@@ -171,12 +168,9 @@ def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
     Returns: networkx: osmnx: DiGraph  of network
     """
 
-    _links_df = filter_links_by_mode(
-        net.links_df,
-        modes=[mode],
-    )
+    _links_df = net.links_df.mode_query(mode)
 
-    _nodes_df = nodes_in_links(
+    _nodes_df = net.nodes_in_links(
         net.links_df,
         net.nodes_df,
     )
@@ -187,7 +181,7 @@ def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
 
 
 def shortest_path(
-    self, G: ox.MultiDiGraph, O_id, D_id, sp_weight_property="weight"
+    self, G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight"
 ) -> tuple:
     """
 

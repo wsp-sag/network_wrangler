@@ -42,6 +42,7 @@ def test_out_dir(test_dir):
         os.mkdir(_test_out_dir)
     return _test_out_dir
 
+
 @pytest.fixture
 def stpaul_base_scenario(stpaul_ex_dir, stpaul_net, stpaul_transit_net):
     base_scenario = {
@@ -49,6 +50,7 @@ def stpaul_base_scenario(stpaul_ex_dir, stpaul_net, stpaul_transit_net):
         "transit_net": copy.deepcopy(stpaul_transit_net),
     }
     return base_scenario
+
 
 @pytest.fixture(scope="session")
 def stpaul_card_dir(stpaul_ex_dir):
@@ -79,16 +81,19 @@ def stpaul_net(stpaul_ex_dir):
     node_filename = os.path.join(stpaul_ex_dir, "node.geojson")
 
     net = RoadwayNetwork.read(
-        link_file=link_filename,
-        node_file=node_filename,
-        shape_file=shape_filename,
+        links_file=link_filename,
+        nodes_file=node_filename,
+        shapes_file=shape_filename,
     )
     return net
+
 
 @pytest.fixture(scope="module")
 def stpaul_transit_net(stpaul_ex_dir):
     from network_wrangler import TransitNetwork
+
     return TransitNetwork.read(stpaul_ex_dir)
+
 
 @pytest.fixture(scope="module")
 def small_net(small_ex_dir):
@@ -99,9 +104,8 @@ def small_net(small_ex_dir):
     node_filename = os.path.join(small_ex_dir, "node.geojson")
 
     net = RoadwayNetwork.read(
-        link_file=link_filename,
-        node_file=node_filename,
-        shape_file=shape_filename,
-        fast=True,
+        links_file=link_filename,
+        nodes_file=node_filename,
+        shapes_file=shape_filename,
     )
     return net

@@ -6,15 +6,10 @@ import pytest
 import pandas as pd
 
 from network_wrangler import WranglerLogger
-from network_wrangler import ProjectCard
-
-from network_wrangler.roadway.model_roadway import (
-    MANAGED_LANES_LINK_ID_SCALAR,
-)
+from projectcard import ProjectCard
 
 """
-Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_feature_change.py`
-To run with print statments, use `pytest -s tests/test_roadway/test_changes/test_feature_change.py`
+Usage `pytest tests/test_roadway/test_changes/test_feature_change.py`
 """
 
 
