@@ -26,23 +26,22 @@ LINK_PROJECT_CARD_KEYS = [
     "link",
 ]
 
-MODES_TO_NETWORK_NODE_VARIABLES = {
-    "drive": ["drive_node"],
-    "rail": ["rail_only", "drive_node"],
-    "bus": ["bus_only", "drive_node"],
-    "transit": ["bus_only", "rail_only", "drive_node"],
-    "walk": ["walk_node"],
-    "bike": ["bike_node"],
-}
 
 class RoadwaySelection:
-    """_summary_
+    """Object to perform and store information about a selection from a project card "facility".
 
     Properties:
-        net:
-        id:
-        type: one of "unique_link_id", "unique_node_id" or "segment_search" or "all_links"
-
+        net: roadway network related to the selection
+        sel_key: unique selection key based on selection dictionary
+        selection_type(str): one of "unique_link_id", "unique_node_id" or "segment_search" or "all_links" or
+            "all_nodes"
+        selected_nodes_df: lazily-evaluated selected node. sDefaults to None if not a
+            nodes selection.
+        selected_links_df: lazily-evaluated selected links. Defaults to None if not a
+            links selection.
+        link_selection(bool): True if selection is for links
+        node_selection(bool): True if selection is for nodes
+        feature_types(list): list of selected features containing  "links" and/or "nodes
     """
 
     def __init__(
@@ -54,39 +53,77 @@ class RoadwaySelection:
     ):
         self.net = net
 
-        # This should make it compatible with old and new project card types
-        self.selection_dict = selection_dict.update(selection_dict.get("links", {}))
-        self.sel_key = RoadwaySelection._assign_selection_key(self.selection_dict)
-        self._net_hash = hash(tuple(net.links_df, net.nodes_df))
-        self.type = self.get_selection_type(self.selection_dict, self.net)
-        self.ignore = ignore + ["O", "D", "A", "B"]
+        self.selection_dict = selection_dict
 
-        self.selected_links_df = None
+        # for older project cards
+        if isinstance(self.selection_dict.get("links"), list):
+            for i in self.selection_dict["links"]:
+                self.selection_dict.update(i)
+
+        WranglerLogger.info(f"self.selection_dict:\n {self.selection_dict}")
+        self.sel_key = RoadwaySelection._assign_selection_key(self.selection_dict)
+
+        self.selection_type = self.get_selection_type(self.selection_dict, self.net)
+
+        self._stored_net_hash = copy.deepcopy(self.net.network_hash)
+        self._selected_links_df = None
+        self._selected_nodes_df = None
         self._segment = None
 
         if additional_requirements:
             for k, v in additional_requirements.items():
                 self.selection_dict[k] = v
 
-        self.validate_to_net()
+        self.validate_selection()
 
     @property
     def selected_links(self) -> list:
-        if not self.found:
+        if self.selected_links_df is None:
             return None
         return self.selected_links_df.index.tolist()
+
+    @property
+    def selected_nodes(self) -> list:
+        if self.selected_nodes_df is None:
+            return None
+        return self.selected_nodes_df.index.tolist()
 
     @property
     def found(self) -> bool:
         if self.selected_links_df is not None:
             return True
+        if self.selected_nodes_df is not None:
+            return True
         return False
 
     @property
     def segment(self):
-        if self._segment is None and self.type == "segment_search":
+        if self._segment is None and self.selection_type == "segment_search":
             self._segment = Segment(self.net, self)
         return self._segment
+
+    @property
+    def link_selection(self) -> bool:
+        LINK_SELECTIONS = ["all_links", "unique_link_id", "segment_search"]
+        return self.selection_type in LINK_SELECTIONS
+
+    @property
+    def node_selection(self) -> bool:
+        NODE_SELECTIONS = ["all_nodes", "unique_node_id"]
+        return self.selection_type in NODE_SELECTIONS
+
+    @property
+    def feature_types(self) -> list:
+        _t = []
+        if self.node_selection:
+            _t.append("nodes")
+        if self.link_selection:
+            _t.append("links")
+        if not _t:
+            raise SelectionFormatError(
+                "Should be one of type node or links but found neither."
+            )
+        return _t
 
     @property
     def _node_selection_props(self) -> list:
@@ -104,7 +141,7 @@ class RoadwaySelection:
 
     @property
     def _link_selection_props(self) -> list:
-        """List of properties nodes are selected by."""
+        """List of properties links are selected by."""
         _props = []
         _link_keys = LINK_PROJECT_CARD_KEYS + [
             k for k in self.selection_dict.keys() if k not in NODE_PROJECT_CARD_KEYS
@@ -143,42 +180,99 @@ class RoadwaySelection:
         """
         selection_keys = list(selection_dict.keys())
 
-        # if selection has a unique id, then its a unique_id type
+        if selection_dict.get("links") == "all":
+            return "all_links"
+
+        if selection_dict.get("nodes") == "all":
+            return "all_nodes"
+
+        if set(["A", "B"]).issubset(selection_keys):
+            return "segment_search"
+
+        if set(["from", "to"]).issubset(selection_keys):
+            return "segment_search"
+
         if not set(net.links_df.params.unique_ids).isdisjoint(selection_keys):
             return "unique_link_id"
 
-        elif set(["A", "B", "name"]).issubset(selection_keys):
-            return "segment_search"
+        if not set(net.nodes_df.params.unique_ids).isdisjoint(selection_keys):
+            return "unique_node_id"
 
-        elif set(["O", "D", "name"]).issubset(selection_keys):
-            return "segment_search"
+        WranglerLogger.error(f"Selection type not found for : {selection_dict}")
+        WranglerLogger.error(
+            f"Expected one of: {net.links_df.params.unique_ids} or A, B, name or O, D, name"
+        )
+        raise SelectionFormatError(
+            "Don't believe selection is valid - can't find a unique id or A, B, \
+                Name or O,D name"
+        )
 
-        elif selection_dict.get("links") == "all":
-            return "all_links"
+    @property
+    def selected_links_df(self) -> pd.DataFrame:
+        """Lazily evaluates selection for links or returns stored value in self._selected_links_df.
 
-        else:
-            WranglerLogger.error(f"Selection type not found for : {selection_dict}")
-            WranglerLogger.error(
-                f"Expected one of: {net.links_df.params.unique_ids} or A, B, name or O, D, name"
-            )
-            raise SelectionFormatError(
-                "Don't believe selection is valid - can't find a unique id or A, B, \
-                    Name or O,D name"
-            )
+        Will re-evaluate if the current network hash is different than the stored one from the
+        last selection.
 
-    def select_links(self):
+        Returns:
+            _type_: _description_
+        """
+        if not self.link_selection:
+            msg = f"selected_links_df accessed for invalid selection type: {self.selection_type}"
+            WranglerLogger.error(msg)
+            raise SelectionError(msg)
+        if (
+            self._selected_links_df is not None
+        ) and self._stored_net_hash == self.net.network_hash:
+            return self._selected_links_df
+
+        self._stored_net_hash = copy.deepcopy(self.net.network_hash)
+
         if self.selection_type == "unique_link_id":
-            _initial_selected_links_df = self._select_unique_link_id()
+            _init_selected_links_df = self._select_unique_link_id()
         elif self.selection_type == "segment_search":
-            _initial_selected_links_df = copy.deepcopy(self.segment.segment_links_df)
+            _init_selected_links_df = copy.deepcopy(self.segment.segment_links_df)
         elif self.selecton_type == "all_links":
-            _initial_selected_links_df = copy.deepcopy(self.net.links_df)
+            _init_selected_links_df = copy.deepcopy(self.net.links_df)
         else:
             raise SelectionFormatError("Doesn't have known link selection type")
 
-        self.selected_links_df = copy.deepcopy(
-            _initial_selected_links_df.dict_query(self.selection_dict)
+        self._selected_links_df = copy.deepcopy(
+            _init_selected_links_df.dict_query(self.selection_dict)
         )
+
+        return self._selected_links_df
+
+    @property
+    def selected_nodes_df(self) -> pd.DataFrame:
+        """Lazily evaluates selection for nodes or returns stored value in self._selected_nodes_df.
+
+        Will re-evaluate if the current network hash is different than the stored one from the
+        last selection.
+        """
+        if not self.node_selection:
+            msg = f"selected_nodes_df accessed for invalid selection type: {self.selection_type}"
+            WranglerLogger.error(msg)
+            raise SelectionError(msg)
+        if (
+            self._selected_nodes_df is not None
+        ) and self._stored_net_hash == self.net.network_hash:
+            return self._selected_nodes_df
+
+        self._stored_net_hash = copy(self.net.network_hash)
+
+        if self.selection_type == "unique_node_id":
+            _init_selected_nodes_df = self._select_unique_node_id()
+        elif self.selecton_type == "all_nodes":
+            _init_selected_nodes_df = copy.deepcopy(self.net.nodes_df)
+        else:
+            raise SelectionFormatError("Doesn't have known node selection type")
+
+        self._selected_nodes_df = copy.deepcopy(
+            _init_selected_nodes_df.dict_query(self.selection_dict)
+        )
+
+        return self._selected_nodes_df
 
     def _validate_node_selection(self) -> bool:
         """Validates that network has node properties that are specified in selection.
@@ -190,7 +284,7 @@ class RoadwaySelection:
         if self.selection_dict.get("nodes") == "all":
             return True
 
-        _missing_node_props = set(self._node_selection_properties) - set(
+        _missing_node_props = set(self._node_selection_props) - set(
             self.net.nodes_df.columns
         )
 
@@ -212,7 +306,7 @@ class RoadwaySelection:
         if self.selection_dict.get("links") == "all":
             return True
 
-        _missing_link_props = set(self._link_selection_properties) - set(
+        _missing_link_props = set(self._link_selection_props) - set(
             self.net.links_df.columns
         )
 
@@ -242,13 +336,25 @@ class RoadwaySelection:
         """Select links based on a unique link id in selection_dict."""
 
         _sel_links_mask = self.links_df.isin(self.selection_dict).any(axis=1)
-        self.selected_links_df = self.net.links_df.loc[_sel_links_mask]
+        _selected_links_df = self.net.links_df.loc[_sel_links_mask]
 
         if not _sel_links_mask.any():
             WranglerLogger.warning("No links found matching criteria.")
-            return False
 
-        return True
+        return _selected_links_df
+
+    def _select_unique_node_id(
+        self,
+    ):
+        """Select nodes based on a unique node id in selection_dict."""
+
+        _sel_nodes_mask = self.nodes_df.isin(self.selection_dict).any(axis=1)
+        _selected_nodes_df = self.net.links_df.loc[_sel_nodes_mask]
+
+        if not _sel_nodes_mask.any():
+            WranglerLogger.warning("No nodes found matching criteria.")
+
+        return _selected_nodes_df
 
     def _property_selection_dict(self, selection_dict):
         """Takes a selection dictionary and returns it with only property-based selections.
@@ -264,4 +370,3 @@ class RoadwaySelection:
         property_selection_dict = delete_keys_from_dict(selection_dict, NOT_PROPS)
         WranglerLogger.debug(f"Property selection dict:{property_selection_dict}")
         return property_selection_dict
-

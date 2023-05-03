@@ -1,16 +1,11 @@
 project: test
 tags: ''
 dependencies: ''
-changes:
-- category: Add New Roadway
-  links: []
-  nodes: []
-- category: Roadway Property Change
+roadway_property_change:
   facility:
-    links:
-    - model_link_id:
+    model_link_id:
       - 224
-  properties:
+  property_changes:
   - property: lanes
     timeofday:
     - existing: 1

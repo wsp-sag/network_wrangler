@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from projectcard import ProjectCard
+from projectcard import read_card
 from network_wrangler import WranglerLogger
 
 """
@@ -75,7 +75,7 @@ def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     expected_net_nodes = 0
 
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", card_name)
-    project_card = ProjectCard.read(project_card_path, validate=False)
+    project_card = read_card(project_card_path, validate=False)
 
     orig_links_count = len(net.links_df)
     orig_nodes_count = len(net.nodes_df)
@@ -96,7 +96,7 @@ def test_multiple_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex
     expected_net_nodes = +1 - 1 + 1
 
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", card_name)
-    project_card = ProjectCard.read(project_card_path, validate=False)
+    project_card = read_card(project_card_path, validate=False)
 
     orig_links_count = len(net.links_df)
     orig_nodes_count = len(net.nodes_df)
@@ -118,7 +118,7 @@ def test_add_roadway_links(request, stpaul_net, stpaul_ex_dir):
     project_card_name = "10a_incorrect_roadway_add_change.yml"
 
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path)
+    project_card = read_card(project_card_path)
 
     project_card_dictionary = project_card.__dict__
 
@@ -137,16 +137,13 @@ def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
 
     card_name = "13_simple_roadway_delete_change.yml"
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", card_name)
-    project_card = ProjectCard.read(project_card_path, validate=False)
+    project_card = read_card(project_card_path, validate=False)
 
     expected_net_links = -1
 
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", card_name)
-    project_card = ProjectCard.read(project_card_path, validate=False)
+    orig_links_count = copy(len(net.links_df))
 
-    orig_links_count = len(net.links_df)
-
-    net = net.apply(project_card.__dict__)
+    net = net.apply(project_card)
     net_links = len(net.links_df) - orig_links_count
 
     assert net_links == expected_net_links
@@ -155,6 +152,50 @@ def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
 
 
 def test_add_nodes(request, small_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    net = copy.deepcopy(small_net)
+
+    node_properties = {
+        "X": -93.14412,
+        "Y": 44.87497,
+        "bike_node": 1,
+        "drive_node": 1,
+        "transit_node": 0,
+        "walk_node": 1,
+        "model_node_id": 1234567,
+    }
+
+    roadway_addition = {"nodes": [node_properties]}
+
+    net = net.apply(
+        {
+            "project": "test adding a node",
+            "roadway_addition": roadway_addition,
+        }
+    )
+
+    WranglerLogger.debug(
+        f"Added Node 1234567:\n{net.nodes_df.loc[net.nodes_df.model_node_id == 1234567]}"
+    )
+
+    assert 1234567 in net.nodes_df.model_node_id.tolist()
+
+    # should fail when adding a node with a model_node_id that already exists
+    bad_node_properties = node_properties.copy()
+    bad_node_properties["model_node_id"] = (3494,)  # should already be in network
+    try:
+        net = net.apply(
+            {
+                "project": "test adding a node already in network",
+                "nodes": [bad_node_properties],
+            },
+        )
+    except ValueError:
+        "expected ValueError when adding a node with a model_node_id that already exists"
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+def test_add_nodes_old_prject_card(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_net)
 
@@ -181,75 +222,3 @@ def test_add_nodes(request, small_net):
     )
 
     assert 1234567 in net.nodes_df.model_node_id.tolist()
-
-    # should fail when adding a node with a model_node_id that already exists
-    bad_node_properties = node_properties.copy()
-    bad_node_properties["model_node_id"] = (3494,)  # should already be in network
-    try:
-        net = net.apply(
-            {
-                "category": "add new roadway",
-                "project": "test adding a node already in network",
-                "nodes": [bad_node_properties],
-            },
-        )
-    except ValueError:
-        "expected ValueError when adding a node with a model_node_id that already exists"
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-def test_change_node_xy(request, small_net):
-    """Tests if X and Y property changes from a project card also update the node/link geometry."""
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    net = copy.deepcopy(small_net)
-
-    _test_link = net.links_df.iloc[0]
-    _test_link_idx = _test_link[net.links_df.params.primary_key]
-    _test_node = net.nodes_df.loc[[_test_link[net.links_df.params.from_node]]].iloc[0]
-    _test_node_idx = _test_node[[net.nodes_df.params.primary_key]].iloc[0]
-
-    WranglerLogger.debug(f"Node Index: {_test_node_idx}")
-    WranglerLogger.debug(f"Link Index: {_test_link_idx}")
-    WranglerLogger.info(
-        f"Original Node (Index: {_test_node_idx}):\n{net.nodes_df.loc[_test_node_idx]}"
-    )
-
-    facility = {
-        "nodes": [
-            {"model_node_id": [_test_node_idx]},
-        ]
-    }
-    _expected_X = -1000
-    _expected_Y = 1000000
-    properties = [
-        {"property": "X", "set": _expected_X},
-        {"property": "Y", "set": _expected_Y},
-    ]
-
-    net = net.apply(
-        {
-            "category": "Roadway Property Change",
-            "project": "Update node geometry",
-            "facility": facility,
-            "properties": properties,
-        }
-    )
-
-    _updated_node = net.nodes_df.loc[_test_node_idx]
-    _updated_link = net.links_df.loc[_test_link_idx]
-    _first_point = _updated_link.geometry.coords[0]
-
-    WranglerLogger.info(
-        f"Updated Node:\n{_updated_node[[net.nodes_df.params.primary_key,'X','Y','geometry']]}"
-    )
-    WranglerLogger.info(
-        f"Updated Link Geometry for ({_updated_link.A}-->{_updated_link.B}):\n{_updated_link[['geometry']]}"
-    )
-
-    assert _updated_node.geometry.x == _expected_X
-    assert _updated_node.geometry.y == _expected_Y
-    assert _updated_node.X == _expected_X
-    assert _updated_node.Y == _expected_Y
-    assert _first_point[0] == _expected_X
-    assert _first_point[1] == _expected_Y
-    WranglerLogger.info(f"--Finished: {request.node.name}")

@@ -2,10 +2,6 @@ project: Bus Reroute
 category: Transit Service Property Change
 tags:
    - existing_plus_committed
-dependencies:
-  prerequisites: []
-  corequisites: []
-  conflicts: []
 facility:
   route_id: 294-111
   direction_id: 1

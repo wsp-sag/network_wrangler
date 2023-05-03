@@ -1,6 +1,6 @@
 import os
 
-from projectcard import ProjectCard
+from projectcard import read_card
 from network_wrangler import RoadwayNetwork
 from network_wrangler import TransitNetwork
 
@@ -39,7 +39,7 @@ def test_project_card(request):
     project_card_path = os.path.join(
         STPAUL_DIR, "project_cards", "12_transit_shape_change.yml"
     )
-    project_card = ProjectCard.read(project_card_path)
+    project_card = read_card(project_card_path)
     transit_net = transit_net.apply_transit_feature_change(
         transit_net.select_transit_features(project_card.facility),
         project_card.properties,

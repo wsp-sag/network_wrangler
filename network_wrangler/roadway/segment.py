@@ -36,6 +36,17 @@ SEARCH_BREADTH = 5
 """
 MAX_SEARCH_BREADTH = 10
 
+"""
+(list[str]) list of fields in a selection dictionary that match the starting node of the segment
+"""
+SEGMENT_START_KEYS = ["A", "from"]
+
+
+"""
+(list[str]) list of fields in a selection dictionary that match the ending node of the segment
+"""
+SEGMENT_END_KEYS = ["B", "to"]
+
 
 class SegmentFormatError(Exception):
     pass
@@ -58,8 +69,8 @@ class Segment:
     ```
     selection_dict = {
         "links": {"name":['6th','Sixth','sixth']},
-        "start": {"osm_node_id": '187899923'},
-        "end": {"osm_node_id": '187865924'}
+        "from": {"osm_node_id": '187899923'},
+        "to": {"osm_node_id": '187865924'}
     }
 
     net = RoadwayNetwork(...)
@@ -92,7 +103,7 @@ class Segment:
     def __init__(
         self,
         net: "RoadwayNetwork",
-        selection: 'RoadwaySelection',
+        selection: "RoadwaySelection",
         sp_weight_col: str = SP_WEIGHT_COL,
         sp_weight_factor: int = SP_WEIGHT_FACTOR,
         max_search_breadth: int = MAX_SEARCH_BREADTH,
@@ -114,9 +125,11 @@ class Segment:
         """
 
         self.net = net
-        if not selection.type == "segment_search":
-            raise SegmentFormatError("Selection object passed to Segment must be of type\
-                                      `segment_search`")
+        if not selection.selection_type == "segment_search":
+            raise SegmentFormatError(
+                "Selection object passed to Segment must be of type\
+                                      `segment_search`"
+            )
         self.selection = selection
 
         self.start_node_pk = self._start_node_pk()
@@ -126,10 +139,36 @@ class Segment:
         self._sp_weight_factor = sp_weight_factor
         self._max_search_breadth = max_search_breadth
 
-        self.subnet = self._generate_subnet(self.selection_dict)
+        self.subnet = self._generate_subnet(self.segment_selection_dict)
 
         # segment members are identified by storing nodes along a route
         self._segment_nodes = None
+
+    @property
+    def segment_selection_dict(self) -> list:
+        """Selection dictionary which only has keys related to creation of the segment.
+
+        AKA segment_id_props.
+        """
+        return {
+            k: v
+            for k, v in self.selection.selection_dict.items()
+            if k in self.segment_id_props
+        }
+
+    @property
+    def segment_id_props(self) -> list:
+        """List of properties to define the base of the segment.
+
+        Combination of "name", "ref", and the network's explicit link ids.
+        """
+        _segment_id_props = ["name", "ref"]
+        _segment_id_props += [
+            p
+            for p in self.net.links_df.params.explicit_ids
+            if p in self.selection.selection_dict.keys()
+        ]
+        return list(set(_segment_id_props))
 
     @property
     def segment_nodes(self) -> list:
@@ -162,7 +201,7 @@ class Segment:
         """
         Finds a path from start_node_pk to send_node_pk based on the weight col value/factor.
         """
-        WranglerLogger.debug(f"Initial set of nodes: {self.subnet_nodes}".format())
+        WranglerLogger.debug(f"Initial set of nodes: {self.subnet.subnet_nodes}")
 
         # expand network to find at least the origin and destination nodes
         self.subnet.expand_subnet_to_include_nodes(
@@ -194,7 +233,7 @@ class Segment:
 
     def _start_node_pk(self):
         """Find start node in selection dict and return its primary key."""
-        _search_keys = ["A", "O", "start"]
+        _search_keys = SEGMENT_START_KEYS
         _node_dict = None
         for k in _search_keys:
             if self.selection.selection_dict.get(k):
@@ -209,7 +248,7 @@ class Segment:
 
     def _end_node_pk(self):
         """Find end node in selection dict and return its primary key."""
-        _search_keys = ["B", "D", "end"]
+        _search_keys = SEGMENT_END_KEYS
         _node_dict = None
         for k in _search_keys:
             if self.selection.selection_dict.get(k):
@@ -242,33 +281,37 @@ class Segment:
             )
         return _pk_list[0]
 
-    def _generate_subnet(self) -> Subnet:
+    def _generate_subnet(self, selection_dict: dict) -> Subnet:
         """Generate a subnet of the roadway network on which to search for connected segment.
 
         First will search based on "name" in selection_dict but if not found, will search
         using the "ref" field instead.
+
+        args:
+            selection_dict: selection dictionary to use for generating subnet
         """
-        _selection_dict = copy.deepcopy(self.selection.selection_dict)
+        _selection_dict = copy.deepcopy(selection_dict)
         # First search for initial set of links using "name" field, combined with values from "ref"
 
-        if "ref" in self.selection.selection_dict:
+        if "ref" in selection_dict:
             _selection_dict["name"] += _selection_dict["ref"]
             del _selection_dict["ref"]
 
         subnet = Subnet(
+            self.net,
             selection_dict=_selection_dict,
             sp_weight_col=self._sp_weight_col,
             sp_weight_factor=self._sp_weight_factor,
             max_search_breadth=self._max_search_breadth,
         )
 
-        if subnet.num_links == 0 and "ref" in self.selection_dict:
+        if subnet.num_links == 0 and "ref" in selection_dict:
             del _selection_dict["name"]
-            _selection_dict["ref"] = self.selection_dict["ref"]
+            _selection_dict["ref"] = selection_dict["ref"]
 
             WranglerLogger.debug(f"Searching with ref = {_selection_dict['ref']}")
-            subnet = Subnet(selection_dict=_selection_dict)
-            _selection_dict = copy.deepcopy(self.selection_dict)
+            subnet = Subnet(self.net, selection_dict=_selection_dict)
+            _selection_dict = copy.deepcopy(selection_dict)
 
         # i is iteration # for an iterative search for connected paths with larger subnet
         if subnet.num_links == 0:
@@ -314,16 +357,16 @@ class Segment:
 
 def identify_segment_endpoints(
     net,
-    mode: str,
+    mode: str = "drive",
     min_connecting_links: int = 10,
     min_distance: float = None,
     max_link_deviation: int = 2,
-):
+) -> pd.DataFrame:
     """This has not been revisited or refactored and may or may not contain useful code.
 
     Args:
         mode:  list of modes of the network, one of `drive`,`transit`,
-            `walk`, `bike`
+            `walk`, `bike`. Defaults to "drive".
         links_df: if specified, will assess connectivity of this
             links list rather than self.links_df
         nodes_df: if specified, will assess connectivity of this
@@ -335,11 +378,12 @@ def identify_segment_endpoints(
     NAME_PER_NODE = 4
     REF_PER_NODE = 2
 
-    _links_df = net.links_df.mode_query(mode)
+    # make a copy so it is a full dataframe rather than a slice.
+    _links_df = copy.deepcopy(net.links_df.mode_query(mode))
+
     _nodes_df = net.nodes_in_links(
-        _links_df,
-        net.nodes_df,
-    )
+            _links_df,
+        ).copy()
 
     _nodes_df = net.add_incident_link_data_to_nodes(
         links_df=_links_df,

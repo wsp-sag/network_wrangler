@@ -6,21 +6,21 @@ dependencies:
   prerequisites: []
   corequisites: []
   conflicts: []
-facility:
-   links:
-     - name:
-        - '6th'
-        - 'Sixth'
-        - 'sixth' #finds links where name contains 6th or Sixth...not a regex technically ;-)
-   A:
-     osm_node_id: '187899923'
-   B:
-     osm_node_id: '187865924'
-properties:
-  - property: lanes
-    set: 2
-  - property: transit_access
-    set: 1
-  - property: drive_access
-    set: 0
+roadway_property_change:
+  facility:
+    name:
+      - '6th'
+      - 'Sixth'
+      - 'sixth' 
+    from:
+      osm_node_id: '187899923'
+    to:
+      osm_node_id: '187865924'
+  property_changes:
+    - property: lanes
+      set: 2
+    - property: transit_access
+      set: 1
+    - property: drive_access
+      set: 0
 notes: Transitions 6th St E to transitway

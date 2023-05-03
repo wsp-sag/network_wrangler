@@ -14,7 +14,7 @@ from typing import Union, Collection
 
 import geopandas as gpd
 
-from projectcard import ProjectCard
+from projectcard import read_cards, ProjectCard
 
 from .logger import WranglerLogger
 from .roadwaynetwork import RoadwayNetwork
@@ -167,9 +167,7 @@ class Scenario(object):
     def create_scenario(
         base_scenario: Union["Scenario", dict] = {},
         project_card_list=[],
-        project_card_file_list=[],
-        card_search_dir: str = "",
-        glob_search="",
+        project_card_filepath: Union[Collection[str], str] = None,
         filter_tags: Collection[str] = [],
         validate=True,
     ) -> Scenario:
@@ -187,10 +185,10 @@ class Scenario(object):
 
         args:
             base_scenario: base Scenario scenario instances of dictionary of attributes.
-            project_card_list: List of ProjectCard instances to create Scenario from.
-            project_card_file_list: List of ProjectCard files to create Scenario from.
-            card_search_dir (str): Directory to search for project card files in.
-            glob_search (str, optional): Optional glob search parameters for card_search_dir.
+            project_card_list: List of ProjectCard instances to create Scenario from. Defaults
+                to [].
+            project_card_filepath: where the project card is.  A single path, list of paths,
+            a directory, or a glob pattern. Defaults to None.
             filter_tags (Collection[str], optional): If used, will only add the project card if
                 its tags match one or more of these filter_tags. Defaults to []
                 which means no tag-filtering will occur.
@@ -199,37 +197,16 @@ class Scenario(object):
         """
 
         scenario = Scenario(base_scenario)
+
+        if project_card_filepath:
+            project_card_list += list(read_cards(filter_tags=filter_tags).values())
+
         if project_card_list:
             scenario.add_project_cards(
                 project_card_list, filter_tags=filter_tags, validate=validate
             )
-        if project_card_file_list:
-            scenario.add_projects_from_files(
-                project_card_file_list, filter_tags=filter_tags, validate=validate
-            )
-        if card_search_dir:
-            scenario.add_projects_from_directory(
-                card_search_dir,
-                glob_search=glob_search,
-                filter_tags=filter_tags,
-                validate=validate,
-            )
+
         return scenario
-
-    def add_project_card_from_file(
-        self, project_card_file: str, validate: bool = True, tags: list = []
-    ):
-        WranglerLogger.debug(
-            "Trying to add project card from file: {}".format(project_card_file)
-        )
-        project_card = ProjectCard.read(project_card_file, validate=validate)
-
-        if project_card is None:
-            msg = "project card not read: {}".format(project_card_file)
-            WranglerLogger.error(msg)
-            raise ValueError(msg)
-
-        return project_card
 
     def _add_dependencies(self, project_name, dependencies: dict) -> None:
         """Add dependencies from a project card to relevant scenario variables.
@@ -286,13 +263,7 @@ class Scenario(object):
             return
 
         if validate:
-            if not project_card.__dict__.get("file", None):
-                WranglerLogger.warning(
-                    f"Could not validate Project Card {project_card.project} because \
-                        no file specified"
-                )
-                return
-            project_card.validate_project_card_schema(project_card.file)
+            assert project_card.valid
 
         WranglerLogger.info(f"Adding {project_name} to scenario.")
         self.project_cards[project_name] = project_card
@@ -323,67 +294,6 @@ class Scenario(object):
         """
         for p in project_card_list:
             self._add_project(p, validate=validate, filter_tags=filter_tags)
-
-    def add_projects_from_files(
-        self,
-        project_card_file_list: Collection[str],
-        validate: bool = True,
-        filter_tags: Collection[str] = [],
-    ) -> None:
-        """Adds a list of ProjectCard files  to the Scenario.
-
-        Creates ProjectCard instances from each file.
-        Checks that a project of same name is not already in scenario.
-        If selected, will validate ProjectCard before adding.
-        If provided, will only add ProjectCard if it matches at least one filter_tags.
-
-        Args:
-            project_card_file_list (Collection[str]): List of project card files to add to
-                scenario.
-            validate (bool, optional): If True, will require each ProjectCard is validated before
-                being added to scenario. Defaults to True.
-            filter_tags (Collection[str], optional): If used, will filter ProjectCard instances
-                and only add those whose tags match one or more of these filter_tags.
-                Defaults to [] - which means no tag-filtering will occur.
-        """
-        _project_card_list = [
-            ProjectCard.read(_pc_file) for _pc_file in project_card_file_list
-        ]
-        self.add_project_cards(
-            _project_card_list, validate=validate, filter_tags=filter_tags
-        )
-
-    def add_projects_from_directory(
-        self,
-        search_dir: str,
-        glob_search: str = "",
-        validate: bool = True,
-        filter_tags: Collection[str] = [],
-    ) -> None:
-        """Adds ProjectCards from project card files found in a directory to the Scenario.
-
-        Finds files in directory which have ProjectCard.FILE_TYPE suffices.
-        If provided, will filter directory search using glob_search pattern.
-        Creates ProjectCard instances from each file.
-        Checks that a project of same name is not already in scenario.
-        If selected, will validate ProjectCard before adding.
-        If provided, will only add ProjectCard if it matches at least one filter_tags.
-
-        Args:
-            search_dir (str): Search directory.
-            glob_search (str, optional): Optional glob search parameters.
-            validate (bool, optional): If True, will require each ProjectCard is validated before
-                being added to scenario. Defaults to True.
-            filter_tags (Collection[str], optional): If used, will filter ProjectCard instances
-                and only add those whse tags match one or more of these filter_tags. Defaults to []
-                which means no tag-filtering will occur.
-        """
-        _project_card_file_list = project_card_files_from_directory(
-            search_dir, glob_search
-        )
-        self.add_projects_from_files(
-            _project_card_file_list, validate=validate, filter_tags=filter_tags
-        )
 
     def _check_projects_requirements_satisfied(self, project_list: Collection[str]):
         """Checks that all requirements are satisified to apply this specific set of projects
@@ -429,8 +339,7 @@ class Scenario(object):
         return True
 
     def _check_projects_prerequisites(self, project_names: str) -> None:
-        """Checks that list of projects' pre-requisites have been or will be applied to scenario.
-        """
+        """Checks that list of projects' pre-requisites have been or will be applied to scenario."""
         if set(project_names).isdisjoint(set(self.prerequisites.keys())):
             return
         _prereqs = []
@@ -448,8 +357,7 @@ class Scenario(object):
             )
 
     def _check_projects_corequisites(self, project_names: str) -> None:
-        """Checks that a list of projects' co-requisites have been or will be applied to scenario.
-        """
+        """Checks that a list of projects' co-requisites have been or will be applied to scenario."""
         if set(project_names).isdisjoint(set(self.corequisites.keys())):
             return
         _coreqs = []

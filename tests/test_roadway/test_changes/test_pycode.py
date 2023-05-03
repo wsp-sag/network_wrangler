@@ -2,7 +2,7 @@ import copy
 import os
 
 from network_wrangler import WranglerLogger
-from projectcard  import ProjectCard
+from projectcard import read_card
 
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_pycode.py`
@@ -14,7 +14,7 @@ def test_read_dot_wrangler_roadway(request, stpaul_ex_dir):
 
     project_card_name = "add_highway_lanes.wrangler"
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate=False)
+    project_card = read_card(project_card_path, validate=False)
     WranglerLogger.debug(f"project_card:\n{project_card}")
     assert (
         "self.links_df.loc[self.links_df['lanes'] == 4, 'lanes'] = 12"

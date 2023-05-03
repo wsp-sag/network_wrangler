@@ -8,7 +8,7 @@ import os
 import copy
 
 from collections import defaultdict
-from typing import Collection, List
+from typing import Collection, List, Union, Mapping, Any
 
 import geopandas as gpd
 import networkx as nx
@@ -16,6 +16,7 @@ import pandas as pd
 
 from geopandas.geodataframe import GeoDataFrame
 from pandas.core.frame import DataFrame
+from pandas.util import hash_pandas_object
 from projectcard import ProjectCard
 
 from .projects import (
@@ -29,16 +30,14 @@ from .logger import WranglerLogger
 from .utils import (
     location_reference_from_nodes,
     line_string_from_location_references,
-    links_df_to_json,
     parse_time_spans_to_secs,
     point_from_xy,
-    point_df_to_geojson,
     update_points_in_linestring,
     get_point_geometry_from_linestring,
 )
 from .roadway.model_roadway import ModelRoadwayNetwork
-from .roadway.links import read_links, LinksParams
-from .roadway.nodes import read_nodes, NodesParams
+from .roadway.links import read_links, LinksParams, links_df_to_json
+from .roadway.nodes import read_nodes, NodesParams, nodes_df_to_geojson
 from .roadway.shapes import read_shapes, ShapesParams
 from .roadway.selection import RoadwaySelection
 
@@ -51,16 +50,16 @@ class RoadwayNetwork(object):
 
     ```py
     net = RoadwayNetwork.read(
-        link_file=MY_LINK_FILE,
-        node_file=MY_NODE_FILE,
-        shape_file=MY_SHAPE_FILE,
+        links_file=MY_LINK_FILE,
+        nodes_file=MY_NODE_FILE,
+        shapes_file=MY_SHAPE_FILE,
     )
     my_selection = {
         "link": [{"name": ["I 35E"]}],
         "A": {"osm_node_id": "961117623"},  # start searching for segments at A
         "B": {"osm_node_id": "2564047368"},
     }
-    net.select_roadway_features(my_selection)
+    net.get_selection(my_selection)
 
     my_change = [
         {
@@ -75,7 +74,7 @@ class RoadwayNetwork(object):
     ]
 
     my_net.apply_roadway_feature_change(
-        my_net.select_roadway_features(my_selection),
+        my_net.get_selection(my_selection),
         my_change
     )
 
@@ -132,6 +131,7 @@ class RoadwayNetwork(object):
         nodes_df: GeoDataFrame,
         shapes_df: GeoDataFrame = None,
         shapes_file: str = None,
+        shapes_params: ShapesParams = None,
         crs: int = DEFAULT_CRS,
     ):
         """
@@ -141,7 +141,9 @@ class RoadwayNetwork(object):
             nodes_df: GeoDataFrame of of node records.
             links_df: GeoDataFrame of of link records.
             shapes_df: GeoDataFrame of detailed shape records
-            shapes_file: path to shapes file to lazily read it in when needed.
+            shapes_file: path to shapes file to lazily read it in when needed. Defaults to None.
+            shapes_params: ShapesParams instance. Defaults to default initialization of
+                ShapesParams.
             crs: coordinate reference system in ESPG number format. Defaults to DEFAUULT_CRS
                 which is set to 4326, WGS 84 Lat/Long
 
@@ -156,6 +158,11 @@ class RoadwayNetwork(object):
             raise ValueError("Should specify either shapes or shapes_file.")
 
         self._shapes_df = shapes_df
+        self._shapes_file = shapes_file
+        if shapes_df is None:
+            if shapes_params is None:
+                shapes_params = ShapesParams()
+            self._shapes_params = shapes_params
 
         # Model network
         self._model_net = None
@@ -168,15 +175,15 @@ class RoadwayNetwork(object):
 
     @property
     def shapes_df(self):
-        if self._shapes is None:
-            self._shapes = read_shapes(
-                self.shapes_file, crs=self.crs, shapes_params=self.shapes_params
+        if self._shapes_df is None:
+            self._shapes_df = read_shapes(
+                self._shapes_file, crs=self.crs, shapes_params=self._shapes_params
             )
-        return self.shapes_df
+        return self._shapes_df
 
     @property
     def network_hash(self):
-        return hash(tuple(self.links_df, self.nodes_df))
+        return hash((self.links_df.values.tobytes(), self.nodes_df.values.tobytes()))
 
     @property
     def model_net(self):
@@ -231,13 +238,11 @@ class RoadwayNetwork(object):
             shapes_df = read_shapes(shapes_file, crs=crs, shapes_params=shapes_params)
 
         roadway_network = RoadwayNetwork(
-            nodes=nodes_df,
-            links=links_df,
-            shapes=shapes_df,
+            links_df,
+            nodes_df,
+            shapes_df=shapes_df,
             crs=crs,
-            link_file=links_file,
-            node_file=nodes_file,
-            shape_file=shapes_file,
+            shapes_file=shapes_file,
         )
 
         return roadway_network
@@ -279,7 +284,7 @@ class RoadwayNetwork(object):
         property_columns = self.nodes_df.columns.values.tolist()
         property_columns.remove("geometry")
 
-        nodes_geojson = point_df_to_geojson(self.nodes_df, property_columns)
+        nodes_geojson = nodes_df_to_geojson(self.nodes_df, property_columns)
 
         with open(nodes_file, "w") as f:
             json.dump(nodes_geojson, f)
@@ -303,154 +308,34 @@ class RoadwayNetwork(object):
         )
         return link_shapes_df
 
-    def get_selection(self, selection_dict: dict) -> RoadwaySelection:
+    def get_selection(
+        self, selection_dict: dict, overwrite: bool = False
+    ) -> RoadwaySelection:
         """Return selection if it already exists, otherwise performan selection.
 
         Args:
             selection_dict (dict): _description_
+            overwrite: if True, will overwrite any previously cached searches. Defaults to False.
 
         Returns:
             Selection: _description_
         """
         key = RoadwaySelection._assign_selection_key(selection_dict)
-        if key not in self._selection:
-            self._selection[key] = RoadwaySelection(self, selection_dict)
-        return self._selection[key]
+        if (key not in self._selections) or overwrite:
+            self._selections[key] = RoadwaySelection(self, selection_dict)
+        return self._selections[key]
 
     def modal_graph_hash(self, mode):
         """Hash of the links in order to detect a network change from when graph created."""
-        return hash(tuple(self.links_df, mode))
+        return hash((self.links_df.values.tobytes(), mode))
 
     def get_modal_graph(self, mode):
         from .roadway.graph import net_to_graph
+
         if self._modal_graphs[mode]["hash"] != self.modal_graph_hash(mode):
             self._modal_graphs[mode]["graph"] = net_to_graph(self, [mode])
 
         return self._modal_graphs[mode]["graph"]
-
-    def select_roadway_features(
-        self, selection: dict, search_mode="drive", force_search=False
-    ) -> list:
-        """
-        Selects roadway features that satisfy selection criteria
-        #TODO
-        Example usage:
-            net.select_roadway_features(
-              selection = [ {
-                #   a match condition for the from node using osm,
-                #   shared streets, or model node number
-                'from': {'osm_model_link_id': '1234'},
-                #   a match for the to-node..
-                'to': {'shstid': '4321'},
-                #   a regex or match for facility condition
-                #   could be # of lanes, facility type, etc.
-                'facility': {'name':'Main St'},
-                }, ... ])
-
-        Args:
-            selection : dictionary with keys for:
-                 A - from node
-                 B - to node
-                 link - which includes at least a variable for `name` or 'all' if all selected
-            search_mode: will be overridden if 'link':'all'
-
-        Returns: a list of indices for the selected links or nodes
-        TODO
-        """
-        WranglerLogger.debug("validating selection")
-        self.validate_selection(selection)
-
-        # create a unique key for the selection so that we can cache it
-        sel_key = self.build_selection_key(selection)
-        WranglerLogger.debug("Selection Key: {}".format(sel_key))
-
-        self.selections[sel_key] = {"selection_found": False}
-
-        if "links" in selection:
-            return self.select_roadway_link_features(
-                selection,
-                sel_key,
-                force_search=force_search,
-                search_mode=search_mode,
-            )
-        if "nodes" in selection:
-            return self.select_node_features(
-                selection,
-                sel_key,
-            )
-
-        raise ValueError("Invalid selection type. Must be either 'links' or 'nodes'.")
-
-    def select_node_features(
-        self,
-        selection: dict,
-        sel_key: str,
-    ) -> list:
-        """Select Node Features.
-        #TODO
-        Args:
-            selection (dict): selection dictionary from project card.
-            sel_key (str): key to store selection in self.selections under.
-
-        Returns:
-            List of indices for selected nodes in self.nodes_df
-        """
-        WranglerLogger.debug("Selecting nodes.")
-        if selection.get("nodes") == "all":
-            return self.nodes_df.index.tolist()
-
-        sel_query = ProjectCard.build_selection_query(
-            selection=selection,
-            type="nodes",
-            unique_ids=self.nodes_df.params.unique_ids,
-        )
-        WranglerLogger.debug("Selecting node features:\n{}".format(sel_query))
-
-        self.selections[sel_key]["selected_nodes"] = self.nodes_df.query(
-            sel_query, engine="python"
-        )
-
-        if len(self.selections[sel_key]["selected_nodes"]) > 0:
-            self.selections[sel_key]["selection_found"] = True
-        else:
-            raise ValueError(f"No nodes found for selection: {selection}")
-
-        return self.selections[sel_key]["selected_nodes"].index.tolist()
-
-    def select_roadway_link_features(
-        self,
-        selection_dict: dict,
-        force_search: bool = False,
-        additional_requirements: dict = {"drive_access": True},
-        ignore: list = [],
-    ) -> list:
-        """_summary_
-        #TODO
-        Args:
-            selection (dict): _description_
-            force_search (bool, optional): _description_. Defaults to False.
-            search_mode (str, optional): _description_. Defaults to "drive".
-
-        Returns:
-            List of indices for selected links in self.links_df
-        """
-        sel_key = RoadwaySelection._assign_selection_key(selection_dict)
-
-        # if this selection has been found before, return the previously selected links
-        if sel_key in self.selections:
-            if self.selections[sel_key].found and not force_search:
-                return self.selections[sel_key].selected_links
-
-            _sel = self.selections[sel_key].select()
-            return _sel.selected_links
-
-        self.selections[sel_key] = RoadwaySelection(
-            self,
-            selection_dict,
-            additional_requirements=additional_requirements,
-            ignore=ignore,
-        )
-        return self.selections[sel_key].select()
 
     def validate_properties(
         self,
@@ -511,17 +396,26 @@ class RoadwayNetwork(object):
             raise ValueError("Property changes are not valid:\n  {properties")
 
     def apply(
-        self, project_card_dictionary: dict, _subproject: bool = False
+        self, project_card: Union[ProjectCard, dict], _subproject: bool = False
     ) -> "RoadwayNetwork":
         """
         Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.
 
         Args:
-            project_card_dictionary: a dictionary of the project card object
+            project_card: either a dictionary of the project card object or ProjectCard instance
             _subproject: boolean indicating if this is a subproject under a "changes" heading.
                 Defaults to False. Will be set to true with code when necessary.
 
         """
+        if isinstance(project_card, dict):
+            project_card_dictionary = project_card
+        elif isinstance(project_card, ProjectCard):
+            project_card_dictionary = project_card.__dict__
+        else:
+            raise ValueError(
+                f"Expecting ProjectCard or dict instance but found \
+                             {type(project_card)}."
+            )
         # Need to reset the network graph every time the network changes
         self._graph = {}
 
@@ -549,33 +443,59 @@ class RoadwayNetwork(object):
                 len(_geometry_type) == 1
             ), "Facility must have exactly one of 'links' or 'nodes'"
             _geometry_type = _geometry_type[0]
-
-            _df_idx = self.select_roadway_features(_facility)
+            _selection = self.get_selection(_facility)
 
         if _category == "roadway property change":
+            _property_changes = project_dictionary.get("property_changes")
+            # for <v.1 project cards
+            if not _property_changes:
+                 _property_changes = project_dictionary.get("properties", [])
+            _selection = self.get_selection(_facility)
             return apply_roadway_property_change(
                 self,
-                _df_idx,
-                project_dictionary["properties"],
-                geometry_type=_geometry_type,
+                _selection,
+                _property_changes,
             )
         elif _category == "parallel managed lanes":
+            _property_changes = project_dictionary.get("property_changes")
+            # for <v.1 project cards
+            if not _property_changes:
+                 _property_changes = project_dictionary.get("properties", [])
+            _selection = self.get_selection(_facility)
             return apply_parallel_managed_lanes(
                 self,
-                _df_idx,
-                project_dictionary["properties"],
+                _selection,
+                _property_changes,
             )
         elif _category == "add new roadway":
+            _roadway_addition = project_dictionary.get("roadway_addition")
+
+            # for <v.1 project cards
+            if not _roadway_addition:
+                _roadway_addition = {
+                    "links": project_dictionary.get("links", []),
+                    "nodes": project_dictionary.get("nodes", []),
+                }
+
             return apply_new_roadway(
                 self,
-                project_dictionary.get("links", []),
-                project_dictionary.get("nodes", []),
+                _roadway_addition.get("links", []),
+                _roadway_addition.get("nodes", []),
             )
         elif _category == "roadway deletion":
+            _roadway_deletion = project_dictionary.get("roadway_deletion")
+
+            # for <v.1 project cards
+            if not _roadway_deletion:
+                _roadway_deletion = {
+                    "links": project_dictionary.get("links", {}),
+                    "nodes": project_dictionary.get("nodes", {}),
+                }
+
             return apply_roadway_deletion(
                 self,
-                project_dictionary.get("links", []),
-                project_dictionary.get("nodes", []),
+                _roadway_deletion.get("links", {}),
+                _roadway_deletion.get("nodes", {}),
             )
         elif _category == "calculated roadway":
             return apply_calculated_roadway(
@@ -637,25 +557,30 @@ class RoadwayNetwork(object):
 
         self._update_node_geometry_in_links_shapes(updated_nodes_df)
 
-    @staticmethod
     def nodes_in_links(
+        self,
         links_df: pd.DataFrame,
-        nodes_df: pd.DataFrame,
+        nodes_df: pd.DataFrame = None,
     ) -> pd.DataFrame:
         """Filters dataframe for nodes that are in links
 
         Args:
-            links_df: DataFrame of standard network links
-            nodes_df: DataFrame of standard network nodes.
+            links_df: DataFrame of standard network links to search for nodes for.
+            nodes_df: DataFrame of standard network nodes. Optional. If not provided will use
+                self.nodes_df.
 
         """
-        _node_ids = RoadwayNetwork.nodes_ids_in_links(links_df)
-        nodes_in_links = nodes_df.index.isin(_node_ids)
-        WranglerLogger.debug(f"Selected {len(nodes_in_links)} of {len(nodes_df)} nodes.")
+        if nodes_df is None:
+            nodes_df = self.nodes_df
+        _node_ids = self.node_ids_in_links(links_df)
+        nodes_in_links = nodes_df.loc[nodes_df.index.isin(_node_ids)]
+        WranglerLogger.debug(
+            f"Selected {len(nodes_in_links)} of {len(nodes_df)} nodes."
+        )
         return nodes_in_links
-    
-    @staticmethod
-    def nodes_ids_in_links(
+
+    def node_ids_in_links(
+        self,
         links_df: pd.DataFrame,
     ) -> Collection:
         """Returns a list of nodes that are contained in the links.
@@ -664,17 +589,22 @@ class RoadwayNetwork(object):
             links_df: Links which to return node list for
         """
         if len(links_df) < 25:
-            WranglerLogger.debug(f"Links:\n{links_df[links_df.params.fks_to_nodes]}")
+            WranglerLogger.debug(
+                f"Links:\n{links_df[self.links_df.params.fks_to_nodes]}"
+            )
         nodes_list = list(
-            set(pd.concat([links_df[c] for c in links_df.params.fks_to_nodes]).tolist())
+            set(
+                pd.concat(
+                    [links_df[c] for c in self.links_df.params.fks_to_nodes]
+                ).tolist()
+            )
         )
         if len(nodes_list) < 25:
             WranglerLogger.debug(f"_node_list:\n{nodes_list}")
         return nodes_list
 
-    @staticmethod
     def links_with_nodes(
-        links_df: pd.DataFrame, node_id_list: list
+        self, links_df: pd.DataFrame, node_id_list: list
     ) -> gpd.GeoDataFrame:
         """Returns a links geodataframe which start or end at the nodes in the list.
 
@@ -684,7 +614,7 @@ class RoadwayNetwork(object):
                 by the foreign key - the one that is referenced in LINK_FOREIGN_KEY.
         """
         # If nodes are equal to all the nodes in the links, return all the links
-        _nodes_in_links = RoadwayNetwork.nodes_ids_in_links(links_df)
+        _nodes_in_links = self.nodes_in_links(links_df)
         WranglerLogger.debug(
             f"# Nodes: {len(node_id_list)}\nNodes in links:{len(_nodes_in_links)}"
         )
@@ -734,7 +664,7 @@ class RoadwayNetwork(object):
         """
         _node_ids = updated_nodes_df.index.tolist()
         updated_links_df = copy.deepcopy(
-            RoadwayNetwork.links_with_nodes(self.links_df, _node_ids)
+            self.links_with_nodes(self.links_df, _node_ids)
         )
 
         _shape_ids = updated_links_df[self.links_df.params.fk_to_shape].tolist()
@@ -846,7 +776,6 @@ class RoadwayNetwork(object):
         shapes_missing_links = _ids_in_shapes[~_ids_in_shapes.isin(_ids_in_links)]
         return shapes_missing_links
 
-  
     def get_property_by_time_period_and_group(
         self, property, time_period=None, category=None
     ):
@@ -1076,9 +1005,7 @@ class RoadwayNetwork(object):
         )
         nodes_df["X"] = nodes_df.geometry.x
         nodes_df["Y"] = nodes_df.geometry.y
-        nodes_df[nodes_df.params.idx_col] = nodes_df[
-            nodes_df.params.primary_key
-        ]
+        nodes_df[nodes_df.params.idx_col] = nodes_df[nodes_df.params.primary_key]
         nodes_df.set_index(nodes_df.params.idx_col, inplace=True)
         # WranglerLogger.debug(f"ct3: nodes_df:\n{nodes_df}")
         return nodes_df
@@ -1137,9 +1064,82 @@ class RoadwayNetwork(object):
             links_df[[links_df.params.to_node] + _link_vals_to_nodes],
             how="outer",
             left_on=nodes_df.params.primary_key,
-            right_on=links_df.params.to_node
+            right_on=links_df.params.to_node,
         )
         _nodes_from_links_ab = pd.concat([_nodes_from_links_A, _nodes_from_links_B])
 
         return _nodes_from_links_ab
 
+
+@pd.api.extensions.register_dataframe_accessor("dict_query")
+class DictQueryAccessor:
+    """
+    Query link, node and shape dataframes using project selection dictionary.
+
+    Will overlook any keys which are not columns in the dataframe.
+
+    Usage:
+
+    ```
+    selection_dict = {
+        "lanes":[1,2,3],
+        "name":['6th','Sixth','sixth'],
+        "drive_access": 1,
+    }
+    selected_links_df = links_df.dict_query(selection_dict)
+    ```
+
+    """
+
+    def __init__(self, pandas_obj):
+        self._obj = pandas_obj
+
+    def __call__(self, selection_dict: dict):
+        # filter the rows for the mode
+        _selection_dict = {
+            k: v for k, v in selection_dict.items() if k in self._obj.columns
+        }
+        _sel_query = _dict_to_query(_selection_dict)
+        WranglerLogger.debug(f"_sel_query:\n   {_sel_query}")
+        _df = self._obj.query(_sel_query, engine="python")
+
+        #if "params" in self._obj.__dict__:
+        #    _df.__dict__["params"] = copy.deepcopy(self._obj.__dict__["params"])
+            
+        if len(_df) == 0:
+            WranglerLogger.warning(
+                f"No records found in {_df.name} \
+                                   using selection: {selection_dict}"
+            )
+        return _df
+
+
+def _dict_to_query(
+    selection_dict: Mapping[str, Any],
+) -> str:
+    """Generates the query of from selection_dict.
+
+    Args:
+        selection_dict: selection dictionary
+
+    Returns:
+        _type_: Query value
+    """
+    WranglerLogger.debug("Building selection query")
+
+    def _kv_to_query_part(k, v, _q_part=""):
+        if isinstance(v, list):
+            _q_part += "(" + " or ".join([_kv_to_query_part(k, i) for i in v]) + ")"
+            return _q_part
+        if isinstance(v, str):
+            return k + '.str.contains("' + v + '")'
+        else:
+            return k + "==" + str(v)
+
+    query = (
+        "("
+        + " and ".join([_kv_to_query_part(k, v) for k, v in selection_dict.items()])
+        + ")"
+    )
+    WranglerLogger.debug(f"Selection query:\n{query}")
+    return query

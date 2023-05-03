@@ -1,7 +1,7 @@
 import copy
 import os
 
-from projectcard import ProjectCard
+from projectcard import read_card
 from network_wrangler.roadway import ModelRoadwayNetwork
 from network_wrangler import WranglerLogger
 
@@ -24,19 +24,16 @@ def test_add_adhoc_managed_lane_field(request, small_net):
     net = copy.deepcopy(small_net)
 
     net.links_df["ML_my_ad_hoc_field"] = 0
+    net.links_df.loc[SELECTED_LINK_INDEX, "ML_my_ad_hoc_field"] = AD_HOC_VALUE
     net.links_df["ML_my_ad_hoc_field"].iloc[SELECTED_LINK_INDEX] = AD_HOC_VALUE
     net.links_df["ML_lanes"] = 0
-    net.links_df["ML_lanes"].iloc[SELECTED_LINK_INDEX] = 1
+    net.links_df.loc[SELECTED_LINK_INDEX, "ML_lanes"] = 1
     net.links_df["ML_price"] = 0
-    net.links_df["ML_price"].iloc[SELECTED_LINK_INDEX] = 1.5
+    net.links_df.loc[SELECTED_LINK_INDEX, "ML_price"] = 1.5
     net.links_df["managed"] = 0
-    net.links_df["managed"].iloc[SELECTED_LINK_INDEX] = 1
+    net.links_df.loc[SELECTED_LINK_INDEX, "managed"] = 1
 
-    _model_link_id = net.links_df["model_link_id"].iloc[SELECTED_LINK_INDEX]
-    
-    WranglerLogger.debug(
-        f"model_link_id: {_model_link_id}\nml_model_link_id: {_ml_model_link_id}"
-    )
+    _model_link_id = net.links_df[SELECTED_LINK_INDEX, "model_link_id"]
 
     _display_cols = [
         "model_link_id",
@@ -50,8 +47,11 @@ def test_add_adhoc_managed_lane_field(request, small_net):
     WranglerLogger.debug(f"Network with field.\n{net.links_df[ _display_cols]}")
 
     m_net = net.model_net
-    _ml_model_link_id = m_net._link_id_to_managed_lane_link_id(_model_link_id)
 
+    _ml_model_link_id = m_net._link_id_to_managed_lane_link_id(_model_link_id)
+    WranglerLogger.debug(
+        f"model_link_id: {_model_link_id}\nml_model_link_id: {_ml_model_link_id}"
+    )
     _display_cols = ["model_link_id", "name", "my_ad_hoc_field", "lanes", "price"]
     WranglerLogger.debug(f"Managed Lane Network\n{m_net.m_links_df[_display_cols]}")
 
@@ -124,7 +124,9 @@ def test_create_ml_network_shape(request, small_net):
     base_model_link_ids = project_card_dictionary["facility"]["links"][0][
         "model_link_id"
     ]
-    ml_model_link_ids = [net.model_net.managed_lanes_link_id_scalar+ x for x in base_model_link_ids]
+    ml_model_link_ids = [
+        net.model_net.managed_lanes_link_id_scalar + x for x in base_model_link_ids
+    ]
     access_model_link_ids = [
         sum(x) + 1 for x in zip(base_model_link_ids, ml_model_link_ids)
     ]
@@ -191,7 +193,7 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
     # project_card_name = "test_managed_lanes_change_keyword.yml"
     project_card_name = "test_managed_lanes_restricted_access_egress.yml"
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate=False)
+    project_card = read_card(project_card_path, validate=False)
 
     net.apply_managed_lane_feature_change(
         net.select_roadway_features(project_card.facility), project_card.properties
@@ -223,8 +225,12 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
     expected_ml_link_ids = [
         net.model_net._link_id_to_managed_lane_link_id(x) for x in pcard_gp_link_ids
     ]
-    expected_access_link_ids = [net.model_net._access_model_link_id(x) for x in pcard_gp_link_ids]
-    expected_egress_link_ids = [net.model_net._egress_model_link_id(x) for x in pcard_gp_link_ids]
+    expected_access_link_ids = [
+        net.model_net._access_model_link_id(x) for x in pcard_gp_link_ids
+    ]
+    expected_egress_link_ids = [
+        net.model_net._egress_model_link_id(x) for x in pcard_gp_link_ids
+    ]
 
     net_gp_links = net.model_net.m_links_df.loc[net.m_links_df["managed"] == -1]
     net_ml_links = net.model_net.m_links_df.loc[net.m_links_df["managed"] == 1]

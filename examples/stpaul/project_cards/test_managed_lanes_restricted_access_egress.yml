@@ -4,37 +4,36 @@ dependencies:
   prerequisites: []
   corequisites: []
   conflicts: []
-category: Parallel Managed lanes
-facility:
-  links:
-    - model_link_id:
+roadway_managed_lanes:
+  facility:
+    model_link_id:
       - 390239
       - 391206
       - 390344
       - 401484
-properties:
-  - property: ML_lanes
-    set: 0
-    timeofday:
-    - time: ['6:00', '9:00']
-      set: 1
-    - time: ['15:00', '18:00']
-      set: 1
-  - property: lanes
-    change: 0
-    timeofday:
-    - time: ['6:00', '9:00']
-      change: -1
-    - time: ['15:00', '18:00']
-      change: -1
-  - property: segment_id
-    set: 5
-  - property: ML_HOV
-    set: 5
-  - property: HOV
-    set: 5
-  - property: ML_access_point
-    set: [38765, 87982]
-  - property: ML_egress_point
-    set: [87993, 37457]
+  property_changes:
+    - property: ML_lanes
+      set: 0
+      timeofday:
+      - time: ['6:00', '9:00']
+        set: 1
+      - time: ['15:00', '18:00']
+        set: 1
+    - property: lanes
+      change: 0
+      timeofday:
+      - time: ['6:00', '9:00']
+        change: -1
+      - time: ['15:00', '18:00']
+        change: -1
+    - property: segment_id
+      set: 5
+    - property: ML_HOV
+      set: 5
+    - property: HOV
+      set: 5
+    - property: ML_access_point
+      set: [38765, 87982]
+    - property: ML_egress_point
+      set: [87993, 37457]
 notes: Need to adjust normal lanes

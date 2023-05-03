@@ -1,12 +1,13 @@
+project: TO DO User Define
 changes:
-- category: Roadway Deletion
+- roadway_deletion:
   links:
     model_link_id:
     - 2171
     - 25856
     - 383747
     - 383790
-- category: New Roadway
+- roadway_addition:
   links:
   - A: 354386
     AADT: 770
@@ -371,5 +372,3 @@ changes:
     transit_node: 0
     walk_node: 0
     model_node_id: 354391
-project: TO DO User Define
-valid: false

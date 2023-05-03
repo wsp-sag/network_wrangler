@@ -34,7 +34,6 @@ MANAGED_LANES_REQUIRED_ATTRIBUTES = [
     "A",
     "B",
     "model_link_id",
-    "locationReferences",
 ]
 
 """
@@ -258,15 +257,6 @@ class ModelRoadwayNetwork:
             )
         )
         WranglerLogger.debug(f"_ref_gp_node_list: \n{_ref_gp_node_list}")
-        # update geometry and location references
-        ml_links_df["locationReferences"] = ml_links_df["locationReferences"].apply(
-            # lambda x: _update_location_reference(x)
-            lambda x: offset_location_reference(x)
-        )
-
-        ml_links_df["geometry"] = ml_links_df["locationReferences"].apply(
-            lambda x: line_string_from_location_references(x)
-        )
 
         # Get new node,link and shape IDs for managed lane mirrors
         ml_nodes_df = copy.deepcopy(self.net.nodes_df.loc[_ref_gp_node_list])
@@ -346,7 +336,6 @@ class ModelRoadwayNetwork:
             "model_link_id",
             "access",
             "drive_access",
-            "locationReferences",
         ]
 
         _optional_cols_to_keep = ["ML_access_point", "ML_egress_point", "ref"]

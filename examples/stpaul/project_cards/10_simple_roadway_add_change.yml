@@ -2,10 +2,6 @@ project: test simple roadway add
 tags:
   - 'add roadway'
 category: Add New Roadway
-dependencies:
-  prerequisites: []
-  corequisites: []
-  conflicts: []
 links:
   - A: 269066
     B: 268932

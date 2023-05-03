@@ -2,7 +2,7 @@ import json
 import os
 
 from dataclasses import dataclass, field
-from typing import Union, Mapping, Any, Optional
+from typing import Union, Mapping, Any, Optional, List
 
 import geopandas as gpd
 import pandas as pd
@@ -12,6 +12,7 @@ from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 
+import pandera as pa
 from pandera import check_input, check_output, DataFrameModel
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
@@ -19,18 +20,28 @@ from pandera.typing.geopandas import GeoSeries
 from ..logger import WranglerLogger
 from ..utils import line_string_from_location_references
 
+MODES_TO_NETWORK_LINK_VARIABLES = {
+    "drive": ["drive_access"],
+    "bus": ["bus_only", "drive_access"],
+    "rail": ["rail_only"],
+    "transit": ["bus_only", "rail_only", "drive_access"],
+    "walk": ["walk_access"],
+    "bike": ["bike_access"],
+}
+
 
 @dataclass
 class LinksParams:
     primary_key: str = field(default="model_link_id")
     _addtl_unique_ids: list[str] = field(default_factory=lambda: [])
-    _addtl_explicit_ids: list[str] = field(
-        default_factory= lambda: ["osm_link_id"]
-    )
+    _addtl_explicit_ids: list[str] = field(default_factory=lambda: ["osm_link_id"])
     from_node: str = field(default="A")
     to_node: str = field(default="B")
     fk_to_shape: str = field(default="shape_id")
     source_file: str = field(default=None)
+    modes_to_network_link_variables: dict = field(
+        default_factory=lambda: MODES_TO_NETWORK_LINK_VARIABLES
+    )
 
     @property
     def idx_col(self):
@@ -42,49 +53,43 @@ class LinksParams:
 
     @property
     def unique_ids(self):
-        return list(set(self._addtl_unique_ids.append(self.primary_key)))
+        _uids = self._addtl_unique_ids + [self.primary_key]
+        return list(set(_uids))
 
     @property
     def explicit_ids(self):
-        return list(set(self.unique_ids + self.p_addtl_explicit_ids))
+        return list(set(self.unique_ids + self._addtl_explicit_ids))
 
-MODES_TO_NETWORK_LINK_VARIABLES = {
-    "drive": ["drive_access"],
-    "bus": ["bus_only", "drive_access"],
-    "rail": ["rail_only"],
-    "transit": ["bus_only", "rail_only", "drive_access"],
-    "walk": ["walk_access"],
-    "bike": ["bike_access"],
-}
 
 class LinksSchema(DataFrameModel):
     """Datamodel used to validate if links_df is of correct format and types."""
 
     model_link_id: Series[int] = pa.Field(coerce=True, unique=True)
-    A: Series[Any] = pa.Field()
-    B: Series[Any] = pa.Field()
-    geometry: GeoSeries = pa.Field()
-    name: Series[str] = pa.Field()
-    rail_only: Series[bool] = pa.Field(coerce=True)
-    bus_only: Series[bool] = pa.Field(coerce=True)
-    drive_access: Series[bool] = pa.Field(coerce=True)
-    bike_access: Series[bool] = pa.Field(coerce=True)
-    walk_access: Series[bool] = pa.Field(coerce=True)
-    truck_access: Series[bool] = pa.Field(coerce=True)
+    A: Series[Any] = pa.Field(nullable=False)
+    B: Series[Any] = pa.Field(nullable=False)
+    geometry: GeoSeries = pa.Field(nullable=False)
+    name: Series[str] = pa.Field(nullable=False)
+    rail_only: Series[bool] = pa.Field(coerce=True, nullable=False)
+    bus_only: Series[bool] = pa.Field(coerce=True, nullable=False)
+    drive_access: Series[bool] = pa.Field(coerce=True, nullable=False)
+    bike_access: Series[bool] = pa.Field(coerce=True, nullable=False)
+    walk_access: Series[bool] = pa.Field(coerce=True, nullable=False)
 
-    roadway: Series[str] = pa.Field()
-    lanes: Series[int] = pa.Field(coerce=True)
+    roadway: Series[str] = pa.Field(nullable=False)
+    lanes: Series[int] = pa.Field(coerce=True, nullable=False)
 
-    osm_link_id: Optional[Series[str]] = pa.Field(coerce=True)
-    locationReferences: Optional[Series]
-    shape_id: Optional[Series[bool]] = pa.Field(coerce=True, unique=True)
+    # Optional Fields
+    truck_access: Optional[Series[bool]] = pa.Field(coerce=True, nullable=True)
+    osm_link_id: Optional[Series[str]] = pa.Field(coerce=True, nullable=True)
+    locationReferences: Optional[Series[Any]] = pa.Field(nullable=True)
+    shape_id: Optional[Series[Any]] = pa.Field(nullable=True)
 
     @pa.dataframe_check
     def unique_ab(cls, df: pd.DataFrame) -> bool:
         return ~df[["A", "B"]].duplicated()
 
 
-@check_output(LinksSchema)
+@check_output(LinksSchema, inplace=True)
 def read_links(
     filename: str, crs: int = 4326, links_params: Union[dict, LinksParams] = None
 ) -> gpd.GeoDataFrame:
@@ -107,13 +112,14 @@ def read_links(
     ]
     links_df = gpd.GeoDataFrame(link_properties, geometry=link_geometries)
     links_df = df_to_links_df(links_df, crs=crs, links_params=links_params)
-    links_params.source_file = filename
-
+    links_df.params.source_file = filename
+    # need to add params to _metadata in order to make sure it is copied. 
+    # see: https://stackoverflow.com/questions/50372509/why-are-attributes-lost-after-copying-a-pandas-dataframe/50373364#50373364
+    
     return links_df
 
 
-@check_input(LinksSchema)
-@check_output(LinksSchema)
+@check_output(LinksSchema, inplace=True)
 def df_to_links_df(
     links_df: gpd.GeoDataFrame, crs: int = 4326, links_params: LinksParams = None
 ) -> gpd.GeoDataFrame:
@@ -138,9 +144,13 @@ def df_to_links_df(
         links_params = LinksParams()
 
     links_df.__dict__["params"] = links_params
-
-    links_df[links_df.params.idx_col] = links_df[links_df.primary_key]
+    
+    links_df[links_df.params.idx_col] = links_df[links_df.params.primary_key]
     links_df.set_index(links_df.params.idx_col, inplace=True)
+
+    links_df._metadata += ['params']
+    links_df._metadata += ['crs']
+    return links_df
 
 
 def validate_wrangler_links_file(
@@ -177,63 +187,51 @@ def validate_wrangler_links_file(
 
     return False
 
+
 @pd.api.extensions.register_dataframe_accessor("mode_query")
 class ModeLinkAccessor:
     def __init__(self, pandas_obj):
         self._obj = pandas_obj
 
-    def __call__(self,modes:list,str):
+    def __call__(self, modes: List[str]):
         # filter the rows where drive_access is True
-        if isinstance(modes,str):
+        if isinstance(modes, str):
             modes = [modes]
         _mode_link_props = list(
-            set([m for m in modes for m in MODES_TO_NETWORK_LINK_VARIABLES[m]])
+            set(
+                [
+                    m
+                    for m in modes
+                    for m in self._obj.params.modes_to_network_link_variables[m]
+                ]
+            )
         )
+
         modal_links_df = self._obj.loc[self._obj[_mode_link_props].any(axis=1)]
-        return  modal_links_df
-
-@pd.api.extensions.register_dataframe_accessor("dict_query")
-class DictQueryAccessor:
-    def __init__(self, pandas_obj):
-        self._obj = pandas_obj
-
-    def __call__(self,selection_dict:dict):
-        # filter the rows where drive_access is True
-        _sel_query = dict_to_query(selection_dict)
-        q_links_df = self.net.links_df.query(_sel_query, engine="python")
-        if len(q_links_df) == 0:
-            WranglerLogger.warning(f"No links found using selection: {selection_dict}")
-        return q_links_df
+        return modal_links_df
 
 
-def dict_to_query(
-    selection_dict: Mapping[str, Any],
-) -> str:
-    """Generates the query of from selection_dict.
+@check_input(LinksSchema, inplace=True)
+def links_df_to_json(links_df: pd.DataFrame, properties: list):
+    """Export pandas dataframe as a json object.
+
+    Modified from: Geoff Boeing:
+    https://geoffboeing.com/2015/10/exporting-python-data-geojson/
 
     Args:
-        selection_dict: selection dictionary
-
-    Returns:
-        _type_: Query value
+        df: Dataframe to export
+        properties: list of properties to export
     """
-    WranglerLogger.debug("Building selection query")
 
-    def _kv_to_query_part(k, v, _q_part=""):
-        if isinstance(v, list):
-            _q_part += "(" + " or ".join([_kv_to_query_part(k, i) for i in v]) + ")"
-            return _q_part
-        if isinstance(v, str):
-            return k + '.str.contains("' + v + '")'
-        else:
-            return k + "==" + str(v)
+    # can't remember why we need this?
+    if "distance" in properties:
+        links_df["distance"].fillna(0)
 
-    query = (
-        "("
-        + " and ".join([_kv_to_query_part(k, v) for k, v in selection_dict.items()])
-        + ")"
-    )
-    WranglerLogger.debug(f"Selection query:\n{query}")
-    return query
+    json = []
+    for _, row in links_df.iterrows():
+        feature = {}
+        for prop in properties:
+            feature[prop] = row[prop]
+        json.append(feature)
 
-
+    return json

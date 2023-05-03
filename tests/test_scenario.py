@@ -4,7 +4,7 @@ import subprocess
 
 import pytest
 
-from projectcard import ProjectCard
+from projectcard import read_card, read_cards, write_card, ProjectCard
 from network_wrangler import Scenario
 from network_wrangler.scenario import (
     ScenarioConflictError,
@@ -23,7 +23,7 @@ def test_project_card_read(request, stpaul_card_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     in_file = os.path.join(stpaul_card_dir, "1_simple_roadway_attribute_change.yml")
-    project_card = ProjectCard.read(in_file)
+    project_card = read_card(in_file)
     WranglerLogger.debug(project_card)
     assert project_card.category == "Roadway Property Change"
     print("--Finished:", request.node.name)
@@ -34,9 +34,9 @@ def test_project_card_write(request, stpaul_card_dir, scratch_dir):
 
     in_file = os.path.join(stpaul_card_dir, "1_simple_roadway_attribute_change.yml")
     outfile = os.path.join(scratch_dir, "t_simple_roadway_attribute_change.yml")
-    project_card = ProjectCard.read(in_file)
-    project_card.write(outfile)
-    test_card = ProjectCard.read(in_file)
+    project_card = read_card(in_file)
+    write_card(project_card, outfile)
+    test_card = read_card(in_file)
     for k, v in project_card.__dict__.items():
         assert v == test_card.__dict__[k]
 
@@ -99,7 +99,6 @@ def test_scenario_corequisites(request):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.menow
 def test_scenario_prerequisites(request):
     """
     Shouldn't be able to apply projects if they don't have their pre-requisites applied first

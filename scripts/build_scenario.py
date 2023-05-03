@@ -3,7 +3,6 @@ import sys
 import yaml
 import warnings
 
-from projectcard import ProjectCard
 from network_wrangler import Scenario
 from network_wrangler.scenario import create_base_scenario
 
@@ -32,9 +31,7 @@ if __name__ == "__main__":
     base_node_name = config_dict.get("base_network").get("node_file_name")
     validate_base_network = config_dict.get("base_network").get("validate_network")
 
-    project_cards_filenames = config_dict.get("scenario").get("project_cards_filenames")
-    card_directory = config_dict.get("scenario").get("card_directory")
-    glob_search = config_dict.get("scenario").get("glob_search")
+    project_card_filepath = config_dict.get("scenario").get("project_card_filepath")
     project_tags = config_dict.get("scenario").get("tags")
 
     write_out = config_dict.get("scenario").get("write_out")
@@ -44,8 +41,8 @@ if __name__ == "__main__":
     if project_tags is None:
         project_tags = []
 
-    if project_cards_filenames is None:
-        project_cards_filenames = []
+    if project_card_filepath is None:
+        project_card_filepath = []
 
     # Create Base Network
     base_scenario = create_base_scenario(
@@ -57,18 +54,10 @@ if __name__ == "__main__":
         transit_dir=base_network_dir,
     )
 
-    # Create Scenaro Network
-    project_card_list = [
-        ProjectCard.read(filename, validate=False)
-        for filename in project_cards_filenames
-    ]
-
     my_scenario = Scenario.create_scenario(
         base_scenario=base_scenario,
-        card_search_directory=card_directory,
+        project_card_filepath=project_card_filepath,
         filter_tags=project_tags,
-        project_card_list=project_card_list,
-        glob_search=glob_search,
         validate=False,
     )
 

@@ -22,8 +22,8 @@ from ..logger import WranglerLogger
 @dataclass
 class NodesParams:
     primary_key: str = field(default="model_node_id")
-    _addtl_unique_ids: list[str] = field(default_factory= lambda: ["osm_node_id"])
-    source_file: str = field(default = None)
+    _addtl_unique_ids: list[str] = field(default_factory=lambda: ["osm_node_id"])
+    source_file: str = field(default=None)
 
     @property
     def idx_col(self):
@@ -35,29 +35,33 @@ class NodesParams:
 
     @property
     def unique_ids(self):
-        return list(set(self._addtl_unique_ids.append(self.primary_key)))
+        _uids = self._addtl_unique_ids + [self.primary_key]
+        return list(set(_uids))
 
 
 class NodesSchema(DataFrameModel):
     """Datamodel used to validate if links_df is of correct format and types."""
 
-    model_node_id: Series[int] = pa.Field(coerce=True, unique=True)
-    transit_node: Series[bool] = pa.Field(coerce=True)
-    drive_node: Series[bool] = pa.Field(coerce=True)
-    walk_node: Series[bool] = pa.Field(coerce=True)
-    bike_node: Series[bool] = pa.Field(coerce=True)
+    model_node_id: Series[int] = pa.Field(coerce=True, unique=True, nullable=False)
+
     geometry: GeoSeries
-    X: Series[float] = pa.Field(coerce=True)
-    Y: Series[float] = pa.Field(coerce=True)
+    X: Series[float] = pa.Field(coerce=True, nullable=False)
+    Y: Series[float] = pa.Field(coerce=True, nullable=False)
 
-    osm_node_id: Optional[Series[str]] = pa.Field(coerce=True, unique=True)
+    # optional fields
+    osm_node_id: Optional[Series[str]] = pa.Field(
+        coerce=True, unique=True, nullable=True
+    )
 
-    @pa.dataframe_check
-    def unique_ab(cls, df: pd.DataFrame) -> bool:
-        return ~df[["A", "B"]].duplicated()
+    # TODO not sure we even need these anymore since we pull modal networks based on connections
+    # to links now.
+    transit_node: Optional[Series[bool]] = pa.Field(coerce=True, nullable=True)
+    drive_node: Optional[Series[bool]] = pa.Field(coerce=True, nullable=True)
+    walk_node: Optional[Series[bool]] = pa.Field(coerce=True, nullable=True)
+    bike_node: Optional[Series[bool]] = pa.Field(coerce=True, nullable=True)
 
 
-@check_output(NodesSchema)
+@check_output(NodesSchema, inplace=True)
 def read_nodes(
     filename: str, crs: int = 4326, nodes_params: Union[dict, NodesParams] = None
 ) -> gpd.GeoDataFrame:
@@ -81,13 +85,12 @@ def read_nodes(
     ]
     nodes_df = gpd.GeoDataFrame(node_properties, geometry=node_geometries)
     nodes_df = df_to_nodes_df(nodes_df, crs=crs, nodes_params=nodes_params)
-    nodes_params.source_file = filename
-
+    nodes_df.params.source_file = filename
+    
     return nodes_df
 
 
-@check_input(NodesSchema)
-@check_output(NodesSchema)
+@check_output(NodesSchema, inplace=True)
 def df_to_nodes_df(
     nodes_df: gpd.GeoDataFrame, crs: int = 4326, nodes_params: NodesParams = None
 ) -> gpd.GeoDataFrame:
@@ -114,9 +117,11 @@ def df_to_nodes_df(
         nodes_params = NodesParams()
 
     nodes_df.__dict__["params"] = nodes_params
-
-    nodes_df[nodes_df.params.idx_col] = nodes_df[nodes_df.primary_key]
+    nodes_df._metadata += ['params']
+    nodes_df._metadata += ['crs']
+    nodes_df[nodes_df.params.idx_col] = nodes_df[nodes_df.params.primary_key]
     nodes_df.set_index(nodes_df.params.idx_col, inplace=True)
+    return nodes_df
 
 
 def validate_wrangler_nodes_file(
@@ -151,3 +156,26 @@ def validate_wrangler_nodes_file(
         WranglerLogger.error(json.dumps(exc.message, indent=2))
 
     return False
+
+
+@check_input(NodesSchema, inplace=True)
+def nodes_df_to_geojson(nodes_df: pd.DataFrame, properties: list):
+    """
+    Author: Geoff Boeing:
+    https://geoffboeing.com/2015/10/exporting-python-data-geojson/
+    """
+    from ..roadwaynetwork import RoadwayNetwork
+
+    geojson = {"type": "FeatureCollection", "features": []}
+    for _, row in nodes_df.iterrows():
+        feature = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {"type": "Point", "coordinates": []},
+        }
+        feature["geometry"]["coordinates"] = [row["geometry"].x, row["geometry"].y]
+        feature["properties"][nodes_df.params.primary_key] = row.name
+        for prop in properties:
+            feature["properties"][prop] = row[prop]
+        geojson["features"].append(feature)
+    return geojson

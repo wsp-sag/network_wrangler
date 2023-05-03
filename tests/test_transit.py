@@ -150,7 +150,7 @@ def test_select_transit_features_from_projectcard(request):
         print("Reading project card", test["file"], "...")
 
         project_card_path = os.path.join(STPAUL_DIR, "project_cards", test["file"])
-        project_card = ProjectCard.read(project_card_path)
+        project_card = read_card(project_card_path)
         sel = project_card.facility
 
         selected_trips = net.select_transit_features(sel)
@@ -214,7 +214,7 @@ def test_apply_transit_feature_change_from_projectcard(request):
         print("Reading project card", test["file"], "...")
 
         project_card_path = os.path.join(STPAUL_DIR, "project_cards", test["file"])
-        project_card = ProjectCard.read(project_card_path)
+        project_card = read_card(project_card_path)
         net = net.apply_transit_feature_change(
             net.select_transit_features(project_card.facility), project_card.properties
         )

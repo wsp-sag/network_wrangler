@@ -23,53 +23,6 @@ def topological_sort(adjacency_list, visited_list):
     return output_stack
 
 
-def links_df_to_json(df: pd.DataFrame, properties: list):
-    """Export pandas dataframe as a json object.
-
-    Modified from: Geoff Boeing:
-    https://geoffboeing.com/2015/10/exporting-python-data-geojson/
-
-    Args:
-        df: Dataframe to export
-        properties: list of properties to export
-    """
-
-    # can't remember why we need this?
-    if "distance" in properties:
-        df["distance"].fillna(0)
-
-    json = []
-    for _, row in df.iterrows():
-        feature = {}
-        for prop in properties:
-            feature[prop] = row[prop]
-        json.append(feature)
-
-    return json
-
-
-def point_df_to_geojson(df: pd.DataFrame, properties: list):
-    """
-    Author: Geoff Boeing:
-    https://geoffboeing.com/2015/10/exporting-python-data-geojson/
-    """
-    from ..roadwaynetwork import RoadwayNetwork
-
-    geojson = {"type": "FeatureCollection", "features": []}
-    for _, row in df.iterrows():
-        feature = {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {"type": "Point", "coordinates": []},
-        }
-        feature["geometry"]["coordinates"] = [row["geometry"].x, row["geometry"].y]
-        feature["properties"][RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK] = row.name
-        for prop in properties:
-            feature["properties"][prop] = row[prop]
-        geojson["features"].append(feature)
-    return geojson
-
-
 def make_slug(text, delimiter: str = "_"):
     """
     makes a slug from text

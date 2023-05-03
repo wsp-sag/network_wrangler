@@ -1,5 +1,6 @@
+project: Divided Route
 changes:
-- category: Roadway Deletion
+- roadway_deletion:
   links:
     model_link_id:
     - 400522
@@ -12,7 +13,7 @@ changes:
     - 153591
     - 182587
     - 142533
-- category: New Roadway
+- roadway_addition:
   links:
   - A: 65718
     AADT: 0
@@ -237,7 +238,7 @@ changes:
     transit_node: 0
     walk_node: 1
     model_node_id: 354391
-- category: Roadway Attribute Change
+- roadway_property_change:
   facility:
     A:
       travelModelId:
@@ -245,10 +246,9 @@ changes:
     B:
       travelModelId:
       - 83809
-    links:
-      model_link_id:
+    model_link_id:
       - 166734
-  properties:
+  property_changes:
   - existing: 166734
     property: model_link_id
     set: 142533
@@ -285,7 +285,7 @@ changes:
   - existing: 425.7981340837
     property: distance
     set: 0.32302
-- category: Roadway Attribute Change
+- roadway_property_change:
   facility:
     A:
       travelModelId:
@@ -293,10 +293,9 @@ changes:
     B:
       travelModelId:
       - 65718
-    links:
-      model_link_id:
+    model_link_id:
       - 182586
-  properties:
+  property_changes:
   - existing: 182586
     property: model_link_id
     set: 142533
@@ -306,5 +305,3 @@ changes:
   - existing: 135.4552073381
     property: distance
     set: 0.10162
-project: TO DO User Define
-valid: false

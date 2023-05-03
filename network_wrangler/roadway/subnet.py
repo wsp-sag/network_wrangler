@@ -2,12 +2,15 @@ import copy
 
 import pandas as pd
 
+from pandas.util import hash_pandas_object
+
 from .graph import links_nodes_to_ox_graph
 from ..logger import WranglerLogger
 
 
 class SubnetExpansionError(Exception):
     pass
+
 
 class SubnetCreationError(Exception):
     pass
@@ -23,8 +26,8 @@ class Subnet:
     ```
     selection_dict = {
         "links": {"name":['6th','Sixth','sixth']},
-        "start": {"osm_node_id": '187899923'},
-        "end": {"osm_node_id": '187865924'}
+        "from": {"osm_node_id": '187899923'},
+        "to": {"osm_node_id": '187865924'}
     }
 
     segment = Segment(net = RoadwayNetwork(...), selection_dict = selection_dict)
@@ -70,9 +73,9 @@ class Subnet:
                 Example:
                     ```
                     selection_dict = {
-                        "links": {"name":['6th','Sixth','sixth']},
-                        "start": {"osm_node_id": '187899923'},
-                        "end": {"osm_node_id": '187865924'}
+                        "name":['6th','Sixth','sixth'],
+                        "from": {"osm_node_id": '187899923'},
+                        "to": {"osm_node_id": '187865924'}
                     }
                     ```
                 Defaults to None.
@@ -89,17 +92,9 @@ class Subnet:
         Raises:
             ValueError: _description_
         """
-
-        self.subnet_links_df = subnet_links_df
+        self.net = net
+        self._subnet_links_df = subnet_links_df
         self.selection_dict = selection_dict
-
-        if self.subnet_links_df is None:
-            if self.selection_dict is None:
-                raise SubnetCreationError("Cannot create a subnet without one of subnet_links_df\
-                                           or seleciton_dict")
-            self.subnet_links_df = self.generate_subnet_from_selection_dict(
-                selection_dict
-            )
 
         self._i = i
         self._sp_weight_col = sp_weight_col
@@ -109,10 +104,29 @@ class Subnet:
         self._graph_link_hash = None
 
     @property
+    def subnet_links_df(self):
+        if self._subnet_links_df is None:
+
+            if self.selection_dict is None:
+                raise SubnetCreationError(
+                    "Cannot create a subnet without one of subnet_links_df\
+                    or selection_dict"
+                )
+            
+            self._subnet_links_df = self.generate_subnet_from_selection_dict(
+                self.selection_dict
+            )
+        return self._subnet_links_df
+
+    @property
     def graph_hash(self):
         """Hash of the links in order to detect a network change from when graph created."""
         return hash(
-            tuple(self.subnet_links_df, self._sp_weight_col, self._sp_weight_factor)
+            (
+                self.subnet_links_df.values.tobytes(),
+                self._sp_weight_col,
+                self._sp_weight_factor,
+            )
         )
 
     @property
@@ -121,8 +135,8 @@ class Subnet:
             self._graph = links_nodes_to_ox_graph(
                 self.subnet_links_df,
                 self.subnet_nodes_df,
-                sp_weight_col=self.sp_weight_col,
-                sp_weight_factor=self.sp_weight_factor,
+                sp_weight_col=self._sp_weight_col,
+                sp_weight_factor=self._sp_weight_factor,
             )
         return self._graph
 
@@ -147,13 +161,15 @@ class Subnet:
         selection_dict: dict,
     ) -> "Subnet":
         WranglerLogger.debug("Generating subnet from selection dict.")
+        WranglerLogger.debug(f"selection_dict: {selection_dict}")
 
-        _subnet_links_df = copy.deepcopy(self.net.links_df.dict_query(selection_dict))
+        _subnet_links_df = self.net.links_df.dict_query(selection_dict).copy() 
         _subnet_links_df["i"] = 0
+        WranglerLogger.debug(f"{len(_subnet_links_df)} links found for subnet.")
         if len(_subnet_links_df) == 0:
             WranglerLogger.warning(f"No links found using selection: {selection_dict}")
 
-        self.subnet_links_df = _subnet_links_df
+        return _subnet_links_df
 
     def expand_subnet_to_include_nodes(self, nodes_list: list):
         """Expand network to include list of nodes.

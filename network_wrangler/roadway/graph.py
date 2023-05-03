@@ -14,21 +14,16 @@ ox_major_version = int(ox.__version__.split(".")[0])
 
 def _drop_complex_df_columns(df: DataFrame) -> DataFrame:
     "Returns dataframe without columns with lists, tuples or dictionaries types."
-    # column types which could have complex types (i.e. lists, dicts, etc)
-    _drop_cols = list(
-        df.applymap(
-            lambda x: isinstance(x, list).any()
-            or isinstance(x, dict).any()
-            or isinstance(x, tuple).any()
-        )
-    )
 
-    if _drop_cols:
-        WranglerLogger.debug(
-            f"Dropping following columns from df becasue found complex \
-            types which osmnx wouldn't like: {_drop_cols}"
-        )
-        df = df.drop(_drop_cols, axis=1)
+    #columns we already know are complex
+    _drop_cols = ['geometry']
+    df = df.drop(_drop_cols, axis=1)
+
+    # find and drop any more complex column types
+    _drop_types = (list,dict,tuple)
+    _drop_cols = [c for c in df.columns if df[c].apply(type).isin(_drop_types).any() ]
+    df = df.drop(_drop_cols, axis=1)
+
     return df
 
 
@@ -41,11 +36,10 @@ def _nodes_to_graph_nodes(nodes_df: GeoDataFrame) -> GeoDataFrame:
     - property values which are simple int or strings
 
     Args:
-        nodes_df (GeoDataFrame): nodes geodataframe from RoadwayNetwork instance and index of
-            the nodes_df.params.primary_key
+        nodes_df (GeoDataFrame): nodes geodataframe from RoadwayNetwork instance 
     """
 
-    graph_nodes_df = copy.deepcopy(nodes_df)
+    graph_nodes_df = nodes_df.copy()
     graph_nodes_df.gdf_name = "network_nodes"
 
     # drop column types which could have complex types (i.e. lists, dicts, etc)
@@ -53,7 +47,7 @@ def _nodes_to_graph_nodes(nodes_df: GeoDataFrame) -> GeoDataFrame:
 
     # OSMNX is expecting id, x, y
     graph_nodes_df["id"] = graph_nodes_df.index
-    graph_nodes_df = graph_nodes_df.rename({"X": "x", "Y": "y"})
+    graph_nodes_df = graph_nodes_df.rename(columns = {"X": "x", "Y": "y"})
 
     return graph_nodes_df
 
@@ -72,7 +66,7 @@ def _links_to_graph_links(
         sp_weight_col: column to use for weights. Defaults to `distance`.
         sp_weight_factor: multiple to apply to the weights. Defaults to 1.
     """
-    graph_links_df = copy.deepcopy(links_df)
+    graph_links_df = links_df.copy()
 
     # drop column types which could have complex types (i.e. lists, dicts, etc)
     graph_links_df = _drop_complex_df_columns(graph_links_df)
@@ -86,19 +80,26 @@ def _links_to_graph_links(
 
     graph_links_df["weight"] = graph_links_df[sp_weight_col] * sp_weight_factor
 
-    # have to change this over into u,v b/c this is what osm-nx is expecting
+    # osm-nx is expecting u and v instead of A B - but first have to drop existing u/v
+
+    if "u" in graph_links_df.columns and "u" != links_df.params.from_node:
+        graph_links_df = graph_links_df.drop("u",axis=1)
+
+    if "v" in graph_links_df.columns and "v" != links_df.params.to_node:
+        graph_links_df = graph_links_df.drop("v", axis=1)
+
     graph_links_df = graph_links_df.rename(
-        {links_df.params.from_node: "u", links_df.params.to_node: "v"}
+        columns = {links_df.params.from_node: "u", links_df.params.to_node: "v"}
     )
 
-    graph_links_df["key"] = graph_links_df.index
-
+    graph_links_df["key"] = graph_links_df.index.copy()
     # Per osmnx u,v,key should be a multi-index;
     #     https://osmnx.readthedocs.io/en/stable/osmnx.html#osmnx.utils_graph.graph_from_gdfs
     # However - if the index is set before hand in osmnx version <1.0 then it fails
     #     on the set_index line *within* osmnx.utils_graph.graph_from_gdfs():
     #           `for (u, v, k), row in gdf_edges.set_index(["u", "v", "key"]).iterrows()
     if ox_major_version >= 1:
+
         graph_links_df = graph_links_df.set_index(keys=["u", "v", "key"], drop=True)
 
     return graph_links_df

@@ -17,7 +17,7 @@ def selection_map(
         selection: RoadwaySelectioninstance
     """
 
-    if selection.type == "segment_search":
+    if selection.selection_type == "segment_search":
         G = selection.segment.graph
     else:
         G = links_nodes_to_ox_graph(
@@ -48,7 +48,7 @@ def selection_map(
         )
         return node_marker
 
-    if selection.type == "segment_search":
+    if selection.selection_type == "segment_search":
         _folium_node(
             selection.selected_nodes_df.loc[selection.segment.O_pk],
             color="green",

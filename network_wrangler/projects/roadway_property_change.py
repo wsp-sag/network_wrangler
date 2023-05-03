@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 
 from ..logger import WranglerLogger
+from ..roadway.selection import SelectionFormatError
 
 
 def apply_roadway_property_change(
     roadway_net: "RoadwayNetwork",
-    df_idx: list,
-    properties: dict,
-    geometry_type="links",
+    selection: "Selection",
+    property_changes: dict,
 ) -> "RoadwayNetwork":
     """
     Changes the roadway attributes for the selected features based on the
@@ -16,16 +16,28 @@ def apply_roadway_property_change(
 
     Args:
         roadway_net: input RoadwayNetwork to apply change to
-        df_idx : list
-            lndices of all links or nodes to apply change to
-        properties : list of dictionarys
-            roadway properties to change
-        geometry_type: either 'links' or 'nodes'. Defaults to 'link'
+        selection : roadway selection object
+        property_changes : list of dictionarys roadway properties to change
     """
-    if geometry_type == "links":
-        roadway_net._apply_links_feature_change(df_idx, properties)
-    elif geometry_type == "nodes":
-        roadway_net._apply_nodes_feature_change(df_idx, properties)
+    # should only be for links or nodes at once, not both
+    if not len(selection.feature_types) == 1:
+        raise SelectionFormatError(
+            f"Should have exactly 1 feature type for roadway\
+            property change. Found: {selection.feature_types}"
+        )
+
+    if "links" in selection.feature_types:
+        _apply_links_feature_change(
+            roadway_net,
+            selection.selected_links,
+            property_changes
+        )
+    elif "nodes" in selection.feature_types:
+        _apply_nodes_feature_change(
+            roadway_net,
+            selection.selected_nodes,
+            property_changes
+        )
     else:
         raise ValueError("geometry_type must be either 'links' or 'nodes'")
 

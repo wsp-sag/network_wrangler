@@ -21,8 +21,8 @@ from ..logger import WranglerLogger
 @dataclass
 class ShapesParams:
     primary_key: str = field(default="shape_id")
-    _addtl_unique_ids: list[str] = field(default_factory= lambda: [])
-    source_file: str = field(default = None)
+    _addtl_unique_ids: list[str] = field(default_factory=lambda: [])
+    source_file: str = field(default=None)
 
     @property
     def idx_col(self):
@@ -37,10 +37,10 @@ class ShapesSchema(DataFrameModel):
     """Datamodel used to validate if links_df is of correct format and types."""
 
     shape_id: Series[Any] = pa.Field(unique=True)
-    geometry: GeoSeries
+    geometry: GeoSeries = pa.Field()
 
 
-@check_output(ShapesSchema)
+@check_output(ShapesSchema, inplace=True)
 def read_shapes(
     filename: str, crs: int = 4326, shapes_params: Union[dict, ShapesParams] = None
 ) -> gpd.GeoDataFrame:
@@ -57,15 +57,13 @@ def read_shapes(
     WranglerLogger.info(f"Reading shapes from {filename}.")
     with open(filename) as f:
         shapes_df = gpd.read_file(f)
-    shapes_df.dropna(subset=["geometry", "id"], inplace=True)
     shapes_df = df_to_shapes_df(shapes_df, crs=crs, shapes_params=shapes_params)
-    shapes_params.source_file = filename
+    shapes_df.params.source_file = filename
 
     return shapes_df
 
 
-@check_input(ShapesSchema)
-@check_output(ShapesSchema)
+@check_output(ShapesSchema, inplace=True)
 def df_to_shapes_df(
     shapes_df: gpd.GeoDataFrame, crs: int = 4326, shapes_params: ShapesParams = None
 ) -> gpd.GeoDataFrame:
@@ -91,8 +89,12 @@ def df_to_shapes_df(
 
     shapes_df.__dict__["params"] = shapes_params
 
-    shapes_df[shapes_df.params.idx_col] = shapes_df[shapes_df.primary_key]
+    shapes_df[shapes_df.params.idx_col] = shapes_df[shapes_df.params.primary_key]
+    shapes_df.dropna(subset=["geometry", shapes_df.params.primary_key], inplace=True)
     shapes_df.set_index(shapes_df.params.idx_col, inplace=True)
+    shapes_df._metadata += ['params']
+
+    return shapes_df
 
 
 def validate_wrangler_shapes_file(

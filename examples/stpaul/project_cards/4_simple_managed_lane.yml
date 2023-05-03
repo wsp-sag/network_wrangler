@@ -2,34 +2,30 @@ project: test managed lane project
 category: Parallel Managed lanes
 tags:
    - 'managed lanes'
-dependencies:
-  prerequisites: []
-  corequisites: []
-  conflicts: []
-facility:
-  links:
-    - model_link_id:
+roadway_managed_lanes:
+  facility:
+    model_link_id:
       - 385534
       - 412227
-properties:
-  - property: lanes
-    set: 3
-    timeofday:
-      - time: ['6:00', '9:00']
-        set: 2
-  - property: ML_lanes
-    set: 0
-    timeofday:
-      - time: ['6:00', '9:00']
-        set: 1
-  - property: segment_id
-    set: 5
-  - property: ML_HOV
-    set: 5
-  - property: HOV
-    set: 5
-  - property: ML_access
-    set: 'all'
-  - property: ML_egress
-    set: 'all'
+  property_changes:
+    - property: lanes
+      set: 3
+      timeofday:
+        - time: ['6:00', '9:00']
+          set: 2
+    - property: ML_lanes
+      set: 0
+      timeofday:
+        - time: ['6:00', '9:00']
+          set: 1
+    - property: segment_id
+      set: 5
+    - property: ML_HOV
+      set: 5
+    - property: HOV
+      set: 5
+    - property: ML_access
+      set: 'all'
+    - property: ML_egress
+      set: 'all'
 notes: Placeholder for notes

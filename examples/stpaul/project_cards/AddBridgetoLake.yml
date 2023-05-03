@@ -1,5 +1,5 @@
-changes:
-- category: New Roadway
+project: Add bridge to lake
+roadway_addition:
   links:
   - A: 36622
     AADT: 1800
@@ -41,5 +41,3 @@ changes:
     drive_access: 1
     transit_access: 0
     walk_access: 0
-project: Add bridge to lake
-valid: false
