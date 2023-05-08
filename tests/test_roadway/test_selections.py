@@ -1,12 +1,15 @@
 import copy
 import os
 
+import pandas as pd
+
 import pytest
 
 from projectcard import read_card
 import network_wrangler
 from network_wrangler import RoadwayNetwork
 from network_wrangler import WranglerLogger
+from network_wrangler.roadway import RoadwaySelection
 from network_wrangler.roadwaynetwork import _dict_to_query
 
 """
@@ -14,83 +17,214 @@ Run just the tests labeled basic using `pytest tests/test_roadway/test_selection
 To run with print statments, use `pytest -s tests/test_roadway/test_selections.py`
 """
 
+def test_dfhash(request,stpaul_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    df = pd.DataFrame({'a':[1,2,3],'b':[2,4,5]})
+    hash1 = df.df_hash()
+    hash2 = df.df_hash()
+    WranglerLogger.debug(f"Simple DF\nhash1: {hash1}\nhash2: {hash2}")
+    assert hash1==hash2
 
-@pytest.mark.parametrize(
-    "selection",
-    [
-        {  # SELECTION 1 - OLD PROJECT CARD
-            "links": [{"name": ["6th", "Sixth", "sixth"]}],
-            "A": {"osm_node_id": "187899923"},
-            "B": {"osm_node_id": "187865924"},
-            "answer": ["187899923", "187858777", "187923585", "187865924"],
-        },
-        {  # SELECTION 1 - CURRENT PROJECT CARD
+    df = stpaul_net.nodes_df
+    hash1 = df.df_hash()
+    hash2 = df.df_hash()
+    WranglerLogger.debug(f"Full Nodes\nhash1: {hash1}\nhash2: {hash2}")
+    assert hash1==hash2
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+def test_links_in_path(request,stpaul_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    links_df = pd.DataFrame({'A':[1,1,2,4,3],'B':[2,4,4,5,5],'id':['one','two','three','four','five']})
+    path = [1,4,5]
+    path_links_df = stpaul_net.links_in_path(links_df,path)
+    WranglerLogger.info(f"Path Nodes: {path}")
+    WranglerLogger.info(f"Path Links:\n {path_links_df}")
+    answer_ids = ['two','four']
+    assert path_links_df['id'].tolist() == answer_ids
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+TEST_SELECTIONS = [
+    {  # SELECTION 1
+        "links":{
             "name": ["6th", "Sixth", "sixth"],
-            "from": {"osm_node_id": "187899923"},
-            "to": {"osm_node_id": "187865924"},
-            "answer": ["187899923", "187858777", "187923585", "187865924"],
         },
-        {  # SELECTION 2 - OLD PROJECT CARD
-            "links": [{"name": ["6th", "Sixth", "sixth"]}],
-            "A": {"osm_node_id": "187899923"},
-            "B": {"osm_node_id": "187942339"},
+        "from": {"osm_node_id": "187899923"},
+        "to": {"osm_node_id": "187865924"},
+    },
+    {  # SELECTION 2 
+        "links":{
+            "name": ["Lafayette"],
         },
-        {  # SELECTION 2 - CURRENT PROJECT CARD
-            "name": ["6th", "Sixth", "sixth"],
-            "from": {"osm_node_id": "187899923"},
-            "to": {"osm_node_id": "187942339"},
+        "from": {"osm_node_id": "2292977517"},
+        "to": {"osm_node_id": "507951637"},
+    },
+    {  # SELECTION 3 
+        "links":{
+            "name": ["University Ave"],
+            "lanes": [1],
         },
-        {  # SELECTION 3 - OLD
-            "links": [{"name": ["6th", "Sixth", "sixth"]}, {"lanes": [1, 2]}],
-            "A": {"osm_node_id": "187899923"},
-            "B": {"osm_node_id": "187942339"},
-        },
-        {  # SELECTION 3 - CURRENT
-            "name": ["6th", "Sixth", "sixth"],
-            "lanes": [1, 2],
-            "from": {"osm_node_id": "187899923"},
-            "to": {"osm_node_id": "187942339"},
-        },
-        {  # SELECTION 4 - OLD
-            "links": [{"name": ["I 35E"]}],
-            "A": {"osm_node_id": "961117623"},
-            "B": {"osm_node_id": "2564047368"},
-        },
-        {  # SELECTION 4 - NEW
+        "from": {"osm_node_id": "716319401"},
+        "to": {"model_node_id": "62153"},
+    },
+    {  # SELECTION 4 
+        "links":{
             "name": ["I 35E"],
-            "from": {"osm_node_id": "961117623"},
-            "to": {"osm_node_id": "2564047368"},
         },
-        {  # SELECTION 5
-            "osm_link_id": ["221685900"],
-            "from": {"model_node_id": "68075"},
-            "to": {"model_node_id": "131216"},
-            "answer": ["445978", "147798"],
+        "from": {"osm_node_id": "954746969"},
+        "to": {"osm_node_id": "3071141242"},
+    },
+    {  # SELECTION 5
+        "links":{
+            "osm_link_id": ["221685893"],
         },
-        {  # SELECTION 6
+        "from": {"model_node_id": "131209"},
+        "to": {"model_node_id": "131221"},
+    },
+    {  # SELECTION 6
+        "links":{
             "model_link_id": ["390239", "391206", "281", "1464"],
             "lanes": [1, 2],
-            "answer": ["281", "1464"],
         },
-    ],
-)
-def test_select_roadway_features(request, selection, stpaul_net):
+    },
+    {  # SELECTION 7
+        "links":{
+            "all": True,
+            "lanes": [1, 2],
+        },
+    },
+    {  # SELECTION 8
+        "links":{
+            "all": True,
+        },
+    },
+    {  # SELECTION 9
+        "modes": ["walk"],
+        "links":{
+            "name": ["Valley Street"],
+        },
+        "from":{
+            "model_node_id":174762
+        },
+        "to":{
+            "model_node_id":43041
+        },
+    }
+]
+
+
+node_sel_dict_answers = [
+    {   
+        "from": {"osm_node_id": "187899923"},
+        "to": {"osm_node_id": "187865924"},
+    },
+    {  
+        "from": {"osm_node_id": "2292977517"},
+        "to": {"osm_node_id": "507951637"},
+    },
+    {  
+        "from": {"osm_node_id": "716319401"},
+        "to": {"model_node_id": "62153"},
+    },
+    {  
+        "from": {"osm_node_id": "961117623"},
+        "to": {"osm_node_id": "2564047368"},
+    },
+    {  
+        "from": {"model_node_id": "131209"},
+        "to": {"model_node_id": "131221"},
+    },
+    { },
+    { },
+    { },
+    {
+        "from":{"model_node_id":174762 },
+        "to":{"model_node_id":43041},
+    },
+]
+
+
+@pytest.mark.parametrize("selection,answer",zip(TEST_SELECTIONS,node_sel_dict_answers))
+def test_calc_node_selection_dict(request,selection,answer):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    d = RoadwaySelection.calc_node_selection_dict(selection)
+    assert d == answer
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+link_sel_dict_answers = [
+    {  
+        "name": ["6th", "Sixth", "sixth"],
+    },
+    {  
+        "name": ["Lafayette"],
+    },
+    {  
+        "name": ["University Ave"],
+        "lanes": [1],
+    },
+    {  
+        "name": ["I 35E"],
+    },
+    {  
+        "osm_link_id": ["221685893"],
+    },
+    {  
+        "model_link_id": ["390239", "391206", "281", "1464"],
+        "lanes": [1, 2],
+    },
+    {  
+        "all": True,
+        "lanes": [1, 2],
+    },
+    {  
+        "all": True,
+    },
+    {
+        "name": ["Valley Street"]
+    },
+]
+
+@pytest.mark.parametrize("selection,answer",zip(TEST_SELECTIONS,link_sel_dict_answers))
+def test_calc_link_selection_dict(request,selection,answer):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    d = RoadwaySelection.calc_link_selection_dict(selection)
+    assert d == answer
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+#  134543, 488245
+
+answer_selected_links = [
+    [134543, 85185, 154004], # SELECTION 1
+    [386035,401018,401019], # SELECTION 2
+    [412924,389361], # SELECTION 3
+    [381412,392837,394194,394196,391146], # SELECTION 4
+    [294513,294518,294532], # SELECTION 5
+    [281, 1464],# SELECTION 6
+    None,# SELECTION 7 - all links
+    None,# SELECTION 8 - all links with some features
+    [460228,481940] # SELECTION 9 - Valley Street Pedestrian Ways
+]
+@pytest.mark.menow
+@pytest.mark.parametrize("selection,answer",zip(TEST_SELECTIONS,answer_selected_links))
+def test_select_roadway_features(request, selection, answer, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = stpaul_net
-    print("--->", selection)
-
-    _selection_dict = copy.deepcopy(selection)
-    _selection_dict.pop("answer", None)
-
-    _selection = net.get_selection(_selection_dict)
-
+    WranglerLogger.info(f"Selecting--->{selection}")
+    WranglerLogger.info(f"Num Net Selections: {len(net._selections)}")
+    _selection = net.get_selection(selection)
+    _show_f = ["A","B","name","osm_link_id","model_link_id","lanes"]
     selected_link_indices = _selection.selected_links
-    WranglerLogger.debug(f"{len(_selection.selected_links)} links selected")
-    WranglerLogger.debug(
-        f"Selected Links: {len(_selection.selected_links_df[_selection_dict.keys])}"
-    )
-    if "answer" in selection.keys():
-        assert set(_selection.segment.segment_nodes) == set(selection["answer"])
+    WranglerLogger.info(f"{len(_selection.selected_links)} links selected")
+    if _selection.selection_type == "segment_search":
+        WranglerLogger.info(f"Segment Path: \n{_selection.segment.segment_nodes}")
+        WranglerLogger.info(f"Segment Links: \n{_selection.segment.segment_links_df[_show_f]}")
+    WranglerLogger.info(f"Selected Links")
+    
+    if len(selected_link_indices )<10:
+        WranglerLogger.info(f"Selected Links: \n{_selection.selected_links_df[_show_f]}")
+        
+    if answer:
+        WranglerLogger.info(f"Answer Links: {answer}")
+        assert set(selected_link_indices) == set(answer)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 

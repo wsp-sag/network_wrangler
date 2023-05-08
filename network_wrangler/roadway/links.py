@@ -60,6 +60,10 @@ class LinksParams:
     def explicit_ids(self):
         return list(set(self.unique_ids + self._addtl_explicit_ids))
 
+    @property
+    def display_cols(self):
+        _addtl = ['lanes']
+        return list(set(self.explicit_ids + self.fks_to_nodes + _addtl))
 
 class LinksSchema(DataFrameModel):
     """Datamodel used to validate if links_df is of correct format and types."""
@@ -149,7 +153,7 @@ def df_to_links_df(
     links_df.set_index(links_df.params.idx_col, inplace=True)
 
     links_df._metadata += ['params']
-    links_df._metadata += ['crs']
+
     return links_df
 
 

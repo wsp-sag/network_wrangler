@@ -36,18 +36,6 @@ SEARCH_BREADTH = 5
 """
 MAX_SEARCH_BREADTH = 10
 
-"""
-(list[str]) list of fields in a selection dictionary that match the starting node of the segment
-"""
-SEGMENT_START_KEYS = ["A", "from"]
-
-
-"""
-(list[str]) list of fields in a selection dictionary that match the ending node of the segment
-"""
-SEGMENT_END_KEYS = ["B", "to"]
-
-
 class SegmentFormatError(Exception):
     pass
 
@@ -87,8 +75,8 @@ class Segment:
     attr:
         net: Associated RoadwayNetwork object
         selection: segment selection
-        start_node_pk: value of the primary key (usually model_node_id) for segment start node
-        end_node_pk: value of the primary key (usually model_node_id) for segment end node
+        from_node_pk: value of the primary key (usually model_node_id) for segment start node
+        to_node_pk: value of the primary key (usually model_node_id) for segment end node
         subnet: Subnet object (and associated graph) on which to do shortest path search
         segment_nodes: list of primary keys of nodes within the selected segment. Will be lazily
             evaluated as the result of connected_path_search().
@@ -132,8 +120,8 @@ class Segment:
             )
         self.selection = selection
 
-        self.start_node_pk = self._start_node_pk()
-        self.end_node_pk = self._end_node_pk()
+        self.from_node_pk = self._from_node_pk()
+        self.to_node_pk = self._to_node_pk()
 
         self._sp_weight_col = sp_weight_col
         self._sp_weight_factor = sp_weight_factor
@@ -144,17 +132,25 @@ class Segment:
         # segment members are identified by storing nodes along a route
         self._segment_nodes = None
 
+        WranglerLogger.info(f"Segment created: {self}")
+
     @property
     def segment_selection_dict(self) -> list:
         """Selection dictionary which only has keys related to creation of the segment.
 
         AKA segment_id_props.
         """
-        return {
+        d = {
             k: v
-            for k, v in self.selection.selection_dict.items()
+            for k, v in self.selection.link_selection_dict.items()
             if k in self.segment_id_props
         }
+        if not d:
+            raise SegmentFormatError(f"link_selection_dict doesn't generate a valid segment\
+                                     selection dictionary:\n \
+                                     link_selection_dict: {self.selection.link_selection_dict}\n\
+                                     self.segment_id_props: {self.segment_id_props}")
+        return d
 
     @property
     def segment_id_props(self) -> list:
@@ -166,13 +162,14 @@ class Segment:
         _segment_id_props += [
             p
             for p in self.net.links_df.params.explicit_ids
-            if p in self.selection.selection_dict.keys()
+            if p in self.selection.link_selection_dict.keys()
         ]
         return list(set(_segment_id_props))
 
     @property
     def segment_nodes(self) -> list:
         if self._segment_nodes is None:
+            WranglerLogger.debug(f"Segment not found yet so conducting connected_path_search.")
             self.connected_path_search()
         return self._segment_nodes
 
@@ -182,14 +179,9 @@ class Segment:
 
     @property
     def segment_links_df(self):
-        return self.net.links_df[
-            self.net.links_df[self.net.links_df.params.from_node].isin(
-                self.segment_nodes
-            )
-            & self.net.links_df[self.net.links_df.params.to_node].isin(
-                self.segment_nodes
-            )
-        ]
+        modal_links_df = self.net.links_df.mode_query(self.selection.modes)
+        segment_links_df = self.net.links_in_path(modal_links_df,self.segment_nodes)
+        return segment_links_df
 
     @property
     def segment_links(self):
@@ -199,30 +191,26 @@ class Segment:
         self,
     ) -> None:
         """
-        Finds a path from start_node_pk to send_node_pk based on the weight col value/factor.
+        Finds a path from from_node_pk to to_node_pk based on the weight col value/factor.
         """
         WranglerLogger.debug(f"Initial set of nodes: {self.subnet.subnet_nodes}")
 
         # expand network to find at least the origin and destination nodes
         self.subnet.expand_subnet_to_include_nodes(
-            [self.start_node_pk, self.end_node_pk]
+            [self.from_node_pk, self.to_node_pk]
         )
 
         # Once have A and B in graph try calculating shortest path and iteratively
         #    expand if not found.
         WranglerLogger.debug("Calculating shortest path from graph")
-        while (
-            not self._find_subnet_shortest_path()
-            and self._i <= self._max_search_breadth
-        ):
-            self._i += 1
-            WranglerLogger.debug(
-                f"Adding breadth to find a connected path in subnet \
-                i/max_i: {self._i}/{self._max_search_breadth}"
-            )
-            self._expand_subnet_breadth()
+        _found = False
+        _found = self._find_subnet_shortest_path()
 
-        if not self.found:
+        while not _found and self.subnet._i <= self._max_search_breadth:
+            self.subnet._expand_subnet_breadth()
+            _found = self._find_subnet_shortest_path()
+
+        if not _found:
             WranglerLogger.debug(
                 f"No connected path found from {self.O.pk} and {self.D_pk}\n\
                 self.subnet_links_df:\n{self.subnet_links_df}"
@@ -231,13 +219,9 @@ class Segment:
                 f"No connected path found from {self.O.pk} and {self.D_pk}"
             )
 
-    def _start_node_pk(self):
+    def _from_node_pk(self):
         """Find start node in selection dict and return its primary key."""
-        _search_keys = SEGMENT_START_KEYS
-        _node_dict = None
-        for k in _search_keys:
-            if self.selection.selection_dict.get(k):
-                _node_dict = self.selection.selection_dict[k]
+        _node_dict = self.selection.node_selection_dict.get("from")
         if not _node_dict:
             raise SegmentFormatError("Can't find start node in selection dict.")
         if len(_node_dict) > 1:
@@ -246,13 +230,9 @@ class Segment:
             )
         return self._get_node_pk_from_selection_dict_prop(_node_dict)
 
-    def _end_node_pk(self):
+    def _to_node_pk(self):
         """Find end node in selection dict and return its primary key."""
-        _search_keys = SEGMENT_END_KEYS
-        _node_dict = None
-        for k in _search_keys:
-            if self.selection.selection_dict.get(k):
-                _node_dict = self.selection.selection_dict[k]
+        _node_dict = self.selection.node_selection_dict.get("to")
         if not _node_dict:
             raise SegmentFormatError("Can't find end node in selection dict.")
         if len(_node_dict) > 1:
@@ -269,6 +249,7 @@ class Segment:
         _node_prop, _val = next(iter(prop_dict.items()))
 
         if _node_prop == self.net.nodes_df.params.primary_key:
+            
             return _val
 
         _pk_list = self.net.nodes_df[
@@ -290,65 +271,94 @@ class Segment:
         args:
             selection_dict: selection dictionary to use for generating subnet
         """
+        if not selection_dict:
+            raise SegmentFormatError("No selection provided to generate subnet from.")
+        
+        WranglerLogger.info(f"Creating subnet from dictionary: {selection_dict}")
         _selection_dict = copy.deepcopy(selection_dict)
         # First search for initial set of links using "name" field, combined with values from "ref"
 
         if "ref" in selection_dict:
             _selection_dict["name"] += _selection_dict["ref"]
             del _selection_dict["ref"]
-
+        WranglerLogger.info(f"Initially dictionary for subnet search: {_selection_dict}")
         subnet = Subnet(
             self.net,
+            modes = self.selection.modes,
             selection_dict=_selection_dict,
             sp_weight_col=self._sp_weight_col,
             sp_weight_factor=self._sp_weight_factor,
             max_search_breadth=self._max_search_breadth,
         )
-
-        if subnet.num_links == 0 and "ref" in selection_dict:
+        if subnet.exists:
+            WranglerLogger.info(f"Found subnet with {len(subnet.subnet_links_df)} links searching name")
+            return subnet
+        
+        if "ref" in selection_dict:
             del _selection_dict["name"]
             _selection_dict["ref"] = selection_dict["ref"]
 
-            WranglerLogger.debug(f"Searching with ref = {_selection_dict['ref']}")
-            subnet = Subnet(self.net, selection_dict=_selection_dict)
-            _selection_dict = copy.deepcopy(selection_dict)
+            WranglerLogger.info(f"Trying subnet search with 'ref': {_selection_dict}")
+            subnet = Subnet(
+                self.net,
+                modes = self.selection.modes,
+                selection_dict=_selection_dict,
+                sp_weight_col=self._sp_weight_col,
+                sp_weight_factor=self._sp_weight_factor,
+                max_search_breadth=self._max_search_breadth,
+            )
+        if subnet.exists:
+            WranglerLogger.info(f"Found subnet with {len(subnet.subnet_links_df)} links searching for ref in ref")
+            return subnet
 
-        # i is iteration # for an iterative search for connected paths with larger subnet
-        if subnet.num_links == 0:
+        if "name" in selection_dict:
+            _selection_dict = copy.deepcopy(selection_dict)
+            del _selection_dict["name"]
+            _selection_dict["ref"] = selection_dict["name"]
+
+            WranglerLogger.info(f"Trying subnet search using name as ref: {_selection_dict}")
+            subnet = Subnet(
+                self.net,
+                modes = self.selection.modes,
+                selection_dict=_selection_dict,
+                sp_weight_col=self._sp_weight_col,
+                sp_weight_factor=self._sp_weight_factor,
+                max_search_breadth=self._max_search_breadth,
+            )
+        
+        if not subnet.exists:
             WranglerLogger.error(
                 f"Selection didn't return subnet links: {_selection_dict}"
             )
             raise SegmentSelectionError("No links found with selection.")
+        WranglerLogger.info(f"Found subnet with {len(subnet.subnet_links_df)} searching name in ref")
         return subnet
 
     def _find_subnet_shortest_path(
         self,
     ) -> bool:
-        """Finds shortest path from start_node_pk to end_node_pk using self.subnet.graph.
+        """Finds shortest path from from_node_pk to to_node_pk using self.subnet.graph.
 
-        Args:
-            sp_weight_col (str, optional): _description_. Defaults to SP_WEIGHT_COL.
-            sp_weight_factor (float, optional): _description_. Defaults to SP_WEIGHT_FACTOR.
+        Sets self._segment_nodes to resulting path nodes
 
         Returns:
-            _type_: boolean indicating if shortest path was found
+            bool: True if shortest path was found
         """
 
         WranglerLogger.debug(
-            f"Calculating shortest path from {self.start_node_pk} to {self.end_node_pk}\
-                using {self._sp_weight_col} as \
-                weight with a factor of {self._sp_weight_factor}"
+            f"Calculating shortest path from {self.from_node_pk} to {self.to_node_pk}\
+            using {self._sp_weight_col} as weight with a factor of {self._sp_weight_factor}"
         )
         self.subnet._sp_weight_col = self._sp_weight_col
         self.subnet._weight_factor = self._sp_weight_factor
 
-        self._segment_route_nodes = shortest_path(
-            self.subnet.graph, self.start_node_pk, self.end_node_pk
+        self._segment_nodes = shortest_path(
+            self.subnet.graph, self.from_node_pk, self.to_node_pk
         )
 
-        if not self._segment_route_nodes:
+        if not self._segment_nodes:
             WranglerLogger.debug(
-                f"No SP from {self.start_node_pk} to {self.end_node_pk} Found."
+                f"No SP from {self.from_node_pk} to {self.to_node_pk} Found."
             )
             return False
 

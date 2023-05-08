@@ -15,13 +15,12 @@ ox_major_version = int(ox.__version__.split(".")[0])
 def _drop_complex_df_columns(df: DataFrame) -> DataFrame:
     "Returns dataframe without columns with lists, tuples or dictionaries types."
 
-    #columns we already know are complex
-    _drop_cols = ['geometry']
-    df = df.drop(_drop_cols, axis=1)
-
-    # find and drop any more complex column types
+    _cols_to_exclude =  ['geometry']
+    _cols_to_search = [c for c in df.columns if c not in _cols_to_exclude]
     _drop_types = (list,dict,tuple)
-    _drop_cols = [c for c in df.columns if df[c].apply(type).isin(_drop_types).any() ]
+
+    _drop_cols = [c for c in _cols_to_search if df[c].apply(type).isin(_drop_types).any() ]
+
     df = df.drop(_drop_cols, axis=1)
 
     return df
@@ -182,7 +181,7 @@ def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
 
 
 def shortest_path(
-    self, G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight"
+    G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight"
 ) -> tuple:
     """
 

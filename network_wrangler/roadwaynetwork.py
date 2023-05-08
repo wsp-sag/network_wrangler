@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import copy
@@ -12,11 +13,11 @@ from typing import Collection, List, Union, Mapping, Any
 
 import geopandas as gpd
 import networkx as nx
+import numpy as np
 import pandas as pd
 
 from geopandas.geodataframe import GeoDataFrame
 from pandas.core.frame import DataFrame
-from pandas.util import hash_pandas_object
 from projectcard import ProjectCard
 
 from .projects import (
@@ -181,9 +182,13 @@ class RoadwayNetwork(object):
             )
         return self._shapes_df
 
+
     @property
     def network_hash(self):
-        return hash((self.links_df.values.tobytes(), self.nodes_df.values.tobytes()))
+        _value = str.encode(self.links_df.df_hash()+"-"+self.nodes_df.df_hash())
+        
+        _hash = hashlib.sha256(_value).hexdigest()
+        return _hash
 
     @property
     def model_net(self):
@@ -311,7 +316,9 @@ class RoadwayNetwork(object):
     def get_selection(
         self, selection_dict: dict, overwrite: bool = False
     ) -> RoadwaySelection:
-        """Return selection if it already exists, otherwise performan selection.
+        """Return selection if it already exists, otherwise performs selection.
+
+        Will raise an error if no links or nodes found.
 
         Args:
             selection_dict (dict): _description_
@@ -321,13 +328,24 @@ class RoadwayNetwork(object):
             Selection: _description_
         """
         key = RoadwaySelection._assign_selection_key(selection_dict)
+        WranglerLogger.debug(f"Getting selection from key: {key}")
         if (key not in self._selections) or overwrite:
+            WranglerLogger.debug(f"Performing selection from key: {key}")
             self._selections[key] = RoadwaySelection(self, selection_dict)
+        else: 
+            WranglerLogger.debug(f"Using cached selection from key: {key}")
+
+        if not self._selections[key]:
+            WranglerLogger.debug(f"No links or nodes found for selection dict:\n {selection_dict}")
+            raise ValueError("Selection not successful.")
         return self._selections[key]
 
     def modal_graph_hash(self, mode):
         """Hash of the links in order to detect a network change from when graph created."""
-        return hash((self.links_df.values.tobytes(), mode))
+        _value = str.encode(self.links_df.df_hash()+"-"+ mode)
+        _hash = hashlib.sha256(_value).hexdigest()
+        
+        return  _hash
 
     def get_modal_graph(self, mode):
         from .roadway.graph import net_to_graph
@@ -646,6 +664,32 @@ class RoadwayNetwork(object):
         )
 
         return _selected_links_df
+
+    def links_in_path(
+        self, 
+        links_df: pd.DataFrame, 
+        node_id_path_list: list
+    ):
+        """Returns a selection of links dataframe with nodes along path defined by node_id_path_list.
+
+        Args:
+            links_df (pd.DataFrame): Links dataframe to select from
+            node_id_path_list (list): List of node primary keys.
+        """
+        _ab_pairs = [node_id_path_list[i:i+2] for i,_ in enumerate(node_id_path_list)][:-1]
+        _cols = self.links_df.params.fks_to_nodes
+        _idx_col = self.links_df.params.idx_col
+        _sel_df = pd.DataFrame(
+            _ab_pairs, 
+            columns=_cols
+        )
+        WranglerLogger.debug(f"Selecting links that match _sel_df:\n{_sel_df}")
+
+        _sel_links_df = pd.merge(links_df.reset_index(), _sel_df, how='inner').set_index(_idx_col)
+        WranglerLogger.debug(f"Selected links that match _sel_links_df:\n{_sel_df}")
+
+        return _sel_links_df
+
 
     def _update_node_geometry_in_links_shapes(
         self,
@@ -1071,6 +1115,22 @@ class RoadwayNetwork(object):
         return _nodes_from_links_ab
 
 
+@pd.api.extensions.register_dataframe_accessor("df_hash")
+class dfHash:
+    """Creates a dataframe hash that is compatable with geopandas and various metadata.
+
+    Definitely not the fastest, but she seems to work where others have failed. 
+    """
+    def __init__(self, pandas_obj):
+        self._obj = pandas_obj
+
+    def __call__(self):
+     
+        _value = str(self._obj.values).encode()
+        hash = hashlib.sha1(_value).hexdigest()
+        return hash
+
+
 @pd.api.extensions.register_dataframe_accessor("dict_query")
 class DictQueryAccessor:
     """
@@ -1095,17 +1155,18 @@ class DictQueryAccessor:
         self._obj = pandas_obj
 
     def __call__(self, selection_dict: dict):
-        # filter the rows for the mode
+        
         _selection_dict = {
             k: v for k, v in selection_dict.items() if k in self._obj.columns
         }
+
+        if not _selection_dict:
+            raise ValueError(f"Relevant part of selection dictionary is empty: {selection_dict}")
+        
         _sel_query = _dict_to_query(_selection_dict)
         WranglerLogger.debug(f"_sel_query:\n   {_sel_query}")
         _df = self._obj.query(_sel_query, engine="python")
 
-        #if "params" in self._obj.__dict__:
-        #    _df.__dict__["params"] = copy.deepcopy(self._obj.__dict__["params"])
-            
         if len(_df) == 0:
             WranglerLogger.warning(
                 f"No records found in {_df.name} \

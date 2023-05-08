@@ -106,3 +106,52 @@ def parse_time_spans_to_secs(times):
         raise ValueError()
 
     return (start_time_sec, end_time_sec)
+
+def coerce_dict_to_df_types(
+        d: dict,
+        df: pd.DataFrame, 
+        skip_keys: list = [], 
+        return_skipped: bool = False
+    ) -> dict:
+    """Coerce dictionary values to match the type of a dataframe columns matching dict keys.
+
+    Will also coerce a list of values.
+
+    Args:
+        d (dict): dictionary to coerce with singleton or list values
+        df (pd.DataFrame): dataframe to get types from
+        skip_keys: list of dict keys to skip. Defaults to []/
+        return_skipped: keep the uncoerced, skipped keys/vals in the resulting dict. 
+            Defaults to False.
+
+    Returns:
+        dict: dict with coerced types
+    """
+    coerced_dict = {}
+    for k,vals in d.items():
+        if k in skip_keys: 
+            if return_skipped:
+                coerced_dict[k] = vals
+            continue
+        if pd.api.types.infer_dtype(df[k]) == 'integer':
+            if isinstance(vals,list):
+                coerced_v = [int(float(v)) for v in vals]
+            else:
+                coerced_v = int(float(vals))
+        elif pd.api.types.infer_dtype(df[k]) == 'floating':
+            if isinstance(vals,list):
+                coerced_v = [float(v) for v in vals]
+            else:
+                coerced_v = float(vals)
+        elif pd.api.types.infer_dtype(df[k]) == 'boolean':
+            if isinstance(vals,list):
+                coerced_v = [float(v) for v in vals]
+            else:
+                coerced_v = float(vals)
+        else:
+            if isinstance(vals,list):
+                coerced_v = [str(v) for v in vals]
+            else:
+                coerced_v = str(vals)
+        coerced_dict[k] = coerced_v
+    return coerced_dict

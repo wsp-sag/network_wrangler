@@ -1,4 +1,5 @@
 import copy
+import hashlib
 
 import pandas as pd
 
@@ -53,6 +54,7 @@ class Subnet:
     def __init__(
         self,
         net: "RoadwayNetwork",
+        modes: list = ["drive"],
         subnet_links_df: pd.DataFrame = None,
         selection_dict: dict = None,
         i: int = 0,
@@ -64,6 +66,7 @@ class Subnet:
 
         Args:
             net (RoadwayNetwork): Associated RoadwayNetwork object.
+            modes: List of modes to limit subnet to. Defaults to "drive".
             subnet_links_df (pd.DataFrame, optional): Initial links to include in subnet.
                 Optional if define a selection_dict and will default to result of
                 self.generate_subnet_from_selection_dict(selection_dict)
@@ -93,7 +96,8 @@ class Subnet:
             ValueError: _description_
         """
         self.net = net
-        self._subnet_links_df = subnet_links_df
+        self.modes = modes
+        self._subnet_links_df = None if subnet_links_df is None else subnet_links_df.mode_query(self.modes)
         self.selection_dict = selection_dict
 
         self._i = i
@@ -102,6 +106,16 @@ class Subnet:
         self._max_search_breadth = max_search_breadth
         self._graph = None
         self._graph_link_hash = None
+
+    @property
+    def exists(self):
+        if self.subnet_links_df is None:
+            return False
+        if len(self.subnet_links_df)== 0:
+            return False
+        if len(self.subnet_links_df)>0:
+            return True
+        raise SubnetCreationError("Something's not right.")
 
     @property
     def subnet_links_df(self):
@@ -121,13 +135,14 @@ class Subnet:
     @property
     def graph_hash(self):
         """Hash of the links in order to detect a network change from when graph created."""
-        return hash(
-            (
-                self.subnet_links_df.values.tobytes(),
-                self._sp_weight_col,
-                self._sp_weight_factor,
-            )
-        )
+        _value = [
+            self.subnet_links_df.df_hash(),
+            self._sp_weight_col,
+            str(self._sp_weight_factor),
+        ]
+        _enc_value = str.encode("-".join( _value))
+        _hash = hashlib.sha256(_enc_value).hexdigest()
+        return _hash
 
     @property
     def graph(self):
@@ -162,8 +177,11 @@ class Subnet:
     ) -> "Subnet":
         WranglerLogger.debug("Generating subnet from selection dict.")
         WranglerLogger.debug(f"selection_dict: {selection_dict}")
+        WranglerLogger.debug(f"modes: {self.modes}")
 
-        _subnet_links_df = self.net.links_df.dict_query(selection_dict).copy() 
+        _modal_links_df = self.net.links_df.mode_query(self.modes)
+
+        _subnet_links_df = _modal_links_df.dict_query(selection_dict).copy() 
         _subnet_links_df["i"] = 0
         WranglerLogger.debug(f"{len(_subnet_links_df)} links found for subnet.")
         if len(_subnet_links_df) == 0:
@@ -181,7 +199,7 @@ class Subnet:
             nodes_list: a list of node primary keys to expand subnet to include.
         """
 
-        WranglerLogger.debug(f"Initial set of nodes: {self.subnet_nodes}".format())
+        WranglerLogger.debug(f"Expanding subnet to includes nodes: {nodes_list}")
 
         # expand network to find nodes in the list
         while (
@@ -206,46 +224,45 @@ class Subnet:
             f"Adding Breadth to Subnet: \
             i={self._i} out of {self._max_search_breadth}"
         )
-
+        _modal_links_df = self.net.links_df.mode_query(self.modes)
         # find links where A node is connected to subnet but not B node
-        _outbound_links_df = copy.deepcopy(
-            self.net.links_df.loc[
-                self.net.links_df["A"].isin(self.subnet_nodes)
-                & ~self.net.links_df["B"].isin(self.subnet_nodes)
+        _outbound_links_df = _modal_links_df.loc[
+                _modal_links_df[self.net.links_df.params.from_node].isin(self.subnet_nodes)
+                & ~_modal_links_df[self.net.links_df.params.to_node].isin(self.subnet_nodes)
             ]
-        )
+        
         WranglerLogger.debug(f"_outbound_links_df links: {len( _outbound_links_df)}")
 
         # find links where B node is connected to subnet but not A node
-        _inbound_links_df = copy.deepcopy(
-            self.net.links_df.loc[
-                self.net.links_df["B"].isin(self.subnet_nodes)
-                & ~self.net.links_df["A"].isin(self.subnet_nodes)
+        _inbound_links_df = _modal_links_df.loc[
+                _modal_links_df[self.net.links_df.params.to_node].isin(self.subnet_nodes)
+                & ~_modal_links_df[self.net.links_df.params.from_node].isin(self.subnet_nodes)
             ]
-        )
+        
         WranglerLogger.debug(f"_inbound_links_df links: {len( _inbound_links_df)}")
 
         # find links where A and B nodes are connected to subnet but not in subnet
-        _bothABconnected_links_df = copy.deepcopy(
-            self.net.links_df.loc[
-                self.net.links_df["B"].isin(self.subnet_nodes)
-                & self.net.links_df["A"].isin(self.subnet_nodes)
-                & ~self.net.links_df.index.isin(self.subnet_links_df.index.tolist())
+        _bothABconnected_links_df = _modal_links_df.loc[
+                _modal_links_df[self.net.links_df.params.to_node].isin(self.subnet_nodes)
+                & _modal_links_df[self.net.links_df.params.from_node].isin(self.subnet_nodes)
+                & ~_modal_links_df.index.isin(self.subnet_links_df.index.tolist())
             ]
-        )
+        
 
         WranglerLogger.debug(
-            f"_bothABConnected links: {len( _bothABconnected_links_df)}"
+            f"{len( _bothABconnected_links_df)} links where both A and B are connected to subnet\
+             but aren't in subnet."
         )
 
         _add_links_df = pd.concat(
-            _bothABconnected_links_df, _inbound_links_df, _outbound_links_df
+            [_bothABconnected_links_df, _inbound_links_df, _outbound_links_df]
         )
+
         _add_links_df["i"] = self._i
         WranglerLogger.debug(f"Links to add: {len(_add_links_df)}")
 
-        WranglerLogger.debug(f"Initial subnet links: {self.num_links}")
+        WranglerLogger.debug(f"{self.num_links} initial subnet links")
 
-        self.subnet_links_df = pd.concat([self.subnet_links_df, _add_links_df])
+        self._subnet_links_df = pd.concat([self.subnet_links_df, _add_links_df])
 
-        WranglerLogger.debug(f"Expanded subnet links: {self.num_links}")
+        WranglerLogger.debug(f"{self.num_links} expanded subnet links")

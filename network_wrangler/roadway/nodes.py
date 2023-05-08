@@ -2,6 +2,7 @@ import json
 import os
 
 from dataclasses import dataclass, field
+import hashlib
 from typing import Union, Optional
 
 import geopandas as gpd
@@ -23,6 +24,7 @@ from ..logger import WranglerLogger
 class NodesParams:
     primary_key: str = field(default="model_node_id")
     _addtl_unique_ids: list[str] = field(default_factory=lambda: ["osm_node_id"])
+    _addtl_explicit_ids: list[str] = field(default_factory=lambda: [])
     source_file: str = field(default=None)
 
     @property
@@ -30,13 +32,15 @@ class NodesParams:
         return self.primary_key + "_idx"
 
     @property
-    def fks_to_nodes(self):
-        return self.from_node, self.to_node
-
-    @property
     def unique_ids(self):
         _uids = self._addtl_unique_ids + [self.primary_key]
         return list(set(_uids))
+    
+    @property
+    def explicit_ids(self):
+        _eids = self._addtl_unique_ids + self.unique_ids
+        return list(set(_eids))
+
 
 
 class NodesSchema(DataFrameModel):
@@ -118,7 +122,7 @@ def df_to_nodes_df(
 
     nodes_df.__dict__["params"] = nodes_params
     nodes_df._metadata += ['params']
-    nodes_df._metadata += ['crs']
+
     nodes_df[nodes_df.params.idx_col] = nodes_df[nodes_df.params.primary_key]
     nodes_df.set_index(nodes_df.params.idx_col, inplace=True)
     return nodes_df
@@ -179,3 +183,18 @@ def nodes_df_to_geojson(nodes_df: pd.DataFrame, properties: list):
             feature["properties"][prop] = row[prop]
         geojson["features"].append(feature)
     return geojson
+
+
+@pd.api.extensions.register_dataframe_accessor("node_hash")
+class NodeHash:
+    """Creates a dataframe hash that is compatable with geopandas and various metadata.
+    """
+    def __init__(self, pandas_obj):
+        self._obj = pandas_obj
+
+    def __call__(self):
+
+        _value = self._obj.values
+        hash = hashlib.sha256(_value).hexdigest()
+        WranglerLogger.info(f"hash: {hash}")
+        return hash
