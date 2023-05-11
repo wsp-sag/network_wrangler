@@ -23,6 +23,7 @@ NODE_PROJECT_CARD_KEYS = ["nodes", "from", "to"]
 # Project card keys that are associated with link properties
 LINK_PROJECT_CARD_KEYS = [ "links"  ] 
 
+# Default modes for searching in the event it is not specified in the project card using `modes` keyword.
 DEFAULT_SEARCH_MODES = ["drive"]
 
 class RoadwaySelection:

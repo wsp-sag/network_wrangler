@@ -1,7 +1,10 @@
 import pytest
 
-from shapely.geometry import LineString
+import geopandas as gpd
 
+from shapely.geometry import LineString, Point
+
+from network_wrangler import WranglerLogger
 from network_wrangler.utils import haversine_distance
 from network_wrangler.utils import create_unique_shape_id
 from network_wrangler.utils import offset_location_reference
@@ -75,7 +78,7 @@ def test_get_unique_shape_id(request):
 
 
 def test_location_reference_offset(request):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
 
     location_reference = [
         {"sequence": 1, "point": [-93.0903549, 44.961085]},
@@ -94,13 +97,13 @@ def test_location_reference_offset(request):
 
     assert new_location_reference == expected_location_reference
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_point_from_xy(request):
     from network_wrangler.utils import point_from_xy
     from numpy.testing import assert_almost_equal
-
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     in_xy = (871106.53, 316284.46)  # Minnesota Science Museum
     xy_crs = 26993  # Minnesota State Plane South, Meter
     out_crs = 4269  # https://epsg.io/4269
@@ -110,3 +113,4 @@ def test_point_from_xy(request):
     wgs_xy_science_museum = (-93.099, 44.943)
 
     assert_almost_equal(out_xy, wgs_xy_science_museum, decimal=2)
+    WranglerLogger.info(f"--Finished: {request.node.name}")

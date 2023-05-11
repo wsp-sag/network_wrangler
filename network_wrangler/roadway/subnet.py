@@ -1,13 +1,9 @@
-import copy
 import hashlib
 
 import pandas as pd
 
-from pandas.util import hash_pandas_object
-
 from .graph import links_nodes_to_ox_graph
 from ..logger import WranglerLogger
-
 
 class SubnetExpansionError(Exception):
     pass

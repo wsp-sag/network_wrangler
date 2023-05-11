@@ -102,45 +102,6 @@ def offset_location_reference(location_reference, offset_meters: float = 10):
     return out_location_reference
 
 
-def meters_to_projected_distance(
-    distance_meters: float, gdf: gpd.GeoDataFrame, meters_crs=26915
-):
-    """Find the specified distance in meters in the geodataframe's coordinate reference system.
-
-    Uses the centroid of the geodataframe as a reference point. Might not be as accurate for
-    geodataframes which span large areas.
-
-    Currently a bit of a convoluted algorithm:
-    1. use the centeroid of the gdf as the reference point
-    2. transform it to a crs that uses meters
-    3. create an offset point hat is `distance_meters` away
-    4. translate offset point back to gdf_crs
-    5. calculate distance between two points
-
-    Args:
-        distance_meters (float): desired distance in meters
-        gdf (gpd.GeoDataFrame): geodataframe which has a CRS specified
-        meters_crs: Espg code for  projected coordinate system which uses meters. Defaults to
-            26915 which is NAD83 Zone 15N which is useful for North America.
-    """
-
-    gdf_crs = gdf.crs
-    ref_point = gdf.geometry.centroid.iloc[0]
-    t_gdf_to_meters = Transformer.from_crs(gdf_crs, meters_crs)
-    ref_point_meters = Point(t_gdf_to_meters.transform(ref_point.x, ref_point.y))
-
-    offset_point_meters = Point(
-        ref_point_meters.x, ref_point_meters.y + distance_meters
-    )
-
-    t_meters_to_gdf = Transformer.from_crs(gdf_crs, meters_crs)
-    offset_point = Point(t_meters_to_gdf(offset_point_meters.x, offset_point_meters.y))
-
-    distance = ref_point.distance(offset_point)
-
-    return distance
-
-
 def haversine_distance(origin: list, destination: list) -> float:
     """
     Returns haversine distance between the coordinates of two points in lat/lon.

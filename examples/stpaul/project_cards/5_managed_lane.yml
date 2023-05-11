@@ -2,14 +2,11 @@ project: test managed lane project
 category: Parallel Managed lanes
 tags:
    - 'example'
-dependencies:
-  prerequisites: []
-  corequisites: []
-  conflicts: []
 roadway_managed_lanes:
   facility:
-    name:
-      - 'I 35E'
+    links:
+      name:
+        - 'I 35E'
     from:
       osm_node_id: '961117623'
     to:

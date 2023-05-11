@@ -183,18 +183,3 @@ def nodes_df_to_geojson(nodes_df: pd.DataFrame, properties: list):
             feature["properties"][prop] = row[prop]
         geojson["features"].append(feature)
     return geojson
-
-
-@pd.api.extensions.register_dataframe_accessor("node_hash")
-class NodeHash:
-    """Creates a dataframe hash that is compatable with geopandas and various metadata.
-    """
-    def __init__(self, pandas_obj):
-        self._obj = pandas_obj
-
-    def __call__(self):
-
-        _value = self._obj.values
-        hash = hashlib.sha256(_value).hexdigest()
-        WranglerLogger.info(f"hash: {hash}")
-        return hash

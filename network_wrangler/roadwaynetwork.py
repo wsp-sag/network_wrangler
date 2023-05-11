@@ -434,8 +434,6 @@ class RoadwayNetwork(object):
                 f"Expecting ProjectCard or dict instance but found \
                              {type(project_card)}."
             )
-        # Need to reset the network graph every time the network changes
-        self._graph = {}
 
         if not _subproject:
             WranglerLogger.info(
@@ -450,78 +448,48 @@ class RoadwayNetwork(object):
         else:
             project_dictionary = project_card_dictionary
 
-        _facility = project_dictionary.get("facility")
-        _category = project_dictionary.get("category").lower()
+        _property_change = project_dictionary.get("roadway_property_change")
+        _managed_lanes = project_dictionary.get("roadway_managed_lanes")
+        _addition = project_dictionary.get("roadway_addition")
+        _deletion = project_dictionary.get("roadway_deletion")
+        _pycode = project_dictionary.get("pycode")
 
-        if _facility:
-            WranglerLogger.info(f"Selecting Facility: {_facility}")
-
-            _geometry_type = list({"links", "nodes"}.intersection(set(_facility)))
-            assert (
-                len(_geometry_type) == 1
-            ), "Facility must have exactly one of 'links' or 'nodes'"
-            _geometry_type = _geometry_type[0]
-            _selection = self.get_selection(_facility)
-
-        if _category == "roadway property change":
-            _property_changes = project_dictionary.get("property_changes")
-            # for <v.1 project cards
-            if not _property_changes:
-                 _property_changes = project_dictionary.get("properties", [])
-            _selection = self.get_selection(_facility)
+        if _property_change:
             return apply_roadway_property_change(
                 self,
-                _selection,
-                _property_changes,
+                self.get_selection(_property_change["facility"]),
+                _property_change["property_changes"],
             )
-        elif _category == "parallel managed lanes":
-            _property_changes = project_dictionary.get("property_changes")
-            # for <v.1 project cards
-            if not _property_changes:
-                 _property_changes = project_dictionary.get("properties", [])
-            _selection = self.get_selection(_facility)
+        
+        elif  _managed_lanes:
             return apply_parallel_managed_lanes(
                 self,
-                _selection,
-                _property_changes,
+                self.get_selection(_managed_lanes["facility"]),
+                _managed_lanes["property_changes"],
             )
-        elif _category == "add new roadway":
-            _roadway_addition = project_dictionary.get("roadway_addition")
-
-            # for <v.1 project cards
-            if not _roadway_addition:
-                _roadway_addition = {
-                    "links": project_dictionary.get("links", []),
-                    "nodes": project_dictionary.get("nodes", []),
-                }
-
+        
+        elif _addition:
             return apply_new_roadway(
                 self,
-                _roadway_addition.get("links", []),
-                _roadway_addition.get("nodes", []),
+                _addition.get("links", []),
+                _addition.get("nodes", []),
             )
-        elif _category == "roadway deletion":
-            _roadway_deletion = project_dictionary.get("roadway_deletion")
-
-            # for <v.1 project cards
-            if not _roadway_deletion:
-                _roadway_deletion = {
-                    "links": project_dictionary.get("links", {}),
-                    "nodes": project_dictionary.get("nodes", {}),
-                }
-
+        
+        elif _deletion:
             return apply_roadway_deletion(
                 self,
-                _roadway_deletion.get("links", {}),
-                _roadway_deletion.get("nodes", {}),
+                _deletion.get("links", {}),
+                _deletion.get("nodes", {}),
             )
-        elif _category == "calculated roadway":
+        
+        elif _pycode:
             return apply_calculated_roadway(
                 self,
-                project_dictionary["pycode"],
+                _pycode,
             )
         else:
-            raise (ValueError(f"Invalid Project Card Category: {_category}"))
+            WranglerLogger.error(f"Couldn't find project in:\n{project_dictionary}")
+            raise (ValueError(f"Invalid Project Card Category."))
 
     def update_node_geometry(self, updated_nodes: List = None) -> gpd.GeoDataFrame:
         """Adds or updates the geometry of the nodes in the network based on XY coordinates.

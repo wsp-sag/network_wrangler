@@ -4,10 +4,11 @@ tags:
    - 'example'
 roadway_property_change:
   facility:
-    name:
-      - '6th'
-      - 'Sixth'
-      - 'sixth'
+    links:
+      name:
+        - '6th'
+        - 'Sixth'
+        - 'sixth'
     from:
       osm_node_id: '187899923'       # Jackson St
     to:

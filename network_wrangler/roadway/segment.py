@@ -13,32 +13,31 @@ from ..logger import WranglerLogger
 """
 (str): default column to use as weights in the shortest path calculations.
 """
-SP_WEIGHT_COL = "i"
+DEFAULT_SP_WEIGHT_COL = "i"
 
 """
 Union(int, float)): default penalty assigned for each
     degree of distance between a link and a link with the searched-for
     name when searching for paths between A and B node
 """
-SP_WEIGHT_FACTOR = 100
+DEFAULT_SP_WEIGHT_FACTOR = 100
 
 """
 (int): default for initial number of links from name-based
     selection that are traveresed before trying another shortest
     path when searching for paths between A and B node
 """
-SEARCH_BREADTH = 5
+DEFAULT_SEARCH_BREADTH = 5
 
 """
 (int): default for maximum number of links traversed between
     links that match the searched name when searching for paths
     between A and B node
 """
-MAX_SEARCH_BREADTH = 10
+DEFAULT_MAX_SEARCH_BREADTH = 10
 
 class SegmentFormatError(Exception):
     pass
-
 
 class SegmentSelectionError(Exception):
     pass
@@ -92,9 +91,9 @@ class Segment:
         self,
         net: "RoadwayNetwork",
         selection: "RoadwaySelection",
-        sp_weight_col: str = SP_WEIGHT_COL,
-        sp_weight_factor: int = SP_WEIGHT_FACTOR,
-        max_search_breadth: int = MAX_SEARCH_BREADTH,
+        sp_weight_col: str = DEFAULT_SP_WEIGHT_COL,
+        sp_weight_factor: int = DEFAULT_SP_WEIGHT_FACTOR,
+        max_search_breadth: int = DEFAULT_MAX_SEARCH_BREADTH,
     ):
         """Initialize a roadway segment object.
 
@@ -102,14 +101,14 @@ class Segment:
             net (RoadwayNetwork): Associated RoadwayNetwork object
             selection (RoadwaySelection): Selection of type `segment_search`.
             sp_weight_col (str, optional): Column to use for weights in shortest path.  Will not
-                likely need to be changed. Defaults to SP_WEIGHT_COL which defaults to `i`.
+                likely need to be changed. Defaults to DEFAULT_SP_WEIGHT_COL which defaults to `i`.
             sp_weight_factor (int, optional): Factor to multiply sp_weight_col by to use for
                 weights in shortest path.  Will not likely need to be changed. Defaults to
-                SP_WEIGHT_FACTOR which defaults to `100`.
+                DEFAULT_SP_WEIGHT_FACTOR which defaults to `100`.
             max_search_breadth (int, optional):Maximum expansions of the subnet network to find
                 the shortest path after the initial selection based on `name`. Will not likely
                 need to be changed unless network contains a lot of ambiguity. Defaults to
-                MAX_SEARCH_BREADTH which defaults to 10.
+                DEFAULT_MAX_SEARCH_BREADTH which defaults to 10.
         """
 
         self.net = net
@@ -369,18 +368,18 @@ def identify_segment_endpoints(
     net,
     mode: str = "drive",
     min_connecting_links: int = 10,
-    min_distance: float = None,
     max_link_deviation: int = 2,
 ) -> pd.DataFrame:
     """This has not been revisited or refactored and may or may not contain useful code.
 
     Args:
+        net: RoadwayNetwork to find segments for
         mode:  list of modes of the network, one of `drive`,`transit`,
             `walk`, `bike`. Defaults to "drive".
-        links_df: if specified, will assess connectivity of this
-            links list rather than self.links_df
-        nodes_df: if specified, will assess connectivity of this
-            nodes list rather than self.nodes_df
+        min_connecting_links: number of links that should be connected with same name or ref
+            to be considered a segment (minus max_link_deviation). Defaults to 10.
+        max_link_deviation: maximum links that don't have the same name or ref to still be 
+            considered a segment. Defaults to 2.
 
     """
     SEGMENT_IDENTIFIERS = ["name", "ref"]
@@ -389,7 +388,7 @@ def identify_segment_endpoints(
     REF_PER_NODE = 2
 
     # make a copy so it is a full dataframe rather than a slice.
-    _links_df = copy.deepcopy(net.links_df.mode_query(mode))
+    _links_df = net.links_df.mode_query(mode).copy()
 
     _nodes_df = net.nodes_in_links(
             _links_df,
@@ -400,18 +399,15 @@ def identify_segment_endpoints(
         nodes_df=_nodes_df,
         link_variables=SEGMENT_IDENTIFIERS + ["distance"],
     )
-    WranglerLogger.debug("Node/Link table elements: {}".format(len(_nodes_df)))
+    
+    #WranglerLogger.debug(f"Node/Link table elements: {len(_nodes_df)}"")
 
     # Screen out segments that have blank name AND refs
     _nodes_df = _nodes_df.replace(r"^\s*$", np.nan, regex=True).dropna(
         subset=["name", "ref"]
     )
 
-    WranglerLogger.debug(
-        "Node/Link table elements after dropping empty name AND ref : {}".format(
-            len(_nodes_df)
-        )
-    )
+    # WranglerLogger.debug(f"Node/Link recs after dropping empty name AND ref : {len(_nodes_df)}")
 
     # Screen out segments that aren't likely to be long enough
     # Minus 1 in case ref or name is missing on an intermediate link
@@ -426,21 +422,18 @@ def identify_segment_endpoints(
         & (_nodes_df["name_freq"] >= _min_name_in_table)
     ]
 
-    WranglerLogger.debug(
-        "Node/Link table has n = {} after screening segments for min length:\n{}".format(
-            len(_nodes_df),
-            _nodes_df[
-                [
-                    net.nodes_df.params.primary_key,
-                    "name",
-                    "ref",
-                    "distance",
-                    "ref_freq",
-                    "name_freq",
-                ]
-            ],
-        )
-    )
+    _display_cols = [
+        net.nodes_df.params.primary_key,
+        "name",
+        "ref",
+        "distance",
+        "ref_freq",
+        "name_freq",
+    ]
+    msg = f"Node/Link table has n = {len(_nodes_df)} after screening segments for min length:\n\
+        { _nodes_df[_display_cols]}"
+    WranglerLogger.debug(msg)
+
     # ----------------------------------------
     # Find nodes that are likely endpoints
     # ----------------------------------------
@@ -455,7 +448,9 @@ def identify_segment_endpoints(
         .rename("ref_N_freq"),
         on=[net.nodes_df.params.primary_key, "ref"],
     )
-    # WranglerLogger.debug("_ref_count+_nodes:\n{}".format(_nodes_df[["model_node_id","ref","name","ref_N_freq"]]))
+
+    _display_cols = ["model_node_id","ref","name","ref_N_freq"]
+    # WranglerLogger.debug(f"_ref_count+_nodes:\n{_nodes_df[_display_cols]})
     # - Attach frequency  of node/name
     _nodes_df = _nodes_df.merge(
         _nodes_df.groupby(by=[net.nodes_df.params.primary_key, "name"])
@@ -463,67 +458,56 @@ def identify_segment_endpoints(
         .rename("name_N_freq"),
         on=[net.nodes_df.params.primary_key, "name"],
     )
-    # WranglerLogger.debug("_name_count+_nodes:\n{}".format(_nodes_df[["model_node_id","ref","name","name_N_freq"]]))
+    _display_cols = ["model_node_id","ref","name","name_N_freq"]
+    #WranglerLogger.debug(f"_name_count+_nodes:\n{_nodes_df[_display_cols]}")
 
-    WranglerLogger.debug(
-        "Possible segment endpoints:\n{}".format(
-            _nodes_df[
-                [
-                    net.nodes_df.params.primary_key,
-                    "name",
-                    "ref",
-                    "distance",
-                    "ref_N_freq",
-                    "name_N_freq",
-                ]
-            ]
-        )
-    )
+    _display_cols = [
+        net.nodes_df.params.primary_key,
+        "name",
+        "ref",
+        "distance",
+        "ref_N_freq",
+        "name_N_freq",
+    ]
+    #WranglerLogger.debug(f"Possible segment endpoints:\n{_nodes_df[_display_cols]}")
     # - Filter possible endpoint list based on node/name node/ref frequency
     _nodes_df = _nodes_df.loc[
         (_nodes_df["ref_N_freq"] <= _max_ref_endpoints)
         | (_nodes_df["name_N_freq"] <= _max_name_endpoints)
     ]
-    WranglerLogger.debug(
-        "{} Likely segment endpoints with req_ref<= {} or freq_name<={} \n{}".format(
-            len(_nodes_df),
-            _max_ref_endpoints,
-            _max_name_endpoints,
-            _nodes_df[
-                [
-                    net.nodes_df.params.primary_key,
-                    "name",
-                    "ref",
-                    "ref_N_freq",
-                    "name_N_freq",
-                ]
-            ],
-        )
-    )
+    _gb_cols = [ net.nodes_df.params.primary_key,
+            'name',
+            "ref",
+            "ref_N_freq",
+            "name_N_freq",
+    ]
+
+    msg = f"{len(_nodes_df)} Likely segment endpoints with req_ref<= {_max_ref_endpoints} or\
+            freq_name<={_max_name_endpoints}\n{_nodes_df.groupby(_gb_cols)}"
+    #WranglerLogger.debug(msg)
     # ----------------------------------------
     # Assign a segment id
     # ----------------------------------------
     _nodes_df["segment_id"], _segments = pd.factorize(_nodes_df.name + _nodes_df.ref)
-    WranglerLogger.debug("{} Segments:\n{}".format(len(_segments), _segments))
+
+    WranglerLogger.debug(f"{len(_segments)} Segments:\n{chr(10).join(_segments.tolist())}")
 
     # ----------------------------------------
     # Drop segments without at least two nodes
     # ----------------------------------------
 
     # https://stackoverflow.com/questions/13446480/python-pandas-remove-entries-based-on-the-number-of-occurrences
+    _min_nodes = 2
     _nodes_df = _nodes_df[
         _nodes_df.groupby(["segment_id", net.nodes_df.params.primary_key])[
             net.nodes_df.params.primary_key
         ].transform(len)
-        > 1
+        >= _min_nodes
     ]
 
-    WranglerLogger.debug(
-        "{} Segments with at least nodes:\n{}".format(
-            len(_nodes_df),
-            _nodes_df[[net.nodes_df.params.primary_key, "name", "ref", "segment_id"]],
-        )
-    )
+    msg = f"{len(_nodes_df)} segments with at least { _min_nodes} nodes:\n\
+        {_nodes_df.groupby(['segment_id'])}"
+    #WranglerLogger.debug(msg)
 
     # ----------------------------------------
     # For segments with more than two nodes, find farthest apart pairs
@@ -552,21 +536,15 @@ def identify_segment_endpoints(
     # ----------------------------------------
     _nodes_df["segment_id"], _segments = pd.factorize(_nodes_df.name + _nodes_df.ref)
 
-    WranglerLogger.debug(
-        "{} Segments:\n{}".format(
-            len(_segments),
-            _nodes_df[
-                [
-                    net.nodes_df.params.primary_key,
-                    "name",
-                    "ref",
-                    "segment_id",
-                    "seg_distance",
-                ]
-            ],
-        )
-    )
+    _display_cols = [
+        net.nodes_df.params.primary_key,
+        "name",
+        "ref",
+        "segment_id",
+        "seg_distance",
+    ] 
 
-    return _nodes_df[
-        ["segment_id", net.nodes_df.params.primary_key, "geometry", "name", "ref"]
-    ]
+    WranglerLogger.debug(f"Start and end of {len(_segments)} Segments:\n{_nodes_df[_display_cols]}")
+
+    _return_cols = ["segment_id", net.nodes_df.params.primary_key, "geometry", "name", "ref"]
+    return _nodes_df[_return_cols]

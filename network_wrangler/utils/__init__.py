@@ -11,7 +11,6 @@ from .geo import line_string_from_location_references
 from .geo import get_point_geometry_from_linestring
 from .geo import point_from_xy
 from .geo import update_points_in_linestring
-from .geo import meters_to_projected_distance
 
 
 __all__ = [
@@ -29,5 +28,4 @@ __all__ = [
     "point_from_xy",
     "topological_sort",
     "update_points_in_linestring",
-    "meters_to_projected_distance",
 ]

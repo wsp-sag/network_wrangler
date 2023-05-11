@@ -1,7 +1,7 @@
 import numbers
 
 from ..logger import WranglerLogger
-from ..utils import parse_time_spans_to_secs, meters_to_projected_distance
+from ..utils import parse_time_spans_to_secs
 
 
 def apply_parallel_managed_lanes(
@@ -9,6 +9,7 @@ def apply_parallel_managed_lanes(
     selection: "Selection",
     properties: dict,
     geometry_meters_offset=10,
+    meters_crs:int = 4326,
 ) -> "RoadwayNetwork":
     """
     Apply the managed lane feature changes to the roadway network
@@ -20,6 +21,8 @@ def apply_parallel_managed_lanes(
         geometry_meters_offset: meters to the left to offset the parallel managed lanes from the
             roadway centerline. Can offset to the right by using a negative number. Default is
             10 meters.
+        meters_crs: meters-based coordinate reference system to use when doing the meters offset. 
+            Defaults to 4326 or web-mercador
 
     .. todo:: decide on connectors info when they are more specific in project card
     """
@@ -32,17 +35,17 @@ def apply_parallel_managed_lanes(
         roadway_net.links_df["managed"] = 0
         roadway_net.links_df.loc[link_idx, "managed"] = 1
 
-    # figure out how far to offset geometry based on CRS being used
-    geometry_projected_offset = meters_to_projected_distance(
-        geometry_meters_offset, roadway_net.links_df
-    )
-
+    #consider a shortcut if the re-projecting takes a long time
+    og_crs = roadway_net.links_df.crs
+    roadway_net.links_df.to_crs(meters_crs)
+    WranglerLogger.info(f"og_crs: {og_crs}; meters_crs: {roadway_net.links_df.crs}")
     # create managed lane geometries
     roadway_net.links_df.loc[
         link_idx, "ML_geometry"
     ] = roadway_net.links_df.geometry.apply(
-        lambda x: x.offset_curve(geometry_projected_offset)
+        lambda x: x.offset_curve(geometry_meters_offset)
     )
+    roadway_net.links_df.to_crs(og_crs)
 
     for p in properties:
         attribute = p["property"]
