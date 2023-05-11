@@ -1033,7 +1033,7 @@ class RoadwayNetwork(object):
 
         Returns: boolean
         """
-        is_connected = nx.is_strongly_connected(self.graph[mode])
+        is_connected = nx.is_strongly_connected(self.get_modal_graph(mode))
 
         return is_connected
 

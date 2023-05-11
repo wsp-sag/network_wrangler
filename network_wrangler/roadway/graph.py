@@ -229,7 +229,9 @@ def assess_connectivity(
         List of disconnected subgraphs described by the list of their
             member nodes (as described by their `model_node_id`)
     """
-    G = net.graph[mode]
+    WranglerLogger.debug(f"Assessing network connectivity for mode: {mode}")
+    
+    G = net.get_modal_graph(mode)
 
     sub_graph_nodes = [
         list(s)

@@ -1,29 +1,27 @@
 """
-Run just the tests labeled basic using `pytest tests/test_roadway/test_properties.py
-To run with print statments, use `pytest -s tests/test_roadway/test_properties.py`
+To run these tests, use `pytest -s tests/test_roadway/test_properties.py`
 """
 
+from network_wrangler import WranglerLogger
+from network_wrangler.roadway.graph import assess_connectivity
 
 def test_network_connectivity(request, stpaul_net):
-    print("\n--Starting:", request.node.name)
-
-    print("Reading network ...")
+    WranglerLogger.info(f"--Starting: {request.node.name}")
 
     net = stpaul_net
-    print("Checking network connectivity ...")
-    print("Drive Network Connected:", net.is_network_connected(mode="drive"))
-    print("--Finished:", request.node.name)
-
+    _mode = "drive"
+    _connected = net.is_connected(mode=_mode)
+    WranglerLogger.debug(f"{_mode} Network Connected: {_connected}")
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 def test_network_connectivity_ignore_single_nodes(request, stpaul_net):
-    print("\n--Starting:", request.node.name)
-
-    print("Reading network ...")
+    WranglerLogger.info(f"--Starting: {request.node.name}")
 
     net = stpaul_net
+    _mode = "walk"
+    _, disconnected_nodes = assess_connectivity(net,mode=_mode, ignore_end_nodes=True)
+    
+    WranglerLogger.debug(f"{len(disconnected_nodes)} Disconnected Subnetworks")
+    assert len(disconnected_nodes) == 5
 
-    print("Assessing network connectivity for walk...")
-    _, disconnected_nodes = net.assess_connectivity(mode="walk", ignore_end_nodes=True)
-    print("{} Disconnected Subnetworks:".format(len(disconnected_nodes)))
-    print("-->\n{}".format("\n".join(list(map(str, disconnected_nodes)))))
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
