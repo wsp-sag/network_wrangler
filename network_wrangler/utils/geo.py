@@ -217,23 +217,3 @@ def get_point_geometry_from_linestring(polyline_geometry, pos: int = 0):
     # Note: when upgrading to shapely 2.0, will need to use following command
     # _point_coords = get_coordinates(polyline_geometry).tolist()[pos]
     return point_from_xy(*polyline_geometry.coords[pos])
-
-
-def create_unique_shape_id(line_string: LineString):
-    """
-    Creates a unique hash id using the coordinates of the geometry using first and last locations.
-
-    Args:
-    line_string: Line Geometry as a LineString
-
-    Returns: string
-    """
-
-    x1, y1 = list(line_string.coords)[0]  # first coordinate (A node)
-    x2, y2 = list(line_string.coords)[-1]  # last coordinate (B node)
-
-    message = "Geometry {} {} {} {}".format(x1, y1, x2, y2)
-    unhashed = message.encode("utf-8")
-    hash = hashlib.md5(unhashed).hexdigest()
-
-    return hash

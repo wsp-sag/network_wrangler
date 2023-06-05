@@ -1,5 +1,4 @@
-project: test managed lane project
-category: Parallel Managed lanes
+project: another test managed lane project
 tags:
    - 'example'
 roadway_managed_lanes:
@@ -12,21 +11,21 @@ roadway_managed_lanes:
     to:
       osm_node_id: '2564047368'
   property_changes:
-    - property: lanes
+    lanes:
       set: 3
       timeofday:
         - time: ['6:00', '9:00']
           set: 2
         - time: ['16:00', '19:00']
           set: 2
-    - property: ML_lanes
+    ML_lanes:
       set: 0
       timeofday:
         - time: ['6:00', '9:00']
           set: 1
         - time: ['16:00', '19:00']
           set: 1
-    - property: ML_price
+    ML_price:
       set: 0
       group:
         - category: ['sov']
@@ -41,8 +40,8 @@ roadway_managed_lanes:
               set: 1.0
             - time: ['16:00', '19:00']
               set: 2.0
-    - property: ML_access
+    ML_access:
       set: 'all'
-    - property: ML_egress
+    ML_egress:
       set: 'all'
 notes: Placeholder for notes

@@ -582,14 +582,14 @@ class TransitNetwork(object):
 
         def _apply_individual_change(project_dictionary: dict):
             if (
-                project_dictionary["category"].lower()
+                project_dictionary["type"].lower()
                 == "transit service property change"
             ):
                 self.apply_transit_feature_change(
                     self.select_transit_features(project_dictionary["facility"]),
                     project_dictionary["properties"],
                 )
-            elif project_dictionary["category"].lower() == "parallel managed lanes":
+            elif project_dictionary["type"].lower() == "parallel managed lanes":
                 # Grab the list of nodes in the facility from road_net
                 # It should be cached because managed lane projects are
                 # processed by RoadwayNetwork first via
@@ -610,15 +610,15 @@ class TransitNetwork(object):
                     self.select_transit_features_by_nodes(managed_lane_nodes),
                     managed_lane_nodes,
                 )
-            elif project_dictionary["category"].lower() == "add transit":
+            elif project_dictionary["type"].lower() == "add transit":
                 self.apply_python_calculation(project_dictionary["pycode"])
-            elif project_dictionary["category"].lower() == "roadway deletion":
+            elif project_dictionary["type"].lower() == "roadway deletion":
                 WranglerLogger.warning(
                     "Roadway Deletion not yet implemented in Transit; ignoring"
                 )
             else:
                 msg = "{} not implemented yet in TransitNetwork; can't apply.".format(
-                    project_dictionary["category"]
+                    project_dictionary["type"]
                 )
                 WranglerLogger.error(msg)
                 raise (msg)

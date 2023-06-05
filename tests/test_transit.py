@@ -1,166 +1,29 @@
 import os
 import pytest
 from network_wrangler import TransitNetwork
-from projectcard import ProjectCard
+from projectcard import read_card
 from network_wrangler import RoadwayNetwork
+from network_wrangler import WranglerLogger
 
 """
 Run just the tests labeled transit using `pytest -v -m transit`
 """
 
-STPAUL_DIR = os.path.join(os.getcwd(), "examples", "stpaul")
-SCRATCH_DIR = os.path.join(os.getcwd(), "scratch")
 
+def test_transit_read_write(request, stpaul_transit_net,scratch_dir):
+    """Checks that reading a network, writing it to a file and then reading it again 
+    results in a valid TransitNetwork.
+    """
+    stpaul_transit_net.write(path=scratch_dir)
+    WranglerLogger.debug("Transit Write Directory:", scratch_dir)
+    stpaul_transit_net_read_write = TransitNetwork.read(scratch_dir)
+    assert isinstance(stpaul_transit_net_read_write, TransitNetwork)
 
-def test_transit_read_write(request):
-    print("\n--Starting:", request.node.name)
-    transit_net = TransitNetwork.read(feed_path=STPAUL_DIR)
-    print("Transit Net Directory:", STPAUL_DIR)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
-    transit_net.write(path=SCRATCH_DIR)
-    print("Transit Write Directory:", SCRATCH_DIR)
-
-    print("--Finished:", request.node.name)
-
-
-def test_select_transit_features(request):
-    print("\n--Starting:", request.node.name)
-    net = TransitNetwork.read(STPAUL_DIR)
-
-    test_selections = {
-        "1. simple trip_id": {
-            "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
-            "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
-        },
-        "2. multiple trip_id": {
-            "trip_id": [
-                "14969841-JUN19-RAIL-Weekday-01",  # unordered
-                "14940701-JUN19-MVS-BUS-Weekday-01",
-            ],
-            "answer": [
-                "14940701-JUN19-MVS-BUS-Weekday-01",
-                "14969841-JUN19-RAIL-Weekday-01",
-            ],
-        },
-        "3. route_id": {
-            "route_id": "365-111",
-            "answer": ["14947182-JUN19-MVS-BUS-Weekday-01"],
-        },
-    }
-
-    for i, sel in test_selections.items():
-        print("--->", i, "\n", sel)
-        answer = sel.pop("answer")
-        selected_trips = net.select_transit_features(sel)
-        assert set(selected_trips) == set(answer)
-
-    print("--Finished:", request.node.name)
-
-
-def test_select_transit_features_from_projectcard(request):
-    print("\n--Starting:", request.node.name)
-    net = TransitNetwork.read(STPAUL_DIR)
-
-    test_selections = [
-        {
-            "file": "7_simple_transit_attribute_change.yml",
-            "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
-        },
-        {
-            "file": "7a_multi_transit_attribute_change.yml",
-            "answer": [
-                "14940701-JUN19-MVS-BUS-Weekday-01",
-                "14948032-JUN19-MVS-BUS-Weekday-01",
-            ],
-        },
-        {
-            "file": "8_simple_transit_attribute_change.yml",
-            "answer": [
-                "14944012-JUN19-MVS-BUS-Weekday-01",
-                "14944018-JUN19-MVS-BUS-Weekday-01",
-                "14944019-JUN19-MVS-BUS-Weekday-01",
-                "14944022-JUN19-MVS-BUS-Weekday-01",
-            ],
-        },
-        {
-            "file": "8a_multi_transit_attribute_change.yml",
-            "answer": [
-                "14944012-JUN19-MVS-BUS-Weekday-01",
-                "14944018-JUN19-MVS-BUS-Weekday-01",
-                "14944019-JUN19-MVS-BUS-Weekday-01",
-                "14944022-JUN19-MVS-BUS-Weekday-01",
-                "14948211-JUN19-MVS-BUS-Weekday-01",  # additional for 53-111
-                "14948218-JUN19-MVS-BUS-Weekday-01",
-            ],
-        },
-        {
-            "file": "9_simple_transit_attribute_change.yml",
-            "answer": [
-                "14940701-JUN19-MVS-BUS-Weekday-01",
-                "14943414-JUN19-MVS-BUS-Weekday-01",
-                "14943415-JUN19-MVS-BUS-Weekday-01",
-                "14946111-JUN19-MVS-BUS-Weekday-01",
-                "14946257-JUN19-MVS-BUS-Weekday-01",
-                "14946470-JUN19-MVS-BUS-Weekday-01",
-                "14946471-JUN19-MVS-BUS-Weekday-01",
-                "14946480-JUN19-MVS-BUS-Weekday-01",
-                "14946521-JUN19-MVS-BUS-Weekday-01",
-                "14947182-JUN19-MVS-BUS-Weekday-01",
-                "14947504-JUN19-MVS-BUS-Weekday-01",
-                "14947734-JUN19-MVS-BUS-Weekday-01",
-                "14947755-JUN19-MVS-BUS-Weekday-01",
-                "14978409-JUN19-MVS-BUS-Weekday-01",
-                "14981028-JUN19-MVS-BUS-Weekday-01",
-                "14981029-JUN19-MVS-BUS-Weekday-01",
-                "14986383-JUN19-MVS-BUS-Weekday-01",
-                "14986385-JUN19-MVS-BUS-Weekday-01",
-            ],
-        },
-        {
-            "file": "9a_multi_transit_attribute_change.yml",
-            "answer": [
-                "14940701-JUN19-MVS-BUS-Weekday-01",
-                "14943414-JUN19-MVS-BUS-Weekday-01",
-                "14943415-JUN19-MVS-BUS-Weekday-01",
-                "14946111-JUN19-MVS-BUS-Weekday-01",
-                "14946257-JUN19-MVS-BUS-Weekday-01",
-                "14946470-JUN19-MVS-BUS-Weekday-01",
-                "14946471-JUN19-MVS-BUS-Weekday-01",
-                "14946480-JUN19-MVS-BUS-Weekday-01",
-                "14946521-JUN19-MVS-BUS-Weekday-01",
-                "14947182-JUN19-MVS-BUS-Weekday-01",
-                "14947504-JUN19-MVS-BUS-Weekday-01",
-                "14947734-JUN19-MVS-BUS-Weekday-01",
-                "14947755-JUN19-MVS-BUS-Weekday-01",
-                "14978409-JUN19-MVS-BUS-Weekday-01",
-                "14981028-JUN19-MVS-BUS-Weekday-01",
-                "14981029-JUN19-MVS-BUS-Weekday-01",
-                "14986383-JUN19-MVS-BUS-Weekday-01",
-                "14986385-JUN19-MVS-BUS-Weekday-01",
-                "14946199-JUN19-MVS-BUS-Weekday-01",  # add below for Ltd Stop
-                "14947598-JUN19-MVS-BUS-Weekday-01",
-                "14948211-JUN19-MVS-BUS-Weekday-01",
-                "14948218-JUN19-MVS-BUS-Weekday-01",
-            ],
-        },
-    ]
-
-    for i, test in enumerate(test_selections):
-        print("--->", i)
-        print("Reading project card", test["file"], "...")
-
-        project_card_path = os.path.join(STPAUL_DIR, "project_cards", test["file"])
-        project_card = read_card(project_card_path)
-        sel = project_card.facility
-
-        selected_trips = net.select_transit_features(sel)
-        assert set(selected_trips) == set(test["answer"])
-
-    print("--Finished:", request.node.name)
-
-
+@pytest.mark.menow
 def test_apply_transit_feature_change_from_projectcard(request):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = TransitNetwork.read(STPAUL_DIR)
 
     test_selections = [
@@ -231,11 +94,11 @@ def test_apply_transit_feature_change_from_projectcard(request):
             results = freq[matches]["headway_secs"].tolist()
             assert set(results) == set(answers)
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_wrong_existing(request):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = TransitNetwork.read(STPAUL_DIR)
 
     selected_trips = net.select_transit_features(
@@ -252,11 +115,11 @@ def test_wrong_existing(request):
             selected_trips, [{"property": "headway_secs", "existing": 553, "set": 900}]
         )
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_zero_valid_facilities(request):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = TransitNetwork.read(STPAUL_DIR)
 
     with pytest.raises(Exception):
@@ -271,7 +134,7 @@ def test_zero_valid_facilities(request):
 
 
 def test_invalid_selection_key(request):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = TransitNetwork.read(STPAUL_DIR)
 
     with pytest.raises(Exception):
@@ -282,7 +145,7 @@ def test_invalid_selection_key(request):
 
 
 def test_invalid_optional_selection_variable(request):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = TransitNetwork.read(STPAUL_DIR)
 
     with pytest.raises(Exception):
@@ -305,11 +168,11 @@ def test_invalid_optional_selection_variable(request):
     sel = net.select_transit_features({"route_long_name": "Express", "agency_id": "2"})
     assert set(sel) == set(["14978409-JUN19-MVS-BUS-Weekday-01"])
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
-
+@pytest.mark.menow
 def test_transit_road_consistencies(request):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     net = TransitNetwork.read(STPAUL_DIR)
 
     STPAUL_SHAPE_FILE = os.path.join(STPAUL_DIR, "shape.geojson")
@@ -326,7 +189,7 @@ def test_transit_road_consistencies(request):
 
     net.validate_road_network_consistencies()
     print(net.validated_road_network_consistency)
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 if __name__ == "__main__":

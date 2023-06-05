@@ -15,11 +15,13 @@ ox_major_version = int(ox.__version__.split(".")[0])
 def _drop_complex_df_columns(df: DataFrame) -> DataFrame:
     "Returns dataframe without columns with lists, tuples or dictionaries types."
 
-    _cols_to_exclude =  ['geometry']
+    _cols_to_exclude = ["geometry"]
     _cols_to_search = [c for c in df.columns if c not in _cols_to_exclude]
-    _drop_types = (list,dict,tuple)
+    _drop_types = (list, dict, tuple)
 
-    _drop_cols = [c for c in _cols_to_search if df[c].apply(type).isin(_drop_types).any() ]
+    _drop_cols = [
+        c for c in _cols_to_search if df[c].apply(type).isin(_drop_types).any()
+    ]
 
     df = df.drop(_drop_cols, axis=1)
 
@@ -35,7 +37,7 @@ def _nodes_to_graph_nodes(nodes_df: GeoDataFrame) -> GeoDataFrame:
     - property values which are simple int or strings
 
     Args:
-        nodes_df (GeoDataFrame): nodes geodataframe from RoadwayNetwork instance 
+        nodes_df (GeoDataFrame): nodes geodataframe from RoadwayNetwork instance
     """
 
     graph_nodes_df = nodes_df.copy()
@@ -46,7 +48,7 @@ def _nodes_to_graph_nodes(nodes_df: GeoDataFrame) -> GeoDataFrame:
 
     # OSMNX is expecting id, x, y
     graph_nodes_df["id"] = graph_nodes_df.index
-    graph_nodes_df = graph_nodes_df.rename(columns = {"X": "x", "Y": "y"})
+    graph_nodes_df = graph_nodes_df.rename(columns={"X": "x", "Y": "y"})
 
     return graph_nodes_df
 
@@ -82,13 +84,13 @@ def _links_to_graph_links(
     # osm-nx is expecting u and v instead of A B - but first have to drop existing u/v
 
     if "u" in graph_links_df.columns and "u" != links_df.params.from_node:
-        graph_links_df = graph_links_df.drop("u",axis=1)
+        graph_links_df = graph_links_df.drop("u", axis=1)
 
     if "v" in graph_links_df.columns and "v" != links_df.params.to_node:
         graph_links_df = graph_links_df.drop("v", axis=1)
 
     graph_links_df = graph_links_df.rename(
-        columns = {links_df.params.from_node: "u", links_df.params.to_node: "v"}
+        columns={links_df.params.from_node: "u", links_df.params.to_node: "v"}
     )
 
     graph_links_df["key"] = graph_links_df.index.copy()
@@ -98,7 +100,6 @@ def _links_to_graph_links(
     #     on the set_index line *within* osmnx.utils_graph.graph_from_gdfs():
     #           `for (u, v, k), row in gdf_edges.set_index(["u", "v", "key"]).iterrows()
     if ox_major_version >= 1:
-
         graph_links_df = graph_links_df.set_index(keys=["u", "v", "key"], drop=True)
 
     return graph_links_df
@@ -180,9 +181,7 @@ def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
     return G
 
 
-def shortest_path(
-    G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight"
-) -> tuple:
+def shortest_path(G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight") -> tuple:
     """
 
     Args:
@@ -230,7 +229,7 @@ def assess_connectivity(
             member nodes (as described by their `model_node_id`)
     """
     WranglerLogger.debug(f"Assessing network connectivity for mode: {mode}")
-    
+
     G = net.get_modal_graph(mode)
 
     sub_graph_nodes = [

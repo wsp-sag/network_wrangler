@@ -15,7 +15,7 @@ roadway_property_change:
     to:
       osm_node_id: '187899923' # Robert St N
   property_changes:
-    - property: lanes  #changes number of lanes 3 to 2 (reduction of 1)
+    lanes:  #changes number of lanes 3 to 2 (reduction of 1)
       existing: 3
       change: -1
 notes: Simple project example to do a road diet on 6th St E in front of MetCouncil

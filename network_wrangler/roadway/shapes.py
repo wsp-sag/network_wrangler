@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 
@@ -5,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Union, Any
 
 import geopandas as gpd
+import pandas as pd
 import pandera as pa
 
 from jsonschema import validate
@@ -92,7 +94,7 @@ def df_to_shapes_df(
     shapes_df[shapes_df.params.idx_col] = shapes_df[shapes_df.params.primary_key]
     shapes_df.dropna(subset=["geometry", shapes_df.params.primary_key], inplace=True)
     shapes_df.set_index(shapes_df.params.idx_col, inplace=True)
-    shapes_df._metadata += ['params']
+    shapes_df._metadata += ["params"]
 
     return shapes_df
 

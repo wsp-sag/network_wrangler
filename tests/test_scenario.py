@@ -26,9 +26,9 @@ def test_project_card_read(request, stpaul_card_dir):
     project_card = read_card(in_file)
     WranglerLogger.debug(project_card)
     assert project_card.category == "Roadway Property Change"
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
-
+@pytest.mark.menow
 def test_project_card_write(request, stpaul_card_dir, scratch_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -138,7 +138,7 @@ def test_scenario_prerequisites(request):
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
-
+@pytest.mark.menow
 @pytest.mark.failing
 def test_project_sort(request):
     """Make sure projects sort correctly before being applied."""
@@ -187,7 +187,7 @@ def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_base_scenario):
 
     my_scenario = Scenario.create_scenario(
         base_scenario=stpaul_base_scenario,
-        project_card_file_list=project_card_path_list,
+        project_card_filepath=project_card_path_list,
     )
 
     my_scenario.apply_all_projects()

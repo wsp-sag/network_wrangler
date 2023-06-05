@@ -14,11 +14,11 @@ roadway_property_change:
     to:
       osm_node_id: '187865924'       # Robert St N
   property_changes:
-    - property: lanes
+    lanes:
       existing: 1
       set: 2
-    - property: transit_access
+    transit_access:
       set: 1
-    - property: drive_access
+    drive_access:
       set: 0
 notes: Transitions 6th St E to transitway

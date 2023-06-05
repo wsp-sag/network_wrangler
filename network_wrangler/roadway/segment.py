@@ -36,8 +36,10 @@ DEFAULT_SEARCH_BREADTH = 5
 """
 DEFAULT_MAX_SEARCH_BREADTH = 10
 
+
 class SegmentFormatError(Exception):
     pass
+
 
 class SegmentSelectionError(Exception):
     pass
@@ -145,10 +147,12 @@ class Segment:
             if k in self.segment_id_props
         }
         if not d:
-            raise SegmentFormatError(f"link_selection_dict doesn't generate a valid segment\
+            raise SegmentFormatError(
+                f"link_selection_dict doesn't generate a valid segment\
                                      selection dictionary:\n \
                                      link_selection_dict: {self.selection.link_selection_dict}\n\
-                                     self.segment_id_props: {self.segment_id_props}")
+                                     self.segment_id_props: {self.segment_id_props}"
+            )
         return d
 
     @property
@@ -168,7 +172,9 @@ class Segment:
     @property
     def segment_nodes(self) -> list:
         if self._segment_nodes is None:
-            WranglerLogger.debug(f"Segment not found yet so conducting connected_path_search.")
+            WranglerLogger.debug(
+                f"Segment not found yet so conducting connected_path_search."
+            )
             self.connected_path_search()
         return self._segment_nodes
 
@@ -179,7 +185,7 @@ class Segment:
     @property
     def segment_links_df(self):
         modal_links_df = self.net.links_df.mode_query(self.selection.modes)
-        segment_links_df = self.net.links_in_path(modal_links_df,self.segment_nodes)
+        segment_links_df = self.net.links_in_path(modal_links_df, self.segment_nodes)
         return segment_links_df
 
     @property
@@ -195,9 +201,7 @@ class Segment:
         WranglerLogger.debug(f"Initial set of nodes: {self.subnet.subnet_nodes}")
 
         # expand network to find at least the origin and destination nodes
-        self.subnet.expand_subnet_to_include_nodes(
-            [self.from_node_pk, self.to_node_pk]
-        )
+        self.subnet.expand_subnet_to_include_nodes([self.from_node_pk, self.to_node_pk])
 
         # Once have A and B in graph try calculating shortest path and iteratively
         #    expand if not found.
@@ -248,7 +252,6 @@ class Segment:
         _node_prop, _val = next(iter(prop_dict.items()))
 
         if _node_prop == self.net.nodes_df.params.primary_key:
-            
             return _val
 
         _pk_list = self.net.nodes_df[
@@ -272,7 +275,7 @@ class Segment:
         """
         if not selection_dict:
             raise SegmentFormatError("No selection provided to generate subnet from.")
-        
+
         WranglerLogger.info(f"Creating subnet from dictionary: {selection_dict}")
         _selection_dict = copy.deepcopy(selection_dict)
         # First search for initial set of links using "name" field, combined with values from "ref"
@@ -280,19 +283,23 @@ class Segment:
         if "ref" in selection_dict:
             _selection_dict["name"] += _selection_dict["ref"]
             del _selection_dict["ref"]
-        WranglerLogger.info(f"Initially dictionary for subnet search: {_selection_dict}")
+        WranglerLogger.info(
+            f"Initially dictionary for subnet search: {_selection_dict}"
+        )
         subnet = Subnet(
             self.net,
-            modes = self.selection.modes,
+            modes=self.selection.modes,
             selection_dict=_selection_dict,
             sp_weight_col=self._sp_weight_col,
             sp_weight_factor=self._sp_weight_factor,
             max_search_breadth=self._max_search_breadth,
         )
         if subnet.exists:
-            WranglerLogger.info(f"Found subnet with {len(subnet.subnet_links_df)} links searching name")
+            WranglerLogger.info(
+                f"Found subnet with {len(subnet.subnet_links_df)} links searching name"
+            )
             return subnet
-        
+
         if "ref" in selection_dict:
             del _selection_dict["name"]
             _selection_dict["ref"] = selection_dict["ref"]
@@ -300,14 +307,16 @@ class Segment:
             WranglerLogger.info(f"Trying subnet search with 'ref': {_selection_dict}")
             subnet = Subnet(
                 self.net,
-                modes = self.selection.modes,
+                modes=self.selection.modes,
                 selection_dict=_selection_dict,
                 sp_weight_col=self._sp_weight_col,
                 sp_weight_factor=self._sp_weight_factor,
                 max_search_breadth=self._max_search_breadth,
             )
         if subnet.exists:
-            WranglerLogger.info(f"Found subnet with {len(subnet.subnet_links_df)} links searching for ref in ref")
+            WranglerLogger.info(
+                f"Found subnet with {len(subnet.subnet_links_df)} links searching for ref in ref"
+            )
             return subnet
 
         if "name" in selection_dict:
@@ -315,22 +324,26 @@ class Segment:
             del _selection_dict["name"]
             _selection_dict["ref"] = selection_dict["name"]
 
-            WranglerLogger.info(f"Trying subnet search using name as ref: {_selection_dict}")
+            WranglerLogger.info(
+                f"Trying subnet search using name as ref: {_selection_dict}"
+            )
             subnet = Subnet(
                 self.net,
-                modes = self.selection.modes,
+                modes=self.selection.modes,
                 selection_dict=_selection_dict,
                 sp_weight_col=self._sp_weight_col,
                 sp_weight_factor=self._sp_weight_factor,
                 max_search_breadth=self._max_search_breadth,
             )
-        
+
         if not subnet.exists:
             WranglerLogger.error(
                 f"Selection didn't return subnet links: {_selection_dict}"
             )
             raise SegmentSelectionError("No links found with selection.")
-        WranglerLogger.info(f"Found subnet with {len(subnet.subnet_links_df)} searching name in ref")
+        WranglerLogger.info(
+            f"Found subnet with {len(subnet.subnet_links_df)} searching name in ref"
+        )
         return subnet
 
     def _find_subnet_shortest_path(
@@ -378,7 +391,7 @@ def identify_segment_endpoints(
             `walk`, `bike`. Defaults to "drive".
         min_connecting_links: number of links that should be connected with same name or ref
             to be considered a segment (minus max_link_deviation). Defaults to 10.
-        max_link_deviation: maximum links that don't have the same name or ref to still be 
+        max_link_deviation: maximum links that don't have the same name or ref to still be
             considered a segment. Defaults to 2.
 
     """
@@ -391,16 +404,16 @@ def identify_segment_endpoints(
     _links_df = net.links_df.mode_query(mode).copy()
 
     _nodes_df = net.nodes_in_links(
-            _links_df,
-        ).copy()
+        _links_df,
+    ).copy()
 
     _nodes_df = net.add_incident_link_data_to_nodes(
         links_df=_links_df,
         nodes_df=_nodes_df,
         link_variables=SEGMENT_IDENTIFIERS + ["distance"],
     )
-    
-    #WranglerLogger.debug(f"Node/Link table elements: {len(_nodes_df)}"")
+
+    # WranglerLogger.debug(f"Node/Link table elements: {len(_nodes_df)}"")
 
     # Screen out segments that have blank name AND refs
     _nodes_df = _nodes_df.replace(r"^\s*$", np.nan, regex=True).dropna(
@@ -449,7 +462,7 @@ def identify_segment_endpoints(
         on=[net.nodes_df.params.primary_key, "ref"],
     )
 
-    _display_cols = ["model_node_id","ref","name","ref_N_freq"]
+    _display_cols = ["model_node_id", "ref", "name", "ref_N_freq"]
     # WranglerLogger.debug(f"_ref_count+_nodes:\n{_nodes_df[_display_cols]})
     # - Attach frequency  of node/name
     _nodes_df = _nodes_df.merge(
@@ -458,8 +471,8 @@ def identify_segment_endpoints(
         .rename("name_N_freq"),
         on=[net.nodes_df.params.primary_key, "name"],
     )
-    _display_cols = ["model_node_id","ref","name","name_N_freq"]
-    #WranglerLogger.debug(f"_name_count+_nodes:\n{_nodes_df[_display_cols]}")
+    _display_cols = ["model_node_id", "ref", "name", "name_N_freq"]
+    # WranglerLogger.debug(f"_name_count+_nodes:\n{_nodes_df[_display_cols]}")
 
     _display_cols = [
         net.nodes_df.params.primary_key,
@@ -469,28 +482,31 @@ def identify_segment_endpoints(
         "ref_N_freq",
         "name_N_freq",
     ]
-    #WranglerLogger.debug(f"Possible segment endpoints:\n{_nodes_df[_display_cols]}")
+    # WranglerLogger.debug(f"Possible segment endpoints:\n{_nodes_df[_display_cols]}")
     # - Filter possible endpoint list based on node/name node/ref frequency
     _nodes_df = _nodes_df.loc[
         (_nodes_df["ref_N_freq"] <= _max_ref_endpoints)
         | (_nodes_df["name_N_freq"] <= _max_name_endpoints)
     ]
-    _gb_cols = [ net.nodes_df.params.primary_key,
-            'name',
-            "ref",
-            "ref_N_freq",
-            "name_N_freq",
+    _gb_cols = [
+        net.nodes_df.params.primary_key,
+        "name",
+        "ref",
+        "ref_N_freq",
+        "name_N_freq",
     ]
 
     msg = f"{len(_nodes_df)} Likely segment endpoints with req_ref<= {_max_ref_endpoints} or\
             freq_name<={_max_name_endpoints}\n{_nodes_df.groupby(_gb_cols)}"
-    #WranglerLogger.debug(msg)
+    # WranglerLogger.debug(msg)
     # ----------------------------------------
     # Assign a segment id
     # ----------------------------------------
     _nodes_df["segment_id"], _segments = pd.factorize(_nodes_df.name + _nodes_df.ref)
 
-    WranglerLogger.debug(f"{len(_segments)} Segments:\n{chr(10).join(_segments.tolist())}")
+    WranglerLogger.debug(
+        f"{len(_segments)} Segments:\n{chr(10).join(_segments.tolist())}"
+    )
 
     # ----------------------------------------
     # Drop segments without at least two nodes
@@ -507,7 +523,7 @@ def identify_segment_endpoints(
 
     msg = f"{len(_nodes_df)} segments with at least { _min_nodes} nodes:\n\
         {_nodes_df.groupby(['segment_id'])}"
-    #WranglerLogger.debug(msg)
+    # WranglerLogger.debug(msg)
 
     # ----------------------------------------
     # For segments with more than two nodes, find farthest apart pairs
@@ -542,9 +558,17 @@ def identify_segment_endpoints(
         "ref",
         "segment_id",
         "seg_distance",
-    ] 
+    ]
 
-    WranglerLogger.debug(f"Start and end of {len(_segments)} Segments:\n{_nodes_df[_display_cols]}")
+    WranglerLogger.debug(
+        f"Start and end of {len(_segments)} Segments:\n{_nodes_df[_display_cols]}"
+    )
 
-    _return_cols = ["segment_id", net.nodes_df.params.primary_key, "geometry", "name", "ref"]
+    _return_cols = [
+        "segment_id",
+        net.nodes_df.params.primary_key,
+        "geometry",
+        "name",
+        "ref",
+    ]
     return _nodes_df[_return_cols]

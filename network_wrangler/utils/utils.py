@@ -107,12 +107,35 @@ def parse_time_spans_to_secs(times):
 
     return (start_time_sec, end_time_sec)
 
+
+def coerce_val_to_series_type(val, s: pd.Series):
+    """Coerces a calue to match type of pandas series.
+
+    Will try not to fail so if you give it a value that can't convert to a number, it will
+    return a string.
+
+    Args:
+        val: Any type of singleton value
+        s (pd.Series): series to match the type to
+    """
+    # WranglerLogger.debug(f"Input val: {val} of type {type(val)} to match with series type \
+    #    {pd.api.types.infer_dtype(s)}.")
+    if pd.api.types.infer_dtype(s) in ["integer", "floating"]:
+        try:
+            v = float(val)
+        except:
+            v = str(val)
+    elif pd.api.types.infer_dtype(s) == "boolean":
+        v = bool(val)
+    else:
+        v = str(val)
+    # WranglerLogger.debug(f"Return value: {v}")
+    return v
+
+
 def coerce_dict_to_df_types(
-        d: dict,
-        df: pd.DataFrame, 
-        skip_keys: list = [], 
-        return_skipped: bool = False
-    ) -> dict:
+    d: dict, df: pd.DataFrame, skip_keys: list = [], return_skipped: bool = False
+) -> dict:
     """Coerce dictionary values to match the type of a dataframe columns matching dict keys.
 
     Will also coerce a list of values.
@@ -121,37 +144,56 @@ def coerce_dict_to_df_types(
         d (dict): dictionary to coerce with singleton or list values
         df (pd.DataFrame): dataframe to get types from
         skip_keys: list of dict keys to skip. Defaults to []/
-        return_skipped: keep the uncoerced, skipped keys/vals in the resulting dict. 
+        return_skipped: keep the uncoerced, skipped keys/vals in the resulting dict.
             Defaults to False.
 
     Returns:
         dict: dict with coerced types
     """
     coerced_dict = {}
-    for k,vals in d.items():
-        if k in skip_keys: 
+    for k, vals in d.items():
+        if k in skip_keys:
             if return_skipped:
                 coerced_dict[k] = vals
             continue
-        if pd.api.types.infer_dtype(df[k]) == 'integer':
-            if isinstance(vals,list):
+        if pd.api.types.infer_dtype(df[k]) == "integer":
+            if isinstance(vals, list):
                 coerced_v = [int(float(v)) for v in vals]
             else:
                 coerced_v = int(float(vals))
-        elif pd.api.types.infer_dtype(df[k]) == 'floating':
-            if isinstance(vals,list):
+        elif pd.api.types.infer_dtype(df[k]) == "floating":
+            if isinstance(vals, list):
                 coerced_v = [float(v) for v in vals]
             else:
                 coerced_v = float(vals)
-        elif pd.api.types.infer_dtype(df[k]) == 'boolean':
-            if isinstance(vals,list):
-                coerced_v = [float(v) for v in vals]
+        elif pd.api.types.infer_dtype(df[k]) == "boolean":
+            if isinstance(vals, list):
+                coerced_v = [bool(v) for v in vals]
             else:
-                coerced_v = float(vals)
+                coerced_v = bool(vals)
         else:
-            if isinstance(vals,list):
+            if isinstance(vals, list):
                 coerced_v = [str(v) for v in vals]
             else:
                 coerced_v = str(vals)
         coerced_dict[k] = coerced_v
     return coerced_dict
+
+
+def findkeys(node, kv):
+    """Returns values of all keys in various objects.
+
+    Adapted from arainchi on Stack Overflow:
+    https://stackoverflow.com/questions/9807634/find-all-occurrences-of-a-key-in-nested-dictionaries-and-lists
+
+    """
+    if isinstance(node, list):
+        for i in node:
+            for x in findkeys(i, kv):
+                yield x
+    elif isinstance(node, dict):
+        if kv in node:
+            yield node[kv]
+        for j in node.values():
+            for x in findkeys(j, kv):
+                yield x

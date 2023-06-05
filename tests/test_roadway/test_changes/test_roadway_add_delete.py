@@ -3,6 +3,8 @@ import os
 
 import pytest
 
+from pandera.errors import SchemaError
+
 from projectcard import read_card
 from network_wrangler import WranglerLogger
 
@@ -15,7 +17,7 @@ def test_add_roadway_link_project_card(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     _project = "Add Newsy Link"
-    _category = "Add New Roadway"
+    _category = "roadway_addition"
     _links = [
         {
             "A": 3494,
@@ -47,8 +49,9 @@ def test_add_roadway_link_project_card(request, small_net):
 
     pc_dict = {
         "project": _project,
-        "category": _category,
-        "links": _links,
+        _category: {
+            "links": _links,
+        },
     }
 
     net = copy.deepcopy(small_net)
@@ -100,7 +103,7 @@ def test_multiple_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex
 
     orig_links_count = len(net.links_df)
     orig_nodes_count = len(net.nodes_df)
-    net = net.apply(project_card.__dict__)
+    net = net.apply(project_card)
     net_links = len(net.links_df) - orig_links_count
     net_nodes = len(net.nodes_df) - orig_nodes_count
 
@@ -141,7 +144,7 @@ def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
 
     expected_net_links = -1
 
-    orig_links_count = copy(len(net.links_df))
+    orig_links_count = len(net.links_df.copy())
 
     net = net.apply(project_card)
     net_links = len(net.links_df) - orig_links_count
@@ -165,12 +168,10 @@ def test_add_nodes(request, small_net):
         "model_node_id": 1234567,
     }
 
-    roadway_addition = {"nodes": [node_properties]}
-
     net = net.apply(
         {
             "project": "test adding a node",
-            "roadway_addition": roadway_addition,
+            "roadway_addition": {"nodes": [node_properties]},
         }
     )
 
@@ -179,46 +180,23 @@ def test_add_nodes(request, small_net):
     )
 
     assert 1234567 in net.nodes_df.model_node_id.tolist()
+    assert 1234567 in net.nodes_df.index.tolist()
 
     # should fail when adding a node with a model_node_id that already exists
     bad_node_properties = node_properties.copy()
-    bad_node_properties["model_node_id"] = (3494,)  # should already be in network
+    bad_node_properties["model_node_id"] = 3494
+    WranglerLogger.debug(
+        "Trying to add node 3494 into network but should fail b/c already there"
+    )
     try:
         net = net.apply(
             {
                 "project": "test adding a node already in network",
-                "nodes": [bad_node_properties],
+                "roadway_addition": {"nodes": [bad_node_properties]},
             },
         )
-    except ValueError:
+        WranglerLogger.error("Should have failed due to overlapping node IDs")
+        assert False
+    except SchemaError:
         "expected ValueError when adding a node with a model_node_id that already exists"
     WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-def test_add_nodes_old_prject_card(request, small_net):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    net = copy.deepcopy(small_net)
-
-    node_properties = {
-        "X": -93.14412,
-        "Y": 44.87497,
-        "bike_node": 1,
-        "drive_node": 1,
-        "transit_node": 0,
-        "walk_node": 1,
-        "model_node_id": 1234567,
-    }
-
-    net = net.apply(
-        {
-            "category": "add new roadway",
-            "project": "test adding a node",
-            "nodes": [node_properties],
-        }
-    )
-
-    WranglerLogger.debug(
-        f"Added Node 1234567:\n{net.nodes_df.loc[net.nodes_df.model_node_id == 1234567]}"
-    )
-
-    assert 1234567 in net.nodes_df.model_node_id.tolist()

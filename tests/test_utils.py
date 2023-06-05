@@ -103,6 +103,7 @@ def test_location_reference_offset(request):
 def test_point_from_xy(request):
     from network_wrangler.utils import point_from_xy
     from numpy.testing import assert_almost_equal
+
     WranglerLogger.info(f"--Starting: {request.node.name}")
     in_xy = (871106.53, 316284.46)  # Minnesota Science Museum
     xy_crs = 26993  # Minnesota State Plane South, Meter

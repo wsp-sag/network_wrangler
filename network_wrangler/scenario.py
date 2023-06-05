@@ -28,6 +28,19 @@ BASE_SCENARIO_SUGGESTED_PROPS = [
     "conflicts",
 ]
 
+TRANSIT_CARD_TYPES = [
+    "transit_property_change"
+]
+ROADWAY_CARD_TYPES= [
+    "roadway_deletion",
+    "roadway_addition",
+    "roadway_property_change",
+    "roadway_managed_lanes"
+]
+SECONDARY_TRANSIT_CARD_TYPES = [
+    "roadway_deletion",
+    "roadway_managed_lanes"
+]
 
 class ScenarioConflictError(Exception):
     pass
@@ -199,7 +212,7 @@ class Scenario(object):
         scenario = Scenario(base_scenario)
 
         if project_card_filepath:
-            project_card_list += list(read_cards(filter_tags=filter_tags).values())
+            project_card_list += list(read_cards(project_card_filepath, filter_tags=filter_tags).values())
 
         if project_card_list:
             scenario.add_project_cards(
@@ -452,36 +465,36 @@ class Scenario(object):
         # set this so it will trigger re-queuing any more projects.
         self._queued_projects = None
 
-    def _apply_change(self, change: dict) -> None:
+    def _apply_change(self, change: Union[ProjectCard,'SubProject']) -> None:
         """Applies a specific change specified in a project card.
 
-        "category" must be in at least one of:
+        Change type must be in at least one of:
         - ROADWAY_CATEGORIES
         - TRANSIT_CATEGORIES
 
         Args:
-            change (dict): dictionary of a project card change
+            change: a project card or subproject card
         """
-        if change["category"] in ProjectCard.ROADWAY_CATEGORIES:
+        if change.type in ROADWAY_CARD_TYPES:
             if not self.road_net:
                 raise ("Missing Roadway Network")
-            self.road_net.apply(change)
-        if change["category"] in ProjectCard.TRANSIT_CATEGORIES:
+            self.road_net.apply(change.__dict__)
+        if change.type in TRANSIT_CARD_TYPES:
             if not self.transit_net:
                 raise ("Missing Transit Network")
-            self.transit_net.apply(change)
+            self.transit_net.apply(change.__dict__)
         if (
-            change["category"] in ProjectCard.SECONDARY_TRANSIT_CATEGORIES
+            change.type in SECONDARY_TRANSIT_CARD_TYPES
             and self.transit_net
         ):
-            self.transit_net.apply(change)
+            self.transit_net.apply(change.__dict__)
 
         if (
-            change["category"]
-            not in ProjectCard.TRANSIT_CATEGORIES + ProjectCard.ROADWAY_CATEGORIES
+            change.type
+            not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES
         ):
             raise ProjectCardError(
-                f"Don't understand project category: {change['category']}"
+                f"Don't understand project category: {change.type}"
             )
 
     def _apply_project(self, project_name: str) -> None:
@@ -496,11 +509,11 @@ class Scenario(object):
 
         WranglerLogger.info(f"Applying {project_name}")
 
-        p = self.project_cards[project_name].__dict__
-        if "changes" in p:
-            for pc in p["changes"]:
-                pc["project"] = p["project"]
-                self._apply_change(pc)
+        p = self.project_cards[project_name]
+        if p.sub_projects:
+            for sp in p.sub_projects:
+                WranglerLogger.debug(f"- applying subproject: {sp.type}")
+                self._apply_change(sp)
 
         else:
             self._apply_change(p)
