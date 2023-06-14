@@ -436,6 +436,33 @@
     Links
   </a>
   
+    <nav class="md-nav" aria-label="Links">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defining-time-dependent-properties" class="md-nav__link">
+    Defining time-dependent properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#defining-category-dependent-properties" class="md-nav__link">
+    Defining category-dependent properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#defining-time-and-category-dependent-properties" class="md-nav__link">
+    Defining time- and category-dependent properties
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -460,6 +487,13 @@
         <li class="md-nav__item">
   <a href="#project-cards" class="md-nav__link">
     Project Cards
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-roadway-network-export-format" class="md-nav__link">
+    Model Roadway Network Export Format
   </a>
   
 </li>
@@ -518,6 +552,33 @@
     Links
   </a>
   
+    <nav class="md-nav" aria-label="Links">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defining-time-dependent-properties" class="md-nav__link">
+    Defining time-dependent properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#defining-category-dependent-properties" class="md-nav__link">
+    Defining category-dependent properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#defining-time-and-category-dependent-properties" class="md-nav__link">
+    Defining time- and category-dependent properties
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -542,6 +603,13 @@
         <li class="md-nav__item">
   <a href="#project-cards" class="md-nav__link">
     Project Cards
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-roadway-network-export-format" class="md-nav__link">
+    Model Roadway Network Export Format
   </a>
   
 </li>
@@ -597,7 +665,7 @@
 </tbody>
 </table>
 <h3 id="links">Links<a class="headerlink" href="#links" title="Permanent link"> ¶</a></h3>
-<p>A  valid <code>json</code> file with the following <code>properties</code>. Additional properites may be defined and are assumed to have the safe definition of OpenStreetMap if they have overlapping property names.</p>
+<p>A  valid <code>json</code> file with the following <code>properties</code>. Additional properites may be defined and are assumed to have the same definition of OpenStreetMap if they have overlapping property names.</p>
 <table>
 <thead>
 <tr>
@@ -633,19 +701,39 @@
 <td>Required. Name of link.</td>
 </tr>
 <tr>
+<td>roadway</td>
+<td>str</td>
+<td>Required. Uses <a href="https://wiki.openstreetmap.org/wiki/Key:highway">OpenStreetMap.highway</a> tag definition.</td>
+</tr>
+<tr>
 <td>distance</td>
-<td>float</td>
+<td>Positive float</td>
 <td>Required. Length in miles.</td>
 </tr>
 <tr>
+<td>managed</td>
+<td>[ 0,1]</td>
+<td>Indicator for managed lane presence.</td>
+</tr>
+<tr>
 <td>lanes</td>
-<td>int</td>
+<td>Positive int</td>
 <td>Required. Number of GP lanes.</td>
 </tr>
 <tr>
 <td>ML_lanes</td>
-<td>int</td>
+<td>Positive int</td>
 <td>Number of managed lanes.</td>
+</tr>
+<tr>
+<td>price</td>
+<td>Number</td>
+<td>Required. Price of GP lanes.</td>
+</tr>
+<tr>
+<td>ML_price</td>
+<td>Number</td>
+<td>Price of managed lanes.</td>
 </tr>
 <tr>
 <td>drive_access</td>
@@ -684,6 +772,92 @@
 </tr>
 </tbody>
 </table>
+<p>The following above properties can be time-dependent or time- and category-dependent:</p>
+<ul>
+<li>lanes</li>
+<li>ML_lanes</li>
+<li>price</li>
+<li>ML_price</li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>There is no limit on other, user-defined properties being listed as time-dependent or time- and category-dependent.</p>
+</div>
+<div class="admonition example">
+<p class="admonition-title">User-defined variable by time of day</p>
+<p>Define a variable <code>access</code> to represent which categories can access the network and vary it by time of day.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="c1">#access</span>
+<span class="p">{</span>
+    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;any&#39;</span><span class="p">),</span>
+    <span class="s1">&#39;timeofday&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:(</span><span class="s1">&#39;06:00&#39;</span><span class="p">:</span><span class="s1">&#39;09:00&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;no-trucks&#39;</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:(</span><span class="s1">&#39;16:00&#39;</span><span class="p">:</span><span class="s1">&#39;19:00&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;hov2&#39;</span><span class="p">,</span><span class="s1">&#39;hov3&#39;</span><span class="p">,</span><span class="s1">&#39;trucks&#39;</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<h4 id="defining-time-dependent-properties">Defining time-dependent properties<a class="headerlink" href="#defining-time-dependent-properties" title="Permanent link"> ¶</a></h4>
+<ul>
+<li>Time-dependent properties are defined as a list of dictionaries with time-periods and values.</li>
+<li>Time periods must be defined as a tuple of HH:MM or HH:MM:SS using a 24-hour clock: <code>('06:00':'09:00')</code>.</li>
+<li>Time periods must not intersect.</li>
+<li>When defining a property for a specific time period, a <code>default</code> value must be provided and will apply when a time period is not in effect.</li>
+</ul>
+<div class="admonition example">
+<p class="admonition-title">Time-dependent property</p>
+<p>$3 peak-period pricing</p>
+<div class="language-python highlight"><pre><span></span><code><span class="c1"># price</span>
+<span class="p">{</span>
+    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;timeofday&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:(</span><span class="s1">&#39;06:00&#39;</span><span class="p">:</span><span class="s1">&#39;09:00&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">3</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:(</span><span class="s1">&#39;16:00&#39;</span><span class="p">:</span><span class="s1">&#39;19:00&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<h4 id="defining-category-dependent-properties">Defining category-dependent properties<a class="headerlink" href="#defining-category-dependent-properties" title="Permanent link"> ¶</a></h4>
+<ul>
+<li>Not currently implemented.</li>
+</ul>
+<h4 id="defining-time-and-category-dependent-properties">Defining time- and category-dependent properties<a class="headerlink" href="#defining-time-and-category-dependent-properties" title="Permanent link"> ¶</a></h4>
+<ul>
+<li>Properties co-dependent on time- and category are defined as a list of dictionaries with value, category and time defined.</li>
+<li>Similar to the above, a <code>default</code> value must be provided and will be understood to apply when a category is not matched.</li>
+</ul>
+<div class="admonition example">
+<p class="admonition-title">time- and category-dependent property</p>
+<p>A pricing strategy which only applies in peak period for trucks and sovs:</p>
+<div class="language-python highlight"><pre><span></span><code><span class="c1"># price</span>
+<span class="p">{</span>
+    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;timeofday&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:(</span><span class="s1">&#39;06:00&#39;</span><span class="p">:</span><span class="s1">&#39;09:00&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;sov&#39;</span><span class="p">,</span><span class="s1">&#39;truck&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">3</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:(</span><span class="s1">&#39;16:00&#39;</span><span class="p">:</span><span class="s1">&#39;19:00&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;sov&#39;</span><span class="p">,</span><span class="s1">&#39;truck&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
 <h3 id="shapes">Shapes<a class="headerlink" href="#shapes" title="Permanent link"> ¶</a></h3>
 <p>A  valid <code>geojson</code> file with <code>LineString</code> features and the folowing <code>properties</code>. Additional properties may be defined and if overlapping with <a href="http://sharedstreets.io">SharedStreets</a> are assumed to be defined in the same manner.</p>
 <table>
@@ -714,6 +888,11 @@
 </ol>
 <h2 id="project-cards">Project Cards<a class="headerlink" href="#project-cards" title="Permanent link"> ¶</a></h2>
 <p>Project Cards, which define changes to the roadway and transit networks must use the <a href="https://github.com/networkwrangler/projectcard">ProjectCard</a> standard.</p>
+<h2 id="model-roadway-network-export-format">Model Roadway Network Export Format<a class="headerlink" href="#model-roadway-network-export-format" title="Permanent link"> ¶</a></h2>
+<p>In order to separatly calculate the delay when the networks are assigned in static roadway network assignment the roadway network must be exported with separate managed lane links.</p>
+<p>To acheive this, RoadwayNetwork objects have the option to be exported in the ModelRoadwayNetwork format, which separates a link into two: set of managed lanes and a set of general purpose lanes which are connected by a set of dummy connector links.  </p>
+<p>The parallel managed lanes are defined by nodes which are offset from the parent by the <code>MANAGED_LANES_NODE_ID_SCALAR</code> and a primary link id which is offset from teh parent by <code>MANAGED_LANES_LINK_ID_SCALAR</code>.</p>
+<p>Remaining properties which are not defined by a preceeding <code>ML</code> are copied from the parent link.</p>
 
 
 
