@@ -23,7 +23,6 @@ from geopandas.geodataframe import GeoDataFrame
 
 from pandas.core.frame import DataFrame
 
-from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 
@@ -308,7 +307,6 @@ class RoadwayNetwork(object):
     ) -> RoadwayNetwork:
         """
         Reads a network from the roadway network standard
-        Validates that it conforms to the schema
 
         args:
             link_file: full path to the link file
@@ -327,14 +325,6 @@ class RoadwayNetwork(object):
                 msg = f"Specified file doesn't exist at: {fn}"
                 WranglerLogger.error(msg)
                 raise ValueError(msg)
-
-        if not fast:
-            if not (
-                RoadwayNetwork.validate_node_schema(node_file)
-                and RoadwayNetwork.validate_link_schema(link_file)
-                and RoadwayNetwork.validate_shape_schema(shape_file)
-            ):
-                sys.exit("RoadwayNetwork: Data doesn't conform to schema")
 
         links_df = RoadwayNetwork.read_links(link_file)
         nodes_df = RoadwayNetwork.read_nodes(node_file)
@@ -652,116 +642,6 @@ class RoadwayNetwork(object):
         if errors:
             return False
         return True
-
-    @staticmethod
-    def validate_node_schema(
-        node_file, schema_location: str = "roadway_network_node.json"
-    ):
-        """
-        Validate roadway network data node schema and output a boolean
-        """
-        if not os.path.exists(schema_location):
-            base_path = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "schemas"
-            )
-            schema_location = os.path.join(base_path, schema_location)
-
-        with open(schema_location) as schema_json_file:
-            schema = json.load(schema_json_file)
-
-        with open(node_file) as node_json_file:
-            json_data = json.load(node_json_file)
-
-        try:
-            validate(json_data, schema)
-            return True
-
-        except ValidationError as exc:
-            WranglerLogger.error("Failed Node schema validation: Validation Error")
-            WranglerLogger.error("Node File Loc:{}".format(node_file))
-            WranglerLogger.error("Node Schema Loc:{}".format(schema_location))
-            WranglerLogger.error(exc.message)
-
-        except SchemaError as exc:
-            WranglerLogger.error("Invalid Node Schema")
-            WranglerLogger.error("Node Schema Loc:{}".format(schema_location))
-            WranglerLogger.error(json.dumps(exc.message, indent=2))
-
-        return False
-
-    @staticmethod
-    def validate_link_schema(
-        link_file, schema_location: str = "roadway_network_link.json"
-    ):
-        """
-        Validate roadway network data link schema and output a boolean
-        """
-
-        if not os.path.exists(schema_location):
-            base_path = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "schemas"
-            )
-            schema_location = os.path.join(base_path, schema_location)
-
-        with open(schema_location) as schema_json_file:
-            schema = json.load(schema_json_file)
-
-        with open(link_file) as link_json_file:
-            json_data = json.load(link_json_file)
-
-        try:
-            validate(json_data, schema)
-            return True
-
-        except ValidationError as exc:
-            WranglerLogger.error("Failed Link schema validation: Validation Error")
-            WranglerLogger.error("Link File Loc:{}".format(link_file))
-            WranglerLogger.error("Path:{}".format(exc.path))
-            WranglerLogger.error(exc.message)
-
-        except SchemaError as exc:
-            WranglerLogger.error("Invalid Link Schema")
-            WranglerLogger.error("Link Schema Loc: {}".format(schema_location))
-            WranglerLogger.error(json.dumps(exc.message, indent=2))
-
-        return False
-
-    @staticmethod
-    def validate_shape_schema(
-        shape_file, schema_location: str = "roadway_network_shape.json"
-    ):
-        """
-        Validate roadway network data shape schema and output a boolean
-        """
-
-        if not os.path.exists(schema_location):
-            base_path = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "schemas"
-            )
-            schema_location = os.path.join(base_path, schema_location)
-
-        with open(schema_location) as schema_json_file:
-            schema = json.load(schema_json_file)
-
-        with open(shape_file) as shape_json_file:
-            json_data = json.load(shape_json_file)
-
-        try:
-            validate(json_data, schema)
-            return True
-
-        except ValidationError as exc:
-            WranglerLogger.error("Failed Shape schema validation: Validation Error")
-            WranglerLogger.error("Shape File Loc:{}".format(shape_file))
-            WranglerLogger.error("Path:{}".format(exc.path))
-            WranglerLogger.error(exc.message)
-
-        except SchemaError as exc:
-            WranglerLogger.error("Invalid Shape Schema")
-            WranglerLogger.error("Shape Schema Loc: {}".format(schema_location))
-            WranglerLogger.error(json.dumps(exc.message, indent=2))
-
-        return False
 
     @property
     def num_managed_lane_links(self):
