@@ -1786,7 +1786,7 @@ class RoadwayNetwork(object):
             for prop in RoadwayNetwork.LINK_FOREIGN_KEY_TO_NODE
             for n in node_id_list
         ]
-        
+
         _query = " or ".join(_query_parts)
         _selected_links_df = links_df.query(_query, engine="python")
         """

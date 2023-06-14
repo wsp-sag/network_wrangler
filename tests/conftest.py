@@ -51,6 +51,7 @@ def stpaul_base_scenario(stpaul_ex_dir, stpaul_net, stpaul_transit_net):
     }
     return base_scenario
 
+
 @pytest.fixture(scope="session")
 def stpaul_card_dir(stpaul_ex_dir):
     return os.path.join(stpaul_ex_dir, "project_cards")
@@ -86,10 +87,13 @@ def stpaul_net(stpaul_ex_dir):
     )
     return net
 
+
 @pytest.fixture(scope="module")
 def stpaul_transit_net(stpaul_ex_dir):
     from network_wrangler import TransitNetwork
+
     return TransitNetwork.read(stpaul_ex_dir)
+
 
 @pytest.fixture(scope="module")
 def small_net(small_ex_dir):
