@@ -76,4 +76,3 @@ Requires installation of supporting packages in `requirements.viz.txt`
 ::: network_wrangler.logger
 
 ## On-Disk Schemas
-

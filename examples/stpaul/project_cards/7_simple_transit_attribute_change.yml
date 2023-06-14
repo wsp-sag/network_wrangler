@@ -1,14 +1,10 @@
 project: Blue Line Service Enhancement A
-category: Transit Service Property Change
 tags:
    - example
-dependencies:
-  prerequisites: []
-  corequisites: []
-  conflicts: []
-facility:
-  trip_id: 14940701-JUN19-MVS-BUS-Weekday-01
-  time: ['06:00:00', '09:00:00']
-properties:
-  - property: headway_secs
-    set: 900
+transit_property_change:
+  service:
+    trip_id: 14940701-JUN19-MVS-BUS-Weekday-01
+    time: ['06:00:00', '09:00:00']
+  property_changes:
+    headway_secs:
+      set: 900

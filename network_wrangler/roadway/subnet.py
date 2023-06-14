@@ -67,8 +67,8 @@ class Subnet:
             subnet_links_df (pd.DataFrame, optional): Initial links to include in subnet.
                 Optional if define a selection_dict and will default to result of
                 self.generate_subnet_from_selection_dict(selection_dict)
-            selection_dict (dict optional): RoadwaySelection dictionary for initial links to include in
-                subnet.
+            selection_dict (dict optional): RoadwaySelection dictionary for initial links to
+                include in subnet.
 
                 Example:
                     ```

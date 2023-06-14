@@ -16,7 +16,7 @@ def selection_map(
     Args:
         selection: RoadwaySelectioninstance
     """
-
+    WranglerLogger.debug("Creating selection map.")
     if selection.selection_type == "segment_search":
         G = selection.segment.graph
     else:
@@ -74,7 +74,7 @@ def network_connection_plot(G, disconnected_subgraph_nodes: list):
 
     returns: fig, ax : tuple
     """
-
+    WranglerLogger.debug("Creating network connection plot.")
     colors = []
     for i in range(len(disconnected_subgraph_nodes)):
         colors.append("#%06X" % randint(0, 0xFFFFFF))

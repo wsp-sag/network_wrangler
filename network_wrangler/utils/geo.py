@@ -1,17 +1,15 @@
-import hashlib
 import math
 
+from typing import Collection, List, Tuple
+
 import pandas as pd
-import geopandas as gpd
 
 from pyproj import Proj, Transformer
 from shapely.geometry import LineString, Point
 from shapely.ops import transform
 from geographiclib.geodesic import Geodesic
 
-from typing import Collection, List, Tuple
-
-from ..logger import WranglerLogger
+# from ..logger import WranglerLogger
 
 
 def get_bearing(lat1, lon1, lat2, lon2):

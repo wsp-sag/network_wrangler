@@ -11,7 +11,7 @@ roadway_property_change:
     name:
       - '6th'
       - 'Sixth'
-      - 'sixth' 
+      - 'sixth'
     from:
       osm_node_id: '187899923'
     to:

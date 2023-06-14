@@ -1,11 +1,10 @@
 project: 365 Bus Reroute
-category: Transit Route Change
+transit_property_change:
 facility:
   route_id: [53-111]
   time: ['09:00', '15:00']
 properties:
-  - property: 'model_node_id'
-    action: 'routing'
+  routing:
     existing:
       - 62145 #N Robert St
         39430 #Jackson St

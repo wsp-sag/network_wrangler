@@ -2,10 +2,9 @@ import pandas as pd
 
 import copy
 import hashlib
-from typing import Any, Mapping
 
 from ..logger import WranglerLogger
-from ..utils import delete_keys_from_dict, coerce_dict_to_df_types
+from ..utils import coerce_dict_to_df_types
 from .segment import Segment
 
 
@@ -23,7 +22,7 @@ NODE_PROJECT_CARD_KEYS = ["nodes", "from", "to"]
 # Project card keys that are associated with link properties
 LINK_PROJECT_CARD_KEYS = ["links"]
 
-# Default modes for searching in the event it is not specified in the project card using `modes` keyword.
+# Default modes for searching if not specified in the project card using `modes` keyword.
 DEFAULT_SEARCH_MODES = ["drive"]
 
 
@@ -45,8 +44,8 @@ class RoadwaySelection:
             segment-search, all, or explict ID search (i.e. "lanes": [1,2,3], "drive_access": True)
         additional_node_selection_dict: node selection criteria that is layered on top of a
             all or explicit ID search. Not typically used.
-        selection_type(str): one of "explicit_link_id", "explicit_node_id" or "segment_search" or "all_links" or
-            "all_nodes"
+        selection_type(str): one of "explicit_link_id", "explicit_node_id" or "segment_search"
+            or "all_links" or "all_nodes"
         selected_nodes_df: lazily-evaluated selected node. sDefaults to None if not a
             nodes selection.
         selected_links_df: lazily-evaluated selected links. Defaults to None if not a
@@ -255,7 +254,7 @@ class RoadwaySelection:
             str: Selection type value
         """
         SEGMENT_SELECTION = ["from", "to", "links"]
-        NODE_SELECTION = ["nodes"]
+        # NODE_SELECTION = ["nodes"]
         selection_keys = list(selection_dict.keys())
 
         if set(SEGMENT_SELECTION).issubset(selection_keys):
@@ -402,7 +401,8 @@ class RoadwaySelection:
         _missing_node_props = _node_props - set(self.net.nodes_df.columns) - {"all"}
 
         if _missing_node_props:
-            msg = f"Node selection uses properties not in net.nodes_df:{','.join(_missing_node_props)}"
+            msg = f"Node selection uses properties not in net.nodes_df:\
+                {','.join(_missing_node_props)}"
             WranglerLogger.error(msg)
             raise SelectionError(msg)
 
@@ -426,7 +426,8 @@ class RoadwaySelection:
         )
 
         if _missing_link_props:
-            msg = f"Link selection uses properties not in net.links_df:{','.join(_missing_link_props)}"
+            msg = f"Link selection uses properties not in net.links_df:\
+                {','.join(_missing_link_props)}"
             WranglerLogger.error(msg)
             raise SelectionError(msg)
 
@@ -467,7 +468,8 @@ class RoadwaySelection:
         ).any(axis=1)
         _selected_links_df = self.net.links_df.loc[_sel_links_mask]
         WranglerLogger.debug(
-            f"{len(_selected_links_df)} links selected with explicit links dict: {self.explicit_link_id_selection_dict}"
+            f"{len(_selected_links_df)} links selected with explicit links dict:\
+                {self.explicit_link_id_selection_dict}"
         )
 
         # make sure in mode
@@ -503,7 +505,8 @@ class RoadwaySelection:
         _selected_nodes_df = self.net.nodes_df.loc[_sel_nodes_mask]
 
         WranglerLogger.debug(
-            f"{len(_selected_nodes_df)} links selected with explicit links dict: {self.explicit_node_id_selection_dict}"
+            f"{len(_selected_nodes_df)} links selected with explicit links dict:\
+                {self.explicit_node_id_selection_dict}"
         )
 
         if not _sel_nodes_mask.any():

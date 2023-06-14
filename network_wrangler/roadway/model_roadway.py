@@ -328,7 +328,7 @@ class ModelRoadwayNetwork:
         """
         # shortcut reference to link and node parameters
         i_ps = net.links_df.params
-        n_ps = net.nodes_df.params
+        # n_ps = net.nodes_df.params
 
         # 1. Align the managed lane and associated general purpose lanes in the same records
         _keep_cols = i_ps.fks_to_nodes

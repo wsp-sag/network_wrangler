@@ -1,7 +1,7 @@
 project: Test Managed Lane Subsequent Change
 roadway_property_change:
   facility:
-    model_link_id: 
+    model_link_id:
       - 390239
   property_changes:
     - property: lanes  #changes number of lanes 3 to 2 (reduction of 1)

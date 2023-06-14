@@ -13,7 +13,6 @@ from typing import Collection, List, Union, Mapping, Any
 
 import geopandas as gpd
 import networkx as nx
-import numpy as np
 import pandas as pd
 
 from geopandas.geodataframe import GeoDataFrame
@@ -109,8 +108,8 @@ class RoadwayNetwork(object):
             primary key: `.params.primary_key`.  This is lazily created iff it is called because
             shapes files can be expensive to read.
 
-        selections (dict): dictionary of stored `RoadwaySelection` objects, mapped by `RoadwaySelection.sel_key`
-            in case they are made repeatedly.
+        selections (dict): dictionary of stored `RoadwaySelection` objects, mapped by
+            `RoadwaySelection.sel_key` in case they are made repeatedly.
 
         crs (str): coordinate reference system in ESPG number format. Defaults to DEFAUULT_CRS
             which is set to 4326, WGS 84 Lat/Long
@@ -499,7 +498,7 @@ class RoadwayNetwork(object):
             return apply_calculated_roadway(self, _pycode)
         else:
             WranglerLogger.error(f"Couldn't find project in:\n{project_dictionary}")
-            raise (ValueError(f"Invalid Project Card Category."))
+            raise (ValueError("Invalid Project Card Category."))
 
     def update_network_geometry_from_node_xy(
         self, updated_nodes: List = None
@@ -662,7 +661,7 @@ class RoadwayNetwork(object):
         if all_unused:
             shape_ids += self._shapes_without_links()
             shape_ids = list(set(shape_ids))
-        WranglerLogger.debug(f"{len(shape_ids)} shapes to drop\n\{shape_ids}")
+        WranglerLogger.debug(f"{len(shape_ids)} shapes to drop\n{shape_ids}")
         self.shapes_df = self.shapes_df.drop(shape_ids)
 
     def node_ids_in_links(
@@ -721,7 +720,7 @@ class RoadwayNetwork(object):
         )
         if len(_selected_links_df) < 10:
             WranglerLogger.debug(
-                f"Temp Selected Links:\n{_selected_links_df[_selected_links_df.params.display_cols]}"
+                f"Temp Sel Links:\n{_selected_links_df[_selected_links_df.params.display_cols]}"
             )
         """TODO
         _query_parts = [
@@ -740,25 +739,24 @@ class RoadwayNetwork(object):
         return _selected_links_df
 
     def links_in_path(self, links_df: pd.DataFrame, node_id_path_list: list):
-        """Returns a selection of links dataframe with nodes along path defined by node_id_path_list.
+        """Return selection of links dataframe with nodes along path defined by node_id_path_list.
 
         Args:
             links_df (pd.DataFrame): Links dataframe to select from
             node_id_path_list (list): List of node primary keys.
         """
         _ab_pairs = [
-            node_id_path_list[i : i + 2] for i, _ in enumerate(node_id_path_list)
+            node_id_path_list[i: i + 2] for i, _ in enumerate(node_id_path_list)
         ][:-1]
         _cols = self.links_df.params.fks_to_nodes
         _sel_df = pd.DataFrame(_ab_pairs, columns=_cols)
- 
+
         WranglerLogger.debug(f"Selecting links that match _sel_df:\n{_sel_df}")
         _sel_links_df = pd.merge(
-            links_df.reset_index(names='index'), _sel_df, how="inner"
+            links_df.reset_index(names="index"), _sel_df, how="inner"
         )
-        #WranglerLogger.debug(f"_sel_links_df:\n{_sel_links_df[_sel_links_df.params.display_cols]}")
+        # WranglerLogger.debug(f"_sel_links_df:\n{_sel_links_df[_sel_links_df.params.display_cols]}")
         _sel_links_df = _sel_links_df.set_index("index")
-        
 
         return _sel_links_df
 

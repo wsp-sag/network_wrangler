@@ -2,7 +2,7 @@ import json
 import os
 
 from dataclasses import dataclass, field
-from typing import Union, Mapping, Any, Optional, List
+from typing import Union, Any, Optional, List
 
 import geopandas as gpd
 import numpy as np
@@ -13,7 +13,6 @@ from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 
-import pandera as pa
 from pandera import check_input, check_output, DataFrameModel
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
@@ -25,7 +24,6 @@ from ..utils import (
     line_string_from_location_references,
     coerce_val_to_series_type,
     parse_time_spans_to_secs,
-    line_string_from_location_references,
     location_reference_from_nodes,
 )
 
@@ -124,7 +122,7 @@ def read_links(
     links_df = links_data_to_links_df(links_data, crs=crs, links_params=links_params)
     links_df.params.source_file = filename
     # need to add params to _metadata in order to make sure it is copied.
-    # see: https://stackoverflow.com/questions/50372509/why-are-attributes-lost-after-copying-a-pandas-dataframe/50373364#50373364
+    # see: https://stackoverflow.com/questions/50372509/
 
     return links_df
 
@@ -137,7 +135,7 @@ def links_data_to_links_df(
     link_geometries: List = None,
     nodes_df: gpd.GeoDataFrame = None,
 ) -> gpd.GeoDataFrame:
-    """Creates a links dataframe from list of link properties + link geometries or associated nodes.
+    """Create a links dataframe from list of link properties + link geometries or associated nodes.
 
     Sets index to be a copy of the primary key.
     Validates output dataframe using LinksSchema.
@@ -158,7 +156,7 @@ def links_data_to_links_df(
     if link_geometries is None:
         temp_links_df = pd.DataFrame(links_data)
 
-        if not "locationReferences" in temp_links_df:
+        if "locationReferences" not in temp_links_df:
             if nodes_df is None:
                 raise LinkCreationError(
                     "Must give nodes_df argument if don't have LocationReferences or Geometry"
@@ -278,7 +276,7 @@ class ModeLinkAccessor:
 
 
 @pd.api.extensions.register_dataframe_accessor("of_type")
-class ModeLinkAccessor:
+class LinkOfTypeAccessor:
     def __init__(self, links_df):
         self._links_df = links_df
 
@@ -374,7 +372,7 @@ def links_df_to_json(links_df: pd.DataFrame, properties: list):
 
 
 @pd.api.extensions.register_dataframe_accessor("set_link_prop")
-class ModeLinkAccessor:
+class SetLinkPropAccessor:
     def __init__(self, links_df):
         self._links_df = links_df
 
@@ -384,7 +382,7 @@ class ModeLinkAccessor:
             return {"default": prop_dict["set"]}
         elif "change" in prop_dict:
             if isinstance(existing_val, dict):
-                if not "default" in existing_val:
+                if "default" not in existing_val:
                     WranglerLogger.error(
                         "cannot change existing default value when it is not set."
                     )
@@ -543,7 +541,7 @@ class ModeLinkAccessor:
 
         # check existing if necessary
         if "existing" in prop_dict:
-            if not prop_name in self._links_df.columns:
+            if prop_name not in self._links_df.columns:
                 WranglerLogger.warning(f"No existing value defined for {prop_name}")
                 if existing_value_conflict_error:
                     raise LinkChangeError(f"No existing value defined for {prop_name}")

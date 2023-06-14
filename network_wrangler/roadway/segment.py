@@ -173,7 +173,7 @@ class Segment:
     def segment_nodes(self) -> list:
         if self._segment_nodes is None:
             WranglerLogger.debug(
-                f"Segment not found yet so conducting connected_path_search."
+                "Segment not found yet so conducting connected_path_search."
             )
             self.connected_path_search()
         return self._segment_nodes

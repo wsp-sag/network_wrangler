@@ -4,7 +4,7 @@ import subprocess
 
 import pytest
 
-from projectcard import read_card, read_cards, write_card, ProjectCard
+from projectcard import read_card, write_card, ProjectCard
 from network_wrangler import Scenario
 from network_wrangler.scenario import (
     ScenarioConflictError,
@@ -27,6 +27,7 @@ def test_project_card_read(request, stpaul_card_dir):
     WranglerLogger.debug(project_card)
     assert project_card.category == "Roadway Property Change"
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
 
 @pytest.mark.menow
 def test_project_card_write(request, stpaul_card_dir, scratch_dir):
@@ -61,10 +62,10 @@ def test_scenario_conflicts(request, stpaul_card_dir):
     )
 
     # should raise an error whenever calling queued projects or when applying them.
-    with pytest.raises(ScenarioConflictError) as e_info:
+    with pytest.raises(ScenarioConflictError):
         WranglerLogger.info(scen.queued_projects)
 
-    with pytest.raises(ScenarioConflictError) as e_info:
+    with pytest.raises(ScenarioConflictError):
         scen.apply_all_projects()
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -91,10 +92,10 @@ def test_scenario_corequisites(request):
     )
 
     # should raise an error whenever calling queued projects or when applying them.
-    with pytest.raises(ScenarioCorequisiteError) as e_info:
+    with pytest.raises(ScenarioCorequisiteError):
         WranglerLogger.info(scen.queued_projects)
 
-    with pytest.raises(ScenarioCorequisiteError) as e_info:
+    with pytest.raises(ScenarioCorequisiteError):
         scen.apply_all_projects()
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
@@ -137,6 +138,7 @@ def test_scenario_prerequisites(request):
         scen.apply_projects(["project b"])
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
 
 @pytest.mark.menow
 @pytest.mark.failing

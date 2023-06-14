@@ -36,7 +36,7 @@ def make_slug(text, delimiter: str = "_"):
 def delete_keys_from_dict(dictionary: dict, keys: list) -> dict:
     """Removes list of keys from potentially nested dictionary.
 
-    SOURCE: https://stackoverflow.com/questions/3405715/elegant-way-to-remove-fields-from-nested-dictionaries
+    SOURCE: https://stackoverflow.com/questions/3405715/
     User: @mseifert
 
     Args:

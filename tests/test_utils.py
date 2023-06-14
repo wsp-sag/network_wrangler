@@ -1,8 +1,6 @@
 import pytest
 
-import geopandas as gpd
-
-from shapely.geometry import LineString, Point
+from shapely.geometry import LineString
 
 from network_wrangler import WranglerLogger
 from network_wrangler.utils import haversine_distance

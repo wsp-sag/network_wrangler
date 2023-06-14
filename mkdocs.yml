@@ -46,7 +46,7 @@ plugins:
   - search
   - macros
 
-watch: 
+watch:
  - network_wrangler
 
 extra:

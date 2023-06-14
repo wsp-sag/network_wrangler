@@ -14,7 +14,7 @@ from typing import Union, Collection
 
 import geopandas as gpd
 
-from projectcard import read_cards, ProjectCard
+from projectcard import read_cards, ProjectCard, SubProject
 
 from .logger import WranglerLogger
 from .roadwaynetwork import RoadwayNetwork
@@ -28,19 +28,15 @@ BASE_SCENARIO_SUGGESTED_PROPS = [
     "conflicts",
 ]
 
-TRANSIT_CARD_TYPES = [
-    "transit_property_change"
-]
-ROADWAY_CARD_TYPES= [
+TRANSIT_CARD_TYPES = ["transit_property_change"]
+ROADWAY_CARD_TYPES = [
     "roadway_deletion",
     "roadway_addition",
     "roadway_property_change",
-    "roadway_managed_lanes"
+    "roadway_managed_lanes",
 ]
-SECONDARY_TRANSIT_CARD_TYPES = [
-    "roadway_deletion",
-    "roadway_managed_lanes"
-]
+SECONDARY_TRANSIT_CARD_TYPES = ["roadway_deletion", "roadway_managed_lanes"]
+
 
 class ScenarioConflictError(Exception):
     pass
@@ -212,7 +208,9 @@ class Scenario(object):
         scenario = Scenario(base_scenario)
 
         if project_card_filepath:
-            project_card_list += list(read_cards(project_card_filepath, filter_tags=filter_tags).values())
+            project_card_list += list(
+                read_cards(project_card_filepath, filter_tags=filter_tags).values()
+            )
 
         if project_card_list:
             scenario.add_project_cards(
@@ -352,7 +350,7 @@ class Scenario(object):
         return True
 
     def _check_projects_prerequisites(self, project_names: str) -> None:
-        """Checks that list of projects' pre-requisites have been or will be applied to scenario."""
+        """Check a list of projects' pre-requisites have been or will be applied to scenario."""
         if set(project_names).isdisjoint(set(self.prerequisites.keys())):
             return
         _prereqs = []
@@ -370,7 +368,7 @@ class Scenario(object):
             )
 
     def _check_projects_corequisites(self, project_names: str) -> None:
-        """Checks that a list of projects' co-requisites have been or will be applied to scenario."""
+        """Check a list of projects' co-requisites have been or will be applied to scenario."""
         if set(project_names).isdisjoint(set(self.corequisites.keys())):
             return
         _coreqs = []
@@ -465,7 +463,7 @@ class Scenario(object):
         # set this so it will trigger re-queuing any more projects.
         self._queued_projects = None
 
-    def _apply_change(self, change: Union[ProjectCard,'SubProject']) -> None:
+    def _apply_change(self, change: Union[ProjectCard, SubProject]) -> None:
         """Applies a specific change specified in a project card.
 
         Change type must be in at least one of:
@@ -483,19 +481,11 @@ class Scenario(object):
             if not self.transit_net:
                 raise ("Missing Transit Network")
             self.transit_net.apply(change.__dict__)
-        if (
-            change.type in SECONDARY_TRANSIT_CARD_TYPES
-            and self.transit_net
-        ):
+        if change.type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
             self.transit_net.apply(change.__dict__)
 
-        if (
-            change.type
-            not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES
-        ):
-            raise ProjectCardError(
-                f"Don't understand project category: {change.type}"
-            )
+        if change.type not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES:
+            raise ProjectCardError(f"Don't understand project category: {change.type}")
 
     def _apply_project(self, project_name: str) -> None:
         """Applies project card to scenario.

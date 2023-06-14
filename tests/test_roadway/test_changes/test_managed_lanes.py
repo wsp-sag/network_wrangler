@@ -30,13 +30,6 @@ SIMPLE_MANAGED_LANE_PROPERTIES = {
             {"time": ["16:00", "19:00"], "set": 1},
         ],
     },
-    "ML_lanes": {
-        "set": 0,
-        "timeofday": [
-            {"time": ["6:00", "9:00"], "set": 1},
-            {"time": ["16:00", "19:00"], "set": 1},
-        ],
-    },
     "ML_access": {"set": "all"},
     "ML_egress": {"set": "all"},
     "ML_price": {

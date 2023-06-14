@@ -338,7 +338,8 @@ def test_change_node_xy(request, small_net):
         f"Updated Node:\n{_updated_node[[net.nodes_df.params.primary_key,'X','Y','geometry']]}"
     )
     WranglerLogger.info(
-        f"Updated Link Geometry for ({_updated_link.A}-->{_updated_link.B}):\n{_updated_link[['geometry']]}"
+        f"Updated Link Geometry for ({_updated_link.A}-->{_updated_link.B}):\n\
+            {_updated_link[['geometry']]}"
     )
 
     assert _updated_node.geometry.x == _expected_X

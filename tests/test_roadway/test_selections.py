@@ -6,8 +6,6 @@ import pandas as pd
 import pytest
 
 from projectcard import read_card
-import network_wrangler
-from network_wrangler import RoadwayNetwork
 from network_wrangler import WranglerLogger
 from network_wrangler.roadway import RoadwaySelection
 from network_wrangler.roadwaynetwork import _dict_to_query
@@ -147,12 +145,13 @@ node_sel_dict_answers = [
     },
 ]
 
+
 @pytest.mark.parametrize(
     "selection,answer", zip(TEST_SELECTIONS, node_sel_dict_answers)
 )
 def test_calc_node_selection_dict(request, selection, answer, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    s = RoadwaySelection(stpaul_net,selection)
+    s = RoadwaySelection(stpaul_net, selection)
     d = s.calc_node_selection_dict(selection)
     assert d == answer
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -182,17 +181,17 @@ link_sel_dict_answers = [
     {
         "lanes": [1, 2],
     },
-    {
-    },
+    {},
     {"name": ["Valley Street"]},
 ]
+
 
 @pytest.mark.parametrize(
     "selection,answer", zip(TEST_SELECTIONS, link_sel_dict_answers)
 )
-def test_calc_link_selection_dict(request, selection, answer,stpaul_net):
+def test_calc_link_selection_dict(request, selection, answer, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    s = RoadwaySelection(stpaul_net,selection)
+    s = RoadwaySelection(stpaul_net, selection)
     d = s.calc_link_selection_dict(selection)
     assert d == answer
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -230,7 +229,7 @@ def test_select_roadway_features(request, selection, answer, stpaul_net):
         WranglerLogger.info(
             f"Segment Links: \n{_selection.segment.segment_links_df[_show_f]}"
         )
-    WranglerLogger.info(f"Selected Links")
+    WranglerLogger.info("Selected Links")
 
     if len(selected_link_indices) < 10:
         WranglerLogger.info(

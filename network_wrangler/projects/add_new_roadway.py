@@ -2,18 +2,18 @@ import copy
 from typing import Collection
 
 import geopandas as gpd
-import pandas as pd
 
+from ..roadwaynetwork import RoadwayNetwork
 from ..roadway.nodes import nodes_data_to_nodes_df
 from ..roadway.links import links_data_to_links_df
 from ..logger import WranglerLogger
 
 
 def apply_new_roadway(
-    roadway_net: "RoadwayNetwork",
+    roadway_net: RoadwayNetwork,
     add_links: Collection[dict] = [],
     add_nodes: Collection[dict] = [],
-) -> None:
+) -> RoadwayNetwork:
     """
     Add the new roadway features defined in the project card.
 
@@ -48,7 +48,7 @@ def apply_new_roadway(
 
 
 def _create_new_shapes_from_links(
-    roadway_net, links_df: gpd.GeoDataFrame
+    roadway_net: RoadwayNetwork, links_df: gpd.GeoDataFrame
 ) -> gpd.GeoDataFrame:
     new_shapes_df = copy.deepcopy(
         links_df[[roadway_net.shapes_df.params.primary_key, "geometry"]]

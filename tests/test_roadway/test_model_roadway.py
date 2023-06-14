@@ -4,7 +4,6 @@ import os
 import pytest
 
 from projectcard import read_card
-from network_wrangler.roadway import ModelRoadwayNetwork
 from network_wrangler import WranglerLogger
 
 
@@ -111,9 +110,6 @@ def test_create_ml_network_shape(request, small_net):
         },
     }
 
-    _orig_links_count = len(net.links_df)
-    _orig_shapes_count = len(net.shapes_df)
-
     net = net.apply(project_card_dictionary)
 
     base_model_link_ids = _facility["links"]["model_link_id"]
@@ -140,10 +136,7 @@ def test_create_ml_network_shape(request, small_net):
         net.model_net.m_links_df["model_link_id"].isin(egress_model_link_ids)
     ]
 
-    _num_added_links = len(net.links_df) - _orig_links_count
-    _num_added_shapes = len(net.shapes_df) - _orig_shapes_count
-
-    # CHECK: new ML links, each ML link has 2 more access/egress links for total of 3 links per ML link
+    # CHECK: new ML links, each ML link has 2 more acc/egr links for total of 3 links per ML link
     # total new links for 2 ML links will be 6 (2*3)
     _display_c = ["model_link_id", "roadway", "A", "B", "shape_id", "name"]
     WranglerLogger.debug(
@@ -174,6 +167,7 @@ def test_create_ml_network_shape(request, small_net):
     ) == len(egress_model_link_ids)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
 
 def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_dir):
     """Tests usage of ML_access and ML_egress when they are set to a list of nodes instead of "all"

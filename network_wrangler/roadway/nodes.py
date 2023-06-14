@@ -2,7 +2,6 @@ import json
 import os
 
 from dataclasses import dataclass, field
-import hashlib
 from typing import Union, Optional, List
 
 import geopandas as gpd
@@ -111,7 +110,7 @@ def nodes_data_to_nodes_df(
     crs: int = 4326,
     node_geometries: List = None,
 ) -> gpd.GeoDataFrame:
-    """Turns list of nodes data into nodes dataframe given either node_geometries or X,Y properties.
+    """Turn list of nodes data into nodes dataframe given either node_geometries or X,Y properties.
 
     Validates output to NodesSchema.
 
@@ -214,7 +213,6 @@ def nodes_df_to_geojson(nodes_df: pd.DataFrame, properties: list):
     Author: Geoff Boeing:
     https://geoffboeing.com/2015/10/exporting-python-data-geojson/
     """
-    from ..roadwaynetwork import RoadwayNetwork
 
     geojson = {"type": "FeatureCollection", "features": []}
     for _, row in nodes_df.iterrows():
@@ -232,7 +230,7 @@ def nodes_df_to_geojson(nodes_df: pd.DataFrame, properties: list):
 
 
 @pd.api.extensions.register_dataframe_accessor("set_node_prop")
-class ModeLinkAccessor:
+class ModeNodeAccessor:
     def __init__(self, nodes_df):
         self._nodes_df = nodes_df
 
@@ -268,7 +266,7 @@ class ModeLinkAccessor:
                     f"Existing value defined for {prop_name} in project card \
                     does not match the value in the roadway network for the selected links. \n\
                     Specified Existing:{prop_dict['existing']}\n\
-                    Actual Existing:\n {_nodes_df.loc[self._node_idx,prop_name]}."
+                    Actual Existing:\n {self._nodes_df.loc[self._node_idx,prop_name]}."
                 )
 
                 if existing_value_conflict_error:

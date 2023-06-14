@@ -1,5 +1,3 @@
-import copy
-
 import networkx as nx
 import osmnx as ox
 
@@ -7,6 +5,7 @@ from pandas import DataFrame
 from geopandas import GeoDataFrame
 
 from ..logger import WranglerLogger
+from ..roadwaynetwork import RoadwayNetwork
 
 
 ox_major_version = int(ox.__version__.split(".")[0])
@@ -158,7 +157,7 @@ def links_nodes_to_ox_graph(
     return G
 
 
-def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
+def net_to_graph(net: RoadwayNetwork, mode: str = None) -> nx.MultiDiGraph:
     """Converts a network to a MultiDiGraph
 
     Args:
@@ -211,7 +210,7 @@ def shortest_path(G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight") -
 
 
 def assess_connectivity(
-    net: "RoadwayNetwork",
+    net: RoadwayNetwork,
     mode: str = "",
     ignore_end_nodes: bool = True,
 ):

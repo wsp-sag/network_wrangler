@@ -14,6 +14,8 @@ import pandas as pd
 import partridge as ptg
 from partridge.config import default_config
 
+from projectcard import ProjectCard
+
 from .logger import WranglerLogger
 from .utils import parse_time_spans_to_secs
 from .roadwaynetwork import RoadwayNetwork
@@ -52,6 +54,7 @@ class TransitNetwork(object):
     # PK = primary key, FK = foreign key
     SHAPES_FOREIGN_KEY = "shape_model_node_id"
     STOPS_FOREIGN_KEY = "model_node_id"
+    TIME_COLS = ["arrival_time", "departure_time", "start_time", "end_time"]
 
     # TODO consolidate these two ^^^ constants if possible
 
@@ -193,7 +196,7 @@ class TransitNetwork(object):
 
         return _valid
 
-    def validate_road_network_consistencies(self) -> bool:
+    def evaluate_road_network_consistencies(self) -> bool:
         """
         Validates transit network against the road network for both stops
         and shapes.
@@ -211,11 +214,11 @@ class TransitNetwork(object):
         valid_stops = self.validate_transit_stops()
         valid_shapes = self.validate_transit_shapes()
 
-        self.validated_road_network_consistency = True
-
         if not valid_stops or not valid_shapes:
             valid = False
             raise ValueError("Transit network is not consistent with road network.")
+
+        self.validated_road_network_consistency = True
 
         return valid
 
@@ -237,10 +240,9 @@ class TransitNetwork(object):
 
         valid = True
 
-        stop_ids = [int(s) for s in stops[TransitNetwork.STOPS_FOREIGN_KEY].to_list()]
-        node_ids = [
-            int(n) for n in nodes[RoadwayNetwork.NODE_FOREIGN_KEY_TO_LINK].to_list()
-        ]
+        # convert to string for comparison
+        stop_ids = [str(s) for s in stops[TransitNetwork.STOPS_FOREIGN_KEY].to_list()]
+        node_ids = [str(s) for s in nodes[nodes.params.primary_key].to_list()]
 
         if not set(stop_ids).issubset(node_ids):
             valid = False
@@ -476,54 +478,11 @@ class TransitNetwork(object):
     def set_roadnet(
         self,
         road_net: RoadwayNetwork,
-        graph_shapes: bool = False,
-        graph_stops: bool = False,
         validate_consistency: bool = True,
     ) -> None:
-        self.road_net: RoadwayNetwork = road_net
-        self.graph: nx.MultiDiGraph = RoadwayNetwork.ox_graph(
-            road_net.nodes_df, road_net.links_df
-        )
-        if graph_shapes:
-            self._graph_shapes()
-        if graph_stops:
-            self._graph_stops()
-
+        self.road_net = road_net
         if validate_consistency:
-            self.validate_road_network_consistencies()
-
-    def _graph_shapes(self) -> None:
-        """
-
-        .. todo:: Fill out this method.
-        """
-        msg = "_graph_shapes() not implemented yet."
-        WranglerLogger.error(msg)
-        raise NotImplementedError(msg)
-        # graphed_shapes = pd.DataFrame()
-
-        # for shape_id in shapes:
-        # TODO traverse point by point, mapping shortest path on graph,
-        # then append to a list
-        # return total list of all link ids
-        # rebuild rows in shapes dataframe and add to graphed_shapes
-        # make graphed_shapes a GeoDataFrame
-
-        # self.feed.shapes = graphed_shapes
-
-    def _graph_stops(self) -> None:
-        """
-        .. todo:: Fill out this method.
-        """
-        msg = "_graph_stops() not implemented yet."
-        WranglerLogger.error(msg)
-        raise NotImplementedError(msg)
-        # graphed_stops = pd.DataFrame()
-
-        # for stop_id in stops:
-        # TODO
-
-        # self.feed.stops = graphed_stops
+            self.evaluate_road_network_consistencies()
 
     def write(self, path: str = ".", filename: str = None) -> None:
         """
@@ -534,16 +493,24 @@ class TransitNetwork(object):
             filename: the name prefix of the transit files that will be generated
         """
         WranglerLogger.info("Writing transit to directory: {}".format(path))
-        for node in self.config.nodes.keys():
+        for node, config in self.config.nodes.items():
             df = self.feed.get(node.replace(".txt", ""))
             if not df.empty:
                 if filename:
                     outpath = os.path.join(path, filename + "_" + node)
                 else:
                     outpath = os.path.join(path, node)
-                WranglerLogger.debug("Writing file: {}".format(outpath))
+                _time_cols = [c for c in TransitNetwork.TIME_COLS if c in df.columns]
 
-                df.to_csv(outpath, index=False)
+                if _time_cols:
+                    WranglerLogger.debug(f"Converting cols to datetime: {_time_cols}")
+                    df = df.copy()
+                    df[_time_cols] = df[_time_cols].applymap(
+                        lambda x: pd.to_datetime(x, unit="s")
+                    )
+
+                WranglerLogger.debug("Writing file: {}".format(outpath))
+                df.to_csv(outpath, index=False, date_format="%H:%M:%S")
 
     @staticmethod
     def transit_net_to_gdf(transit: Union("TransitNetwork", pd.DataFrame)):
@@ -565,69 +532,58 @@ class TransitNetwork(object):
         transit_gdf = geo.build_shapes(shapes)
         return transit_gdf
 
-    def apply(self, project_card_dictionary: dict):
+    def apply(
+        self, project_card: Union[ProjectCard, dict], _subproject: bool = False
+    ) -> "TransitNetwork":
         """
         Wrapper method to apply a project to a transit network.
 
         Args:
-            project_card_dictionary: dict
-                a dictionary of the project card object
+            project_card: either a dictionary of the project card object or ProjectCard instance
+            _subproject: boolean indicating if this is a subproject under a "changes" heading.
+                Defaults to False. Will be set to true with code when necessary.
 
         """
-        WranglerLogger.info(
-            "Applying Project to Transit Network: {}".format(
-                project_card_dictionary["project"]
+        if isinstance(project_card, ProjectCard):
+            project_card_dictionary = project_card.__dict__
+        elif isinstance(project_card, dict):
+            project_card_dictionary = project_card
+        else:
+            WranglerLogger.error(
+                f"project_card is of invalid type: {type(project_card)}"
             )
+            raise TypeError("project_card must be of type ProjectCard or dict")
+
+        WranglerLogger.info(
+            f"Applying Project to Transit Network: { project_card_dictionary['project']}"
         )
 
-        def _apply_individual_change(project_dictionary: dict):
-            if (
-                project_dictionary["type"].lower()
-                == "transit service property change"
-            ):
-                self.apply_transit_feature_change(
-                    self.select_transit_features(project_dictionary["facility"]),
-                    project_dictionary["properties"],
+        if not _subproject:
+            WranglerLogger.info(
+                "Applying Project to Roadway Network: {}".format(
+                    project_card_dictionary["project"]
                 )
-            elif project_dictionary["type"].lower() == "parallel managed lanes":
-                # Grab the list of nodes in the facility from road_net
-                # It should be cached because managed lane projects are
-                # processed by RoadwayNetwork first via
-                # Scenario.apply_all_projects
-                try:
-                    managed_lane_nodes = self.road_net.selections(
-                        self.road_net.build_selection_key(
-                            project_dictionary["facility"]
-                        )
-                    )["route"]
-                except ValueError:
-                    WranglerLogger.error(
-                        "RoadwayNetwork not set yet, see TransitNetwork.set_roadnet()"
-                    )
-
-                # Reroute any transit using these nodes
-                self.apply_transit_managed_lane(
-                    self.select_transit_features_by_nodes(managed_lane_nodes),
-                    managed_lane_nodes,
-                )
-            elif project_dictionary["type"].lower() == "add transit":
-                self.apply_python_calculation(project_dictionary["pycode"])
-            elif project_dictionary["type"].lower() == "roadway deletion":
-                WranglerLogger.warning(
-                    "Roadway Deletion not yet implemented in Transit; ignoring"
-                )
-            else:
-                msg = "{} not implemented yet in TransitNetwork; can't apply.".format(
-                    project_dictionary["type"]
-                )
-                WranglerLogger.error(msg)
-                raise (msg)
+            )
 
         if project_card_dictionary.get("changes"):
             for project_dictionary in project_card_dictionary["changes"]:
-                _apply_individual_change(project_dictionary)
+                return self.apply(project_dictionary, _subproject=True)
         else:
-            _apply_individual_change(project_card_dictionary)
+            project_dictionary = project_card_dictionary
+
+        if project_dictionary["type"].lower() == "transit_property_change:":
+            return self.apply_transit_feature_change(
+                self.select_transit_features(project_dictionary["facility"]),
+                project_dictionary["properties"],
+            )
+
+        elif project_dictionary.get("pycode"):
+            return self.apply_python_calculation(project_dictionary["pycode"])
+
+        else:
+            msg = f"Can't apply {project_dictionary['type']} – not implemented yet."
+            WranglerLogger.error(msg)
+            raise (msg)
 
     def apply_python_calculation(self, pycode: str) -> "TransitNetwork":
         """
@@ -802,6 +758,14 @@ class TransitNetwork(object):
         """
         net = copy.deepcopy(self)
 
+        # Grab the list of nodes in the facility from road_net
+        # It should be cached because managed lane projects are
+        # processed by RoadwayNetwork first via
+        # Scenario.apply_all_projects
+        # managed_lane_nodes = self.road_net.selections(
+        #    self.road_net.build_selection_key(project_dictionary["facility"])
+        # )["route"]
+
         for i in properties:
             if i["property"] in ["headway_secs"]:
                 net = TransitNetwork._apply_transit_feature_change_frequencies(
@@ -903,7 +867,7 @@ class TransitNetwork(object):
                     [
                         this_shape.iloc[:index_replacement_starts],
                         new_shape_rows,
-                        this_shape.iloc[index_replacement_ends + 1 :],
+                        this_shape.iloc[index_replacement_ends + 1:],
                     ],
                     ignore_index=True,
                     sort=False,
@@ -1013,7 +977,7 @@ class TransitNetwork(object):
                         [
                             this_stoptime.iloc[:index_replacement_starts],
                             new_stoptime_rows,
-                            this_stoptime.iloc[index_replacement_ends + 1 :],
+                            this_stoptime.iloc[index_replacement_ends + 1:],
                         ],
                         ignore_index=True,
                         sort=False,

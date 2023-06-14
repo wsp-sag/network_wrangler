@@ -1,4 +1,3 @@
-import hashlib
 import json
 import os
 
@@ -6,14 +5,13 @@ from dataclasses import dataclass, field
 from typing import Union, Any
 
 import geopandas as gpd
-import pandas as pd
 import pandera as pa
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 
-from pandera import check_input, check_output, DataFrameModel
+from pandera import check_output, DataFrameModel
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
 

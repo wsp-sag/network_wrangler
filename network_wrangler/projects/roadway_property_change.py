@@ -1,15 +1,13 @@
-import numpy as np
-import pandas as pd
-
 from ..logger import WranglerLogger
-from ..roadway.selection import SelectionFormatError
+from ..roadwaynetwork import RoadwayNetwork
+from ..roadway.selection import RoadwaySelection, SelectionFormatError
 
 
 def apply_roadway_property_change(
-    roadway_net: "RoadwayNetwork",
-    selection: "Selection",
+    roadway_net: RoadwayNetwork,
+    selection: RoadwaySelection,
     property_change: dict,
-) -> "RoadwayNetwork":
+) -> RoadwayNetwork:
     """
     Changes the roadway attributes for the selected features based on the
     project card information passed
@@ -29,6 +27,7 @@ def apply_roadway_property_change(
                 set: 2
             ```
     """
+    WranglerLogger.debug("Applying roadway property change project.")
     # should only be for links or nodes at once, not both
     if not len(selection.feature_types) == 1:
         raise SelectionFormatError(
