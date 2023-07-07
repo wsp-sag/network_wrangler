@@ -17,4 +17,3 @@ NetworkWrangler deals with four primary atomic parts:
 `Partridge` `feed` object.  Transit networks can be associated with Roadway networks.
 
 **4.[`ProjectCard`](/network_wrangler/api/#network_wrangler.ProjectCard)** objects store infromation (including  metadata) about changes to the network.  Network Wtanglr reads project cards from .yml files validates them, and manages them within a `Scenario` object.
-

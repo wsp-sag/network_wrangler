@@ -15,6 +15,3 @@ hide:
 
 ::: network_wrangler.utils
 ::: network_wrangler.logger
-
-## Schemas
-

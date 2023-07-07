@@ -8,8 +8,8 @@ assignees: ''
 ---
 
 ## Describe the bug
-A clear and concise description of what the bug is or the error code you got. e.g. 
-```python 
+A clear and concise description of what the bug is or the error code you got. e.g.
+```python
 KeyError: 'Passing list-likes to .loc or [] with any missing labels is no longer supported, see https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#deprecate-loc-reindex-listlike'
 ```
 
@@ -22,7 +22,7 @@ Steps to reproduce the behavior:
 
 ### Failing tests
 - [ ] No applicable test failed, need to create.
-- [ ] 
+- [ ]
 
 ### Triggering line of code
 

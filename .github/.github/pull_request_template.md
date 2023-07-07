@@ -5,7 +5,7 @@
 
 *Demonstrate the code is solid by discussing how results are verified and covered by tests*
 
- - [ ] Code for this PR is covered in tests 
+ - [ ] Code for this PR is covered in tests
  - [ ] Code passes all existing tests
 
 ## Code formatting
@@ -18,10 +18,8 @@
 
 *Put `closes #XXXX` in your comment to auto-close the issue that your PR fixes.*
 
- 
+
 #### Issues List
 
  -  closes...
  -  closes...
-
-

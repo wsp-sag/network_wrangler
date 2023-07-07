@@ -3,7 +3,7 @@ tags:
   - 'add and delete roadway'
 changes:
   - category: Add New Roadway
-    nodes:   
+    nodes:
     - model_node_id: 314159
       X: -93.18389
       Y: 44.96898

@@ -173,8 +173,9 @@ def test_project_sort(request):
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
+
 @pytest.mark.menow
-def test_apply_summary_wrappers(request, stpaul_card_dir,stpaul_base_scenario):
+def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_base_scenario):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     card_files = [
@@ -184,14 +185,12 @@ def test_apply_summary_wrappers(request, stpaul_card_dir,stpaul_base_scenario):
     ]
 
     project_card_path_list = [
-        os.path.join(stpaul_card_dir, filename)
-        for filename in card_files
+        os.path.join(stpaul_card_dir, filename) for filename in card_files
     ]
 
-    
-
     my_scenario = Scenario.create_scenario(
-        base_scenario=stpaul_base_scenario, project_card_file_list=project_card_path_list
+        base_scenario=stpaul_base_scenario,
+        project_card_file_list=project_card_path_list,
     )
 
     my_scenario.apply_all_projects()
