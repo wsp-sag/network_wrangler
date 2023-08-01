@@ -62,7 +62,7 @@ def test_apply_transit_feature_change_from_projectcard(
 ):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    WranglerLogger.debug(f"   File:  test_project['file']")
+    WranglerLogger.debug("   File:  test_project['file']")
 
     project_card_path = os.path.join(stpaul_card_dir, test_project["file"])
     project_card = read_card(project_card_path)
@@ -82,14 +82,14 @@ def test_apply_transit_feature_change_from_projectcard(
 def test_wrong_existing(request, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    selected_trips = stpaul_transit_net.select_transit_features(
+    selected_trips = stpaul_transit_net.get_selection(
         {
             "trip_id": [
                 "14944018-JUN19-MVS-BUS-Weekday-01",
                 "14944012-JUN19-MVS-BUS-Weekday-01",
             ]
         }
-    )
+    ).selected_trips
 
     with pytest.raises(Exception):
         stpaul_transit_net.apply_transit_feature_change(

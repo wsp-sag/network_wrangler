@@ -3,21 +3,30 @@ import os
 import pytest
 
 from network_wrangler import WranglerLogger
+from network_wrangler.transit.selection import TransitSelectionFormatError, TransitSelectionError
 from projectcard import read_card
 
-"""
+""" 
 Run just the tests using `pytest tests/test_transit/test_selections.py`
 """
 
 TEST_SELECTIONS = [
     {
         "name": "1. simple trip_id",
-        "selection": {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01"},
+        "service": {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01"},
         "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
     },
     {
-        "name": "2. multiple trip_id",
-        "selection": {
+        "name": "2. trip_id + time",
+        "service": {
+            "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
+            "time": ["06:00:00", "09:00:00"],
+        },
+        "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
+    },
+    {
+        "name": "3. multiple trip_id",
+        "service": {
             "trip_id": [
                 "14969841-JUN19-RAIL-Weekday-01",  # unordered
                 "14940701-JUN19-MVS-BUS-Weekday-01",
@@ -29,40 +38,30 @@ TEST_SELECTIONS = [
         ],
     },
     {
-        "name": "3. route_id",
-        "selection": {"route_id": "365-111"},
-        "answer": ["14947182-JUN19-MVS-BUS-Weekday-01"],
-    },
-]
-
-
-@pytest.mark.parametrize("selection", TEST_SELECTIONS)
-def test_select_transit_features(request, stpaul_transit_net, selection):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    WranglerLogger.info(f"     Name: {selection['name']}")
-    WranglerLogger.debug(f"     Selection: {selection['selection']}")
-
-    selected_trips = stpaul_transit_net.select_transit_features(selection["selection"])
-    WranglerLogger.debug(f"    Exepected Answer: /n{selection['answer']}")
-    assert set(selected_trips) == set(selection["answer"])
-
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-TEST_CARD_SELECTIONS = [
-    {
-        "file": "7_simple_transit_attribute_change.yml",
-        "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
-    },
-    {
-        "file": "7a_multi_transit_attribute_change.yml",
+        "name": "4. multiple trip_id + time",
+        "service": {
+            "trip_id": [
+                "14940701-JUN19-MVS-BUS-Weekday-01",
+                "14948032-JUN19-MVS-BUS-Weekday-01",
+            ],
+            "time": ["06:00:00", "09:00:00"],
+        },
         "answer": [
             "14940701-JUN19-MVS-BUS-Weekday-01",
             "14948032-JUN19-MVS-BUS-Weekday-01",
         ],
     },
     {
-        "file": "8_simple_transit_attribute_change.yml",
+        "name": "5. route_id",
+        "service": {"route_id": "365-111"},
+        "answer": ["14947182-JUN19-MVS-BUS-Weekday-01"],
+    },
+    {
+        "name": "6. route_id + time",
+        "service": {
+            "route_id": "21-111",
+            "time": ["09:00", "15:00"],
+        },
         "answer": [
             "14944012-JUN19-MVS-BUS-Weekday-01",
             "14944018-JUN19-MVS-BUS-Weekday-01",
@@ -71,7 +70,11 @@ TEST_CARD_SELECTIONS = [
         ],
     },
     {
-        "file": "8a_multi_transit_attribute_change.yml",
+        "name": "7. multiple route_id + time",
+        "service": {
+            "route_id": ["21-111", "53-111"],
+            "time": ["09:00", "15:00"],
+        },
         "answer": [
             "14944012-JUN19-MVS-BUS-Weekday-01",
             "14944018-JUN19-MVS-BUS-Weekday-01",
@@ -82,7 +85,8 @@ TEST_CARD_SELECTIONS = [
         ],
     },
     {
-        "file": "9_simple_transit_attribute_change.yml",
+        "name": "8. route long name contains",
+        "service": {"route_long_name": "Express"},
         "answer": [
             "14940701-JUN19-MVS-BUS-Weekday-01",
             "14943414-JUN19-MVS-BUS-Weekday-01",
@@ -105,7 +109,8 @@ TEST_CARD_SELECTIONS = [
         ],
     },
     {
-        "file": "9a_multi_transit_attribute_change.yml",
+        "name": "9. multiple route long name",
+        "service": {"route_long_name": ["Express", "Ltd Stop"]},
         "answer": [
             "14940701-JUN19-MVS-BUS-Weekday-01",
             "14943414-JUN19-MVS-BUS-Weekday-01",
@@ -134,20 +139,25 @@ TEST_CARD_SELECTIONS = [
 ]
 
 
-@pytest.mark.parametrize("selection", TEST_CARD_SELECTIONS)
+@pytest.mark.parametrize("selection", TEST_SELECTIONS)
 def test_select_transit_features_from_projectcard(
     request, selection, stpaul_transit_net, stpaul_card_dir
 ):
     WranglerLogger.info(f"--Starting: {request.node.name}")
+    sel = selection["service"]
+    WranglerLogger.info(f"     Name: {selection['name']}")
+    WranglerLogger.debug(f"     Service: {sel}")
 
-    WranglerLogger.debug(f"     Card: {selection['file']}")
+    selected_trips = set(stpaul_transit_net.get_selection(sel).selected_trips)
+    answer = set(selection["answer"])
+    if selected_trips - answer:
+        WranglerLogger.error(f"!!! Trips overselected:\n   {selected_trips-answer}")
+    if answer - selected_trips:
+        WranglerLogger.error(
+            f"!!! Trips missing in selection:\n   {answer-selected_trips}"
+        )
 
-    project_card = read_card(os.path.join(stpaul_card_dir, selection["file"]))
-    sel = project_card.facility
-
-    selected_trips = stpaul_transit_net.select_transit_features(sel)
-    WranglerLogger.debug(f"    Exepected Answer: /n{selection['answer']}")
-    assert set(selected_trips) == set(selection["answer"])
+    assert selected_trips == answer
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
@@ -156,12 +166,12 @@ def test_zero_valid_facilities(request, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     with pytest.raises(Exception):
-        stpaul_transit_net.select_transit_features(
+        stpaul_transit_net.get_selection(
             {
                 "trip_id": ["14941433-JUN19-MVS-BUS-Weekday-01"],
                 "time": ["06:00:00", "09:00:00"],
             }
-        )
+        ).selected_trips
 
     print("--Finished:", request.node.name)
 
@@ -169,9 +179,9 @@ def test_zero_valid_facilities(request, stpaul_transit_net):
 def test_invalid_selection_key(request, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    with pytest.raises(Exception):
+    with pytest.raises(TransitSelectionFormatError):
         # trip_ids rather than trip_id should fail
-        stpaul_transit_net.select_transit_features(
+        stpaul_transit_net.get_selection(
             {"trip_ids": ["14941433-JUN19-MVS-BUS-Weekday-01"]}
         )
 
@@ -181,26 +191,25 @@ def test_invalid_selection_key(request, stpaul_transit_net):
 def test_invalid_optional_selection_variable(request, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    with pytest.raises(Exception):
+    with pytest.raises(TransitSelectionFormatError):
         # `wheelchair` rather than `wheelchair_accessible`
-        stpaul_transit_net.select_transit_features(
-            {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01", "wheelchair": "0"}
+        stpaul_transit_net.get_selection(
+            {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01", "trips.wheelchair": 0}
         )
 
-    with pytest.raises(Exception):
-        # Missing trip_id, route_id, route_short_name, or route_long_name
-        stpaul_transit_net.select_transit_features({"wheelchair_accessible": "0"})
-
     # Correct trip variable
-    sel = stpaul_transit_net.select_transit_features(
-        {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01", "wheelchair_accessible": 1}
-    )
+    sel = stpaul_transit_net.get_selection(
+        {
+            "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
+            "trips.wheelchair_accessible": 1,
+        }
+    ).selected_trips
     assert set(sel) == set(["14940701-JUN19-MVS-BUS-Weekday-01"])
 
     # Correct route variable
-    sel = stpaul_transit_net.select_transit_features(
-        {"route_long_name": "Express", "agency_id": "2"}
-    )
+    sel = stpaul_transit_net.get_selection(
+        {"route_long_name": "Express", "routes.agency_id": "2"}
+    ).selected_trips
     assert set(sel) == set(["14978409-JUN19-MVS-BUS-Weekday-01"])
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

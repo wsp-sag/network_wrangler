@@ -82,7 +82,7 @@ class RoadwaySelection:
         self.link_selection_dict = self.calc_link_selection_dict(self.selection_dict)
         self.node_selection_dict = self.calc_node_selection_dict(self.selection_dict)
 
-        self.sel_key = RoadwaySelection._assign_selection_key(self.selection_dict)
+        self.sel_key = self._assign_selection_key(self.selection_dict)
 
         self.selection_type = self.get_selection_type(self.selection_dict, self.net)
 

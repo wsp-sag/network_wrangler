@@ -1,15 +1,13 @@
-from ..roadwaynetwork import RoadwayNetwork
-from ..roadway.selection import RoadwaySelection
 from ..logger import WranglerLogger
 
 
 def apply_parallel_managed_lanes(
-    roadway_net: RoadwayNetwork,
-    selection: RoadwaySelection,
+    roadway_net: "RoadwayNetwork",
+    selection: "RoadwaySelection",
     property_changes: dict,
     geometry_meters_offset=10,
     meters_crs: int = 4326,
-) -> RoadwayNetwork:
+) -> "RoadwayNetwork":
     """
     Apply the managed lane feature changes to the roadway network
 

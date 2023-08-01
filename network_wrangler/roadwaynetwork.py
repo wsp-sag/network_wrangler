@@ -746,7 +746,7 @@ class RoadwayNetwork(object):
             node_id_path_list (list): List of node primary keys.
         """
         _ab_pairs = [
-            node_id_path_list[i: i + 2] for i, _ in enumerate(node_id_path_list)
+            node_id_path_list[i : i + 2] for i, _ in enumerate(node_id_path_list)
         ][:-1]
         _cols = self.links_df.params.fks_to_nodes
         _sel_df = pd.DataFrame(_ab_pairs, columns=_cols)
@@ -1187,98 +1187,6 @@ class RoadwayNetwork(object):
         _nodes_from_links_ab = pd.concat([_nodes_from_links_A, _nodes_from_links_B])
 
         return _nodes_from_links_ab
-
-
-@pd.api.extensions.register_dataframe_accessor("df_hash")
-class dfHash:
-    """Creates a dataframe hash that is compatable with geopandas and various metadata.
-
-    Definitely not the fastest, but she seems to work where others have failed.
-    """
-
-    def __init__(self, pandas_obj):
-        self._obj = pandas_obj
-
-    def __call__(self):
-        _value = str(self._obj.values).encode()
-        hash = hashlib.sha1(_value).hexdigest()
-        return hash
-
-
-@pd.api.extensions.register_dataframe_accessor("dict_query")
-class DictQueryAccessor:
-    """
-    Query link, node and shape dataframes using project selection dictionary.
-
-    Will overlook any keys which are not columns in the dataframe.
-
-    Usage:
-
-    ```
-    selection_dict = {
-        "lanes":[1,2,3],
-        "name":['6th','Sixth','sixth'],
-        "drive_access": 1,
-    }
-    selected_links_df = links_df.dict_query(selection_dict)
-    ```
-
-    """
-
-    def __init__(self, pandas_obj):
-        self._obj = pandas_obj
-
-    def __call__(self, selection_dict: dict):
-        _selection_dict = {
-            k: v for k, v in selection_dict.items() if k in self._obj.columns
-        }
-
-        if not _selection_dict:
-            raise ValueError(
-                f"Relevant part of selection dictionary is empty: {selection_dict}"
-            )
-
-        _sel_query = _dict_to_query(_selection_dict)
-        WranglerLogger.debug(f"_sel_query:\n   {_sel_query}")
-        _df = self._obj.query(_sel_query, engine="python")
-
-        if len(_df) == 0:
-            WranglerLogger.warning(
-                f"No records found in {_df.name} \
-                                   using selection: {selection_dict}"
-            )
-        return _df
-
-
-def _dict_to_query(
-    selection_dict: Mapping[str, Any],
-) -> str:
-    """Generates the query of from selection_dict.
-
-    Args:
-        selection_dict: selection dictionary
-
-    Returns:
-        _type_: Query value
-    """
-    WranglerLogger.debug("Building selection query")
-
-    def _kv_to_query_part(k, v, _q_part=""):
-        if isinstance(v, list):
-            _q_part += "(" + " or ".join([_kv_to_query_part(k, i) for i in v]) + ")"
-            return _q_part
-        if isinstance(v, str):
-            return k + '.str.contains("' + v + '")'
-        else:
-            return k + "==" + str(v)
-
-    query = (
-        "("
-        + " and ".join([_kv_to_query_part(k, v) for k, v in selection_dict.items()])
-        + ")"
-    )
-    WranglerLogger.debug(f"Selection query:\n{query}")
-    return query
 
 
 class NodeDeletionError(Exception):

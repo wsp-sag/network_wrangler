@@ -41,7 +41,7 @@ def test_project_card(request):
     )
     project_card = read_card(project_card_path)
     transit_net = transit_net.apply_transit_feature_change(
-        transit_net.select_transit_features(project_card.facility),
+        transit_net.get_selection(project_card.facility).selected_trips,
         project_card.properties,
     )
 
@@ -112,9 +112,9 @@ def test_wo_existing(request):
     transit_net.road_net = road_net
 
     transit_net = transit_net.apply_transit_feature_change(
-        trip_ids=transit_net.select_transit_features(
+        trip_ids=transit_net.get_selection(
             {"trip_id": ["14986385-JUN19-MVS-BUS-Weekday-01"]}
-        ),
+        ).selected_trips,
         properties=[{"property": "routing", "set": [75318]}],
     )
 
@@ -134,9 +134,9 @@ def test_select_transit_features_by_nodes(request):
     transit_net = TransitNetwork.read(STPAUL_DIR)
 
     # Any nodes
-    trip_ids = transit_net.select_transit_features_by_nodes(
-        node_ids=["75520", "66380", "57530"]
-    )
+    trip_ids = transit_net.get_selection(
+        {"nodes": ["75520", "66380", "57530"]}
+    ).selected_trips
     print(trip_ids)
     assert set(trip_ids) == set(
         [
@@ -152,9 +152,9 @@ def test_select_transit_features_by_nodes(request):
     )
 
     # All nodes
-    trip_ids = transit_net.select_transit_features_by_nodes(
-        node_ids=["75520", "66380"], require_all=True
-    )
+    trip_ids = transit_net.get_selection(
+        {"nodes": ["75520", "66380"], "require_all": True}
+    ).selected_trips
     assert set(trip_ids) == set(
         [
             "14941148-JUN19-MVS-BUS-Weekday-01",

@@ -1,3 +1,5 @@
+from typing import Union, Tuple
+
 import pandas as pd
 
 from ..logger import WranglerLogger
@@ -56,6 +58,23 @@ def delete_keys_from_dict(dictionary: dict, keys: list) -> dict:
                     key
                 ] = value  # or copy.deepcopy(value) if a copy is desired for non-dicts.
     return modified_dict
+
+
+def get_overlapping_range(ranges: list[Union[tuple[int], range]]) -> Union[None, range]:
+    """Returns overlapping range for a list of ranges or tuples defining ranges.
+
+    If no overlap found, returns None.
+    """
+
+    _ranges = [r if isinstance(r, range) else range(r[0], r[1]) for r in ranges]
+
+    _overlap_start = max(r.start for r in _ranges)
+    _overlap_end = min(r.stop for r in _ranges)
+
+    if _overlap_start < _overlap_end:
+        return range(_overlap_start, _overlap_end)
+    else:
+        return None
 
 
 def parse_time_spans_to_secs(times):
@@ -197,3 +216,21 @@ def findkeys(node, kv):
         for j in node.values():
             for x in findkeys(j, kv):
                 yield x
+
+
+def fk_in_pk(
+    pk: Union[pd.Series, list], fk: Union[pd.Series, list]
+) -> Tuple[bool, list]:
+    if isinstance(fk, list):
+        fk = pd.Series(fk)
+
+    missing_flag = ~fk.isin(pk)
+
+    if missing_flag.any():
+        WranglerLogger.warning(
+            f"Following keys referenced in {fk.name} but missing\
+            in primary key table:\n{fk[~fk.isin(pk)]} "
+        )
+        return False, fk[~fk.isin(pk)].tolist()
+
+    return True, []

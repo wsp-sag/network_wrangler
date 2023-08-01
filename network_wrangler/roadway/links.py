@@ -12,10 +12,10 @@ import pandera as pa
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
-
-from pandera import check_input, check_output, DataFrameModel
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
+from pandera import check_input, check_output
+
 
 from ..logger import WranglerLogger
 
@@ -73,7 +73,7 @@ class LinksParams:
         return list(set(self.explicit_ids + self.fks_to_nodes + _addtl))
 
 
-class LinksSchema(DataFrameModel):
+class LinksSchema(pa.DataFrameModel):
     """Datamodel used to validate if links_df is of correct format and types."""
 
     model_link_id: Series[int] = pa.Field(coerce=True, unique=True)

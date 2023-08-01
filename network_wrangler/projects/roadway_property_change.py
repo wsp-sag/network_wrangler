@@ -1,13 +1,12 @@
 from ..logger import WranglerLogger
-from ..roadwaynetwork import RoadwayNetwork
-from ..roadway.selection import RoadwaySelection, SelectionFormatError
+from ..roadway.selection import SelectionFormatError
 
 
 def apply_roadway_property_change(
-    roadway_net: RoadwayNetwork,
-    selection: RoadwaySelection,
+    roadway_net: "RoadwayNetwork",
+    selection: "RoadwaySelection",
     property_change: dict,
-) -> RoadwayNetwork:
+) -> "RoadwayNetwork":
     """
     Changes the roadway attributes for the selected features based on the
     project card information passed

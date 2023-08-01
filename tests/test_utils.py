@@ -3,9 +3,6 @@ import pytest
 from shapely.geometry import LineString
 
 from network_wrangler import WranglerLogger
-from network_wrangler.utils import haversine_distance
-from network_wrangler.utils import create_unique_shape_id
-from network_wrangler.utils import offset_location_reference
 
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
@@ -56,6 +53,7 @@ def test_time_convert(request):
 
 def test_get_distance_bw_lat_lon(request):
     print("\n--Starting:", request.node.name)
+    from network_wrangler.utils import haversine_distance
 
     start = [-93.0889873, 44.966861]
     end = [-93.08844310000001, 44.9717832]
@@ -66,6 +64,9 @@ def test_get_distance_bw_lat_lon(request):
 
 
 def test_get_unique_shape_id(request):
+    print("\n--Starting:", request.node.name)
+    from network_wrangler.roadway.utils import create_unique_shape_id
+
     geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
 
     shape_id = create_unique_shape_id(geometry)
@@ -77,6 +78,7 @@ def test_get_unique_shape_id(request):
 
 def test_location_reference_offset(request):
     WranglerLogger.info(f"--Starting: {request.node.name}")
+    from network_wrangler.utils import offset_location_reference
 
     location_reference = [
         {"sequence": 1, "point": [-93.0903549, 44.961085]},
@@ -112,4 +114,27 @@ def test_point_from_xy(request):
     wgs_xy_science_museum = (-93.099, 44.943)
 
     assert_almost_equal(out_xy, wgs_xy_science_museum, decimal=2)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+@pytest.mark.menow
+def test_get_overlapping_range(request):
+    from network_wrangler.utils import get_overlapping_range
+
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+
+    a = range(0, 5)
+    b = range(5, 10)
+    assert get_overlapping_range([a, b]) == None
+
+    c = range(100, 106)
+    assert get_overlapping_range([a, b, c]) == None
+
+    i = (1, 5)
+    j = (2, 7)
+    assert get_overlapping_range([i, j]) == range(2, 5)
+
+    k = range(3, 5)
+    assert get_overlapping_range([i, j, k]) == range(3, 5)
+
     WranglerLogger.info(f"--Finished: {request.node.name}")

@@ -1,11 +1,10 @@
-from ..roadwaynetwork import RoadwayNetwork
 from ..logger import WranglerLogger
 
 
 def apply_calculated_roadway(
-    roadway_net: RoadwayNetwork,
+    roadway_net: "RoadwayNetwork",
     pycode: str,
-) -> RoadwayNetwork:
+) -> "RoadwayNetwork":
     """
     Changes roadway network object by executing pycode.
 

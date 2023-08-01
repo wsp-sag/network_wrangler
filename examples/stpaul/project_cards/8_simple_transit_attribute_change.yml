@@ -2,7 +2,7 @@ project: Blue Line Service Enhancement C
 tags:
    - example
 transit_property_change:
-  servcice:
+  service:
     route_id: 21-111
     time: ['09:00', '15:00']
   property_changes:

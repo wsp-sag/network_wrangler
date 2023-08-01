@@ -1,13 +1,12 @@
-from ..roadwaynetwork import RoadwayNetwork
 from ..logger import WranglerLogger
 
 
 def apply_roadway_deletion(
-    roadway_net: RoadwayNetwork,
+    roadway_net: "RoadwayNetwork",
     del_links: dict = None,
     del_nodes: dict = None,
     ignore_missing=True,
-) -> RoadwayNetwork:
+) -> "RoadwayNetwork":
     """
     Delete the roadway links or nodes defined in the project card.
 
