@@ -752,7 +752,7 @@ def create_base_scenario(
             "No transit directory specified, base scenario will have empty transit network."
         )
 
-    transit_net.set_roadnet(road_net, validate_consistency=validate)
+    transit_net.road_net = road_net
     base_scenario = {"road_net": road_net, "transit_net": transit_net}
 
     return base_scenario

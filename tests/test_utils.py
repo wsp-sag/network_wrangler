@@ -125,10 +125,10 @@ def test_get_overlapping_range(request):
 
     a = range(0, 5)
     b = range(5, 10)
-    assert get_overlapping_range([a, b]) == None
+    assert get_overlapping_range([a, b]) is None
 
     c = range(100, 106)
-    assert get_overlapping_range([a, b, c]) == None
+    assert get_overlapping_range([a, b, c]) is None
 
     i = (1, 5)
     j = (2, 7)

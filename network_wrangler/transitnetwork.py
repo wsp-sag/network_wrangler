@@ -4,9 +4,7 @@
 from __future__ import annotations
 
 import copy
-import hashlib
 import os
-import re
 from typing import Union
 
 import networkx as nx
@@ -16,7 +14,7 @@ import pandas as pd
 from projectcard import ProjectCard
 
 from .logger import WranglerLogger
-from .utils import parse_time_spans_to_secs, fk_in_pk, get_overlapping_range
+from .utils import fk_in_pk
 from .transit import Feed, TransitSelection
 
 
@@ -43,8 +41,6 @@ class TransitNetwork(object):
         validated_frequencies (bool): The frequencies have been validated.
         validated_road_network_consistency (): The network has been validated against
             the road network.
-        SHAPES_FOREIGN_KEY (str): foreign key between shapes dataframe and roadway network nodes
-        STOPS_FOREIGN_KEY (str): foreign  key between stops dataframe and roadway network nodes
         ID_SCALAR (int): scalar value added to create new IDs when necessary.
         REQUIRED_FILES (list[str]): list of files that the transit network requires.
 
@@ -58,10 +54,10 @@ class TransitNetwork(object):
     Network.
     """
     TRANSIT_FOREIGN_KEYS_TO_ROADWAY = {
-        "stops": {"nodes": {"model_node_id": "index"}},
+        "stops": {"nodes": ("model_node_id", "model_node_id")},
         "shapes": {
-            "nodes": {"shape_model_node_id": "index"},
-            "links": ("shape_model_node_id", ("fks_to_nodes")),
+            "nodes": ("shape_model_node_id", "model_node_id"),
+            "links": ("shape_model_node_id", "model_node_id"),
         },
     }
 
@@ -112,17 +108,17 @@ class TransitNetwork(object):
 
     @road_net.setter
     def road_net(self, road_net: "RoadwayNetwork"):
+        if "RoadwayNetwork" not in str(type(road_net)):
+            WranglerLogger.error(f"Cannot assign to road_net - type {type(road_net)}")
+            raise ValueError("road_net must be a RoadwayNetwork object.")
         if self._evaluate_consistency_with_road_net(road_net):
-            self._road_net_hash = copy.deepcopy(self.road_net.network_hash)
             self._road_net = road_net
+            self._road_net_hash = copy.deepcopy(self.road_net.network_hash)
+
         else:
             raise TransitRoadwayConsistencyError(
                 "RoadwayNetwork not as TransitNetwork base."
             )
-
-    @property
-    def feed_hash(self):
-        return self.feed.feed_hash
 
     @property
     def consistent_with_road_net(self) -> bool:
@@ -142,16 +138,23 @@ class TransitNetwork(object):
             self._road_net_hash = copy.deepcopy(self.road_net.network_hash)
         return self._consistent_with_road_net
 
-    def _evaluate_consistency_with_road_net(self, road_net: "RoadwayNetwork") -> bool:
+    def _evaluate_consistency_with_road_net(
+        self, road_net: "RoadwayNetwork" = None
+    ) -> bool:
         """Checks foreign key and network link relationships between transit feed and a road_net.
 
         Args:
-            road_net (RoadwayNetwork): Roadway network to check relationship with.
+            road_net (RoadwayNetwork): Roadway network to check relationship with. If None, will
+                check self.road_net.
 
         Returns:
             bool: boolean indicating if road_net is consistent with transit network.
         """
-        _consistency = self._nodes_in_road_net() and self._shape_links_in_road_net()
+        if road_net is None:
+            road_net = self.road_net
+        _consistency = self._nodes_in_road_net(
+            road_net.nodes_df
+        ) and self._shape_links_in_road_net(road_net.links_df)
         return _consistency
 
     @property
@@ -190,8 +193,6 @@ class TransitNetwork(object):
             "nodes"
         )
 
-        if _fk_field not in self.feed.get(table).columns:
-            return True, []
         if nodes_df is None:
             nodes_df = self.road_net.nodes_df
 
@@ -222,6 +223,10 @@ class TransitNetwork(object):
         Returns:
             boolean indicating if relationships are all valid
         """
+        if self.road_net is None:
+            return ValueError(
+                "Cannot evaluate consistency because roadway network us not set."
+            )
         all_valid = True
         missing = []
         if nodes_df is None:
@@ -242,7 +247,7 @@ class TransitNetwork(object):
         return all_valid
 
     def _shape_links_in_road_net(self, links_df: pd.DataFrame = None) -> bool:
-        """Validate that links in transis shapes exist in referenced roadway links.
+        """Validate that links in transit shapes exist in referenced roadway links.
         FIXME
         Args:
             links_df (pd.DataFrame, optional): Links dataframe from roadway network to validate
@@ -251,11 +256,12 @@ class TransitNetwork(object):
         Returns:
             boolean indicating if relationships are all valid
         """
+        tr_field, rd_field = self.TRANSIT_FOREIGN_KEYS_TO_ROADWAY["shapes"]["links"]
         if links_df is None:
             links_df = self.road_net.links_df
-        shapes_df = shapes_df.astype({TransitNetwork.SHAPES_FOREIGN_KEY: int})
+        shapes_df = self.feed.shapes.astype({tr_field: int})
         unique_shape_ids = shapes_df.shape_id.unique().tolist()
-
+        valid = True
         for id in unique_shape_ids:
             subset_shapes_df = shapes_df[shapes_df["shape_id"] == id]
             subset_shapes_df = subset_shapes_df.sort_values(by=["shape_pt_sequence"])
@@ -268,8 +274,8 @@ class TransitNetwork(object):
                 links_df,
                 how="left",
                 left_on=[
-                    TransitNetwork.SHAPES_FOREIGN_KEY + "_1",
-                    TransitNetwork.SHAPES_FOREIGN_KEY + "_2",
+                    tr_field + "_1",
+                    tr_field + "_2",
                 ],
                 right_on=["A", "B"],
                 indicator=True,
@@ -415,17 +421,19 @@ class TransitNetwork(object):
         else:
             project_dictionary = project_card_dictionary
 
-        if project_dictionary["type"].lower() == "transit_property_change:":
+        if "transit_property_change" in project_dictionary:
             return self.apply_transit_feature_change(
-                self.get_selection(project_dictionary["service"]).selected_trips,
-                project_dictionary["properties"],
+                self.get_selection(
+                    project_dictionary["transit_property_change"]["service"]
+                ).selected_trips,
+                project_dictionary["transit_property_change"]["property_changes"],
             )
 
         elif project_dictionary.get("pycode"):
             return self.apply_python_calculation(project_dictionary["pycode"])
 
         else:
-            msg = f"Can't apply {project_dictionary['type']} – not implemented yet."
+            msg = "Cannot find transit project in project_dictionary – not implemented yet."
             WranglerLogger.error(msg)
             raise (msg)
 
@@ -443,7 +451,7 @@ class TransitNetwork(object):
     def apply_transit_feature_change(
         self,
         trip_ids: pd.Series,
-        properties: list,
+        property_changes: dict,
     ) -> "TransitNetwork":
         """
         Changes the transit attributes for the selected features based on the
@@ -469,22 +477,20 @@ class TransitNetwork(object):
         #    self.road_net.build_selection_key(project_dictionary["facility"])
         # )["route"]
 
-        for i in properties:
-            if i["property"] in ["headway_secs"]:
+        for property, p_changes in property_changes.items():
+            if property in ["headway_secs"]:
                 net = TransitNetwork._apply_transit_feature_change_frequencies(
-                    net, trip_ids, i
+                    net, trip_ids, property, p_changes
                 )
 
-            elif i["property"] in ["routing"]:
+            elif property in ["routing"]:
                 net = TransitNetwork._apply_transit_feature_change_routing(
-                    net, trip_ids, i
+                    net, trip_ids, p_changes
                 )
         return net
 
     def _apply_transit_feature_change_routing(
-        self,
-        trip_ids: pd.Series,
-        properties: dict,
+        self, trip_ids: pd.Series, routing_change: dict
     ) -> TransitNetwork:
         net = copy.deepcopy(self)
         shapes = net.feed.shapes.copy()
@@ -494,20 +500,22 @@ class TransitNetwork(object):
         # A negative sign in "set" indicates a traversed node without a stop
         # If any positive numbers, stops have changed
         stops_change = False
-        if any(x > 0 for x in properties["set"]):
+        if any(x > 0 for x in routing_change["set"]):
             # Simplify "set" and "existing" to only stops
-            properties["set_stops"] = [str(i) for i in properties["set"] if i > 0]
-            if properties.get("existing") is not None:
-                properties["existing_stops"] = [
-                    str(i) for i in properties["existing"] if i > 0
+            routing_change["set_stops"] = [
+                str(i) for i in routing_change["set"] if i > 0
+            ]
+            if routing_change.get("existing") is not None:
+                routing_change["existing_stops"] = [
+                    str(i) for i in routing_change["existing"] if i > 0
                 ]
             stops_change = True
 
         # Convert ints to objects
-        properties["set_shapes"] = [str(abs(i)) for i in properties["set"]]
-        if properties.get("existing") is not None:
-            properties["existing_shapes"] = [
-                str(abs(i)) for i in properties["existing"]
+        routing_change["set_shapes"] = [str(abs(i)) for i in routing_change["set"]]
+        if routing_change.get("existing") is not None:
+            routing_change["existing_shapes"] = [
+                str(abs(i)) for i in routing_change["existing"]
             ]
 
         # Replace shapes records
@@ -539,6 +547,9 @@ class TransitNetwork(object):
             # Make sure they are ordered by shape_pt_sequence
             this_shape = this_shape.sort_values(by=["shape_pt_sequence"])
 
+            shape_node_fk, rd_field = self.net.TRANSIT_FOREIGN_KEYS_TO_ROADWAY[
+                "shapes"
+            ]["links"]
             # Build a pd.DataFrame of new shape records
             new_shape_rows = pd.DataFrame(
                 {
@@ -547,24 +558,24 @@ class TransitNetwork(object):
                     "shape_pt_lon": None,  # FIXME
                     "shape_osm_node_id": None,  # FIXME
                     "shape_pt_sequence": None,
-                    TransitNetwork.SHAPES_FOREIGN_KEY: properties["set_shapes"],
+                    shape_node_fk: routing_change["set_shapes"],
                 }
             )
 
             # If "existing" is specified, replace only that segment
             # Else, replace the whole thing
-            if properties.get("existing") is not None:
+            if routing_change.get("existing") is not None:
                 # Match list
-                nodes = this_shape[TransitNetwork.SHAPES_FOREIGN_KEY].tolist()
+                nodes = this_shape[shape_node_fk].tolist()
                 index_replacement_starts = [
                     i
                     for i, d in enumerate(nodes)
-                    if d == properties["existing_shapes"][0]
+                    if d == routing_change["existing_shapes"][0]
                 ][0]
                 index_replacement_ends = [
                     i
                     for i, d in enumerate(nodes)
-                    if d == properties["existing_shapes"][-1]
+                    if d == routing_change["existing_shapes"][-1]
                 ][-1]
                 this_shape = pd.concat(
                     [
@@ -590,13 +601,13 @@ class TransitNetwork(object):
 
         # Replace stop_times and stops records (if required)
         if stops_change:
-            # If node IDs in properties["set_stops"] are not already
+            # If node IDs in routing_change["set_stops"] are not already
             # in stops.txt, create a new stop_id for them in stops
             existing_fk_ids = set(stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist())
             nodes_df = net.road_net.nodes_df.loc[
                 :, [TransitNetwork.STOPS_FOREIGN_KEY, "X", "Y"]
             ]
-            for fk_i in properties["set_stops"]:
+            for fk_i in routing_change["set_stops"]:
                 if fk_i not in existing_fk_ids:
                     WranglerLogger.info(
                         "Creating a new stop in stops.txt for node ID: {}".format(fk_i)
@@ -650,7 +661,7 @@ class TransitNetwork(object):
                         "stop_distance": None,
                         "timepoint": None,
                         "stop_is_skipped": None,
-                        TransitNetwork.STOPS_FOREIGN_KEY: properties["set_stops"],
+                        TransitNetwork.STOPS_FOREIGN_KEY: routing_change["set_stops"],
                     }
                 )
 
@@ -667,14 +678,14 @@ class TransitNetwork(object):
 
                 # If "existing" is specified, replace only that segment
                 # Else, replace the whole thing
-                if properties.get("existing") is not None:
+                if routing_change.get("existing") is not None:
                     # Match list (remember stops are passed in with node IDs)
                     nodes = this_stoptime[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
                     index_replacement_starts = nodes.index(
-                        properties["existing_stops"][0]
+                        routing_change["existing_stops"][0]
                     )
                     index_replacement_ends = nodes.index(
-                        properties["existing_stops"][-1]
+                        routing_change["existing_stops"][-1]
                     )
                     this_stoptime = pd.concat(
                         [
@@ -707,7 +718,7 @@ class TransitNetwork(object):
         return net
 
     def _apply_transit_feature_change_frequencies(
-        self, trip_ids: pd.Series, properties: dict
+        self, trip_ids: pd.Series, property: str, property_change: dict
     ) -> TransitNetwork:
         net = copy.deepcopy(self)
         freq = net.feed.frequencies.copy()
@@ -716,8 +727,8 @@ class TransitNetwork(object):
         freq = freq[freq.trip_id.isin(trip_ids)]
 
         # Check all `existing` properties if given
-        if properties.get("existing") is not None:
-            if not all(freq.headway_secs == properties["existing"]):
+        if property_change.get("existing") is not None:
+            if not all(freq.headway_secs == property_change["existing"]):
                 WranglerLogger.error(
                     "Existing does not match for at least "
                     "1 trip in:\n {}".format(trip_ids.to_string())
@@ -725,14 +736,14 @@ class TransitNetwork(object):
                 raise ValueError
 
         # Calculate build value
-        if properties.get("set") is not None:
-            build_value = properties["set"]
+        if property_change.get("set") is not None:
+            build_value = property_change["set"]
         else:
-            build_value = [i + properties["change"] for i in freq.headway_secs]
+            build_value = [i + property_change["change"] for i in freq.headway_secs]
 
         q = net.feed.frequencies.trip_id.isin(freq["trip_id"])
 
-        net.feed.frequencies.loc[q, properties["property"]] = build_value
+        net.feed.frequencies.loc[q, property] = build_value
         return net
 
 

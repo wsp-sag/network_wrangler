@@ -9,7 +9,7 @@ import os
 import copy
 
 from collections import defaultdict
-from typing import Collection, List, Union, Mapping, Any
+from typing import Collection, List, Union
 
 import geopandas as gpd
 import networkx as nx

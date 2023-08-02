@@ -1,17 +1,17 @@
 project: 365 Bus Reroute
 transit_property_change:
-facility:
-  route_id: [53-111]
-  time: ['09:00', '15:00']
-properties:
-  routing:
-    existing:
-      - 62145 #N Robert St
-        39430 #Jackson St
-    set:
-      - 62145 #N Robert St
-        -62146 #Robert/6th
-        -41625 #Robert/7th
-        39426 #7th/Jackson with a stop (open to other ways of expressing this)
-        -39425 #6th Jackson
-        39430 #5th Jackson
+  service:
+    route_id: [53-111]
+    time: ['09:00', '15:00']
+  property_changes:
+    routing:
+      existing:
+        - 62145 #N Robert St
+        - 39430 #Jackson St
+      set:
+        - 62145 #N Robert St
+        - -62146 #Robert/6th
+        - -41625 #Robert/7th
+        - 39426 #7th/Jackson with a stop (open to other ways of expressing this)
+        - -39425 #6th Jackson
+        - 39430 #5th Jackson

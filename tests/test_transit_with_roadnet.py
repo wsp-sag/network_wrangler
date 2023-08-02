@@ -21,7 +21,7 @@ def test_set_roadnet(request):
         shapes_file=os.path.join(STPAUL_DIR, "shape.geojson"),
     )
     transit_net = TransitNetwork.read(STPAUL_DIR)
-    transit_net.set_roadnet(road_net)
+    transit_net.road_net = road_net
 
     print("--Finished:", request.node.name)
 

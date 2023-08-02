@@ -1,7 +1,7 @@
 import copy
 import hashlib
 
-from typing import Collection, Union
+from typing import Union
 
 import pandas as pd
 
@@ -25,6 +25,7 @@ class TransitSelection:
     TRIP_QUERY = ["trip_id", "route_id"]
     NODE_QUERY = ["nodes", "require_all"]
     QUERY_KEYS = FREQ_QUERY + ROUTE_QUERY + TRIP_QUERY + NODE_QUERY
+
     def __init__(
         self,
         net: "TransitNetwork",
@@ -50,9 +51,7 @@ class TransitSelection:
 
         # Initialize
         self._selected_trips_df = None
-        self._stored_feed_hash = copy.deepcopy(self.net.feed_hash)
-
-        
+        self._stored_feed_hash = copy.deepcopy(self.net.feed.feed_hash)
 
     def __nonzero__(self):
         if len(self.selected_trips_df) > 0:
@@ -109,7 +108,7 @@ class TransitSelection:
                 d[k] = v
         return d
 
-    def validate_selection_dict(self,selection_dict:dict)->None:
+    def validate_selection_dict(self, selection_dict: dict) -> None:
         """Check that selection dictionary has valid and used properties consistent with network.
 
         Args:
@@ -119,26 +118,34 @@ class TransitSelection:
             TransitSelectionFormatError: If not valid
         """
         _nonstandard_sks = list(set(self.selection_dict.keys()) - set(self.QUERY_KEYS))
-        _unused_sks = [ i for i in _nonstandard_sks if i.split(".")[0] not in ('trips','routes')]
+        _unused_sks = [
+            i for i in _nonstandard_sks if i.split(".")[0] not in ("trips", "routes")
+        ]
         if _unused_sks:
             WranglerLogger.error(
                 f"Following keys in selection query are not valid: {_unused_sks}"
             )
 
-        _bad_route_keys = set(self.route_selection_dict.keys()) - set(self.net.feed.routes.columns)
+        _bad_route_keys = set(self.route_selection_dict.keys()) - set(
+            self.net.feed.routes.columns
+        )
         if _bad_route_keys:
             WranglerLogger.error(
                 f"Following route keys not found in routes.txt: {_bad_route_keys}"
             )
 
-        _bad_trip_keys = set(self.trip_selection_dict.keys()) - set(self.net.feed.trips.columns)
+        _bad_trip_keys = set(self.trip_selection_dict.keys()) - set(
+            self.net.feed.trips.columns
+        )
         if _bad_trip_keys:
             WranglerLogger.error(
                 f"Following trip keys not found in trips.txt: {_bad_trip_keys}"
             )
 
         if _bad_route_keys or _bad_trip_keys or _unused_sks:
-            raise TransitSelectionFormatError("Invalid selection keys in selection dictionary.")
+            raise TransitSelectionFormatError(
+                "Invalid selection keys in selection dictionary."
+            )
 
     @property
     def selected_trips(self) -> list:
@@ -158,11 +165,11 @@ class TransitSelection:
         """
         if (
             self._selected_trips_df is not None
-        ) and self._stored_feed_hash == self.net.feed_hash:
+        ) and self._stored_feed_hash == self.net.feed.feed_hash:
             return self._selected_trips_df
 
         self._selected_trips_df = self._select_trips()
-        self._stored_feed_hash = copy.deepcopy(self.net.feed_hash)
+        self._stored_feed_hash = copy.deepcopy(self.net.feed.feed_hash)
         return self._selected_trips_df
 
     @staticmethod
@@ -191,7 +198,7 @@ class TransitSelection:
 
         if self.node_selection_dict:
             trips_df = self._select_trips_by_nodes(trips_df)
-        
+
         trips_df = self._select_trips_by_properties(trips_df)
 
         _sel_trips = len(trips_df)
@@ -225,7 +232,7 @@ class TransitSelection:
         shapes_df = self.net.feed.shapes
         require_all = self.node_selection_dict.get("require_all", False)
         node_ids = self.node_selection_dict["nodes"]
-        node_fk = self.net.SHAPES_FOREIGN_KEY
+        node_fk, rd_field = self.net.TRANSIT_FOREIGN_KEYS_TO_ROADWAY["shapes"]["links"]
         if require_all:
             shape_ids = (
                 shapes_df.groupby("shape_id").filter(
@@ -241,9 +248,9 @@ class TransitSelection:
 
         _sel_trips = len(trips_df)
         WranglerLogger.debug(f"Selected {_sel_trips}/{_tot_trips} trips.")
-        if _sel_trips<10: 
+        if _sel_trips < 10:
             WranglerLogger.debug(f"{trips_df.trip_id}")
-            
+
         return trips_df
 
     def _select_trips_by_properties(
@@ -268,9 +275,9 @@ class TransitSelection:
         trips_df = trips_df.copy()
 
         _sel_trips = len(trips_df)
-        
+
         WranglerLogger.debug(f"Selected {_sel_trips}/{_tot_trips} trips.")
-        if _sel_trips<10: 
+        if _sel_trips < 10:
             WranglerLogger.debug(f"{trips_df.trip_id}")
 
         return trips_df
@@ -286,9 +293,9 @@ class TransitSelection:
             f"{_filtered_trips}/{_unfiltered_trips} trips remain after \
             filtering to trip selection {self.trip_selection_dict}"
         )
-        if _filtered_trips<10:
+        if _filtered_trips < 10:
             WranglerLogger.debug(f"{trips_df.trip_id}")
-        
+
         return trips_df
 
     def _filter_trips_by_route(self, trips_df: pd.DataFrame) -> pd.DataFrame:
@@ -305,7 +312,7 @@ class TransitSelection:
             f"{_filtered_trips}/{_unfiltered_trips} trips remain after \
             filtering to route selection {self.route_selection_dict}"
         )
-        if _filtered_trips<10:
+        if _filtered_trips < 10:
             WranglerLogger.debug(f"{trips_df.trip_id}")
 
         return trips_df
@@ -336,7 +343,7 @@ class TransitSelection:
                 {self.freq_selection_dict['end_time']}"
         )
 
-        if _filtered_trips<10:
+        if _filtered_trips < 10:
             WranglerLogger.debug(f"{trips_df.trip_id}")
 
         return trips_df

@@ -1,11 +1,8 @@
 # Contributing to Network Wrangler
 
-
 ## Roles
 
-
 ## How to Contribute
-
 
 ### Setup
 

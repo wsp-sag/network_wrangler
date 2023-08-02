@@ -10,20 +10,35 @@ import partridge as ptg
 from networkx import DiGraph
 from partridge.config import default_config
 
-from .schemas import FrequenciesSchema, StopsSchema, RoutesSchema, TripsSchema
+from .schemas import (
+    FrequenciesSchema,
+    StopsSchema,
+    RoutesSchema,
+    TripsSchema,
+    ShapesSchema,
+)
 from ..utils import fk_in_pk
 from ..logger import WranglerLogger
 
 
+# Raised when there is an issue reading the GTFS feed.
 class FeedReadError(Exception):
     pass
 
 
+# Raised when there is an issue with the validation of the GTFS data.
 class FeedValidationError(Exception):
     pass
 
 
 class Feed:
+    """
+    Wrapper class around GTFS feed to allow abstraction from partridge.
+
+    TODO: Replace usage of partridge
+    """
+
+    # A list of GTFS files that are required to be present in the feed.
     REQUIRED_FILES = [
         "agency.txt",
         "frequencies.txt",
@@ -34,13 +49,16 @@ class Feed:
         "trips.txt",
     ]
 
+    # Dictionary mapping table names to their corresponding schema classes for validation purposes.
     SCHEMAS = {
         "frequencies": FrequenciesSchema,
         "routes": RoutesSchema,
         "trips": TripsSchema,
         "stops": StopsSchema,
+        "shapes": ShapesSchema,
     }
 
+    # List of table names used for calculating a hash representing the content of the entire feed.
     TABLES_IN_FEED_HASH = [
         "frequencies",
         "routes",
@@ -75,7 +93,6 @@ class Feed:
     def __init__(self, feed_path: Union[Path, str]):
         """Constructor for GTFS Feed.
 
-        TODO: Replace usage of partridge
         Updates partridge config based on which files are available.
         Validates each table to schemas in SCHEMAS as they are read.
         Validates foreign keys after all tables read in.
@@ -101,8 +118,34 @@ class Feed:
         WranglerLogger.info(msg)
 
     @property
-    def config(self):
+    def config(self) -> DiGraph:
+        """
+        Internal configuration of the GTFS feed.
+        """
         return self._config
+
+    def __deepcopy__(self, memo):
+        """Custom implementation of __deepcopy__ method.
+
+        This method is called by copy.deepcopy() to create a deep copy of the object.
+
+        Args:
+            memo (dict): Dictionary to track objects already copied during deepcopy.
+
+        Returns:
+            Feed: A deep copy of the Feed object.
+        """
+        # First, create a new instance of the Feed class
+        new_feed = Feed(feed_path=self.feed_path)
+
+        # Now, use the deepcopy method to create deep copies of each DataFrame
+        # and assign them to the corresponding attributes in the new Feed object.
+        for table_name, df in self.__dict__.items():
+            if isinstance(df, pd.DataFrame):
+                new_feed.__dict__[table_name] = copy.deepcopy(df, memo)
+
+        # Return the newly created deep copy of the Feed object
+        return new_feed
 
     def _read_from_file(self, node: str) -> pd.DataFrame:
         """Read node from file + validate to schema if table name in SCHEMAS and return dataframe.
@@ -115,7 +158,7 @@ class Feed:
         """
         _table = node.replace(".txt", "")
         df = self._ptg_feed.get(node)
-        self.validate_df_as_table(_table, df)
+        df = self.validate_df_as_table(_table, df)
         return df.copy()
 
     def get(self, table: str, validate: bool = True) -> pd.DataFrame:
@@ -128,7 +171,7 @@ class Feed:
         """
         df = self.__dict__.get(table, None)
         if validate:
-            self.validate_df_as_table(table, df)
+            df = self.validate_df_as_table(table, df)
         return df
 
     def validate_df_as_table(self, table: str, df: pd.DataFrame) -> bool:
@@ -140,16 +183,16 @@ class Feed:
         """
         if self.SCHEMAS.get(table):
             # set to lazy so that all errors found before returning
-            self.SCHEMAS[table].validate(df, lazy=True)
+            df = self.SCHEMAS[table].validate(df, lazy=True)
         else:
             WranglerLogger.debug(
                 f"{table} requested but no schema available to validate."
             )
-        return True
+        return df
 
     @property
     def foreign_keys_valid(self) -> bool:
-        """Validate all foreign keys exist in primary key table."""
+        """Boolean indiciating if all foreign keys exist in primary key table."""
         return self.validate_fks()
 
     @classmethod
@@ -184,14 +227,26 @@ class Feed:
 
     def validate_table_fks(
         self, table: str, df: pd.DataFrame = None, _raise_error: bool = True
-    ) -> Union[bool, list]:
+    ) -> tuple[bool, list]:
+        """Validates the foreign keys of a specific table.
+
+        Args:
+            table (str): Table name (i.e. routes, stops, etc)
+            df (pd.DataFrame, optional): Dataframe to use as that table. If left to default of
+                None, will retrieve the table using table name using `self.feed.get(<table>)`.
+
+        Returns:
+            tuple[bool, list]: A tuple where the first value is a boolean representing if foreign
+                keys are valid.  The second value is a list of foreign keys that are missing from
+                the referenced table.
+        """
         _fks = self.INTRA_FEED_FOREIGN_KEYS.get(table, {})
         table_valid = True
         table_fk_missing = []
         if not _fks:
             return True, []
         if df is None:
-            node_df = self.get(table)
+            df = self.get(table)
         for _fk_field, (_pk_table, _pk_field) in _fks.items():
             if _fk_field not in df.columns:
                 continue
@@ -210,7 +265,13 @@ class Feed:
             raise FeedValidationError("{table} missing Foreign Keys.")
         return table_valid, table_fk_missing
 
-    def validate_fks(self):
+    def validate_fks(self) -> bool:
+        """
+        Validates the foreign keys of all the tables in the feed.
+
+        Returns:
+            bool: If true, all tables in feed have valid foreign keys.
+        """
         all_valid = True
         missing = []
         for df in self.config.nodes.keys():
@@ -225,7 +286,8 @@ class Feed:
         return all_valid
 
     @property
-    def feed_hash(self):
+    def feed_hash(self) -> str:
+        """A hash representing the contents of the talbes in self.TABLES_IN_FEED_HASH."""
         _table_hashes = [
             self.get(t, validate=False).df_hash() for t in self.TABLES_IN_FEED_HASH
         ]

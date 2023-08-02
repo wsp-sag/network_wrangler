@@ -17,6 +17,18 @@ class FrequenciesSchema(DataFrameModel):
 
 class StopsSchema(DataFrameModel):
     stop_id: Series[str] = pa.Field(nullable=False, unique=True)
+    model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
+    stop_lat: Series[float] = pa.Field(coerce=True, nullable=False)
+    stop_lon: Series[float] = pa.Field(coerce=True, nullable=False)
+    wheelchair_boarding: Series[float] = pa.Field(coerce=True, nullable=True)
+
+
+class ShapesSchema(DataFrameModel):
+    shape_id: Series[str] = pa.Field(nullable=False)
+    shape_model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
+    shape_pt_lat: Series[float] = pa.Field(coerce=True, nullable=False)
+    shape_pt_lon: Series[float] = pa.Field(coerce=True, nullable=False)
+    shape_pt_sequence: Series[int] = pa.Field(coerce=True, nullable=False)
 
 
 class TripsSchema(DataFrameModel):

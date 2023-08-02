@@ -1,12 +1,11 @@
-import os
-
 import pytest
 
 from network_wrangler import WranglerLogger
-from network_wrangler.transit.selection import TransitSelectionFormatError, TransitSelectionError
-from projectcard import read_card
+from network_wrangler.transit.selection import (
+    TransitSelectionFormatError,
+)
 
-""" 
+"""
 Run just the tests using `pytest tests/test_transit/test_selections.py`
 """
 
