@@ -111,3 +111,98 @@ class dfHash:
         _value = str(self._obj.values).encode()
         hash = hashlib.sha1(_value).hexdigest()
         return hash
+
+
+def _check_compatable_df_update(
+    destination_df: pd.DataFrame,
+    source_df: pd.DataFrame,
+    join_col: str,
+    properties: list[str] = None,
+) -> None:
+    """Evaluates if destination df is comptable for being updated with source_df based on id_col.
+
+    Args:
+        destination_df (pd.DataFrame): Dataframe to modify.
+        source_df (pd.DataFrame): Dataframe with updated columns
+        join_col (str): column to join on
+        properties (list[str]): List of properties to use. If None, will default to all.
+    """
+
+    if join_col not in source_df.columns:
+        raise ValueError(f"source_df must have {join_col}.")
+
+    if properties is None:
+        properties = [p for p in source_df.columns if p != join_col]
+
+    _missing_cols = set(properties) - set(source_df.columns)
+    if _missing_cols:
+        raise ValueError(f"Properties missing from source_df: {_missing_cols}")
+
+    if join_col not in destination_df:
+        raise ValueError(f"joim_col {join_col} not in destination_df columns.")
+
+    _missing_t_cols = set(properties) - set(destination_df.columns)
+    if _missing_t_cols:
+        raise NotImplementedError(
+            f"Properties missing from destination_df: {_missing_t_cols}"
+        )
+
+    _missing_ids = set(source_df[join_col]) - set(destination_df[join_col])
+    if _missing_ids:
+        raise ValueError(
+            f"join values specified in set_df missing from destionation_df table:\
+            {_missing_ids}"
+        )
+
+
+def update_df_by_col_value(
+    destination_df: pd.DataFrame,
+    source_df: pd.DataFrame,
+    join_col: str,
+    properties: list[str] = None,
+) -> pd.DataFrame:
+    """Creates an updated destination_df based on values in source_df with same  join_col.
+
+    ```
+    >> destination_df
+    trip_id  property1  property2
+    1         10      100
+    2         20      200
+    3         30      300
+    4         40      400
+
+    >> source_df
+    trip_id  property1  property2
+    2         25      250
+    3         35      350
+
+    >> updated_df
+    trip_id  property1  property2
+    0        1       10      100
+    1        2       25      250
+    2        3       35      350
+    3        4       40      400
+    ```
+
+    Args:
+        destination_df (pd.DataFrame): Dataframe to modify.
+        source_df (pd.DataFrame): Dataframe with updated columns
+        join_col (str): column to join on
+        properties (list[str]): List of properties to use. If None, will default to all 
+            in source_df.
+    """
+    if properties is None:
+        properties = [p for p in properties if p != join_col]
+
+    _check_compatable_df_update(
+        destination_df, source_df, join_col, properties=properties
+    )
+
+    merged_df = destination_df.merge(
+        source_df, on=join_col, how="left", suffixes=("", "_updated")
+    )
+    for prop in properties:
+        merged_df[prop] = merged_df[f"{prop}_updated"].combine_first(merged_df[prop])
+    updated_df = merged_df.drop([f"{prop}_updated" for prop in properties], axis=1)
+
+    return updated_df

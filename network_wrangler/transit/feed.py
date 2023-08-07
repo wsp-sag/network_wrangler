@@ -17,7 +17,7 @@ from .schemas import (
     TripsSchema,
     ShapesSchema,
 )
-from ..utils import fk_in_pk
+from ..utils import fk_in_pk, update_df_by_col_value
 from ..logger import WranglerLogger
 
 
@@ -147,6 +147,20 @@ class Feed:
         # Return the newly created deep copy of the Feed object
         return new_feed
 
+    @property
+    def table_names(self) -> list[str]:
+        """
+        Returns list of tables from config.
+        """
+        return list(self.config.nodes.keys())
+
+    @property
+    def tables(self) -> list[pd.DataFrame]:
+        """
+        Returns list of tables from config.
+        """
+        return [self.get(table_name) for table_name in self.config.nodes.keys()]
+
     def _read_from_file(self, node: str) -> pd.DataFrame:
         """Read node from file + validate to schema if table name in SCHEMAS and return dataframe.
 
@@ -173,6 +187,32 @@ class Feed:
         if validate:
             df = self.validate_df_as_table(table, df)
         return df
+
+    def set_by_id(
+        self,
+        table_name: str,
+        set_df: pd.DataFrame,
+        id_property: str = "trip_id",
+        properties: list[str] = None,
+    ):
+        """
+        Set property values in a specific table for a list of IDs.
+
+        Args:
+            table_name (str): Name of the table to modify.
+            set_df (pd.DataFrame): DataFrame with columns 'trip_id' and 'value' containing
+                trip IDs and values to set for the specified property.
+            id_property: Property to use as ID to set by. Defaults to "trip_id.
+            properties: List of properties to set which are in set_df. If not specified, will set
+                all properties.
+
+        """
+        table_df = self.get(table_name)
+        updated_df = update_df_by_col_value(
+            table_df, set_df, id_property, properties=properties
+        )
+        self.validate_df_as_table(table_name, updated_df)
+        self.__dict__[table_name] = updated_df
 
     def validate_df_as_table(self, table: str, df: pd.DataFrame) -> bool:
         """Validate a dataframe as a table: relevant schemas and foreign keys.
@@ -295,3 +335,9 @@ class Feed:
 
         _hash = hashlib.sha256(_value).hexdigest()
         return _hash
+
+    def tables_with_property(self, property: str) -> list[str]:
+        """
+        Returns feed tables in the feed which contain the property.
+        """
+        return [t for t in self.table_names if property in self.get(t).columns]

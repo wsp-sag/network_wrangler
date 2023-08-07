@@ -16,9 +16,11 @@ from .geo import point_from_xy
 from .geo import update_points_in_linestring
 from .data import DictQueryAccessor
 from .data import dfHash
+from .data import update_df_by_col_value
 
 
 __all__ = [
+    "update_df_by_col_value",
     "DictQueryAccessor",
     "dfHash",
     "delete_keys_from_dict",
