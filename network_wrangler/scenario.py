@@ -9,6 +9,7 @@ import copy
 import pprint
 from datetime import datetime
 from typing import Union
+import numpy as np
 
 import pandas as pd
 import geopandas as gpd
@@ -134,6 +135,9 @@ class Scenario(object):
         self.has_conflict_error = False
 
         self.prerequisites_sorted = False
+
+        # create a property to store deleted model_link_id
+        self.deleted_model_link_id = []
 
         for card in self.project_cards:
             if not card.__dict__.get("dependencies"):
@@ -552,6 +556,15 @@ class Scenario(object):
                 if not self.road_net:
                     raise ("Missing Roadway Network")
                 self.road_net.apply(p)
+                # check if there are links deleted
+                if p["category"] == "roadway deletion":
+                    # compare the links_df before and after deletion, get the model_link_id not in the after deletion
+                    # and add them to the deleted_model_link_id
+                    links_df_before_df = self.base_scenario["road_net"].links_df
+                    links_df_after_df = self.road_net.links_df
+                    self.deleted_model_link_id.extend(
+                        list(set(links_df_before_df["model_link_id"]) - set(links_df_after_df["model_link_id"]))
+                    )
             if p["category"] in ProjectCard.TRANSIT_CATEGORIES:
                 if not self.transit_net:
                     raise ("Missing Transit Network")
@@ -711,6 +724,81 @@ class Scenario(object):
 
         return report_str
 
+    def update_transit_net_with_new_road_net(self):
+        """
+        Updates the transit network with the new road network, when the change in road network breaks transit routing
+        1) update the road network in the transit network
+        2) check if any transit shapes go on the deleted links
+        3) if so, keep a record of the transit shapes
+        4) call the check_network_connectivity() method to update the shape
+        5) swap out the old transit shape with the new transit shape
+        """
+        # this step can take a while
+        self.transit_net.set_roadnet(self.road_net, validate_consistency=False)
+
+        # check if any transit shapes go on the deleted links
+        deleted_model_link_id = self.deleted_model_link_id
+        WranglerLogger.info("deleted_model_link_id: {}".format(deleted_model_link_id))
+        shapes_df = self.transit_net.feed.shapes.copy()
+        # sort the shapes_df by agency_raw_name, shape_id and shape_pt_sequence
+        if "agency_raw_name" in shapes_df.columns:
+            shapes_df = shapes_df.sort_values(["agency_raw_name", "shape_id", "shape_pt_sequence"])
+        else:
+            shapes_df = shapes_df.sort_values(["shape_id", "shape_pt_sequence"])
+        # create shape_model_node_id_next column by using the value of the next row's shape_model_node_id
+        shapes_df["shape_model_node_id_next"] = shapes_df["shape_model_node_id"].shift(-1)
+        # create shape_id_next column by using the value of the next row's shape_id
+        shapes_df["shape_id_next"] = shapes_df["shape_id"].shift(-1)
+        # keep rows with the same shape_id_next and the shape_id
+        shapes_df = shapes_df[shapes_df["shape_id_next"] == shapes_df["shape_id"]]
+        # make sure shape_model_node_id_next and shape_model_node_id_next are numeric
+        shapes_df["shape_model_node_id_next"] = pd.to_numeric(shapes_df["shape_model_node_id_next"])
+        shapes_df["shape_model_node_id"] = pd.to_numeric(shapes_df["shape_model_node_id"])
+        # join the shapes_df with the links_df to get the model_link_id
+        shapes_df = shapes_df.merge(
+            self.road_net.links_df[["model_link_id", "A", "B"]], 
+            how="left", 
+            left_on=["shape_model_node_id", "shape_model_node_id_next"], 
+            right_on=["A", "B"]
+        )
+        # keep rows with missing model_link_id
+        shapes_df = shapes_df[shapes_df["model_link_id"].isnull()]
+        if len(shapes_df) == 0:
+            WranglerLogger.info("no broken transit shapes")
+            return
+        WranglerLogger.info("broken transit shape_ids: {}".format(shapes_df.shape_id.unique()))
+
+        updated_shapes_df = self.transit_net.feed.shapes.copy()
+
+        # call the check_network_connectivity() method to update the shape
+        for broken_shape_id in shapes_df.shape_id.unique():
+            WranglerLogger.debug("fixing broken_shape_id: {}".format(broken_shape_id))
+            broken_shapes_df = self.transit_net.feed.shapes[self.transit_net.feed.shapes["shape_id"] == broken_shape_id].copy()
+
+            check_new_shape_nodes = self.transit_net.check_network_connectivity(broken_shapes_df["shape_model_node_id"])
+
+            if len(check_new_shape_nodes) != len(broken_shapes_df):
+                fixed_shapes_df = pd.DataFrame(
+                    {
+                        "shape_id": broken_shape_id,
+                        "shape_osm_node_id": None,  # FIXME
+                        "shape_pt_sequence": None,
+                        self.transit_net.shapes_foreign_key: check_new_shape_nodes,
+                    }
+                )
+
+                # Renumber shape_pt_sequence
+                fixed_shapes_df["shape_pt_sequence"] = np.arange(len(fixed_shapes_df))
+
+                # Add rows back into shapes
+                updated_shapes_df = pd.concat(
+                    [updated_shapes_df[updated_shapes_df.shape_id != broken_shape_id], fixed_shapes_df],
+                    ignore_index=True,
+                    sort=False,
+                )
+        
+        self.transit_net.feed.shapes = updated_shapes_df
+
 
 def net_to_mapbox(
     roadway: Union[RoadwayNetwork, gpd.GeoDataFrame] = gpd.GeoDataFrame(),
@@ -779,3 +867,4 @@ def net_to_mapbox(
         raise (
             "If mbview isn't installed, try `npm install -g @mapbox/mbview` or visit https://github.com/mapbox/mbview"
         )
+
