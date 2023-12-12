@@ -1,5 +1,4 @@
 project: 6th Street Transitway
-category: Roadway Property Change
 tags:
    - 'example'
 roadway_property_change:
@@ -10,12 +9,11 @@ roadway_property_change:
         - 'Sixth'
         - 'sixth'
     from:
-      osm_node_id: '187899923'       # Jackson St
+      osm_node_id: '187899923'
     to:
-      osm_node_id: '187865924'       # Robert St N
+      osm_node_id: '187865924'
   property_changes:
     lanes:
-      existing: 1
       set: 2
     transit_access:
       set: 1

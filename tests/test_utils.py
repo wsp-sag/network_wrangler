@@ -4,6 +4,7 @@ from shapely.geometry import LineString
 
 from network_wrangler import WranglerLogger
 
+
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
     {"text": "I'm a roadway", "delim": "_", "answer": "im_a_roadway"},
@@ -117,7 +118,6 @@ def test_point_from_xy(request):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.menow
 def test_get_overlapping_range(request):
     from network_wrangler.utils import get_overlapping_range
 

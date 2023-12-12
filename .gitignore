@@ -65,4 +65,5 @@ env/
 .project
 .pydevproject
 .settings
+.vscode
 *.hubstorinfo

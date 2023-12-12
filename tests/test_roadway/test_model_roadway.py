@@ -179,7 +179,7 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
 
-    project_card_name = "test_managed_lanes_restricted_access_egress.yml"
+    project_card_name = "road.managed_lanes.restricted_access.yml"
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
     project_card = read_card(project_card_path, validate=False)
 

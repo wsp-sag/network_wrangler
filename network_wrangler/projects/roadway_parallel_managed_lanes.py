@@ -1,5 +1,7 @@
 from ..logger import WranglerLogger
 
+class RoadwayParallelManagedLanesError(Exception):
+    pass
 
 def apply_parallel_managed_lanes(
     roadway_net: "RoadwayNetwork",
@@ -35,7 +37,7 @@ def apply_parallel_managed_lanes(
 
     # TODO: consider a shortcut if the re-projecting takes a long time
     roadway_net.links_df.to_crs(meters_crs)
-    WranglerLogger.info(f"og_crs: {og_crs}; meters_crs: {roadway_net.links_df.crs}")
+    WranglerLogger.debug(f"og_crs: {og_crs}; meters_crs: {roadway_net.links_df.crs}")
 
     roadway_net.links_df.loc[
         link_idx, "ML_geometry"
@@ -46,6 +48,7 @@ def apply_parallel_managed_lanes(
 
     # --- Copy properties to nested dict.
     for property, property_dict in property_changes.items():
+        WranglerLogger.info(f"Setting {property}: {property_dict}")
         roadway_net.links_df = roadway_net.links_df.set_link_prop(
             link_idx, property, property_dict
         )

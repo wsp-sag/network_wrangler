@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 import partridge as ptg
 
+from pandera.decorators import check_input, check_output
 from networkx import DiGraph
 from partridge.config import default_config
 
@@ -16,6 +17,7 @@ from .schemas import (
     RoutesSchema,
     TripsSchema,
     ShapesSchema,
+    StopTimesSchema,
 )
 from ..utils import fk_in_pk, update_df_by_col_value
 from ..logger import WranglerLogger
@@ -56,6 +58,7 @@ class Feed:
         "trips": TripsSchema,
         "stops": StopsSchema,
         "shapes": ShapesSchema,
+        "stop_times": StopTimesSchema,
     }
 
     # List of table names used for calculating a hash representing the content of the entire feed.
@@ -105,10 +108,12 @@ class Feed:
         self.feed_path = feed_path
         self._ptg_feed = ptg.load_feed(feed_path)
         self._config = self._config_from_files(self._ptg_feed)
+        self._net = None
 
         for node in self.config.nodes.keys():
             _table = node.replace(".txt", "")
-            self.__dict__[_table] = self._read_from_file(node)
+            WranglerLogger.debug(f"...setting {_table}")
+            setattr(self, _table, self._read_from_file(node))
 
         assert self.foreign_keys_valid
 
@@ -129,30 +134,41 @@ class Feed:
 
         This method is called by copy.deepcopy() to create a deep copy of the object.
 
+
         Args:
             memo (dict): Dictionary to track objects already copied during deepcopy.
 
         Returns:
             Feed: A deep copy of the Feed object.
         """
-        # First, create a new instance of the Feed class
-        new_feed = Feed(feed_path=self.feed_path)
+        # Create a new, empty instance of the Feed class
+        new_feed = self.__class__.__new__(self.__class__)
 
-        # Now, use the deepcopy method to create deep copies of each DataFrame
-        # and assign them to the corresponding attributes in the new Feed object.
-        for table_name, df in self.__dict__.items():
-            if isinstance(df, pd.DataFrame):
-                new_feed.__dict__[table_name] = copy.deepcopy(df, memo)
+        # Copy all attributes to the new instance
+        for attr_name, attr_value in self.__dict__.items():
+            # Use copy.deepcopy to create deep copies of mutable objects
+            if isinstance(attr_value, pd.DataFrame):
+                setattr(new_feed, attr_name, copy.deepcopy(attr_value, memo))
+            else:
+                setattr(new_feed, attr_name, attr_value)
+
+        WranglerLogger.warning(
+            "Creating a deep copy of Transit Feed.\
+            This will NOT update the reference from TransitNetwork.feed."
+        )
 
         # Return the newly created deep copy of the Feed object
         return new_feed
+
+    def deepcopy(self):
+        return copy.deepcopy(self)
 
     @property
     def table_names(self) -> list[str]:
         """
         Returns list of tables from config.
         """
-        return list(self.config.nodes.keys())
+        return list(t.replace(".txt", "") for t in self.config.nodes.keys())
 
     @property
     def tables(self) -> list[pd.DataFrame]:
@@ -160,6 +176,27 @@ class Feed:
         Returns list of tables from config.
         """
         return [self.get(table_name) for table_name in self.config.nodes.keys()]
+
+    @property
+    def schemas_valid(self) -> bool:
+        _schema_validations = {
+            _table: self.validate_df_as_table(_table, self.get(_table))
+            for _table in self.table_names
+        }
+        _invalid_schemas = [t for t, v in _schema_validations.items() if not v]
+        if _invalid_schemas:
+            WranglerLogger.warning(
+                f"!!! Following transit feed schemas invalid: {','.join(_invalid_schemas)}"
+            )
+        schemas_valid = not bool(_invalid_schemas)
+        return schemas_valid
+
+    @property
+    def valid(self) -> bool:
+        """
+        Returns True iff all specified tables match schemas and foreign keys valid.
+        """
+        return self.foreign_keys_valid & self.schemas_valid
 
     def _read_from_file(self, node: str) -> pd.DataFrame:
         """Read node from file + validate to schema if table name in SCHEMAS and return dataframe.
@@ -175,18 +212,89 @@ class Feed:
         df = self.validate_df_as_table(_table, df)
         return df.copy()
 
-    def get(self, table: str, validate: bool = True) -> pd.DataFrame:
-        """Get table by name and optionally validate it.
+    def get(self, table: str) -> pd.DataFrame:
+        """Get table by name.
 
         args:
             table: table name. e.g. frequencies, stops, etc.
-            validate: if True, will validate against relevant schemas and foreign keys.
-                Defaults to True.
         """
-        df = self.__dict__.get(table, None)
-        if validate:
-            df = self.validate_df_as_table(table, df)
+        table = table.replace(".txt", "")
+        df = getattr(self,table)
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError(f"Couldn't find valid table: {table}")
+
         return df
+
+    @property
+    def stop_times(self):
+        """If roadway node_ids aren't all there, will merge in roadway node_ids from stops.txt."""
+        if not self.net:
+            return self._stop_times
+        if self.stops_node_id in self._stop_times.columns:
+            
+            if self._stop_times[self.stops_node_id].isna().any():
+                WranglerLogger.debug(f"Removing stoptimes nodes col.")
+                self._stop_times = self._stop_times.drop(columns=[self.stops_node_id])
+
+        if self.stops_node_id not in self._stop_times.columns:
+            self._stop_times = self._stop_times.merge(
+                self.net.feed.stops[["stop_id", self.stops_node_id]],
+                on="stop_id",
+                how="left",
+            )
+        self._stop_times = StopTimesSchema.validate(self._stop_times, lazy=True)
+        return self._stop_times
+
+    @stop_times.setter
+    def stop_times(self, df):
+        df = StopTimesSchema.validate(df, lazy=True)
+        WranglerLogger.warning("SETTING STOPTIMES")
+        self._stop_times = df
+
+    @property
+    def stops(self):
+        return self._stops
+
+    @stops.setter
+    def stops(self, value):
+        df = StopsSchema.validate(value, lazy=True)
+        self._stops = df
+
+    @property
+    def shapes(self):
+        return self._shapes
+
+    @shapes.setter
+    def shapes(self, value):
+        df = ShapesSchema.validate(value, lazy=True)
+        self._shapes = df
+
+    @property
+    def trips(self):
+        return self._trips
+
+    @trips.setter
+    def trips(self, value):
+        df = TripsSchema.validate(value, lazy=True)
+        self._trips = df
+
+    @property
+    def frequencies(self):
+        return self._frequencies
+
+    @frequencies.setter
+    def frequencies(self, value):
+        df = FrequenciesSchema.validate(value, lazy=True)
+        self._frequencies = df
+
+    @property
+    def routes(self):
+        return self._routes
+
+    @routes.setter
+    def routes(self, value):
+        df = RoutesSchema.validate(value, lazy=True)
+        self._routes = df
 
     def set_by_id(
         self,
@@ -205,13 +313,11 @@ class Feed:
             id_property: Property to use as ID to set by. Defaults to "trip_id.
             properties: List of properties to set which are in set_df. If not specified, will set
                 all properties.
-
         """
         table_df = self.get(table_name)
         updated_df = update_df_by_col_value(
             table_df, set_df, id_property, properties=properties
         )
-        self.validate_df_as_table(table_name, updated_df)
         self.__dict__[table_name] = updated_df
 
     def validate_df_as_table(self, table: str, df: pd.DataFrame) -> bool:
@@ -229,6 +335,25 @@ class Feed:
                 f"{table} requested but no schema available to validate."
             )
         return df
+
+    @property
+    def net(self):
+        if self._net == None:
+            WranglerLogger.warning("Feed.net called, but is not set.")
+        return self._net
+
+    @net.setter
+    def net(self, net: "TransitNetwork"):
+        self._net = net
+        self._net._feed = self
+
+    @property
+    def stops_node_id(self):
+        return self.net.TRANSIT_FOREIGN_KEYS_TO_ROADWAY["stops"]["nodes"][0]
+
+    @property
+    def shapes_node_id(self):
+        return self.net.TRANSIT_FOREIGN_KEYS_TO_ROADWAY["shapes"]["nodes"][0]
 
     @property
     def foreign_keys_valid(self) -> bool:
@@ -328,9 +453,7 @@ class Feed:
     @property
     def feed_hash(self) -> str:
         """A hash representing the contents of the talbes in self.TABLES_IN_FEED_HASH."""
-        _table_hashes = [
-            self.get(t, validate=False).df_hash() for t in self.TABLES_IN_FEED_HASH
-        ]
+        _table_hashes = [self.get(t).df_hash() for t in self.TABLES_IN_FEED_HASH]
         _value = str.encode("-".join(_table_hashes))
 
         _hash = hashlib.sha256(_value).hexdigest()
@@ -339,5 +462,195 @@ class Feed:
     def tables_with_property(self, property: str) -> list[str]:
         """
         Returns feed tables in the feed which contain the property.
+
+        arg:
+            property: name of property to search for tables with
         """
+
         return [t for t in self.table_names if property in self.get(t).columns]
+
+    @check_output(TripsSchema, inplace=True)
+    def trips_with_shape_id(self, shape_id: str) -> pd.DataFrame:
+        trips_df = self.get("trips")
+
+        return trips_df.loc[trips_df.shape_id == shape_id]
+
+    @check_output(StopTimesSchema, inplace=True)
+    def trip_stop_times(self, trip_id: str) -> pd.DataFrame:
+        """Returns a stop_time records for a given trip_id.
+
+        args:
+            trip_id: trip_id to get stop pattern for
+        """
+        stop_times_df = self.stop_times
+
+        return stop_times_df.loc[stop_times_df.trip_id == trip_id]
+
+    def trip_shape_id(self, trip_id: str) -> str:
+        """Returns a shape_id for a given trip_id.
+
+        args:
+            trip_id: trip_id to get stop pattern for
+        """
+        trips_df = self.get("trips")
+        return trips_df.loc[trips_df.trip_id == trip_id, "shape_id"].values[0]
+
+    def trip_shape(self, trip_id: str) -> pd.DataFrame:
+        """Returns a shape records for a given trip_id.
+
+        args:
+            trip_id: trip_id to get stop pattern for
+        """
+        shape_id = self.trip_shape_id(trip_id)
+        shapes_df = self.get("shapes")
+        return shapes_df.loc[shapes_df.shape_id == shape_id]
+
+    @check_output(StopsSchema, inplace=True)
+    def trip_stops(self, trip_id: str, pickup_type: str = "either") -> list[str]:
+        """Returns stops.txt which are used for a given trip_id"""
+        stop_ids = self.trip_stop_pattern(trip_id, pickup_type=pickup_type)
+        return self.stops.loc[self.stops.isin(stop_ids)]
+
+    def shape_node_pattern(self, shape_id: str) -> list[int]:
+        """Returns node pattern of a shape.
+         
+        args:
+            shape_id: string identifier of the shape.
+        """
+        shape_df = self.shapes.loc[self.shapes["shape_id"] == shape_id ]
+        shape_df = shape_df.sort_values(by=["shape_pt_sequence"])
+        return shape_df[self.shapes_node_id].to_list()
+
+
+    def shape_with_trip_stops(
+        self, trip_id: str, pickup_type: str = "either"
+    ) -> pd.DataFrame:
+        """Returns shapes.txt for a given trip_id with the stop_id added based on pickup_type.
+
+        args:
+            trip_id: trip id to select
+            pickup_type: str indicating logic for selecting stops based on piackup and dropoff
+                availability at stop. Defaults to "either".
+                "either": either pickup_type or dropoff_type > 0
+                "both": both pickup_type or dropoff_type > 0
+                "pickup_only": only pickup > 0
+                "dropoff_only": only dropoff > 0
+
+        """
+
+        shapes = self.trip_shape(trip_id)
+        trip_stop_times = self.trip_stop_times_for_pickup_type(trip_id, pickup_type=pickup_type)
+
+        stop_times_cols = [
+            "stop_id",
+            "trip_id",
+            "pickup_type",
+            "drop_off_type",
+            self.stops_node_id,
+        ]
+        shape_with_trip_stops = shapes.merge(
+            trip_stop_times[stop_times_cols],
+            how="left",
+            right_on=self.stops_node_id,
+            left_on=self.shapes_node_id,
+        )
+        shape_with_trip_stops = shape_with_trip_stops.sort_values(
+            by=["shape_pt_sequence"]
+        )
+        return shape_with_trip_stops
+
+    def stops_node_id_from_stop_id(
+        self, stop_id: Union[list[str], str]
+    ) -> Union[list[int], int]:
+        """Returns node_ids from one or more stop_ids.
+
+        stop_id: a stop_id string or a list of stop_id strings
+        """
+        if isinstance(stop_id, list):
+            return [self.stops_node_id_from_stop_id(s) for s in stop_id]
+        elif isinstance(stop_id, str):
+            stops = self.get("stops")
+            return stops.at[stops["stop_id"] == stop_id, self.stops_node_id]
+        raise ValueError(
+            f"Expecting list of strings or string for stop_id; got {type(stop_id)}"
+        )
+
+    @check_output(StopTimesSchema,inplace = True)
+    def trip_stop_times_for_pickup_type(
+        self, trip_id: str, pickup_type: str = "either"
+    ) -> list[str]:
+        """Returns stop_times for a given trip_id based on pickup type.
+
+        GTFS values for pickup_type and drop_off_type"
+            0 or empty - Regularly scheduled pickup/dropoff.
+            1 - No pickup/dropoff available.
+            2 - Must phone agency to arrange pickup/dropoff.
+            3 - Must coordinate with driver to arrange pickup/dropoff.
+
+        args:
+            trip_id: trip_id to get stop pattern for
+            pickup_type: str indicating logic for selecting stops based on piackup and dropoff
+                availability at stop. Defaults to "either".
+                "either": either pickup_type or dropoff_type != 1
+                "both": both pickup_type and dropoff_type != 1
+                "pickup_only": dropoff = 1; pickup != 1
+                "dropoff_only":  pickup = 1; dropoff != 1
+
+
+        """
+        trip_stop_pattern = self.trip_stop_times(trip_id)
+        
+        pickup_type_selection = {
+            "either": (trip_stop_pattern.pickup_type != 1)
+            | (trip_stop_pattern.drop_off_type != 1),
+            "both": (trip_stop_pattern.pickup_type != 1)
+            & (trip_stop_pattern.drop_off_type != 1),
+            "pickup_only": (trip_stop_pattern.pickup_type != 1)
+            & (trip_stop_pattern.drop_off_type == 1),
+            "dropoff_only": (trip_stop_pattern.drop_off_type != 1)
+            & (trip_stop_pattern.pickup_type == 1),
+        }
+
+        selection = pickup_type_selection[pickup_type]
+        trip_stops = trip_stop_pattern[selection]
+
+        return trip_stops
+
+    def node_is_stop(
+        self, node_id: Union[int, list[int]], trip_id: str, pickup_type: str = "either"
+    ) -> Union[bool, list[bool]]:
+        """Returns a boolean indicating if a node (or a list of nodes) is (are) stops for a given trip_id.
+
+        args:
+            node_id: node ID for roadway
+            trip_id: trip_id to get stop pattern for
+            pickup_type: str indicating logic for selecting stops based on piackup and dropoff
+                availability at stop. Defaults to "either".
+                "either": either pickup_type or dropoff_type > 0
+                "both": both pickup_type or dropoff_type > 0
+                "pickup_only": only pickup > 0
+                "dropoff_only": only dropoff > 0
+        """
+        trip_stop_nodes = self.trip_stops(trip_id, pickup_type=pickup_type)[
+            self.stops_node_id
+        ]
+        if isinstance(node_id, list):
+            return [n in trip_stop_nodes.values for n in node_id]
+        return node_id in trip_stop_nodes.values
+
+    def trip_stop_pattern(self, trip_id: str, pickup_type: str = "either") -> list[str]:
+        """Returns a stop pattern for a given trip_id given by a list of stop_ids.
+
+        args:
+            trip_id: trip_id to get stop pattern for
+            pickup_type: str indicating logic for selecting stops based on piackup and dropoff
+                availability at stop. Defaults to "either".
+                "either": either pickup_type or dropoff_type > 0
+                "both": both pickup_type or dropoff_type > 0
+                "pickup_only": only pickup > 0
+                "dropoff_only": only dropoff > 0
+        """
+        trip_stops = self.trip_stop_times_for_pickup_type(
+            trip_id, pickup_type=pickup_type
+        )
+        return trip_stops.stop_id.to_list()

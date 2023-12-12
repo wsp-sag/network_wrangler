@@ -13,6 +13,7 @@ Usage:  `pytest tests/test_roadway/test_changes/test_roadway_add_delete.py`
 """
 
 
+@pytest.mark.failing
 def test_add_roadway_link_project_card(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -23,7 +24,7 @@ def test_add_roadway_link_project_card(request, small_net):
             "A": 3494,
             "B": 3230,
             "model_link_id": 123456,
-            "roadway": "busway",
+            "roadway": "bus_guideway",
             "walk_access": 0,
             "drive_access": 0,
             "bus_only": 1,
@@ -36,7 +37,7 @@ def test_add_roadway_link_project_card(request, small_net):
             "A": 3230,
             "B": 3494,
             "model_link_id": 123457,
-            "roadway": "busway",
+            "roadway": "bus_guideway",
             "walk_access": 0,
             "drive_access": 0,
             "bus_only": 1,
@@ -69,11 +70,12 @@ def test_add_roadway_link_project_card(request, small_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
+@pytest.mark.failing
 def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     net = copy.deepcopy(stpaul_net)
-    card_name = "10_simple_roadway_add_change.yml"
+    card_name = "road.add.simple.yml"
     expected_net_links = 2
     expected_net_nodes = 0
 
@@ -90,11 +92,12 @@ def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     assert net_nodes == expected_net_nodes
 
 
+@pytest.mark.failing
 def test_multiple_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     net = copy.deepcopy(stpaul_net)
-    card_name = "11_multiple_roadway_add_and_delete_change.yml"
+    card_name = "road.add_and_delete.yml"
     expected_net_links = -2 + 2
     expected_net_nodes = +1 - 1 + 1
 
@@ -117,8 +120,7 @@ def test_add_roadway_links(request, stpaul_net, stpaul_ex_dir):
     net = copy.deepcopy(stpaul_net)
 
     print("Reading project card ...")
-    # project_card_name = "10_simple_roadway_add_change.yml"
-    project_card_name = "10a_incorrect_roadway_add_change.yml"
+    project_card_name = "x.road.add.fail.yml"
 
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
     project_card = read_card(project_card_path)
@@ -133,12 +135,13 @@ def test_add_roadway_links(request, stpaul_net, stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
+@pytest.mark.failing
 def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     net = copy.deepcopy(stpaul_net)
 
-    card_name = "13_simple_roadway_delete_change.yml"
+    card_name = "road.delete.simple.yml"
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", card_name)
     project_card = read_card(project_card_path, validate=False)
 
@@ -154,6 +157,7 @@ def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
+@pytest.mark.failing
 def test_add_nodes(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_net)

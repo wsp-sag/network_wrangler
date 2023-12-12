@@ -22,8 +22,16 @@ class TransitSelection:
 
     FREQ_QUERY = ["time", "start_time", "end_time"]
     ROUTE_QUERY = ["route_short_name", "route_long_name"]
-    TRIP_QUERY = ["trip_id", "route_id"]
-    NODE_QUERY = ["nodes", "require_all"]
+    TRIP_QUERY = [
+        "trip_id",
+        "shape_id",
+        "route_id",
+        "direction_id",
+        "service_id",
+        "trip_short_name",
+    ]
+    NODE_QUERY = ["nodes", "type"]
+    LINK_QUERY = ["links", "type"]
     QUERY_KEYS = FREQ_QUERY + ROUTE_QUERY + TRIP_QUERY + NODE_QUERY
 
     def __init__(
@@ -37,7 +45,7 @@ class TransitSelection:
             net (TransitNetwork): Transit network object to select from.
             selection_dict (dict): Selection dictionary.
         """
-
+        WranglerLogger.debug(f"Created Transit Selection: {selection_dict}")
         self.net = net
 
         # make sure all values tuples or list

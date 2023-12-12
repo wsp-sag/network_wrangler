@@ -7,6 +7,7 @@ from .utils import coerce_dict_to_df_types
 from .utils import coerce_val_to_series_type
 from .utils import findkeys
 from .utils import fk_in_pk
+from .utils import generate_new_id
 from .geo import offset_location_reference
 from .geo import haversine_distance
 from .geo import location_reference_from_nodes
@@ -17,9 +18,11 @@ from .geo import update_points_in_linestring
 from .data import DictQueryAccessor
 from .data import dfHash
 from .data import update_df_by_col_value
+from .data import dict_to_query
 
 
 __all__ = [
+    "dict_to_query",
     "update_df_by_col_value",
     "DictQueryAccessor",
     "dfHash",
@@ -40,4 +43,5 @@ __all__ = [
     "coerce_val_to_series_type",
     "findkeys",
     "fk_in_pk",
+    "generate_new_id",
 ]

@@ -234,3 +234,25 @@ def fk_in_pk(
         return False, fk[missing_flag].tolist()
 
     return True, []
+
+
+def generate_new_id(input_id: str, existing_ids: pd.Series, id_scalar: int) -> str:
+    """Generate a new ID that isn't in existing_ids.
+
+    args:
+        input_id: id to use to generate new id. Should be a integerizable.
+        existing_ids: series that has existing IDs that should be unique
+        id_scalar: scalar value to initially use to create the new id.
+    """
+    ITER_VAL = 10
+    MAX_ITER = 1000
+
+    for i in range(1, MAX_ITER + 1):
+        new_id = f"{int(input_id) + id_scalar + (ITER_VAL * i)}"
+        if not new_id in existing_ids.values:
+            return new_id
+        elif i == MAX_ITER:
+            WranglerLogger.error(
+                f"Cannot generate new id within max iters of {MAX_ITER}."
+            )
+            raise ValueError("Cannot create unique new id.")

@@ -5,5 +5,4 @@ roadway_deletion:
   links:
     model_link_id:
       - 477533
-  mode: walk
 notes: Simple project card to delete roadway

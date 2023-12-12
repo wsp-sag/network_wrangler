@@ -10,7 +10,7 @@ from typing import Union
 import networkx as nx
 import pandas as pd
 
-from projectcard import ProjectCard
+from projectcard import ProjectCard, SubProject
 
 from .logger import WranglerLogger
 from .utils import fk_in_pk
@@ -45,7 +45,6 @@ class TransitNetwork(object):
         validated_frequencies (bool): The frequencies have been validated.
         validated_road_network_consistency (): The network has been validated against
             the road network.
-        ID_SCALAR (int): scalar value added to create new IDs when necessary.
         REQUIRED_FILES (list[str]): list of files that the transit network requires.
 
     .. todo::
@@ -66,8 +65,6 @@ class TransitNetwork(object):
     }
 
     TIME_COLS = ["arrival_time", "departure_time", "start_time", "end_time"]
-
-    ID_SCALAR = 100000000
 
     def __init__(self, feed: Feed = None):
         """
@@ -107,6 +104,15 @@ class TransitNetwork(object):
         return self.feed.config
 
     @property
+    def feed(self):
+        return self._feed
+
+    @feed.setter
+    def feed(self, feed: "Feed"):
+        self._feed = feed
+        self._feed._net = self
+
+    @property
     def road_net(self):
         return self._road_net
 
@@ -141,6 +147,30 @@ class TransitNetwork(object):
             )
             self._road_net_hash = copy.deepcopy(self.road_net.network_hash)
         return self._consistent_with_road_net
+
+    def __deepcopy__(self, memo):
+        """Returns copied TransitNetwork instance with deep copy of Feed but not roadway network."""
+        COPY_REF_NOT_VALUE = ["_road_net"]
+        # Create a new, empty instance
+        copied_net = self.__class__.__new__(self.__class__)
+        # Return the new TransitNetwork instance
+        attribute_dict = vars(self)
+
+        # Copy the attributes to the new instance
+        for attr_name, attr_value in attribute_dict.items():
+            # WranglerLogger.debug(f"Copying {attr_name}")
+            if attr_name in COPY_REF_NOT_VALUE:
+                # If the attribute is in the COPY_REF_NOT_VALUE list, assign the reference
+                setattr(copied_net, attr_name, attr_value)
+            else:
+                # WranglerLogger.debug(f"making deep copy: {attr_name}")
+                # For other attributes, perform a deep copy
+                setattr(copied_net, attr_name, copy.deepcopy(attr_value, memo))
+
+        return copied_net
+
+    def deepcopy(self):
+        return copy.deepcopy(self)
 
     def _evaluate_consistency_with_road_net(
         self, road_net: "RoadwayNetwork" = None
@@ -250,12 +280,18 @@ class TransitNetwork(object):
             )
         return all_valid
 
-    def _shape_links_in_road_net(self, links_df: pd.DataFrame = None) -> bool:
+    def _shape_links_in_road_net(
+        self,
+        links_df: pd.DataFrame = None,
+        shapes_df: pd.DataFrame = None,
+    ) -> bool:
         """Validate that links in transit shapes exist in referenced roadway links.
-        FIXME
+
         Args:
             links_df (pd.DataFrame, optional): Links dataframe from roadway network to validate
                 foreign key to. Defaults to self.roadway_net.links_df
+            shapes_df (pd.DataFrame, optional): shapes_df to validate
+            Defaults to self.feed.shapes
 
         Returns:
             boolean indicating if relationships are all valid
@@ -263,7 +299,8 @@ class TransitNetwork(object):
         tr_field, rd_field = self.TRANSIT_FOREIGN_KEYS_TO_ROADWAY["shapes"]["links"]
         if links_df is None:
             links_df = self.road_net.links_df
-        shapes_df = self.feed.shapes.astype({tr_field: int})
+        if shapes_df is None:
+            shapes_df = self.feed.shapes.astype({tr_field: int})
         unique_shape_ids = shapes_df.shape_id.unique().tolist()
         valid = True
         for id in unique_shape_ids:
@@ -386,62 +423,62 @@ class TransitNetwork(object):
             raise ValueError("Selection not successful.")
         return self._selections[key]
 
-    def apply(
-        self, project_card: Union[ProjectCard, dict], _subproject: bool = False
-    ) -> "TransitNetwork":
+    def apply(self, project_card: Union[ProjectCard, dict]) -> "TransitNetwork":
         """
-        Wrapper method to apply a project to a transit network.
+        Wrapper method to apply a roadway project, returning a new TransitNetwork instance.
 
         Args:
             project_card: either a dictionary of the project card object or ProjectCard instance
-            _subproject: boolean indicating if this is a subproject under a "changes" heading.
-                Defaults to False. Will be set to true with code when necessary.
-
         """
-        if isinstance(project_card, dict):
-            project_card_dictionary = project_card
-        elif isinstance(project_card, ProjectCard):
-            project_card_dictionary = project_card.__dict__
-        else:
-            raise ValueError(
-                f"Expecting ProjectCard or dict instance but found \
-                             {type(project_card)}."
-            )
 
-        if not _subproject:
+        if not (
+            isinstance(project_card, ProjectCard)
+            or isinstance(project_card, SubProject)
+        ):
+            project_card = ProjectCard(project_card)
+
+        if not project_card.valid:
+            WranglerLogger.error("Invalid Project Card: {project_card}")
+            raise ValueError(f"Project card {project_card.project} not valid.")
+
+        if project_card.sub_projects:
+            for sp in project_card.sub_projects:
+                WranglerLogger.debug(f"- applying subproject: {sp.type}")
+                self._apply_change(sp)
+            return self
+        else:
+            return self._apply_change(project_card)
+
+    def _apply_change(self, change: Union[ProjectCard, SubProject]) -> TransitNetwork:
+        """Apply a single change: a single-project project or a sub-project."""
+        if not isinstance(change, SubProject):
             WranglerLogger.info(
-                "Applying Project to Transit Network: {}".format(
-                    project_card_dictionary["project"]
-                )
+                f"Applying Project to Transit Network: {change.project}"
             )
 
-        if project_card_dictionary.get("changes"):
-            for project_dictionary in project_card_dictionary["changes"]:
-                return self.apply(project_dictionary, _subproject=True)
-        else:
-            project_dictionary = project_card_dictionary
-
-        if "transit_property_change" in project_dictionary:
-            _proj = project_dictionary["transit_property_change"]
+        if change.type == "transit_property_change":
             return apply_transit_property_change(
                 self,
-                self.get_selection(_proj["service"]),
-                _proj["property_changes"],
+                self.get_selection(change.service),
+                change.transit_property_change,
             )
 
-        elif "transit_routing_changes" in project_dictionary:
-            _proj = project_dictionary["transit_routing_change"]
+        elif change.type == "transit_routing_change":
             return apply_transit_routing_change(
                 self,
-                self.get_selection(_proj["service"]),
-                _proj["routing_changes"],
+                self.get_selection(change.service),
+                change.transit_routing_change,
             )
 
-        elif "pycode" in project_dictionary:
-            return self.apply_calculated_transit(self, project_dictionary["pycode"])
+        elif change.type == "roadway_deletion":
+            # FIXME
+            return NotImplementedError("Roadway deletion check not yet implemented.")
+
+        elif change.type == "pycode":
+            return apply_calculated_transit(self, change.pycode)
 
         else:
-            msg = f"Not a currently valid transit project: {project_dictionary.keys()}."
+            msg = f"Not a currently valid transit project: {change}."
             WranglerLogger.error(msg)
             raise NotImplementedError(msg)
 

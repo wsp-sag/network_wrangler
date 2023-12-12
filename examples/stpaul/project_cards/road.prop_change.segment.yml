@@ -5,10 +5,10 @@ changes:
   - roadway_property_change:
       facility:
         links:
-          - name:
-              - '6th'
-              - 'Sixth'
-              - 'sixth' #finds links where name contains 6th or Sixth...not a regex technically ;-)
+          name:
+            - '6th'
+            - 'Sixth'
+            - 'sixth' #finds links where name contains 6th or Sixth...not a regex technically ;-)
         from:
           osm_node_id: '187899923'
         to:
@@ -19,8 +19,8 @@ changes:
   - roadway_property_change:
       facility:
         links:
-          - name:
-              - '5th'
+          name:
+            - '5th'
         from:
           osm_node_id: '187899922'
         to:

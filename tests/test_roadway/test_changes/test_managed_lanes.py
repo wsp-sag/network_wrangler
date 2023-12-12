@@ -9,7 +9,7 @@ from network_wrangler.utils import parse_time_spans_to_secs
 
 
 """
-Run just the tests using `pytest tests/test_roadway/test_changes/test_managed_lanes.py`
+Usage:  `pytest tests/test_roadway/test_changes/test_managed_lanes.py`
 """
 
 _am_period = parse_time_spans_to_secs(["6:00", "9:00"])
@@ -137,14 +137,14 @@ def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir):
         "ML_HOV": 5,
     }
 
-    project_card_name = "test_managed_lanes_change_keyword.yml"
+    project_card_name = "road.prop_change.managed_lanes.yml"
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
     project_card = read_card(project_card_path)
 
     WranglerLogger.info("      start: select_roadway_features")
     _selected_link_idx = net.get_selection(project_card.facility).selected_links
 
-    attributes_to_update = list(project_card.property_changes.keys())
+    attributes_to_update = list(project_card.roadway_managed_lanes['property_changes'].keys())
 
     _orig_links = net.links_df.loc[
         _selected_link_idx, net.links_df.columns.intersection(attributes_to_update)

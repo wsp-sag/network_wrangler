@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandera as pa
 
 from pandas import DataFrame
@@ -33,18 +35,16 @@ class ShapesSchema(DataFrameModel):
 
 class TripsSchema(DataFrameModel):
     trip_id: Series[str] = pa.Field(nullable=False, unique=True)
+    shape_id: Series[str] = pa.Field(nullable=False)
+
+
+class StopTimesSchema(DataFrameModel):
+    stop_id: Series[str] = pa.Field(nullable=False, coerce=True)
+    stop_sequence: Series[int] = pa.Field(nullable=False, coerce=True)
+    pickup_type: Series[int] = pa.Field(nullable=True, coerce=True)
+    drop_off_type: Series[int] = pa.Field(nullable=True, coerce=True)
+    # model_node_id: Optional[Series[int]] = pa.Field(nullable=True, coerce=True)
 
 
 class RoutesSchema(DataFrameModel):
     route_id: Series[str] = pa.Field(nullable=False, unique=True)
-
-
-def validate_df(df: DataFrame, schema: DataFrameModel):
-    try:
-        FrequenciesSchema.validate(df, lazy=True)
-
-    except pa.errors.SchemaErrors as err:
-        WranglerLogger.error(
-            f"Schema errors and failure cases:{err.failure_cases}\n\
-                             DataFrame object that failed validation:{err.data}"
-        )

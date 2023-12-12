@@ -65,9 +65,8 @@ class ModelTransit:
         all_stops = net.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
         node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
 
-        TransitNetwork._apply_transit_feature_change_routing(
-            net,
-            trip_ids=trip_ids,
+        net.apply(
+            net.get_selection({"trip_id": trip_ids}),
             properties={
                 "existing": node_ids,
                 "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids),

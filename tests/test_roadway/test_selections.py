@@ -8,7 +8,7 @@ import pytest
 from projectcard import read_card
 from network_wrangler import WranglerLogger
 from network_wrangler.roadway import RoadwaySelection
-from network_wrangler.roadwaynetwork import _dict_to_query
+from network_wrangler.utils import dict_to_query
 
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_selections.py`
@@ -243,13 +243,12 @@ def test_select_roadway_features(request, selection, answer, stpaul_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.menow
 def test_select_roadway_features_from_projectcard(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = stpaul_net
 
     # selection is a facility segment
-    project_card_name = "3_multiple_roadway_attribute_change.yml"
+    project_card_name = "road.prop_change.multiple.yml"
     _expected_answer = [134543, 85185, 154004]
 
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
@@ -291,7 +290,7 @@ def test_query_roadway_property_by_time_group(
     _query, _answer = variable_query
 
     project_card_path = os.path.join(
-        stpaul_ex_dir, "project_cards", "5_managed_lane.yml"
+        stpaul_ex_dir, "project_cards", "road.managed_lanes.whole_facility.yml"
     )
     project_card = read_card(project_card_path)
     net = net.apply(project_card)
@@ -429,7 +428,7 @@ def test_query_builder(request, test_spec, stpaul_net):
     selection, answer = test_spec
     WranglerLogger.debug(f"Getting selection: \n{selection}")
 
-    sel_query = _dict_to_query(selection)
+    sel_query = dict_to_query(selection)
 
     WranglerLogger.debug(f"\nsel_query:\n{sel_query}")
     WranglerLogger.debug(f"\nanswer:\n{answer}")

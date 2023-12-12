@@ -1,5 +1,4 @@
 project: 6th St E Road Diet
-category: Roadway Property Change
 tags:
    - 'example'
 dependencies:
@@ -8,8 +7,9 @@ dependencies:
   conflicts: []
 roadway_property_change:
   facility:
-    osm_link_id:
-      - '223371529' # 6th St E
+    links:
+      osm_link_id:
+        - '223371529' # 6th St E
     from:
       osm_node_id: '187854529' # Jackson St
     to:

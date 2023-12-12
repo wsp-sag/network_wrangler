@@ -139,8 +139,10 @@ TEST_SELECTIONS = [
 
 
 @pytest.mark.parametrize("selection", TEST_SELECTIONS)
-def test_select_transit_features_from_projectcard(
-    request, selection, stpaul_transit_net, stpaul_card_dir
+def test_select_transit_features_by_properties(
+    request,
+    selection,
+    stpaul_transit_net,
 ):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     sel = selection["service"]
@@ -210,5 +212,82 @@ def test_invalid_optional_selection_variable(request, stpaul_transit_net):
         {"route_long_name": "Express", "routes.agency_id": "2"}
     ).selected_trips
     assert set(sel) == set(["14978409-JUN19-MVS-BUS-Weekday-01"])
+
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+TEST_NODE_SELECTIONS = [
+    {
+        "name": "Any of the listed nodes",
+        "service": {"nodes": ["75520", "66380", "57530"], "type": "any"},
+        "answer": [
+            "14941148-JUN19-MVS-BUS-Weekday-01",
+            "14941151-JUN19-MVS-BUS-Weekday-01",
+            "14941153-JUN19-MVS-BUS-Weekday-01",
+            "14941163-JUN19-MVS-BUS-Weekday-01",
+            "14944379-JUN19-MVS-BUS-Weekday-01",
+            "14944386-JUN19-MVS-BUS-Weekday-01",
+            "14944413-JUN19-MVS-BUS-Weekday-01",
+            "14944416-JUN19-MVS-BUS-Weekday-01",
+        ],
+    },
+    {
+        "name": "All of listed nodes",
+        "service": {"nodes": ["75520", "66380"], "type": "all"},
+        "answer": [
+            "14941148-JUN19-MVS-BUS-Weekday-01",
+            "14941151-JUN19-MVS-BUS-Weekday-01",
+            "14941153-JUN19-MVS-BUS-Weekday-01",
+            "14941163-JUN19-MVS-BUS-Weekday-01",
+        ],
+    },
+    {
+        "name": "All Links",
+        "service": {"links": [{"A": "75520", "B": "66380"}], "type": "all"},
+        "answer": [
+            "14941148-JUN19-MVS-BUS-Weekday-01",
+            "14941151-JUN19-MVS-BUS-Weekday-01",
+            "14941153-JUN19-MVS-BUS-Weekday-01",
+            "14941163-JUN19-MVS-BUS-Weekday-01",
+        ],
+    },
+    {
+        "name": "Any Links",
+        "service": {
+            "links": [{"A": "75520", "B": "66380"}, {"A": "66380", "B": "75520"}],
+            "type": "any",
+        },
+        "answer": [
+            "14941148-JUN19-MVS-BUS-Weekday-01",
+            "14941151-JUN19-MVS-BUS-Weekday-01",
+            "14941153-JUN19-MVS-BUS-Weekday-01",
+            "14941163-JUN19-MVS-BUS-Weekday-01",
+        ],
+    },
+]
+
+
+@pytest.mark.failing
+@pytest.mark.parametrize("selection", TEST_NODE_SELECTIONS)
+def test_select_transit_features_by_nodes(
+    request,
+    selection,
+    stpaul_transit_net,
+):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    sel = selection["service"]
+    WranglerLogger.info(f"     Name: {selection['name']}")
+    WranglerLogger.debug(f"     Service: {sel}")
+
+    selected_trips = set(stpaul_transit_net.get_selection(sel).selected_trips)
+    answer = set(selection["answer"])
+    if selected_trips - answer:
+        WranglerLogger.error(f"!!! Trips overselected:\n   {selected_trips-answer}")
+    if answer - selected_trips:
+        WranglerLogger.error(
+            f"!!! Trips missing in selection:\n   {answer-selected_trips}"
+        )
+
+    assert selected_trips == answer
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

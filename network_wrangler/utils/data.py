@@ -54,7 +54,7 @@ class DictQueryAccessor:
                 f"Relevant part of selection dictionary is empty: {selection_dict}"
             )
 
-        _sel_query = _dict_to_query(_selection_dict)
+        _sel_query = dict_to_query(_selection_dict)
         WranglerLogger.debug(f"_sel_query:\n   {_sel_query}")
         _df = self._obj.query(_sel_query, engine="python")
 
@@ -66,7 +66,7 @@ class DictQueryAccessor:
         return _df
 
 
-def _dict_to_query(
+def dict_to_query(
     selection_dict: Mapping[str, Any],
 ) -> str:
     """Generates the query of from selection_dict.
@@ -188,7 +188,7 @@ def update_df_by_col_value(
         destination_df (pd.DataFrame): Dataframe to modify.
         source_df (pd.DataFrame): Dataframe with updated columns
         join_col (str): column to join on
-        properties (list[str]): List of properties to use. If None, will default to all 
+        properties (list[str]): List of properties to use. If None, will default to all
             in source_df.
     """
     if properties is None:

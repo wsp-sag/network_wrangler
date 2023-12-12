@@ -16,11 +16,14 @@ class SelectionError(Exception):
     pass
 
 
-# Project card keys that are associated with node properties
-NODE_PROJECT_CARD_KEYS = ["nodes", "from", "to"]
+# Project card facility selection keys that are associated with node properties
+NODE_SELECTION_KEYS = ["nodes", "from", "to"]
 
-# Project card keys that are associated with link properties
-LINK_PROJECT_CARD_KEYS = ["links"]
+# Project card facility selectionnkeys that are associated with link properties
+LINK_SELECTION_KEYS = ["links"]
+
+# Project card facility selectionnkeys
+SEGMENT_SELECTION_KEYS = ["from", "to", "links"]
 
 # Default modes for searching if not specified in the project card using `modes` keyword.
 DEFAULT_SEARCH_MODES = ["drive"]
@@ -71,7 +74,9 @@ class RoadwaySelection:
         """
         self.net = net
 
-        # WranglerLogger.debug(f"Creating selection from selection dictionary:\n\{selection_dict}")
+        WranglerLogger.debug(
+            f"Creating selection from selection dictionary:\n\{selection_dict}"
+        )
         self.selection_dict = selection_dict
         self.ignore_missing = ignore_missing
         if "modes" in selection_dict:
@@ -167,7 +172,7 @@ class RoadwaySelection:
         """
 
         _node_prop_dict = {
-            k: v for k, v in selection_dict.items() if k in NODE_PROJECT_CARD_KEYS
+            k: v for k, v in selection_dict.items() if k in NODE_SELECTION_KEYS
         }
         _typed_node_prop_dict = {
             k: coerce_dict_to_df_types(v, self.net.nodes_df, skip_keys=["all"])
@@ -182,7 +187,7 @@ class RoadwaySelection:
         """
         _link_prop_dict = {
             k: v
-            for i in LINK_PROJECT_CARD_KEYS
+            for i in LINK_SELECTION_KEYS
             for k, v in selection_dict.get(i, {}).items()
         }
         _typed_link_prop_dict = coerce_dict_to_df_types(
@@ -253,11 +258,10 @@ class RoadwaySelection:
         Returns:
             str: Selection type value
         """
-        SEGMENT_SELECTION = ["from", "to", "links"]
-        # NODE_SELECTION = ["nodes"]
+
         selection_keys = list(selection_dict.keys())
 
-        if set(SEGMENT_SELECTION).issubset(selection_keys):
+        if set(SEGMENT_SELECTION_KEYS).issubset(selection_keys):
             return "segment_search"
 
         if "all" in selection_dict.get("links", {}):
@@ -277,7 +281,7 @@ class RoadwaySelection:
             return "explicit_node_id"
 
         msg = f"Expected one of: {net.links_df.params.explicit_ids}, \
-                {net.nodes_df.params.explicit_ids} or from,to, name"
+                {net.nodes_df.params.explicit_ids} or {SEGMENT_SELECTION_KEYS}"
         WranglerLogger.error(f"Selection type not found for : {selection_dict}")
         WranglerLogger.error(msg)
         raise SelectionFormatError(
@@ -393,7 +397,7 @@ class RoadwaySelection:
         _node_props = set(
             [
                 k
-                for c in NODE_PROJECT_CARD_KEYS
+                for c in NODE_SELECTION_KEYS
                 for k in self.node_selection_dict.get(c, {}).keys()
             ]
         )

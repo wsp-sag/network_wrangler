@@ -9,7 +9,7 @@ from network_wrangler import WranglerLogger
 from projectcard import read_card
 
 """
-Usage `pytest tests/test_roadway/test_changes/test_roadway_feature_change.py`
+Usage: `pytest tests/test_roadway/test_changes/test_roadway_feature_change.py`
 """
 
 
@@ -242,13 +242,13 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     """
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
-    project_card_name = "new_fields_project_card.yml"
+    project_card_name = "road.prop_change.new_fields.yml"
 
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
     project_card = read_card(project_card_path)
 
     selected_link_indices = net.get_selection(project_card.facility).selected_links
-    attributes_to_update = list(project_card.property_changes.keys())
+    attributes_to_update = list(project_card.roadway_property_change['property_changes'].keys())
 
     net = net.apply(project_card)
 

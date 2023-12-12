@@ -1,5 +1,10 @@
 import os
+
+
 import pytest
+
+import pandas as pd
+
 from projectcard import read_card
 from network_wrangler import WranglerLogger
 
@@ -8,14 +13,14 @@ Run just the tests here by running pytest tests/test_transit/test_transit.py`
 """
 TEST_PROJECT_CARDS = [
     {
-        "file": "7_simple_transit_attribute_change.yml",
+        "file": "transit.prop_change.trip_time.yml",
         "answer": {
             "trip_ids": ["14940701-JUN19-MVS-BUS-Weekday-01"],
             "headway_secs": [900],
         },
     },
     {
-        "file": "8_simple_transit_attribute_change.yml",
+        "file": "transit.prop_change.route_time.yml",
         "answer": {
             "trip_ids": [
                 "14944012-JUN19-MVS-BUS-Weekday-01",
@@ -25,7 +30,7 @@ TEST_PROJECT_CARDS = [
         },
     },
     {
-        "file": "9_simple_transit_attribute_change.yml",
+        "file": "transit.prop_change.route_name_contains.yml",
         "answer": {
             "trip_ids": [
                 "14940701-JUN19-MVS-BUS-Weekday-01",
@@ -79,19 +84,19 @@ def test_apply_transit_feature_change_from_projectcard(
 def test_wrong_existing(request, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    selected_trips = stpaul_transit_net.get_selection(
+    selection = stpaul_transit_net.get_selection(
         {
             "trip_id": [
                 "14944018-JUN19-MVS-BUS-Weekday-01",
                 "14944012-JUN19-MVS-BUS-Weekday-01",
             ]
         }
-    ).selected_trips
+    )
+
+    property_change = {"headway_secs": {"existing": 553, "set": 900}}
 
     with pytest.raises(Exception):
-        stpaul_transit_net.apply_transit_feature_change(
-            selected_trips, [{"property": "headway_secs", "existing": 553, "set": 900}]
-        )
+        stpaul_transit_net.apply(selection, property_change)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 

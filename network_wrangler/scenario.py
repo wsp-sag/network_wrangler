@@ -35,7 +35,7 @@ ROADWAY_CARD_TYPES = [
     "roadway_property_change",
     "roadway_managed_lanes",
 ]
-SECONDARY_TRANSIT_CARD_TYPES = ["roadway_deletion", "roadway_managed_lanes"]
+SECONDARY_TRANSIT_CARD_TYPES = ["roadway_deletion"]
 
 
 class ScenarioConflictError(Exception):
@@ -90,7 +90,7 @@ class Scenario(object):
     # Add some projects to create a build scenario based on a list of files.
     build_card_filenames = [
         "3_multiple_roadway_attribute_change.yml",
-        "multiple_changes.yml",
+        "road.prop_changes.segment.yml",
         "4_simple_managed_lane.yml",
     ]
     my_scenario.add_projects_from_files(build_card_filenames)
@@ -231,9 +231,10 @@ class Scenario(object):
                 projects.
         """
         project_name = project_name.lower()
-        WranglerLogger.debug(f"Adding {project_name} dependencies:\n{dependencies}")
+
         for d, v in dependencies.items():
             _dep = list(map(str.lower, v))
+            WranglerLogger.debug(f"Adding {_dep} to {project_name} dependency table.")
             self.__dict__[d].update({project_name: _dep})
 
     def _add_project(
@@ -476,16 +477,19 @@ class Scenario(object):
         if change.type in ROADWAY_CARD_TYPES:
             if not self.road_net:
                 raise ("Missing Roadway Network")
-            self.road_net.apply(change.__dict__)
+            self.road_net.apply(change)
         if change.type in TRANSIT_CARD_TYPES:
             if not self.transit_net:
                 raise ("Missing Transit Network")
-            self.transit_net.apply(change.__dict__)
+            self.transit_net.apply(change)
         if change.type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
-            self.transit_net.apply(change.__dict__)
+            self.transit_net.apply(change)
 
         if change.type not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES:
-            raise ProjectCardError(f"Don't understand project category: {change.type}")
+            # WranglerLogger.debug(f"Project {change.project}:Change .type {change.type} and ._type:{change._type}")
+            raise ProjectCardError(
+                f"Project {change.project}: Don't understand project category: {change.type}"
+            )
 
     def _apply_project(self, project_name: str) -> None:
         """Applies project card to scenario.
@@ -500,6 +504,8 @@ class Scenario(object):
         WranglerLogger.info(f"Applying {project_name}")
 
         p = self.project_cards[project_name]
+        WranglerLogger.debug(f"types: {p.types}")
+        WranglerLogger.debug(f"type: {p.type}")
         if p.sub_projects:
             for sp in p.sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.type}")
@@ -567,14 +573,16 @@ class Scenario(object):
 
         report_str += "Base Scenario:\n"
         report_str += "--Road Network:\n"
-        report_str += f"----Link File: {self.base_scenario['road_net'].link_file}\n"
-        report_str += f"----Node File: {self.base_scenario['road_net'].node_file}\n"
-        report_str += f"----Shape File: {self.base_scenario['road_net'].shape_file}\n"
+        report_str += f"----Link File: {self.base_scenario['road_net']._links_file}\n"
+        report_str += f"----Node File: {self.base_scenario['road_net']._nodes_file}\n"
+        report_str += f"----Shape File: {self.base_scenario['road_net']._shapes_file}\n"
         report_str += "--Transit Network:\n"
-        report_str += f"----Feed Path: {self.base_scenario['transit_net'].feed_path}\n"
+        report_str += (
+            f"----Feed Path: {self.base_scenario['transit_net'].feed.feed_path}\n"
+        )
 
         report_str += "\nProject Cards:\n -"
-        report_str += "\n-".join([pc.file for p, pc in self.project_cards.items()])
+        report_str += "\n-".join([str(pc.file) for p, pc in self.project_cards.items()])
 
         report_str += "\nApplied Projects:\n-"
         report_str += "\n-".join(self.applied_projects)
@@ -594,115 +602,6 @@ class Scenario(object):
             WranglerLogger.info(f"Wrote Scenario Report to: {outfile}")
 
         return report_str
-
-
-def net_to_mapbox(
-    roadway: Union[RoadwayNetwork, gpd.GeoDataFrame] = gpd.GeoDataFrame(),
-    transit: Union[TransitNetwork, gpd.GeoDataFrame] = gpd.GeoDataFrame(),
-    roadway_geojson: str = "roadway_shapes.geojson",
-    transit_geojson: str = "transit_shapes.geojson",
-    mbtiles_out: str = "network.mbtiles",
-    overwrite: bool = True,
-    port: str = "9000",
-):
-    """
-
-    Args:
-        roadway: a RoadwayNetwork instance or a geodataframe with roadway linetrings
-        transit: a TransitNetwork instance or a geodataframe with transit linetrings
-    """
-    import subprocess
-
-    # test for mapbox token
-    try:
-        os.getenv("MAPBOX_ACCESS_TOKEN")
-    except:
-        raise (
-            "NEED TO SET MAPBOX ACCESS TOKEN IN ENVIRONMENT VARIABLES/n \
-                In command line: >>export MAPBOX_ACCESS_TOKEN='pk.0000.1111' # \
-                replace value with your mapbox public access token"
-        )
-
-    if type(transit) != gpd.GeoDataFrame:
-        transit = TransitNetwork.transit_net_to_gdf(transit)
-    if type(roadway) != gpd.GeoDataFrame:
-        roadway = RoadwayNetwork.roadway_net_to_gdf(roadway)
-
-    transit.to_file(transit_geojson, driver="GeoJSON")
-    roadway.to_file(roadway_geojson, driver="GeoJSON")
-
-    tippe_options_list = ["-zg", "-o", mbtiles_out]
-    if overwrite:
-        tippe_options_list.append("--force")
-    # tippe_options_list.append("--drop-densest-as-needed")
-    tippe_options_list.append(roadway_geojson)
-    tippe_options_list.append(transit_geojson)
-
-    try:
-        WranglerLogger.info(
-            "Running tippecanoe with following options: {}".format(
-                " ".join(tippe_options_list)
-            )
-        )
-        subprocess.run(["tippecanoe"] + tippe_options_list)
-    except:
-        WranglerLogger.error()
-        raise (
-            "If tippecanoe isn't installed, try `brew install tippecanoe` or \
-                visit https://github.com/mapbox/tippecanoe"
-        )
-
-    try:
-        WranglerLogger.info(
-            "Running mbview with following options: {}".format(
-                " ".join(tippe_options_list)
-            )
-        )
-        subprocess.run(["mbview", "--port", port, ",/{}".format(mbtiles_out)])
-    except:
-        WranglerLogger.error()
-        raise (
-            "If mbview isn't installed, try `npm install -g @mapbox/mbview` or \
-                visit https://github.com/mapbox/mbview"
-        )
-
-
-def project_card_files_from_directory(
-    search_dir: str, glob_search=""
-) -> Collection[str]:
-    """Returns a list of ProjectCard instances from searching a directory.
-
-    Args:
-        search_dir (str): Search directory.
-        glob_search (str, optional): Optional glob search parameters.
-
-    Returns:
-        Collection[cls]: list of ProjectCard isntances.
-    """
-
-    project_card_files = []
-    if not Path(search_dir).exists():
-        raise FileNotFoundError(
-            "Cannot find specified directory to find project cards: {search_dir}"
-        )
-
-    if glob_search:
-        WranglerLogger.debug(
-            f"Finding project cards using glob search: {glob_search} in {search_dir}"
-        )
-        for f in glob.iglob(os.path.join(search_dir, glob_search)):
-            # Path.suffix returns string starting with .
-            if not Path(f).suffix[1:] in ProjectCard.FILE_TYPES:
-                continue
-            else:
-                project_card_files.append(f)
-    else:
-        for f in os.listdir(search_dir):
-            if not Path(f).suffix in ProjectCard.FILE_TYPES:
-                continue
-            else:
-                project_card_files.append(f)
-    return project_card_files
 
 
 def create_base_scenario(

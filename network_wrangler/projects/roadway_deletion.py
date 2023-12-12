@@ -1,10 +1,11 @@
 from ..logger import WranglerLogger
 
+class RoadwayDeletionError(Exception):
+    pass
 
 def apply_roadway_deletion(
     roadway_net: "RoadwayNetwork",
-    del_links: dict = None,
-    del_nodes: dict = None,
+    roadway_deletion: dict,
     ignore_missing=True,
 ) -> "RoadwayNetwork":
     """
@@ -14,14 +15,15 @@ def apply_roadway_deletion(
 
     Args:
         roadway_net: input RoadwayNetwork to apply change to
-        del_links : dictionary of identified links to delete
-        del_nodes : dictionary of identified nodes to delete
+        roadway_deletion: 
         ignore_missing: bool
             If True, will only warn about links/nodes that are missing from
             network but specified to "delete" in project card
             If False, will fail.
     """
-
+    del_links,del_nodes = roadway_deletion.get("links",[]),roadway_deletion.get("nodes",[])
+    if not del_links and not del_nodes:
+        raise RoadwayDeletionError("No links or nodes given to add.")
     WranglerLogger.debug(
         f"Deleting Roadway Features:\n-Links:\n{del_links}\n-Nodes:\n{del_nodes}"
     )

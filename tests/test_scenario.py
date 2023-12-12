@@ -22,18 +22,17 @@ To run with print statments, use `pytest -s tests/test_scenario.py`
 def test_project_card_read(request, stpaul_card_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    in_file = os.path.join(stpaul_card_dir, "1_simple_roadway_attribute_change.yml")
+    in_file = os.path.join(stpaul_card_dir, "road.prop_change.simple.yml")
     project_card = read_card(in_file)
     WranglerLogger.debug(project_card)
-    assert project_card.category == "Roadway Property Change"
+    assert project_card.type == "roadway_property_change"
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.menow
 def test_project_card_write(request, stpaul_card_dir, scratch_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    in_file = os.path.join(stpaul_card_dir, "1_simple_roadway_attribute_change.yml")
+    in_file = os.path.join(stpaul_card_dir, "road.prop_change.simple.yml")
     outfile = os.path.join(scratch_dir, "t_simple_roadway_attribute_change.yml")
     project_card = read_card(in_file)
     write_card(project_card, outfile)
@@ -140,8 +139,6 @@ def test_scenario_prerequisites(request):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.menow
-@pytest.mark.failing
 def test_project_sort(request):
     """Make sure projects sort correctly before being applied."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -156,7 +153,10 @@ def test_project_sort(request):
     project_c = ProjectCard({"project": "project c"})
 
     project_d = ProjectCard(
-        {"project": "project d", "dependencies": {"prerequisites": ["project b"]}}
+        {
+            "project": "project d",
+            "dependencies": {"prerequisites": ["project b", "project a"]},
+        }
     )
 
     expected_project_queue = ["project c", "project b", "project a", "project d"]
@@ -173,14 +173,13 @@ def test_project_sort(request):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.menow
 def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_base_scenario):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     card_files = [
-        "3_multiple_roadway_attribute_change.yml",
+        "road.prop_change.multiple.yml",
         "multiple_changes.yml",
-        "4_simple_managed_lane.yml",
+        "road.managed_lane.simple.yml",
     ]
 
     project_card_path_list = [
@@ -194,7 +193,7 @@ def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_base_scenario):
 
     my_scenario.apply_all_projects()
 
-    my_scenario.scenario_summary()
+    my_scenario.summarize()
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 

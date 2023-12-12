@@ -8,17 +8,17 @@ roadway_managed_lanes:
       - 394208
       - 394214
   property_changes:
-    - property: ML_lanes
+    ML_lanes:
       set: 0
       timeofday:
         - time: ['6:00', '9:00']
           set: 1
-    - property: ML_access
+    ML_access:
       set: 'all'
-    - property: ML_egress
+    ML_egress:
       set: 'all'
-    - property: ML_HOV
+    ML_HOV:
       set: 5
-    - property: HOV
+    HOV:
       set: 5
-notes: Placeholder for notes
+

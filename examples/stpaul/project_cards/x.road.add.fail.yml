@@ -1,7 +1,6 @@
 project: test simple roadway add
 tags:
   - 'add roadway'
-category: Add New Roadway
 links:
   - A: 3230
     B: 52771

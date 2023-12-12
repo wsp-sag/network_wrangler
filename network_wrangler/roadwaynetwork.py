@@ -18,7 +18,7 @@ import pandas as pd
 from geopandas.geodataframe import GeoDataFrame
 from pandas.core.frame import DataFrame
 from pandera import check_input
-from projectcard import ProjectCard
+from projectcard import ProjectCard, SubProject
 
 from .projects import (
     apply_new_roadway,
@@ -154,6 +154,9 @@ class RoadwayNetwork(object):
         self.nodes_df = nodes_df
         self.links_df = links_df
 
+        self._links_file = ""
+        self._nodes_file = ""
+
         if shapes_df is None and shapes_file is None:
             WranglerLogger.warning("No shapes associated with network!")
             raise ValueError("Should specify either shapes or shapes_file.")
@@ -248,6 +251,9 @@ class RoadwayNetwork(object):
             crs=crs,
             shapes_file=shapes_file,
         )
+
+        roadway_network._links_file = links_file
+        roadway_network._nodes_file = nodes_file
 
         return roadway_network
 
@@ -425,80 +431,70 @@ class RoadwayNetwork(object):
         if not valid:
             raise ValueError("Property changes are not valid:\n  {properties")
 
-    def apply(
-        self, project_card: Union[ProjectCard, dict], _subproject: bool = False
-    ) -> "RoadwayNetwork":
+    def apply(self, project_card: Union[ProjectCard, dict]) -> "RoadwayNetwork":
         """
         Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.
 
         Args:
             project_card: either a dictionary of the project card object or ProjectCard instance
-            _subproject: boolean indicating if this is a subproject under a "changes" heading.
-                Defaults to False. Will be set to true with code when necessary.
-
         """
-        if isinstance(project_card, dict):
-            project_card_dictionary = project_card
-        elif isinstance(project_card, ProjectCard):
-            project_card_dictionary = project_card.__dict__
-        else:
-            raise ValueError(
-                f"Expecting ProjectCard or dict instance but found \
-                             {type(project_card)}."
-            )
 
-        if not _subproject:
+        if not (
+            isinstance(project_card, ProjectCard)
+            or isinstance(project_card, SubProject)
+        ):
+            project_card = ProjectCard(project_card)
+
+        if not project_card.valid:
+            WranglerLogger.error("Invalid Project Card: {project_card}")
+            raise ValueError(f"Project card {project_card.project} not valid.")
+
+        if project_card.sub_projects:
+            for sp in project_card.sub_projects:
+                WranglerLogger.debug(f"- applying subproject: {sp.type}")
+                self._apply_change(sp)
+            return self
+        else:
+            return self._apply_change(project_card)
+
+    def _apply_change(self, change: Union[ProjectCard, SubProject]) -> "RoadwayNetwork":
+        """Apply a single change: a single-project project or a sub-project."""
+        if not isinstance(change, SubProject):
             WranglerLogger.info(
-                "Applying Project to Roadway Network: {}".format(
-                    project_card_dictionary["project"]
-                )
+                f"Applying Project to Roadway Network: {change.project}"
             )
 
-        if project_card_dictionary.get("changes"):
-            for project_dictionary in project_card_dictionary["changes"]:
-                return self.apply(project_dictionary, _subproject=True)
-        else:
-            project_dictionary = project_card_dictionary
-
-        _property_change = project_dictionary.get("roadway_property_change")
-        _managed_lanes = project_dictionary.get("roadway_managed_lanes")
-        _addition = project_dictionary.get("roadway_addition")
-        _deletion = project_dictionary.get("roadway_deletion")
-        _pycode = project_dictionary.get("pycode")
-
-        if _property_change:
+        if change.type == "roadway_property_change":
             return apply_roadway_property_change(
                 self,
-                self.get_selection(_property_change["facility"]),
-                _property_change["property_changes"],
+                self.get_selection(change.facility),
+                change.roadway_property_change["property_changes"],
             )
 
-        elif _managed_lanes:
+        elif change.type == "roadway_managed_lanes":
             return apply_parallel_managed_lanes(
                 self,
-                self.get_selection(_managed_lanes["facility"]),
-                _managed_lanes["property_changes"],
+                self.get_selection(change.facility),
+                change.roadway_managed_lanes["property_changes"],
             )
 
-        elif _addition:
+        elif change.type == "roadway_addition":
             return apply_new_roadway(
                 self,
-                _addition.get("links", []),
-                _addition.get("nodes", []),
+                change.roadway_addition,
             )
 
-        elif _deletion:
+        elif change.type == "roadway_deletion":
             return apply_roadway_deletion(
                 self,
-                del_links=_deletion.get("links", {}),
-                del_nodes=_deletion.get("nodes", {}),
+                change.roadway_deletion,
             )
 
-        elif _pycode:
-            return apply_calculated_roadway(self, _pycode)
+        elif change.type == "pycode":
+            return apply_calculated_roadway(self, change.pycode)
         else:
-            WranglerLogger.error(f"Couldn't find project in:\n{project_dictionary}")
-            raise (ValueError("Invalid Project Card Category."))
+            WranglerLogger.error(f"Couldn't find project in:\n{change.__dict__}")
+            raise (ValueError("Invalid Project Card Category: {change.type}"))
 
     def update_network_geometry_from_node_xy(
         self, updated_nodes: List = None
@@ -620,12 +616,20 @@ class RoadwayNetwork(object):
                 raise NodeDeletionError("Links to delete are not in network.")
 
         link_ids = list(set(self.links_df.index).intersection(link_ids))
-
         WranglerLogger.debug(f"Dropping links: {link_ids}")
+        
+        if clean_nodes:
+            _links_to_delete = self.links_df.loc[self.links_df.index.isin(link_ids)]
+            _nodes_to_delete = self.nodes_in_links(_links_to_delete).index.values.tolist()
+            WranglerLogger.debug(
+                f"Dropping nodes associated with dropped links: \n\
+                {_nodes_to_delete}"
+            )
+            self.delete_nodes(node_ids = _nodes_to_delete)
+        
         self.links_df = self.links_df.drop(selection.selected_links)
 
-        if clean_nodes:
-            self.delete_nodes(all_unused=True)
+        
         if clean_shapes:
             self.delete_shapes(all_unused=True)
 
@@ -636,13 +640,36 @@ class RoadwayNetwork(object):
         all_unused: bool = False,
         ignore_missing: bool = True,
     ) -> None:
-        if selection_dict is not None:
-            selection = self.get_selection(
-                {"nodes": selection_dict}, ignore_missing=ignore_missing
-            )
-            node_ids += selection.selected_nodes
+        """
+        Deletes nodes from roadway network.
+
+        Gets a list of nodes to delete by either selecting all unused or a combination of 
+        the node_ids list or a selection dictionary. 
+        Makes sure any nodes that are used by links aren't deleted.
+        
+        args:
+            selection_dict:
+            node_ids: list of model_node_ids
+            all_unused: If True, will select all unused nodes in network. Defaults to False.
+            ignore_missing: If False, will raise  NodeDeletionError if nodes specified for deletion
+                aren't foudn in the network. Otherwise it will just be a warning. Defaults to True.
+        
+        raises:
+            NodeDeletionError: If not ignore_missing and selected nodes to delete aren't in network.
+        """
+
+        #
         if all_unused:
-            node_ids += self.nodes_without_links
+            node_ids = self.nodes_without_links
+        else:
+            if selection_dict is not None:
+                selection = self.get_selection(
+                    {"nodes": selection_dict}, ignore_missing=ignore_missing
+                )
+                node_ids += selection.selected_nodes
+
+            # Only delete nodes that don't have attached links
+            node_ids = list(set(node_ids).intersection(self.nodes_without_links))
 
         _missing = set(node_ids) - set(self.nodes_df.index)
         if _missing:
@@ -661,6 +688,7 @@ class RoadwayNetwork(object):
         if all_unused:
             shape_ids += self._shapes_without_links()
             shape_ids = list(set(shape_ids))
+        
         WranglerLogger.debug(f"{len(shape_ids)} shapes to drop\n{shape_ids}")
         self.shapes_df = self.shapes_df.drop(shape_ids)
 

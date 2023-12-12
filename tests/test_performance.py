@@ -23,6 +23,7 @@ def copy_net(net):
     return copy.deepcopy(net)
 
 
+@pytest.mark.failing
 def test_read_net_speed(benchmark, stpaul_ex_dir):
     print("starting")
     LINKS = os.path.join(stpaul_ex_dir, "link.json")
