@@ -1311,14 +1311,11 @@ class TransitNetwork(object):
                     ["stop_id", "stop_lat", "stop_lon", self.stops_foreign_key,],
                 ] = [
                     new_stop_id,
-                    nodes_df.loc[nodes_df[self.stops_foreign_key] == int(node_id), "Y"],
-                    nodes_df.loc[nodes_df[self.stops_foreign_key] == int(node_id), "X"],
+                    nodes_df.loc[nodes_df[self.stops_foreign_key] == int(node_id), "Y"].values[0],
+                    nodes_df.loc[nodes_df[self.stops_foreign_key] == int(node_id), "X"].values[0],
                     str(node_id),
                 ]
             else:
-                WranglerLogger.info(
-                    "Modifying existing stop in stop_times.txt for node ID: {}".format(node_id)
-                )
                 for trip_id in trip_ids:
                     # Pop the rows that match trip_id
                     this_stoptime = stop_times[stop_times.trip_id == trip_id].copy()
@@ -1329,31 +1326,43 @@ class TransitNetwork(object):
                         how="left",
                         on="stop_id",
                     )
+                    skip_outer = False
+                    # check if this node_id is in stoptime
+                    existing_stop_in_this_stoptime = set(this_stoptime[self.stops_foreign_key].to_list())
+                    if str(node_id) not in existing_stop_in_this_stoptime:
+                         WranglerLogger.info(
+                        "Adding existing stop to stop_times.txt for node ID: {}".format(node_id)
+                        )                       
+                    else:
+                        skip_outer = True
+                        WranglerLogger.info(
+                        "Modifying existing stop in stop_times.txt for node ID: {}".format(node_id)
+                        )
 
-                    stop_id = this_stoptime[this_stoptime[self.stops_foreign_key] == str(node_id)]['stop_id'].iloc[0]
+                        stop_id = this_stoptime[this_stoptime[self.stops_foreign_key] == str(node_id)]['stop_id'].iloc[0]
 
-                    if properties['property'] == 'allow_alightings':
-                        stop_times.loc[
-                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
-                            'pickup_type'
-                        ] = 0
-                    if properties['property'] == 'no_alightings':
-                        stop_times.loc[
-                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
-                            'pickup_type'
-                        ] = 1
-                    if properties['property'] == 'allow_boardings':
-                        stop_times.loc[
-                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
-                            'drop_off_type'
-                        ] = 0
-                    if properties['property'] == 'no_boardings':
-                        stop_times.loc[
-                            (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
-                            'drop_off_type'
-                        ] = 1
-                
-                continue
+                        if properties['property'] == 'allow_alightings':
+                            stop_times.loc[
+                                (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                                'pickup_type'
+                            ] = 0
+                        if properties['property'] == 'no_alightings':
+                            stop_times.loc[
+                                (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                                'pickup_type'
+                            ] = 1
+                        if properties['property'] == 'allow_boardings':
+                            stop_times.loc[
+                                (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                                'drop_off_type'
+                            ] = 0
+                        if properties['property'] == 'no_boardings':
+                            stop_times.loc[
+                                (stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == stop_id),
+                                'drop_off_type'
+                            ] = 1
+                if skip_outer:
+                    continue
 
             for trip_id in trip_ids:
                 # Pop the rows that match trip_id

@@ -310,7 +310,7 @@ class Scenario(object):
         WranglerLogger.debug("Adding project card dependencies")
         if project_card.dependencies.get("prerequisites"):
             self.prerequisites.update(
-                {project_card.project: project_card.dependencies["prerequisites"]}
+                {project_card.project.lower(): [element.lower() for element in project_card.dependencies["prerequisites"]]}
             )
         if project_card.dependencies.get("corequisites"):
             self.corequisites.update(
