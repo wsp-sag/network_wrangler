@@ -191,6 +191,7 @@ class RoadwayNetwork(object):
         "assign_group",
         "county",
         "mpo",
+        "area_type",
     ]
 
     MANAGED_LANES_SCALAR = 500000
@@ -2049,6 +2050,8 @@ class RoadwayNetwork(object):
                 access_row["A"] = row["A"]
                 access_row["B"] = row["ML_A"]
                 access_row["lanes"] = 1
+                access_row["assign_group"] = 1
+                access_row["area_type"] = row["area_type"]
                 access_row["model_link_id"] = (
                     row["model_link_id"] + row["ML_model_link_id"] + 1
                 )
@@ -2077,6 +2080,8 @@ class RoadwayNetwork(object):
                 egress_row["A"] = row["ML_B"]
                 egress_row["B"] = row["B"]
                 egress_row["lanes"] = 1
+                egress_row["assign_group"] = 1
+                egress_row["area_type"] = row["area_type"]
                 egress_row["model_link_id"] = (
                     row["model_link_id"] + row["ML_model_link_id"] + 2
                 )
