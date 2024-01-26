@@ -1494,9 +1494,14 @@ class RoadwayNetwork(object):
                     if "set" in p.keys():
                         attr_value["default"] = p["set"]
                     elif "change" in p.keys():
-                        attr_value["default"] = (
-                            self.links_df.at[idx, attribute] + p["change"]
-                        )
+                        # the attribute could have become an object column
+                        # if a ML project has been applied before to the network
+                        if isinstance(self.links_df.at[idx, attribute], dict):
+                            attr_value["default"] = self.links_df.at[idx, attribute]["default"] + p["change"]
+                        elif isinstance(self.links_df.at[idx, attribute], str):
+                            attr_value["default"] = int(self.links_df.at[idx, attribute]) + p["change"]
+                        else:
+                            attr_value["default"] = self.links_df.at[idx, attribute] + p["change"]
 
                     attr_value["timeofday"] = []
 
@@ -1509,12 +1514,29 @@ class RoadwayNetwork(object):
                                 }
                             )
                         elif "change" in tod.keys():
-                            attr_value["timeofday"].append(
-                                {
-                                    "time": parse_time_spans(tod["time"]),
-                                    "value": self.links_df.at[idx, attribute] + tod["change"]
-                                }
-                            )
+                            # the attribute could have become an object column
+                            # if a ML project has been applied before to the network
+                            if isinstance(self.links_df.at[idx, attribute], dict):
+                                attr_value["timeofday"].append(
+                                    {
+                                        "time": parse_time_spans(tod["time"]),
+                                        "value": self.links_df.at[idx, attribute]["default"] + tod["change"]
+                                    }
+                                )
+                            elif isinstance(self.links_df.at[idx, attribute], str):
+                                attr_value["timeofday"].append(
+                                    {
+                                        "time": parse_time_spans(tod["time"]),
+                                        "value": int(self.links_df.at[idx, attribute]) + tod["change"]
+                                    }
+                                )
+                            else:
+                                attr_value["timeofday"].append(
+                                    {
+                                        "time": parse_time_spans(tod["time"]),
+                                        "value": self.links_df.at[idx, attribute] + tod["change"]
+                                    }
+                                )
                 elif "set" in p.keys():
                     attr_value = p["set"]
 
