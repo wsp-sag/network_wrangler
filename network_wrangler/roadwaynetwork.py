@@ -1664,6 +1664,17 @@ class RoadwayNetwork(object):
                 if key not in df_column_names:
                     new_row_to_add[key] = new_dict[key]
 
+            for unique_link_id in self.unique_link_ids:
+                if unique_link_id in df_column_names:
+
+                    if new_row_to_add[unique_link_id] in df[unique_link_id] or new_row_to_add[unique_link_id]==0 or type(new_row_to_add[unique_link_id])==str or new_row_to_add[unique_link_id] is None:
+                        new_row_to_add[unique_link_id] = df[unique_link_id].max()+1
+
+            for unique_node_id in self.unique_node_ids:
+                if unique_node_id in df_column_names:
+                    if new_row_to_add[unique_node_id] in df[unique_node_id] or new_row_to_add[unique_node_id]==0 or type(new_row_to_add[unique_node_id])==str or new_row_to_add[unique_node_id] is None:
+                        new_row_to_add[unique_node_id] = df[unique_node_id].max()+1
+
             out_df = df.append(new_row_to_add, ignore_index=True)
             return out_df
 
