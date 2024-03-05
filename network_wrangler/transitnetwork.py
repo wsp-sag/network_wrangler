@@ -711,6 +711,19 @@ class TransitNetwork(object):
         # If a time key exists, filter trips using frequency table
         if selection.get("time"):
             selection["time"] = parse_time_spans(selection["time"])
+        elif selection.get("time_periods"):
+            selection["time"] = []
+            for time_period in selection["time_periods"]:
+                selection["time"].append(parse_time_spans(
+                    [time_period["start_time"], time_period["end_time"]]
+                ))
+            # Filter freq to trips in selection
+            freq = freq[freq.trip_id.isin(trips["trip_id"])]
+            freq = freq[freq.start_time.isin([i[0] for i in selection["time"]])]
+            freq = freq[freq.end_time.isin([i[1] for i in selection["time"]])]
+
+            # Filter trips table to those still in freq table
+            trips = trips[trips.trip_id.isin(freq["trip_id"])]
         elif selection.get("start_time") and selection.get("end_time"):
             selection["time"] = parse_time_spans(
                 [selection["start_time"][0], selection["end_time"][0]]
@@ -732,7 +745,8 @@ class TransitNetwork(object):
                 "route_long_name",
                 "time",
                 "start_time",
-                "end_time"
+                "end_time",
+                "time_periods",
             ]:
                 if key in trips:
                     trips = trips[trips[key].isin(selection[key])]
@@ -784,6 +798,72 @@ class TransitNetwork(object):
         # Return pandas.Series of trip_ids
         return self.feed.trips[self.feed.trips.shape_id.isin(shape_ids)].trip_id
 
+    def check_network_connectivity(self, shapes_foreign_key : pd.Series) -> pd.Series:
+        """
+        check if new shapes contain any links that are not in the roadway network
+        """
+        shape_links_df = pd.DataFrame(
+            {
+                "A" : shapes_foreign_key.tolist()[:-1],
+                "B" : shapes_foreign_key.tolist()[1:],
+            }
+        )
+
+        shape_links_df["A"] = shape_links_df["A"].astype(int)
+        shape_links_df["B"] = shape_links_df["B"].astype(int)
+
+        shape_links_df = pd.merge(
+            shape_links_df,
+            self.road_net.links_df[["A", "B", "model_link_id"]],
+            how = "left",
+            on = ["A", "B"]
+        )
+
+        missing_shape_links_df = shape_links_df[shape_links_df["model_link_id"].isnull()]
+
+        if len(missing_shape_links_df) > 0:
+            for index, row in missing_shape_links_df.iterrows():
+                WranglerLogger.warning(
+                    "Missing connections from node {} to node {} for the new routing, find complete path using default graph".format(int(row.A), int(row.B))
+                )
+
+                complete_node_list = TransitNetwork.route_between_nodes(self.graph, row.A, row.B)
+                complete_node_list = pd.Series([str(int(i)) for i in complete_node_list])
+
+                WranglerLogger.info(
+                    "Routing path from node {} to node {} for missing connections: {}.".format(int(row.A), int(row.B), complete_node_list.tolist())
+                )
+
+                nodes = shapes_foreign_key.tolist()
+                index_replacement_starts = [i for i,d in enumerate(nodes) if d == str(int(row.A))][0]
+                index_replacement_ends = [i for i,d in enumerate(nodes) if d == str(int(row.B))][-1]
+                shapes_foreign_key = pd.concat(
+                    [
+                        shapes_foreign_key.iloc[:index_replacement_starts],
+                        complete_node_list,
+                        shapes_foreign_key.iloc[index_replacement_ends + 1 :],
+                    ],
+                    ignore_index=True,
+                    sort=False,
+                )
+
+        return shapes_foreign_key
+    
+    @staticmethod
+    def route_between_nodes(graph, A, B) -> list:
+        """
+        find complete path when the new shape has connectivity issue
+        """
+
+        node_list = nx.shortest_path(
+            graph,
+            A,
+            B,
+            weight = "length"
+        )
+
+        return node_list
+    
     def apply_transit_feature_change(
         self, trip_ids: pd.Series, properties: list, in_place: bool = True
     ) -> Union(None, TransitNetwork):
@@ -816,6 +896,25 @@ class TransitNetwork(object):
         stop_times = self.feed.stop_times.copy()
         stops = self.feed.stops.copy()
 
+        assert shapes[TransitNetwork.SHAPES_FOREIGN_KEY].dtype == "object"
+        assert stops[TransitNetwork.STOPS_FOREIGN_KEY].dtype == "object"
+
+        if shapes[TransitNetwork.SHAPES_FOREIGN_KEY].isnull().any():
+            WranglerLogger.error(
+                "There are null values in the shapes foreign key column, they will be filled with empty strings"
+            )
+            shapes[TransitNetwork.SHAPES_FOREIGN_KEY].fillna("", inplace=True)
+            
+        shapes[TransitNetwork.SHAPES_FOREIGN_KEY] = shapes[TransitNetwork.SHAPES_FOREIGN_KEY].apply(lambda x: x.replace(".0",""))
+        
+        if stops[TransitNetwork.STOPS_FOREIGN_KEY].isnull().any():
+            WranglerLogger.error(
+                "There are null values in the stops foreign key column, they will be filled with empty strings"
+            )
+            stops[TransitNetwork.STOPS_FOREIGN_KEY].fillna("", inplace=True)
+
+        stops[TransitNetwork.STOPS_FOREIGN_KEY] = stops[TransitNetwork.STOPS_FOREIGN_KEY].apply(lambda x: x.replace(".0",""))
+
         # A negative sign in "set" indicates a traversed node without a stop
         # If any positive numbers, stops have changed
         stops_change = False
@@ -826,7 +925,10 @@ class TransitNetwork(object):
                 properties["existing_stops"] = [
                     str(i) for i in properties["existing"] if i > 0
                 ]
-            stops_change = True
+            if properties["existing_stops"] == properties["set_stops"]:
+                stops_change = False
+            else:
+                stops_change = True
 
         # Convert ints to objects
         properties["set_shapes"] = [str(abs(i)) for i in properties["set"]]
@@ -838,7 +940,7 @@ class TransitNetwork(object):
         # Replace shapes records
         trips = self.feed.trips  # create pointer rather than a copy
         shape_ids = trips[trips["trip_id"].isin(trip_ids)].shape_id
-        for shape_id in shape_ids:
+        for shape_id in set(shape_ids):
             # Check if `shape_id` is used by trips that are not in
             # parameter `trip_ids`
             trips_using_shape_id = trips.loc[trips["shape_id"] == shape_id, ["trip_id"]]
@@ -875,6 +977,21 @@ class TransitNetwork(object):
                     TransitNetwork.SHAPES_FOREIGN_KEY: properties["set_shapes"],
                 }
             )
+
+            check_new_shape_nodes = self.check_network_connectivity(new_shape_rows[TransitNetwork.SHAPES_FOREIGN_KEY])
+
+            if len(check_new_shape_nodes) != len(new_shape_rows):
+                new_shape_rows = pd.DataFrame(
+                    {
+                        "shape_id": shape_id,
+                        "shape_pt_lat": None,  # FIXME Populate from self.road_net?
+                        "shape_pt_lon": None,  # FIXME
+                        "shape_osm_node_id": None,  # FIXME
+                        "shape_pt_sequence": None,
+                        TransitNetwork.SHAPES_FOREIGN_KEY: check_new_shape_nodes,
+                    }
+                )
+                properties["set_shapes"] = check_new_shape_nodes.tolist()
 
             # If "existing" is specified, replace only that segment
             # Else, replace the whole thing
@@ -922,6 +1039,7 @@ class TransitNetwork(object):
                     new_stop_id = str(int(fk_i) + TransitNetwork.ID_SCALAR)
                     if new_stop_id in stops["stop_id"].tolist():
                         WranglerLogger.error("Cannot create a unique new stop_id.")
+
                     stops.loc[
                         len(stops.index) + 1,
                         [
@@ -932,8 +1050,8 @@ class TransitNetwork(object):
                         ],
                     ] = [
                         new_stop_id,
-                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"],
-                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"],
+                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"].values[0],
+                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"].values[0],
                         fk_i,
                     ]
 
@@ -944,9 +1062,9 @@ class TransitNetwork(object):
 
                 # Merge on node IDs using stop_id (one node ID per stop_id)
                 this_stoptime = this_stoptime.merge(
-                    stops[["stop_id", TransitNetwork.STOPS_FOREIGN_KEY]],
+                    stops[["stop_id", "trip_id", TransitNetwork.STOPS_FOREIGN_KEY]],
                     how="left",
-                    on="stop_id",
+                    on=["stop_id", "trip_id"],
                 )
 
                 # Make sure the stop_times are ordered by stop_sequence
@@ -981,14 +1099,25 @@ class TransitNetwork(object):
                 # If "existing" is specified, replace only that segment
                 # Else, replace the whole thing
                 if properties.get("existing") is not None:
+                    index_replacement_starts = None
+                    index_replacement_ends = None
                     # Match list (remember stops are passed in with node IDs)
                     nodes = this_stoptime[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
-                    index_replacement_starts = nodes.index(
-                        properties["existing_stops"][0]
-                    )
-                    index_replacement_ends = nodes.index(
-                        properties["existing_stops"][-1]
-                    )
+                    if len(properties["existing_stops"]) == 0:
+                        for n in this_shape[TransitNetwork.SHAPES_FOREIGN_KEY]:
+                            if n in this_stoptime[TransitNetwork.STOPS_FOREIGN_KEY].values:
+                                index_replacement_starts = nodes.index(n)+1
+                                index_replacement_ends = nodes.index(n)
+                            if n == properties["existing_shapes"][0]:
+                                break
+                    else:
+                        index_replacement_starts = nodes.index(
+                            properties["existing_stops"][0]
+                        )
+                        index_replacement_ends = nodes.index(
+                            properties["existing_stops"][-1]
+                        )
+                    
                     this_stoptime = pd.concat(
                         [
                             this_stoptime.iloc[:index_replacement_starts],
