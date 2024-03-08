@@ -940,6 +940,7 @@ class TransitNetwork(object):
         # Replace shapes records
         trips = self.feed.trips  # create pointer rather than a copy
         shape_ids = trips[trips["trip_id"].isin(trip_ids)].shape_id
+        agency_raw_name = trips[trips["trip_id"].isin(trip_ids)].agency_raw_name.unique()[0]
         for shape_id in set(shape_ids):
             # Check if `shape_id` is used by trips that are not in
             # parameter `trip_ids`
@@ -975,6 +976,7 @@ class TransitNetwork(object):
                     "shape_osm_node_id": None,  # FIXME
                     "shape_pt_sequence": None,
                     TransitNetwork.SHAPES_FOREIGN_KEY: properties["set_shapes"],
+                    "agency_raw_name":agency_raw_name,
                 }
             )
 
@@ -989,6 +991,7 @@ class TransitNetwork(object):
                         "shape_osm_node_id": None,  # FIXME
                         "shape_pt_sequence": None,
                         TransitNetwork.SHAPES_FOREIGN_KEY: check_new_shape_nodes,
+                        "agency_raw_name":agency_raw_name,
                     }
                 )
                 properties["set_shapes"] = check_new_shape_nodes.tolist()
@@ -1030,30 +1033,61 @@ class TransitNetwork(object):
             nodes_df = self.road_net.nodes_df.loc[
                 :, [TransitNetwork.STOPS_FOREIGN_KEY, "X", "Y"]
             ]
-            for fk_i in properties["set_stops"]:
-                if fk_i not in existing_fk_ids:
-                    WranglerLogger.info(
-                        "Creating a new stop in stops.txt for node ID: {}".format(fk_i)
-                    )
-                    # Add new row to stops
-                    new_stop_id = str(int(fk_i) + TransitNetwork.ID_SCALAR)
-                    if new_stop_id in stops["stop_id"].tolist():
-                        WranglerLogger.error("Cannot create a unique new stop_id.")
+            for trip_id in trip_ids:
+                for fk_i in properties["set_stops"]:
+                    if fk_i in existing_fk_ids:
+                       existing_agency_raw_name = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['agency_raw_name'].iloc[0]
+                       existing_trip_ids = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['trip_id'].to_list()
+                       existing_stop_id = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['stop_id'].iloc[0]
+                       if ((agency_raw_name!=existing_agency_raw_name)
+                        | (trip_id not in existing_trip_ids)
+                       ):
+                            stops.loc[
+                            len(stops.index) + 1,
+                            [
+                                "stop_id",
+                                "stop_lat",
+                                "stop_lon",
+                                TransitNetwork.STOPS_FOREIGN_KEY,
+                                "trip_id",
+                                "agency_raw_name"
+                            ],
+                            ] = [
+                                existing_stop_id,
+                                nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"].values[0],
+                                nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"].values[0],
+                                fk_i,
+                                trip_id,
+                                agency_raw_name
+                            ]
 
-                    stops.loc[
-                        len(stops.index) + 1,
-                        [
-                            "stop_id",
-                            "stop_lat",
-                            "stop_lon",
-                            TransitNetwork.STOPS_FOREIGN_KEY,
-                        ],
-                    ] = [
-                        new_stop_id,
-                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"].values[0],
-                        nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"].values[0],
-                        fk_i,
-                    ]
+                    elif fk_i not in existing_fk_ids:
+                        WranglerLogger.info(
+                            "Creating a new stop in stops.txt for node ID: {}".format(fk_i)
+                        )
+                        # Add new row to stops
+                        new_stop_id = str(int(fk_i) + TransitNetwork.ID_SCALAR)
+                        if new_stop_id in stops["stop_id"].tolist():
+                            WranglerLogger.error("Cannot create a unique new stop_id.")
+                        
+                        stops.loc[
+                            len(stops.index) + 1,
+                            [
+                                "stop_id",
+                                "stop_lat",
+                                "stop_lon",
+                                TransitNetwork.STOPS_FOREIGN_KEY,
+                                "trip_id",
+                                "agency_raw_name"
+                            ],
+                        ] = [
+                            new_stop_id,
+                            nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "Y"].values[0],
+                            nodes_df.loc[nodes_df[TransitNetwork.STOPS_FOREIGN_KEY] == int(fk_i), "X"].values[0],
+                            fk_i,
+                            trip_id,
+                            agency_raw_name
+                        ]
 
             # Loop through all the trip_ids
             for trip_id in trip_ids:
@@ -1082,6 +1116,7 @@ class TransitNetwork(object):
                         "timepoint": None,
                         "stop_is_skipped": None,
                         TransitNetwork.STOPS_FOREIGN_KEY: properties["set_stops"],
+                        "agency_raw_name":agency_raw_name,
                     }
                 )
 
@@ -1111,13 +1146,16 @@ class TransitNetwork(object):
                             if n == properties["existing_shapes"][0]:
                                 break
                     else:
-                        index_replacement_starts = nodes.index(
-                            properties["existing_stops"][0]
-                        )
-                        index_replacement_ends = nodes.index(
-                            properties["existing_stops"][-1]
-                        )
-                    
+                        # index_replacement_starts = nodes.index(
+                        #     properties["existing_stops"][0]
+                        # )
+                        # index_replacement_ends = nodes.index(
+                        #     properties["existing_stops"][-1]
+                        # )
+                        indices = [nodes.index(n) for n in properties["existing_stops"]]
+                        index_replacement_starts = min(indices)
+                        index_replacement_ends = max(indices)
+
                     this_stoptime = pd.concat(
                         [
                             this_stoptime.iloc[:index_replacement_starts],
