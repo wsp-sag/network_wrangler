@@ -12,24 +12,28 @@ Run just the tests using `pytest tests/test_transit/test_selections.py`
 TEST_SELECTIONS = [
     {
         "name": "1. simple trip_id",
-        "service": {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01"},
+        "service": {
+            "trip_properties": {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01"}
+        },
         "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
     },
     {
         "name": "2. trip_id + time",
         "service": {
-            "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
-            "time": ["06:00:00", "09:00:00"],
+            "trip_properties": {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01"},
+            "timespan": ["06:00:00", "09:00:00"],
         },
         "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
     },
     {
         "name": "3. multiple trip_id",
         "service": {
-            "trip_id": [
-                "14969841-JUN19-RAIL-Weekday-01",  # unordered
-                "14940701-JUN19-MVS-BUS-Weekday-01",
-            ]
+            "trip_properties": {
+                "trip_id": [
+                    "14969841-JUN19-RAIL-Weekday-01",  # unordered
+                    "14940701-JUN19-MVS-BUS-Weekday-01",
+                ]
+            }
         },
         "answer": [
             "14940701-JUN19-MVS-BUS-Weekday-01",
@@ -39,11 +43,13 @@ TEST_SELECTIONS = [
     {
         "name": "4. multiple trip_id + time",
         "service": {
-            "trip_id": [
-                "14940701-JUN19-MVS-BUS-Weekday-01",
-                "14948032-JUN19-MVS-BUS-Weekday-01",
-            ],
-            "time": ["06:00:00", "09:00:00"],
+            "trip_properties": {
+                "trip_id": [
+                    "14940701-JUN19-MVS-BUS-Weekday-01",
+                    "14948032-JUN19-MVS-BUS-Weekday-01",
+                ]
+            },
+            "timespan": ["06:00:00", "09:00:00"],
         },
         "answer": [
             "14940701-JUN19-MVS-BUS-Weekday-01",
@@ -52,14 +58,14 @@ TEST_SELECTIONS = [
     },
     {
         "name": "5. route_id",
-        "service": {"route_id": "365-111"},
+        "service": {"trip_properties": {"route_id": "365-111"}},
         "answer": ["14947182-JUN19-MVS-BUS-Weekday-01"],
     },
     {
         "name": "6. route_id + time",
         "service": {
-            "route_id": "21-111",
-            "time": ["09:00", "15:00"],
+            "trip_properties": {"route_id": "21-111"},
+            "timespan": ["09:00", "15:00"],
         },
         "answer": [
             "14944012-JUN19-MVS-BUS-Weekday-01",
@@ -71,8 +77,8 @@ TEST_SELECTIONS = [
     {
         "name": "7. multiple route_id + time",
         "service": {
-            "route_id": ["21-111", "53-111"],
-            "time": ["09:00", "15:00"],
+            "trip_properties": {"route_id": ["21-111", "53-111"]},
+            "timespan": ["09:00", "15:00"],
         },
         "answer": [
             "14944012-JUN19-MVS-BUS-Weekday-01",
@@ -85,7 +91,7 @@ TEST_SELECTIONS = [
     },
     {
         "name": "8. route long name contains",
-        "service": {"route_long_name": "Express"},
+        "service": {"trip_properties": {"route_long_name": "Express"}},
         "answer": [
             "14940701-JUN19-MVS-BUS-Weekday-01",
             "14943414-JUN19-MVS-BUS-Weekday-01",
@@ -109,7 +115,7 @@ TEST_SELECTIONS = [
     },
     {
         "name": "9. multiple route long name",
-        "service": {"route_long_name": ["Express", "Ltd Stop"]},
+        "service": {"trip_properties": {"route_long_name": ["Express", "Ltd Stop"]}},
         "answer": [
             "14940701-JUN19-MVS-BUS-Weekday-01",
             "14943414-JUN19-MVS-BUS-Weekday-01",
@@ -183,7 +189,7 @@ def test_invalid_selection_key(request, stpaul_transit_net):
     with pytest.raises(TransitSelectionFormatError):
         # trip_ids rather than trip_id should fail
         stpaul_transit_net.get_selection(
-            {"trip_ids": ["14941433-JUN19-MVS-BUS-Weekday-01"]}
+            {"trip_properties": {"trip_ids": ["14941433-JUN19-MVS-BUS-Weekday-01"]}}
         )
 
     print("--Finished:", request.node.name)
@@ -195,21 +201,28 @@ def test_invalid_optional_selection_variable(request, stpaul_transit_net):
     with pytest.raises(TransitSelectionFormatError):
         # `wheelchair` rather than `wheelchair_accessible`
         stpaul_transit_net.get_selection(
-            {"trip_id": "14940701-JUN19-MVS-BUS-Weekday-01", "trips.wheelchair": 0}
+            {
+                "trip_properties": {
+                    "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
+                    "trips.wheelchair": 0,
+                }
+            }
         )
 
     # Correct trip variable
     sel = stpaul_transit_net.get_selection(
         {
-            "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
-            "trips.wheelchair_accessible": 1,
+            "trip_properties": {
+                "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
+                "trips.wheelchair_accessible": 1,
+            }
         }
     ).selected_trips
     assert set(sel) == set(["14940701-JUN19-MVS-BUS-Weekday-01"])
 
     # Correct route variable
     sel = stpaul_transit_net.get_selection(
-        {"route_long_name": "Express", "routes.agency_id": "2"}
+        {"trip_properties": {"route_long_name": "Express", "routes.agency_id": "2"}}
     ).selected_trips
     assert set(sel) == set(["14978409-JUN19-MVS-BUS-Weekday-01"])
 
@@ -219,7 +232,10 @@ def test_invalid_optional_selection_variable(request, stpaul_transit_net):
 TEST_NODE_SELECTIONS = [
     {
         "name": "Any of the listed nodes",
-        "service": {"nodes": ["75520", "66380", "57530"], "type": "any"},
+        "service": {
+            "nodes": {"model_node_id": ["75520", "66380", "57530"]},
+            "require": "any",
+        },
         "answer": [
             "14941148-JUN19-MVS-BUS-Weekday-01",
             "14941151-JUN19-MVS-BUS-Weekday-01",
@@ -233,7 +249,7 @@ TEST_NODE_SELECTIONS = [
     },
     {
         "name": "All of listed nodes",
-        "service": {"nodes": ["75520", "66380"], "type": "all"},
+        "service": {"nodes": ["75520", "66380"], "require": "all"},
         "answer": [
             "14941148-JUN19-MVS-BUS-Weekday-01",
             "14941151-JUN19-MVS-BUS-Weekday-01",

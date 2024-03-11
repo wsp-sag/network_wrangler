@@ -79,14 +79,14 @@ def test_create_ml_network_shape(request, small_net):
     # Set ML Properties
     _lanes_p = {
         "set": 3,
-        "timeofday": [{"time": ["6:00", "9:00"], "set": 2}],
+        "timeofday": [{"timespan": ["6:00", "9:00"], "set": 2}],
     }
 
     _ML_lanes_p = {
         "set": 0,
         "timeofday": [
             {
-                "time": ["6:00", "9:00"],
+                "timespan": ["6:00", "9:00"],
                 "set": 1,
             }
         ],
@@ -191,8 +191,12 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
     WranglerLogger.debug(f"Dummy Links:\n {dummy_links_df}")
 
     pcard_gp_link_ids = project_card.facility["links"]["model_link_id"]
-    pcard_access_points = project_card.property_changes["ML_access_point"]
-    pcard_egress_points = project_card.property_changes["ML_egress_point"]
+    pcard_access_points = project_card.roadway_managed_lanes["property_changes"][
+        "ML_access_point"
+    ]
+    pcard_egress_points = project_card.roadway_managed_lanes["property_changes"][
+        "ML_egress_point"
+    ]
 
     expected_ml_link_ids = [
         net.model_net._link_id_to_managed_lane_link_id(x) for x in pcard_gp_link_ids

@@ -265,15 +265,15 @@ def test_select_roadway_features_from_projectcard(request, stpaul_net, stpaul_ex
 
 
 variable_queries = [
-    ({"v": "lanes", "category": "sov", "time_period": ["12:00", "12:30"]}, 3),
-    ({"v": "lanes", "category": None, "time_period": ["12:00", "12:30"]}, 3),
-    ({"v": "lanes", "category": None, "time_period": ["7:00", "9:00"]}, 2),
-    ({"v": "ML_price", "category": "sov", "time_period": ["7:00", "9:00"]}, 1.5),
+    ({"v": "lanes", "category": "sov", "timespan": ["12:00", "12:30"]}, 3),
+    ({"v": "lanes", "category": None, "timespan": ["12:00", "12:30"]}, 3),
+    ({"v": "lanes", "category": None, "timespan": ["7:00", "9:00"]}, 2),
+    ({"v": "ML_price", "category": "sov", "timespan": ["7:00", "9:00"]}, 1.5),
     (
         {
             "v": "ML_price",
             "category": ["hov3", "hov2"],
-            "time_period": ["7:00", "9:00"],
+            "timespan": ["7:00", "9:00"],
         },
         1,
     ),
@@ -295,10 +295,10 @@ def test_query_roadway_property_by_time_group(
     project_card = read_card(project_card_path)
     net = net.apply(project_card)
 
-    v_series = net.get_property_by_time_period_and_group(
+    v_series = net.get_property_by_timespan_and_group(
         _query["v"],
         category=_query["category"],
-        time_period=_query["time_period"],
+        timespan=_query["timespan"],
     )
 
     _selected_links = net.get_selection(

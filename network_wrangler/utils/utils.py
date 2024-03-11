@@ -1,4 +1,5 @@
 from typing import Union, Tuple
+import hashlib
 
 import pandas as pd
 
@@ -77,7 +78,7 @@ def get_overlapping_range(ranges: list[Union[tuple[int], range]]) -> Union[None,
         return None
 
 
-def parse_time_spans_to_secs(times):
+def parse_timespans_to_secs(times):
     """
     parse time spans into tuples of seconds from midnight
     can also be used as an apply function for a pandas series
@@ -256,3 +257,14 @@ def generate_new_id(input_id: str, existing_ids: pd.Series, id_scalar: int) -> s
                 f"Cannot generate new id within max iters of {MAX_ITER}."
             )
             raise ValueError("Cannot create unique new id.")
+
+def dict_to_hexkey(d: dict) -> str:
+    """Converts a dictionary to a hexdigest of the sha1 hash of the dictionary.
+
+    Args:
+        d (dict): dictionary to convert to string
+
+    Returns:
+        str: hexdigest of the sha1 hash of dictionary
+    """
+    return hashlib.sha1(str(d).encode()).hexdigest()

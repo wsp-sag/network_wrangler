@@ -1,17 +1,18 @@
 project: I394E Parallel Lanes
 roadway_managed_lanes:
   facility:
-    model_link_id:
-      - 390975
-      - 391203
-      - 394205
-      - 394208
-      - 394214
+    links:
+      model_link_id:
+        - 390975
+        - 391203
+        - 394205
+        - 394208
+        - 394214
   property_changes:
     ML_lanes:
       set: 0
       timeofday:
-        - time: ['6:00', '9:00']
+        - timespan: ['6:00', '9:00']
           set: 1
     ML_access:
       set: 'all'

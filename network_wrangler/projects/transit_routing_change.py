@@ -238,9 +238,9 @@ def _replace_shapes_segment(
     all_shape_stop_times = pd.concat(
         [net.feed.shape_with_trip_stops(t) for t in trip_ids]
     )
-    shapes_with_stops = all_shape_stop_times[all_shape_stop_times['stop_id'].notna()]
+    shapes_with_stops = all_shape_stop_times[all_shape_stop_times["stop_id"].notna()]
     shapes_with_stops = shapes_with_stops.sort_values(by=["shape_pt_sequence"])
-    
+
     # if start_node == first stop, change start_node to first shape node
     first_stop_node_id = shapes_with_stops[net.feed.shapes_node_id].iloc[0]
     first_shape_node_id = existing_nodes.iat[0]
@@ -254,7 +254,7 @@ def _replace_shapes_segment(
     # if end_node == last stop, change end_node to last shape node
     last_stop_node_id = shapes_with_stops[net.feed.shapes_node_id].iloc[-1]
     last_shape_node_id = existing_nodes.iat[-1]
-    
+
     if last_stop_node_id == end_node & end_node != last_shape_node_id:
         WranglerLogger.debug(
             f"Defined segment end node ({end_node}) is last stop ({last_stop_node_id}). \
@@ -273,12 +273,16 @@ def _replace_shapes_segment(
     if len(set_routing) > 0 and set_routing[0] == start_node:
         replacement_start_idx += 1
         set_routing = set_routing[1:]
-        WranglerLogger.debug(f"Shape start overlaps with replacement. Set routing: {set_routing}")
+        WranglerLogger.debug(
+            f"Shape start overlaps with replacement. Set routing: {set_routing}"
+        )
 
     if len(set_routing) > 0 and set_routing[-1] == end_node:
         replacement_end_idx -= 1
         set_routing = set_routing[:-1]
-        WranglerLogger.debug(f"Shape end overlaps with replacement. Set routing: {set_routing}")
+        WranglerLogger.debug(
+            f"Shape end overlaps with replacement. Set routing: {set_routing}"
+        )
 
     WranglerLogger.debug(
         f"Replacement segment now node(idx): \
@@ -292,9 +296,9 @@ def _replace_shapes_segment(
     # Create new segment
     segment_shapes_df = _create_shapes(set_routing, shape_id, net)
 
-    #WranglerLogger.debug(f"\nBefore Shapes Segment:\n{before_segment[_disp_col]}")
-    #WranglerLogger.debug(f"\nReplm't Shapes Segment:\n{segment_shapes_df[_disp_col]}")
-    #WranglerLogger.debug(f"\nAfter Shapes Segment:\n{after_segment[_disp_col]}")
+    # WranglerLogger.debug(f"\nBefore Shapes Segment:\n{before_segment[_disp_col]}")
+    # WranglerLogger.debug(f"\nReplm't Shapes Segment:\n{segment_shapes_df[_disp_col]}")
+    # WranglerLogger.debug(f"\nAfter Shapes Segment:\n{after_segment[_disp_col]}")
 
     # Concatenate the shape dataframes
 
@@ -381,9 +385,9 @@ def _replace_stop_times_segment_for_trip(
     # Create new segment
     segment_stoptime_rows = _create_stop_times(set_stops_node_ids, trip_id, net)
 
-    #WranglerLogger.debug(f"Before Segment:\n{before_segment[_disp_col]}")
-    #WranglerLogger.debug(f"Segment:\n{segment_stoptime_rows[_disp_col]}")
-    #WranglerLogger.debug(f"After Segment:\n{after_segment[_disp_col]}")
+    # WranglerLogger.debug(f"Before Segment:\n{before_segment[_disp_col]}")
+    # WranglerLogger.debug(f"Segment:\n{segment_stoptime_rows[_disp_col]}")
+    # WranglerLogger.debug(f"After Segment:\n{after_segment[_disp_col]}")
 
     # Concatenate the dataframes
 
@@ -435,7 +439,9 @@ def _update_shapes_and_trips(
 
     # Don't need a new shape if its only the stops that change
     existing_pattern = feed.shape_node_pattern(shape_id)
-    no_routing_change = '|'.join(map(str, set_routing)) in '|'.join(map(str, existing_pattern))
+    no_routing_change = "|".join(map(str, set_routing)) in "|".join(
+        map(str, existing_pattern)
+    )
     if no_routing_change:
         WranglerLogger.debug("No routing change, returning shapes and trips as-is.")
         return feed.shapes, feed.trips
@@ -445,7 +451,7 @@ def _update_shapes_and_trips(
         feed.trips_with_shape_id(shape_id)["trip_id"].to_list()
     )
     selected_trips_using_shape_id = set(trip_ids) & set(all_trips_using_shape_id)
- 
+
     if selected_trips_using_shape_id != all_trips_using_shape_id:
         feed.shapes, feed.trips, shape_id = _add_new_shape_copy(
             shape_id,
@@ -569,7 +575,6 @@ def apply_transit_routing_change(
 
     # update each shape that is used by selected trips to use new routing
     for shape_id in shape_ids:
-
         net.feed.shapes, net.feed.trips = _update_shapes_and_trips(
             net,
             shape_id,
@@ -599,7 +604,9 @@ def apply_transit_routing_change(
         "departure_time",
         "arrival_time",
     ]
-    _ex_stoptimes = net.feed.stop_times.loc[net.feed.stop_times.trip_id == trip_ids[0],_show_col]
-    #WranglerLogger.debug(f"ST for trip: {_ex_stoptimes}")
+    _ex_stoptimes = net.feed.stop_times.loc[
+        net.feed.stop_times.trip_id == trip_ids[0], _show_col
+    ]
+    # WranglerLogger.debug(f"ST for trip: {_ex_stoptimes}")
 
     return net

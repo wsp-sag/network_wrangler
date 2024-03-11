@@ -1,8 +1,10 @@
 from ..logger import WranglerLogger
 from ..roadway.selection import SelectionFormatError
 
+
 class RoadwayPropertyChangeError(Exception):
     pass
+
 
 def apply_roadway_property_change(
     roadway_net: "RoadwayNetwork",
@@ -55,6 +57,8 @@ def apply_roadway_property_change(
             roadway_net.update_network_geometry_from_node_xy(selection.selected_nodes)
 
     else:
-        raise RoadwayPropertyChangeError("geometry_type must be either 'links' or 'nodes'")
+        raise RoadwayPropertyChangeError(
+            "geometry_type must be either 'links' or 'nodes'"
+        )
 
     return roadway_net

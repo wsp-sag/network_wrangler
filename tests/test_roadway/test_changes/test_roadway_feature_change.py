@@ -209,7 +209,7 @@ def test_add_default_value(request, stpaul_net, stpaul_ex_dir):
     _project_card_dict = {
         "project": "6th Street Ad Hoc Fields",
         "roadway_property_change": {
-            "facility": {"modes": "any", "links": {"all": True}},
+            "facility": {"links": {"all": "True", "modes": ["any"]}},
             "property_changes": _adhoc_props,
         },
     }
@@ -248,7 +248,9 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     project_card = read_card(project_card_path)
 
     selected_link_indices = net.get_selection(project_card.facility).selected_links
-    attributes_to_update = list(project_card.roadway_property_change['property_changes'].keys())
+    attributes_to_update = list(
+        project_card.roadway_property_change["property_changes"].keys()
+    )
 
     net = net.apply(project_card)
 
@@ -301,9 +303,9 @@ def test_change_node_xy(request, small_net):
     net = copy.deepcopy(small_net)
 
     _test_link = net.links_df.iloc[0]
-    _test_link_idx = _test_link[net.links_df.params.primary_key]
+    _test_link_idx = int(_test_link[net.links_df.params.primary_key])
     _test_node = net.nodes_df.loc[[_test_link[net.links_df.params.from_node]]].iloc[0]
-    _test_node_idx = _test_node[[net.nodes_df.params.primary_key]].iloc[0]
+    _test_node_idx = int(_test_node[[net.nodes_df.params.primary_key]].iloc[0])
 
     WranglerLogger.debug(f"Node Index: {_test_node_idx}")
     WranglerLogger.debug(f"Link Index: {_test_link_idx}")
@@ -314,6 +316,7 @@ def test_change_node_xy(request, small_net):
     facility = {
         "nodes": {"model_node_id": [_test_node_idx]},
     }
+    WranglerLogger.debug(f"facility: {facility}")
     _expected_X = -1000
     _expected_Y = 1000000
     properties = {

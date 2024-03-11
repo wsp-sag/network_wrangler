@@ -1,4 +1,4 @@
-project: I394 Parallel Lanes
+project: I394 Parallel Lanes Restricted Access
 tags: ['managed lanes']
 roadway_managed_lanes:
   facility:
@@ -12,16 +12,16 @@ roadway_managed_lanes:
     ML_lanes:
       set: 0
       timeofday:
-      - time: ['6:00', '9:00']
+      - timespan: ['6:00', '9:00']
         set: 1
-      - time: ['15:00', '18:00']
+      - timespan: ['15:00', '18:00']
         set: 1
     lanes:
       change: 0
       timeofday:
-      - time: ['6:00', '9:00']
+      - timespan: ['6:00', '9:00']
         change: -1
-      - time: ['15:00', '18:00']
+      - timespan: ['15:00', '18:00']
         change: -1
     segment_id:
       set: 5

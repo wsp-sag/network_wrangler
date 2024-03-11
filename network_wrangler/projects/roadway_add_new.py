@@ -7,8 +7,10 @@ from ..roadway.nodes import nodes_data_to_nodes_df
 from ..roadway.links import links_data_to_links_df
 from ..logger import WranglerLogger
 
+
 class NewRoadwayError(Exception):
     pass
+
 
 def apply_new_roadway(
     roadway_net: "RoadwayNetwork",
@@ -21,14 +23,16 @@ def apply_new_roadway(
 
     args:
         roadway_net: input RoadwayNetwork to apply change to
-        roadway_addition: 
+        roadway_addition:
 
     returns: updated network with new links and nodes and associated geometries
     """
-    add_links,add_nodes = roadway_addition.get("links",[]),roadway_addition.get("nodes",[])
+    add_links, add_nodes = roadway_addition.get("links", []), roadway_addition.get(
+        "nodes", []
+    )
     if not add_links and not add_nodes:
         raise NewRoadwayError("No links or nodes given to add.")
-    
+
     WranglerLogger.debug(
         f"Adding New Roadway Features:\n-Links:\n{add_links}\n-Nodes:\n{add_nodes}"
     )

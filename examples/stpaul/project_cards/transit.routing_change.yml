@@ -3,9 +3,10 @@ tags:
    - existing_plus_committed
 transit_routing_change:
   service:
-    route_id: 
-      - 294-111
-    direction_id: 1
+    trip_properties:
+      route_id: 
+        - 294-111
+      direction_id: 1
   routing:
     existing:
       - -37582

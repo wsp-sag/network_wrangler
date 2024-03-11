@@ -10,10 +10,6 @@ roadway_property_change:
     links:
       osm_link_id:
         - '223371529' # 6th St E
-    from:
-      osm_node_id: '187854529' # Jackson St
-    to:
-      osm_node_id: '187899923' # Robert St N
   property_changes:
     lanes:  #changes number of lanes 3 to 2 (reduction of 1)
       existing: 3

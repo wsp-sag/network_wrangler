@@ -4,7 +4,7 @@ import copy
 import hashlib
 
 from ..logger import WranglerLogger
-from ..utils import coerce_dict_to_df_types
+from ..utils import coerce_dict_to_df_types, findkeys
 from .segment import Segment
 
 
@@ -79,8 +79,10 @@ class RoadwaySelection:
         )
         self.selection_dict = selection_dict
         self.ignore_missing = ignore_missing
-        if "modes" in selection_dict:
-            self.modes = selection_dict["modes"]
+
+        _modes = list(findkeys(selection_dict, "modes"))
+        if _modes:
+            self.modes = _modes[0]
         else:
             self.modes = DEFAULT_SEARCH_MODES
 
@@ -181,7 +183,7 @@ class RoadwaySelection:
         return _typed_node_prop_dict
 
     def calc_link_selection_dict(self, selection_dict) -> list:
-        """Dictionary of link selection properties are selected by.
+        """Dictionary of link selection properties.
 
         Also coerces the values to the matching type of the network links.
         """
@@ -191,7 +193,7 @@ class RoadwaySelection:
             for k, v in selection_dict.get(i, {}).items()
         }
         _typed_link_prop_dict = coerce_dict_to_df_types(
-            _link_prop_dict, self.net.links_df, skip_keys=["all"]
+            _link_prop_dict, self.net.links_df, skip_keys=["all", "modes"]
         )
 
         return _typed_link_prop_dict

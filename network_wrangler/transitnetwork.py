@@ -14,6 +14,7 @@ from projectcard import ProjectCard, SubProject
 
 from .logger import WranglerLogger
 from .utils import fk_in_pk
+from .utils import dict_to_hexkey
 from .transit import Feed, TransitSelection
 from .projects import (
     apply_transit_routing_change,
@@ -408,7 +409,7 @@ class TransitNetwork(object):
         Returns:
             Selection: Selection object
         """
-        key = TransitSelection._assign_selection_key(selection_dict)
+        key = dict_to_hexkey(selection_dict)
 
         if (key not in self._selections) or overwrite:
             WranglerLogger.debug(f"Performing selection from key: {key}")

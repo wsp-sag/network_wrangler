@@ -1,7 +1,9 @@
 from ..logger import WranglerLogger
 
+
 class RoadwayParallelManagedLanesError(Exception):
     pass
+
 
 def apply_parallel_managed_lanes(
     roadway_net: "RoadwayNetwork",

@@ -23,7 +23,7 @@ from .utils import create_unique_shape_id
 from ..utils import (
     line_string_from_location_references,
     coerce_val_to_series_type,
-    parse_time_spans_to_secs,
+    parse_timespans_to_secs,
     location_reference_from_nodes,
 )
 
@@ -409,15 +409,15 @@ class SetLinkPropAccessor:
                 group:
                     - category: ['sov']
                     timeofday:
-                        - time: ['6:00', '9:00']
+                        - timespan:  ['6:00', '9:00']
                         set: 1.5
-                        - time: ['16:00', '19:00']
+                        - timespan: ['16:00', '19:00']
                         set: 2.5
                     - category: ['hov2']
                     timeofday:
-                        - time: ['6:00', '9:00']
+                        - timespan: ['6:00', '9:00']
                         set: 1.0
-                        - time: ['16:00', '19:00']
+                        - timespan: ['16:00', '19:00']
                         set: 2.0
             ```
 
@@ -426,8 +426,8 @@ class SetLinkPropAccessor:
             ```yaml
             default: 3
             timeofday: [
-                {category: ...., time: ...,value...},
-                {category: ...., time: ...,value...},
+                {category: ...., timespan: ...,value...},
+                {category: ...., timespan: ...,value...},
             ]
             ```
 
@@ -445,7 +445,7 @@ class SetLinkPropAccessor:
                     prop_value["timeofday"].append(
                         {
                             "category": category,
-                            "time": parse_time_spans_to_secs(tod["time"]),
+                            "timespan": parse_timespans_to_secs(tod["timespan"]),
                             "value": tod["set"],
                         }
                     )
@@ -457,7 +457,7 @@ class SetLinkPropAccessor:
                     prop_value["timeofday"].append(
                         {
                             "category": category,
-                            "time": parse_time_spans_to_secs(tod["time"]),
+                            "timespan": parse_timespans_to_secs(tod["timespan"]),
                             "value": existing_val + tod["change"],
                         }
                     )
@@ -476,9 +476,9 @@ class SetLinkPropAccessor:
             lanes:
                 set: 3
                 timeofday:
-                    - time: ['6:00', '9:00']
+                    - timespan: ['6:00', '9:00']
                     set: 2
-                    - time: ['16:00', '19:00']
+                    - timespan: ['16:00', '19:00']
             ```
 
         Returns: dictionary in following format:
@@ -486,8 +486,8 @@ class SetLinkPropAccessor:
             ```yaml
             default: 3
             timeofday: [
-                {time: ...,value...},
-                {time: ...,value...},
+                {timespan: ...,value...},
+                {timespan: ...,value...},
             ]
             ```
 
@@ -496,12 +496,12 @@ class SetLinkPropAccessor:
         prop_value.update(self._updated_default(existing_val, prop_dict))
 
         prop_value["timeofday"] = []
-
+        WranglerLogger.debug(f"prop_dict['timeofday']: {prop_dict['timeofday']}")
         for tod in prop_dict["timeofday"]:
             if "set" in tod:
                 prop_value["timeofday"].append(
                     {
-                        "time": parse_time_spans_to_secs(tod["time"]),
+                        "timespan": parse_timespans_to_secs(tod["timespan"]),
                         "value": tod["set"],
                     }
                 )
@@ -512,7 +512,7 @@ class SetLinkPropAccessor:
                     )
                 prop_value["timeofday"].append(
                     {
-                        "time": parse_time_spans_to_secs(tod["time"]),
+                        "timespan": parse_timespans_to_secs(tod["timespan"]),
                         "value": existing_val + tod["change"],
                     }
                 )

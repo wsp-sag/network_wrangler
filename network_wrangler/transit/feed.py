@@ -106,7 +106,8 @@ class Feed:
         WranglerLogger.info(f"Creating transit feed from: {feed_path}")
 
         self.feed_path = feed_path
-        self._ptg_feed = ptg.load_feed(feed_path)
+        # Partidge expects a str not a Path object.
+        self._ptg_feed = ptg.load_feed(str(feed_path))
         self._config = self._config_from_files(self._ptg_feed)
         self._net = None
 
@@ -219,7 +220,7 @@ class Feed:
             table: table name. e.g. frequencies, stops, etc.
         """
         table = table.replace(".txt", "")
-        df = getattr(self,table)
+        df = getattr(self, table)
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"Couldn't find valid table: {table}")
 
@@ -231,7 +232,6 @@ class Feed:
         if not self.net:
             return self._stop_times
         if self.stops_node_id in self._stop_times.columns:
-            
             if self._stop_times[self.stops_node_id].isna().any():
                 WranglerLogger.debug(f"Removing stoptimes nodes col.")
                 self._stop_times = self._stop_times.drop(columns=[self.stops_node_id])
@@ -513,14 +513,13 @@ class Feed:
 
     def shape_node_pattern(self, shape_id: str) -> list[int]:
         """Returns node pattern of a shape.
-         
+
         args:
             shape_id: string identifier of the shape.
         """
-        shape_df = self.shapes.loc[self.shapes["shape_id"] == shape_id ]
+        shape_df = self.shapes.loc[self.shapes["shape_id"] == shape_id]
         shape_df = shape_df.sort_values(by=["shape_pt_sequence"])
         return shape_df[self.shapes_node_id].to_list()
-
 
     def shape_with_trip_stops(
         self, trip_id: str, pickup_type: str = "either"
@@ -539,7 +538,9 @@ class Feed:
         """
 
         shapes = self.trip_shape(trip_id)
-        trip_stop_times = self.trip_stop_times_for_pickup_type(trip_id, pickup_type=pickup_type)
+        trip_stop_times = self.trip_stop_times_for_pickup_type(
+            trip_id, pickup_type=pickup_type
+        )
 
         stop_times_cols = [
             "stop_id",
@@ -575,7 +576,7 @@ class Feed:
             f"Expecting list of strings or string for stop_id; got {type(stop_id)}"
         )
 
-    @check_output(StopTimesSchema,inplace = True)
+    @check_output(StopTimesSchema, inplace=True)
     def trip_stop_times_for_pickup_type(
         self, trip_id: str, pickup_type: str = "either"
     ) -> list[str]:
@@ -599,7 +600,7 @@ class Feed:
 
         """
         trip_stop_pattern = self.trip_stop_times(trip_id)
-        
+
         pickup_type_selection = {
             "either": (trip_stop_pattern.pickup_type != 1)
             | (trip_stop_pattern.drop_off_type != 1),

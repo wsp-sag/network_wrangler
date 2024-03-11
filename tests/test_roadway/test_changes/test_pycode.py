@@ -27,7 +27,7 @@ def test_read_dot_wrangler_roadway(request, stpaul_ex_dir):
 
 def test_apply_pycode_roadway(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    
+
     net = copy.deepcopy(small_net)
     _pycode = (
         "roadway_net.links_df.loc[roadway_net.links_df['lanes'] == 5, 'lanes'] = 12"
@@ -57,7 +57,7 @@ def test_apply_pycode_roadway(request, small_net):
 def test_apply_bad_pycode_roadway(request, small_net):
     "Make sure bad pycode syntax will raise an error."
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    
+
     net = copy.deepcopy(small_net)
     _pycode = (
         "roadway_net.links_df.loc[[roadway_net.links_df['lanes'] == 5, 'lanes'] = 12"

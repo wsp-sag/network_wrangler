@@ -178,7 +178,6 @@ def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_base_scenario):
 
     card_files = [
         "road.prop_change.multiple.yml",
-        "multiple_changes.yml",
         "road.managed_lane.simple.yml",
     ]
 

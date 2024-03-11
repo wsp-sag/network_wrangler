@@ -1,5 +1,5 @@
 from .utils import make_slug
-from .utils import parse_time_spans_to_secs
+from .utils import parse_timespans_to_secs
 from .utils import topological_sort
 from .utils import delete_keys_from_dict
 from .utils import get_overlapping_range
@@ -8,6 +8,7 @@ from .utils import coerce_val_to_series_type
 from .utils import findkeys
 from .utils import fk_in_pk
 from .utils import generate_new_id
+from .utils import dict_to_hexkey
 from .geo import offset_location_reference
 from .geo import haversine_distance
 from .geo import location_reference_from_nodes
@@ -30,7 +31,7 @@ __all__ = [
     "coerce_dict_to_df_types",
     "get_overlapping_range",
     "make_slug",
-    "parse_time_spans_to_secs",
+    "parse_timespans_to_secs",
     "offset_location_reference",
     "haversine_distance",
     "location_reference_from_nodes",
@@ -44,4 +45,5 @@ __all__ = [
     "findkeys",
     "fk_in_pk",
     "generate_new_id",
+    "dict_to_hexkey",
 ]

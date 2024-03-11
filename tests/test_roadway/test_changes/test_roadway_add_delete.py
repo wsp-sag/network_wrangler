@@ -114,27 +114,6 @@ def test_multiple_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex
     assert net_nodes == expected_net_nodes
 
 
-@pytest.mark.xfail(strict=True)
-def test_add_roadway_links(request, stpaul_net, stpaul_ex_dir):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    net = copy.deepcopy(stpaul_net)
-
-    print("Reading project card ...")
-    project_card_name = "x.road.add.fail.yml"
-
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
-    project_card = read_card(project_card_path)
-
-    project_card_dictionary = project_card.__dict__
-
-    net.add_new_roadway_feature_change(
-        project_card_dictionary.get("links", []),
-        project_card_dictionary.get("nodes", []),
-    )
-
-    print("--Finished:", request.node.name)
-
-
 @pytest.mark.failing
 def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")

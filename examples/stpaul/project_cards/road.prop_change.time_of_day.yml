@@ -5,46 +5,43 @@ roadway_property_change:
       model_link_id:
         - 224
   property_changes:
-   lanes:
-    timeofday:
-    - time:
-      - '9:00'
-      - '16:00'
-      existing: 1
-      set: 0
-    - time:
-      - '19:00'
-      - '6:00'
-      existing: 1
-      set: 0
-    - time:
-      - '16:00'
-      - '19:00'
-      existing: 1
-      set: 0
-    - time:
-      - '6:00'
-      - '9:00'
-      existing: 1
-      set: 2
-  access:
-    timeofday:
-    - time:
-      - '16:00'
-      - '19:00'
+    lanes:
+      set: 1
+      timeofday:
+        - timespan:
+          - '9:00'
+          - '16:00'
+          set: 0
+        - timespan:
+          - '19:00'
+          - '6:00'
+          set: 0
+        - timespan:
+          - '16:00'
+          - '19:00'
+          set: 0
+        - timespan:
+          - '6:00'
+          - '9:00'
+          set: 2
+    access:
       set: 'no'
-    - time:
-      - '6:00'
-      - '9:00'
-      set: 'no'
-    - time:
-      - '19:00'
-      - '6:00'
-      set: 'no'
-    - time:
-      - '9:00'
-      - '16:00'
-      set: 'no'
-  roadway:
-    existing: residential
-    set: motorway
+      timeofday:
+        - timespan:
+          - '16:00'
+          - '19:00'
+          set: 'no'
+        - timespan:
+          - '6:00'
+          - '9:00'
+          set: 'no'
+        - timespan:
+          - '19:00'
+          - '6:00'
+          set: 'no'
+        - timespan:
+          - '9:00'
+          - '16:00'
+          set: 'no'
+    roadway:
+      set: motorway

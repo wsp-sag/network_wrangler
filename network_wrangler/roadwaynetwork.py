@@ -31,7 +31,7 @@ from .logger import WranglerLogger
 from .utils import (
     location_reference_from_nodes,
     line_string_from_location_references,
-    parse_time_spans_to_secs,
+    parse_timespans_to_secs,
     point_from_xy,
     update_points_in_linestring,
     get_point_geometry_from_linestring,
@@ -617,19 +617,20 @@ class RoadwayNetwork(object):
 
         link_ids = list(set(self.links_df.index).intersection(link_ids))
         WranglerLogger.debug(f"Dropping links: {link_ids}")
-        
+
         if clean_nodes:
             _links_to_delete = self.links_df.loc[self.links_df.index.isin(link_ids)]
-            _nodes_to_delete = self.nodes_in_links(_links_to_delete).index.values.tolist()
+            _nodes_to_delete = self.nodes_in_links(
+                _links_to_delete
+            ).index.values.tolist()
             WranglerLogger.debug(
                 f"Dropping nodes associated with dropped links: \n\
                 {_nodes_to_delete}"
             )
-            self.delete_nodes(node_ids = _nodes_to_delete)
-        
+            self.delete_nodes(node_ids=_nodes_to_delete)
+
         self.links_df = self.links_df.drop(selection.selected_links)
 
-        
         if clean_shapes:
             self.delete_shapes(all_unused=True)
 
@@ -643,17 +644,17 @@ class RoadwayNetwork(object):
         """
         Deletes nodes from roadway network.
 
-        Gets a list of nodes to delete by either selecting all unused or a combination of 
-        the node_ids list or a selection dictionary. 
+        Gets a list of nodes to delete by either selecting all unused or a combination of
+        the node_ids list or a selection dictionary.
         Makes sure any nodes that are used by links aren't deleted.
-        
+
         args:
             selection_dict:
             node_ids: list of model_node_ids
             all_unused: If True, will select all unused nodes in network. Defaults to False.
             ignore_missing: If False, will raise  NodeDeletionError if nodes specified for deletion
                 aren't foudn in the network. Otherwise it will just be a warning. Defaults to True.
-        
+
         raises:
             NodeDeletionError: If not ignore_missing and selected nodes to delete aren't in network.
         """
@@ -688,7 +689,7 @@ class RoadwayNetwork(object):
         if all_unused:
             shape_ids += self._shapes_without_links()
             shape_ids = list(set(shape_ids))
-        
+
         WranglerLogger.debug(f"{len(shape_ids)} shapes to drop\n{shape_ids}")
         self.shapes_df = self.shapes_df.drop(shape_ids)
 
@@ -922,17 +923,17 @@ class RoadwayNetwork(object):
         unused_node_ids = set(self.nodes_df.index) - _used_node_ids
         return list(unused_node_ids)
 
-    def get_property_by_time_period_and_group(
-        self, property, time_period=None, category=None
+    def get_property_by_timespan_and_group(
+        self, property, timespan=None, category=None
     ):
         """
-        Return a series for the properties with a specific group or time period.
+        Return a series for the properties with a specific group or timespan
 
         args
         ------
         property: str
           the variable that you want from network
-        time_period: list(str)
+        timespan: list(str)
           the time period that you are querying for
           i.e. ['16:00', '19:00']
         category: str or list(str)(Optional)
@@ -951,7 +952,7 @@ class RoadwayNetwork(object):
 
         def _get_property(
             v,
-            time_spans=None,
+            timespans=None,
             category=None,
             return_partial_match: bool = False,
             partial_match_minutes: int = 60,
@@ -962,7 +963,7 @@ class RoadwayNetwork(object):
 
             """
 
-            if category and not time_spans:
+            if category and not timespans:
                 WranglerLogger.error(
                     "\nShouldn't have a category group without time spans"
                 )
@@ -979,7 +980,7 @@ class RoadwayNetwork(object):
             search_cats = [c.lower() for c in category]
 
             # if no time or group specified, but it is a complex link situation
-            if not time_spans:
+            if not timespans:
                 if "default" in v.keys():
                     return v["default"]
                 else:
@@ -992,9 +993,9 @@ class RoadwayNetwork(object):
                 categories = []
                 for tg in v["timeofday"]:
                     if (
-                        (time_spans[0] >= tg["time"][0])
-                        and (time_spans[1] <= tg["time"][1])
-                        and (time_spans[0] <= time_spans[1])
+                        (timespans[0] >= tg["timespan"][0])
+                        and (timespans[1] <= tg["timespan"][1])
+                        and (timespans[0] <= timespans[1])
                     ):
                         if tg.get("category"):
                             categories += tg["category"]
@@ -1003,19 +1004,19 @@ class RoadwayNetwork(object):
                                 if c in tg["category"]:
                                     # print("Var:", v)
                                     # print(
-                                    #    "RETURNING:", time_spans, category, tg["value"]
+                                    #    "RETURNING:", timespans, category, tg["value"]
                                     # )
                                     return tg["value"]
                         else:
                             # print("Var:", v)
-                            # print("RETURNING:", time_spans, category, tg["value"])
+                            # print("RETURNING:", timespans, category, tg["value"])
                             return tg["value"]
 
                     if (
-                        (time_spans[0] >= tg["time"][0])
-                        and (time_spans[1] <= tg["time"][1])
-                        and (time_spans[0] > time_spans[1])
-                        and (tg["time"][0] > tg["time"][1])
+                        (timespans[0] >= tg["timespan"][0])
+                        and (timespans[1] <= tg["timespan"][1])
+                        and (timespans[0] > timespans[1])
+                        and (tg["timespan"][0] > tg["timespan"][1])
                     ):
                         if tg.get("category"):
                             categories += tg["category"]
@@ -1024,12 +1025,12 @@ class RoadwayNetwork(object):
                                 if c in tg["category"]:
                                     # print("Var:", v)
                                     # print(
-                                    #    "RETURNING:", time_spans, category, tg["value"]
+                                    #    "RETURNING:", timespans, category, tg["value"]
                                     # )
                                     return tg["value"]
                         else:
                             # print("Var:", v)
-                            # print("RETURNING:", time_spans, category, tg["value"])
+                            # print("RETURNING:", timespans, category, tg["value"])
                             return tg["value"]
 
                     # if there isn't a fully matched time period, see if there is an overlapping
@@ -1037,22 +1038,22 @@ class RoadwayNetwork(object):
                     # TODO return the time period with the largest overlap
 
                     if (
-                        (time_spans[0] >= tg["time"][0])
-                        and (time_spans[0] <= tg["time"][1])
+                        (timespans[0] >= tg["timespan"][0])
+                        and (timespans[0] <= tg["timespan"][1])
                     ) or (
-                        (time_spans[1] >= tg["time"][0])
-                        and (time_spans[1] <= tg["time"][1])
+                        (timespans[1] >= tg["timespan"][0])
+                        and (timespans[1] <= tg["timespan"][1])
                     ):
                         overlap_minutes = max(
                             0,
-                            min(tg["time"][1], time_spans[1])
-                            - max(time_spans[0], tg["time"][0]),
+                            min(tg["timespan"][1], timespans[1])
+                            - max(timespans[0], tg["timespan"][0]),
                         )
                         # print("OLM",overlap_minutes)
                         if not return_partial_match and overlap_minutes > 0:
                             WranglerLogger.debug(
-                                f"Couldn't find time period consistent with {time_spans}, but \
-                                    found a partial match: {tg['time']}. Consider allowing \
+                                f"Couldn't find time period consistent with {timespans}, but \
+                                    found a partial match: {tg['timespan']}. Consider allowing \
                                     partial matches using 'return_partial_match' keyword or \
                                     updating query."
                             )
@@ -1061,14 +1062,14 @@ class RoadwayNetwork(object):
                             and overlap_minutes > 0
                         ):
                             WranglerLogger.debug(
-                                f"Time period: {time_spans} overlapped less than the minimum \
+                                f"Time period: {timespans} overlapped less than the minimum \
                                     number of minutes ({overlap_minutes}<{partial_match_minutes})\
                                     to be considered a match with time period in network:\
                                     {tg['time']}."
                             )
                         elif overlap_minutes > 0:
                             WranglerLogger.debug(
-                                f"Returning a partial time period match. Time period: {time_spans}\
+                                f"Returning a partial time period match. Time period: {timespans}\
                                 overlapped the minimum number of minutes ({overlap_minutes}>=\
                                 {partial_match_minutes}) to be considered a match with time period\
                                  in network: {tg['time']}."
@@ -1081,26 +1082,26 @@ class RoadwayNetwork(object):
                                         # print("Var:", v)
                                         # print(
                                         #    "RETURNING:",
-                                        #    time_spans,
+                                        #    timespans,
                                         #    category,
                                         #    tg["value"],
                                         # )
                                         return tg["value"]
                             else:
                                 # print("Var:", v)
-                                # print("RETURNING:", time_spans, category, tg["value"])
+                                # print("RETURNING:", timespans, category, tg["value"])
                                 return tg["value"]
 
                 """
                 WranglerLogger.debug(
                     "\nCouldn't find time period for {}, returning default".format(
-                        str(time_spans)
+                        str(timespans)
                     )
                 )
                 """
                 if "default" in v.keys():
                     # print("Var:", v)
-                    # print("RETURNING:", time_spans, v["default"])
+                    # print("RETURNING:", timespans, v["default"])
                     return v["default"]
                 else:
                     # print("Var:", v)
@@ -1115,10 +1116,10 @@ class RoadwayNetwork(object):
                         )
                     )
 
-        time_spans = parse_time_spans_to_secs(time_period)
+        timespans = parse_timespans_to_secs(timespan)
 
         return self.links_df[property].apply(
-            _get_property, time_spans=time_spans, category=category
+            _get_property, timespans=timespans, category=category
         )
 
     def _nodes_from_link(

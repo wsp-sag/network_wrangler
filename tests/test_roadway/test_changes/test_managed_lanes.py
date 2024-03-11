@@ -5,29 +5,29 @@ import pytest
 from projectcard import read_card
 
 from network_wrangler import WranglerLogger
-from network_wrangler.utils import parse_time_spans_to_secs
+from network_wrangler.utils import parse_timespans_to_secs
 
 
 """
 Usage:  `pytest tests/test_roadway/test_changes/test_managed_lanes.py`
 """
 
-_am_period = parse_time_spans_to_secs(["6:00", "9:00"])
-_pm_period = parse_time_spans_to_secs(["16:00", "19:00"])
+_am_period = parse_timespans_to_secs(["6:00", "9:00"])
+_pm_period = parse_timespans_to_secs(["16:00", "19:00"])
 
 SIMPLE_MANAGED_LANE_PROPERTIES = {
     "lanes": {
         "set": 3,
         "timeofday": [
-            {"time": ["6:00", "9:00"], "set": 2},
-            {"time": ["16:00", "19:00"], "set": 2},
+            {"timespan": ["6:00", "9:00"], "set": 2},
+            {"timespan": ["16:00", "19:00"], "set": 2},
         ],
     },
     "ML_lanes": {
         "set": 0,
         "timeofday": [
-            {"time": ["6:00", "9:00"], "set": 1},
-            {"time": ["16:00", "19:00"], "set": 1},
+            {"timespan": ["6:00", "9:00"], "set": 1},
+            {"timespan": ["16:00", "19:00"], "set": 1},
         ],
     },
     "ML_access": {"set": "all"},
@@ -38,15 +38,15 @@ SIMPLE_MANAGED_LANE_PROPERTIES = {
             {
                 "category": "sov",
                 "timeofday": [
-                    {"time": ["6:00", "9:00"], "set": 1.5},
-                    {"time": ["16:00", "19:00"], "set": 2.5},
+                    {"timespan": ["6:00", "9:00"], "set": 1.5},
+                    {"timespan": ["16:00", "19:00"], "set": 2.5},
                 ],
             },
             {
                 "category": "hov2",
                 "timeofday": [
-                    {"time": ["6:00", "9:00"], "set": 1},
-                    {"time": ["16:00", "19:00"], "set": 2},
+                    {"timespan": ["6:00", "9:00"], "set": 1},
+                    {"timespan": ["16:00", "19:00"], "set": 2},
                 ],
             },
         ],
@@ -77,15 +77,15 @@ def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
         "lanes": {
             "default": 3,
             "timeofday": [
-                {"time": _am_period, "value": 2},
-                {"time": _pm_period, "value": 2},
+                {"timespan": _am_period, "value": 2},
+                {"timespan": _pm_period, "value": 2},
             ],
         },
         "ML_lanes": {
             "default": 0,
             "timeofday": [
-                {"time": _am_period, "value": 1},
-                {"time": _pm_period, "value": 1},
+                {"timespan": _am_period, "value": 1},
+                {"timespan": _pm_period, "value": 1},
             ],
         },
         "ML_access": "all",
@@ -93,10 +93,10 @@ def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
         "ML_price": {
             "default": 0,
             "timeofday": [
-                {"category": "sov", "time": _am_period, "value": 1.5},
-                {"category": "sov", "time": _pm_period, "value": 2.5},
-                {"category": "hov2", "time": _am_period, "value": 1},
-                {"category": "hov2", "time": _pm_period, "value": 2},
+                {"category": "sov", "timespan": _am_period, "value": 1.5},
+                {"category": "sov", "timespan": _pm_period, "value": 2.5},
+                {"category": "hov2", "timespan": _am_period, "value": 1},
+                {"category": "hov2", "timespan": _pm_period, "value": 2},
             ],
         },
     }
@@ -144,21 +144,22 @@ def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info("      start: select_roadway_features")
     _selected_link_idx = net.get_selection(project_card.facility).selected_links
 
-    attributes_to_update = list(project_card.roadway_managed_lanes['property_changes'].keys())
+    attributes_to_update = list(
+        project_card.roadway_managed_lanes["property_changes"].keys()
+    )
 
     _orig_links = net.links_df.loc[
         _selected_link_idx, net.links_df.columns.intersection(attributes_to_update)
     ].copy()
 
     WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
-    WranglerLogger.info("      start: apply_managed_lane_feature_change")
     net = net.apply(project_card)
 
     _rev_links = net.links_df.loc[
         _selected_link_idx, list(_expected_property_values.keys())
     ]
     WranglerLogger.debug(f"_rev_links:\n{_rev_links.iloc[0]}")
-    WranglerLogger.info("      start: eval expected")
+
     for p, _expected_value in _expected_property_values.items():
         WranglerLogger.debug(f"Expected_value of {p}:\n{_expected_value}")
         WranglerLogger.debug(f"Actual Values of {p}:\n{_rev_links[p].iloc[0]}")

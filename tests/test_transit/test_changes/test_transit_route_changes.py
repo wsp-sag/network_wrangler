@@ -146,40 +146,41 @@ TEST_ROUTING_CHANGES = [
         ],
     },
     {
-     "name": "Change Middle",
-     "service": {"shape_id":"700004"},
-     "routing_change": {
-        "existing":[76167,57484],
-        "set":[76167,46665,150855,57484],
-     },
-     "expected_routing": [
-        41990,
-        -62145,
-        39430,
-        -68608,
-        76167,
-        46665,
-        150855,
-        57484,
-        -126324,
-        -57483,
-        45985,
-        98429,
-        -4764,
-        -4785,
-        -4779,
-        -41489,
-        41487,
-        -45957,
-        55555,
-        62186,
-        61203,
-        62188,
-        59015,
-        -59014,
-        59013,
-        -59012,]
-     }
+        "name": "Change Middle",
+        "service": {"shape_id": "700004"},
+        "routing_change": {
+            "existing": [76167, 57484],
+            "set": [76167, 46665, 150855, 57484],
+        },
+        "expected_routing": [
+            41990,
+            -62145,
+            39430,
+            -68608,
+            76167,
+            46665,
+            150855,
+            57484,
+            -126324,
+            -57483,
+            45985,
+            98429,
+            -4764,
+            -4785,
+            -4779,
+            -41489,
+            41487,
+            -45957,
+            55555,
+            62186,
+            61203,
+            62188,
+            59015,
+            -59014,
+            59013,
+            -59012,
+        ],
+    },
 ]
 
 TEST_STOP_CHANGES = [
@@ -244,8 +245,9 @@ TEST_STOP_CHANGES = [
     },
 ]
 
+
 @pytest.mark.menow
-@pytest.mark.parametrize("test_routing", TEST_ROUTING_CHANGES+TEST_STOP_CHANGES)
+@pytest.mark.parametrize("test_routing", TEST_ROUTING_CHANGES + TEST_STOP_CHANGES)
 def test_route_changes(request, stpaul_transit_net: TransitNetwork, test_routing):
     WranglerLogger.info(f"--Starting: {request.node.name} - {test_routing['name']}")
     from network_wrangler.projects.transit_routing_change import (
@@ -258,7 +260,7 @@ def test_route_changes(request, stpaul_transit_net: TransitNetwork, test_routing
     sel = net.get_selection(test_routing["service"])
 
     net = apply_transit_routing_change(net, sel, test_routing["routing_change"])
-    
+
     # Select a representative trip id to test
     repr_trip_id = sel.selected_trips[0]
     trip_shape = net.feed.trip_shape(repr_trip_id)
@@ -274,7 +276,7 @@ def test_route_changes(request, stpaul_transit_net: TransitNetwork, test_routing
         "departure_time",
         "arrival_time",
     ]
-   
+
     WranglerLogger.debug(f"trip_stop_times_df:\n{trip_stop_times_df[_show_col]}")
     WranglerLogger.debug(f"trip_shape_df:\n{trip_shape['shape_model_node_id']}")
 
@@ -291,7 +293,7 @@ def test_route_changes(request, stpaul_transit_net: TransitNetwork, test_routing
         expected_stops_nodes = [n for n in test_routing["expected_routing"] if n > 0]
     elif "expected_stops" in test_routing:
         expected_stops_nodes = test_routing["expected_stops"]
-        
+
     missing_stop_times_nodes = list(
         set(expected_stops_nodes) - set(trip_stop_times_nodes)
     )
@@ -304,7 +306,9 @@ def test_route_changes(request, stpaul_transit_net: TransitNetwork, test_routing
         WranglerLogger.error(f"Extra unexpected stop_times: {extra_stop_times_nodes}")
     assert expected_stops_nodes == trip_stop_times_nodes
 
-    missing_in_stops = list(set(expected_stops_nodes) - set(net.feed.stops.model_node_id))
+    missing_in_stops = list(
+        set(expected_stops_nodes) - set(net.feed.stops.model_node_id)
+    )
     if missing_in_stops:
         WranglerLogger.debug(
             f"stops.model_node_id:\n{net.feed.stops[['model_node_id','stop_id']]}"
@@ -314,10 +318,12 @@ def test_route_changes(request, stpaul_transit_net: TransitNetwork, test_routing
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-
 @pytest.mark.failing
 def test_route_changes_project_card(
-    request, stpaul_net: RoadwayNetwork, stpaul_card_dir: str, stpaul_transit_net: TransitNetwork
+    request,
+    stpaul_net: RoadwayNetwork,
+    stpaul_card_dir: str,
+    stpaul_transit_net: TransitNetwork,
 ):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -390,7 +396,9 @@ def test_route_changes_project_card(
 
 
 @pytest.mark.failing
-def test_wo_existing(request, stpaul_net: RoadwayNetwork, stpaul_transit_net: TransitNetwork):
+def test_wo_existing(
+    request, stpaul_net: RoadwayNetwork, stpaul_transit_net: TransitNetwork
+):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     transit_net = copy.deepcopy(stpaul_transit_net)
