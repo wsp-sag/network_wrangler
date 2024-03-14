@@ -918,17 +918,17 @@ class TransitNetwork(object):
         # A negative sign in "set" indicates a traversed node without a stop
         # If any positive numbers, stops have changed
         stops_change = False
-        if any(x > 0 for x in properties["set"]):
-            # Simplify "set" and "existing" to only stops
-            properties["set_stops"] = [str(i) for i in properties["set"] if i > 0]
-            if properties.get("existing") is not None:
-                properties["existing_stops"] = [
-                    str(i) for i in properties["existing"] if i > 0
-                ]
-            if properties["existing_stops"] == properties["set_stops"]:
-                stops_change = False
-            else:
-                stops_change = True
+        # if any(x > 0 for x in properties["set"]):
+        # Simplify "set" and "existing" to only stops
+        properties["set_stops"] = [str(i) for i in properties["set"] if i > 0]
+        if properties.get("existing") is not None:
+            properties["existing_stops"] = [
+                str(i) for i in properties["existing"] if i > 0
+            ]
+        if properties["existing_stops"] == properties["set_stops"]:
+            stops_change = False
+        else:
+            stops_change = True
 
         # Convert ints to objects
         properties["set_shapes"] = [str(abs(i)) for i in properties["set"]]
