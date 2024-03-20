@@ -21,7 +21,7 @@ class ProjectCard(object):
         valid: Boolean indicating if data conforms to project card data schema
     """
 
-    TRANSIT_CATEGORIES = ["Transit Service Property Change", "Add Transit"]
+    TRANSIT_CATEGORIES = ["Transit Service Property Change", "Add New Route", "Add Transit"]
 
     # categories that may affect transit, but only as a secondary
     # effect of changing roadways
