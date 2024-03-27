@@ -830,6 +830,9 @@ class RoadwayNetwork(object):
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
         try:
+            if (int(ox.__version__.split('.')[0]) >= 1):
+            # index required in newer osmnx
+                graph_links = graph_links.set_index(["u", "v", "key"])
             G = ox.graph_from_gdfs(graph_nodes, graph_links)
         except AttributeError:
             WranglerLogger.debug(
@@ -2180,9 +2183,6 @@ class RoadwayNetwork(object):
             [gp_df, ml_df.add_prefix("ML_")], axis=1, join="inner"
         )
 
-        access_set = ml_df.iloc[0]['access']
-        egress_set = ml_df.iloc[0]['egress']
-
         access_df = gp_df.iloc[0:0, :].copy()
         egress_df = gp_df.iloc[0:0, :].copy()
 
@@ -2201,6 +2201,7 @@ class RoadwayNetwork(object):
             return out_location_reference
 
         for index, row in gp_ml_links_df.iterrows():
+            access_set = row['ML_access']
             if access_set == 'all' or row['A'] in access_set:
                 access_row = {}
                 access_row["A"] = row["A"]
@@ -2229,6 +2230,7 @@ class RoadwayNetwork(object):
 
                 access_df = access_df.append(access_row, ignore_index=True)
 
+            egress_set = row['ML_egress']
             if egress_set == 'all' or row['B'] in egress_set:
                 egress_row = {}
                 egress_row["A"] = row["ML_B"]
