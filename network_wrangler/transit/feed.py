@@ -1,24 +1,29 @@
 import copy
 import hashlib
+import shutil
+import tempfile
+import weakref
 
 from typing import Union
 from pathlib import Path
 
 import pandas as pd
-import partridge as ptg
-
+from pandera.errors import SchemaErrors
 from pandera.decorators import check_input, check_output
 from networkx import DiGraph
-from partridge.config import default_config
 
-from .schemas import (
-    FrequenciesSchema,
-    StopsSchema,
-    RoutesSchema,
-    TripsSchema,
-    ShapesSchema,
-    StopTimesSchema,
+from ..models.gtfs.tables import (
+    AgenciesTable,
+    StopsTable,
+    RoutesTable,
+    TripsTable,
+    StopTimesTable,
+    ShapesTable,
+    FrequenciesTable
 )
+from ..models._base import DBModel
+from ..models._base import RecordModel
+
 from ..utils import fk_in_pk, update_df_by_col_value
 from ..logger import WranglerLogger
 
@@ -33,102 +38,80 @@ class FeedValidationError(Exception):
     pass
 
 
-class Feed:
+HASH_TABLES = ["frequencies", "routes", "shapes", "stop_times", "stops", "trips"]
+TABLE_SCHEMAS = {
+    "frequencies": FrequenciesTable,
+    "routes": RoutesTable,
+    "trips": TripsTable,
+    "stops": StopsTable,
+    "shapes": ShapesTable,
+    "stop_times": StopTimesTable,
+}
+
+
+class Feed(RecordModel, DBModel):
     """
-    Wrapper class around GTFS feed to allow abstraction from partridge.
+    Wrapper class around GTFS feed.
 
-    TODO: Replace usage of partridge
+    Attributes:
+        table_names: list of table names in GTFS feed.
+        tables: list tables as dataframes.
+        table_schemas: Dictionary mapping feed tables to a Pandera DataFrameSchema.
+        valid: True if all specified tables match schemas and foreign keys valid.
+        schemas_valid: True if all specified tables match schemas
+        foreign_keys_valid: True if all foreign keys exist in primary key table.
+        stop_times: stop_times dataframe with roadway node_ids
+        stops: stops dataframe
+        shapes: shapes dataframe
+        trips: trips dataframe
+        frequencies: frequencies dataframe
+        routes: route dataframe
+        net: TransitNetwork object
+        feed_hash: hash representing the contents of the talbes in HASH_TQBLES
+        stops_node_id: convenience reference to field in stops table that references roadway
+            model_node_id
+        shapes_node_id: convenience reference to field in shapes table that references roadway
+            model_node_id
     """
 
-    # A list of GTFS files that are required to be present in the feed.
-    REQUIRED_FILES = [
-        "agency.txt",
-        "frequencies.txt",
-        "routes.txt",
-        "shapes.txt",
-        "stop_times.txt",
-        "stops.txt",
-        "trips.txt",
-    ]
-
-    # Dictionary mapping table names to their corresponding schema classes for validation purposes.
-    SCHEMAS = {
-        "frequencies": FrequenciesSchema,
-        "routes": RoutesSchema,
-        "trips": TripsSchema,
-        "stops": StopsSchema,
-        "shapes": ShapesSchema,
-        "stop_times": StopTimesSchema,
-    }
-
-    # List of table names used for calculating a hash representing the content of the entire feed.
-    TABLES_IN_FEED_HASH = [
-        "frequencies",
-        "routes",
-        "shapes",
-        "stop_times",
-        "stops",
-        "trips",
-    ]
-
-    """
-    Mapping of foreign keys in the transit network which refer to primary keys in the highway
-    Network.
-    """
-    INTRA_FEED_FOREIGN_KEYS = {
-        "stop_times": {"trip_id": ("trips", "trip_id"), "stop_id": ("stop", "stop_id")},
-        "frequencies": {"trip_id": ("trips", "trip_id")},
-        "trips": {
-            "route_id": ("route", "route_id"),
-            "shape_id": ("shapes", "shape_id"),
-        },
-        "stops": {"parent_station": ("stop", "stop_id")},
-        "transfers": {
-            "from_stop_id": ("stop", "stop_id"),
-            "to_stop_id": ("stop", "stop_id"),
-        },
-        "pathways": {
-            "from_stop_id": ("stop", "stop_id"),
-            "to_stop_id": ("stop", "stop_id"),
-        },
-    }
-
-    def __init__(self, feed_path: Union[Path, str]):
+    def __init__(self, feed_dfs, table_schemas=TABLE_SCHEMAS):
         """Constructor for GTFS Feed.
 
-        Updates partridge config based on which files are available.
-        Validates each table to schemas in SCHEMAS as they are read.
-        Validates foreign keys after all tables read in.
+        Initializes a GTFS Feed object with the given feed dataframes and schemas.
 
         Args:
-            feed_path (Union[Path,str]): Path of GTFS feed files.
+            feed_dfs (duct): A dictionary mapping the table name to a dataframe for
+                each GTFS table. Example:
+
+                ```python
+                {
+                    "frequencies": frequencies_df,
+                    "trips": trips_df,
+                    "stops": stops_df,
+                    ...
+                ```
+
+            table_schemas (dict): Dictionary mapping feed tables to a Pandera DataFrameSchema.
+                Defaults to TABLE_SCHEMAS.
         """
-        WranglerLogger.info(f"Creating transit feed from: {feed_path}")
+        WranglerLogger.debug("Creating transit feed.")
+        _missing_ts = [t for t in HASH_TABLES if t not in feed_dfs]
+        if _missing_ts:
+            WranglerLogger.warning(
+                f"Missing {len(_missing_ts)} required in tables feed_dfs:\
+                                    {_missing_ts} "
+            )
 
-        self.feed_path = feed_path
-        # Partidge expects a str not a Path object.
-        self._ptg_feed = ptg.load_feed(str(feed_path))
-        self._config = self._config_from_files(self._ptg_feed)
         self._net = None
+        self.table_schemas = table_schemas
+        self.table_names = []
 
-        for node in self.config.nodes.keys():
-            _table = node.replace(".txt", "")
-            WranglerLogger.debug(f"...setting {_table}")
-            setattr(self, _table, self._read_from_file(node))
+        for table, df in feed_dfs.items():
+            setattr(self, table, self.validate_df_as_table(table, df))
+            self.table_names.append(table)
 
         assert self.foreign_keys_valid
-
-        msg = f"Read GTFS feed tables from {self.feed_path}:\n- " + "\n- ".join(
-            self.config.nodes.keys()
-        )
-        WranglerLogger.info(msg)
-
-    @property
-    def config(self) -> DiGraph:
-        """
-        Internal configuration of the GTFS feed.
-        """
-        return self._config
+        WranglerLogger.debug("Created valid transit feed.")
 
     def __deepcopy__(self, memo):
         """Custom implementation of __deepcopy__ method.
@@ -165,18 +148,11 @@ class Feed:
         return copy.deepcopy(self)
 
     @property
-    def table_names(self) -> list[str]:
-        """
-        Returns list of tables from config.
-        """
-        return list(t.replace(".txt", "") for t in self.config.nodes.keys())
-
-    @property
     def tables(self) -> list[pd.DataFrame]:
         """
-        Returns list of tables from config.
+        Returns list of tables.
         """
-        return [self.get(table_name) for table_name in self.config.nodes.keys()]
+        return [self.get(table) for table in self.table_names]
 
     @property
     def schemas_valid(self) -> bool:
@@ -199,27 +175,12 @@ class Feed:
         """
         return self.foreign_keys_valid & self.schemas_valid
 
-    def _read_from_file(self, node: str) -> pd.DataFrame:
-        """Read node from file + validate to schema if table name in SCHEMAS and return dataframe.
-
-        Args:
-            node (str): name of feed file, e.g. `stops.txt`
-
-        Returns:
-            pd.DataFrame: Dataframe of file.
-        """
-        _table = node.replace(".txt", "")
-        df = self._ptg_feed.get(node)
-        df = self.validate_df_as_table(_table, df)
-        return df.copy()
-
     def get(self, table: str) -> pd.DataFrame:
         """Get table by name.
 
         args:
             table: table name. e.g. frequencies, stops, etc.
         """
-        table = table.replace(".txt", "")
         df = getattr(self, table)
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"Couldn't find valid table: {table}")
@@ -242,13 +203,15 @@ class Feed:
                 on="stop_id",
                 how="left",
             )
-        self._stop_times = StopTimesSchema.validate(self._stop_times, lazy=True)
+        self._stop_times = StopTimesTable.validate(self._stop_times, lazy=True)
         return self._stop_times
 
     @stop_times.setter
     def stop_times(self, df):
-        df = StopTimesSchema.validate(df, lazy=True)
-        WranglerLogger.warning("SETTING STOPTIMES")
+        try:
+            df = StopTimesTable.validate(df, lazy=True)
+        except SchemaErrors as err:
+            raise FeedValidationError(f"Invalid stops.txt:\n {err.failure_cases}")
         self._stop_times = df
 
     @property
@@ -257,7 +220,11 @@ class Feed:
 
     @stops.setter
     def stops(self, value):
-        df = StopsSchema.validate(value, lazy=True)
+        try:
+            df = StopsTable.validate(value, lazy=True)
+        except SchemaErrors as err:
+            WranglerLogger.error(f"Invalid stops.txt:\n {err.failure_cases}")
+            raise FeedValidationError("Invalid stops.txt")
         self._stops = df
 
     @property
@@ -266,7 +233,10 @@ class Feed:
 
     @shapes.setter
     def shapes(self, value):
-        df = ShapesSchema.validate(value, lazy=True)
+        try:
+            df = ShapesTable.validate(value, lazy=True)
+        except SchemaErrors as err:
+            raise FeedValidationError(f"Invalid shapes.txt:\n {err.failure_cases}")
         self._shapes = df
 
     @property
@@ -275,7 +245,10 @@ class Feed:
 
     @trips.setter
     def trips(self, value):
-        df = TripsSchema.validate(value, lazy=True)
+        try:
+            df = TripsTable.validate(value, lazy=True)
+        except SchemaErrors as err:
+            raise FeedValidationError(f"Invalid trips.txt:\n {err.failure_cases}")
         self._trips = df
 
     @property
@@ -284,7 +257,10 @@ class Feed:
 
     @frequencies.setter
     def frequencies(self, value):
-        df = FrequenciesSchema.validate(value, lazy=True)
+        try:
+            df = FrequenciesTable.validate(value, lazy=True)
+        except SchemaErrors as err:
+            raise FeedValidationError(f"Invalid frequencies.txt:\n {err.failure_cases}")
         self._frequencies = df
 
     @property
@@ -293,7 +269,10 @@ class Feed:
 
     @routes.setter
     def routes(self, value):
-        df = RoutesSchema.validate(value, lazy=True)
+        try:
+            df = RoutesTable.validate(value, lazy=True)
+        except SchemaErrors as err:
+            raise FeedValidationError(f"Invalid routes.txt:\n {err.failure_cases}")
         self._routes = df
 
     def set_by_id(
@@ -327,9 +306,14 @@ class Feed:
             table (str): table name. e.g. frequencies, stops, etc.
             df (pd.DataFrame): dataframe to be validated as that table
         """
-        if self.SCHEMAS.get(table):
-            # set to lazy so that all errors found before returning
-            df = self.SCHEMAS[table].validate(df, lazy=True)
+        if table in self.table_schemas:
+            # set to lazy so that all errors in each table found before returning
+            try:
+                df = self.table_schemas[table].validate(df, lazy=True)
+            except SchemaErrors as err:
+                WranglerLogger.error(f"Invalid {table}:\n {err.failure_cases}")
+                raise FeedValidationError(f"Invalid {table}")
+
         else:
             WranglerLogger.debug(
                 f"{table} requested but no schema available to validate."
@@ -359,36 +343,6 @@ class Feed:
     def foreign_keys_valid(self) -> bool:
         """Boolean indiciating if all foreign keys exist in primary key table."""
         return self.validate_fks()
-
-    @classmethod
-    def _config_from_files(cls, ptg_feed: ptg.gtfs.Feed) -> DiGraph:
-        """
-        Return updated config based on which files are available & have data.
-
-        Will fail if any Feed.REQUIRED_FILES are not present.
-
-        Since Partridge lazily loads the df, load each file to make sure it
-        actually works.
-
-        Args:
-            ptg_feed: partridge feed
-        """
-        updated_config = copy.deepcopy(default_config())
-        _missing_files = []
-        for node in ptg_feed._config.nodes.keys():
-            if ptg_feed.get(node).shape[0] == 0:
-                _missing_files.append(node)
-
-        _missing_required = set(_missing_files) & set(cls.REQUIRED_FILES)
-        if _missing_required:
-            WranglerLogger.error(f"Couldn't find required files: {_missing_required}")
-            raise FeedReadError(f"Missing required files: {_missing_required}")
-
-        for node in _missing_files:
-            WranglerLogger.debug(f"{node} empty. Removing from transit network.")
-            updated_config.remove_node(node)
-
-        return updated_config
 
     def validate_table_fks(
         self, table: str, df: pd.DataFrame = None, _raise_error: bool = True
@@ -439,7 +393,7 @@ class Feed:
         """
         all_valid = True
         missing = []
-        for df in self.config.nodes.keys():
+        for df in self.tables:
             _valid, _missing = self.validate_table_fks(df, _raise_error=False)
             all_valid = all_valid and _valid
             if _missing:
@@ -452,8 +406,8 @@ class Feed:
 
     @property
     def feed_hash(self) -> str:
-        """A hash representing the contents of the talbes in self.TABLES_IN_FEED_HASH."""
-        _table_hashes = [self.get(t).df_hash() for t in self.TABLES_IN_FEED_HASH]
+        """A hash representing the contents of the talbes in HASH_TABLES."""
+        _table_hashes = [self.get(t).df_hash() for t in HASH_TABLES]
         _value = str.encode("-".join(_table_hashes))
 
         _hash = hashlib.sha256(_value).hexdigest()
@@ -469,13 +423,13 @@ class Feed:
 
         return [t for t in self.table_names if property in self.get(t).columns]
 
-    @check_output(TripsSchema, inplace=True)
+    @check_output(TripsTable, inplace=True)
     def trips_with_shape_id(self, shape_id: str) -> pd.DataFrame:
         trips_df = self.get("trips")
 
         return trips_df.loc[trips_df.shape_id == shape_id]
 
-    @check_output(StopTimesSchema, inplace=True)
+    @check_output(StopTimesTable, inplace=True)
     def trip_stop_times(self, trip_id: str) -> pd.DataFrame:
         """Returns a stop_time records for a given trip_id.
 
@@ -505,7 +459,7 @@ class Feed:
         shapes_df = self.get("shapes")
         return shapes_df.loc[shapes_df.shape_id == shape_id]
 
-    @check_output(StopsSchema, inplace=True)
+    @check_output(StopsTable, inplace=True)
     def trip_stops(self, trip_id: str, pickup_type: str = "either") -> list[str]:
         """Returns stops.txt which are used for a given trip_id"""
         stop_ids = self.trip_stop_pattern(trip_id, pickup_type=pickup_type)

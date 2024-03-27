@@ -2,6 +2,7 @@ import hashlib
 from typing import Mapping, Any
 
 import pandas as pd
+from numpy import ndarray
 
 from ..logger import WranglerLogger
 
@@ -60,8 +61,8 @@ class DictQueryAccessor:
 
         if len(_df) == 0:
             WranglerLogger.warning(
-                f"No records found in {_df.name} \
-                                   using selection: {selection_dict}"
+                f"No records found in df \
+                  using selection: {selection_dict}"
             )
         return _df
 
@@ -206,3 +207,78 @@ def update_df_by_col_value(
     updated_df = merged_df.drop([f"{prop}_updated" for prop in properties], axis=1)
 
     return updated_df
+
+
+def list_like_columns(df, item_type: type = None) -> list[str]:
+    """Find columns in a dataframe that contain list-like items that can't be json-serialized.
+
+    args:
+        df: dataframe to check
+        item_type: if not None, will only return columns where all items are of this type by
+            checking **only** the first item in the column.  Defaults to None.
+    """
+    list_like_columns = []
+
+    for column in df.columns:
+        if df[column].apply(lambda x: isinstance(x, (list, ndarray))).any():
+            if item_type is not None:
+                if not isinstance(df[column].iloc[0], item_type):
+                    continue
+            list_like_columns.append(column)
+    return list_like_columns
+
+
+def diff_dfs(df1, df2, ignore: list[str] = []) -> bool:
+    """Compare two dataframes and log differences."""
+
+    diff = False
+    if not set(df1.columns) == set(df2.columns):
+        WranglerLogger.info(
+            f" Columns are different 1vs2 \n    {set(df1.columns) ^ set(df2.columns)}"
+        )
+        common_cols = [col for col in df1.columns if col in df2.columns]
+        df1 = df1[common_cols]
+        df2 = df2[common_cols]
+        diff = True
+
+    cols_to_compare = [col for col in df1.columns if col not in ignore]
+    df1 = df1[cols_to_compare]
+    df2 = df2[cols_to_compare]
+
+    if not len(df1) == len(df2):
+        WranglerLogger.info(
+            f" Length is different /" f"DF1: {len(df1)} vs /" f"DF2: {len(df2)}\n /"
+        )
+        diff = True
+
+    llcs = list_like_columns(df1)
+
+    diff_df = df1[df1.columns.difference(llcs)].compare(
+        df2[df2.columns.difference(llcs)]
+    )
+
+    if not diff_df.empty:
+        diff = True
+        WranglerLogger.error(f"!!! Differences dfs:\n{diff_df}")
+
+    for llc in llcs:
+        WranglerLogger.info(f"...checking list-like column: {llc}")
+        diff_s = _diff_list_like_series(df1[llc], df2[llc])
+        if diff_s:
+            diff = True
+
+    if not diff:
+        WranglerLogger.info("...no differences in df found.")
+    return diff
+
+
+def _diff_list_like_series(s1, s2) -> bool:
+    """Compare two series that contain list-like items as strings"""
+    diff_df = pd.concat([s1, s2], axis=1, keys=["s1", "s2"])
+    diff_df["diff"] = diff_df.apply(lambda x: str(x["s1"]) != str(x["s2"]), axis=1)
+
+    if diff_df["diff"].any():
+        WranglerLogger.info("List-Like differences:")
+        WranglerLogger.info(diff_df)
+        return True
+    return False

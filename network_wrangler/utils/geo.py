@@ -1,15 +1,21 @@
 import math
 
-from typing import Collection, List, Tuple
+from typing import List, Tuple, Union
+from pathlib import Path
 
 import pandas as pd
-
+import geopandas as gpd
 from pyproj import Proj, Transformer
 from shapely.geometry import LineString, Point
 from shapely.ops import transform
 from geographiclib.geodesic import Geodesic
 
-# from ..logger import WranglerLogger
+from ..logger import WranglerLogger
+from .types import LatLongCoordinates, LocationReference, LocationReferences
+
+
+# key:value (from espg, to espg): pyproj transform object
+transformers = {}
 
 
 def get_bearing(lat1, lon1, lat2, lon2):
@@ -65,44 +71,9 @@ def offset_point_with_distance_and_bearing(
     return [out_lon, out_lat]
 
 
-def offset_location_reference(location_reference, offset_meters: float = 10):
-    """
-    Creates a new location reference line
-    using the first and last nodes of given polyline location reference,
-    offseting it by 90 degree to the bearing of given location reference
-    and distance equals to offset_meters
-
-    args:
-        location_reference: existing location reference
-        offset_meters: (Optional) meters to offset the existing
-
-    returns: new location_reference with offset
-    """
-    lon_1 = location_reference[0]["point"][0]
-    lat_1 = location_reference[0]["point"][1]
-    lon_2 = location_reference[-1]["point"][0]
-    lat_2 = location_reference[-1]["point"][1]
-
-    bearing = get_bearing(lat_1, lon_1, lat_2, lon_2)
-    # adding 90 degrees (1.57 radians) to the current bearing
-    bearing = bearing + 1.57
-
-    out_location_reference = [
-        {
-            "sequence": idx + 1,
-            "point": offset_point_with_distance_and_bearing(
-                lr["point"][0], lr["point"][1], offset_meters, bearing
-            ),
-        }
-        for idx, lr in enumerate(location_reference)
-    ]
-
-    return out_location_reference
-
-
 def haversine_distance(origin: list, destination: list) -> float:
     """
-    Returns haversine distance between the coordinates of two points in lat/lon.
+    Returns haversine distance in miles between the coordinates of two points in lat/lon.
 
     Args:
     origin: lat/lon for point A
@@ -127,38 +98,91 @@ def haversine_distance(origin: list, destination: list) -> float:
     return d
 
 
-def location_reference_from_nodes(node_list: Collection[pd.Series]):
+def length_of_linestring_miles(
+    gdf: Union[gpd.GeoSeries, gpd.GeoDataFrame]
+) -> pd.Series:
     """
-    Creates a location references using a list of nodes coordinates
+    Returns a Series with the linestring length in miles.
 
     Args:
-        node_list: List of nodes represented as series or dicts with "X" and "Y" values.
-
+        gdf: GeoDataFrame with linestring geometry.  If given a GeoSeries will attempt to convert
+            to a GeoDataFrame.
     """
+    if isinstance(gdf, gpd.GeoSeries):
+        gdf = gpd.GeoDataFrame(geometry=gdf)
 
-    out_location_references = [
-        {"sequence": idx + 1, "point": [n["X"], n["Y"]]}
-        for idx, n in enumerate(node_list)
+    p_crs = gdf.estimate_utm_crs()
+    gdf = gdf.to_crs(p_crs)
+    METERS_IN_MILES = 1609.34
+    return gdf.geometry.length / METERS_IN_MILES
+
+
+def linestring_from_nodes(
+    links_df: pd.DataFrame,
+    nodes_df: gpd.GeoDataFrame,
+    from_node: str = "A",
+    to_node: str = "B",
+    node_pk: str = "model_node_id",
+) -> gpd.GeoSeries:
+    """
+    Creates a LineString geometry GeoSeries from a DataFrame of links and a DataFrame of nodes.
+
+    Args:
+        links_df: DataFrame with columns for from_node and to_node.
+        nodes_df: GeoDataFrame with geometry column.
+        from_node: column name in links_df for the from node. Defaults to "A".
+        to_node: column name in links_df for the to node. Defaults to "B".
+        node_pk: primary key column name in nodes_df. Defaults to "model_node_id".
+    """
+    assert "geometry" in nodes_df.columns, "nodes_df must have a 'geometry' column"
+
+    # need to continuously reset the index to make sure the index is the same as the link index
+    _link_idx = links_df.params.idx_col
+
+    links_df = (
+        links_df[[from_node, to_node]]
+        .reset_index()
+        .merge(
+            nodes_df[[node_pk, "geometry"]],
+            left_on=from_node,
+            right_on=node_pk,
+            how="left",
+        )
+        .set_index(_link_idx)
+    )
+
+    links_df = links_df.rename(columns={"geometry": "geometry_A"})
+
+    links_df = (
+        links_df.reset_index()
+        .merge(
+            nodes_df[[node_pk, "geometry"]],
+            left_on=to_node,
+            right_on=node_pk,
+            how="left",
+        )
+        .set_index(_link_idx)
+    )
+
+    links_df = links_df.rename(columns={"geometry": "geometry_B"})
+
+    # makes sure all nodes exist
+    _missing_geo_links_df = links_df[
+        links_df["geometry_A"].isnull() | links_df["geometry_B"].isnull()
     ]
+    if not _missing_geo_links_df.empty:
+        missing_nodes = _missing_geo_links_df[[from_node, to_node]].values
+        raise ValueError(f"Missing from/to nodes in nodes_df: {missing_nodes}")
 
-    # WranglerLogger.debug(f"out_location_references: {out_location_references}")
+    # create geometry from points
+    links_df["geometry"] = links_df.apply(
+        lambda row: LineString([row["geometry_A"], row["geometry_B"]]), axis=1
+    )
 
-    return out_location_references
+    # convert to GeoDataFrame
+    links_gdf = gpd.GeoDataFrame(links_df, geometry="geometry")
 
-
-def line_string_from_location_references(location_references: list):
-    """
-    Creates a geometry as a LineString using a list of location references.
-    """
-    # WranglerLogger.debug(
-    #    f"line_string_from_location_references.location_references: {[lr['point'] for lr in\
-    #  location_references]}."
-    #    )
-    return LineString([lr["point"] for lr in location_references])
-
-
-# key:value (from espg, to espg): pyproj transform object
-transformers = {}
+    return links_gdf["geometry"]
 
 
 def point_from_xy(x, y, xy_crs: int = 4326, point_crs: int = 4326):
@@ -194,16 +218,52 @@ def point_from_xy(x, y, xy_crs: int = 4326, point_crs: int = 4326):
 def update_points_in_linestring(
     linestring: LineString, updated_coords: List[float], position: int
 ):
-    """Replaces
+    """Replaces a point in a linestring with a new point.
 
     Args:
-        linestring (LineString): _description_
-        point_coords (List[float]): _description_
-        position (int): _description_
+        linestring (LineString): original_linestring
+        updated_coords (List[float]): updated poimt coordinates
+        position (int): position in the linestring to update
     """
     coords = [c for c in linestring.coords]
     coords[position] = updated_coords
     return LineString(coords)
+
+
+def update_nodes_in_linestring_geometry(
+    original_df: gpd.GeoDataFrame,
+    updated_nodes_df: gpd.GeoDataFrame,
+    position: int,
+) -> gpd.GeoSeries:
+    """
+    Updates the nodes in a linestring geometry and returns updated geometry.
+
+    Args:
+        original_df: GeoDataFrame with the node primary key and linestring geometry
+        updated_nodes_df: GeoDataFrame with updated node geometries.
+        position: position in the linestring to update with the node.
+    """
+    nodes_pk = updated_nodes_df.params.primary_key
+    orig_pk = original_df.params.primary_key
+
+    updated_df = original_df.merge(
+        updated_nodes_df[["geometry"]],
+        left_on=nodes_pk,
+        right_index=True,
+        suffixes=("", "_node"),
+    )
+
+    updated_df["geometry"] = updated_df.apply(
+        lambda row: update_points_in_linestring(
+            row["geometry"], row["geometry_node"].coords[0], position
+        ),
+        axis=1,
+    )
+
+    updated_df = updated_df.set_index(orig_pk)
+
+    # WranglerLogger.debug(f"updated_df - AFTER: \n {updated_df}")
+    return updated_df["geometry"]
 
 
 def get_point_geometry_from_linestring(polyline_geometry, pos: int = 0):
@@ -215,3 +275,116 @@ def get_point_geometry_from_linestring(polyline_geometry, pos: int = 0):
     # Note: when upgrading to shapely 2.0, will need to use following command
     # _point_coords = get_coordinates(polyline_geometry).tolist()[pos]
     return point_from_xy(*polyline_geometry.coords[pos])
+
+
+def location_ref_from_point(
+    geometry: Point,
+    sequence: int = 1,
+    bearing: float = None,
+    distance_to_next_ref: float = None,
+) -> LocationReference:
+    """Generates a shared street point location reference.
+
+    Args:
+        geometry (Point): Point shapely geometry
+        sequence (int, optional): Sequence if part of polyline. Defaults to None.
+        bearing (float, optional): Direction of line if part of polyline. Defaults to None.
+        distance_to_next_ref (float, optional): Distnce to next point if part of polyline. Defaults to None.
+
+    Returns:
+        LocationReference: As defined by sharedStreets.io schema
+    """
+    lr = {
+        "point": LatLongCoordinates(geometry.coords[0]),
+    }
+
+    for arg in ["sequence", "bearing", "distance_to_next_ref"]:
+        if locals()[arg] is not None:
+            lr[arg] = locals()[arg]
+
+    return LocationReference(**lr)
+
+
+def location_refs_from_linestring(geometry: LineString) -> LocationReferences:
+    """Generates a shared street location reference from linestring.
+
+    Args:
+        geometry (LineString): Shapely LineString instance
+
+    Returns:
+        LocationReferences: As defined by sharedStreets.io schema
+    """
+    return LocationReferences(
+        [
+            location_ref_from_point(
+                point,
+                sequence=i + 1,
+                distance_to_next_ref=point.distance(geometry.coords[i + 1]),
+                bearing=get_bearing(*point.coords[0], *geometry.coords[i + 1]),
+            )
+            for i, point in enumerate(geometry.coords[:-1])
+        ]
+    )
+
+
+def get_bounding_polygon(
+    boundary_gdf: gpd.GeoDataFrame = None,
+    boundary_geocode: Union[str, dict] = None,
+    boundary_file: Union[str, Path] = None,
+    crs: int = 4326,  # WGS84
+) -> gpd.GeoSeries:
+    """Get the bounding polygon for a given boundary.
+
+    This function retrieves the bounding polygon for a given boundary. The boundary can be provided
+    as a GeoDataFrame, a geocode string or dictionary, or a boundary file. The resulting polygon
+    geometry is returned as a GeoSeries.
+
+    Args:
+        boundary_gdf (gpd.GeoDataFrame, optional): A GeoDataFrame representing the boundary.
+            Defaults to None.
+        boundary_geocode (Union[str, dict], optional): A geocode string or dictionary
+            representing the boundary. Defaults to None.
+        boundary_file (Union[str, Path], optional): A path to the boundary file.
+            Defaults to None.
+        crs (int, optional): The coordinate reference system (CRS) code. Defaults to 4326 (WGS84).
+
+    Returns:
+        gpd.GeoSeries: The polygon geometry representing the bounding polygon.
+    """
+
+    import osmnx as ox
+
+    if sum(x is not None for x in [boundary_gdf, boundary_geocode, boundary_file]) != 1:
+        raise ValueError(
+            "Exacly one of boundary_gdf, boundary_geocode, or boundary_shp must \
+                         be provided"
+        )
+
+    OK_BOUNDARY_SUFF = [".shp", ".geojson", ".parquet"]
+
+    if boundary_geocode is not None:
+        boundary_gdf = ox.geocode_to_gdf(boundary_geocode)
+    if boundary_file is not None:
+        boundary_file = Path(boundary_file)
+        if boundary_file.suffix not in OK_BOUNDARY_SUFF:
+            raise ValueError(
+                f"Boundary file must have one of the following suffixes: {OK_BOUNDARY_SUFF}"
+            )
+        if not boundary_file.exists():
+            raise FileNotFoundError(f"Boundary file {boundary_file} does not exist")
+        if boundary_file.suffix == ".parquet":
+            boundary_gdf = gpd.read_parquet(boundary_file)
+        else:
+            boundary_gdf = gpd.read_file(boundary_file)
+            if boundary_file.suffix == ".geojson":  # geojson standard is WGS84
+                boundary_gdf.crs = crs
+
+    if boundary_gdf.crs is not None:
+        boundary_gdf = boundary_gdf.to_crs(crs)
+    # make sure boundary_gdf is a polygon
+    if len(boundary_gdf.geom_type[boundary_gdf.geom_type != "Polygon"]) > 0:
+        raise ValueError("boundary_gdf must all be Polygons")
+    # get the boundary as a single polygon
+    boundary_gs = gpd.GeoSeries([boundary_gdf.geometry.unary_union], crs=crs)
+
+    return boundary_gs

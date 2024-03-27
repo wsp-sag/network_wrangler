@@ -4,8 +4,8 @@
 from __future__ import annotations
 
 import copy
-import os
 from typing import Union
+from pathlib import Path
 
 import networkx as nx
 import pandas as pd
@@ -13,8 +13,7 @@ import pandas as pd
 from projectcard import ProjectCard, SubProject
 
 from .logger import WranglerLogger
-from .utils import fk_in_pk
-from .utils import dict_to_hexkey
+from .utils import fk_in_pk, dict_to_hexkey
 from .transit import Feed, TransitSelection
 from .projects import (
     apply_transit_routing_change,
@@ -34,7 +33,7 @@ class TransitNetwork(object):
     Typical usage example:
     ``` py
     import network_wrangler as wr
-    tc=wr.TransitNetwork.read(path=stpaul_gtfs)
+    tc=wr.load_transit(stpaul_gtfs)
     ```
 
     Attributes:
@@ -83,16 +82,6 @@ class TransitNetwork(object):
 
         # cached selections
         self._selections = {}
-
-    @staticmethod
-    def read(feed_path: str) -> TransitNetwork:
-        """
-        Create TransitNetwork object from path to a GTFS transit feed.
-
-        Args:
-            feed_path: where to read transit network files from
-        """
-        return TransitNetwork(Feed(feed_path))
 
     @property
     def feed_path(self):
@@ -345,36 +334,8 @@ class TransitNetwork(object):
 
         return valid
 
-    def write(self, path: str = ".", filename: str = None) -> None:
-        """
-        Writes a network in the transit network standard
-
-        Args:
-            path: the path were the output will be saved
-            filename: the name prefix of the transit files that will be generated
-        """
-        WranglerLogger.info("Writing transit to directory: {}".format(path))
-        for node, config in self.config.nodes.items():
-            df = self.feed.get(node.replace(".txt", ""))
-            if not df.empty:
-                if filename:
-                    outpath = os.path.join(path, filename + "_" + node)
-                else:
-                    outpath = os.path.join(path, node)
-                _time_cols = [c for c in TransitNetwork.TIME_COLS if c in df.columns]
-
-                if _time_cols:
-                    WranglerLogger.debug(f"Converting cols to datetime: {_time_cols}")
-                    df = df.copy()
-                    df[_time_cols] = df[_time_cols].applymap(
-                        lambda x: pd.to_datetime(x, unit="s")
-                    )
-
-                WranglerLogger.debug("Writing file: {}".format(outpath))
-                df.to_csv(outpath, index=False, date_format="%H:%M:%S")
-
     @staticmethod
-    def transit_net_to_gdf(transit: Union("TransitNetwork", pd.DataFrame)):
+    def transit_net_to_gdf(transit: Union["TransitNetwork", pd.DataFrame]):
         """
         Returns a geodataframe given a TransitNetwork or a valid Shapes DataFrame.
 
@@ -444,7 +405,7 @@ class TransitNetwork(object):
 
         if project_card.sub_projects:
             for sp in project_card.sub_projects:
-                WranglerLogger.debug(f"- applying subproject: {sp.type}")
+                WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
                 self._apply_change(sp)
             return self
         else:
@@ -457,25 +418,25 @@ class TransitNetwork(object):
                 f"Applying Project to Transit Network: {change.project}"
             )
 
-        if change.type == "transit_property_change":
+        if change.change_type == "transit_property_change":
             return apply_transit_property_change(
                 self,
                 self.get_selection(change.service),
                 change.transit_property_change,
             )
 
-        elif change.type == "transit_routing_change":
+        elif change.change_type == "transit_routing_change":
             return apply_transit_routing_change(
                 self,
                 self.get_selection(change.service),
                 change.transit_routing_change,
             )
 
-        elif change.type == "roadway_deletion":
+        elif change.change_type == "roadway_deletion":
             # FIXME
             return NotImplementedError("Roadway deletion check not yet implemented.")
 
-        elif change.type == "pycode":
+        elif change.change_type == "pycode":
             return apply_calculated_transit(self, change.pycode)
 
         else:
