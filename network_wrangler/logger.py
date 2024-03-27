@@ -27,11 +27,13 @@ def setup_logging(
             The INFO Log is terse, just gives the bare minimum of details.
             Defaults to file in cwd() `wrangler_[datetime].log`. To turn off logging to a file,
             use log_filename = None.
-        debug_log_filename: the location of the log file that will get created to add the DEBUG log.
+        debug_log_filename: the location of the log file that will get created to add the DEBUG log
             The DEBUG log is very noisy, for debugging. Defaults to file in cwd()
             `wrangler_[datetime].log`. To turn off logging to a file, use log_filename = None.
         log_to_console: if True, logging will go to the console at DEBUG level. Defaults to False.
     """
+    # fiona is VERY noisy when writing to parquet.
+    logging.getLogger("fiona").setLevel(logging.INFO)
 
     # add function variable so that we know if logging has been called
     setup_logging.called = True

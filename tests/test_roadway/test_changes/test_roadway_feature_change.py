@@ -6,15 +6,10 @@ import pytest
 import pandas as pd
 
 from network_wrangler import WranglerLogger
-from network_wrangler import ProjectCard
-
-from network_wrangler.roadway.model_roadway import (
-    MANAGED_LANES_LINK_ID_SCALAR,
-)
+from projectcard import read_card
 
 """
-Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_feature_change.py`
-To run with print statments, use `pytest -s tests/test_roadway/test_changes/test_feature_change.py`
+Usage: `pytest tests/test_roadway/test_changes/test_roadway_feature_change.py`
 """
 
 
@@ -24,20 +19,26 @@ def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
 
     # Set facility selection
     _facility = {
-        "links": [{"osm_link_id": ["223371529"]}],
-        "A": {"osm_node_id": "187854529"},  # Jackson St
-        "B": {"osm_node_id": "187899923"},  # Robert St N
+        "links": {"osm_link_id": ["223371529"]},
+        "from": {"osm_node_id": "187854529"},  # Jackson St
+        "to": {"osm_node_id": "187899923"},  # Robert St N
     }
-    _properties = [
-        {
-            "property": "lanes",  # changes number of lanes 3 to 2 (reduction of 1)
+    _properties = {
+        "lanes": {  # changes number of lanes 3 to 2 (reduction of 1)
             "existing": 2,
             "change": -1,
         }
-    ]
+    }
+    _project_card_dict = {
+        "project": "test",
+        "roadway_property_change": {
+            "facility": _facility,
+            "property_changes": _properties,
+        },
+    }
 
-    _selected_link_idx = net.select_roadway_features(_facility)
-    _p_to_track = ["name"] + [p["property"] for p in _properties]
+    _selected_link_idx = net.get_selection(_facility).selected_links
+    _p_to_track = ["name"] + list(_properties.keys())
 
     WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
 
@@ -46,7 +47,7 @@ def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
     WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
 
     # apply change
-    net = net.apply_roadway_feature_change(_selected_link_idx, _properties)
+    net = net.apply(_project_card_dict)
 
     _rev_links = pd.DataFrame(net.links_df)
     _rev_links = _rev_links.loc[_selected_link_idx, _p_to_track]
@@ -56,10 +57,10 @@ def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
         f"ORIGINAL to REVISED Comparison\n {_orig_links.compare(_rev_links)}"
     )
 
-    for p in _properties:
+    for p_name, p in _properties.items():
         _expected_value = p["existing"] + p["change"]
-        WranglerLogger.debug(f"Expected_value of {p['property']}:{_expected_value}")
-        assert _rev_links[p["property"]].eq(_expected_value).all()
+        WranglerLogger.debug(f"Expected_value of {p_name}:{_expected_value}")
+        assert _rev_links[p_name].eq(_expected_value).all()
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
@@ -69,36 +70,39 @@ def test_change_multiple_properties_multiple_links(request, stpaul_net):
     net = copy.deepcopy(stpaul_net)
     # Set facility selection
     _facility = {
-        "links": [{"name": ["6th", "Sixth", "sixth"]}],
-        "A": {"osm_node_id": "187899923"},  # Jackson St
-        "B": {"osm_node_id": "187865924"},  # Robert St N
+        "links": {"name": ["6th", "Sixth", "sixth"]},
+        "from": {"osm_node_id": "187899923"},  # Jackson St
+        "to": {"osm_node_id": "187865924"},  # Robert St N
     }
-    _properties = [
-        {
-            "property": "lanes",
+    _properties = {
+        "lanes": {
             "set": 2,
         },
-        {
-            "property": "bus_only",
+        "bus_only": {
             "set": 1,
         },
-        {
-            "property": "drive_access",
+        "drive_access": {
             "set": 0,
         },
-    ]
-
-    _selected_link_idx = net.select_roadway_features(_facility)
-    _p_to_track = ["name"] + [p["property"] for p in _properties]
+    }
+    _project_card_dict = {
+        "project": "test",
+        "roadway_property_change": {
+            "facility": _facility,
+            "property_changes": _properties,
+        },
+    }
+    _selected_link_idx = net.get_selection(_facility).selected_links
+    _p_to_track = ["name"] + list(_properties.keys())
 
     WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
 
-    _orig_links = pd.DataFrame(copy.deepcopy(net.links_df))
+    _orig_links = net.links_df.copy()
     _orig_links = _orig_links.loc[_selected_link_idx, _p_to_track]
     WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
 
     # apply change
-    net = net.apply_roadway_feature_change(_selected_link_idx, _properties)
+    net = net.apply(_project_card_dict)
 
     _rev_links = pd.DataFrame(net.links_df)
     _rev_links = _rev_links.loc[_selected_link_idx, _p_to_track]
@@ -108,10 +112,10 @@ def test_change_multiple_properties_multiple_links(request, stpaul_net):
         f"ORIGINAL to REVISED Comparison\n {_orig_links.compare(_rev_links)}"
     )
 
-    for p in _properties:
+    for p_name, p in _properties.items():
         _expected_value = p["set"]
-        WranglerLogger.debug(f"Expected_value of {p['property']}:{_expected_value}")
-        assert _rev_links[p["property"]].eq(_expected_value).all()
+        WranglerLogger.debug(f"Expected_value of {p_name}:{_expected_value}")
+        assert _rev_links[p_name].eq(_expected_value).all()
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
@@ -120,50 +124,53 @@ def test_change_multiple_properties_multiple_links_existing_set(request, stpaul_
     net = copy.deepcopy(stpaul_net)
     # Set facility selection
     _facility = {
-        "links": [{"name": ["6th", "Sixth", "sixth"]}],
-        "A": {"osm_node_id": "187899923"},  # Jackson St
-        "B": {"osm_node_id": "187865924"},  # Robert St N
+        "links": {"name": ["6th", "Sixth", "sixth"]},
+        "from": {"osm_node_id": "187899923"},  # Jackson St
+        "to": {"osm_node_id": "187865924"},  # Robert St N
     }
-    _properties = [
-        {
-            "property": "lanes",
+    _properties = {
+        "lanes": {
             "existing": 1,
             "set": 2,
         },
-        {
-            "property": "bus_only",
+        "bus_only": {
             "set": 1,
         },
-        {
-            "property": "drive_access",
+        "drive_access": {
             "set": 0,
         },
-    ]
-
-    _selected_link_idx = net.select_roadway_features(_facility)
-    _p_to_track = ["name"] + [p["property"] for p in _properties]
+    }
+    _project_card_dict = {
+        "project": "test",
+        "roadway_property_change": {
+            "facility": _facility,
+            "property_changes": _properties,
+        },
+    }
+    _selection = net.get_selection(_facility)
+    _p_to_track = ["name"] + list(_properties.keys())
 
     WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
 
     _orig_links = pd.DataFrame(copy.deepcopy(net.links_df))
-    _orig_links = _orig_links.loc[_selected_link_idx, _p_to_track]
+    _orig_links = _orig_links.loc[_selection.selected_links, _p_to_track]
     WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
 
     # apply change
-    net = net.apply_roadway_feature_change(_selected_link_idx, _properties)
+    net = net.apply(_project_card_dict)
 
     _rev_links = pd.DataFrame(net.links_df)
-    _rev_links = _rev_links.loc[_selected_link_idx, _p_to_track]
+    _rev_links = _rev_links.loc[_selection.selected_links, _p_to_track]
     WranglerLogger.debug(f"_rev_links:\n{_rev_links}")
 
     WranglerLogger.debug(
         f"ORIGINAL to REVISED Comparison\n {_orig_links.compare(_rev_links)}"
     )
 
-    for p in _properties:
+    for p_name, p in _properties.items():
         _expected_value = p["set"]
-        WranglerLogger.debug(f"Expected_value of {p['property']}:{_expected_value}")
-        assert _rev_links[p["property"]].eq(_expected_value).all()
+        WranglerLogger.debug(f"Expected_value of {p_name}:{_expected_value}")
+        assert _rev_links[p_name].eq(_expected_value).all()
 
 
 def test_add_adhoc_field(request, small_net):
@@ -188,31 +195,40 @@ def test_add_default_value(request, stpaul_net, stpaul_ex_dir):
     """
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
-    project_card_name = "select_all_project_card.yml"
 
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path)
+    _float_val = 1.2345
+    _int_val = 10
+    _str_val = "default value"
 
-    net = net.apply_roadway_feature_change(
-        net.select_roadway_features(project_card.facility), project_card.properties
-    )
+    _adhoc_props = {
+        "my_ad_hoc_field_float": {"set": _float_val},
+        "my_ad_hoc_field_integer": {"set": _int_val},
+        "my_ad_hoc_field_string": {"set": _str_val},
+    }
+
+    _project_card_dict = {
+        "project": "6th Street Ad Hoc Fields",
+        "roadway_property_change": {
+            "facility": {"links": {"all": "True", "modes": ["any"]}},
+            "property_changes": _adhoc_props,
+        },
+    }
+    net = net.apply(_project_card_dict)
 
     WranglerLogger.debug(f"{net.links_df['my_ad_hoc_field_float'].value_counts()}")
     WranglerLogger.debug(f"{net.links_df['my_ad_hoc_field_integer'].value_counts()}")
     WranglerLogger.debug(f"{net.links_df['my_ad_hoc_field_string'].value_counts()}")
 
     assert (
-        net.links_df.loc[net.links_df["my_ad_hoc_field_float"] == 1.2345].shape
+        net.links_df.loc[net.links_df["my_ad_hoc_field_float"] == _float_val].shape
         == net.links_df.shape
     )
     assert (
-        net.links_df.loc[net.links_df["my_ad_hoc_field_integer"] == 10].shape
+        net.links_df.loc[net.links_df["my_ad_hoc_field_integer"] == _int_val].shape
         == net.links_df.shape
     )
     assert (
-        net.links_df.loc[
-            net.links_df["my_ad_hoc_field_string"] == "default value"
-        ].shape
+        net.links_df.loc[net.links_df["my_ad_hoc_field_string"] == _str_val].shape
         == net.links_df.shape
     )
 
@@ -226,18 +242,17 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     """
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
-    project_card_name = "new_fields_project_card.yml"
+    project_card_name = "road.prop_change.new_fields.yml"
 
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path)
+    project_card = read_card(project_card_path)
 
-    selected_link_indices = net.select_roadway_features(project_card.facility)
-
-    attributes_to_update = [p["property"] for p in project_card.properties]
-
-    net = net.apply_roadway_feature_change(
-        net.select_roadway_features(project_card.facility), project_card.properties
+    selected_link_indices = net.get_selection(project_card.facility).selected_links
+    attributes_to_update = list(
+        project_card.roadway_property_change["property_changes"].keys()
     )
+
+    net = net.apply(project_card)
 
     rev_links = net.links_df.loc[selected_link_indices, attributes_to_update]
     rev_types = [(a, net.links_df[a].dtypes) for a in attributes_to_update]
@@ -262,9 +277,9 @@ def test_bad_properties_statements(request, small_net):
 
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_net)
-    ok_properties_change = [{"property": "lanes", "change": 1}]
-    bad_properties_change = [{"property": "my_random_var", "change": 1}]
-    bad_properties_existing = [{"property": "my_random_var", "existing": 1}]
+    ok_properties_change = {"lanes": {"change": 1}}
+    bad_properties_change = {"my_random_var": {"change": 1}}
+    bad_properties_existing = {"my_random_var": {"existing": 1}}
 
     with pytest.raises(ValueError):
         net.validate_properties(net.links_df, bad_properties_change)
@@ -278,5 +293,78 @@ def test_bad_properties_statements(request, small_net):
         net.validate_properties(
             net.links_df, bad_properties_existing, ignore_existing=False
         )
+
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+def test_change_node_xy(request, small_net):
+    """Tests if X and Y property changes from a project card also update the node/link geometry."""
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    net = copy.deepcopy(small_net)
+
+    _test_link = net.links_df.iloc[0]
+    _test_link_idx = int(_test_link[net.links_df.params.primary_key])
+    _test_node = net.nodes_df.loc[[_test_link[net.links_df.params.from_node]]].iloc[0]
+    _test_node_idx = int(_test_node[[net.nodes_df.params.primary_key]].iloc[0])
+
+    WranglerLogger.debug(f"Node Index: {_test_node_idx}")
+    WranglerLogger.debug(f"Link Index: {_test_link_idx}")
+    WranglerLogger.info(
+        f"Original Node (Index: {_test_node_idx}):\n{net.nodes_df.loc[_test_node_idx]}"
+    )
+
+    facility = {
+        "nodes": {"model_node_id": [_test_node_idx]},
+    }
+    WranglerLogger.debug(f"facility: {facility}")
+    _expected_X = -1000
+    _expected_Y = 1000000
+    properties = {
+        "X": {"set": _expected_X},
+        "Y": {"set": _expected_Y},
+    }
+
+    _project_card_dict = {
+        "project": "Update node geometry",
+        "roadway_property_change": {
+            "facility": facility,
+            "property_changes": properties,
+        },
+    }
+    net = net.apply(_project_card_dict)
+
+    # Make sure geometry and XY were updated in node
+    _updated_node = net.nodes_df.loc[_test_node_idx]
+    WranglerLogger.info(
+        f"Updated Node:\n{_updated_node[[net.nodes_df.params.primary_key,'X','Y','geometry']]}"
+    )
+    assert _updated_node.geometry.x == _expected_X
+    assert _updated_node.geometry.y == _expected_Y
+    assert _updated_node.X == _expected_X
+    assert _updated_node.Y == _expected_Y
+
+    # Make sure geometry also updated in link e
+    _updated_link = net.links_df.loc[_test_link_idx]
+    WranglerLogger.info(
+        f"Updated Link Geometry for ({_updated_link.A}-->{_updated_link.B}):\n\
+            {_updated_link[['geometry']].values}"
+    )
+    _first_point_in_link = _updated_link.geometry.coords[0]
+    assert (_first_point_in_link[0], _first_point_in_link[1]) == (
+        _expected_X,
+        _expected_Y,
+    )
+
+    # Make sure geometry also updated shape
+    _updated_shape = net.shapes_df.loc[net.links_df.loc[_test_link_idx, "shape_id"]]
+    WranglerLogger.info(
+        f"Updated Shape Geometry:\n\
+            {_updated_shape[['geometry']].values}"
+    )
+    _first_point_in_shape = _updated_shape.geometry.coords[0]
+    assert (_first_point_in_shape[0], _first_point_in_shape[1]) == (
+        _expected_X,
+        _expected_Y,
+    )
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

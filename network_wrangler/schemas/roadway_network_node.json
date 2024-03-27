@@ -84,14 +84,7 @@
             "type": "object",
             "title": "The Properties Schema",
             "required": [
-              "shstReferenceId",
-              "osm_node_id",
-              "transit_node",
-              "drive_node",
-              "walk_node",
-              "bike_node",
-              "outboundReferenceIds",
-              "inboundReferenceIds"
+              "model_node_id"
             ],
             "properties": {
               "id": {

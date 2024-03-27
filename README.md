@@ -3,6 +3,7 @@
 Network Wrangler is a Python library for managing travel model network scenarios.
 
 ## System Requirements
+
 Network Wrangler should be operating system agonistic and has been tested on Ubuntu and Mac OS.
 
 In order to assist in installation, its helpful to have either [miniconda](https://docs.conda.io/en/latest/miniconda.html), [anaconda](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/index.html#regular-installation) or [Docker CE](https://docs.docker.com/install/) installed.  If you don't have any of these already, we reommend starting with Miniconda for Python 3.7 as it has the smallest footprint. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications. All commands described below should be entered into the `Ananconda Prompt` command window.
@@ -10,6 +11,7 @@ In order to assist in installation, its helpful to have either [miniconda](https
 Network Wrangler does require Python 3.7+.  If you have a different version of Python installed, `conda` will take care of installing it for you in the installation instructions below.
 
 ## Installation
+
 Network Wrangler uses Python 3.6 and above.  Requirements are stored in `requirements.txt` but are automatically installed when using `pip`.
 
 If you are managing multiple python versions, we suggest using [`virtualenv`](https://virtualenv.pypa.io/en/latest/) or [`conda`](https://conda.io/en/latest/) virtual environments. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications. Do not add Anaconda to the system path during installation. This may cause problems with other programs that require python 2.7 to be placed in the system path.
@@ -27,6 +29,7 @@ pytest
 Network wrangler can be installed in several ways depending on the user's needs. Installing from github is the simplest method and is appropriate when the user does not anticipate needing to update network wrangler. An update will require rebuilding the network wrangler environment. Installing from clone is slightly more involved and requires the user to have a git manager on their machine, but permits the user to install network wrangler with the `-e`, edit, option so that their network wrangler installation can be updated through pulling new commits from the network wrangler repo without a full reinstallation.
 
 ### From GitHub
+
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install Network Wrangler from the source on GitHub.
 
 ```bash
@@ -39,6 +42,7 @@ pip install git+https://github.com/wsp-sag/network_wrangler.git@master#egg=netwo
 Note: if you wanted to install from a specific tag/version number or branch, replace `@master` with `@<branchname>`  or `@tag`
 
 ### From Clone
+
 If you are going to be working on Network Wrangler locally, you might want to clone it to your local machine and install it from the clone.  The -e will install it in [editable mode](https://pip.pypa.io/en/stable/reference/pip_install/?highlight=editable#editable-installs).
 
 This is also useful if you want to continue to update your Network Wrangler as it is developed on GitHub.
@@ -131,16 +135,17 @@ Note: if you are not part of the project team and want to contribute code back t
 4. Command to exit container: `exit`
 
 Containers:
- - `wrangler-jupyter` started by running `docker-compose run wrangler-jupyter --build` is appropriate for running and testing wrangler.
-   - Default action is to start [jupyter notebook](https://jupyter.org/) which can be found at http://127.0.0.1:8888
-   - Safe: It creates an empty folder to store jupyter notebooks within the container but wont overwrite the source files on your actual machine.
-   - Starting Bash: You can also start the container with a command line using `docker-compose run wrangler-jupyter /bin/bash --build`.  
-   - Doesn't install development dependencies (although they can be installed from within the container)
- - `wrangler-ci` is a small image without extras meant for running tests and deploying to continuous integration server.
-   - default command is to run [pytest](https://docs.pytest.org/en/latest/).
-   - contains development dependencies so that it can run tests and build docs.
- - `wrangler-dev` is the most powerful but dangerous container `docker-compose run wrangler-dev /bin/bash --build`
-   - Warning: It will synchronize code edited from the container to your wrangler clone.  This is great for developing within an IDE, but please take this into account.
+
+- `wrangler-jupyter` started by running `docker-compose run wrangler-jupyter --build` is appropriate for running and testing wrangler.
+    - Default action is to start [jupyter notebook](https://jupyter.org/) which can be found at <http://127.0.0.1:8888>
+    - Safe: It creates an empty folder to store jupyter notebooks within the container but wont overwrite the source files on your actual machine.
+    - Starting Bash: You can also start the container with a command line using `docker-compose run wrangler-jupyter /bin/bash --build`.  
+    - Doesn't install development dependencies (although they can be installed from within the container)
+- `wrangler-ci` is a small image without extras meant for running tests and deploying to continuous integration server.
+    - default command is to run [pytest](https://docs.pytest.org/en/latest/).
+    - contains development dependencies so that it can run tests and build docs.
+- `wrangler-dev` is the most powerful but dangerous container `docker-compose run wrangler-dev /bin/bash --build`
+    - Warning: It will synchronize code edited from the container to your wrangler clone.  This is great for developing within an IDE, but please take this into account.
 
 ### Common Installation Issues
 
@@ -153,12 +158,14 @@ Try installing rtree on its own from the Anaconda cloud
 ```bash
 conda install rtree
 ```
+
 **Issue: Shapely, a pre-requisite, doesn't install propertly because it is missing GEOS module**
 Try installing shapely on its own from the Anaconda cloud
 
 ```bash
 conda install shapely
 ```
+
 **Issue: Conda is unable to install a library or to update to a specific library version**
 Try installing libraries from conda-forge
 
@@ -177,11 +184,12 @@ To start the notebook, open a command line in the network_wrangler top-level dir
 
 `jupyter notebook`
 
-
 ## Documentation
+
 Documentation can be built from the `/docs` folder using the command: `make html`
 
 ## Usage
+
 ```python
 import network_wrangler
 
@@ -210,15 +218,18 @@ my_scenario.apply_all_projects()
 my_scenario.write("my_project/build", "baseline")
 
 ```
-## Attribution  
+
+## Attribution
+
 This project is built upon the ideas and concepts implemented in the [network wrangler project](https://github.com/sfcta/networkwrangler) by the [San Francisco County Transportation Authority](http://github.com/sfcta) and expanded upon by the [Metropolitan Transportation Commission](https://github.com/BayAreaMetro/NetworkWrangler).
 
 While Network Wrangler as written here is based on these concepts, the code is distinct and builds upon other packages such as `geopandas` and `partridge` which hadn't been implemented when networkwrangler 1.0 was developed.
 
 ## Contributing
+
 Pull requests are welcome. Please open an issue first to discuss what you would like to change.
 Please make sure to update tests as appropriate.
 
-
 ## License
+
 [Apache-2.0](https://choosealicense.com/licenses/apache-2.0/)

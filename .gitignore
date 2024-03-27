@@ -13,6 +13,7 @@ scratch/*
 .cache
 tests/t_*
 tests/*.txt
+tests/out/** 
 # Logs
 *.log
 scenario_log.txt
@@ -65,4 +66,5 @@ env/
 .project
 .pydevproject
 .settings
+.vscode
 *.hubstorinfo

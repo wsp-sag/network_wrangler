@@ -2,9 +2,8 @@ import pytest
 
 from shapely.geometry import LineString
 
-from network_wrangler.utils import haversine_distance
-from network_wrangler.utils import create_unique_shape_id
-from network_wrangler.utils import offset_location_reference
+from network_wrangler import WranglerLogger
+
 
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
@@ -44,9 +43,9 @@ def test_time_convert(request):
     df = DataFrame(time_tests, columns=["time", "time_results"])
     print("Original Time Series", df)
 
-    from network_wrangler.utils import parse_time_spans_to_secs
+    from network_wrangler.utils.time import parse_timespans_to_secs
 
-    df["time"] = df["time"].apply(parse_time_spans_to_secs)
+    df["time"] = df["time"].apply(parse_timespans_to_secs)
     print("Result Time Series", df)
     from pandas.testing import assert_series_equal
 
@@ -55,6 +54,7 @@ def test_time_convert(request):
 
 def test_get_distance_bw_lat_lon(request):
     print("\n--Starting:", request.node.name)
+    from network_wrangler.utils import haversine_distance
 
     start = [-93.0889873, 44.966861]
     end = [-93.08844310000001, 44.9717832]
@@ -65,6 +65,9 @@ def test_get_distance_bw_lat_lon(request):
 
 
 def test_get_unique_shape_id(request):
+    print("\n--Starting:", request.node.name)
+    from network_wrangler.roadway.utils import create_unique_shape_id
+
     geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
 
     shape_id = create_unique_shape_id(geometry)
@@ -75,7 +78,8 @@ def test_get_unique_shape_id(request):
 
 
 def test_location_reference_offset(request):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    from network_wrangler.utils import offset_location_reference
 
     location_reference = [
         {"sequence": 1, "point": [-93.0903549, 44.961085]},
@@ -94,13 +98,14 @@ def test_location_reference_offset(request):
 
     assert new_location_reference == expected_location_reference
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_point_from_xy(request):
     from network_wrangler.utils import point_from_xy
     from numpy.testing import assert_almost_equal
 
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     in_xy = (871106.53, 316284.46)  # Minnesota Science Museum
     xy_crs = 26993  # Minnesota State Plane South, Meter
     out_crs = 4269  # https://epsg.io/4269
@@ -110,3 +115,26 @@ def test_point_from_xy(request):
     wgs_xy_science_museum = (-93.099, 44.943)
 
     assert_almost_equal(out_xy, wgs_xy_science_museum, decimal=2)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+def test_get_overlapping_range(request):
+    from network_wrangler.utils import get_overlapping_range
+
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+
+    a = range(0, 5)
+    b = range(5, 10)
+    assert get_overlapping_range([a, b]) is None
+
+    c = range(100, 106)
+    assert get_overlapping_range([a, b, c]) is None
+
+    i = (1, 5)
+    j = (2, 7)
+    assert get_overlapping_range([i, j]) == range(2, 5)
+
+    k = range(3, 5)
+    assert get_overlapping_range([i, j, k]) == range(3, 5)
+
+    WranglerLogger.info(f"--Finished: {request.node.name}")

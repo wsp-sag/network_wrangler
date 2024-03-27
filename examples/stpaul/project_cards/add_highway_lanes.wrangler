@@ -1,6 +1,0 @@
----
-project: mega freeways
-category: Calculated Roadway
----
-
-self.links_df.loc[self.links_df['lanes'] == 4, 'lanes'] = 12
