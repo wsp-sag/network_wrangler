@@ -6,7 +6,7 @@ from .model_roadway import (
 from .segment import Segment
 from .selection import RoadwaySelection
 from .subnet import Subnet
-from .utils import compare_networks, compare_links
+from .utils import compare_networks, compare_links, diff_nets
 
 __all__ = [
     "ModelRoadwayNetwork",
@@ -17,4 +17,5 @@ __all__ = [
     "MANAGED_LANES_NODE_ID_SCALAR",
     "compare_networks",
     "compare_links",
+    "diff_nets",
 ]

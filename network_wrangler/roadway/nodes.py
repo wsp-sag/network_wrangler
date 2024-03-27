@@ -1,8 +1,9 @@
 import json
-import os
+import time
 
 from dataclasses import dataclass, field
-from typing import Union, Optional, List
+from pathlib import Path
+from typing import Union, Optional, List, Literal
 
 import geopandas as gpd
 import numpy as np
@@ -15,10 +16,19 @@ from jsonschema.exceptions import SchemaError
 from pandera import check_input, check_output, DataFrameModel
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
-from shapely.geometry import Point
 
-from ..utils import findkeys, coerce_val_to_series_type, point_from_xy
+from ..utils import (
+    findkeys,
+    coerce_val_to_series_type,
+    point_from_xy,
+    read_table,
+    write_table,
+)
 from ..logger import WranglerLogger
+
+
+# Remove the unused import statement
+# from network_wrangler.roadway.nodes_params import NodesParams
 
 
 @dataclass
@@ -27,6 +37,7 @@ class NodesParams:
     _addtl_unique_ids: list[str] = field(default_factory=lambda: ["osm_node_id"])
     _addtl_explicit_ids: list[str] = field(default_factory=lambda: [])
     source_file: str = field(default=None)
+    table_type: Literal["nodes"] = field(default="nodes")
     x_field: str = field(default="X")
     y_field: str = field(default="Y")
 
@@ -64,19 +75,24 @@ class NodesSchema(DataFrameModel):
 
     # optional fields
     osm_node_id: Optional[Series[str]] = pa.Field(
-        coerce=True, unique=True, nullable=True
+        coerce=True,
+        unique=True,
+        nullable=True,
+        default="",
     )
 
-    # TODO not sure we even need these anymore since we pull modal networks based on connections
-    # to links now.
-    transit_node: Optional[Series[bool]] = pa.Field(coerce=True, nullable=True)
-    drive_node: Optional[Series[bool]] = pa.Field(coerce=True, nullable=True)
-    walk_node: Optional[Series[bool]] = pa.Field(coerce=True, nullable=True)
-    bike_node: Optional[Series[bool]] = pa.Field(coerce=True, nullable=True)
+    inboundReferenceIds: Optional[Series[List[str]]] = pa.Field(
+        coerce=True, nullable=True
+    )
+    outboundReferenceIds: Optional[Series[List[str]]] = pa.Field(
+        coerce=True, nullable=True
+    )
 
 
 def read_nodes(
-    filename: str, crs: int = 4326, nodes_params: Union[dict, NodesParams] = None
+    filename: Union[Path, str],
+    crs: int = 4326,
+    nodes_params: Union[dict, NodesParams] = None,
 ) -> gpd.GeoDataFrame:
     """Reads nodes and returns a geodataframe of nodes.
 
@@ -84,86 +100,111 @@ def read_nodes(
     Validates output dataframe using NodsSchema.
 
     Args:
-        filename (str): file to read links in from.
+        filename (Path,str): file to read links in from.
         crs: coordinate reference system number. Defaults to 4323.
         nodes_params: a NodesParams instance. Defaults to a default odesParams instance.
     """
-    WranglerLogger.info(f"Reading node from {filename}.")
-    with open(filename) as f:
-        node_geojson = json.load(f)
-    nodes_data = [g["properties"] for g in node_geojson["features"]]
-    node_geometries = [
-        Point(g["geometry"]["coordinates"]) for g in node_geojson["features"]
-    ]
-    nodes_df = nodes_data_to_nodes_df(
-        nodes_data, nodes_params=nodes_params, crs=crs, node_geometries=node_geometries
-    )
-    nodes_df.params.source_file = filename
+    WranglerLogger.debug(f"Reading nodes from {filename}.")
+    start_time = time.time()
 
+    nodes_df = read_table(filename)
+    WranglerLogger.debug(
+        f"Read {len(nodes_df)} nodes from file in {round(time.time() - start_time,2)}."
+    )
+
+    nodes_df = _nodes_data_to_nodes_df(nodes_df, nodes_params=nodes_params, crs=crs)
+    nodes_df.params.source_file = filename
+    WranglerLogger.info(
+        f"Read {len(nodes_df)} nodes from {filename} in {round(time.time() - start_time,2)}."
+    )
     return nodes_df
 
 
+def _create_node_geometries_from_xy(
+    nodes_df: pd.DataFrame, crs: int
+) -> gpd.GeoDataFrame:
+    """Fixes geometries in nodes_df if necessary using X and Y columns
+
+    Args:
+        nodes_df: nodes dataframe to fix geometries in.
+
+    Returns:
+        gpd.GeoDataFrame: nodes dataframe with fixed geometries.
+    """
+    if not isinstance(nodes_df, pd.DataFrame):
+        nodes_df = pd.DataFrame(nodes_df)
+    if "X" not in nodes_df.columns or "Y" not in nodes_df.columns:
+        raise NodeAddError("Must have X and Y properties to create geometries from.")
+
+    geo_start_time = time.time()
+    if "geometry" in nodes_df:
+        nodes_df["geometrys"] = nodes_df["geometry"].fillna(
+            lambda x: point_from_xy(x["X"], x["Y"], xy_crs=crs, point_crs=crs),
+        )
+        WranglerLogger.debug(
+            f"Filled missing geometry from X and Y in {round(time.time() - geo_start_time,2)}."
+        )
+        return nodes_df
+
+    node_geometries = nodes_df.apply(
+        lambda x: point_from_xy(x["X"], x["Y"], xy_crs=crs, point_crs=crs),
+        axis=1,
+    )
+    WranglerLogger.debug(
+        f"Created node geometries from X and Y in {round(time.time() - geo_start_time,2)}."
+    )
+    nodes_gdf = gpd.GeoDataFrame(nodes_df, geometry=node_geometries)
+    return nodes_gdf
+
+
 @check_output(NodesSchema, inplace=True)
-def nodes_data_to_nodes_df(
-    nodes_data: List[dict],
+def _nodes_data_to_nodes_df(
+    nodes_df: gpd.GeoDataFrame,
     nodes_params: NodesParams = None,
     crs: int = 4326,
-    node_geometries: List = None,
 ) -> gpd.GeoDataFrame:
-    """Turn list of nodes data into nodes dataframe given either node_geometries or X,Y properties.
+    """Turn nodes data into official nodes dataframe.
 
+    Adds missing geometry.
+    Makes sure X and Y are consistent with geometry GeoSeries.
+    Adds `params` as a _metadata attribute of nodes_df.
+    Adds CRS.
+    Copies and sets idx to primary_key.
     Validates output to NodesSchema.
 
     Args:
-        nodes_data (List[dict]): List of dictionaries with node properties.
+        nodes_df : Nodes dataframe
         nodes_params (NodesParams, optional): NodesParams instance. Defaults to Default NodeParams
             properties.
         crs: Coordinate references system id. Defaults to 4326.
-        node_geometries (List, optional): List of node_geometries. If None, will calculate from X
-            and Y properties.
 
     Returns:
         gpd.GeoDataFrame: _description_
     """
-    if len(nodes_data) < 25:
+    WranglerLogger.debug("Turning node data into official nodes_df")
+
+    if isinstance(nodes_df, gpd.GeoDataFrame) and nodes_df.crs != crs:
+        nodes_df = nodes_df.to_crs(crs)
+
+    if (
+        not isinstance(nodes_df, gpd.GeoDataFrame)
+        or nodes_df.geometry.isnull().values.any()
+    ):
+        nodes_df = _create_node_geometries_from_xy(nodes_df, crs=crs)
+
+    # Make sure values are consistent
+    nodes_df["X"] = nodes_df["geometry"].apply(lambda g: g.x)
+    nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.y)
+
+    if len(nodes_df) < 5:
         WranglerLogger.debug(
-            f"Coercing following data to nodes_df:\n{pd.DataFrame(nodes_data)}"
+            f"nodes_df:\n{nodes_df[['model_node_id','geometry','X','Y']]}"
         )
+
+    nodes_df.gdf_name = "network_nodes"
 
     if nodes_params is None:
         nodes_params = NodesParams()
-
-    if node_geometries is None:
-        temp_nodes_df = pd.DataFrame(nodes_data)
-        if (
-            not set(temp_nodes_df.columns).issubset(["X", "Y"])
-            and temp_nodes_df[["X", "Y"]].isnull().values.any()
-        ):
-            raise NodeAddError(
-                "Must have X and Y data for all nodes in order to compute geometry"
-            )
-
-        node_geometries = temp_nodes_df.apply(
-            lambda x: point_from_xy(
-                x["X"],
-                x["Y"],
-                xy_crs=crs,
-                point_crs=crs,
-            ),
-            axis=1,
-        )
-    nodes_df = gpd.GeoDataFrame(nodes_data, geometry=node_geometries)
-    if len(nodes_df) < 25:
-        WranglerLogger.debug(f"nodes_df:\n{nodes_df[['model_node_id','geometry']]}")
-    nodes_df.crs = crs
-    nodes_df.gdf_name = "network_nodes"
-
-    if "X" not in nodes_df.columns or "Y" not in nodes_df.columns:
-        if nodes_df[["geometry"]].isnull().values.any():
-            raise NodeAddError("Must have geometry data for all nodes.")
-        nodes_df["X"] = nodes_df["geometry"].apply(lambda g: g.x)
-        nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.y)
-
     nodes_df.__dict__["params"] = nodes_params
     nodes_df._metadata += ["params"]
 
@@ -174,14 +215,16 @@ def nodes_data_to_nodes_df(
 
 
 def validate_wrangler_nodes_file(
-    node_file: str, schema_location: str = "roadway_network_node.json"
+    node_file: str, schema_location: Union[str, Path] = "roadway_network_node.json"
 ) -> bool:
     """
     Validate roadway network data node schema and output a boolean
     """
-    if not os.path.exists(schema_location):
-        base_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "schemas")
-        schema_location = os.path.join(base_path, schema_location)
+    schema_location = Path(schema_location)
+    schema_location = Path(schema_location)
+    if not schema_location.exists():
+        base_path = Path(__file__).resolve().parent / "schemas"
+        schema_location = base_path / schema_location
 
     with open(schema_location) as schema_json_file:
         schema = json.load(schema_json_file)
@@ -233,6 +276,10 @@ def nodes_df_to_geojson(nodes_df: pd.DataFrame, properties: list):
 class ModeNodeAccessor:
     def __init__(self, nodes_df):
         self._nodes_df = nodes_df
+        if not nodes_df.params.table_type == "nodes":
+            raise NotNodesError(
+                "`set_node_prop` is only available to nodes dataframes."
+            )
 
     def __call__(
         self,
@@ -303,6 +350,22 @@ class ModeNodeAccessor:
             )
 
         return _nodes_df
+
+
+@check_input(NodesSchema, inplace=True)
+def write_nodes(
+    nodes_df: gpd.GeoDataFrame,
+    out_dir: Union[str, Path],
+    prefix: str,
+    format: str,
+    overwrite: bool,
+) -> None:
+    nodes_file = Path(out_dir) / f"{prefix}node.{format}"
+    write_table(nodes_df, nodes_file, overwrite=overwrite)
+
+
+class NotNodesError(Exception):
+    pass
 
 
 class NodeChangeError(Exception):

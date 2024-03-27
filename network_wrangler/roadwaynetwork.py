@@ -10,6 +10,7 @@ import copy
 
 from collections import defaultdict
 from typing import Collection, List, Union
+from pathlib import Path
 
 import geopandas as gpd
 import networkx as nx
@@ -29,16 +30,15 @@ from .projects import (
 )
 from .logger import WranglerLogger
 from .utils import (
-    location_reference_from_nodes,
-    line_string_from_location_references,
-    parse_timespans_to_secs,
     point_from_xy,
-    update_points_in_linestring,
     get_point_geometry_from_linestring,
+    update_nodes_in_linestring_geometry,
+    linestring_from_nodes,
 )
+from .utils.time import parse_timespans_to_secs
 from .roadway.model_roadway import ModelRoadwayNetwork
-from .roadway.links import read_links, LinksParams, links_df_to_json, LinksSchema
-from .roadway.nodes import read_nodes, NodesParams, nodes_df_to_geojson, NodesSchema
+from .roadway.links import LinksSchema
+from .roadway.nodes import NodesSchema
 from .roadway.shapes import read_shapes, ShapesParams
 from .roadway.selection import RoadwaySelection
 
@@ -50,7 +50,7 @@ class RoadwayNetwork(object):
     Typical usage example:
 
     ```py
-    net = RoadwayNetwork.read(
+    net = load_roadway(
         links_file=MY_LINK_FILE,
         nodes_file=MY_NODE_FILE,
         shapes_file=MY_SHAPE_FILE,
@@ -87,7 +87,7 @@ class RoadwayNetwork(object):
             nodes=self.m_nodes_df,
             links=self.m_links_df
         )
-        net.write(filename=my_out_prefix, path=my_dir, for_model = True)
+        write_roadway(net,filename=my_out_prefix, path=my_dir, for_model = True)
     ```
 
     Attributes:
@@ -124,8 +124,6 @@ class RoadwayNetwork(object):
         num_managed_lane_links (int): dynamic property number of managed lane links.
     """
 
-    DEFAULT_CRS = 4326
-
     def __init__(
         self,
         links_df: GeoDataFrame,
@@ -133,7 +131,6 @@ class RoadwayNetwork(object):
         shapes_df: GeoDataFrame = None,
         shapes_file: str = None,
         shapes_params: ShapesParams = None,
-        crs: int = DEFAULT_CRS,
     ):
         """
         Constructor for RoadwayNetwork object.
@@ -145,12 +142,16 @@ class RoadwayNetwork(object):
             shapes_file: path to shapes file to lazily read it in when needed. Defaults to None.
             shapes_params: ShapesParams instance. Defaults to default initialization of
                 ShapesParams.
-            crs: coordinate reference system in ESPG number format. Defaults to DEFAUULT_CRS
+            crs: coordinate reference system in ESPG number format. Defaults to DEFAULT_CRS
                 which is set to 4326, WGS 84 Lat/Long
 
         """
-
-        self.crs = crs
+        if not links_df.crs == nodes_df.crs:
+            WranglerLogger.error(
+                f"CRS of links_df ({links_df.crs}) and nodes_df ({nodes_df.crs}) don't match."
+            )
+            raise ValueError("CRS of links_df and nodes_df don't match.")
+        self.crs = links_df.crs
         self.nodes_df = nodes_df
         self.links_df = links_df
 
@@ -205,58 +206,6 @@ class RoadwayNetwork(object):
         else:
             return 0
 
-    @staticmethod
-    def read(
-        links_file: str,
-        nodes_file: str,
-        shapes_file: str = None,
-        links_params: LinksParams = None,
-        nodes_params: NodesParams = None,
-        shapes_params: ShapesParams = None,
-        crs: int = DEFAULT_CRS,
-        read_shapes: bool = False,
-    ) -> RoadwayNetwork:
-        """
-        Reads a network from the roadway network standard
-        Validates that it conforms to the schema
-
-        args:
-            links_file: full path to the link file
-            nodes_file: full path to the node file
-            shapes_file: full path to the shape file
-            links_params: LinkParams instance to use. Will default to default
-                values for LinkParams
-            nodes_params: NodeParames instance to use. Will default to default
-                values for NodeParams
-            shapes_params: ShapeParames instance to use. Will default to default
-                values for ShapeParams
-            crs: coordinate reference system. Defaults to DEFAULT_CRS which defaults to 4326
-                which is WGS84 lat/long.
-            read_shapes: if True, will read shapes into network instead of only lazily
-                reading them when they are called. Defaults to False.
-
-        Returns: a RoadwayNetwork instance
-        """
-        links_df = read_links(links_file, crs=crs, links_params=links_params)
-        nodes_df = read_nodes(nodes_file, crs=crs, nodes_params=nodes_params)
-
-        shapes_df = None
-        if read_shapes:
-            shapes_df = read_shapes(shapes_file, crs=crs, shapes_params=shapes_params)
-
-        roadway_network = RoadwayNetwork(
-            links_df,
-            nodes_df,
-            shapes_df=shapes_df,
-            crs=crs,
-            shapes_file=shapes_file,
-        )
-
-        roadway_network._links_file = links_file
-        roadway_network._nodes_file = nodes_file
-
-        return roadway_network
-
     @property
     def summary(self) -> dict:
         """Quick summary dictionary of number of links, nodes"""
@@ -265,50 +214,6 @@ class RoadwayNetwork(object):
             "nodes": len(self.nodes_df),
         }
         return d
-
-    def write(
-        self,
-        path: str = ".",
-        filename: str = "",
-    ) -> None:
-        """
-        Writes a network in the roadway network standard
-
-        args:
-            path: the path were the output will be saved
-            filename: the name prefix of the roadway files that will be generated
-        """
-
-        if not os.path.exists(path):
-            WranglerLogger.debug("\nPath [%s] doesn't exist; creating." % path)
-            os.mkdir(path)
-
-        links_file = os.path.join(path, f"{filename}{'_' if filename else ''}link.json")
-        nodes_file = os.path.join(
-            path, f"{filename}{'_' if filename else ''}node.geojson"
-        )
-        shapes_file = os.path.join(
-            path, f"{filename}{'_' if filename else ''}shape.geojson"
-        )
-
-        link_property_columns = self.links_df.columns.values.tolist()
-        link_property_columns.remove("geometry")
-        links_json = links_df_to_json(self.links_df, link_property_columns)
-        with open(links_file, "w") as f:
-            json.dump(links_json, f)
-
-        # geopandas wont let you write to geojson because
-        # it uses fiona, which doesn't accept a list as one of the properties
-        # so need to convert the df to geojson manually first
-        property_columns = self.nodes_df.columns.values.tolist()
-        property_columns.remove("geometry")
-
-        nodes_geojson = nodes_df_to_geojson(self.nodes_df, property_columns)
-
-        with open(nodes_file, "w") as f:
-            json.dump(nodes_geojson, f)
-
-        self.shapes_df.to_file(shapes_file, driver="GeoJSON")
 
     @property
     def link_shapes_df(self) -> gpd.GeoDataFrame:
@@ -445,13 +350,11 @@ class RoadwayNetwork(object):
         ):
             project_card = ProjectCard(project_card)
 
-        if not project_card.valid:
-            WranglerLogger.error("Invalid Project Card: {project_card}")
-            raise ValueError(f"Project card {project_card.project} not valid.")
+        project_card.validate()
 
         if project_card.sub_projects:
             for sp in project_card.sub_projects:
-                WranglerLogger.debug(f"- applying subproject: {sp.type}")
+                WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
                 self._apply_change(sp)
             return self
         else:
@@ -464,37 +367,37 @@ class RoadwayNetwork(object):
                 f"Applying Project to Roadway Network: {change.project}"
             )
 
-        if change.type == "roadway_property_change":
+        if change.change_type == "roadway_property_change":
             return apply_roadway_property_change(
                 self,
                 self.get_selection(change.facility),
                 change.roadway_property_change["property_changes"],
             )
 
-        elif change.type == "roadway_managed_lanes":
+        elif change.change_type == "roadway_managed_lanes":
             return apply_parallel_managed_lanes(
                 self,
                 self.get_selection(change.facility),
                 change.roadway_managed_lanes["property_changes"],
             )
 
-        elif change.type == "roadway_addition":
+        elif change.change_type == "roadway_addition":
             return apply_new_roadway(
                 self,
                 change.roadway_addition,
             )
 
-        elif change.type == "roadway_deletion":
+        elif change.change_type == "roadway_deletion":
             return apply_roadway_deletion(
                 self,
                 change.roadway_deletion,
             )
 
-        elif change.type == "pycode":
+        elif change.change_type == "pycode":
             return apply_calculated_roadway(self, change.pycode)
         else:
             WranglerLogger.error(f"Couldn't find project in:\n{change.__dict__}")
-            raise (ValueError("Invalid Project Card Category: {change.type}"))
+            raise (ValueError("Invalid Project Card Category: {change.change_type}"))
 
     def update_network_geometry_from_node_xy(
         self, updated_nodes: List = None
@@ -505,22 +408,18 @@ class RoadwayNetwork(object):
         Also updates the geometry of links and shapes that reference these nodes.
 
         Args:
-            updated_nodes: List of nodes to update. Defaults to all nodes.
+            updated_nodes: List of node_ids to update. Defaults to all nodes.
 
         Returns:
            gpd.GeoDataFrame: nodes geodataframe with updated geometry.
         """
         if updated_nodes:
-            updated_nodes_df = copy.deepcopy(
-                self.nodes_df.loc[
-                    self.nodes_df[self.nodes_df.params.primary_key].isin(updated_nodes)
-                ]
-            )
+            updated_nodes_df = self.nodes_df.loc[updated_nodes]
         else:
-            updated_nodes_df = copy.deepcopy(self.nodes_df)
+            updated_nodes_df = self.nodes_df
             updated_nodes = self.nodes_df.index.values.tolist()
 
-        if len(updated_nodes_df) < 25:
+        if len(updated_nodes_df) < 5:
             WranglerLogger.debug(
                 f"Original Nodes:\n{updated_nodes_df[['X','Y','geometry']]}"
             )
@@ -534,21 +433,23 @@ class RoadwayNetwork(object):
             ),
             axis=1,
         )
-        WranglerLogger.debug(f"{len(self.nodes_df)} nodes in network before update")
-        if len(updated_nodes_df) < 25:
+
+        if len(updated_nodes_df) < 5:
             WranglerLogger.debug(
                 f"Updated Nodes:\n{updated_nodes_df[['X','Y','geometry']]}"
             )
+
         self.nodes_df.update(
             updated_nodes_df[[updated_nodes_df.params.primary_key, "geometry"]]
         )
-        WranglerLogger.debug(f"{len(self.nodes_df)} nodes in network after update")
-        if len(self.nodes_df) < 25:
+
+        if len(self.nodes_df) < 5:
             WranglerLogger.debug(
                 f"Updated self.nodes_df:\n{self.nodes_df[['X','Y','geometry']]}"
             )
 
-        self._update_node_geometry_in_links_shapes(updated_nodes_df)
+        self._update_node_geometry_in_links(updated_nodes_df.index.values.tolist())
+        self._update_node_geometry_in_shapes(updated_nodes_df.index.values.tolist())
 
     def nodes_in_links(
         self,
@@ -789,87 +690,100 @@ class RoadwayNetwork(object):
 
         return _sel_links_df
 
-    def _update_node_geometry_in_links_shapes(
+    def _update_node_geometry_in_links(
         self,
-        updated_nodes_df: gpd.GeoDataFrame,
+        updated_node_ids: list[int],
     ) -> None:
-        """Updates the locationReferences & geometry for given links & shapes for a given node df
+        """Updates the geometry for given links for a given list of nodes
+
+        Should be called by any function that changes a node location.
+
+        Args:
+            updated_node_ids: list of node PKs with updated geometry
+        """
+        _from_field = (self.links_df.params.from_node, 0)
+        _to_field = (self.links_df.params.to_node, -1)
+        _link_pk = self.links_df.params.primary_key
+
+        for node_fk, linestring_idx in _from_field, _to_field:
+            # Update Links
+            _link_mask = self.links_df[node_fk].isin(updated_node_ids)
+            if not _link_mask.any():
+                continue
+
+            _links_df = self.links_df.loc[_link_mask, [_link_pk, node_fk, "geometry"]]
+            _links_df = _links_df.rename(
+                columns={node_fk: self.nodes_df.params.primary_key}
+            )
+            self.links_df.loc[
+                _link_mask, "geometry"
+            ] = update_nodes_in_linestring_geometry(
+                _links_df,
+                self.nodes_df.loc[updated_node_ids],
+                linestring_idx,
+            )
+            _disp_c = self.links_df.params.fks_to_nodes + ["geometry"]
+            WranglerLogger.debug(
+                f"Upd link geom::\n{self.links_df.loc[_link_mask,_disp_c]}"
+            )
+
+    def _update_node_geometry_in_shapes(
+        self,
+        updated_node_ids: list[int],
+    ) -> None:
+        """Updates the geometry for given shapes for a given list of nodes.
 
         Should be called by any function that changes a node location.
 
         NOTES:
-         - For shapes, this will mutate the geometry of a shape in place for the start and end node
+         - This will mutate the geometry of a shape in place for the start and end node
             ...but not the nodes in-between.  Something to consider...
 
         Args:
-            updated_nodes_df: gdf of nodes with updated geometry.
+            updated_node_ids: list of node PKs with updated geometry
         """
-        _node_ids = updated_nodes_df.index.tolist()
-        updated_links_df = self.links_with_nodes(self.links_df, _node_ids).copy()
-        WranglerLogger.info(
-            f"links_df: \n {self.links_df[self.links_df.params.display_cols]}"
-        )
+        _from_field = (self.links_df.params.from_node, 0)
+        _to_field = (self.links_df.params.to_node, -1)
+        _shape_fk = self.links_df.params.fk_to_shape
+        _node_pk = self.nodes_df.params.primary_key
+        _shape_pk = self.shapes_df.params.primary_key
 
-        _shape_ids = updated_links_df[self.links_df.params.fk_to_shape].tolist()
-        updated_shapes_df = self.shapes_df.loc[
-            self.shapes_df[self.shapes_df.params.primary_key].isin(_shape_ids)
-        ].copy()
+        for node_fk, linestring_idx in _from_field, _to_field:
+            # Identify links
+            _link_mask = self.links_df[node_fk].isin(updated_node_ids)
+            if not _link_mask.any():
+                continue
 
-        WranglerLogger.info(
-            f"updated_links_df: \n {updated_links_df[updated_links_df.params.display_cols]}"
-        )
+            # Update Shapes
+            _shape_id_df = self.links_df.loc[_link_mask, [node_fk, _shape_fk]]
+            if not len(_shape_id_df):
+                continue
 
-        updated_links_df["locationReferences"] = updated_links_df.apply(
-            lambda x: location_reference_from_nodes(
-                [
-                    self.nodes_df.loc[x[updated_links_df.params.from_node]],
-                    self.nodes_df.loc[x[updated_links_df.params.to_node]],
-                ]
-            ),
-            axis=1,
-        )
-
-        updated_links_df["geometry"] = updated_links_df["locationReferences"].apply(
-            line_string_from_location_references,
-        )
-
-        updated_shapes_df["geometry"] = self._update_existing_shape_geometry_from_nodes(
-            updated_shapes_df, updated_links_df
-        )
-
-        self.links_df.update(
-            updated_links_df[
-                [self.links_df.params.primary_key, "geometry", "locationReferences"]
-            ]
-        )
-        self.shapes_df.update(
-            updated_shapes_df[[self.shapes_df.params.primary_key, "geometry"]]
-        )
-
-    def _update_existing_shape_geometry_from_nodes(
-        self, updated_shapes_df, updated_links_df
-    ) -> gpd.GeoSeries:
-        # WranglerLogger.debug(f"updated_shapes_df:\n {updated_shapes_df}")
-        # update the first and last coordinates for the shape
-
-        _df = updated_shapes_df[[self.shapes_df.params.primary_key, "geometry"]].merge(
-            updated_links_df[[self.links_df.params.fk_to_shape, "geometry"]],
-            left_on=self.shapes_df.params.primary_key,
-            right_on=self.links_df.params.fk_to_shape,
-            suffixes=["_old_shape", "_link"],
-            how="left",
-        )
-
-        for position in [0, -1]:
-            _df["geometry"] = _df.apply(
-                lambda x: update_points_in_linestring(
-                    x["geometry_old_shape"],
-                    _df["geometry_link"][0].coords[position],
-                    position,
-                ),
-                axis=1,
+            # _shape_id_df: model_node_id, shape_id
+            _shape_id_df = _shape_id_df.rename(
+                columns={node_fk: _node_pk, _shape_fk: _shape_pk}
             )
-        return _df["geometry"]
+            _shape_ids = _shape_id_df[_shape_pk].unique()
+
+            # _shapes_df: shape_id, model_node_id, geometry
+            _shapes_df = self.shapes_df.loc[_shape_ids, [_shape_pk, "geometry"]].merge(
+                _shape_id_df, left_on=_shape_pk, right_on=_shape_pk, how="left"
+            )
+
+            # WranglerLogger.debug(f"_shapes_df:\n{_shapes_df}")
+
+            self.shapes_df.loc[
+                _shape_ids, "geometry"
+            ] = update_nodes_in_linestring_geometry(
+                _shapes_df,  # shape_id, model_node_id, geometry
+                self.nodes_df.loc[updated_node_ids],  # node_id: geometry
+                linestring_idx,
+            )
+
+            _disp_c = [self.shapes_df.params.primary_key, "geometry"]
+            WranglerLogger.debug(
+                f"Upd shape geom:\n{self.shapes_df.loc[_shape_ids,_disp_c]}"
+            )
 
     def has_node(self, unique_node_id) -> bool:
         """Queries if network has node based on nodes_df.params.primary_key.

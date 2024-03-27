@@ -1,8 +1,9 @@
 import json
-import os
+import time
 
 from dataclasses import dataclass, field
-from typing import Union, Any
+from pathlib import Path
+from typing import Union, Any, Literal
 
 import geopandas as gpd
 import pandera as pa
@@ -16,12 +17,14 @@ from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
 
 from ..logger import WranglerLogger
+from ..utils import read_table, write_table
 
 
 @dataclass
 class ShapesParams:
     primary_key: str = field(default="shape_id")
     _addtl_unique_ids: list[str] = field(default_factory=lambda: [])
+    table_type: Literal["shapes"] = field(default="shapes")
     source_file: str = field(default=None)
 
     @property
@@ -54,12 +57,18 @@ def read_shapes(
         crs: coordinate reference system number. Defaults to 4323.
         link_params: a LinkParams instance. Defaults to a default LinkParams instance.
     """
-    WranglerLogger.info(f"Reading shapes from {filename}.")
-    with open(filename) as f:
-        shapes_df = gpd.read_file(f)
+    start_time = time.time()
+    WranglerLogger.debug(f"Reading shapes from {filename}.")
+
+    shapes_df = read_table(filename)
+    WranglerLogger.debug(
+        f"Read {len(shapes_df)} shapes from file in {round(time.time() - start_time,2)}."
+    )
     shapes_df = df_to_shapes_df(shapes_df, crs=crs, shapes_params=shapes_params)
     shapes_df.params.source_file = filename
-
+    WranglerLogger.info(
+        f"Read {len(shapes_df)} shapes from {filename} in {round(time.time() - start_time,2)}."
+    )
     return shapes_df
 
 
@@ -97,15 +106,28 @@ def df_to_shapes_df(
     return shapes_df
 
 
+def write_shapes(
+    shapes_df: gpd.GeoDataFrame,
+    out_dir: Union[str, Path],
+    prefix: str,
+    format: str,
+    overwrite: bool,
+) -> None:
+    shapes_file = Path(out_dir) / f"{prefix}shape.{format}"
+    write_table(shapes_df, shapes_file, overwrite=overwrite)
+
+
 def validate_wrangler_shapes_file(
-    shapes_file: str, schema_location: str = "roadway_network_shape.json"
+    shapes_file: str, schema_location: Union[Path, str] = "roadway_network_shape.json"
 ) -> bool:
     """
     Validate roadway network data node schema and output a boolean
     """
-    if not os.path.exists(schema_location):
-        base_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "schemas")
-        schema_location = os.path.join(base_path, schema_location)
+    schema_location = Path(schema_location)
+    schema_location = Path(schema_location)
+    if not schema_location.exists():
+        base_path = Path(__file__).resolve().parent / "schemas"
+        schema_location = base_path / schema_location
 
     with open(schema_location) as schema_json_file:
         schema = json.load(schema_json_file)

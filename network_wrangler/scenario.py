@@ -17,8 +17,8 @@ import geopandas as gpd
 from projectcard import read_cards, ProjectCard, SubProject
 
 from .logger import WranglerLogger
-from .roadwaynetwork import RoadwayNetwork
-from .transitnetwork import TransitNetwork
+from .roadway.io import load_roadway, write_roadway
+from .transit.io import load_transit, write_transit
 from .utils import topological_sort
 
 BASE_SCENARIO_SUGGESTED_PROPS = [
@@ -62,12 +62,12 @@ class Scenario(object):
 
     ```python
     my_base_year_scenario = {
-        "road_net": RoadwayNetwork.read(
+        "road_net": load_roadway(
             links_file=STPAUL_LINK_FILE,
             nodes_file=STPAUL_NODE_FILE,
             shapes_file=STPAUL_SHAPE_FILE,
         ),
-        "transit_net": TransitNetwork.read(STPAUL_DIR),
+        "transit_net": load_transit(STPAUL_DIR),
     }
 
     # create a future baseline scenario from base by searching for all cards in dir w/ baseline tag
@@ -474,21 +474,21 @@ class Scenario(object):
         Args:
             change: a project card or subproject card
         """
-        if change.type in ROADWAY_CARD_TYPES:
+        if change.change_type in ROADWAY_CARD_TYPES:
             if not self.road_net:
                 raise ("Missing Roadway Network")
             self.road_net.apply(change)
-        if change.type in TRANSIT_CARD_TYPES:
+        if change.change_type in TRANSIT_CARD_TYPES:
             if not self.transit_net:
                 raise ("Missing Transit Network")
             self.transit_net.apply(change)
-        if change.type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
+        if change.change_type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
             self.transit_net.apply(change)
 
-        if change.type not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES:
-            # WranglerLogger.debug(f"Project {change.project}:Change .type {change.type} and ._type:{change._type}")
+        if change.change_type not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES:
+            # WranglerLogger.debug(f"Project {change.project}:Change .change_type {change.change_type} and ._change_type:{change._change_type}")
             raise ProjectCardError(
-                f"Project {change.project}: Don't understand project category: {change.type}"
+                f"Project {change.project}: Don't understand project category: {change.change_type}"
             )
 
     def _apply_project(self, project_name: str) -> None:
@@ -504,11 +504,11 @@ class Scenario(object):
         WranglerLogger.info(f"Applying {project_name}")
 
         p = self.project_cards[project_name]
-        WranglerLogger.debug(f"types: {p.types}")
-        WranglerLogger.debug(f"type: {p.type}")
+        WranglerLogger.debug(f"types: {p.change_types}")
+        WranglerLogger.debug(f"type: {p.change_type}")
         if p.sub_projects:
             for sp in p.sub_projects:
-                WranglerLogger.debug(f"- applying subproject: {sp.type}")
+                WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
                 self._apply_change(sp)
 
         else:
@@ -540,15 +540,15 @@ class Scenario(object):
         # Set so that when called again it will retrigger queueing from planned projects.
         self._ordered_projects = None
 
-    def write(self, path: Union(Path, str), name: str) -> None:
+    def write(self, path: Union[Path, str], name: str) -> None:
         """_summary_
 
         Args:
             path: Path to write scenario networks and scenario summary to.
             name: Name to use.
         """
-        self.road_net.write(path, name)
-        self.transit_net.write(path, name)
+        write_roadway(self.road_net, prefix=name, outdir=path)
+        write_transit(self.transit_net, prefix=name, outdir=path)
         self.summarize(outfile=os.path.join(path, name))
 
     def summarize(
@@ -637,14 +637,14 @@ def create_base_scenario(
         base_network_link_file = base_link_name
         base_network_node_file = base_node_name
 
-    road_net = RoadwayNetwork.read(
+    road_net = load_roadway(
         links_file=base_network_link_file,
         nodes_file=base_network_node_file,
         shapes_file=base_network_shape_file,
     )
 
     if transit_dir:
-        transit_net = TransitNetwork.read(transit_dir)
+        transit_net = load_transit(transit_dir)
     else:
         transit_net = None
         WranglerLogger.info(

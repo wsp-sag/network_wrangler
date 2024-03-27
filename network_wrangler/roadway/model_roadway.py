@@ -7,10 +7,10 @@ import pandas as pd
 
 from network_wrangler import WranglerLogger
 from network_wrangler.utils import (
-    line_string_from_location_references,
-    haversine_distance,
+    linestring_from_nodes,
+    length_of_linestring_miles,
 )
-from network_wrangler.utils import location_reference_from_nodes
+from network_wrangler.roadway.links import _links_data_to_links_df
 from .utils import compare_networks, compare_links, create_unique_shape_id
 
 """
@@ -418,46 +418,14 @@ class ModelRoadwayNetwork:
             "ref",
         ]
         _keep_ae_cols = [c for c in _keep_ae_cols if c in access_egress_df.columns]
-        access_egress_df = access_egress_df[_keep_ae_cols]
-
-        # 4 - Create various geometry fields from A and B nodes
-        WranglerLogger.debug(f"m_nodes_df length: {len(m_nodes_df)}")
-
-        # LocationReferences
-        access_egress_df["locationReferences"] = access_egress_df.apply(
-            lambda x: location_reference_from_nodes(
-                [
-                    m_nodes_df.loc[x[i_ps.from_node]],
-                    m_nodes_df.loc[x[i_ps.to_node]],
-                ]
-            ),
-            axis=1,
-        )
-
-        # Geometry
-        access_egress_df["geometry"] = access_egress_df["locationReferences"].apply(
-            lambda x: line_string_from_location_references(x)
+        access_egress_df = _links_data_to_links_df(
+            access_egress_df[_keep_ae_cols],
+            links_params=net.links_df.params,
+            nodes_df=m_nodes_df,
         )
 
         WranglerLogger.debug(
-            f"access_egress_df['locationReferences']: \n {access_egress_df['locationReferences']}"
-        )
-        # Distance
-        # TODO make this a shapely call instead?
-        access_egress_df["distance"] = access_egress_df["locationReferences"].apply(
-            lambda x: haversine_distance(
-                x[0]["point"],
-                x[-1]["point"],
-            )
-        )
-
-        # Shape
-        access_egress_df[i_ps.fk_to_shape] = access_egress_df["geometry"].apply(
-            lambda x: create_unique_shape_id(x)
-        )
-
-        WranglerLogger.debug(
-            f"Returning {len(access_egress_df)} access and egress links."
+            f"access_egress_df['geometry']: \n {access_egress_df['geometry']}"
         )
 
         return access_egress_df

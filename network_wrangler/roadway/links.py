@@ -1,8 +1,9 @@
 import json
-import os
+import time
 
 from dataclasses import dataclass, field
-from typing import Union, Any, Optional, List
+from pathlib import Path
+from typing import Union, Any, Optional, List, Literal
 
 import geopandas as gpd
 import numpy as np
@@ -15,17 +16,22 @@ from jsonschema.exceptions import SchemaError
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
 from pandera import check_input, check_output
-
+from pydantic import BaseModel
 
 from ..logger import WranglerLogger
 
+from .shapes import ShapesSchema
 from .utils import create_unique_shape_id
 from ..utils import (
-    line_string_from_location_references,
     coerce_val_to_series_type,
-    parse_timespans_to_secs,
-    location_reference_from_nodes,
+    length_of_linestring_miles,
+    linestring_from_nodes,
+    fk_in_pk,
+    read_table,
+    write_table,
 )
+from ..utils.time import parse_timespans_to_secs
+
 
 MODES_TO_NETWORK_LINK_VARIABLES = {
     "drive": ["drive_access"],
@@ -45,6 +51,7 @@ class LinksParams:
     from_node: str = field(default="A")
     to_node: str = field(default="B")
     fk_to_shape: str = field(default="shape_id")
+    table_type: Literal["links"] = field(default="links")
     source_file: str = field(default=None)
     modes_to_network_link_variables: dict = field(
         default_factory=lambda: MODES_TO_NETWORK_LINK_VARIABLES
@@ -81,20 +88,33 @@ class LinksSchema(pa.DataFrameModel):
     B: Series[Any] = pa.Field(nullable=False)
     geometry: GeoSeries = pa.Field(nullable=False)
     name: Series[str] = pa.Field(nullable=False)
-    rail_only: Series[bool] = pa.Field(coerce=True, nullable=False)
-    bus_only: Series[bool] = pa.Field(coerce=True, nullable=False)
-    drive_access: Series[bool] = pa.Field(coerce=True, nullable=False)
-    bike_access: Series[bool] = pa.Field(coerce=True, nullable=False)
-    walk_access: Series[bool] = pa.Field(coerce=True, nullable=False)
+    rail_only: Series[bool] = pa.Field(coerce=True, nullable=False, default=False)
+    bus_only: Series[bool] = pa.Field(coerce=True, nullable=False, default=False)
+    drive_access: Series[bool] = pa.Field(coerce=True, nullable=False, default=True)
+    bike_access: Series[bool] = pa.Field(coerce=True, nullable=False, default=True)
+    walk_access: Series[bool] = pa.Field(coerce=True, nullable=False, default=True)
 
     roadway: Series[str] = pa.Field(nullable=False)
     lanes: Series[int] = pa.Field(coerce=True, nullable=False)
 
     # Optional Fields
-    truck_access: Optional[Series[bool]] = pa.Field(coerce=True, nullable=True)
-    osm_link_id: Optional[Series[str]] = pa.Field(coerce=True, nullable=True)
-    locationReferences: Optional[Series[Any]] = pa.Field(nullable=True)
-    shape_id: Optional[Series[Any]] = pa.Field(nullable=True)
+    truck_access: Optional[Series[bool]] = pa.Field(
+        coerce=True, nullable=True, default=True
+    )
+    osm_link_id: Optional[Series[str]] = pa.Field(
+        coerce=True, nullable=True, default=""
+    )
+    locationReferences: Optional[Series[List[dict]]] = pa.Field(
+        coerce=True,
+        nullable=True,
+        default="",
+    )
+    shape_id: Optional[Series[str]] = pa.Field(nullable=True, default="", coerce=True)
+
+    class Config:
+        name = "LinkSchema"
+        add_missing_columns = True
+        coerce = True
 
     @pa.dataframe_check
     def unique_ab(cls, df: pd.DataFrame) -> bool:
@@ -103,7 +123,10 @@ class LinksSchema(pa.DataFrameModel):
 
 @check_output(LinksSchema, inplace=True)
 def read_links(
-    filename: str, crs: int = 4326, links_params: Union[dict, LinksParams] = None
+    filename: Union[Path, str],
+    crs: int = 4326,
+    links_params: Union[dict, LinksParams] = None,
+    nodes_df: gpd.GeoDataFrame = None,
 ) -> gpd.GeoDataFrame:
     """Reads links and returns a geodataframe of links.
 
@@ -112,28 +135,88 @@ def read_links(
 
     Args:
         filename (str): file to read links in from.
-        crs: coordinate reference system number. Defaults to 4323.
+        crs: coordinate reference system number any link geometries are stored in.
+            Defaults to 4323.
         link_params: a LinkParams instance. Defaults to a default LinkParams instance.
     """
-    WranglerLogger.info(f"Reading links from {filename}.")
-    with open(filename) as f:
-        links_data = json.load(f)
-
-    links_df = links_data_to_links_df(links_data, crs=crs, links_params=links_params)
+    WranglerLogger.debug(f"Reading links from {filename}.")
+    start_time = time.time()
+    links_df = read_table(filename)
+    WranglerLogger.debug(
+        f"Read {len(links_df)} links from file in {round(time.time() - start_time,2)}."
+    )
+    links_df = _links_data_to_links_df(
+        links_df, links_crs=crs, links_params=links_params, nodes_df=nodes_df
+    )
     links_df.params.source_file = filename
-    # need to add params to _metadata in order to make sure it is copied.
-    # see: https://stackoverflow.com/questions/50372509/
+    WranglerLogger.info(
+        f"Read {len(links_df)} links from {filename} in {round(time.time() - start_time,2)}."
+    )
+    return links_df
 
+
+def validate_links_have_nodes(links_df: pd.DataFrame, nodes_df: pd.DataFrame) -> bool:
+    """Checks if links have nodes and returns a boolean.
+
+    raises: ValueError if nodes_df is missing and A or B node
+    """
+    nodes_in_links = list(set(links_df["A"]).union(set(links_df["B"])))
+
+    fk_valid, fk_missing = fk_in_pk(nodes_df.index, nodes_in_links)
+    if not fk_valid:
+        WranglerLogger.error(f"Nodes missing from links: {fk_missing}")
+        raise ValueError(f"Links are missing these nodes: {fk_missing}")
+    return True
+
+
+def _add_link_geometries_from_nodes(
+    links_df: pd.DataFrame, nodes_df: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    """
+    Create location references and link geometries from nodes.
+
+    If already has either, then will just fill NA.
+    """
+    WranglerLogger.debug("Creating link geometries from nodes")
+    geo_start_time = time.time()
+
+    if links_df is gpd.GeoDataFrame:
+        links_gdf = links_df
+        links_gdf[links_df.geometry.isnull()] = linestring_from_nodes(
+            links_gdf.geometry.isnull(), nodes_df
+        )
+    else:
+        geometry = linestring_from_nodes(links_df, nodes_df)
+        # WranglerLogger.debug(f"----Geometry:\n{geometry}")
+        links_gdf = gpd.GeoDataFrame(links_df, geometry=geometry, crs=nodes_df.crs)
+        links_gdf.__dict__["params"] = links_df.params
+        # WranglerLogger.debug(f"----LINKs:\n{links_gdf[['A','B','geometry']]}")
+    WranglerLogger.debug(
+        f"Created link geometries from nodes in {round(time.time() - geo_start_time,2)}."
+    )
+    WranglerLogger.debug(f"----Links:\n{links_gdf[['A','B','geometry']]}")
+    return links_gdf
+
+
+def _set_links_df_index(links_df: pd.DataFrame) -> pd.DataFrame:
+    """Sets the index of the links dataframe to be a copy of the primary key.
+
+    Args:
+        links_df (pd.DataFrame): links dataframe
+    """
+    if links_df.index.name != links_df.params.idx_col:
+        links_df[links_df.params.idx_col] = links_df[links_df.params.primary_key]
+        links_df = links_df.set_index(links_df.params.idx_col)
     return links_df
 
 
 @check_output(LinksSchema, inplace=True)
-def links_data_to_links_df(
-    links_data: List[dict],
-    crs: int = 4326,
+def _links_data_to_links_df(
+    links_df: Union[pd.DataFrame, List[dict]],
+    links_crs: int = 4326,
     links_params: LinksParams = None,
-    link_geometries: List = None,
     nodes_df: gpd.GeoDataFrame = None,
+    nodes_crs: int = 4326,
 ) -> gpd.GeoDataFrame:
     """Create a links dataframe from list of link properties + link geometries or associated nodes.
 
@@ -141,52 +224,77 @@ def links_data_to_links_df(
     Validates output dataframe using LinksSchema.
 
     Args:
-        links_data (pd.DataFrame): _description_
-        crs: coordinate reference system id. Defaults to 4326
-        links_params: a LinkParams instance. Defaults to a default LinkParams instance.
-        link_geometies: list geometry data. Defaults to None.
+        links_df (pd.DataFrame): df or list of dictionaries of link properties
+        links_crs: coordinate reference system id for incoming links if geometry already exists.
+            Defaults to 4326. Will convert everything to 4326 if it doesn't match.
+        links_params: a LinkParams instance. Defaults to a default LinkParams instance..
         nodes_df: Associated notes geodataframe to use if geometries or location references not
             present. Defaults to None.
+        nodes_crs: coordinate reference system id for incoming nodes if geometry already exists.
+            Defaults to 4326. Will convert everything to 4326 if it doesn't match.
     Returns:
         pd.DataFrame: _description_
     """
-    if links_params is None:
-        links_params = LinksParams()
+    # Make it a dataframe it if isn't already
+    if not isinstance(links_df, pd.DataFrame):
+        links_df = pd.DataFrame(links_df)
 
-    if link_geometries is None:
-        temp_links_df = pd.DataFrame(links_data)
+    # If already has geometry, try coercing to a geodataframe.
+    if not isinstance(links_df, gpd.GeoDataFrame) and "geometry" in links_df:
+        gpd.GeoDataFrame(links_df, geometry="geometry", crs=links_crs)
 
-        if "locationReferences" not in temp_links_df:
-            if nodes_df is None:
-                raise LinkCreationError(
-                    "Must give nodes_df argument if don't have LocationReferences or Geometry"
-                )
-            temp_links_df.__dict__["params"] = links_params
-            temp_links_df["locationReferences"] = location_references_from_nodes(
-                temp_links_df, nodes_df
+    # check CRS and convert if necessary to 4326
+    if isinstance(links_df, gpd.GeoDataFrame) and links_df.crs != 4326:
+        links_df = links_df.to_crs(4326)
+    if nodes_df is not None and nodes_df.crs != 4326:
+        nodes_df = nodes_df.to_crs(4326)
+
+    # If missing parameters, fill them in
+    if "params" not in links_df.__dict__ or links_df.params is None:
+        if links_params is None:
+            links_df.__dict__["params"] = LinksParams()
+        else:
+            links_df.__dict__["params"] = links_params
+        # need to add params to _metadata in order to make sure it is copied.
+        # see: https://stackoverflow.com/questions/50372509/
+        links_df._metadata += ["params"]
+    WranglerLogger.debug(f"Link Params: {links_df.params}")
+    # Set link  index
+    links_df = _set_links_df_index(links_df)
+
+    # If missing geometry, fill it and make it a GeoDataFrame
+    if (
+        not isinstance(links_df, gpd.GeoDataFrame)
+        or links_df.geometry.isnull().values.any()
+    ):
+        if nodes_df is None:
+            raise LinkCreationError(
+                "Must give nodes_df argument if don't have Geometry"
             )
+        links_df = _add_link_geometries_from_nodes(links_df, nodes_df)
 
-        link_geometries = temp_links_df["locationReferences"].apply(
-            line_string_from_location_references
-        )
+    # If missing distance, approximate it from geometry
+    if "distance" not in links_df:
+        links_df["distance"] = length_of_linestring_miles(links_df)
+    elif links_df["distance"].isnull().values.any():
+        _add_dist = links_df["distance"].isnull()
+        links_df[_add_dist] = length_of_linestring_miles(links_df.loc[_add_dist])
 
-    links_df = gpd.GeoDataFrame(links_data, geometry=link_geometries)
-    links_df.crs = crs
     links_df.gdf_name = "network_links"
-    links_df.__dict__["params"] = links_params
-
-    links_df[links_df.params.idx_col] = links_df[links_df.params.primary_key]
-    links_df.set_index(links_df.params.idx_col, inplace=True)
-
-    links_df._metadata += ["params"]
-
+    assert "params" in links_df.__dict__
     _disp_c = [
         links_df.params.primary_key,
         links_df.params.from_node,
         links_df.params.to_node,
         "name",
+        "geometry",
     ]
-    WranglerLogger.debug(f"New Links:\n{links_df[_disp_c]}")
+
+    _num_links = len(links_df)
+    if _num_links < 10:
+        WranglerLogger.debug(f"New Links:\n{links_df[_disp_c]}")
+    else:
+        WranglerLogger.debug(f"{len(links_df)} new links.")
 
     return links_df
 
@@ -198,31 +306,16 @@ def shape_id_from_link_geometry(
     return shape_ids
 
 
-def location_references_from_nodes(
-    links_df: pd.DataFrame, nodes_df: pd.DataFrame
-) -> pd.Series:
-    locationreferences_s = links_df.apply(
-        lambda x: location_reference_from_nodes(
-            [
-                nodes_df.loc[nodes_df.index == x[links_df.params.from_node]].squeeze(),
-                nodes_df[nodes_df.index == x[links_df.params.to_node]].squeeze(),
-            ]
-        ),
-        axis=1,
-    )
-    return locationreferences_s
-
-
 def validate_wrangler_links_file(
-    link_file, schema_location: str = "roadway_network_link.json"
+    link_file, schema_location: Union[Path, str] = "roadway_network_link.json"
 ):
     """
     Validate roadway network data link schema and output a boolean
     """
-
-    if not os.path.exists(schema_location):
-        base_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "schemas")
-        schema_location = os.path.join(base_path, schema_location)
+    schema_location = Path(schema_location)
+    if not schema_location.exists():
+        base_path = Path(__file__).resolve().parent / "schemas"
+        schema_location = base_path / schema_location
 
     with open(schema_location) as schema_json_file:
         schema = json.load(schema_json_file)
@@ -248,10 +341,27 @@ def validate_wrangler_links_file(
     return False
 
 
+@pd.api.extensions.register_dataframe_accessor("true_shape")
+class TrueShapeAccessor:
+    def __init__(self, links_df: LinksSchema):
+        self._links_df = links_df
+
+    def __call__(self, shapes_df: ShapesSchema):
+        links_df = self._links_df.merge(
+            shapes_df[[shapes_df.params.primary_key, "geometry"]],
+            left_on=self._links_df.params.fk_to_shape,
+            right_on=shapes_df.params.primary_key,
+            how="left",
+        )
+        return links_df
+
+
 @pd.api.extensions.register_dataframe_accessor("mode_query")
 class ModeLinkAccessor:
     def __init__(self, links_df):
         self._links_df = links_df
+        if not links_df.params.table_type == "links":
+            raise NotLinksError("`mode_query` is only available to links dataframes.")
 
     def __call__(self, modes: List[str]):
         # filter the rows where drive_access is True
@@ -279,6 +389,8 @@ class ModeLinkAccessor:
 class LinkOfTypeAccessor:
     def __init__(self, links_df):
         self._links_df = links_df
+        if not links_df.params.table_type == "links":
+            raise NotLinksError("`of_type` is only available to links dataframes.")
 
     @property
     def managed(self):
@@ -345,36 +457,34 @@ class LinkOfTypeAccessor:
         return d
 
 
-@check_input(LinksSchema, inplace=True)
-def links_df_to_json(links_df: pd.DataFrame, properties: list):
-    """Export pandas dataframe as a json object.
+@check_input(LinksSchema, obj_getter="links_df", inplace=True)
+def write_links(
+    links_df: gpd.GeoDataFrame,
+    out_dir: Union[str, Path] = ".",
+    prefix: str = "",
+    format: str = "json",
+    overwrite: bool = False,
+    include_geometry: bool = False,
+) -> None:
+    if not include_geometry:
+        if format == "geojson":
+            format = "json"
 
-    Modified from: Geoff Boeing:
-    https://geoffboeing.com/2015/10/exporting-python-data-geojson/
+    links_file = Path(out_dir) / f"{prefix}link.{format}"
 
-    Args:
-        df: Dataframe to export
-        properties: list of properties to export
-    """
+    if not include_geometry:
+        links_df = pd.DataFrame(links_df)
+        links_df = links_df.drop(columns=["geometry"])
 
-    # can't remember why we need this?
-    if "distance" in properties:
-        links_df["distance"].fillna(0)
-
-    json = []
-    for _, row in links_df.iterrows():
-        feature = {}
-        for prop in properties:
-            feature[prop] = row[prop]
-        json.append(feature)
-
-    return json
+    write_table(links_df, links_file, overwrite=overwrite)
 
 
 @pd.api.extensions.register_dataframe_accessor("set_link_prop")
 class SetLinkPropAccessor:
     def __init__(self, links_df):
         self._links_df = links_df
+        if not links_df.params.table_type == "links":
+            raise NotLinksError("`set_link_prop` is only available to links dataframs.")
 
     @staticmethod
     def _updated_default(existing_val, prop_dict):
@@ -603,6 +713,10 @@ class SetLinkPropAccessor:
             )
 
         return _links_df
+
+
+class NotLinksError(Exception):
+    pass
 
 
 class LinkChangeError(Exception):
