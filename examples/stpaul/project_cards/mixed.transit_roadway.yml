@@ -5,7 +5,7 @@ changes:
       trip_properties:
         direction_id: 1
         route_id: [452-111]
-      timespan: ['06:00:00' , '09:00:00']
+      timespans: [['06:00:00' , '09:00:00']]
     property_changes:
       headway_secs:
         change: -1800.0
@@ -14,9 +14,9 @@ changes:
       trip_properties:
         direction_id: 1
         route_id: [134-111]
-      timespan:
-        - 06:00:00
-        - 09:00:00
+      timespans:
+          - - 06:00:00
+            - 09:00:00
     property_changes:
       headway_secs:
         change: 1800.0
@@ -25,9 +25,9 @@ changes:
       trip_properties:
         direction_id: 0
         route_id: [921-111]
-      timespan:
-        - 09:00:00
-        - '15:00:00'
+      timespans:
+        -  - 09:00:00
+           - '15:00:00'
     property_changes:
       headway_secs:
         change: -300.0

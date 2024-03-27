@@ -3,7 +3,7 @@ transit_property_change:
   service:
     trip_properties:
       trip_id: ['14940701-JUN19-MVS-BUS-Weekday-01', '14948032-JUN19-MVS-BUS-Weekday-01']
-    timespan: ['06:00:00', '09:00:00']
+    timespans: [['06:00:00', '09:00:00']]
   property_changes:
     headway_secs:
       set: 900
