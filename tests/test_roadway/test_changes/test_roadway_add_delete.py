@@ -92,7 +92,6 @@ def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     assert net_nodes == expected_net_nodes
 
 
-@pytest.mark.failing
 def test_multiple_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -114,7 +113,6 @@ def test_multiple_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex
     assert net_nodes == expected_net_nodes
 
 
-@pytest.mark.failing
 def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 

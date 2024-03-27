@@ -6,17 +6,19 @@ import pytest
 import pandas as pd
 from network_wrangler import WranglerLogger
 
+TEST_TABLES_W_PROP = [
+    ("route_short_name", ["routes"]),
+    ("agency_id", ["agency", "routes"]),
+    ("wheelchair_boarding", ["stops"]),
+]
 
-def test_tables_with_property(request, stpaul_transit_net):
+
+@pytest.mark.parametrize("prop, expected_tables", TEST_TABLES_W_PROP)
+def test_tables_with_property(request, stpaul_transit_net, prop, expected_tables):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    result_1 = stpaul_transit_net.feed.tables_with_property("route_short_name")
-    result_2 = stpaul_transit_net.feed.tables_with_property("agency_id")
-    result_3 = stpaul_transit_net.feed.tables_with_property("wheelchair_boarding")
-
-    assert result_1 == ["routes"]
-    assert result_2 == ["agency", "routes"]
-    assert result_3 == ["stops"]
+    tables = stpaul_transit_net.feed.tables_with_property(prop)
+    assert tables == expected_tables
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
@@ -74,37 +76,48 @@ def test_trip_shape(request, stpaul_transit_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_trip_stop_pattern(request, stpaul_transit_net):
+TEST_TRIP_PATTERNS = [
+    {
+        "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
+        "pickup_type": "either",
+        "answer": [
+            "52761",
+            "52758",
+            "11834",
+            "3142",
+            "48302",
+            "11837",
+            "11838",
+            "11840",
+            "48338",
+        ],
+    },
+    {
+        "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
+        "pickup_type": "both",
+        "answer": ["52761", "48338"],
+    },
+    {
+        "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
+        "pickup_type": "pickup_only",
+        "answer": [],
+    },
+    {
+        "trip_id": "14940701-JUN19-MVS-BUS-Weekday-01",
+        "pickup_type": "dropoff_only",
+        "answer": ["52758", "11834", "3142", "48302", "11837", "11838", "11840"],
+    },
+]
+
+
+@pytest.mark.parametrize("tpat_test", TEST_TRIP_PATTERNS)
+def test_trip_stop_pattern(request, tpat_test, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    trip_id = "14943415-JUN19-MVS-BUS-Weekday-01"
-    result_1 = stpaul_transit_net.feed.trip_stop_pattern(trip_id, pickup_type="either")
-    result_2 = stpaul_transit_net.feed.trip_stop_pattern(trip_id, pickup_type="both")
-    result_3 = stpaul_transit_net.feed.trip_stop_pattern(
-        trip_id, pickup_type="pickup_only"
-    )
-    result_4 = stpaul_transit_net.feed.trip_stop_pattern(
-        trip_id, pickup_type="dropoff_only"
+    result = stpaul_transit_net.feed.trip_stop_pattern(
+        tpat_test["trip_id"], tpat_test["pickup_type"]
     )
 
-    expected_1 = [
-        "52761",
-        "52758",
-        "11834",
-        "3142",
-        "48302",
-        "11837",
-        "11838",
-        "11840",
-        "48338",
-    ]
-    expected_2 = ["52761", "48338"]
-    expected_3 = []
-    expected_4 = ["52758", "11834", "3142", "48302", "11837", "11838", "11840"]
+    assert result == tpat_test["answer"]
 
-    assert result_1 == expected_1
-    assert result_2 == expected_2
-    assert result_3 == expected_3
-
-    assert result_4 == expected_4
     WranglerLogger.info(f"--Finished: {request.node.name}")

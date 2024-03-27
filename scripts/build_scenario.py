@@ -3,7 +3,7 @@ import sys
 import yaml
 import warnings
 
-from network_wrangler import Scenario
+from network_wrangler import Scenario, write_roadway
 from network_wrangler.scenario import create_base_scenario
 
 
@@ -67,5 +67,5 @@ if __name__ == "__main__":
     my_scenario.apply_all_projects()
 
     if write_out:
-        my_scenario.road_net.write(filename=out_prefix, path=out_dir)
+        write_roadway(my_scenario.road_net, filename=out_prefix, path=out_dir)
         my_scenario.transit_net.write(filename=out_prefix, path=out_dir)

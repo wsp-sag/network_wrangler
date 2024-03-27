@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from network_wrangler import WranglerLogger
+from network_wrangler import WranglerLogger, load_roadway
 
 
 pd.set_option("display.max_rows", 500)
@@ -28,6 +28,11 @@ def test_logging(test_out_dir):
 @pytest.fixture(scope="session")
 def base_dir():
     return Path(__file__).resolve().parent.parent
+
+
+@pytest.fixture(scope="session")
+def bin_dir(base_dir):
+    return base_dir / "bin"
 
 
 @pytest.fixture(scope="session")
@@ -85,6 +90,12 @@ def test_out_dir(test_dir):
     return _test_out_dir
 
 
+@pytest.fixture(scope="session")
+def clear_out_dir(test_out_dir):
+    for f in test_out_dir.iterdir():
+        f.unlink()
+
+
 @pytest.fixture
 def stpaul_base_scenario(stpaul_ex_dir, stpaul_net, stpaul_transit_net):
     base_scenario = {
@@ -122,7 +133,7 @@ def stpaul_net(stpaul_ex_dir):
     link_filename = stpaul_ex_dir / "link.json"
     node_filename = stpaul_ex_dir / "node.geojson"
 
-    net = RoadwayNetwork.read(
+    net = load_roadway(
         links_file=link_filename,
         nodes_file=node_filename,
         shapes_file=shape_filename,
@@ -132,20 +143,20 @@ def stpaul_net(stpaul_ex_dir):
 
 @pytest.fixture(scope="module")
 def stpaul_transit_net(stpaul_ex_dir):
-    from network_wrangler import TransitNetwork
+    from network_wrangler import load_transit
 
-    return TransitNetwork.read(stpaul_ex_dir)
+    return load_transit(stpaul_ex_dir)
 
 
 @pytest.fixture(scope="module")
 def small_net(small_ex_dir):
-    from network_wrangler import RoadwayNetwork
+    from network_wrangler import load_roadway
 
     shape_filename = small_ex_dir / "shape.geojson"
     link_filename = small_ex_dir / "link.json"
     node_filename = small_ex_dir / "node.geojson"
 
-    net = RoadwayNetwork.read(
+    net = load_roadway(
         links_file=link_filename,
         nodes_file=node_filename,
         shapes_file=shape_filename,

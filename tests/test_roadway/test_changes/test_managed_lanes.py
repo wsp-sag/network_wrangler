@@ -5,7 +5,7 @@ import pytest
 from projectcard import read_card
 
 from network_wrangler import WranglerLogger
-from network_wrangler.utils import parse_timespans_to_secs
+from network_wrangler.utils.time import parse_timespans_to_secs
 
 
 """

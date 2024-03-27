@@ -25,7 +25,7 @@ def test_project_card_read(request, stpaul_card_dir):
     in_file = os.path.join(stpaul_card_dir, "road.prop_change.simple.yml")
     project_card = read_card(in_file)
     WranglerLogger.debug(project_card)
-    assert project_card.type == "roadway_property_change"
+    assert project_card.change_type == "roadway_property_change"
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 

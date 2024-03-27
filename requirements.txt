@@ -3,8 +3,10 @@ geojson
 geopandas >= 0.8.0
 jsonschema
 osmnx >= 0.12
-pandas >= 1.0
+pandas >= 1.6
 pandera[geopandas]
 partridge >= 1.1
+pydantic >= 2
+pyarrow
 projectcard
 pyyaml

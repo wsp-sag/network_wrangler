@@ -38,7 +38,7 @@ TEST_ROUTING_REPLACEMENT = [
 @pytest.mark.parametrize("test_routing", TEST_ROUTING_REPLACEMENT)
 def test_replace_shape_segment(request, test_routing):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    from network_wrangler.projects.transit_routing_change import _replace_shape_segment
+    from network_wrangler.projects.transit_routing_change import _replace_shapes_segment
 
     node_col = "shape_model_node_id"
     existing_routing = test_routing["existing_routing"]
@@ -75,7 +75,7 @@ def test_replace_shape_segment(request, test_routing):
 TEST_ROUTING_CHANGES = [
     {
         "name": "Replace",
-        "service": {"shape_id": "700004"},
+        "service": {"shape_id": ["700004"]},
         "routing_change": {
             "set": [41990, 39430, 46665],
         },
@@ -83,7 +83,7 @@ TEST_ROUTING_CHANGES = [
     },
     {
         "name": "Truncate start",
-        "service": {"shape_id": "700004"},
+        "service": {"shape_id": ["700004"]},
         "routing_change": {
             "existing": [41990, 76167],
             "set": [76167],
@@ -115,7 +115,7 @@ TEST_ROUTING_CHANGES = [
     },
     {
         "name": "Truncate end",
-        "service": {"shape_id": "700004"},
+        "service": {"shape_id": ["700004"]},
         "routing_change": {
             "existing": [62188, 59013],
             "set": [62188],
@@ -147,7 +147,7 @@ TEST_ROUTING_CHANGES = [
     },
     {
         "name": "Change Middle",
-        "service": {"shape_id": "700004"},
+        "service": {"shape_id": ["700004"]},
         "routing_change": {
             "existing": [76167, 57484],
             "set": [76167, 46665, 150855, 57484],
@@ -186,7 +186,7 @@ TEST_ROUTING_CHANGES = [
 TEST_STOP_CHANGES = [
     {
         "name": "Add Stop",
-        "service": {"trip_id": "14947879-JUN19-MVS-BUS-Weekday-01"},
+        "service": {"trip_id": ["14947879-JUN19-MVS-BUS-Weekday-01"]},
         "routing_change": {
             "existing": [-40253],
             "set": [40253],
@@ -216,7 +216,7 @@ TEST_STOP_CHANGES = [
     },
     {
         "name": "Remove Stop",
-        "service": {"trip_id": "14947879-JUN19-MVS-BUS-Weekday-01"},
+        "service": {"trip_id": ["14947879-JUN19-MVS-BUS-Weekday-01"]},
         "routing_change": {
             "existing": [100806],
             "set": [-100806],
@@ -334,7 +334,7 @@ def test_route_changes_project_card(
     )
 
     WranglerLogger.debug(f"Project Card: {project_card.__dict__}")
-    WranglerLogger.debug(f"Types: {project_card.types}")
+    WranglerLogger.debug(f"Types: {project_card.change_types}")
     transit_net = transit_net.apply(project_card)
 
     sel = transit_net.get_selection(project_card.service)
@@ -404,19 +404,28 @@ def test_wo_existing(
     transit_net = copy.deepcopy(stpaul_transit_net)
     transit_net.road_net = stpaul_net
 
-    selection_dict = {"trip_id": ["14986385-JUN19-MVS-BUS-Weekday-01"]}
-    change_dict = {"transit_routing_change": {"routing": {"set": [75318]}}}
+    selection_dict = {
+        "trip_properties": {"trip_id": ["14986385-JUN19-MVS-BUS-Weekday-01"]}
+    }
+    change_dict = {
+        "project": "test_wo_existing",
+        "transit_routing_change": {
+            "routing": {"set": [75318]},
+            "service": selection_dict,
+        },
+    }
 
-    transit_net = transit_net.apply(
-        transit_net.get_selection(selection_dict), change_dict
-    )
+    transit_net = transit_net.apply(change_dict)
 
     # Stops
     result = transit_net.feed.stop_times[
         transit_net.feed.stop_times["trip_id"] == "14986385-JUN19-MVS-BUS-Weekday-01"
     ]["stop_id"].tolist()
 
-    answer = ["2609"]  # first matching stop_id in stops.txt
-    assert result == answer
+    answer = [
+        "2609",
+        "40126",
+    ]  # there are two stop_ids matching the model_node_id 75318 stops.txt
+    assert set(result).issubset(answer)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

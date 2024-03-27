@@ -333,22 +333,38 @@ def test_change_node_xy(request, small_net):
     }
     net = net.apply(_project_card_dict)
 
+    # Make sure geometry and XY were updated in node
     _updated_node = net.nodes_df.loc[_test_node_idx]
-    _updated_link = net.links_df.loc[_test_link_idx]
-    _first_point = _updated_link.geometry.coords[0]
-
     WranglerLogger.info(
         f"Updated Node:\n{_updated_node[[net.nodes_df.params.primary_key,'X','Y','geometry']]}"
     )
-    WranglerLogger.info(
-        f"Updated Link Geometry for ({_updated_link.A}-->{_updated_link.B}):\n\
-            {_updated_link[['geometry']]}"
-    )
-
     assert _updated_node.geometry.x == _expected_X
     assert _updated_node.geometry.y == _expected_Y
     assert _updated_node.X == _expected_X
     assert _updated_node.Y == _expected_Y
-    assert _first_point[0] == _expected_X
-    assert _first_point[1] == _expected_Y
+
+    # Make sure geometry also updated in link e
+    _updated_link = net.links_df.loc[_test_link_idx]
+    WranglerLogger.info(
+        f"Updated Link Geometry for ({_updated_link.A}-->{_updated_link.B}):\n\
+            {_updated_link[['geometry']].values}"
+    )
+    _first_point_in_link = _updated_link.geometry.coords[0]
+    assert (_first_point_in_link[0], _first_point_in_link[1]) == (
+        _expected_X,
+        _expected_Y,
+    )
+
+    # Make sure geometry also updated shape
+    _updated_shape = net.shapes_df.loc[net.links_df.loc[_test_link_idx, "shape_id"]]
+    WranglerLogger.info(
+        f"Updated Shape Geometry:\n\
+            {_updated_shape[['geometry']].values}"
+    )
+    _first_point_in_shape = _updated_shape.geometry.coords[0]
+    assert (_first_point_in_shape[0], _first_point_in_shape[1]) == (
+        _expected_X,
+        _expected_Y,
+    )
+
     WranglerLogger.info(f"--Finished: {request.node.name}")

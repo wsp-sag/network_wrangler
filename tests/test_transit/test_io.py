@@ -1,6 +1,6 @@
 import pytest
 
-from network_wrangler import TransitNetwork
+from network_wrangler import TransitNetwork, load_transit
 from network_wrangler import WranglerLogger
 
 """
@@ -17,7 +17,7 @@ def test_transit_read_write(request, stpaul_transit_net, scratch_dir):
     WranglerLogger.debug(
         f"stpaul_transit_net.feed.frequencies\n{stpaul_transit_net.feed.frequencies.dtypes}"
     )
-    stpaul_transit_net_read_write = TransitNetwork.read(scratch_dir)
+    stpaul_transit_net_read_write = load_transit(scratch_dir)
     assert isinstance(stpaul_transit_net_read_write, TransitNetwork)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

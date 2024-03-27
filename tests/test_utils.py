@@ -43,7 +43,7 @@ def test_time_convert(request):
     df = DataFrame(time_tests, columns=["time", "time_results"])
     print("Original Time Series", df)
 
-    from network_wrangler.utils import parse_timespans_to_secs
+    from network_wrangler.utils.time import parse_timespans_to_secs
 
     df["time"] = df["time"].apply(parse_timespans_to_secs)
     print("Result Time Series", df)
