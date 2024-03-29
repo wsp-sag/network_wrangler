@@ -1254,8 +1254,6 @@ class TransitNetwork(object):
         Returns:
         """
 
-        # TODO: add in_place
-
         routes_df = self.feed.routes.copy()
         shapes_df = self.feed.shapes.copy()
         trips_df = self.feed.trips.copy()
@@ -1266,7 +1264,7 @@ class TransitNetwork(object):
         # links = self.road_net.links_df.copy()
         nodes = self.road_net.nodes_df.copy()
 
-        # TODO: fix this issue in the network
+        # in case any stops missing model_node_id
         stops_missing_model_node_id = stops_df[stops_df['model_node_id'].isna()].copy()
         stops_with_model_node_id = stops_df[~stops_df['model_node_id'].isna()].copy()
 
@@ -1357,7 +1355,7 @@ class TransitNetwork(object):
             trip_index = 1
             for trip in route["trips"]:
                 # add shape
-                shape_id = f"shp{shape_id_max+1}"
+                shape_id = f"{shape_id_max+1}_shp"
                 shape_model_node_id_list = [list(item.keys())[0] if isinstance(item, dict) else item for item in trip["routing"]]
                 add_shapes_dict = {
                     "shape_id": shape_id,
@@ -1406,7 +1404,9 @@ class TransitNetwork(object):
                     drop_off_type = []
 
                     for i in trip['routing']:
-                        if isinstance(i, dict) and list(i.values())[0].get('stop'):
+                        if (isinstance(i, dict) and 
+                           list(i.values())[0] is not None and 
+                           list(i.values())[0].get('stop')):
                             stop_model_node_id_list.append(list(i.keys())[0])
                             drop_off_type.append(0 if list(i.values())[0].get('alight', True) else 1)
                             pickup_type.append(0 if list(i.values())[0].get('board', True) else 1) 
@@ -1414,7 +1414,7 @@ class TransitNetwork(object):
                     # used to build stop_time
                     stop_id_list = [] 
 
-                    # used to add stops if they are not in the stops.txt
+                    # used to add new stops if they are not in the stops.txt
                     new_stop_id_list = []
                     model_node_id_list = []
                     stop_lat_list = []
@@ -1462,6 +1462,7 @@ class TransitNetwork(object):
                     stops_final_df = pd.concat([stops_final_df, add_stops_df], ignore_index=True, sort=False)
 
                     # add stop_times
+                    # TODO: time_to_next_node_sec
                     stop_sequence = list(range(1, len(stop_id_list) + 1))
                     add_stop_times_df = pd.DataFrame({
                         "trip_id": trip_id,
@@ -1492,7 +1493,7 @@ class TransitNetwork(object):
             updated_network.feed.shapes = shapes_df
             updated_network.feed.trips = trips_df
             updated_network.feed.stop_times = stop_times_df
-            updated_network.feed.stops = stops_df
+            updated_network.feed.stops = stops_final_df
             updated_network.feed.frequencies = frequencies_df
             return updated_network
 
