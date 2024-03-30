@@ -1265,8 +1265,8 @@ class TransitNetwork(object):
         nodes = self.road_net.nodes_df.copy()
 
         # in case any stops missing model_node_id
-        stops_missing_model_node_id = stops_df[stops_df['model_node_id'].isna()].copy()
-        stops_with_model_node_id = stops_df[~stops_df['model_node_id'].isna()].copy()
+        stops_missing_model_node_id = stops_df[(stops_df['model_node_id'].isna())| (stops_df['model_node_id']=="")].copy()
+        stops_with_model_node_id = stops_df[~((stops_df['model_node_id'].isna())| (stops_df['model_node_id']==""))].copy()
 
         stops_missing_model_node_id = pd.merge(
             stops_missing_model_node_id.drop('model_node_id', axis = 1),
