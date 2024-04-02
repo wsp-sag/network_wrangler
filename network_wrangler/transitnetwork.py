@@ -613,7 +613,7 @@ class TransitNetwork(object):
                     managed_lane_nodes,
                 )
             elif project_dictionary["category"].lower() == "add new route":
-                self.add_new_transit_feature_change(
+                self.add_new_transit_feature(
                     project_dictionary["routes"]
                 )
             elif project_dictionary["category"].lower() == "add transit":
@@ -1245,7 +1245,7 @@ class TransitNetwork(object):
             in_place=in_place,
         )
 
-    def add_new_transit_feature_change(
+    def add_new_transit_feature(
         self, routes: dict, in_place: bool = True
     ) -> Union(None, TransitNetwork):
         """
@@ -1270,12 +1270,24 @@ class TransitNetwork(object):
         nodes = self.road_net.nodes_df.copy()
 
         # in case any stops missing model_node_id
-        stops_missing_model_node_id = stops_df[(stops_df['model_node_id'].isna())| (stops_df['model_node_id']=="")].copy()
-        stops_with_model_node_id = stops_df[~((stops_df['model_node_id'].isna())| (stops_df['model_node_id']==""))].copy()
+        stops_missing_model_node_id = (
+            stops_df[
+                (stops_df[TransitNetwork.STOPS_FOREIGN_KEY].isna())
+                | (stops_df[TransitNetwork.STOPS_FOREIGN_KEY]=="")
+            ].copy()
+        )
+        stops_with_model_node_id = (
+            stops_df[
+                ~(
+                    (stops_df[TransitNetwork.STOPS_FOREIGN_KEY].isna())
+                    | (stops_df[TransitNetwork.STOPS_FOREIGN_KEY]=="")
+                )
+            ].copy()
+        )
 
         stops_missing_model_node_id = pd.merge(
-            stops_missing_model_node_id.drop('model_node_id', axis = 1),
-            nodes[['shst_node_id', 'model_node_id']],
+            stops_missing_model_node_id.drop(TransitNetwork.STOPS_FOREIGN_KEY, axis = 1),
+            nodes[['shst_node_id', TransitNetwork.STOPS_FOREIGN_KEY]],
             how = 'left',
             on = 'shst_node_id'
         )
@@ -1283,9 +1295,18 @@ class TransitNetwork(object):
         stops_final_df = pd.concat([stops_with_model_node_id, stops_missing_model_node_id])
         assert len(stops_final_df) == len(stops_df) 
 
-        stop_id_xref_dict = stops_final_df.set_index("model_node_id")["stop_id"].to_dict()
+        stop_id_xref_dict = (
+            stops_final_df
+            .set_index(TransitNetwork.STOPS_FOREIGN_KEY)["stop_id"]
+            .to_dict()
+        )
         stop_id_xref_dict = {int(float(key)): int(float(value)) for key, value in stop_id_xref_dict.items()}
-        model_node_coord_dict = nodes.set_index('model_node_id')[['X', 'Y']].apply(tuple, axis=1).to_dict()
+        model_node_coord_dict = (
+            nodes
+            .set_index(TransitNetwork.STOPS_FOREIGN_KEY)[['X', 'Y']]
+            .apply(tuple, axis=1)
+            .to_dict()
+        )
         model_node_coord_dict = {int(float(key)): value for key, value in model_node_coord_dict.items()}
         
         stop_id_max = max(stop_id_xref_dict.values())
@@ -1430,9 +1451,27 @@ class TransitNetwork(object):
                     for s in stop_model_node_id_list:
                         s = int(float(s))
                         if s in stop_id_xref_dict.keys():
-                            existing_agency_raw_name = stops_final_df[stops_final_df['model_node_id'].astype(float).astype(int)==s]['agency_raw_name'].to_list()
-                            existing_trip_ids = stops_final_df[stops_final_df['model_node_id'].astype(float).astype(int)==s]['trip_id'].to_list()
-                            existing_stop_id = stops_final_df[stops_final_df['model_node_id'].astype(float).astype(int)==s]['stop_id'].iloc[0]
+                            existing_agency_raw_name = (
+                                stops_final_df[
+                                    stops_final_df[TransitNetwork.STOPS_FOREIGN_KEY]
+                                    .astype(float)
+                                    .astype(int) == s
+                                ]['agency_raw_name'].to_list()
+                            )
+                            existing_trip_ids = (
+                                stops_final_df[
+                                    stops_final_df[TransitNetwork.STOPS_FOREIGN_KEY]
+                                    .astype(float)
+                                    .astype(int) == s
+                                ]['trip_id'].to_list()
+                            )
+                            existing_stop_id = (
+                                stops_final_df[
+                                    stops_final_df[TransitNetwork.STOPS_FOREIGN_KEY]
+                                    .astype(float)
+                                    .astype(int) == s
+                                ]['stop_id'].iloc[0]
+                            )
                             if ((route["agency_raw_name"] not in existing_agency_raw_name)
                                 | (trip_id not in existing_trip_ids)
                             ):
