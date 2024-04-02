@@ -1251,7 +1251,12 @@ class TransitNetwork(object):
         """
         Add new transit services based on the project card information passed
         Args:
+            routes: dict
+                new routes
+            in_place : bool
+                whether to apply changes in place or return a new network
         Returns:
+            None or updated transit network
         """
 
         routes_df = self.feed.routes.copy()
@@ -1286,6 +1291,7 @@ class TransitNetwork(object):
         stop_id_max = max(stop_id_xref_dict.values())
         shape_id_max = pd.to_numeric(shapes_df['shape_id'].str.extract(r'(\d+)')[0], errors='coerce').max()
 
+        # define column data type
         route_col_dtypes = {
             "route_id": "object",
             "route_short_name": "object",
@@ -1355,7 +1361,7 @@ class TransitNetwork(object):
             trip_index = 1
             for trip in route["trips"]:
                 # add shape
-                shape_id = f"{shape_id_max+1}_shp"
+                shape_id = f"{shape_id_max+1}"
                 shape_model_node_id_list = [list(item.keys())[0] if isinstance(item, dict) else item for item in trip["routing"]]
                 add_shapes_dict = {
                     "shape_id": shape_id,
@@ -1370,7 +1376,7 @@ class TransitNetwork(object):
                 
                 for i in trip["headway_sec"]:
                     # add trip
-                    trip_id = f"trip{trip_index}_{shape_id}"
+                    trip_id = f"trip{trip_index}_shp{shape_id}"
                     add_trips_dict = {
                         "route_id": route["route_id"],
                         "direction_id": trip["direction_id"],
@@ -1406,7 +1412,8 @@ class TransitNetwork(object):
                     for i in trip['routing']:
                         if (isinstance(i, dict) and 
                            list(i.values())[0] is not None and 
-                           list(i.values())[0].get('stop')):
+                           list(i.values())[0].get('stop')
+                        ):
                             stop_model_node_id_list.append(list(i.keys())[0])
                             drop_off_type.append(0 if list(i.values())[0].get('alight', True) else 1)
                             pickup_type.append(0 if list(i.values())[0].get('board', True) else 1) 
@@ -1423,10 +1430,10 @@ class TransitNetwork(object):
                     for s in stop_model_node_id_list:
                         s = int(float(s))
                         if s in stop_id_xref_dict.keys():
-                            existing_agency_raw_name = stops_final_df[stops_final_df['model_node_id'].astype(float).astype(int)==s]['agency_raw_name'].iloc[0]
+                            existing_agency_raw_name = stops_final_df[stops_final_df['model_node_id'].astype(float).astype(int)==s]['agency_raw_name'].to_list()
                             existing_trip_ids = stops_final_df[stops_final_df['model_node_id'].astype(float).astype(int)==s]['trip_id'].to_list()
                             existing_stop_id = stops_final_df[stops_final_df['model_node_id'].astype(float).astype(int)==s]['stop_id'].iloc[0]
-                            if ((route["agency_raw_name"]!=existing_agency_raw_name)
+                            if ((route["agency_raw_name"] not in existing_agency_raw_name)
                                 | (trip_id not in existing_trip_ids)
                             ):
                                 new_stop_id = existing_stop_id
