@@ -1040,10 +1040,10 @@ class TransitNetwork(object):
             for trip_id in trip_ids:
                 for fk_i in properties["set_stops"]:
                     if fk_i in existing_fk_ids:
-                       existing_agency_raw_name = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['agency_raw_name'].iloc[0]
+                       existing_agency_raw_name = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['agency_raw_name'].to_list()
                        existing_trip_ids = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['trip_id'].to_list()
                        existing_stop_id = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['stop_id'].iloc[0]
-                       if ((agency_raw_name!=existing_agency_raw_name)
+                       if ((agency_raw_name not in existing_agency_raw_name)
                         | (trip_id not in existing_trip_ids)
                        ):
                             stops.loc[
