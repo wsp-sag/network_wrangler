@@ -612,6 +612,14 @@ class TransitNetwork(object):
                     self.select_transit_features_by_nodes(managed_lane_nodes),
                     managed_lane_nodes,
                 )
+            elif project_dictionary["category"].lower() == "add new route":
+                self.add_new_transit_feature(
+                    project_dictionary["routes"]
+                )
+            elif project_dictionary["category"].lower() == "delete transit service":
+                self.delete_transit_service(
+                    self.select_transit_features(project_dictionary["facility"])
+                )
             elif project_dictionary["category"].lower() == "add transit":
                 self.apply_python_calculation(project_dictionary["pycode"])
             elif project_dictionary["category"].lower() == "roadway deletion":
@@ -1036,10 +1044,10 @@ class TransitNetwork(object):
             for trip_id in trip_ids:
                 for fk_i in properties["set_stops"]:
                     if fk_i in existing_fk_ids:
-                       existing_agency_raw_name = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['agency_raw_name'].iloc[0]
+                       existing_agency_raw_name = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['agency_raw_name'].to_list()
                        existing_trip_ids = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['trip_id'].to_list()
                        existing_stop_id = stops[stops[TransitNetwork.STOPS_FOREIGN_KEY]==fk_i]['stop_id'].iloc[0]
-                       if ((agency_raw_name!=existing_agency_raw_name)
+                       if ((agency_raw_name not in existing_agency_raw_name)
                         | (trip_id not in existing_trip_ids)
                        ):
                             stops.loc[
@@ -1241,6 +1249,342 @@ class TransitNetwork(object):
             in_place=in_place,
         )
 
+    def add_new_transit_feature(
+        self, routes: dict, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        """
+        Add new transit services based on the project card information passed
+        Args:
+            routes: dict
+                new routes
+            in_place : bool
+                whether to apply changes in place or return a new network
+        Returns:
+            None or updated transit network
+        """
+
+        routes_df = self.feed.routes.copy()
+        shapes_df = self.feed.shapes.copy()
+        trips_df = self.feed.trips.copy()
+        stop_times_df = self.feed.stop_times.copy()
+        stops_df = self.feed.stops.copy()
+        frequencies_df = self.feed.frequencies.copy()
+
+        # links = self.road_net.links_df.copy()
+        nodes = self.road_net.nodes_df.copy()
+
+        # in case any stops missing model_node_id
+        stops_missing_model_node_id = (
+            stops_df[
+                (stops_df[TransitNetwork.STOPS_FOREIGN_KEY].isna())
+                | (stops_df[TransitNetwork.STOPS_FOREIGN_KEY]=="")
+            ].copy()
+        )
+        stops_with_model_node_id = (
+            stops_df[
+                ~(
+                    (stops_df[TransitNetwork.STOPS_FOREIGN_KEY].isna())
+                    | (stops_df[TransitNetwork.STOPS_FOREIGN_KEY]=="")
+                )
+            ].copy()
+        )
+
+        stops_missing_model_node_id = pd.merge(
+            stops_missing_model_node_id.drop(TransitNetwork.STOPS_FOREIGN_KEY, axis = 1),
+            nodes[['shst_node_id', TransitNetwork.STOPS_FOREIGN_KEY]],
+            how = 'left',
+            on = 'shst_node_id'
+        )
+
+        stops_final_df = pd.concat([stops_with_model_node_id, stops_missing_model_node_id])
+        assert len(stops_final_df) == len(stops_df) 
+
+        stop_id_xref_dict = (
+            stops_final_df
+            .set_index(TransitNetwork.STOPS_FOREIGN_KEY)["stop_id"]
+            .to_dict()
+        )
+        stop_id_xref_dict = {int(float(key)): int(float(value)) for key, value in stop_id_xref_dict.items()}
+        model_node_coord_dict = (
+            nodes
+            .set_index(TransitNetwork.STOPS_FOREIGN_KEY)[['X', 'Y']]
+            .apply(tuple, axis=1)
+            .to_dict()
+        )
+        model_node_coord_dict = {int(float(key)): value for key, value in model_node_coord_dict.items()}
+        
+        stop_id_max = max(stop_id_xref_dict.values())
+        shape_id_max = pd.to_numeric(shapes_df['shape_id'].str.extract(r'(\d+)')[0], errors='coerce').max()
+
+        # define column data type
+        route_col_dtypes = {
+            "route_id": "object",
+            "route_short_name": "object",
+            "route_long_name": "object",
+            "route_type": "int64",
+            "agency_raw_name": "object",
+            "agency_id": "object"
+        }
+
+        shape_col_dtypes = {
+            "shape_id": "object",
+            "shape_model_node_id": "object",
+            "shape_pt_sequence": "int64",
+            "agency_raw_name": "object"
+        }
+
+        trip_col_dtypes = {
+            "route_id": "object",
+            "direction_id": "object",
+            "trip_id": "object",
+            "shape_id": "object",
+            "agency_raw_name": "object"
+        }
+
+        freq_col_dtypes = {
+            "trip_id": "object",
+            "headway_secs": "int64",
+            "start_time": "float64",
+            "end_time": "float64",
+            "agency_raw_name": "object"
+        }
+
+        stop_col_dtypes = {
+            "stop_id" : "object",
+            "stop_lat" : "float64",
+            "stop_lon" : "float64",
+            "model_node_id" : "object",
+            'trip_id': "object",
+            "agency_raw_name": "object"
+        }
+
+        stop_time_col_dtypes = {
+            "trip_id": "object",
+            "stop_sequence": "int64",
+            "arrival_time": "float64",
+            "departure_time": "float64",
+            "pickup_type": "float64",
+            "drop_off_type": "float64",
+            "stop_id": "object",
+            "agency_raw_name": "object"
+        }
+
+        for route in routes:
+            # add route
+            agency_id = route["agency_id"]
+            add_routes_dict = {
+                "route_id": route["route_id"],
+                "route_short_name": route["route_short_name"],
+                "route_long_name": route["route_long_name"],
+                "route_type": route["route_type"],
+                "agency_raw_name": route["agency_raw_name"],
+                "agency_id": f'{agency_id}'
+            }
+            add_routes_df = pd.DataFrame([add_routes_dict]).astype(route_col_dtypes)
+            routes_df = pd.concat([routes_df, add_routes_df], ignore_index=True, sort=False)
+
+            trip_index = 1
+            for trip in route["trips"]:
+                # add shape
+                shape_id = f"{shape_id_max+1}"
+                shape_model_node_id_list = [list(item.keys())[0] if isinstance(item, dict) else item for item in trip["routing"]]
+                add_shapes_dict = {
+                    "shape_id": shape_id,
+                    "shape_model_node_id": shape_model_node_id_list,
+                    "shape_pt_sequence": list(range(1,len(shape_model_node_id_list)+1)),
+                    "agency_raw_name": route["agency_raw_name"]
+                }
+                
+                add_shapes_df = pd.DataFrame(add_shapes_dict).astype(shape_col_dtypes)
+                shapes_df = pd.concat([shapes_df, add_shapes_df], ignore_index=True, sort=False)
+
+                
+                for i in trip["headway_sec"]:
+                    # add trip
+                    trip_id = f"trip{trip_index}_shp{shape_id}"
+                    add_trips_dict = {
+                        "route_id": route["route_id"],
+                        "direction_id": trip["direction_id"],
+                        "trip_id": trip_id,
+                        "shape_id": shape_id,
+                        "agency_raw_name": route["agency_raw_name"]
+                    }
+                    add_trips_df = pd.DataFrame([add_trips_dict]).astype(trip_col_dtypes)
+                    trips_df = pd.concat([trips_df, add_trips_df], ignore_index=True, sort=False)
+
+                    # add frequency
+                    headway_secs = list(i.values())[0]
+                    time_range = list(i.keys())[0]
+                    time_range = [time.strip().strip("'") for time in time_range.strip("()").split(',')]
+                    start_time = parse_time_spans(time_range)[0]
+                    end_time = parse_time_spans(time_range)[1]
+
+                    add_freqs_dict = {
+                        "trip_id": trip_id,
+                        "headway_secs": headway_secs,
+                        "start_time": start_time,
+                        "end_time": end_time,
+                        "agency_raw_name": route["agency_raw_name"]
+                    }
+                    add_freqs_df = pd.DataFrame([add_freqs_dict]).astype(freq_col_dtypes)
+                    frequencies_df = pd.concat([frequencies_df, add_freqs_df], ignore_index=True, sort=False)
+
+                    # add stop and stop_times
+                    stop_model_node_id_list = []
+                    pickup_type = []
+                    drop_off_type = []
+
+                    for i in trip['routing']:
+                        if (isinstance(i, dict) and 
+                           list(i.values())[0] is not None and 
+                           list(i.values())[0].get('stop')
+                        ):
+                            stop_model_node_id_list.append(list(i.keys())[0])
+                            drop_off_type.append(0 if list(i.values())[0].get('alight', True) else 1)
+                            pickup_type.append(0 if list(i.values())[0].get('board', True) else 1) 
+
+                    # used to build stop_time
+                    stop_id_list = [] 
+
+                    # used to add new stops if they are not in the stops.txt
+                    new_stop_id_list = []
+                    model_node_id_list = []
+                    stop_lat_list = []
+                    stop_lon_list = []
+
+                    for s in stop_model_node_id_list:
+                        s = int(float(s))
+                        if s in stop_id_xref_dict.keys():
+                            existing_agency_raw_name = (
+                                stops_final_df[
+                                    stops_final_df[TransitNetwork.STOPS_FOREIGN_KEY]
+                                    .astype(float)
+                                    .astype(int) == s
+                                ]['agency_raw_name'].to_list()
+                            )
+                            existing_trip_ids = (
+                                stops_final_df[
+                                    stops_final_df[TransitNetwork.STOPS_FOREIGN_KEY]
+                                    .astype(float)
+                                    .astype(int) == s
+                                ]['trip_id'].to_list()
+                            )
+                            existing_stop_id = (
+                                stops_final_df[
+                                    stops_final_df[TransitNetwork.STOPS_FOREIGN_KEY]
+                                    .astype(float)
+                                    .astype(int) == s
+                                ]['stop_id'].iloc[0]
+                            )
+                            if ((route["agency_raw_name"] not in existing_agency_raw_name)
+                                | (trip_id not in existing_trip_ids)
+                            ):
+                                new_stop_id = existing_stop_id
+                                stop_id_list.append(new_stop_id)
+                                # add new stop to stops.txt
+                                new_stop_id_list.append(new_stop_id)
+                                model_node_id_list.append(s)
+                                stop_lat_list.append(model_node_coord_dict[s][1])
+                                stop_lon_list.append(model_node_coord_dict[s][0])
+                                stop_id_xref_dict.update({s: new_stop_id})
+                            else:
+                                stop_id_list.append(stop_id_xref_dict[s])
+                        else:
+                            new_stop_id = stop_id_max + 1
+                            stop_id_list.append(new_stop_id)
+                            # add new stop to stops.txt
+                            new_stop_id_list.append(new_stop_id)
+                            model_node_id_list.append(s)
+                            stop_lat_list.append(model_node_coord_dict[s][1])
+                            stop_lon_list.append(model_node_coord_dict[s][0])
+                            stop_id_xref_dict.update({s: new_stop_id})
+                            stop_id_max += 1
+                    
+                    # add stops
+                    add_stops_df = pd.DataFrame({
+                        "stop_id" : new_stop_id_list,
+                        "stop_lat" : stop_lat_list,
+                        "stop_lon" : stop_lon_list,
+                        "model_node_id" : model_node_id_list,
+                        'trip_id': trip_id,
+                        "agency_raw_name": route["agency_raw_name"]
+                    }).astype(stop_col_dtypes)
+                    stops_final_df = pd.concat([stops_final_df, add_stops_df], ignore_index=True, sort=False)
+
+                    # add stop_times
+                    # TODO: time_to_next_node_sec
+                    stop_sequence = list(range(1, len(stop_id_list) + 1))
+                    add_stop_times_df = pd.DataFrame({
+                        "trip_id": trip_id,
+                        "stop_sequence": stop_sequence,
+                        "arrival_time": 0,
+                        "departure_time": 0,
+                        "pickup_type": pickup_type,
+                        "drop_off_type": drop_off_type,
+                        "stop_id": stop_id_list,
+                        "agency_raw_name": route["agency_raw_name"]
+                    }).astype(stop_time_col_dtypes)
+                    stop_times_df = pd.concat([stop_times_df, add_stop_times_df], ignore_index=True, sort=False)
+
+                    trip_index += 1
+                shape_id_max += 1
+
+        # Replace self if in_place, else return
+        if in_place:
+            self.feed.routes = routes_df
+            self.feed.shapes = shapes_df
+            self.feed.trips = trips_df
+            self.feed.stop_times = stop_times_df
+            self.feed.stops = stops_final_df
+            self.feed.frequencies = frequencies_df
+        else:
+            updated_network = copy.deepcopy(self)
+            updated_network.feed.routes = routes_df
+            updated_network.feed.shapes = shapes_df
+            updated_network.feed.trips = trips_df
+            updated_network.feed.stop_times = stop_times_df
+            updated_network.feed.stops = stops_final_df
+            updated_network.feed.frequencies = frequencies_df
+            return updated_network
+
+    def delete_transit_service(
+        self, trip_ids: pd.Series, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        """
+        delete transit service 
+        Args:
+            trip_ids: pd.Series
+                trip ids that need to be deleted from the transit network
+            in_place : bool
+                whether to apply changes in place or return a new network
+        Returns:
+            None or updated transit network
+        """
+
+        trips_df = self.feed.trips.copy()
+        stop_times_df = self.feed.stop_times.copy()
+        stops_df = self.feed.stops.copy()
+        frequencies_df = self.feed.frequencies.copy()
+
+        delete_trip_list = trip_ids.tolist()
+        trips_df = trips_df[~trips_df.trip_id.isin(delete_trip_list)]
+        stop_times_df = stop_times_df[~stop_times_df.trip_id.isin(delete_trip_list)]
+        stops_df = stops_df[~stops_df.trip_id.isin(delete_trip_list)]
+        frequencies_df = frequencies_df[~frequencies_df.trip_id.isin(delete_trip_list)]
+
+        # Replace self if in_place, else return
+        if in_place:
+            self.feed.trips = trips_df
+            self.feed.stop_times = stop_times_df
+            self.feed.stops = stops_df
+            self.feed.frequencies = frequencies_df
+        else:
+            updated_network = copy.deepcopy(self)
+            updated_network.feed.trips = trips_df
+            updated_network.feed.stop_times = stop_times_df
+            updated_network.feed.stops = stops_df
+            updated_network.feed.frequencies = frequencies_df
+            return updated_network
 
 class DotDict(dict):
     """
