@@ -616,6 +616,10 @@ class TransitNetwork(object):
                 self.add_new_transit_feature(
                     project_dictionary["routes"]
                 )
+            elif project_dictionary["category"].lower() == "delete transit service":
+                self.delete_transit_service(
+                    self.select_transit_features(project_dictionary["facility"])
+                )
             elif project_dictionary["category"].lower() == "add transit":
                 self.apply_python_calculation(project_dictionary["pycode"])
             elif project_dictionary["category"].lower() == "roadway deletion":
@@ -1540,6 +1544,47 @@ class TransitNetwork(object):
             updated_network.feed.trips = trips_df
             updated_network.feed.stop_times = stop_times_df
             updated_network.feed.stops = stops_final_df
+            updated_network.feed.frequencies = frequencies_df
+            return updated_network
+
+    def delete_transit_service(
+        self, trip_ids: pd.Series, in_place: bool = True
+    ) -> Union(None, TransitNetwork):
+        """
+        delete transit service 
+        Args:
+            trip_ids: pd.Series
+                trip ids that need to be deleted from the transit network
+            in_place : bool
+                whether to apply changes in place or return a new network
+        Returns:
+            None or updated transit network
+        """
+
+        trips_df = self.feed.trips.copy()
+        stop_times_df = self.feed.stop_times.copy()
+        stops_df = self.feed.stops.copy()
+        frequencies_df = self.feed.frequencies.copy()
+
+        # Loop through all the trip_ids
+        for trip_id in trip_ids:
+            # Pop the rows that match trip_id
+            trips_df = trips_df[trips_df.trip_id != trip_id]
+            stop_times_df = stop_times_df[stop_times_df.trip_id != trip_id]
+            stops_df = stops_df[stops_df.trip_id != trip_id]
+            frequencies_df = frequencies_df[frequencies_df.trip_id != trip_id]
+
+        # Replace self if in_place, else return
+        if in_place:
+            self.feed.trips = trips_df
+            self.feed.stop_times = stop_times_df
+            self.feed.stops = stops_df
+            self.feed.frequencies = frequencies_df
+        else:
+            updated_network = copy.deepcopy(self)
+            updated_network.feed.trips = trips_df
+            updated_network.feed.stop_times = stop_times_df
+            updated_network.feed.stops = stops_df
             updated_network.feed.frequencies = frequencies_df
             return updated_network
 
