@@ -1566,13 +1566,11 @@ class TransitNetwork(object):
         stops_df = self.feed.stops.copy()
         frequencies_df = self.feed.frequencies.copy()
 
-        # Loop through all the trip_ids
-        for trip_id in trip_ids:
-            # Pop the rows that match trip_id
-            trips_df = trips_df[trips_df.trip_id != trip_id]
-            stop_times_df = stop_times_df[stop_times_df.trip_id != trip_id]
-            stops_df = stops_df[stops_df.trip_id != trip_id]
-            frequencies_df = frequencies_df[frequencies_df.trip_id != trip_id]
+        delete_trip_list = trip_ids.tolist()
+        trips_df = trips_df[~trips_df.trip_id.isin(delete_trip_list)]
+        stop_times_df = stop_times_df[~stop_times_df.trip_id.isin(delete_trip_list)]
+        stops_df = stops_df[~stops_df.trip_id.isin(delete_trip_list)]
+        frequencies_df = frequencies_df[~frequencies_df.trip_id.isin(delete_trip_list)]
 
         # Replace self if in_place, else return
         if in_place:
