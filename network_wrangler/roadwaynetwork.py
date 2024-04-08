@@ -158,6 +158,8 @@ class RoadwayNetwork(object):
     SP_WEIGHT_FACTOR = 100
     MANAGED_LANES_NODE_ID_SCALAR = 500000
     MANAGED_LANES_LINK_ID_SCALAR = 1000000
+    MANAGED_LANES_NODE_ID_MIN= 950001
+    MANAGED_LANES_NODE_ID_MAX= 1000000
 
     SELECTION_REQUIRES = ["link"]
 
@@ -2172,12 +2174,20 @@ class RoadwayNetwork(object):
             )
             return out_location_reference
 
-        ml_links_df["A"] = (
-            ml_links_df["A"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
+        # ml_links_df["A"] = (
+        #     ml_links_df["A"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
+        # )
+        # ml_links_df["B"] = (
+        #     ml_links_df["B"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
+        # )
+        unique_ids = pd.concat([ml_links_df['A'], ml_links_df['B']]).unique()
+        available_ids = (iter(range(RoadwayNetwork.MANAGED_LANES_NODE_ID_MIN, 
+                                    RoadwayNetwork.MANAGED_LANES_NODE_ID_MAX))
         )
-        ml_links_df["B"] = (
-            ml_links_df["B"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
-        )
+        ml_node_mapping = {original_id: next(available_ids) for original_id in unique_ids}
+        ml_links_df["A"] = ml_links_df['A'].map(ml_node_mapping)
+        ml_links_df["B"] = ml_links_df['B'].map(ml_node_mapping)
+
         ml_links_df[RoadwayNetwork.UNIQUE_LINK_KEY] = (
             ml_links_df[RoadwayNetwork.UNIQUE_LINK_KEY]
             + RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR
