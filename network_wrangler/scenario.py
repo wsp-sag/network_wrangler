@@ -401,7 +401,7 @@ class Scenario(object):
 
         Returns: boolean indicating if the check was successful or returned an error
         """
-
+        WranglerLogger.info("Checking Scenario Conflicts")
         conflict_dict = self.conflicts
         scenario_projects = [p.project for p in self.project_cards]
 
@@ -427,7 +427,7 @@ class Scenario(object):
 
         Returns: boolean indicating if the checks were successful or returned an error
         """
-
+        WranglerLogger.info("Checking Scenario Requisites")
         corequisite_dict = self.corequisites
         prerequisite_dict = self.prerequisites
 
@@ -463,7 +463,10 @@ class Scenario(object):
 
         Returns: ordered list of project cards to be applied to scenario
         """
-
+        WranglerLogger.info("Ordering Project Cards")
+        WranglerLogger.info(
+            "Project Cards: {}".format([p.project for p in self.project_cards])
+        )
         scenario_projects = [p.project.lower() for p in self.project_cards]
 
         # build prereq (adjacency) list for topological sort
@@ -478,12 +481,18 @@ class Scenario(object):
                 if (
                     prereq.lower() in scenario_projects
                 ):  # this will always be true, else would have been flagged in missing prerequsite check, but just in case
-                    adjacency_list[prereq.lower()] = [project]
+                    if adjacency_list.get(prereq.lower()):
+                        adjacency_list[prereq.lower()].append(project)
+                    else:
+                        adjacency_list[prereq.lower()] = [project]
+
+        WranglerLogger.debug("Adjacency List: {}".format(adjacency_list))
 
         # sorted_project_names is topological sorted project card names (based on prerequsiite)
         sorted_project_names = topological_sort(
             adjacency_list=adjacency_list, visited_list=visited_list
         )
+        WranglerLogger.info("Sorted Project Names: {}".format(sorted_project_names))
 
         # get the project card objects for these sorted project names
         project_card_and_name_dict = {}
@@ -515,7 +524,7 @@ class Scenario(object):
         )
         self.project_cards = sorted_project_cards
 
-        WranglerLogger.debug("Project Cards: {}".format(self.project_cards))
+        WranglerLogger.debug("Project Cards: {}".format([p.project for p in self.project_cards]))
 
         return sorted_project_cards
 
