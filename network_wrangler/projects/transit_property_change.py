@@ -23,7 +23,7 @@ def apply_transit_property_change(
     for property, property_change in property_changes.items():
         table = TABLE_TO_APPLY_BY_PROPERTY.get(property)
         if not table:
-            table = net.feed.tables_with_property(property)
+            table = net.feed.tables_with_field(property)
             if not len(table == 1):
                 raise TransitPropertyChangeError(
                     "Found property {property} in multiple tables: {table}"
@@ -52,7 +52,7 @@ def _apply_transit_property_change_to_table(
     property: str,
     property_change: dict,
 ) -> "TransitNetwork":
-    table_df = net.feed.get(table_name)
+    table_df = net.feed.get_table(table_name)
     # Grab only those records matching trip_ids (aka selection)
     set_df = table_df[table_df.trip_id.isin(selection.selected_trips)].copy()
 

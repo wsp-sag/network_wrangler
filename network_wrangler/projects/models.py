@@ -1,12 +1,11 @@
 import logging
 
-from typing import Annotated, Any, ClassVar, Dict, List, Union, Optional
-from enum import Enum
+from typing import Annotated, Any, ClassVar, List, Union, Optional, Literal
 
 from pydantic import ConfigDict, Field
 
-from ..utils.models import RecordModel
-from ..utils.types import ForcedStr
+from ..models._base.records import RecordModel
+from ..models._base.types import ForcedStr
 
 log = logging.getLogger(__name__)
 
@@ -22,28 +21,24 @@ class SelectRouteProperties(RecordModel):
     route_type: Annotated[Optional[List[int]], Field(None, min_length=1)]
 
 
-class SelectionRequire(Enum):
-    """Indicator if any or all is required."""
-
-    any = "any"
-    all = "all"
+SelectionRequire = Union[Literal["any"], Literal["all"]]
 
 
 class SelectTransitNodes(RecordModel):
     """Requirements for describing multiple transit nodes of a project card (e.g. to delete)."""
 
     require_any_of: ClassVar = [
-        "stop_id",
+        # "stop_id", TODO Not implemented
         "model_node_id",
     ]
     model_config = ConfigDict(extra="forbid")
 
-    stop_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
+    # stop_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)] TODO Not implemented
     model_node_id: Annotated[List[int], Field(min_length=1)]
     require: Optional[SelectionRequire] = "any"
 
     _examples = [
-        {"stop_id": ["stop1", "stop2"], "require": "any"},
+        # {"stop_id": ["stop1", "stop2"], "require": "any"},  TODO Not implemented
         {"model_node_id": [1, 2], "require": "all"},
     ]
 
@@ -90,7 +85,7 @@ class SelectTripProperties(RecordModel):
 
     trip_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
     shape_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
-    direction_id: int
+    direction_id: Annotated[Optional[int], Field(None)]
     service_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
     route_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
     trip_short_name: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]

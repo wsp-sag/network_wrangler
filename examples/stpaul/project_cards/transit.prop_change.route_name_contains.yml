@@ -1,7 +1,7 @@
 project: Improve Express Bus Frequency
 transit_property_change:
   service:
-    trip_properties:
+    route_properties:
       route_long_name: [Express]
   property_changes:
     headway_secs:
