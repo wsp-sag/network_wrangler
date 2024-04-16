@@ -11,7 +11,8 @@ from shapely.ops import transform
 from geographiclib.geodesic import Geodesic
 
 from ..logger import WranglerLogger
-from .types import LatLongCoordinates, LocationReference, LocationReferences
+from ..models._base.geo import LatLongCoordinates
+from ..models.roadway.types import LocationReference, LocationReferences
 
 
 # key:value (from espg, to espg): pyproj transform object
@@ -35,7 +36,7 @@ def get_bearing(lat1, lon1, lat2, lon2):
 
 def offset_point_with_distance_and_bearing(
     lon: float, lat: float, distance: float, bearing: float
-) -> Tuple[float]:
+) -> List[float]:
     """
     Get the new lon-lat (in degrees) given current point (lon-lat), distance and bearing
 
@@ -45,7 +46,7 @@ def offset_point_with_distance_and_bearing(
         distance: distance in meters to offset point by
         bearing: direction to offset point to in radians
 
-    returns: tuple of new offset lon-lat
+    returns: list of new offset lon-lat
     """
     # Earth's radius in meters
     radius = 6378137
@@ -185,6 +186,30 @@ def linestring_from_nodes(
     return links_gdf["geometry"]
 
 
+def linestring_from_lats_lons(df, lat_fields, lon_fields) -> gpd.GeoSeries:
+    """
+    Create a LineString geometry from a DataFrame with lon/lat fields.
+
+    Args:
+        df: DataFrame with columns for lon/lat fields.
+        lat_fields: list of column names for the lat fields.
+        lon_fields: list of column names for the lon fields.
+    """
+    if len(lon_fields) != len(lat_fields):
+        raise ValueError("lon_fields and lat_fields must have the same length")
+
+    line_geometries = gpd.GeoSeries(
+        [
+            LineString(
+                [(row[lon], row[lat]) for lon, lat in zip(lon_fields, lat_fields)]
+            )
+            for _, row in df.iterrows()
+        ]
+    )
+
+    return gpd.GeoSeries(line_geometries)
+
+
 def point_from_xy(x, y, xy_crs: int = 4326, point_crs: int = 4326):
     """
     Creates a point geometry from x and y coordinates.
@@ -289,7 +314,8 @@ def location_ref_from_point(
         geometry (Point): Point shapely geometry
         sequence (int, optional): Sequence if part of polyline. Defaults to None.
         bearing (float, optional): Direction of line if part of polyline. Defaults to None.
-        distance_to_next_ref (float, optional): Distnce to next point if part of polyline. Defaults to None.
+        distance_to_next_ref (float, optional): Distnce to next point if part of polyline.
+            Defaults to None.
 
     Returns:
         LocationReference: As defined by sharedStreets.io schema
@@ -328,24 +354,24 @@ def location_refs_from_linestring(geometry: LineString) -> LocationReferences:
 
 
 def get_bounding_polygon(
-    boundary_gdf: gpd.GeoDataFrame = None,
     boundary_geocode: Union[str, dict] = None,
     boundary_file: Union[str, Path] = None,
+    boundary_gdf: gpd.GeoDataFrame = None,
     crs: int = 4326,  # WGS84
 ) -> gpd.GeoSeries:
-    """Get the bounding polygon for a given boundary.
+    """Get the bounding polygon for a given boundary first prioritizing the
 
     This function retrieves the bounding polygon for a given boundary. The boundary can be provided
     as a GeoDataFrame, a geocode string or dictionary, or a boundary file. The resulting polygon
     geometry is returned as a GeoSeries.
 
     Args:
-        boundary_gdf (gpd.GeoDataFrame, optional): A GeoDataFrame representing the boundary.
-            Defaults to None.
         boundary_geocode (Union[str, dict], optional): A geocode string or dictionary
             representing the boundary. Defaults to None.
-        boundary_file (Union[str, Path], optional): A path to the boundary file.
-            Defaults to None.
+        boundary_file (Union[str, Path], optional): A path to the boundary file. Only used if
+            boundary_geocode is None. Defaults to None.
+        boundary_gdf (gpd.GeoDataFrame, optional): A GeoDataFrame representing the boundary.
+            Only used if boundary_geocode and boundary_file are None. Defaults to None.
         crs (int, optional): The coordinate reference system (CRS) code. Defaults to 4326 (WGS84).
 
     Returns:

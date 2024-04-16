@@ -86,10 +86,12 @@ def test_wrong_existing(request, stpaul_transit_net):
 
     selection = stpaul_transit_net.get_selection(
         {
-            "trip_id": [
-                "14944018-JUN19-MVS-BUS-Weekday-01",
-                "14944012-JUN19-MVS-BUS-Weekday-01",
-            ]
+            "trip_properties": {
+                "trip_id": [
+                    "14944018-JUN19-MVS-BUS-Weekday-01",
+                    "14944012-JUN19-MVS-BUS-Weekday-01",
+                ]
+            }
         }
     )
 
@@ -101,6 +103,7 @@ def test_wrong_existing(request, stpaul_transit_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
+@pytest.mark.failing
 def test_transit_road_consistencies(request, stpaul_transit_net, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 

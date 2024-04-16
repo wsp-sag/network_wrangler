@@ -258,21 +258,21 @@ class ModelRoadwayNetwork:
                 + list(ml_links_df[f"GP_{i_ps.to_node}"])
             )
         )
-        WranglerLogger.debug(f"_ref_gp_node_list: \n{_ref_gp_node_list}")
+        # WranglerLogger.debug(f"_ref_gp_node_list: \n{_ref_gp_node_list}")
 
         # Get new node,link and shape IDs for managed lane mirrors
         ml_nodes_df = net.nodes_df.loc[_ref_gp_node_list].copy()
-        WranglerLogger.debug(f"1-ml_nodes_df: \n{ml_nodes_df}")
+        # WranglerLogger.debug(f"1-ml_nodes_df: \n{ml_nodes_df}")
         ml_nodes_df["GP_" + n_ps.primary_key] = ml_nodes_df[n_ps.primary_key]
 
-        WranglerLogger.debug(f"2-ml_nodes_df: \n{ml_nodes_df}")
+        # WranglerLogger.debug(f"2-ml_nodes_df: \n{ml_nodes_df}")
         ml_nodes_df[n_ps.primary_key] = ml_nodes_df[n_ps.primary_key].apply(
             lambda x: self._node_id_to_managed_lane_node_id(x)
         )
 
         ml_nodes_df[n_ps.idx_col] = ml_nodes_df[n_ps.primary_key]
         ml_nodes_df.set_index(n_ps.idx_col, inplace=True)
-        WranglerLogger.debug(f"3-ml_nodes_df: \n{ml_nodes_df[[n_ps.primary_key]]}")
+        # WranglerLogger.debug(f"3-ml_nodes_df: \n{ml_nodes_df[[n_ps.primary_key]]}")
         ml_links_df[i_ps.primary_key] = ml_links_df[i_ps.primary_key].apply(
             lambda x: self._link_id_to_managed_lane_link_id(x)
         )

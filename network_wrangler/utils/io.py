@@ -41,6 +41,7 @@ def write_table(
         kwargs: additional arguments to pass to the writer.
 
     """
+    filename = Path(filename)
     if filename.exists() and not overwrite:
         raise FileExistsError(f"File {filename} already exists and overwrite is False.")
 
@@ -54,10 +55,12 @@ def write_table(
     elif "parquet" in filename.suffix:
         df.to_parquet(filename, index=False, **kwargs)
     elif "csv" in filename.suffix:
-        df.to_csv(filename, index=False, **kwargs)
+        df.to_csv(filename, index=False, date_format="%H:%M:%S", **kwargs)
+    elif "txt" in filename.suffix:
+        df.to_csv(filename, index=False, date_format="%H:%M:%S", **kwargs)
     elif "geojson" in filename.suffix:
         # required due to issues with list-like columns
-        data = df.to_json(drop_id=True)
+        data = df.to_json()
         with open(filename, "w", encoding="utf-8") as file:
             file.write(data)
     elif "json" in filename.suffix:

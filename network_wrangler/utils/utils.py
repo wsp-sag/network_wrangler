@@ -1,5 +1,6 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Any
 import hashlib
+import re
 from pathlib import Path
 import pandas as pd
 
@@ -30,7 +31,6 @@ def make_slug(text, delimiter: str = "_"):
     """
     makes a slug from text
     """
-    import re
 
     text = re.sub("[,.;@#?!&$']+", "", text.lower())
     return re.sub("[\ ]+", delimiter, text)
@@ -187,26 +187,79 @@ def fk_in_pk(
     return True, []
 
 
-def generate_new_id(input_id: str, existing_ids: pd.Series, id_scalar: int) -> str:
+def split_string_prefix_suffix_from_num(input_string: str):
+    """Split a string prefix and suffix from *last* number.
+
+    Define a regular expression pattern to capture:
+    1. Any character sequence at the start, including digits (.*?), lazily.
+    2. The last numeric sequence in the string (\d+), ensuring it's followed by
+      non-digit characters (\D*) until the end of the string.
+    """
+    input_string = str(input_string)
+    pattern = re.compile(r"(.*?)(\d+)(\D*)$")
+    match = pattern.match(input_string)
+
+    if match:
+        # Extract the groups: prefix (including preceding numbers), last numeric part, suffix
+        prefix, numeric_part, suffix = match.groups()
+        # Convert the numeric part to an integer
+        num_variable = int(numeric_part)
+        return prefix, num_variable, suffix
+    else:
+        return input_string, 0, ""
+
+
+def generate_new_id(
+    input_id: str,
+    existing_ids: pd.Series,
+    id_scalar: int,
+    iter_val: int = 10,
+    max_iter: int = 1000,
+) -> str:
     """Generate a new ID that isn't in existing_ids.
 
+    TODO: check a registry rather than existing IDs
+
     args:
-        input_id: id to use to generate new id. Should be a integerizable.
+        input_id: id to use to generate new id.
         existing_ids: series that has existing IDs that should be unique
         id_scalar: scalar value to initially use to create the new id.
     """
-    ITER_VAL = 10
-    MAX_ITER = 1000
 
-    for i in range(1, MAX_ITER + 1):
-        new_id = f"{int(input_id) + id_scalar + (ITER_VAL * i)}"
-        if not new_id in existing_ids.values:
+    str_prefix, input_id, str_suffix = split_string_prefix_suffix_from_num(input_id)
+
+    for i in range(1, max_iter + 1):
+        new_id = f"{str_prefix}{int(input_id) + id_scalar + (iter_val * i)}{str_suffix}"
+        if new_id not in existing_ids.values:
             return new_id
-        elif i == MAX_ITER:
+        elif i == max_iter:
             WranglerLogger.error(
-                f"Cannot generate new id within max iters of {MAX_ITER}."
+                f"Cannot generate new id within max iters of {max_iter}."
             )
             raise ValueError("Cannot create unique new id.")
+
+
+def generate_list_of_new_ids(
+    input_ids: list[str],
+    existing_ids: pd.Series,
+    id_scalar: int,
+    iter_val: int = 10,
+    max_iter: int = 1000,
+):
+    # keep new_ids as list to preserve order
+    new_ids = []
+    existing_ids = set(existing_ids)
+    for i in input_ids:
+        new_id = generate_new_id(
+            i,
+            pd.Series(list(existing_ids)),
+            id_scalar,
+            iter_val=iter_val,
+            max_iter=max_iter,
+        )
+        new_ids.append(new_id)
+        existing_ids.add(new_id)
+    return new_ids
 
 
 def dict_to_hexkey(d: dict) -> str:

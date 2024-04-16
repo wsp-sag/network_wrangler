@@ -1,23 +1,73 @@
 import pytest
-
-from network_wrangler import TransitNetwork, load_transit
+from pandera.errors import SchemaErrors
+from network_wrangler import TransitNetwork, load_transit, write_transit
 from network_wrangler import WranglerLogger
+from network_wrangler.models._base.db import RequiredTableError, ForeignKeyValueError
 
 """
 Run just the tests using `pytest tests/test_transit/test_io.py`
 """
 
 
+def test_transit_read_write_small(request, small_transit_net, scratch_dir):
+    """Checks that reading a network, writing it to a file and then reading it again
+    results in a valid TransitNetwork.
+    """
+    write_transit(small_transit_net, out_dir=scratch_dir)
+    WranglerLogger.debug(f"Transit Write Directory:{scratch_dir}")
+    small_transit_net_read_write = load_transit(scratch_dir)
+    assert isinstance(small_transit_net_read_write, TransitNetwork)
+
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
 def test_transit_read_write(request, stpaul_transit_net, scratch_dir):
     """Checks that reading a network, writing it to a file and then reading it again
     results in a valid TransitNetwork.
     """
-    stpaul_transit_net.write(path=scratch_dir)
+    write_transit(stpaul_transit_net, out_dir=scratch_dir)
     WranglerLogger.debug(f"Transit Write Directory:{scratch_dir}")
-    WranglerLogger.debug(
-        f"stpaul_transit_net.feed.frequencies\n{stpaul_transit_net.feed.frequencies.dtypes}"
-    )
     stpaul_transit_net_read_write = load_transit(scratch_dir)
     assert isinstance(stpaul_transit_net_read_write, TransitNetwork)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+def test_bad_dir(request):
+    with pytest.raises(NotADirectoryError):
+        load_transit("I don't exist")
+
+
+def test_missing_files(request, test_dir):
+    missing_files_dir = test_dir / "data" / "transit_input_fail" / "missing_files"
+    with pytest.raises(RequiredTableError):
+        load_transit(missing_files_dir)
+
+
+def test_bad_fk(request, test_dir):
+    bad_fk_dir = test_dir / "data" / "transit_input_fail" / "bad_fks"
+    with pytest.raises(ForeignKeyValueError):
+        load_transit(bad_fk_dir)
+
+
+def test_bad_prop_vals(request, test_dir):
+    bad_prop_vals_dir = test_dir / "data" / "transit_input_fail" / "bad_prop_values"
+    with pytest.raises(SchemaErrors):
+        load_transit(bad_prop_vals_dir)
+
+
+def test_missing_props(request, test_dir):
+    missing_props_dir = test_dir / "data" / "transit_input_fail" / "missing_props"
+    with pytest.raises(SchemaErrors):
+        load_transit(missing_props_dir)
+
+
+def test_write_feed_geo(request, small_transit_net, small_net, test_out_dir):
+    from network_wrangler.transit.io import write_feed_geo
+    write_feed_geo(
+        small_transit_net.feed,
+        ref_nodes_df=small_net.nodes_df,
+        out_dir=test_out_dir,
+        out_prefix="write_feed_geo",
+    )
+    

@@ -33,10 +33,6 @@ class TransitSelectionNetworkConsistencyError(TransitSelectionError):
     pass
 
 
-class TransitSelectionFormatError(TransitSelectionError):
-    pass
-
-
 class TransitSelection:
     """Object to perform and store information about a selection from a project card "facility".
 
@@ -50,9 +46,8 @@ class TransitSelection:
 
     def __init__(
         self,
-        net: "TransitNetwork",
+        net,
         selection_dict: SelectTransitTrips,
-        pyd_dm_selection_dict: BaseModel = SelectTransitTrips,
     ):
         """Constructor for TransitSelection object.
 
@@ -61,16 +56,12 @@ class TransitSelection:
             selection_dict: Selection dictionary conforming to SelectTransitTrips
         """
         self.net = net
-        self._pyd_dm_selection_dict = pyd_dm_selection_dict
-
-        # Only want to set selection dictionary upon initialization
-        selection_dict = self.validate_selection_dict(selection_dict)
-        self._selection_dict = selection_dict
+        self.selection_dict = selection_dict
 
         # Initialize
         self._selected_trips_df = None
         self.sel_key = dict_to_hexkey(selection_dict)
-        self._stored_feed_hash = copy.deepcopy(self.net.feed.feed_hash)
+        self._stored_feed_hash = copy.deepcopy(self.net.feed.hash)
 
         WranglerLogger.debug(f"...created TransitSelection object: {selection_dict}")
 
@@ -85,7 +76,13 @@ class TransitSelection:
         """Getter for selection_dict."""
         return self._selection_dict
 
-    def validate_selection_dict(self, selection_dict: SelectTransitTrips) -> None:
+    @selection_dict.setter
+    def selection_dict(self, value: dict):
+        self._selection_dict = self.validate_selection_dict(value)
+
+    def validate_selection_dict(
+        self, selection_dict: SelectTransitTrips
+    ) -> SelectTransitTrips:
         """Check that selection dictionary has valid and used properties consistent with network.
 
         Checks that selection_dict is a valid TransitSelectionDict:
@@ -94,17 +91,15 @@ class TransitSelection:
             selection_dict (dict): selection dictionary
 
         Raises:
-            TransitSelectionFormatError: If not valid
+            TransitSelectionNetworkConsistencyError: If not consistent with transit network
+            ValidationError: if format not consistent with SelectTransitTrips
         """
-        # WranglerLogger.debug(f"SELECT DICT - before Validation:\n{selection_dict}")
-        try:
-            selection_dict = self._pyd_dm_selection_dict.model_validate(
-                selection_dict
-            ).model_dump(by_alias=True, exclude_none=True)
-        except ValidationError as e:
-            raise TransitSelectionFormatError(e)
-        # WranglerLogger.debug(f"SELECT DICT - after Validation:\n{selection_dict}")
-        _trip_selection_fields = list(selection_dict.get("trip_properties", {}).keys())
+        selection_dict = SelectTransitTrips(**selection_dict)
+        selection_dict = selection_dict.model_dump()
+        WranglerLogger.debug(f"SELECT DICT - before Validation:\n{selection_dict}")
+        _trip_selection_fields = list(
+            (selection_dict.get("trip_properties", {}) or {}).keys()
+        )
         _missing_trip_fields = set(_trip_selection_fields) - set(
             self.net.feed.trips.columns
         )
@@ -115,7 +110,7 @@ class TransitSelection:
             )
 
         _route_selection_fields = list(
-            selection_dict.get("route_properties", {}).keys()
+            (selection_dict.get("route_properties", {}) or {}).keys()
         )
         _missing_route_fields = set(_route_selection_fields) - set(
             self.net.feed.routes.columns
@@ -146,11 +141,11 @@ class TransitSelection:
         """
         if (
             self._selected_trips_df is not None
-        ) and self._stored_feed_hash == self.net.feed.feed_hash:
+        ) and self._stored_feed_hash == self.net.feed_hash:
             return self._selected_trips_df
 
         self._selected_trips_df = self._select_trips()
-        self._stored_feed_hash = copy.deepcopy(self.net.feed.feed_hash)
+        self._stored_feed_hash = copy.deepcopy(self.net.feed_hash)
         return self._selected_trips_df
 
     def _select_trips(self) -> pd.DataFrame:
@@ -161,19 +156,15 @@ class TransitSelection:
             pd.DataFrame: trips_df DataFrame of selected trips
         """
 
-        fk_shp2links, _ = self.net.TRANSIT_FOREIGN_KEYS_TO_ROADWAY["shapes"]["links"]
-
         return _filter_trips_by_selection_dict(
             self.net.feed,
             self.selection_dict,
-            fk_shp2links=fk_shp2links,
         )
 
 
 def _filter_trips_by_selection_dict(
     feed: "Feed",
     sel: SelectTransitTrips,
-    fk_shp2links: str = "shape_model_node_id",
 ):
     trips_df = feed.trips
     _routes_df = feed.routes
@@ -184,12 +175,12 @@ def _filter_trips_by_selection_dict(
 
     if "links" in sel:
         trips_df = _filter_trips_by_links(
-            trips_df, _shapes_df, sel["links"], fk_shp2links
+            trips_df, _shapes_df, sel["links"], "shape_model_node_id"
         )
         WranglerLogger.debug(f"# Trips after links filter:  {len(trips_df)}")
     if "nodes" in sel:
         trips_df = _filter_trips_by_nodes(
-            trips_df, _shapes_df, sel["nodes"], fk_shp2links
+            trips_df, _shapes_df, sel["nodes"], "shape_model_node_id"
         )
         WranglerLogger.debug(f"# Trips after node filter:  {len(trips_df)}")
     if "route_properties" in sel:
@@ -215,7 +206,6 @@ def _filter_trips_by_links(
     trips_df: pd.DataFrame,
     shapes_df: pd.DataFrame,
     select_links: Union[SelectTransitLinks, None],
-    fk_shape_to_roadway_links: str = "shape_model_node_id",
 ) -> pd.DataFrame:
     if select_links is None:
         return trips_df
@@ -226,7 +216,6 @@ def _filter_trips_by_nodes(
     trips_df: pd.DataFrame,
     shapes_df: pd.DataFrame,
     select_nodes: SelectTransitNodes,
-    fk_shape_to_roadway_links: str = "shape_model_node_id",
 ) -> pd.DataFrame:
     """
     Selects transit trips that use any one of a list of nodes in shapes.txt.
@@ -238,8 +227,6 @@ def _filter_trips_by_nodes(
         trips_df: List of trips to filter.
         shapes_df: DataFrame of shapes
         select_nodes: Selection dictionary for nodes
-        fk_shape_to_roadway_links: Foreign key to roadway links in shapes.txt.
-            Defaults to "shape_model_node_id".
     Returns:
         Copy of filtered trips_df
     """
@@ -256,16 +243,16 @@ def _filter_trips_by_nodes(
         shape_ids = (
             shapes_df.groupby("shape_id").filter(
                 lambda x: all(
-                    i in x[fk_shape_to_roadway_links].tolist() for i in model_node_ids
+                    i in x["shape_model_node_id"].tolist() for i in model_node_ids
                 )
             )
         ).shape_id.drop_duplicates()
     elif require == "any":
         shape_ids = shapes_df.loc[
-            shapes_df[fk_shape_to_roadway_links].isin(model_node_ids)
+            shapes_df["shape_model_node_id"].isin(model_node_ids)
         ].shape_id.drop_duplicates()
     else:
-        raise TransitSelectionFormatError("Require must be 'any' or 'all'")
+        raise ValueError("Require must be 'any' or 'all'")
 
     trips_df = trips_df.loc[trips_df.shape_id.isin(shape_ids)].copy()
 
@@ -292,8 +279,8 @@ def _filter_trips_by_trip(
 
     _missing = set(select_trip_properties.keys()) - set(trips_df.columns)
     if _missing:
-        raise TransitSelectionFormatError(
-            f"Route slection properties missing from trips.txt: {_missing}"
+        raise TransitSelectionNetworkConsistencyError(
+            f"Route selection properties missing from trips.txt: {_missing}"
         )
 
     # Select
@@ -330,8 +317,8 @@ def _filter_trips_by_route(
     """
     _missing = set(select_route_properties.keys()) - set(routes_df.columns)
     if _missing:
-        raise TransitSelectionFormatError(
-            f"Route slection properties missing from routes.txt: {_missing}"
+        raise TransitSelectionNetworkConsistencyError(
+            f"Route selection properties missing from routes.txt: {_missing}"
         )
 
     # selection

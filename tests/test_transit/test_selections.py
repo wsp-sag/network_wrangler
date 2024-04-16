@@ -2,10 +2,10 @@ import pytest
 
 from network_wrangler import WranglerLogger
 from network_wrangler.transit.selection import (
-    TransitSelectionFormatError,
     TransitSelectionEmptyError,
     TransitSelectionNetworkConsistencyError,
 )
+from pydantic import ValidationError
 
 """
 Run just the tests using `pytest tests/test_transit/test_selections.py`
@@ -190,7 +190,7 @@ def test_zero_valid_facilities(request, stpaul_transit_net):
 def test_invalid_selection_key(request, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    with pytest.raises(TransitSelectionFormatError):
+    with pytest.raises(ValidationError):
         # trump_properties rather than trip_properties should fail
         stpaul_transit_net.get_selection(
             {"trump_properties": {"trip_ids": ["14941433-JUN19-MVS-BUS-Weekday-01"]}}
@@ -202,7 +202,7 @@ def test_invalid_selection_key(request, stpaul_transit_net):
 def test_invalid_selection_property_format(request, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    with pytest.raises(TransitSelectionFormatError):
+    with pytest.raises(TransitSelectionNetworkConsistencyError):
         # trip_ids rather than trip_id should fail
         stpaul_transit_net.get_selection(
             {"timespans": ["12:00", "1:00"], "route_properties": {"agency_id": "1"}}

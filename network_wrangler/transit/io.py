@@ -1,14 +1,20 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, Literal
 
 import pandas as pd
+import geopandas as gpd
 
+from .feed import Feed
 from ..transitnetwork import TransitNetwork
-from ..transit.feed import Feed
+from ..models.gtfs.gtfs import GtfsModel
+from ..models._base.db import RequiredTableError
 from ..logger import WranglerLogger
 from ..utils import unzip_file
+from ..utils.io import write_table
 
-FEED_TABLE_READ = ["frequencies", "routes", "shapes", "stop_times", "stops", "trips"]
+
+class FeedReadError(Exception):
+    pass
 
 
 def _feed_path_ref(path: Path) -> Path:
@@ -31,26 +37,53 @@ def load_feed_from_path(feed_path: Union[Path, str], suffix: str = "txt") -> Fee
     Returns:
         Feed: The TransitNetwork object created from the GTFS transit feed.
     """
-    feed_path = _feed_path_ref(feed_path)  # unzips if needs to be unzipped
+    feed_path = _feed_path_ref(Path(feed_path))  # unzips if needs to be unzipped
+
+    if not feed_path.is_dir():
+        raise NotADirectoryError(f"Feed path not a directory: {feed_path}")
+
     WranglerLogger.info(f"Reading GTFS feed tables from {feed_path}")
 
-    feed_files = {
-        table: next(feed_path.glob(f"*{table}.{suffix}")) for table in FEED_TABLE_READ
+    feed_possible_files = {
+        table: list(feed_path.glob(f"*{table}.{suffix}")) for table in Feed.table_names
     }
 
+    # make sure we have all the tables we need
+    _missing_files = [t for t, v in feed_possible_files.items() if not v]
+
+    if _missing_files:
+        WranglerLogger.debug(f"!!! Missing transit files: {_missing_files}")
+        raise RequiredTableError(
+            f"Required GTFS Feed table(s) not found in {feed_path}:\n \
+                                - {_missing_files}"
+        )
+
+    # but don't want to have more than one file per search
+    _ambiguous_files = [t for t, v in feed_possible_files.items() if len(v) > 1]
+    if _ambiguous_files:
+        WranglerLogger.warning(
+            f"! More than one file matches following tables. \
+                               Using the first on the list: {_ambiguous_files}"
+        )
+
+    feed_files = {t: f[0] for t, f in feed_possible_files.items()}
     feed_dfs = {
         table: _read_table_from_file(table, file) for table, file in feed_files.items()
     }
 
-    return Feed(feed_dfs)
+    return load_feed_from_dfs(feed_dfs)
 
 
 def _read_table_from_file(table: str, file: Path) -> pd.DataFrame:
     WranglerLogger.debug(f"...reading {file}.")
-    if file.suffix in [".csv", ".txt"]:
-        return pd.read_csv(file)
-    elif file.suffix == ".parquet":
-        return pd.read_parquet(file)
+    try:
+        if file.suffix in [".csv", ".txt"]:
+            return pd.read_csv(file)
+        elif file.suffix == ".parquet":
+            return pd.read_parquet(file)
+    except Exception as e:
+        WranglerLogger.error(f"!!! Error reading table {table} from file: {file}.\n{e}")
+        raise FeedReadError(f"Error reading table {table}")
 
 
 def load_feed_from_dfs(feed_dfs: dict) -> Feed:
@@ -76,17 +109,20 @@ def load_feed_from_dfs(feed_dfs: dict) -> Feed:
         ... }
         >>> feed = load_feed_from_dfs(feed_dfs)
     """
-    if not all([table in feed_dfs for table in FEED_TABLE_READ]):
+    if not all([table in feed_dfs for table in Feed.table_names]):
         raise ValueError(
-            f"feed_dfs must contain the following tables: {FEED_TABLE_READ}"
+            f"feed_dfs must contain the following tables: {Feed.table_names}"
         )
-    return Feed(feed_dfs)
+
+    feed = Feed(**feed_dfs)
+
+    return feed
 
 
 def load_transit(
-    feed: Union[Feed, dict[str, pd.DataFrame], str, Path],
+    feed: Union[Feed, GtfsModel, dict[str, pd.DataFrame], str, Path],
     suffix: str = "txt",
-) -> TransitNetwork:
+) -> "TransitNetwork":
     """
     Create a TransitNetwork object.
 
@@ -118,23 +154,26 @@ def load_transit(
     ```
 
     """
-    if feed is Feed:
-        return TransitNetwork(feed)
+    if feed is str or Path:
+        feed = load_feed_from_path(feed, suffix=suffix)
     elif feed is dict:
-        return TransitNetwork(load_feed_from_dfs(feed))
-    elif feed is str or Path:
-        return TransitNetwork(load_feed_from_path(feed, suffix=suffix))
-    else:
+        feed = load_feed_from_dfs(feed)
+    elif feed is GtfsModel:
+        feed = Feed(feed)
+
+    if not isinstance(feed, Feed):
         raise ValueError(
-            "TransitNetwork must be seeded with a Feed, dict of dfs or Path"
+            f"TransitNetwork must be seeded with a Feed, dict of dfs or Path. Found {type(feed)}"
         )
+
+    return TransitNetwork(feed)
 
 
 def write_transit(
     transit_net,
     out_dir: Union[Path, str] = ".",
     prefix: Union[Path, str] = None,
-    format: str = "csv",
+    file_format: Union[Literal["txt"], Literal["csv"], Literal["parquet"]] = "txt",
     overwrite: bool = True,
 ) -> None:
     """
@@ -143,10 +182,57 @@ def write_transit(
     Args:
         transit_net: a TransitNetwork instance
         out_dir: directory to write the network to
-        format: the format of the output files. Defaults to "csv" which will actually be written to suffix of .txt.
+        format: the format of the output files. Defaults to "txt" which is csv with txt suffix.
         prefix: prefix to add to the file name
         overwrite: if True, will overwrite the files if they already exist. Defaults to True
     """
+    out_dir = Path(out_dir)
+    prefix = f"{prefix}_" if prefix else ""
+    for table in transit_net.feed.table_names:
+        df = transit_net.feed.get_table(table)
+        outpath = out_dir / f"{prefix}{table}.{file_format}"
+        write_table(df, outpath, overwrite=overwrite)
+    WranglerLogger.info(f"Wrote {len(transit_net.feed.tables)} files to {out_dir}")
+
+
+def convert_transit_serialization(
+    input_path,
+    output_format,
+    out_dir,
+    input_suffix,
+    out_prefix,
+    overwrite,
+):
+    if input_suffix is None:
+        input_suffix = "csv"
+    WranglerLogger.info(
+        f"Loading transit net from {input_path} with input type {input_suffix}"
+    )
+    net = load_transit(input_path, suffix=input_suffix)
+    WranglerLogger.info(
+        f"Writing transit network to {out_dir} in {output_format} format."
+    )
+    write_transit(
+        net,
+        prefix=out_prefix,
+        out_dir=out_dir,
+        file_format=output_format,
+        overwrite=overwrite,
+    )
+
+
+def write_feed_geo(
+    feed: Feed,
+    ref_nodes_df: gpd.GeoDataFrame,
+    out_dir: Union[str, Path],
+    file_format: Union[
+        Literal["geojson"], Literal["shp"], Literal["parquet"]
+    ] = "geojson",
+    out_prefix=None,
+    overwrite: bool = True,
+) -> None:
+    from .geo import shapes_to_shape_links_gdf, to_points_gdf
+
     out_dir = Path(out_dir)
     if not out_dir.is_dir():
         if out_dir.parent.is_dir():
@@ -156,21 +242,11 @@ def write_transit(
                 f"Output directory {out_dir} ands its parent path does not exist"
             )
 
-    prefix = f"_{prefix}" if prefix else ""
-    format = "txt" if format is "csv" else format  # because GTFS is weird...
+    prefix = f"{out_prefix}_" if out_prefix else ""
+    shapes_outpath = out_dir / f"{prefix}trn_shapes.{file_format}"
+    shapes_gdf = shapes_to_shape_links_gdf(feed.shapes, ref_nodes_df=ref_nodes_df)
+    write_table(shapes_gdf, shapes_outpath, overwrite=overwrite)
 
-    _feed = transit_net.feed
-    for table in _feed.tables:
-        df = _feed.__dict__[table]
-        outpath = out_dir / f"{prefix}{table}.{format}"
-
-        if outpath.exists() and not overwrite:
-            raise FileExistsError(
-                f"File {outpath} already exists and overwrite set to false."
-            )
-        if format == "csv":
-            outpath = outpath.with_suffix(".csv")
-            df.to_csv(outpath, index=False, date_format="%H:%M:%S")
-        elif format == "parquet":
-            df.to_parquet(outpath)
-    WranglerLogger.info(f"Wrote {len(_feed.tables)} files to {out_dir}")
+    stops_outpath = out_dir / f"{prefix}trn_stops.{file_format}"
+    stops_gdf = to_points_gdf(feed.stops, ref_nodes_df=ref_nodes_df)
+    write_table(stops_gdf, stops_outpath, overwrite=overwrite)

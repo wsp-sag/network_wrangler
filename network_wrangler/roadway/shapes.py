@@ -18,6 +18,7 @@ from pandera.typing.geopandas import GeoSeries
 
 from ..logger import WranglerLogger
 from ..utils import read_table, write_table
+from ..utils.models import empty_df
 
 
 @dataclass
@@ -45,9 +46,12 @@ class ShapesSchema(DataFrameModel):
 
 @check_output(ShapesSchema, inplace=True)
 def read_shapes(
-    filename: str, crs: int = 4326, shapes_params: Union[dict, ShapesParams] = None
-) -> gpd.GeoDataFrame:
-    """Reads shapes and returns a geodataframe of shapes.
+    filename: Union[str, Path],
+    crs: int = 4326,
+    shapes_params: Union[dict, ShapesParams] = None,
+) -> ShapesSchema:
+    """Reads shapes and returns a geodataframe of shapes if filename is found. Otherwise, returns
+        empty GeoDataFrame conforming to ShapesSchema.
 
     Sets index to be a copy of the primary key.
     Validates output dataframe using ShapesSchema.
@@ -57,6 +61,13 @@ def read_shapes(
         crs: coordinate reference system number. Defaults to 4323.
         link_params: a LinkParams instance. Defaults to a default LinkParams instance.
     """
+    if not Path(filename).exists():
+        WranglerLogger.warning(
+            f"Shapes file {filename} not found, but is optional. \
+                               Returning empty shapes dataframe."
+        )
+        return empty_df(ShapesSchema)
+
     start_time = time.time()
     WranglerLogger.debug(f"Reading shapes from {filename}.")
 

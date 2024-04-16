@@ -11,6 +11,7 @@ scratch/*
 .pytest_cache
 *.bak
 .cache
+cache
 tests/t_*
 tests/*.txt
 tests/out/** 

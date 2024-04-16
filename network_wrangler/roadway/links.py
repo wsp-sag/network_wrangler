@@ -26,9 +26,9 @@ from ..utils import (
     coerce_val_to_series_type,
     length_of_linestring_miles,
     linestring_from_nodes,
-    fk_in_pk,
     read_table,
     write_table,
+    fk_in_pk,
 )
 from ..utils.time import parse_timespans_to_secs
 
@@ -150,7 +150,7 @@ def read_links(
     )
     links_df.params.source_file = filename
     WranglerLogger.info(
-        f"Read {len(links_df)} links from {filename} in {round(time.time() - start_time,2)}."
+        f"Read + transformed {len(links_df)} links from {filename} in {round(time.time() - start_time,2)}."
     )
     return links_df
 
@@ -194,7 +194,7 @@ def _add_link_geometries_from_nodes(
     WranglerLogger.debug(
         f"Created link geometries from nodes in {round(time.time() - geo_start_time,2)}."
     )
-    WranglerLogger.debug(f"----Links:\n{links_gdf[['A','B','geometry']]}")
+    # WranglerLogger.debug(f"----Links:\n{links_gdf[['A','B','geometry']]}")
     return links_gdf
 
 

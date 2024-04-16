@@ -12,60 +12,65 @@ from projectcard import read_card
 from network_wrangler import RoadwayNetwork
 from network_wrangler import TransitNetwork
 from network_wrangler import WranglerLogger
+from network_wrangler.transit.feed import shapes_for_trip_id, stop_times_for_trip_id
 
 TEST_ROUTING_REPLACEMENT = [
     {
-        "base_routing": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        "existing_routing": [4, 5, 6],
-        "set_routing": [4, 41, 42, 63, 6],
-        "expected_routing": [1, 2, 3, 4, 41, 42, 63, 6, 7, 8, 9, 10],
+        "name": "insert single-block detour in middle of route",
+        "existing_routing": [2, 3],
+        "set_routing": [2, 7, 6, 3],
+        "expected_routing": [1, 2, 7, 6, 3, 4],
     },
     {
-        "base_routing": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        "existing_routing": [9, 10],
-        "set_routing": [9, 99, 999],
-        "expected_routing": [1, 2, 3, 4, 5, 6, 7, 8, 9, 99, 999],
+        "name": "insert multi-block detour in middle of route",
+        "existing_routing": [2, 4],
+        "set_routing": [2, 7, 6, 5, 4],
+        "expected_routing": [1, 2, 7, 6, 5, 4],
     },
     {
-        "base_routing": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "name": "single-node add on to end of route",
+        "existing_routing": [4],
+        "set_routing": [4, 5, 6],
+        "expected_routing": [1, 2, 3, 4, 5, 6],
+    },
+    {
+        "name": "multi-node existing add on to end of route",
+        "existing_routing": [3, 4],
+        "set_routing": [3, 4, 5, 6],
+        "expected_routing": [1, 2, 3, 4, 5, 6],
+    },
+    {
+        "name": "single-node existing add on to start of route",
+        "existing_routing": [1],
+        "set_routing": [8, 1],
+        "expected_routing": [8, 1, 2, 3, 4],
+    },
+    {
+        "name": "multi-node existing add on to start of route",
         "existing_routing": [1, 2],
-        "set_routing": [11, 22],
-        "expected_routing": [11, 22, 3, 4, 5, 6, 7, 8, 9, 10],
+        "set_routing": [8, 1, 2],
+        "expected_routing": [8, 1, 2, 3, 4],
     },
 ]
 
 
 @pytest.mark.parametrize("test_routing", TEST_ROUTING_REPLACEMENT)
-def test_replace_shape_segment(request, test_routing):
+def test_replace_shapes_segment(request, test_routing, small_transit_net, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
+    WranglerLogger.info(f"...evaluating {test_routing['name']}")
     from network_wrangler.projects.transit_routing_change import _replace_shapes_segment
 
-    node_col = "shape_model_node_id"
-    existing_routing = test_routing["existing_routing"]
-    existing_shape_df = pd.DataFrame(
-        {
-            "shape_id": [1] * len(test_routing["base_routing"]),
-            node_col: test_routing["base_routing"],
-            "shape_pt_lat": [1] * len(test_routing["base_routing"]),
-            "shape_pt_lon": [1] * len(test_routing["base_routing"]),
-            "shape_pt_sequence": range(1, len(test_routing["base_routing"]) + 1),
-        }
-    )
-    segment_shapes_df = pd.DataFrame(
-        {
-            "shape_id": [1] * len(test_routing["set_routing"]),
-            node_col: test_routing["set_routing"],
-            "shape_pt_lat": [1] * len(test_routing["set_routing"]),
-            "shape_pt_lon": [1] * len(test_routing["set_routing"]),
-            "shape_pt_sequence": range(1, len(test_routing["set_routing"]) + 1),
-        }
-    )
-
-    shapes_df = _replace_shape_segment(
-        existing_routing, existing_shape_df, segment_shapes_df, node_col
+    net = copy.deepcopy(small_transit_net)
+    shape_id = "shape2"
+    shapes_df = _replace_shapes_segment(
+        test_routing["existing_routing"],
+        shape_id,
+        test_routing["set_routing"],
+        net.feed,
+        small_net,
     )
     WranglerLogger.debug(f"Updated shapes_df\n {shapes_df}")
-    result_routing = shapes_df[node_col].to_list()
+    result_routing = shapes_df["shape_model_node_id"].to_list()
 
     assert test_routing["expected_routing"] == result_routing
 
@@ -75,210 +80,122 @@ def test_replace_shape_segment(request, test_routing):
 TEST_ROUTING_CHANGES = [
     {
         "name": "Replace",
-        "service": {"shape_id": ["700004"]},
+        "service": {"trip_properties": {"shape_id": ["shape2"]}},
         "routing_change": {
-            "set": [41990, 39430, 46665],
+            "set": [5, 6, 7],
         },
-        "expected_routing": [41990, 39430, 46665],
+        "expected_routing": [5, 6, 7],
+    },
+    {
+        "name": "Extend begining",
+        "service": {"trip_properties": {"shape_id": ["shape2"]}},
+        "routing_change": {
+            "existing": [0, 3],
+            "set": [8, 1, -2, 3],
+        },
+        "expected_routing": [8, 1, -2, 3, 4],
     },
     {
         "name": "Truncate start",
-        "service": {"shape_id": ["700004"]},
+        "service": {"trip_properties": {"shape_id": ["shape2"]}},
         "routing_change": {
-            "existing": [41990, 76167],
-            "set": [76167],
+            "existing": [1, 3],
+            "set": [2, 3],
         },
-        "expected_routing": [
-            76167,
-            -46665,
-            -150855,
-            57484,
-            -126324,
-            -57483,
-            45985,
-            98429,
-            -4764,
-            -4785,
-            -4779,
-            -41489,
-            41487,
-            -45957,
-            55555,
-            62186,
-            61203,
-            62188,
-            59015,
-            -59014,
-            59013,
-            -59012,
-        ],
+        "expected_routing": [2, 3, 4],
+    },
+    {
+        "name": "Truncate start",
+        "service": {"trip_properties": {"shape_id": ["shape2"]}},
+        "routing_change": {
+            "existing": [1, 3],
+            "set": [2, 3],
+        },
+        "expected_routing": [2, 3, 4],
     },
     {
         "name": "Truncate end",
-        "service": {"shape_id": ["700004"]},
+        "service": {"trip_properties": {"shape_id": ["shape2"]}},
         "routing_change": {
-            "existing": [62188, 59013],
-            "set": [62188],
+            "existing": [3, 4],
+            "set": [3],
         },
-        "expected_routing": [
-            41990,
-            -62145,
-            39430,
-            -68608,
-            76167,
-            -46665,
-            -150855,
-            57484,
-            -126324,
-            -57483,
-            45985,
-            98429,
-            -4764,
-            -4785,
-            -4779,
-            -41489,
-            41487,
-            -45957,
-            55555,
-            62186,
-            61203,
-            62188,
-        ],
+        "expected_routing": [1, -2, 3],
     },
     {
         "name": "Change Middle",
-        "service": {"shape_id": ["700004"]},
+        "service": {"trip_properties": {"shape_id": ["shape2"]}},
         "routing_change": {
-            "existing": [76167, 57484],
-            "set": [76167, 46665, 150855, 57484],
+            "existing": [3, 4],
+            "set": [3, 6, 5, 4],
         },
-        "expected_routing": [
-            41990,
-            -62145,
-            39430,
-            -68608,
-            76167,
-            46665,
-            150855,
-            57484,
-            -126324,
-            -57483,
-            45985,
-            98429,
-            -4764,
-            -4785,
-            -4779,
-            -41489,
-            41487,
-            -45957,
-            55555,
-            62186,
-            61203,
-            62188,
-            59015,
-            -59014,
-            59013,
-            -59012,
-        ],
+        "expected_routing": [1, -2, 3, 6, 5, 4],
     },
 ]
 
 TEST_STOP_CHANGES = [
     {
-        "name": "Add Stop",
-        "service": {"trip_id": ["14947879-JUN19-MVS-BUS-Weekday-01"]},
+        "name": "Add Stop starting with negative",
+        "service": {"trip_properties": {"trip_id": ["blue-2"]}},
         "routing_change": {
-            "existing": [-40253],
-            "set": [40253],
+            "existing": [-2],
+            "set": [2],
         },
-        "expected_stops": [
-            40253,
-            40251,
-            40250,
-            40244,
-            12520,
-            40240,
-            12533,
-            12540,
-            12549,
-            12551,
-            67033,
-            67033,
-            5149,
-            75307,
-            57979,
-            45946,
-            45691,
-            45691,
-            100806,
-            51941,
-        ],
+        "expected_stops": [1, 2, 3, 4],
+    },
+    {
+        "name": "Add Stop",
+        "service": {"trip_properties": {"trip_id": ["blue-2"]}},
+        "routing_change": {
+            "existing": [2],
+            "set": [2],
+        },
+        "expected_stops": [1, 2, 3, 4],
+    },
+    {
+        "name": "Delete stop that doesn't exist and warn rather than fail",
+        "service": {"trip_properties": {"trip_id": ["blue-2"]}},
+        "routing_change": {
+            "existing": [2],
+            "set": [-2],
+        },
+        "expected_stops": [1, 3, 4],
     },
     {
         "name": "Remove Stop",
-        "service": {"trip_id": ["14947879-JUN19-MVS-BUS-Weekday-01"]},
+        "service": {"trip_properties": {"trip_id": ["blue-2"]}},
         "routing_change": {
-            "existing": [100806],
-            "set": [-100806],
+            "existing": [3],
+            "set": [-3],
         },
-        "expected_stops": [
-            11440,
-            40251,
-            40250,
-            40244,
-            12520,
-            40240,
-            12533,
-            12540,
-            12549,
-            12551,
-            67033,
-            67033,
-            5149,
-            75307,
-            57979,
-            45946,
-            45691,
-            45691,
-            51941,
-        ],
+        "expected_stops": [1, 4],
     },
 ]
 
 
-@pytest.mark.menow
 @pytest.mark.parametrize("test_routing", TEST_ROUTING_CHANGES + TEST_STOP_CHANGES)
-def test_route_changes(request, stpaul_transit_net: TransitNetwork, test_routing):
+def test_route_changes(request, small_transit_net, small_net, test_routing):
     WranglerLogger.info(f"--Starting: {request.node.name} - {test_routing['name']}")
     from network_wrangler.projects.transit_routing_change import (
         apply_transit_routing_change,
     )
 
-    net = stpaul_transit_net.deepcopy()
+    net = small_transit_net.deepcopy()
+    net.road_net = small_net
     WranglerLogger.info(f"Feed tables: {net.feed.table_names}")
 
     sel = net.get_selection(test_routing["service"])
+    repr_trip_id = sel.selected_trips[0]
 
     net = apply_transit_routing_change(net, sel, test_routing["routing_change"])
 
     # Select a representative trip id to test
-    repr_trip_id = sel.selected_trips[0]
-    trip_shape = net.feed.trip_shape(repr_trip_id)
-    trip_shape_nodes = trip_shape["shape_model_node_id"].to_list()
-    trip_stop_times_df = net.feed.trip_stop_times(repr_trip_id)
-    trip_stop_times_nodes = trip_stop_times_df.model_node_id.to_list()
-
-    _show_col = [
-        "trip_id",
-        "stop_id",
-        net.feed.stops_node_id,
-        "stop_sequence",
-        "departure_time",
-        "arrival_time",
-    ]
-
-    WranglerLogger.debug(f"trip_stop_times_df:\n{trip_stop_times_df[_show_col]}")
-    WranglerLogger.debug(f"trip_shape_df:\n{trip_shape['shape_model_node_id']}")
+    trip_shape_nodes = shapes_for_trip_id(net.feed, repr_trip_id)[
+        "shape_model_node_id"
+    ].to_list()
+    trip_stop_times_nodes = stop_times_for_trip_id(
+        net.feed, repr_trip_id
+    ).model_node_id.to_list()
 
     if "expected_routing" in test_routing:
         expected_shape = [abs(int(x)) for x in test_routing["expected_routing"]]
@@ -328,14 +245,13 @@ def test_route_changes_project_card(
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     transit_net = copy.deepcopy(stpaul_transit_net)
-    transit_net.road_net = stpaul_net
     project_card = read_card(
         os.path.join(stpaul_card_dir, "transit.routing_change.yml")
     )
 
     WranglerLogger.debug(f"Project Card: {project_card.__dict__}")
     WranglerLogger.debug(f"Types: {project_card.change_types}")
-    transit_net = transit_net.apply(project_card)
+    transit_net = transit_net.apply(project_card, reference_road_net=stpaul_net)
 
     sel = transit_net.get_selection(project_card.service)
     sel_trip = sel.selected_trips[0]
@@ -402,7 +318,6 @@ def test_wo_existing(
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     transit_net = copy.deepcopy(stpaul_transit_net)
-    transit_net.road_net = stpaul_net
 
     selection_dict = {
         "trip_properties": {"trip_id": ["14986385-JUN19-MVS-BUS-Weekday-01"]}
@@ -415,7 +330,7 @@ def test_wo_existing(
         },
     }
 
-    transit_net = transit_net.apply(change_dict)
+    transit_net = transit_net.apply(change_dict, reference_road_net=stpaul_net)
 
     # Stops
     result = transit_net.feed.stop_times[

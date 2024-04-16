@@ -34,9 +34,10 @@ jobs:
     - name: Install package
       run: |
         pip install -e .[test]
-    - name: Test with pytest
+    - name: Run Tests with Coverage
       run: |
-        pytest -s -m "not skipci"
+        coverage run -m pytest "not skipci"
+        coverage report
     - name: Configure Git user
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"

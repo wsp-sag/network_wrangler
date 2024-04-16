@@ -1,5 +1,6 @@
 import pytest
-
+import pandas as pd
+from pandas import testing as tm
 from shapely.geometry import LineString
 
 from network_wrangler import WranglerLogger
@@ -77,30 +78,6 @@ def test_get_unique_shape_id(request):
     print("--Finished:", request.node.name)
 
 
-def test_location_reference_offset(request):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    from network_wrangler.utils import offset_location_reference
-
-    location_reference = [
-        {"sequence": 1, "point": [-93.0903549, 44.961085]},
-        {"sequence": 2, "point": [-93.0889873, 44.966861]},
-    ]
-
-    print("original ref", location_reference)
-
-    expected_location_reference = [
-        {"sequence": 1, "point": [-93.09022968479499, 44.961070179988084]},
-        {"sequence": 2, "point": [-93.08886207218725, 44.966846179988075]},
-    ]
-
-    new_location_reference = offset_location_reference(location_reference)
-    print("new ref", new_location_reference)
-
-    assert new_location_reference == expected_location_reference
-
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
 def test_point_from_xy(request):
     from network_wrangler.utils import point_from_xy
     from numpy.testing import assert_almost_equal
@@ -138,3 +115,85 @@ def test_get_overlapping_range(request):
     assert get_overlapping_range([i, j, k]) == range(3, 5)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+SPLT_DF_TEST_PARAMS = [
+    (
+        [1, 2, 3, 4, 5],
+        [1, 2],
+        ([], [1, 2], [3, 4, 5]),
+    ),
+    (
+        [1, 2, 3, 4, 5],
+        [0, 2],
+        ([], [1, 2], [3, 4, 5]),
+    ),
+    (
+        [1, 2, 3, 4, 5],
+        [1, 6],
+        ValueError,
+    ),
+    (
+        [1, 2, 3, 4, 5, 6, 7],
+        [2, 5],
+        ([1], [2, 3, 4, 5], [6, 7]),
+    ),
+    (
+        [1, 2, 3, 4, 5],
+        [5, 0],
+        ([1, 2, 3, 4], [5], []),
+    ),
+    (
+        [1, 2, 3, 2],
+        [3, 2],
+        ([1, 2], [3, 2], []),
+    ),
+    ([1, 2, 3, 2], [2, 1], ValueError),
+]
+
+
+@pytest.mark.parametrize(
+    "ref_list, item_list, expected_result",
+    SPLT_DF_TEST_PARAMS,
+)
+def test_segment_list_by_list(request, ref_list, item_list, expected_result):
+    from network_wrangler.utils.data import segment_data_by_selection
+
+    if expected_result in [ValueError]:
+        with pytest.raises(expected_result):
+            segment_data_by_selection(ref_list, item_list)
+    else:
+        calc_answer = segment_data_by_selection(item_list, ref_list)
+        assert expected_result == calc_answer
+
+
+def test_segment_series_by_list(request):
+    from network_wrangler.utils.data import segment_data_by_selection
+
+    s = pd.Series([1, 2, 3, 4, 5], dtype="int64")
+    item_list = [1, 2]
+    exp_answer = (
+        pd.Series([], dtype="int64"),
+        pd.Series([1, 2], dtype="int64"),
+        pd.Series([3, 4, 5], dtype="int64"),
+    )
+
+    calc_answer = segment_data_by_selection(item_list, s)
+    for calc, exp in zip(calc_answer, exp_answer):
+        WranglerLogger.debug(f"\ncalc:\n{calc}")
+        WranglerLogger.debug(f"\nexp:\n{exp}")
+        tm.assert_series_equal(calc, exp)
+
+
+def test_segment_df_by_list(request):
+    from network_wrangler.utils.data import segment_data_by_selection
+
+    s = pd.DataFrame({"mynodes": [1, 2, 3, 4, 3, 2, 5]})
+    item_list = [2, 3]
+    exp_answer = ([1], [2, 3, 4, 3], [2, 5])
+
+    calc_answer = segment_data_by_selection(item_list, s, field="mynodes")
+    for calc, exp in zip(calc_answer, exp_answer):
+        # WranglerLogger.debug(f"\ncalc:\n{calc['mynodes']}")
+        # WranglerLogger.debug(f"\nexp:\n{exp}")
+        assert exp == calc["mynodes"].to_list()

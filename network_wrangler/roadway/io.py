@@ -3,8 +3,9 @@ from typing import Union
 
 from .nodes import NodesParams, read_nodes, write_nodes
 from .links import LinksParams, read_links, write_links
-from .shapes import ShapesParams, read_shapes, write_shapes
+from .shapes import ShapesParams, ShapesSchema, read_shapes, write_shapes
 from ..roadwaynetwork import RoadwayNetwork
+from ..utils.models import empty_df
 
 DEFAULT_CRS = 4326
 
@@ -17,7 +18,7 @@ def load_roadway(
     nodes_params: NodesParams = None,
     shapes_params: ShapesParams = None,
     crs: int = DEFAULT_CRS,
-    read_shapes: bool = False,
+    read_in_shapes: bool = False,
 ) -> "RoadwayNetwork":
     """
     Reads a network from the roadway network standard
@@ -26,7 +27,8 @@ def load_roadway(
     args:
         links_file: full path to the link file
         nodes_file: full path to the node file
-        shapes_file: full path to the shape file
+        shapes_file: full path to the shape file. NOTE if not found, it will defaul to None and not
+            raise an error.
         links_params: LinkParams instance to use. Will default to default
             values for LinkParams
         nodes_params: NodeParames instance to use. Will default to default
@@ -35,7 +37,7 @@ def load_roadway(
             values for ShapeParams
         crs: coordinate reference system. Defaults to DEFAULT_CRS which defaults to 4326
             which is WGS84 lat/long.
-        read_shapes: if True, will read shapes into network instead of only lazily
+        read_in_shapes: if True, will read shapes into network instead of only lazily
             reading them when they are called. Defaults to False.
 
     Returns: a RoadwayNetwork instance
@@ -45,8 +47,8 @@ def load_roadway(
         links_file, crs=crs, links_params=links_params, nodes_df=nodes_df
     )
 
-    shapes_df = None
-    if read_shapes:
+    shapes_df = empty_df(ShapesSchema)
+    if read_in_shapes:
         shapes_df = read_shapes(shapes_file, crs=crs, shapes_params=shapes_params)
 
     roadway_network = RoadwayNetwork(
@@ -97,9 +99,8 @@ def load_roadway_from_dir(dir: Union[Path, str], suffix="geojson") -> "RoadwayNe
     try:
         shapes_file = next(network_path.glob(f"*shape.{suffix}"))
     except StopIteration:
-        raise FileNotFoundError(
-            f"No shapes file with {suffix} suffix found in {network_path}"
-        )
+        # Shape file is optional so if not found, its ok.
+        shapes_file = None
 
     return load_roadway(links_file, nodes_file, shapes_file)
 

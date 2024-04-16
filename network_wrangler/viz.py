@@ -48,7 +48,7 @@ def net_to_mapbox(
         )
 
     if isinstance(transit, TransitNetwork):
-        transit = TransitNetwork.transit_net_to_gdf(transit)
+        transit = transit.shapes_gdf()
     if isinstance(transit, RoadwayNetwork):
         roadway = RoadwayNetwork.roadway_net_to_gdf(roadway)
 

@@ -105,6 +105,7 @@ def read_nodes(
         nodes_params: a NodesParams instance. Defaults to a default odesParams instance.
     """
     WranglerLogger.debug(f"Reading nodes from {filename}.")
+
     start_time = time.time()
 
     nodes_df = read_table(filename)
@@ -212,6 +213,27 @@ def _nodes_data_to_nodes_df(
     nodes_df.set_index(nodes_df.params.idx_col, inplace=True)
 
     return nodes_df
+
+
+def get_nodes(
+    transit_net: "TransitNetwork" = None,
+    roadway_net: "RoadwayNetwork" = None,
+    roadway_path: Union[str, Path] = None,
+) -> gpd.GeoDataFrame:
+    if transit_net is not None and transit_net.road_net is not None:
+        return transit_net.road_net.nodes_df
+    if roadway_net is not None:
+        return roadway_net.nodes_df
+    elif roadway_path is not None:
+        nodes_path = Path(roadway_net)
+        if nodes_path.is_dir():
+            nodes_path = next(nodes_path.glob("*node*."))
+        return read_nodes(nodes_path)
+    else:
+        raise ValueError(
+            "nodes_df must either be given or provided via an associated \
+                            road_net or by providing a roadway_net path or instance."
+        )
 
 
 def validate_wrangler_nodes_file(
