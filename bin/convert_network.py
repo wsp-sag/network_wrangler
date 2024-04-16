@@ -19,7 +19,7 @@ from pathlib import Path
 import sys
 
 from network_wrangler.roadway.convert import convert_roadway
-from network_wrangler.transit.convert import convert_transit
+from network_wrangler.transit.convert import convert_transit_serialization
 from network_wrangler import WranglerLogger
 
 
@@ -33,7 +33,7 @@ def convert(
     overwrite,
 ):
     if network_type == "transit":
-        convert_transit(
+        convert_transit_serialization(
             input_path,
             output_format,
             out_dir,
