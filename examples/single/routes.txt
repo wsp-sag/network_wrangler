@@ -1,2 +1,2 @@
-route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color
-94-111,0,94,Express - Mpls - St Paul,,3,http://www.metrotransit.org/route/94,,0
+route_id,agency_id,route_short_name,route_long_name,route_type
+blue,0,blue route, very very blue route, 3

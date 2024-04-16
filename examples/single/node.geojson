@@ -2,116 +2,106 @@
     "type": "FeatureCollection",
     "features": [
       {
-          "type": "Feature",
-          "geometry": {
-              "type": "Point",
-              "coordinates": [
-                  -93.0965985,
-                  44.952112199999995
-              ]
-          },
-          "properties": {
-              "shstReferenceId": "0751f5ce12472360fed0d0e80ceae35c",
-              "osm_node_id": "954734870",
-              "model_node_id": 3494,
-              "outboundReferenceIds": [
-                  "a2e58a2801f5994637dfdbab943c503a"
-              ],
-              "inboundReferenceIds": [
-                  "780b6a83285f9acdbf566951917206a7",
-                  "4801603326ffbfd06983baedff263b37"
-              ]
-          }
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 1
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09489405742123,
+            44.94974427235539
+          ],
+          "type": "Point"
+        }
       },
       {
-          "type": "Feature",
-          "geometry": {
-              "type": "Point",
-              "coordinates": [
-                  -93.0960047,
-                  44.95239540000001
-              ]
-          },
-          "properties": {
-              "shstReferenceId": "5c9e5e0f2e6d67208f848f22a6d03700",
-              "osm_node_id": "1894068489",
-              "model_node_id": 121739,
-              "outboundReferenceIds": [
-                  "0a9b7767fbaf5658e8543150333f99bf"
-              ],
-              "inboundReferenceIds": [
-                  "a2e58a2801f5994637dfdbab943c503a",
-                  "90e6e1f14f031a67ed684e165228710f"
-              ]
-          }
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 2
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09383485029893,
+            44.95052589259677
+          ],
+          "type": "Point"
+        }
       },
-    {
+      {
         "type": "Feature",
-        "geometry": {
-            "type": "Point",
-            "coordinates": [
-                -93.0837695,
-                44.96334399999999
-            ]
-        },
         "properties": {
-            "shstReferenceId": "4d0231aa0ebb779f142c2518703ee481",
-            "osm_node_id": "493882040",
-            "model_node_id": 3230,
-            "outboundReferenceIds": [
-                "6a22969708104ae2497244f3d079381d"
-            ],
-            "inboundReferenceIds": [
-                "bfc504a9a8004eadd9d688acb5f4a713"
-            ]
+          "model_node_id": 3
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09241396269603,
+            44.951229798791985
+          ],
+          "type": "Point"
         }
-    },
-    {
+      },
+      {
         "type": "Feature",
-        "geometry": {
-            "type": "Point",
-            "coordinates": [
-                -93.1035758,
-                44.95007489999999
-            ]
-        },
         "properties": {
-            "model_node_id": 71972,
-            "osm_node_id": "945523342",
-            "shstReferenceId": "e81b4f1069134883f10f4ffe0b8fd19c",
-            "outboundReferenceIds": [
-                "780b6a83285f9acdbf566951917206a7"
-            ],
-            "inboundReferenceIds": [
-                "bca1c628bf960d75ae9f08083324f788",
-                "82fe1b2ab8df2c5811b30629f3cf7dfc"
-            ]
+          "model_node_id": 4
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09149038691803,
+            44.95165945268329
+          ],
+          "type": "Point"
         }
-    },
-    {
+      },
+      {
         "type": "Feature",
-        "geometry": {
-            "type": "Point",
-            "coordinates": [
-                -93.0832419,
-                44.962943199999984
-            ]
-        },
         "properties": {
-            "shstReferenceId": "3654951b676940911fe5021b93c90cc5",
-            "osm_node_id": "187879468",
-            "model_node_id": 52771,
-            "outboundReferenceIds": [
-                "d252ddc3b6a8b4f29a8e05ce1ba8c587",
-                "bfc504a9a8004eadd9d688acb5f4a713",
-                "8d201286d63d0f62f57552a7506983f0"
-            ],
-            "inboundReferenceIds": [
-                "6a22969708104ae2497244f3d079381d",
-                "fdc55c0c8cdc6de52b0fc460bb929f57",
-                "bbfb97357af0300d52108e619d3a08c4"
-            ]
+          "model_node_id": 5
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09054743423603,
+            44.950791002244046
+          ],
+          "type": "Point"
         }
-    }
-  ]
-}
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 6
+        },
+        "geometry": {
+          "coordinates": [
+            -93.0916712271583,
+            44.95046190180227
+          ],
+          "type": "Point"
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 7
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09311596139162,
+            44.94975132601343
+          ],
+          "type": "Point"
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {"model_node_id": 8},
+        "geometry": {
+          "coordinates": [
+            -93.0942991236113,
+            44.949163007801786
+          ],
+          "type": "Point"
+        }
+      }
+    ]
+  }
