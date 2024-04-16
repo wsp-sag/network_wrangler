@@ -1,5 +1,6 @@
 black
 "black[jupyter]"
+coverage
 flake8
 pytest
 pytest-benchmark
