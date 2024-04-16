@@ -8,10 +8,6 @@ from typing import Union, Any, Literal
 import geopandas as gpd
 import pandera as pa
 
-from jsonschema import validate
-from jsonschema.exceptions import ValidationError
-from jsonschema.exceptions import SchemaError
-
 from pandera import check_output, DataFrameModel
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
@@ -126,39 +122,3 @@ def write_shapes(
 ) -> None:
     shapes_file = Path(out_dir) / f"{prefix}shape.{format}"
     write_table(shapes_df, shapes_file, overwrite=overwrite)
-
-
-def validate_wrangler_shapes_file(
-    shapes_file: str, schema_location: Union[Path, str] = "roadway_network_shape.json"
-) -> bool:
-    """
-    Validate roadway network data node schema and output a boolean
-    """
-    schema_location = Path(schema_location)
-    schema_location = Path(schema_location)
-    if not schema_location.exists():
-        base_path = Path(__file__).resolve().parent / "schemas"
-        schema_location = base_path / schema_location
-
-    with open(schema_location) as schema_json_file:
-        schema = json.load(schema_json_file)
-
-    with open(shapes_file) as node_json_file:
-        json_data = json.load(node_json_file)
-
-    try:
-        validate(json_data, schema)
-        return True
-
-    except ValidationError as exc:
-        WranglerLogger.error("Failed Shapes schema validation: Validation Error")
-        WranglerLogger.error("Shapes File Loc:{}".format(shapes_file))
-        WranglerLogger.error("Shapes Schema Loc:{}".format(schema_location))
-        WranglerLogger.error(exc.message)
-
-    except SchemaError as exc:
-        WranglerLogger.error("Invalid Shape Schema")
-        WranglerLogger.error("Shape Schema Loc:{}".format(schema_location))
-        WranglerLogger.error(json.dumps(exc.message, indent=2))
-
-    return False

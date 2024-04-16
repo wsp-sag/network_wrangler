@@ -10,9 +10,6 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 
-from jsonschema import validate
-from jsonschema.exceptions import ValidationError
-from jsonschema.exceptions import SchemaError
 from pandera import check_input, check_output, DataFrameModel
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
@@ -97,7 +94,7 @@ def read_nodes(
     """Reads nodes and returns a geodataframe of nodes.
 
     Sets index to be a copy of the primary key.
-    Validates output dataframe using NodsSchema.
+    Validates output dataframe using NodesSchema.
 
     Args:
         filename (Path,str): file to read links in from.
@@ -234,42 +231,6 @@ def get_nodes(
             "nodes_df must either be given or provided via an associated \
                             road_net or by providing a roadway_net path or instance."
         )
-
-
-def validate_wrangler_nodes_file(
-    node_file: str, schema_location: Union[str, Path] = "roadway_network_node.json"
-) -> bool:
-    """
-    Validate roadway network data node schema and output a boolean
-    """
-    schema_location = Path(schema_location)
-    schema_location = Path(schema_location)
-    if not schema_location.exists():
-        base_path = Path(__file__).resolve().parent / "schemas"
-        schema_location = base_path / schema_location
-
-    with open(schema_location) as schema_json_file:
-        schema = json.load(schema_json_file)
-
-    with open(node_file) as node_json_file:
-        json_data = json.load(node_json_file)
-
-    try:
-        validate(json_data, schema)
-        return True
-
-    except ValidationError as exc:
-        WranglerLogger.error("Failed Node schema validation: Validation Error")
-        WranglerLogger.error("Node File Loc:{}".format(node_file))
-        WranglerLogger.error("Node Schema Loc:{}".format(schema_location))
-        WranglerLogger.error(exc.message)
-
-    except SchemaError as exc:
-        WranglerLogger.error("Invalid Node Schema")
-        WranglerLogger.error("Node Schema Loc:{}".format(schema_location))
-        WranglerLogger.error(json.dumps(exc.message, indent=2))
-
-    return False
 
 
 @check_input(NodesSchema, inplace=True)

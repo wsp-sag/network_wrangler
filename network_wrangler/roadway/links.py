@@ -10,9 +10,6 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 
-from jsonschema import validate
-from jsonschema.exceptions import ValidationError
-from jsonschema.exceptions import SchemaError
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
 from pandera import check_input, check_output
@@ -304,41 +301,6 @@ def shape_id_from_link_geometry(
 ) -> gpd.GeoDataFrame:
     shape_ids = links_df["geometry"].apply(create_unique_shape_id)
     return shape_ids
-
-
-def validate_wrangler_links_file(
-    link_file, schema_location: Union[Path, str] = "roadway_network_link.json"
-):
-    """
-    Validate roadway network data link schema and output a boolean
-    """
-    schema_location = Path(schema_location)
-    if not schema_location.exists():
-        base_path = Path(__file__).resolve().parent / "schemas"
-        schema_location = base_path / schema_location
-
-    with open(schema_location) as schema_json_file:
-        schema = json.load(schema_json_file)
-
-    with open(link_file) as link_json_file:
-        json_data = json.load(link_json_file)
-
-    try:
-        validate(json_data, schema)
-        return True
-
-    except ValidationError as exc:
-        WranglerLogger.error("Failed Link schema validation: Validation Error")
-        WranglerLogger.error("Link File Loc:{}".format(link_file))
-        WranglerLogger.error("Path:{}".format(exc.path))
-        WranglerLogger.error(exc.message)
-
-    except SchemaError as exc:
-        WranglerLogger.error("Invalid Link Schema")
-        WranglerLogger.error("Link Schema Loc: {}".format(schema_location))
-        WranglerLogger.error(json.dumps(exc.message, indent=2))
-
-    return False
 
 
 @pd.api.extensions.register_dataframe_accessor("true_shape")

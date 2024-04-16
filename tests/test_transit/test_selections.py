@@ -203,9 +203,9 @@ def test_invalid_selection_property_format(request, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     with pytest.raises(TransitSelectionNetworkConsistencyError):
-        # trip_ids rather than trip_id should fail
+        # agency_iden intsead of agency_id shoul dfail
         stpaul_transit_net.get_selection(
-            {"timespans": ["12:00", "1:00"], "route_properties": {"agency_id": "1"}}
+            {"timespans": [["12:00", "1:00"]], "route_properties": {"agency_ident": "1"}}
         )
 
     print("--Finished:", request.node.name)

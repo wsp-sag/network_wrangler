@@ -10,11 +10,11 @@ from ..models.gtfs.tables import (
 
 
 def gtfs_to_wrangler_stop_times(
-    stop_times: StopTimesTable, stops: WranglerStopsTable = None, **kwargs
+    in_stop_times: StopTimesTable, stops: WranglerStopsTable = None, **kwargs,
 ) -> WranglerStopTimesTable:
     WranglerLogger.debug("Converting GTFS stop_times to Wrangler stop_times")
     try:
-        stop_times = StopTimesTable.validate(stop_times)
+        out_stop_times = StopTimesTable.validate(in_stop_times)
     except SchemaErrors as e:
         WranglerLogger.error(
             "Failed validating StopTimes to generic gtfs StopTimes table."
@@ -30,13 +30,13 @@ def gtfs_to_wrangler_stop_times(
 
     _stops_fields = _merge_fields + ["model_node_id"]
 
-    if "model_node_id" in stop_times:
-        if stop_times["model_node_id"].isna().any():
-            stop_times = stop_times.drop(columns=["model_node_id"])
+    if "model_node_id" in out_stop_times:
+        if out_stop_times["model_node_id"].isna().any():
+            out_stop_times = out_stop_times.drop(columns=["model_node_id"])
         else:
-            return stop_times
+            return out_stop_times
 
-    _m_df = stop_times.merge(
+    _m_df = out_stop_times.merge(
         stops[_stops_fields],
         on=_merge_fields,
         how="left",
@@ -50,7 +50,7 @@ def gtfs_to_wrangler_stop_times(
         )
         raise ValueError("Stops and stop_times tables incompatable.")
     # WranglerLogger.debug(f"Merged stop times df with stops:\n{_m_df}")
-    stop_times["model_node_id"] = _m_df["model_node_id"]
+    out_stop_times["model_node_id"] = _m_df["model_node_id"]
     # WranglerLogger.debug(f"StopTimes with updated model_node_id:\n{stop_times}")
 
-    return stop_times
+    return out_stop_times

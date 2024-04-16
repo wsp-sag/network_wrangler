@@ -91,7 +91,7 @@ class TransitSelection:
             ValidationError: if format not consistent with SelectTransitTrips
         """
         selection_dict = SelectTransitTrips(**selection_dict)
-        selection_dict = selection_dict.model_dump()
+        selection_dict = selection_dict.model_dump(exclude_none=True)
         WranglerLogger.debug(f"SELECT DICT - before Validation:\n{selection_dict}")
         _trip_selection_fields = list(
             (selection_dict.get("trip_properties", {}) or {}).keys()

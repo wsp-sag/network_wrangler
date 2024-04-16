@@ -67,7 +67,7 @@ class TransitNetwork(object):
         self.graph: nx.MultiDiGraph = None
 
         # initialize
-        self.validated_road_network_consistency = False
+        self._consistent_with_road_net = False
 
         # cached selections
         self._selections = {}
@@ -118,6 +118,7 @@ class TransitNetwork(object):
         if transit_road_net_consistency(self.feed, road_net):
             self._road_net = road_net
             self._stored_road_net_hash = copy.deepcopy(self.road_net.network_hash)
+            self._consistent_with_road_net = True
         else:
             WranglerLogger.error(
                 "Can't assign inconsistent RoadwayNetwork - Roadway Network not \
@@ -142,7 +143,7 @@ class TransitNetwork(object):
         Returns:
             Boolean indicating if road_net is consistent with transit network.
         """
-        updated_road = self.road_net_hash != self._stored_road_net_hash
+        updated_road = self.road_net.network_hash != self._stored_road_net_hash
         updated_feed = self.feed_hash != self._stored_feed_hash
 
         if updated_road or updated_feed:
@@ -150,7 +151,7 @@ class TransitNetwork(object):
                 self.feed, self.road_net
             )
             self._stored_road_net_hash = copy.deepcopy(self.road_net.network_hash)
-            self._stored_feed_hash = copy.deeppcopy(self.feed_hash)
+            self._stored_feed_hash = copy.deepcopy(self.feed_hash)
         return self._consistent_with_road_net
 
     def __deepcopy__(self, memo):

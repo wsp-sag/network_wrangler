@@ -36,30 +36,6 @@ def bin_dir(base_dir):
 
 
 @pytest.fixture(scope="session")
-def schemas_dir(base_dir):
-    dir = base_dir / "network_wrangler" / "schemas"
-    assert dir.exists()
-    WranglerLogger.info(f"Schema Dir: {dir}")
-    return dir
-
-
-@pytest.fixture(scope="session")
-def schema_filenames(schemas_dir):
-    """List of schema filenames in schema_dir"""
-    files = list(glob.glob(str(schemas_dir / "*.json")))
-    WranglerLogger.info(f"Schema Files: {files}")
-    return files
-
-
-@pytest.fixture(params=[i for i in range(3)])
-def schema_filename(request, schema_filenames):
-    if request.param < len(schema_filenames):
-        return schema_filenames[request.param]
-    else:
-        return None
-
-
-@pytest.fixture(scope="session")
 def example_dir(base_dir):
     return Path(base_dir) / "examples"
 

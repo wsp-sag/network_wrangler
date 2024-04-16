@@ -12,13 +12,17 @@ log = logging.getLogger(__name__)
 
 class SelectRouteProperties(RecordModel):
     """Selection properties for transit routes."""
-
-    model_config = ConfigDict(extra="allow")
-
     route_short_name: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
     route_long_name: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
     agency_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
     route_type: Annotated[Optional[List[int]], Field(None, min_length=1)]
+
+    model_config = ConfigDict(
+        extra="allow",
+        validate_assignment=True,
+        exclude_none=True,
+        protected_namespaces=()
+    )
 
 
 SelectionRequire = Union[Literal["any"], Literal["all"]]
@@ -31,11 +35,17 @@ class SelectTransitNodes(RecordModel):
         # "stop_id", TODO Not implemented
         "model_node_id",
     ]
-    model_config = ConfigDict(extra="forbid")
 
     # stop_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)] TODO Not implemented
     model_node_id: Annotated[List[int], Field(min_length=1)]
     require: Optional[SelectionRequire] = "any"
+
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_assignment=True,
+        exclude_none=True,
+        protected_namespaces=()
+    )
 
     _examples = [
         # {"stop_id": ["stop1", "stop2"], "require": "any"},  TODO Not implemented
@@ -45,11 +55,15 @@ class SelectTransitNodes(RecordModel):
 
 class TransitABNodesModel(RecordModel):
     """Single transit link model."""
-
-    model_config = ConfigDict(extra="forbid")
-
     A: Optional[int] = None  # model_node_id
     B: Optional[int] = None  # model_node_id
+
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_assignment=True,
+        exclude_none=True,
+        protected_namespaces=()
+    )
 
 
 class SelectTransitLinks(RecordModel):
@@ -60,12 +74,16 @@ class SelectTransitLinks(RecordModel):
         "model_link_id",
     ]
 
-    model_config = ConfigDict(extra="forbid")
-
     model_link_id: Annotated[Optional[List[int]], Field(min_length=1)] = None
     ab_nodes: Annotated[Optional[List[TransitABNodesModel]], Field(min_length=1)] = None
     require: Optional[SelectionRequire] = "any"
-
+    
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_assignment=True,
+        exclude_none=True,
+        protected_namespaces=()
+    )
     _examples = [
         {
             "ab_nodes": [{"A": "75520", "B": "66380"}, {"A": "66380", "B": "75520"}],
@@ -80,15 +98,19 @@ class SelectTransitLinks(RecordModel):
 
 class SelectTripProperties(RecordModel):
     """Selection properties for transit trips."""
-
-    model_config = ConfigDict(extra="allow")
-
     trip_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
     shape_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
     direction_id: Annotated[Optional[int], Field(None)]
     service_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
     route_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
     trip_short_name: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)]
+
+    model_config = ConfigDict(
+        extra="allow",
+        validate_assignment=True,
+        exclude_none=True,
+        protected_namespaces=()
+    )
 
 
 TimeString = Annotated[
@@ -104,9 +126,15 @@ Timespan = Annotated[List[TimeString], Field(min_length=2, max_length=2)]
 
 
 class SelectTransitTrips(RecordModel):
-    model_config = ConfigDict(extra="forbid")
     trip_properties: Optional[SelectTripProperties] = None
     route_properties: Optional[SelectRouteProperties] = None
     timespans: Annotated[Optional[List[Timespan]], Field(None, min_length=1)]
     nodes: Optional[SelectTransitNodes] = None
     links: Optional[SelectTransitLinks] = None
+
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_assignment=True,
+        exclude_none=True,
+        protected_namespaces=()
+    )

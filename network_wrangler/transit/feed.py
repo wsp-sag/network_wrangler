@@ -435,17 +435,16 @@ def unique_shape_links(
 ) -> pd.DataFrame:
     shape_links = shapes_to_shape_links(shapes)
     # WranglerLogger.debug(f"Shape links: \n {shape_links[['shape_id', from_field, to_field]]}")
+
+    _agg_dict = {"shape_id": list}
+    _opt_fields = [f"shape_pt_{v}_{t}" for v in ["lat", "lon"] for t in [from_field, to_field]]
+    for f in _opt_fields:
+        if f in shape_links:
+            _agg_dict[f] = "first"
+
     unique_shape_links = (
         shape_links.groupby([from_field, to_field])
-        .agg(
-            {
-                "shape_id": list,  # Collect all shape_ids in the group into a list
-                f"shape_pt_lat_{from_field}": "first",  # Take the first latitude in the group
-                f"shape_pt_lon_{from_field}": "first",  # Take the first longitude in the group
-                f"shape_pt_lat_{to_field}": "first",  # Take the first latitude in the group
-                f"shape_pt_lon_{to_field}": "first",  # Take the first longitude in the group
-            }
-        )
+        .agg(_agg_dict)
         .reset_index()
     )
     return unique_shape_links

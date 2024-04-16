@@ -103,12 +103,10 @@ def test_wrong_existing(request, stpaul_transit_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.failing
 def test_transit_road_consistencies(request, stpaul_transit_net, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     stpaul_transit_net.road_net = stpaul_net
-    _consistency = stpaul_transit_net._evaluate_consistency_with_road_net()
-    WranglerLogger.info(f"Consistency with RoadNet: {_consistency}")
+    assert stpaul_transit_net.consistent_with_road_net
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
