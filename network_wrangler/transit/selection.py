@@ -1,14 +1,10 @@
 import copy
-import hashlib
 
-from typing import Optional, List, Dict, Union, Literal, Annotated
+from typing import List, Union
 
 import pandas as pd
 
-from pydantic import validate_call, BaseModel, ValidationError
-
 from ..utils import dict_to_hexkey
-from ..utils.time import parse_timespans_to_secs
 from ..logger import WranglerLogger
 
 from ..projects.models import (
@@ -173,23 +169,21 @@ def _filter_trips_by_selection_dict(
 
     _tot_trips = len(trips_df)
 
-    if "links" in sel:
+    if sel.get("links"):
         trips_df = _filter_trips_by_links(
-            trips_df, _shapes_df, sel["links"], "shape_model_node_id"
+            trips_df, _shapes_df, sel["links"],
         )
         WranglerLogger.debug(f"# Trips after links filter:  {len(trips_df)}")
-    if "nodes" in sel:
-        trips_df = _filter_trips_by_nodes(
-            trips_df, _shapes_df, sel["nodes"], "shape_model_node_id"
-        )
+    if sel.get("nodes"):
+        trips_df = _filter_trips_by_nodes(trips_df, _shapes_df, sel["nodes"])
         WranglerLogger.debug(f"# Trips after node filter:  {len(trips_df)}")
-    if "route_properties" in sel:
+    if sel.get("route_properties"):
         trips_df = _filter_trips_by_route(trips_df, _routes_df, sel["route_properties"])
         WranglerLogger.debug(f"# Trips after route property filter:  {len(trips_df)}")
-    if "trip_properties" in sel:
+    if sel.get("trip_properties"):
         trips_df = _filter_trips_by_trip(trips_df, sel["trip_properties"])
         WranglerLogger.debug(f"# Trips after trip property filter: {len(trips_df)}")
-    if "timespan" in sel:
+    if sel.get("timespan"):
         trips_df = _filter_trips_by_timespan(trips_df, _freq_df, sel["timespan"])
         WranglerLogger.debug(f"# Trips after timespan filter:  {len(trips_df)}")
 

@@ -45,7 +45,7 @@ class DictQueryAccessor:
             _type_: _description_
         """
         _selection_dict = {
-            k: v for k, v in selection_dict.items() if k in self._obj.columns
+            k: v for k, v in selection_dict.items() if k in self._obj.columns and v is not None
         }
 
         if not _selection_dict:
