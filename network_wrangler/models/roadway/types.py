@@ -8,6 +8,7 @@ from pydantic import (
 
 from .._base.geo import LatLongCoordinates
 
+
 def LocationReference(BaseModel):
     sequence: PositiveInt
     point: LatLongCoordinates

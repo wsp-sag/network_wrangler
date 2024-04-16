@@ -13,12 +13,19 @@ import pandas as pd
 from projectcard import ProjectCard, SubProject
 
 from .logger import WranglerLogger
-from .utils import fk_in_pk, dict_to_hexkey
+from .utils import dict_to_hexkey
+from .roadwaynetwork import RoadwayNetwork
 from .transit import Feed, TransitSelection
+from .transit.feed import transit_road_net_consistency
 from .projects import (
     apply_transit_routing_change,
     apply_transit_property_change,
     apply_calculated_transit,
+)
+from .transit.geo import ( 
+    shapes_to_shape_links_gdf, to_points_gdf,
+    stop_times_to_stop_time_links_gdf, stop_times_to_stop_time_points_gdf, 
+    shapes_to_trip_shapes_gdf
 )
 
 
@@ -38,43 +45,25 @@ class TransitNetwork(object):
 
     Attributes:
         feed: Partridge feed mapping dataframes.
-        config (nx.DiGraph): Partridge config
         road_net (RoadwayNetwork): Associated roadway network object.
         graph (nx.MultiDiGraph): Graph for associated roadway network object.
         feed_path (str): Where the feed was read in from.
         validated_frequencies (bool): The frequencies have been validated.
         validated_road_network_consistency (): The network has been validated against
             the road network.
-        REQUIRED_FILES (list[str]): list of files that the transit network requires.
-
-    .. todo::
-      investigate consolidating scalars this with RoadwayNetwork
-      consolidate thes foreign key constants into one if possible
     """
-
-    """
-    Mapping of foreign keys in the transit network which refer to primary keys in the roadway
-    Network.
-    """
-    TRANSIT_FOREIGN_KEYS_TO_ROADWAY = {
-        "stops": {"nodes": ("model_node_id", "model_node_id")},
-        "shapes": {
-            "nodes": ("shape_model_node_id", "model_node_id"),
-            "links": ("shape_model_node_id", "model_node_id"),
-        },
-    }
 
     TIME_COLS = ["arrival_time", "departure_time", "start_time", "end_time"]
 
-    def __init__(self, feed: Feed = None):
+    def __init__(self, feed: Feed):
         """
         Constructor for TransitNetwork.
 
         args:
             feed: Feed object mimicing partridge feed
         """
-        self.feed: Feed = feed
         self._road_net: "RoadwayNetwork" = None
+        self.feed: Feed = feed
         self.graph: nx.MultiDiGraph = None
 
         # initialize
@@ -98,27 +87,49 @@ class TransitNetwork(object):
         return self._feed
 
     @feed.setter
-    def feed(self, feed: "Feed"):
-        self._feed = feed
-        self._feed._net = self
+    def feed(self, feed: Feed):
+        if not isinstance(feed, Feed):
+            msg = f"TransitNetwork's feed value must be a valid Feed instance. \
+                             This is a {type(feed)}."
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+        if self._road_net is None or transit_road_net_consistency(feed, self._road_net):
+            self._feed = feed
+            self._stored_feed_hash = copy.deepcopy(feed.hash)
+        else:
+            WranglerLogger.error(
+                "Can't assign Feed inconsistent with set Roadway Network."
+            )
+            raise TransitRoadwayConsistencyError(
+                "Can't assign Feed inconsistent with set RoadwayNetwork."
+            )
 
     @property
     def road_net(self):
         return self._road_net
 
     @road_net.setter
-    def road_net(self, road_net: "RoadwayNetwork"):
-        if "RoadwayNetwork" not in str(type(road_net)):
-            WranglerLogger.error(f"Cannot assign to road_net - type {type(road_net)}")
-            raise ValueError("road_net must be a RoadwayNetwork object.")
-        if self._evaluate_consistency_with_road_net(road_net):
+    def road_net(self, road_net: RoadwayNetwork):
+        if not isinstance(road_net, RoadwayNetwork):
+            msg = f"TransitNetwork's road_net: value must be a valid RoadwayNetwork instance. \
+                             This is a {type(road_net)}."
+            WranglerLogger.error(msg)
+            raise ValueError(msg)
+        if transit_road_net_consistency(self.feed, road_net):
             self._road_net = road_net
-            self._road_net_hash = copy.deepcopy(self.road_net.network_hash)
-
+            self._stored_road_net_hash = copy.deepcopy(self.road_net.network_hash)
         else:
-            raise TransitRoadwayConsistencyError(
-                "RoadwayNetwork not as TransitNetwork base."
+            WranglerLogger.error(
+                "Can't assign inconsistent RoadwayNetwork - Roadway Network not \
+                                 set, but can be referenced separately."
             )
+            raise TransitRoadwayConsistencyError(
+                "Can't assign inconsistent RoadwayNetwork."
+            )
+
+    @property
+    def feed_hash(self):
+        return self.feed.hash
 
     @property
     def consistent_with_road_net(self) -> bool:
@@ -126,20 +137,24 @@ class TransitNetwork(object):
 
         Checks the network hash of when consistency was last evaluated. If transit network or
         roadway network has changed, will re-evaluate consistency and return the updated value and
-        update self._road_net_hash.
+        update self._stored_road_net_hash.
 
         Returns:
             Boolean indicating if road_net is consistent with transit network.
         """
-        if not self.road_net_hash == self.road_net.network_hash:
-            self._consistent_with_road_net = self._evaluate_consistency_with_road_net(
-                self.road_net
+        updated_road = self.road_net_hash != self._stored_road_net_hash
+        updated_feed = self.feed_hash != self._stored_feed_hash
+
+        if updated_road or updated_feed:
+            self._consistent_with_road_net = transit_road_net_consistency(
+                self.feed, self.road_net
             )
-            self._road_net_hash = copy.deepcopy(self.road_net.network_hash)
+            self._stored_road_net_hash = copy.deepcopy(self.road_net.network_hash)
+            self._stored_feed_hash = copy.deeppcopy(self.feed_hash)
         return self._consistent_with_road_net
 
     def __deepcopy__(self, memo):
-        """Returns copied TransitNetwork instance with deep copy of Feed but not roadway network."""
+        """Returns copied TransitNetwork instance with deep copy of Feed but not roadway net."""
         COPY_REF_NOT_VALUE = ["_road_net"]
         # Create a new, empty instance
         copied_net = self.__class__.__new__(self.__class__)
@@ -162,197 +177,56 @@ class TransitNetwork(object):
     def deepcopy(self):
         return copy.deepcopy(self)
 
-    def _evaluate_consistency_with_road_net(
-        self, road_net: "RoadwayNetwork" = None
-    ) -> bool:
-        """Checks foreign key and network link relationships between transit feed and a road_net.
-
-        Args:
-            road_net (RoadwayNetwork): Roadway network to check relationship with. If None, will
-                check self.road_net.
-
-        Returns:
-            bool: boolean indicating if road_net is consistent with transit network.
-        """
-        if road_net is None:
-            road_net = self.road_net
-        _consistency = self._nodes_in_road_net(
-            road_net.nodes_df
-        ) and self._shape_links_in_road_net(road_net.links_df)
-        return _consistency
+    @property
+    def stops_gdf(self) -> "gpd.GeoDataFrame":
+        """Return stops as a GeoDataFrame using set roadway geometry."""
+        if self.road_net is not None:
+            ref_nodes = self.road_net.nodes_df
+        else:
+            ref_nodes = None
+        return to_points_gdf(self.feed.stops, nodes_df=ref_nodes)
 
     @property
-    def transit_shape_links(self) -> pd.DataFrame:
-        fk_field, pk_field = self.TRANSIT_FOREIGN_KEYS_TO_ROADWAY["shapes"]["links"]
-
-        transit_shapes_df = (
-            self.feed.get_table("shapes")[["shape_pt_sequence", "shape_id", fk_field]]
-            .sort_values(by=["shape_pt_sequence"])
-            .groupby("shape_id")[fk_field]
-            .shift()
-            .df.dropna(subset=f"{fk_field}_shift", inplace=True)
-            .rename({fk_field: "to_node", f"{fk_field}_shift": "from_node"})
-        )
-        return transit_shapes_df
-
-    def validate_roadway_nodes_for_table(
-        self, table: str, nodes_df: pd.DataFrame = None, _raise_error: bool = True
-    ) -> Union[bool, str]:
-        """Validate that a transit feed table's foreign key exists in referenced roadway node.
-
-        Uses `self.TRANSIT_FOREIGN_KEYS_TO_ROADWAY` to find the foreign key primary key
-        relationship.
-
-        Args:
-            table (str): transit feed table name e.g. stops, shapes
-            nodes_df (pd.DataFrame, optional): Nodes dataframe from roadway network to validate
-                foreign key to. Defaults to self.roadway_net.nodes_df
-            _raise_error (bool, optional): If True, will raise an error if . Defaults to True.
-
-        Returns:
-            Union[bool,list]: Tuple of a boolean indicating if relationship is valid and an
-                error messages
-        """
-        _fk_field, _pk_field = self.TRANSIT_FOREIGN_KEYS_TO_ROADWAY.get(table, {}).get(
-            "nodes"
-        )
-
-        if nodes_df is None:
-            nodes_df = self.road_net.nodes_df
-
-        fk_valid, fk_missing = fk_in_pk(
-            nodes_df[_pk_field], self.feed.get(table)[_fk_field]
-        )
-        fk_missing_msg = ""
-        if fk_missing:
-            fk_missing_msg = f"{nodes_df}.{_pk_field} missing values from {table}.{_fk_field}\
-                :{fk_missing}"
-            if _raise_error:
-                WranglerLogger.error(fk_missing_msg)
-                raise TransitRoadwayConsistencyError(
-                    "{table} missing Foreign Keys in Roadway Network Nodes."
-                )
-        return fk_valid, fk_missing_msg
-
-    def _nodes_in_road_net(self, nodes_df: pd.DataFrame = None) -> bool:
-        """Validate all of a transit feeds node foreign keys exist in referenced roadway nodes.
-
-        Uses `self.TRANSIT_FOREIGN_KEYS_TO_ROADWAY` to find the foreign key primary key
-        relationship.
-
-        Args:
-            nodes_df (pd.DataFrame, optional): Nodes dataframe from roadway network to validate
-                foreign key to. Defaults to self.roadway_net.nodes_df
-
-        Returns:
-            boolean indicating if relationships are all valid
-        """
-        if self.road_net is None:
-            return ValueError(
-                "Cannot evaluate consistency because roadway network us not set."
-            )
-        all_valid = True
-        missing = []
-        if nodes_df is None:
-            nodes_df = self.road_net.nodes_df
-        for table in self.TRANSIT_FOREIGN_KEYS_TO_ROADWAY.keys():
-            _valid, _missing = self.validate_roadway_nodes_for_table(
-                table, nodes_df, _raise_error=False
-            )
-            all_valid = all_valid and _valid
-            if _missing:
-                missing.append(_missing)
-
-        if missing:
-            WranglerLogger.error(missing)
-            raise TransitRoadwayConsistencyError(
-                "Missing Foreign Keys in Roadway Network Nodes."
-            )
-        return all_valid
-
-    def _shape_links_in_road_net(
-        self,
-        links_df: pd.DataFrame = None,
-        shapes_df: pd.DataFrame = None,
-    ) -> bool:
-        """Validate that links in transit shapes exist in referenced roadway links.
-
-        Args:
-            links_df (pd.DataFrame, optional): Links dataframe from roadway network to validate
-                foreign key to. Defaults to self.roadway_net.links_df
-            shapes_df (pd.DataFrame, optional): shapes_df to validate
-            Defaults to self.feed.shapes
-
-        Returns:
-            boolean indicating if relationships are all valid
-        """
-        tr_field, rd_field = self.TRANSIT_FOREIGN_KEYS_TO_ROADWAY["shapes"]["links"]
-        if links_df is None:
-            links_df = self.road_net.links_df
-        if shapes_df is None:
-            shapes_df = self.feed.shapes.astype({tr_field: int})
-        unique_shape_ids = shapes_df.shape_id.unique().tolist()
-        valid = True
-        for id in unique_shape_ids:
-            subset_shapes_df = shapes_df[shapes_df["shape_id"] == id]
-            subset_shapes_df = subset_shapes_df.sort_values(by=["shape_pt_sequence"])
-            subset_shapes_df = subset_shapes_df.add_suffix("_1").join(
-                subset_shapes_df.shift(-1).add_suffix("_2")
-            )
-            subset_shapes_df = subset_shapes_df.dropna()
-
-            merged_df = subset_shapes_df.merge(
-                links_df,
-                how="left",
-                left_on=[
-                    tr_field + "_1",
-                    tr_field + "_2",
-                ],
-                right_on=["A", "B"],
-                indicator=True,
-            )
-
-            missing_links_df = merged_df.query('_merge == "left_only"')
-
-            # there are shape links which does not exist in the roadway network
-            if len(missing_links_df.index) > 0:
-                valid = False
-                msg = f"There are links for shape id {id} which are missing in the \
-                    roadway network."
-                WranglerLogger.error(msg)
-
-            transit_not_allowed_df = merged_df.query(
-                '_merge == "both" & drive_access == 0 & bus_only == 0 & rail_only == 0'
-            )
-
-            # there are shape links where transit is not allowed
-            if len(transit_not_allowed_df.index) > 0:
-                valid = False
-                msg = f"There are links for shape id {id} which does not allow transit \
-                    in the roadway network."
-                WranglerLogger.error(msg)
-
-        return valid
-
-    @staticmethod
-    def transit_net_to_gdf(transit: Union["TransitNetwork", pd.DataFrame]):
-        """
-        Returns a geodataframe given a TransitNetwork or a valid Shapes DataFrame.
-
-        Args:
-            transit: either a TransitNetwork or a Shapes GeoDataFrame
-
-        .. todo:: Make more sophisticated.
-        """
-        from partridge import geo
-
-        if type(transit) is pd.DataFrame:
-            shapes = transit
+    def shapes_gdf(self) -> "gpd.GeoDataFrame":
+        """Return aggregated shapes as a GeoDataFrame using set roadway geometry."""
+        if self.road_net is not None:
+            ref_nodes = self.road_net.nodes_df
         else:
-            shapes = transit.feed.shapes
+            ref_nodes = None
+        return shapes_to_trip_shapes_gdf(self.feed.shapes, ref_nodes_df=ref_nodes)
 
-        transit_gdf = geo.build_shapes(shapes)
-        return transit_gdf
+    @property
+    def shape_links_gdf(self) -> "gpd.GeoDataFrame":
+        """Return shape-links as a GeoDataFrame using set roadway geometry."""
+        if self.road_net is not None:
+            ref_nodes = self.road_net.nodes_df
+        else:
+            ref_nodes = None
+        return shapes_to_shape_links_gdf(
+            self.feed.shapes, ref_nodes_df=ref_nodes
+        )
+
+    @property
+    def stop_time_links_gdf(self) -> "gpd.GeoDataFrame":
+        """Return stop-time-links as a GeoDataFrame using set roadway geometry."""
+        if self.road_net is not None:
+            ref_nodes = self.road_net.nodes_df
+        else:
+            ref_nodes = None
+        return stop_times_to_stop_time_links_gdf(
+            self.feed.stop_times, self.feed.stops, ref_nodes_df=ref_nodes
+        )
+
+    @property
+    def stop_times_points_gdf(self) -> "gpd.GeoDataFrame":
+        if self.road_net is not None:
+            ref_nodes = self.road_net.nodes_df
+        else:
+            ref_nodes = None
+        """Return stop-time-points as a GeoDataFrame using set roadway geometry."""
+        return stop_times_to_stop_time_points_gdf(
+            self.feed.stop_times, self.feed.stops, ref_nodes_df=ref_nodes
+        )
 
     def get_selection(
         self,
@@ -385,7 +259,9 @@ class TransitNetwork(object):
             raise ValueError("Selection not successful.")
         return self._selections[key]
 
-    def apply(self, project_card: Union[ProjectCard, dict]) -> "TransitNetwork":
+    def apply(
+        self, project_card: Union[ProjectCard, dict], **kwargs
+    ) -> "TransitNetwork":
         """
         Wrapper method to apply a roadway project, returning a new TransitNetwork instance.
 
@@ -406,12 +282,16 @@ class TransitNetwork(object):
         if project_card.sub_projects:
             for sp in project_card.sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
-                self._apply_change(sp)
+                self._apply_change(sp, **kwargs)
             return self
         else:
-            return self._apply_change(project_card)
+            return self._apply_change(project_card, **kwargs)
 
-    def _apply_change(self, change: Union[ProjectCard, SubProject]) -> TransitNetwork:
+    def _apply_change(
+        self,
+        change: Union[ProjectCard, SubProject],
+        reference_road_net: "RoadwayNetwork" = None,
+    ) -> TransitNetwork:
         """Apply a single change: a single-project project or a sub-project."""
         if not isinstance(change, SubProject):
             WranglerLogger.info(
@@ -430,6 +310,7 @@ class TransitNetwork(object):
                 self,
                 self.get_selection(change.service),
                 change.transit_routing_change,
+                reference_road_net=reference_road_net,
             )
 
         elif change.change_type == "roadway_deletion":

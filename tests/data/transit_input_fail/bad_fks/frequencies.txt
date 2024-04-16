@@ -1,0 +1,4 @@
+trip_id,headway_secs,start_time,end_time
+blue-1,600,00:04:00,06:00:00
+blue-1,1800,06:00:00,09:00:00
+blue-2,900,9:00:00,20:00:00

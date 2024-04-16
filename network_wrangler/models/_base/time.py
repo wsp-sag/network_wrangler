@@ -1,11 +1,6 @@
-
-
-from datetime import datetime,time
+from datetime import datetime, time, timedelta
 from typing import Annotated, List, Any, Union
 
-from pydantic import Field
-from datetime import time
-from typing import Annotated, List, Union
 from pydantic import Field
 
 
@@ -17,13 +12,17 @@ class TimespanFormatError(Exception):
     pass
 
 
-# fixme
 TimeString = Annotated[
-    str, Field(description="A time string in the format HH:MM or HH:MM:SS")
+    str,
+    Field(
+        description="A time string in the format HH:MM or HH:MM:SS",
+        pattern=r"^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$",
+    ),
 ]
+
 TimespanString = Annotated[
-    List[TimeString], 
-    Field(min_length=2, max_length=2,pattern="^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$")
+    List[TimeString],
+    Field(min_length=2, max_length=2),
 ]
 
 TimeType = Union[time, str, int]
@@ -40,13 +39,11 @@ def dt_overlaps(timespans: List[List[datetime]]) -> bool:
     return False
 
 
-def dt_overlap_duration(
-    timedelta1: datetime.timedelta, timedelta2: datetime.timedelta
-) -> datetime.timedelta:
+def dt_overlap_duration(timedelta1: timedelta, timedelta2: timedelta) -> timedelta:
     """Check if two timespans overlap and return the amount of overlap."""
     overlap_start = max(timedelta1.start_time, timedelta2.start_time)
     overlap_end = min(timedelta1.end_time, timedelta2.end_time)
-    overlap_duration = max(overlap_end - overlap_start, datetime.timedelta(0))
+    overlap_duration = max(overlap_end - overlap_start, timedelta(0))
     return overlap_duration
 
 
@@ -93,14 +90,14 @@ def _str_to_time(time: str) -> time:
         raise TimeFormatError("time strings must be in the format HH:MM or HH:MM:SS")
 
 
-def _duration_dt(start_time_dt: time, end_time_dt: time) -> datetime.timedelta:
+def _duration_dt(start_time_dt: time, end_time_dt: time) -> timedelta:
     """Returns a datetime.timedelta object representing the duration of the timespan.
 
     If end_time is less than start_time, the duration will assume that it crosses over
     midnight.
     """
     if end_time_dt < start_time_dt:
-        return datetime.timedelta(
+        return timedelta(
             hours=24 - start_time_dt.hour + end_time_dt.hour,
             minutes=end_time_dt.minute - start_time_dt.minute,
             seconds=end_time_dt.second - start_time_dt.second,

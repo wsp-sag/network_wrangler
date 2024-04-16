@@ -8,7 +8,7 @@ This module contains pydantic data models for GTFS records.
 import pydantic
 from networks.gtfs import StopTimeRecord
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def process_table(stoptime: StopTimeRecord):
 
     # Perform operations on the table
@@ -36,18 +36,56 @@ print(stop)
 from typing import Optional
 
 from pydantic import BaseModel
+from pydantic.networks import HttpUrl
 
 from .._base.geo import Longitude, Latitude
-from .._base.types import Timezone, Language, HttpUrl
+
 from .types import (
-    AgencyID, AgencyName, AgencyPhone, AgencyFareUrl, AgencyEmail,
-    StopID, StopCode, StopName, TTSStopName, StopDesc, ZoneID, StopUrl,
-    LocationType, ParentStation, WheelchairAccessible,
-    RouteID, RouteType, RouteShortName, RouteLongName, RouteDesc, RouteUrl, RouteColor, 
-    RouteTextColor, ShapeID, ShapePtSequence, ShapeDistTraveled,
-    TripID, StartTime, EndTime, HeadwaySecs,
-    ArrivalTime, DepartureTime, StopSequence, StopHeadsign, PickupType, DropoffType, Timepoint,
-    ServiceID, TripHeadsign, TripShortName, DirectionID, BlockID, BikesAllowed
+    AgencyID,
+    AgencyName,
+    AgencyPhone,
+    AgencyFareUrl,
+    AgencyEmail,
+    StopID,
+    StopCode,
+    StopName,
+    TTSStopName,
+    StopDesc,
+    ZoneID,
+    StopUrl,
+    LocationType,
+    ParentStation,
+    WheelchairAccessible,
+    RouteID,
+    RouteType,
+    RouteShortName,
+    RouteLongName,
+    RouteDesc,
+    RouteUrl,
+    RouteColor,
+    RouteTextColor,
+    ShapeID,
+    Language,
+    ShapePtSequence,
+    ShapeDistTraveled,
+    TripID,
+    Timezone,
+    StartTime,
+    EndTime,
+    HeadwaySecs,
+    ArrivalTime,
+    DepartureTime,
+    StopSequence,
+    StopHeadsign,
+    PickupType,
+    DropoffType,
+    Timepoint,
+    ServiceID,
+    TripHeadsign,
+    TripShortName,
+    DirectionID,
+    BlockID,
+    BikesAllowed,
 )
 
 
@@ -79,12 +117,17 @@ class StopRecord(BaseModel):
     """
 
     stop_id: StopID
+    stop_lat: Latitude
+    stop_lon: Longitude
+
+    # wrangler specific
+    trip_id: TripID
+
+    # Optional
     stop_code: Optional[StopCode]
     stop_name: Optional[StopName]
     tts_stop_name: Optional[TTSStopName]
     stop_desc: Optional[StopDesc]
-    stop_lat: Latitude
-    stop_lon: Longitude
     zone_id: Optional[ZoneID]
     stop_url: Optional[StopUrl]
     location_type: Optional[LocationType]
@@ -103,6 +146,8 @@ class RouteRecord(BaseModel):
     route_type: RouteType
     route_short_name: RouteShortName
     route_long_name: RouteLongName
+
+    # Optional
     route_desc: Optional[RouteDesc]
     route_url: Optional[RouteUrl]
     route_color: Optional[RouteColor]
@@ -118,6 +163,11 @@ class ShapeRecord(BaseModel):
     shape_pt_lat: Latitude
     shape_pt_lon: Longitude
     shape_pt_sequence: ShapePtSequence
+
+    # Wrangler Specific
+    shape_model_node_id: int
+
+    # Optional
     shape_dist_traveled: Optional[ShapeDistTraveled]
 
 
@@ -131,6 +181,11 @@ class StopTimeRecord(BaseModel):
     departure_time: DepartureTime
     stop_id: StopID
     stop_sequence: StopSequence
+
+    # Wrangler Specific
+    model_node_id: int
+
+    # Optional
     stop_headsign: Optional[StopHeadsign]
     pickup_type: Optional[PickupType]
     drop_off_type: Optional[DropoffType]

@@ -1,5 +1,5 @@
-from types import *
-from records import *
+from .types import *
+from .records import *
 
 
 class MockPaModel:
@@ -9,14 +9,16 @@ class MockPaModel:
 
 
 try:
-    from gtfs import GTFSModel
-    from tables import (
+    from .tables import (
         StopsTable,
         RoutesTable,
         TripsTable,
         StopTimesTable,
         ShapesTable,
         FrequenciesTable,
+        WranglerShapesTable,
+        WranglerStopsTable,
+        WranglerStopTimesTable,
     )
 except ImportError:
     # Mock the data models
@@ -26,12 +28,14 @@ except ImportError:
     log.warning("Pandera is not installed, using mock models.")
     globals().update(
         {
-            "GTFSModel": MockPaModel,
             "StopsTable": MockPaModel,
             "RoutesTable": MockPaModel,
             "TripsTable": MockPaModel,
             "StopTimesTable": MockPaModel,
             "ShapesTable": MockPaModel,
             "FrequenciesTable": MockPaModel,
+            "WranglerStopTimesTable": MockPaModel,
+            "WranglerStopsTable": MockPaModel,
+            "WranglerShapesTable": MockPaModel,
         }
     )

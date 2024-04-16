@@ -1,24 +1,25 @@
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Annotated
-from pydantic import Field, EmailStr, HttpUrl
+from pydantic import Field, HttpUrl
+
 
 from .._base.time import TimeString
 
 
-class BikesAllowed(Enum):
+class BikesAllowed(IntEnum):
     "Indicates whether bicycles are allowed."
     NO_INFORMATION = 0
     ALLOWED = 1
     NOT_ALLOWED = 2
 
 
-class DirectionID(Enum):
+class DirectionID(IntEnum):
     "Indicates the direction of travel for a trip."
     OUTBOUND = 0
     INBOUND = 1
 
 
-class LocationType(Enum):
+class LocationType(IntEnum):
     """Indicates the type of node the stop record represents.
 
     Fully documentation: https://gtfs.org/schedule/reference/#stopstxt
@@ -31,14 +32,14 @@ class LocationType(Enum):
     BOARDING_AREA = 4
 
 
-class PickupDropoffType(Enum):
+class PickupDropoffType(IntEnum):
     REGULAR = 0
     NONE = 1
     PHONE_AGENCY = 2
     COORDINATE_WITH_DRIVER = 3
 
 
-class RouteType(Enum):
+class RouteType(IntEnum):
     TRAM = 0
     SUBWAY = 1
     RAIL = 2
@@ -51,12 +52,12 @@ class RouteType(Enum):
     MONORAIL = 12
 
 
-class TimepointType(Enum):
+class TimepointType(IntEnum):
     APPROXIMATE = 0
     EXACT = 1
 
 
-class WheelchairAccessible(Enum):
+class WheelchairAccessible(IntEnum):
     "Indicates whether the trip is wheelchair accessible."
     NO_INFORMATION = 0
     POSSIBLE = 1
@@ -73,14 +74,19 @@ ServiceID = Annotated[
 ]
 TripID = Annotated[str, Field(None, description="Uniquely identifies a trip.")]
 StopID = Annotated[str, Field(None, description="Uniquely identifies a stop.")]
-AgencyID = Annotated[str, Field(None, description="Agency or brand for the specified route.")]
+AgencyID = Annotated[
+    str, Field(None, description="Agency or brand for the specified route.")
+]
 ShapeID = Annotated[str, Field(None, description="Uniquely identifies a shape.")]
 ZoneID = Annotated[str, Field("", description="The fare zone for a stop ID.")]
 
 AgencyName = Annotated[str, Field("", description="Name of the transit agency.")]
 
 AgencyPhone = Annotated[
-    str, Field(None, description="A single voice telephone number for the specified agency.")
+    str,
+    Field(
+        None, description="A single voice telephone number for the specified agency."
+    ),
 ]
 AgencyFareUrl = Annotated[
     HttpUrl,
@@ -90,7 +96,7 @@ AgencyFareUrl = Annotated[
     ),
 ]
 AgencyEmail = Annotated[
-    EmailStr,
+    str,
     Field(
         None,
         description="Single valid email address actively monitored by the agency’s customer service department.",
@@ -99,16 +105,25 @@ AgencyEmail = Annotated[
 
 ArrivalTime = Annotated[
     TimeString,
-    Field("", description="Arrival time at a specific stop for a specific trip on a route."),
+    Field(
+        "",
+        description="Arrival time at a specific stop for a specific trip on a route.",
+    ),
 ]
 DepartureTime = Annotated[
     TimeString,
-    Field("", description="Departure time from a specific stop for a specific trip on a route."),
+    Field(
+        "",
+        description="Departure time from a specific stop for a specific trip on a route.",
+    ),
 ]
-DropoffType = Annotated[PickupDropoffType, Field(0, description="Indicates dropoff method.")]
+DropoffType = Annotated[
+    PickupDropoffType, Field(0, description="Indicates dropoff method.")
+]
 
 BlockID = Annotated[
-    str, Field(None, description="Uniquely identifies the block to which the trip belongs.")
+    str,
+    Field(None, description="Uniquely identifies the block to which the trip belongs."),
 ]
 HeadwaySecs = Annotated[
     int,
@@ -126,7 +141,9 @@ ParentStation = Annotated[
         description="For stops that are physically located inside stations, the parent_station field identifies the station associated with the stop using the Stop_ID.",
     ),
 ]
-PickupType = Annotated[PickupDropoffType, Field(0, description="Indicates pickup method.")]
+PickupType = Annotated[
+    PickupDropoffType, Field(0, description="Indicates pickup method.")
+]
 
 RouteColor = Annotated[str, Field("", description="Color that corresponds to a route.")]
 RouteDesc = Annotated[str, Field("", description="Description of a route.")]
@@ -135,7 +152,8 @@ RouteShortName = Annotated[str, Field("", description="Short name of a route.")]
 RouteTextColor = Annotated[
     str,
     Field(
-        "", description="Legible color to use for text drawn against a background of route_color."
+        "",
+        description="Legible color to use for text drawn against a background of route_color.",
     ),
 ]
 RouteUrl = Annotated[
@@ -172,7 +190,8 @@ EndTime = Annotated[
 StopCode = Annotated[
     str,
     Field(
-        "", description="Short text or a number that uniquely identifies the stop for passengers."
+        "",
+        description="Short text or a number that uniquely identifies the stop for passengers.",
     ),
 ]
 StopDesc = Annotated[str, Field("", description="Description of a stop.")]
@@ -192,16 +211,19 @@ StopSequence = Annotated[
         description="Order of stops for a particular trip. The values for stop_sequence must be non-negative and increase along the trip.",
     ),
 ]
-StopUrl = Annotated[HttpUrl, Field("", description="URL of a web page about a particular stop.")]
+StopUrl = Annotated[
+    HttpUrl, Field("", description="URL of a web page about a particular stop.")
+]
 
 
 Timepoint = Annotated[
     TimepointType,
     Field(
-        1, description="Exact or approximate time that a vehicle arrives at or departs from a stop."
+        1,
+        description="Exact or approximate time that a vehicle arrives at or departs from a stop.",
     ),
 ]
-Timezone = str = Annotated[
+Timezone = Annotated[
     str,
     Field(
         "",
@@ -209,7 +231,11 @@ Timezone = str = Annotated[
     ),
 ]
 TTSStopName = Annotated[
-    str, Field("", description="Name of a stop or station in a text-to-speech compatible format.")
+    str,
+    Field(
+        "",
+        description="Name of a stop or station in a text-to-speech compatible format.",
+    ),
 ]
 
 TripHeadsign = Annotated[
@@ -219,4 +245,7 @@ TripHeadsign = Annotated[
         description="Text that appears on signage identifying the trip's destination to passengers.",
     ),
 ]
-TripShortName = Annotated[str, Field("", description="Publicly visible short name of a trip.")]
+
+TripShortName = Annotated[
+    str, Field("", description="Publicly visible short name of a trip.")
+]

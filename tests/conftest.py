@@ -164,9 +164,11 @@ def small_net(small_ex_dir):
     return net
 
 
-@pytest.fixture(scope="session")
-def test_dir():
-    return Path(__file__).resolve().parent
+@pytest.fixture(scope="module")
+def small_transit_net(small_ex_dir):
+    from network_wrangler import load_transit
+
+    return load_transit(small_ex_dir)
 
 
 @pytest.fixture(scope="session")

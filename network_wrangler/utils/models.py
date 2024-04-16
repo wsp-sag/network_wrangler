@@ -2,6 +2,9 @@ import logging
 
 from typing import Annotated, Any, ClassVar, Dict, List, Union
 
+import pandas as pd
+
+from pandera import DataFrameModel
 from pydantic import BaseModel, ConfigDict, model_validator, Field, ValidationError
 
 log = logging.getLogger(__name__)
@@ -95,3 +98,15 @@ class RecordModel(BaseModel):
         ):
             return values
         raise ValidationError(f"{cls} should have at least one of {cls.require_any_of}")
+
+
+def empty_df(model: DataFrameModel) -> pd.DataFrame:
+    """Create an empty DataFrame with the specified columns.
+    Args:
+        schema (BaseModel): A pandera schema to create an empty DataFrame from.
+    Returns:
+        pd.DataFrame: An empty DataFrame that validates to the specified model.
+    """
+    schema = model.to_schema()
+    data = {col: [] for col in schema.columns.keys()}
+    return pd.DataFrame(data)
