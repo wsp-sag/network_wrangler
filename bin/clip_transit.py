@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Usage: python clip_transit.py <network_path> <boundary> <out_dir> [--out_prefix <prefix>] [--out_format <format>]
 
@@ -28,7 +29,8 @@ from network_wrangler import WranglerLogger
 if __name__ == "__main__":
     try:
         parser = argparse.ArgumentParser(
-            description="Trim a transit network based on a given boundary."
+            description="Trim a transit network based on a given boundary.",
+            usage="%(prog)s [options] <network_path> <boundary> <out_dir>"
         )
         parser.add_argument(
             "network_path",

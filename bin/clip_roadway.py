@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Usage: python clip_roadway.py <network_path> <boundary> <out_dir> [--out_prefix <prefix>] [--out_format <format>]
 
@@ -77,7 +78,7 @@ if __name__ == "__main__":
             clipped_net,
             prefix=args.out_prefix,
             out_dir=args.out_dir,
-            format=args.out_format,
+            file_format=args.out_format,
             overwrite=args.o,
         )
     except Exception as e:

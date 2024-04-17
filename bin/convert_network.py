@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Usage: python convert_network.py <input_path> <network_type> <output_format> <out_dir> [--input_suffix <input_suffix>] [--out_prefix <prefix>] [-o]
 
