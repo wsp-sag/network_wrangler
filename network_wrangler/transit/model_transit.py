@@ -73,8 +73,3 @@ class ModelTransit:
             },
         )
         return net
-
-    # def write()
-
-
-# def shift_transit_to_managed_lanes(transit_net,roadway_net) -> ModelTransit:

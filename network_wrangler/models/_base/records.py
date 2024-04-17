@@ -1,7 +1,6 @@
 from typing import Any, ClassVar, Dict, List, Union
 
 from pydantic import BaseModel, ConfigDict, model_validator
-from pydantic import ValidationError
 from .types import AnyOf, OneOf
 
 
@@ -23,17 +22,16 @@ class RecordModel(BaseModel):
         require_one_of (ClassVar[OneOf]): Class variable specifying fields that require exactly
             one of them to be present.
     """
+
     model_config = ConfigDict(
         extra="forbid",
         validate_assignment=True,
         exclude_none=True,
-        protected_namespaces=()
+        protected_namespaces=(),
     )
     require_any_of: ClassVar[AnyOf] = []
     require_one_of: ClassVar[OneOf] = []
     _examples: ClassVar = []
-
-
 
     @staticmethod
     def _check_field_exists(field: Union[str, List[str]], values: Dict[str, Any]):

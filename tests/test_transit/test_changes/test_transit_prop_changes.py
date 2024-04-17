@@ -37,6 +37,7 @@ def test_force_invalid_field_value(request, small_transit_net):
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
+
 def test_valid_field_value_set(request, small_transit_net):
     """Checks that setting a valid field value will pass"""
     WranglerLogger.info(f"--Starting: {request.node.name}")

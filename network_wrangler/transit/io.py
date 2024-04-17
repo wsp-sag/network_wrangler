@@ -5,7 +5,7 @@ import pandas as pd
 import geopandas as gpd
 
 from .feed import Feed
-from ..transitnetwork import TransitNetwork
+from .network import TransitNetwork
 from ..models.gtfs.gtfs import GtfsModel
 from ..models._base.db import RequiredTableError
 from ..logger import WranglerLogger
@@ -28,7 +28,7 @@ def _feed_path_ref(path: Path) -> Path:
 
 def load_feed_from_path(feed_path: Union[Path, str], suffix: str = "txt") -> Feed:
     """
-    Create a TransitNetwork object from the path to a GTFS transit feed.
+    Create a Feed object from the path to a GTFS transit feed.
 
     Args:
         feed_path (Union[Path, str]): The path to the GTFS transit feed.

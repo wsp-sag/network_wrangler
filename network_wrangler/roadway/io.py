@@ -4,7 +4,7 @@ from typing import Union
 from .nodes import NodesParams, read_nodes, write_nodes
 from .links import LinksParams, read_links, write_links
 from .shapes import ShapesParams, ShapesSchema, read_shapes, write_shapes
-from ..roadwaynetwork import RoadwayNetwork
+from .network import RoadwayNetwork
 from ..utils.models import empty_df
 
 DEFAULT_CRS = 4326
@@ -109,7 +109,7 @@ def write_roadway(
     net,
     out_dir: Union[Path, str] = ".",
     prefix: str = "",
-    format: str = "geojson",
+    file_format: str = "geojson",
     overwrite: bool = True,
     true_shape: bool = False,
 ) -> None:
@@ -119,7 +119,7 @@ def write_roadway(
     args:
         out_dir: the path were the output will be saved
         prefix: the name prefix of the roadway files that will be generated
-        format: the format of the output files. Defaults to "geojson"
+        file_format: the format of the output files. Defaults to "geojson"
         overwrite: if True, will overwrite the files if they already exist. Defaults to True
         true_shape: if True, will write the true shape of the links as found from shapes.
             Defaults to False
@@ -143,11 +143,11 @@ def write_roadway(
         net.links_df,
         out_dir=out_dir,
         prefix=prefix,
-        format=format,
+        file_format=file_format,
         overwrite=overwrite,
         include_geometry=true_shape,
     )
-    write_nodes(net.nodes_df, out_dir, prefix, format, overwrite)
+    write_nodes(net.nodes_df, out_dir, prefix, file_format, overwrite)
 
     if not true_shape:
-        write_shapes(net.shapes_df, out_dir, prefix, format, overwrite)
+        write_shapes(net.shapes_df, out_dir, prefix, file_format, overwrite)

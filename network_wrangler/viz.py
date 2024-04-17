@@ -4,8 +4,8 @@ from typing import Union
 
 import geopandas as gpd
 
-from .roadwaynetwork import RoadwayNetwork
-from .transitnetwork import TransitNetwork
+from .roadway.network import RoadwayNetwork
+from .transit.network import TransitNetwork
 from .logger import WranglerLogger
 
 

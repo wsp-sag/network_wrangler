@@ -5,7 +5,7 @@ import subprocess
 import pytest
 
 from projectcard import read_card, write_card, ProjectCard
-from network_wrangler import Scenario
+from network_wrangler.scenario import Scenario
 from network_wrangler.scenario import (
     ScenarioConflictError,
     ScenarioCorequisiteError,

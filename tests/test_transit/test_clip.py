@@ -57,11 +57,11 @@ def test_clip_transit_boundary_geocode(stpaul_transit_net, test_dir, stpaul_net)
     assert len(clipped_network.feed.routes) > 0
 
     # TODO Add assertions for specific stops and trips
-    #TRIP_IN = "JUN19-MVS-BUS-Weekday-01"
-    #TRIP_OUT = 1
-    #STOP_NODE_IN = 100781
-    #STOP_NODE_OUT = 1
-    #assert TRIP_IN in clipped_network.feed.trips.trip_id.values
+    # TRIP_IN = "JUN19-MVS-BUS-Weekday-01"
+    # TRIP_OUT = 1
+    # STOP_NODE_IN = 100781
+    # STOP_NODE_OUT = 1
+    # assert TRIP_IN in clipped_network.feed.trips.trip_id.values
     # assert TRIP_OUT not in clipped_network.feed.trips.values
     # assert STOP_NODE_IN in clipped_network.feed.stops.model_node_id.values
     # assert STOP_OUT not in clipped_network.feed.stops.values
@@ -84,7 +84,7 @@ def test_clip_transit_to_roadway(stpaul_transit_net, test_dir, stpaul_net):
 
     WranglerLogger.debug("----CLIP TRANSIT TO ROADWAY---- ")
     clipped_net_to_rd = clip_transit(stpaul_transit_net, roadway_net=clipped_rd)
-    # this method will also check tha the resulting transit network is consistent with 
+    # this method will also check tha the resulting transit network is consistent with
     # the roadway networks
 
     # make sure not empty

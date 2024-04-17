@@ -11,7 +11,9 @@ def point_seq_to_links(
 ) -> "pd.DataFrame":
     point_seq_df = point_seq_df.sort_values(by=[id_field, seq_field])
 
-    links = point_seq_df.add_suffix(f"_{from_field}").join(point_seq_df.shift(-1).add_suffix(f"_{to_field}"))
+    links = point_seq_df.add_suffix(f"_{from_field}").join(
+        point_seq_df.shift(-1).add_suffix(f"_{to_field}")
+    )
 
     links = links[links[f"{id_field}_{to_field}"] == links[f"{id_field}_{from_field}"]]
 

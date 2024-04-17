@@ -242,7 +242,7 @@ class Subnet:
         WranglerLogger.debug(f"_inbound_links_df links: {len( _inbound_links_df)}")
 
         # find links where A and B nodes are connected to subnet but not in subnet
-        _bothABconnected_links_df = _modal_links_df.loc[
+        _both_AB_connected_links_df = _modal_links_df.loc[
             _modal_links_df[self.net.links_df.params.to_node].isin(self.subnet_nodes)
             & _modal_links_df[self.net.links_df.params.from_node].isin(
                 self.subnet_nodes
@@ -251,12 +251,12 @@ class Subnet:
         ]
 
         WranglerLogger.debug(
-            f"{len( _bothABconnected_links_df)} links where both A and B are connected to subnet\
+            f"{len( _both_AB_connected_links_df)} links where both A and B are connected to subnet\
              but aren't in subnet."
         )
 
         _add_links_df = pd.concat(
-            [_bothABconnected_links_df, _inbound_links_df, _outbound_links_df]
+            [_both_AB_connected_links_df, _inbound_links_df, _outbound_links_df]
         )
 
         _add_links_df["i"] = self._i

@@ -6,7 +6,12 @@ from shapely import LineString
 from ..logger import WranglerLogger
 
 from .feed import unique_shape_links, unique_stop_time_links
-from .feed import WranglerShapesTable, WranglerStopTimesTable, WranglerStopsTable, TripsTable
+from .feed import (
+    WranglerShapesTable,
+    WranglerStopTimesTable,
+    WranglerStopsTable,
+    TripsTable,
+)
 
 
 def to_points_gdf(
@@ -91,7 +96,7 @@ def shapes_to_trip_shapes_gdf(
     shapes: "WranglerShapesTable",
     # trips: TripsTable,
     ref_nodes_df: gpd.GeoDataFrame = None,
-    crs: int = 4326
+    crs: int = 4326,
 ) -> gpd.GeoDataFrame:
     """
     Geodataframe with one polyline shape per shape_id.
@@ -151,7 +156,7 @@ def update_point_geometry(
         ref_df[[id_field, lon_field, lat_field]],
         id_field,
         properties=[lat_field, lon_field],
-        source_must_update_all=False
+        source_must_update_all=False,
     )
     return updated_df
 
@@ -222,7 +227,7 @@ def stop_times_to_stop_time_points_gdf(
     Args:
         stop_times (WranglerStopTimesTable): Feed stop times table.
         stops (WranglerStopsTable): Feed stops table.
-        ref_nodes_df (pd.DataFrame, optional): If specified, will use geometry from these nodes.  
+        ref_nodes_df (pd.DataFrame, optional): If specified, will use geometry from these nodes.
             Otherwise, will use geometry in shapes file. Defaults to None.
     """
     if ref_nodes_df is not None:
@@ -248,7 +253,7 @@ def stop_times_to_stop_time_links_gdf(
     stops: "WranglerStopsTable",
     ref_nodes_df: pd.DataFrame = None,
     from_field: str = "A",
-    to_field: str = "B"
+    to_field: str = "B",
 ) -> gpd.GeoDataFrame:
     """Stop times geodataframe as links using geometry from stops.txt or optionally another df.
 

@@ -9,8 +9,8 @@ import pytest
 import pandas as pd
 
 from projectcard import read_card
-from network_wrangler import RoadwayNetwork
-from network_wrangler import TransitNetwork
+from network_wrangler.roadway.network import RoadwayNetwork
+from network_wrangler.transit.network import TransitNetwork
 from network_wrangler import WranglerLogger
 from network_wrangler.transit.feed import shapes_for_trip_id, stop_times_for_trip_id
 

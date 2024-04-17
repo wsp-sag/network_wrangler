@@ -10,7 +10,9 @@ from ..models.gtfs.tables import (
 
 
 def gtfs_to_wrangler_stop_times(
-    in_stop_times: StopTimesTable, stops: WranglerStopsTable = None, **kwargs,
+    in_stop_times: StopTimesTable,
+    stops: WranglerStopsTable = None,
+    **kwargs,
 ) -> WranglerStopTimesTable:
     WranglerLogger.debug("Converting GTFS stop_times to Wrangler stop_times")
     try:

@@ -23,6 +23,6 @@ def convert_roadway(
         net,
         prefix=out_prefix,
         out_dir=out_dir,
-        format=output_format,
+        file_format=output_format,
         overwrite=overwrite,
     )

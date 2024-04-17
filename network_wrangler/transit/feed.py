@@ -365,7 +365,7 @@ def node_is_stop(
     trip_id: str,
     pickup_dropoff: PickupDropoffAvailability = "either",
 ) -> Union[bool, list[bool]]:
-    """Returns a boolean indicating if a node (or a list of nodes) is (are) stops for a given trip_id.
+    """Returns boolean indicating if a (or list of) node(s)) is (are) stops for a given trip_id.
 
     args:
         feed: Feed object
@@ -437,15 +437,15 @@ def unique_shape_links(
     # WranglerLogger.debug(f"Shape links: \n {shape_links[['shape_id', from_field, to_field]]}")
 
     _agg_dict = {"shape_id": list}
-    _opt_fields = [f"shape_pt_{v}_{t}" for v in ["lat", "lon"] for t in [from_field, to_field]]
+    _opt_fields = [
+        f"shape_pt_{v}_{t}" for v in ["lat", "lon"] for t in [from_field, to_field]
+    ]
     for f in _opt_fields:
         if f in shape_links:
             _agg_dict[f] = "first"
 
     unique_shape_links = (
-        shape_links.groupby([from_field, to_field])
-        .agg(_agg_dict)
-        .reset_index()
+        shape_links.groupby([from_field, to_field]).agg(_agg_dict).reset_index()
     )
     return unique_shape_links
 
@@ -680,21 +680,30 @@ def filter_frequencies_to_trips(
 def shape_links_to_segments(shape_links) -> pd.DataFrame:
     """Convert shape_links to segments by shape_id with segments of continuous shape_pt_sequence.
 
-    Returns: DataFrame with shape_id, segment_id, segment_start_shape_pt_seq, segment_end_shape_pt_seq
+    Returns: DataFrame with shape_id, segment_id, segment_start_shape_pt_seq,
+        segment_end_shape_pt_seq
     """
 
-    shape_links['gap'] = shape_links.groupby('shape_id')['shape_pt_sequence_A'].diff().gt(1)
-    shape_links['segment_id'] = shape_links.groupby('shape_id')['gap'].cumsum()
+    shape_links["gap"] = (
+        shape_links.groupby("shape_id")["shape_pt_sequence_A"].diff().gt(1)
+    )
+    shape_links["segment_id"] = shape_links.groupby("shape_id")["gap"].cumsum()
 
     # Define segment starts and ends
-    segment_definitions = shape_links.groupby(['shape_id', 'segment_id']).agg(
-        segment_start_shape_pt_seq=('shape_pt_sequence_A', 'min'),
-        segment_end_shape_pt_seq=('shape_pt_sequence_B', 'max')
-    ).reset_index()
+    segment_definitions = (
+        shape_links.groupby(["shape_id", "segment_id"])
+        .agg(
+            segment_start_shape_pt_seq=("shape_pt_sequence_A", "min"),
+            segment_end_shape_pt_seq=("shape_pt_sequence_B", "max"),
+        )
+        .reset_index()
+    )
 
     # Optionally calculate segment lengths for further uses
-    segment_definitions['segment_length'] = (
-        segment_definitions['segment_end_shape_pt_seq'] - segment_definitions['segment_start_shape_pt_seq'] + 1
+    segment_definitions["segment_length"] = (
+        segment_definitions["segment_end_shape_pt_seq"]
+        - segment_definitions["segment_start_shape_pt_seq"]
+        + 1
     )
 
     return segment_definitions
@@ -710,12 +719,14 @@ def shape_links_to_longest_shape_segments(shape_links) -> pd.DataFrame:
         DataFrame with shape_id, segment_id, segment_start_shape_pt_seq, segment_end_shape_pt_seq
     """
     segments = shape_links_to_segments(shape_links)
-    idx = segments.groupby('shape_id')['segment_length'].idxmax()
+    idx = segments.groupby("shape_id")["segment_length"].idxmax()
     longest_segments = segments.loc[idx]
     return longest_segments
 
 
-def filter_shapes_to_segments(shapes: WranglerShapesTable, segments: pd.DataFrame) -> WranglerShapesTable:
+def filter_shapes_to_segments(
+    shapes: WranglerShapesTable, segments: pd.DataFrame
+) -> WranglerShapesTable:
     """Filter shapes dataframe to records associated with segments dataframe.
 
     Args:
@@ -726,22 +737,34 @@ def filter_shapes_to_segments(shapes: WranglerShapesTable, segments: pd.DataFram
     Returns:
         filtered shapes dataframe
     """
-    shapes_w_segs = shapes.merge(segments, on='shape_id', how="left")
+    shapes_w_segs = shapes.merge(segments, on="shape_id", how="left")
 
     # Retain only those points within the segment sequences
     filtered_shapes = shapes_w_segs[
-        (shapes_w_segs['shape_pt_sequence'] >= shapes_w_segs['segment_start_shape_pt_seq']) &
-        (shapes_w_segs['shape_pt_sequence'] <= shapes_w_segs['segment_end_shape_pt_seq'])
+        (
+            shapes_w_segs["shape_pt_sequence"]
+            >= shapes_w_segs["segment_start_shape_pt_seq"]
+        )
+        & (
+            shapes_w_segs["shape_pt_sequence"]
+            <= shapes_w_segs["segment_end_shape_pt_seq"]
+        )
     ]
 
-    drop_cols = ['segment_id', 'segment_start_shape_pt_seq', 'segment_end_shape_pt_seq', 'segment_length']
+    drop_cols = [
+        "segment_id",
+        "segment_start_shape_pt_seq",
+        "segment_end_shape_pt_seq",
+        "segment_length",
+    ]
     filtered_shapes = filtered_shapes.drop(columns=drop_cols)
 
     return filtered_shapes
 
 
-def filter_shapes_to_links(shapes: WranglerShapesTable, links_df: pd.DataFrame
-                           ) -> WranglerShapesTable:
+def filter_shapes_to_links(
+    shapes: WranglerShapesTable, links_df: pd.DataFrame
+) -> WranglerShapesTable:
     """Filter shapes dataframe to records associated with links dataframe.
 
     EX:
@@ -823,8 +846,10 @@ def filter_shapes_to_links(shapes: WranglerShapesTable, links_df: pd.DataFrame
         {"A": 171268, "B": 171269},
         {"A": 171270, "B": 57484},
     ]
-    WranglerLogger.debug(f"DEBUG AB:\n\
-                         {shape_links_w_links[shape_links_w_links[['A', 'B']].isin(_debug_AB).all(axis=1)]}")
+    WranglerLogger.debug(
+        f"DEBUG AB:\n\
+        {shape_links_w_links[shape_links_w_links[['A', 'B']].isin(_debug_AB).all(axis=1)]}"
+    )
 
     """
     Find largest segment of each shape_id that is in the links
@@ -867,9 +892,7 @@ def merge_shapes_to_stop_times(
         stop_times dataframe with shape_id and shape_pt_sequence added.
     """
     stop_times_w_shape_id = stop_times.merge(
-        trips[["trip_id", "shape_id"]],
-        on="trip_id",
-        how="left"
+        trips[["trip_id", "shape_id"]], on="trip_id", how="left"
     )
 
     stop_times_w_shapes = stop_times_w_shape_id.merge(
@@ -882,43 +905,51 @@ def merge_shapes_to_stop_times(
     return stop_times_w_shapes
 
 
-def filter_stop_times_to_longest_segments(stop_times: WranglerStopTimesTable) -> pd.DataFrame:
+def filter_stop_times_to_longest_segments(
+    stop_times: WranglerStopTimesTable,
+) -> pd.DataFrame:
     """Find the longest segment of each trip_id that is in the stop_times.
 
     Segment ends defined based on interruptions in `stop_sequence`.
     """
-    stop_times = stop_times.sort_values(by=['trip_id', 'stop_sequence'])
+    stop_times = stop_times.sort_values(by=["trip_id", "stop_sequence"])
 
-    stop_times['prev_stop_sequence'] = stop_times.groupby('trip_id')['stop_sequence'].shift(1)
-    stop_times['gap'] = (stop_times['stop_sequence'] - stop_times['prev_stop_sequence']).ne(1) | stop_times['prev_stop_sequence'].isna()
+    stop_times["prev_stop_sequence"] = stop_times.groupby("trip_id")[
+        "stop_sequence"
+    ].shift(1)
+    stop_times["gap"] = (
+        stop_times["stop_sequence"] - stop_times["prev_stop_sequence"]
+    ).ne(1) | stop_times["prev_stop_sequence"].isna()
 
-    stop_times['segment_id'] = stop_times['gap'].cumsum()
+    stop_times["segment_id"] = stop_times["gap"].cumsum()
     # WranglerLogger.debug(f"stop_times with segment_id:\n{stop_times}")
 
     # Calculate the length of each segment
-    segment_lengths = stop_times.groupby(['trip_id', 'segment_id']).size().reset_index(name='segment_length')
+    segment_lengths = (
+        stop_times.groupby(["trip_id", "segment_id"])
+        .size()
+        .reset_index(name="segment_length")
+    )
 
     # Identify the longest segment for each trip
-    idx = segment_lengths.groupby('trip_id')['segment_length'].idxmax()
+    idx = segment_lengths.groupby("trip_id")["segment_length"].idxmax()
     longest_segments = segment_lengths.loc[idx]
 
     # Merge longest segment info back to stop_times
     stop_times = stop_times.merge(
-        longest_segments[['trip_id', 'segment_id']],
-        on=['trip_id', 'segment_id'],
-        how='inner'
+        longest_segments[["trip_id", "segment_id"]],
+        on=["trip_id", "segment_id"],
+        how="inner",
     )
 
     # Drop temporary columns used for calculations
-    stop_times.drop(columns=['prev_stop_sequence', 'gap', 'segment_id'], inplace=True)
+    stop_times.drop(columns=["prev_stop_sequence", "gap", "segment_id"], inplace=True)
     # WranglerLogger.debug(f"stop_timesw/longest segments:\n{stop_times}")
     return stop_times
 
 
 def filter_stop_times_to_shapes(
-    stop_times: WranglerStopTimesTable,
-    shapes: WranglerShapesTable,
-    trips: TripsTable
+    stop_times: WranglerStopTimesTable, shapes: WranglerShapesTable, trips: TripsTable
 ) -> WranglerStopTimesTable:
     """Filter stop_times dataframe to records associated with shapes dataframe.
 
@@ -989,12 +1020,14 @@ def filter_stop_times_to_shapes(
     *t2          2                  t3       3               s2          2
 
     """
-    filtered_stop_times = stop_times_w_shapes[stop_times_w_shapes["shape_pt_sequence"].notna()]
+    filtered_stop_times = stop_times_w_shapes[
+        stop_times_w_shapes["shape_pt_sequence"].notna()
+    ]
     # WranglerLogger.debug(f"filtered_stop_times:\n{filtered_stop_times}")
 
     # Filter out any stop_times the shape_pt_sequence is not ascending
-    valid_stop_times = filtered_stop_times.groupby('trip_id').filter(
-        lambda x: x['shape_pt_sequence'].is_monotonic_increasing
+    valid_stop_times = filtered_stop_times.groupby("trip_id").filter(
+        lambda x: x["shape_pt_sequence"].is_monotonic_increasing
     )
     # WranglerLogger.debug(f"valid_stop_times:\n{valid_stop_times}")
 

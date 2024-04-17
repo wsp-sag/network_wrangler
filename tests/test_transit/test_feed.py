@@ -186,6 +186,7 @@ def test_stop_times_for_trip_id(request, small_transit_net):
     pd.testing.assert_frame_equal(result, expected)
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
+
 def test_shape_id_for_trip_id(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     trip_id = "blue-1"
@@ -193,6 +194,7 @@ def test_shape_id_for_trip_id(request, small_transit_net):
     expected = "shape1"
     assert result == expected
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
 
 def test_shapes_for_trip_id(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -209,6 +211,7 @@ def test_shapes_for_trip_id(request, small_transit_net):
     )
     pd.testing.assert_frame_equal(result, expected)
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
 
 def test_stop_times_for_pickup_dropoff_trip_id(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -230,6 +233,7 @@ def test_stop_times_for_pickup_dropoff_trip_id(request, small_transit_net):
     pd.testing.assert_frame_equal(result, expected)
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
+
 def test_stop_id_pattern_for_trip(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     trip_id = "blue-2"
@@ -240,6 +244,7 @@ def test_stop_id_pattern_for_trip(request, small_transit_net):
     expected = ["111", "333", "444"]
     assert result == expected
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
 
 def test_feed_equality(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -267,16 +272,30 @@ def test_feed_equality(request, small_transit_net):
 def test_filter_shapes_to_links(request):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     from network_wrangler.transit.feed import filter_shapes_to_links
-    links_df = links_df = pd.DataFrame({
-        "A": [1, 2, 3],
-        "B": [2, 3, 4]
-    })
-    shapes_df = pd.DataFrame({
-        'shape_id': [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2],
-        'shape_pt_sequence': [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6, 7, 8],
-        'shape_model_node_id': [1, 2, 3, 4, 5, 1, 2, 3, 1, 5, 4, 1, 2],
-        'should_retain': [True, True, True, True, False, True, True, True, False, False, False, False, False]
-    })
+
+    links_df = links_df = pd.DataFrame({"A": [1, 2, 3], "B": [2, 3, 4]})
+    shapes_df = pd.DataFrame(
+        {
+            "shape_id": [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2],
+            "shape_pt_sequence": [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6, 7, 8],
+            "shape_model_node_id": [1, 2, 3, 4, 5, 1, 2, 3, 1, 5, 4, 1, 2],
+            "should_retain": [
+                True,
+                True,
+                True,
+                True,
+                False,
+                True,
+                True,
+                True,
+                False,
+                False,
+                False,
+                False,
+                False,
+            ],
+        }
+    )
 
     result = filter_shapes_to_links(shapes_df, links_df)
     WranglerLogger.debug(f"result:\n{result}")
@@ -291,31 +310,34 @@ def test_filter_stop_times_to_links(request):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     from network_wrangler.transit.feed import filter_stop_times_to_shapes
 
-    stop_times = pd.DataFrame({
-        'trip_id': ['t1', 't1', 't1', 't1', 't2', 't2', 't2'],
-        'stop_sequence': [1, 2, 3, 4, 1, 2, 3],
-        'stop_id': ['t1', 't2', 't3', 't5', 't1', 't3', 't7'],
-        'model_node_id': [1, 2, 3, 5, 1, 3, 7]
-    })
+    stop_times = pd.DataFrame(
+        {
+            "trip_id": ["t1", "t1", "t1", "t1", "t2", "t2", "t2"],
+            "stop_sequence": [1, 2, 3, 4, 1, 2, 3],
+            "stop_id": ["t1", "t2", "t3", "t5", "t1", "t3", "t7"],
+            "model_node_id": [1, 2, 3, 5, 1, 3, 7],
+        }
+    )
 
-    shapes = pd.DataFrame({
-        'shape_id': ['s1', 's1', 's1', 's1', 's2', 's2', 's2'],
-        'shape_pt_sequence': [1, 2, 3, 4, 1, 2, 3],
-        'shape_model_node_id': [1, 2, 3, 4, 1, 2, 3]
-    })
+    shapes = pd.DataFrame(
+        {
+            "shape_id": ["s1", "s1", "s1", "s1", "s2", "s2", "s2"],
+            "shape_pt_sequence": [1, 2, 3, 4, 1, 2, 3],
+            "shape_model_node_id": [1, 2, 3, 4, 1, 2, 3],
+        }
+    )
 
-    trips = pd.DataFrame({
-        'trip_id': ['t1', 't2'],
-        'shape_id': ['s1', 's2']
-    })
+    trips = pd.DataFrame({"trip_id": ["t1", "t2"], "shape_id": ["s1", "s2"]})
 
     # Expected DataFrame
-    expected = pd.DataFrame({
-        'trip_id': ['t1', 't1', 't1', 't2', 't2'],
-        'stop_sequence': [1, 2, 3, 1, 2],
-        'stop_id': ['t1', 't2', 't3', 't1', 't3'],
-        'model_node_id': [1, 2, 3, 1, 3]
-    })
+    expected = pd.DataFrame(
+        {
+            "trip_id": ["t1", "t1", "t1", "t2", "t2"],
+            "stop_sequence": [1, 2, 3, 1, 2],
+            "stop_id": ["t1", "t2", "t3", "t1", "t3"],
+            "model_node_id": [1, 2, 3, 1, 3],
+        }
+    )
 
     # Function under test
     result = filter_stop_times_to_shapes(stop_times, shapes, trips)

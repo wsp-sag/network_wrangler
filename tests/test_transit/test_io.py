@@ -1,6 +1,7 @@
 import pytest
 from pandera.errors import SchemaErrors
-from network_wrangler import TransitNetwork, load_transit, write_transit
+from network_wrangler import load_transit, write_transit
+from network_wrangler.transit.network import TransitNetwork
 from network_wrangler import WranglerLogger
 from network_wrangler.models._base.db import RequiredTableError, ForeignKeyValueError
 
@@ -64,10 +65,10 @@ def test_missing_props(request, test_dir):
 
 def test_write_feed_geo(request, small_transit_net, small_net, test_out_dir):
     from network_wrangler.transit.io import write_feed_geo
+
     write_feed_geo(
         small_transit_net.feed,
         ref_nodes_df=small_net.nodes_df,
         out_dir=test_out_dir,
         out_prefix="write_feed_geo",
     )
-    

@@ -23,8 +23,8 @@ from pathlib import Path
 import pandas as pd
 import geopandas as gpd
 
-from ..transitnetwork import TransitNetwork
-from ..roadwaynetwork import RoadwayNetwork
+from .network import TransitNetwork
+from ..roadway.network import RoadwayNetwork
 from ..roadway.nodes import get_nodes
 from ..transit.io import load_transit
 from .feed import (
@@ -64,23 +64,32 @@ def clip_feed_to_roadway(
     """
     WranglerLogger.info("Clipping transit network to roadway network.")
 
-    clipped_feed = _remove_links_from_feed(feed, roadway_net.links_df, min_stops=min_stops)
+    clipped_feed = _remove_links_from_feed(
+        feed, roadway_net.links_df, min_stops=min_stops
+    )
 
     return clipped_feed
 
 
-def _remove_links_from_feed(feed: Feed, links_df: pd.DataFrame, min_stops: int = 2) -> Feed:
+def _remove_links_from_feed(
+    feed: Feed, links_df: pd.DataFrame, min_stops: int = 2
+) -> Feed:
     WranglerLogger.info("Clipping transit network to link A and Bs.")
 
     clipped_feed_dfs = {}
     # First find the shapes that are on the links; retaining only the longest segment of each shape
     _valid_shapes = filter_shapes_to_links(feed.shapes, links_df)
-    WranglerLogger.debug(f"_valid_shapes:\n{_valid_shapes[['shape_id','shape_pt_sequence', 'shape_model_node_id']]}")
+    WranglerLogger.debug(
+        f"_valid_shapes:\n\
+        {_valid_shapes[['shape_id','shape_pt_sequence', 'shape_model_node_id']]}"
+    )
     # Filter stop_times to relevant trips first so don't have to do complicated filtering on whole
     _trips_for_valid_shapes = feed.trips.loc[
         feed.trips.shape_id.isin(_valid_shapes.shape_id)
     ]
-    WranglerLogger.debug(f"_trips_for_valid_shapes:\n{_trips_for_valid_shapes[['trip_id', 'shape_id']]}")
+    WranglerLogger.debug(
+        f"_trips_for_valid_shapes:\n{_trips_for_valid_shapes[['trip_id', 'shape_id']]}"
+    )
     _stop_times_for_valid_trips = feed.stop_times.loc[
         feed.stop_times.trip_id.isin(_trips_for_valid_shapes.trip_id)
     ]
@@ -88,33 +97,52 @@ def _remove_links_from_feed(feed: Feed, links_df: pd.DataFrame, min_stops: int =
     _valid_stop_times = filter_stop_times_to_shapes(
         _stop_times_for_valid_trips, _valid_shapes, _trips_for_valid_shapes
     )
-    clipped_feed_dfs["stop_times"] = filter_stop_times_to_min_stops(_valid_stop_times, min_stops)
-    WranglerLogger.debug(f"clipped_feed_dfs['stop_times']:\n{clipped_feed_dfs['stop_times'][['trip_id', 'stop_id', 'stop_sequence','model_node_id']]}")
-    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['stop_times'])}/{len(feed.stop_times)} stop_times.")
+    clipped_feed_dfs["stop_times"] = filter_stop_times_to_min_stops(
+        _valid_stop_times, min_stops
+    )
+    WranglerLogger.debug(
+        f"clipped_feed_dfs['stop_times']:\n\
+        {clipped_feed_dfs['stop_times'][['trip_id', 'stop_id', 'stop_sequence','model_node_id']]}"
+    )
+    WranglerLogger.debug(
+        f"Keeping {len(clipped_feed_dfs['stop_times'])}/{len(feed.stop_times)} stop_times."
+    )
 
     # reselect trips + shapes so we aren't retaining ones that only had one stop in the stop_times
     clipped_feed_dfs["trips"] = filter_trips_to_stop_times(
         feed.trips, clipped_feed_dfs["stop_times"]
     )
-    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['trips'])}/{len(feed.trips)} trips.")
+    WranglerLogger.debug(
+        f"Keeping {len(clipped_feed_dfs['trips'])}/{len(feed.trips)} trips."
+    )
 
-    clipped_feed_dfs["shapes"] = filter_shapes_to_trips(_valid_shapes, clipped_feed_dfs["trips"])
-    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['shapes'])}/{len(feed.shapes)} shapes.")
+    clipped_feed_dfs["shapes"] = filter_shapes_to_trips(
+        _valid_shapes, clipped_feed_dfs["trips"]
+    )
+    WranglerLogger.debug(
+        f"Keeping {len(clipped_feed_dfs['shapes'])}/{len(feed.shapes)} shapes."
+    )
 
     clipped_feed_dfs["stops"] = filter_stops_to_stop_times(
         feed.stops, clipped_feed_dfs["stop_times"]
     )
-    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['stops'])}/{len(feed.stops)} stops.")
+    WranglerLogger.debug(
+        f"Keeping {len(clipped_feed_dfs['stops'])}/{len(feed.stops)} stops."
+    )
 
     clipped_feed_dfs["routes"] = filter_routes_to_trips(
         feed.routes, clipped_feed_dfs["trips"]
     )
-    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['routes'])}/{len(feed.routes)} routes.")
+    WranglerLogger.debug(
+        f"Keeping {len(clipped_feed_dfs['routes'])}/{len(feed.routes)} routes."
+    )
 
     clipped_feed_dfs["frequencies"] = filter_frequencies_to_trips(
         feed.frequencies, clipped_feed_dfs["trips"]
     )
-    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['frequencies'])}/{len(feed.frequencies)} frequencies.")
+    WranglerLogger.debug(
+        f"Keeping {len(clipped_feed_dfs['frequencies'])}/{len(feed.frequencies)} frequencies."
+    )
 
     return Feed(**clipped_feed_dfs)
 
@@ -195,7 +223,9 @@ def _clip_feed_to_nodes(
     clipped_feed_dfs = {}
 
     clipped_feed_dfs["stops"] = feed.stops[feed.stops.model_node_id.isin(node_ids)]
-    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['stops'])}/{len(feed.stops)} stops.")
+    WranglerLogger.debug(
+        f"Keeping {len(clipped_feed_dfs['stops'])}/{len(feed.stops)} stops."
+    )
 
     # don't retain stop_times unless they are more than min stops
     _clipped_stop_times = filter_stop_times_to_stops(

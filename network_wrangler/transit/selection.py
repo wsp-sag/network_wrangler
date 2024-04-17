@@ -7,7 +7,7 @@ import pandas as pd
 from ..utils import dict_to_hexkey
 from ..logger import WranglerLogger
 
-from ..projects.models import (
+from ..models.projects.types import (
     SelectTransitTrips,
     SelectRouteProperties,
     SelectTripProperties,
@@ -171,7 +171,9 @@ def _filter_trips_by_selection_dict(
 
     if sel.get("links"):
         trips_df = _filter_trips_by_links(
-            trips_df, _shapes_df, sel["links"],
+            trips_df,
+            _shapes_df,
+            sel["links"],
         )
         WranglerLogger.debug(f"# Trips after links filter:  {len(trips_df)}")
     if sel.get("nodes"):

@@ -3,7 +3,7 @@ Functions to clip a RoadwayNetwork object to a boundary.
 
 Clipped roadway is an independent roadway network that is a subset of the original roadway network.
 
-Unlike a Subnet, it is geographic selection defined by a bounday rather than 
+Unlike a Subnet, it is geographic selection defined by a bounday rather than
 a logical selection defined by a graph.
 
 Example usage:
@@ -60,7 +60,7 @@ def clip_roadway_to_dfs(
     )
 
     # make sure boundary_gdf.crs == network.crs
-    if not boundary_gdf.crs == network.crs:
+    if boundary_gdf.crs != network.crs:
         boundary_gdf = boundary_gdf.to_crs(network.crs)
     # get the boundary as a single polygon
     boundary = boundary_gdf.geometry.unary_union
@@ -111,7 +111,7 @@ def clip_roadway(
         boundary_geocode=boundary_geocode,
         boundary_file=boundary_file,
     )
-    from .. import RoadwayNetwork
+    from .network import RoadwayNetwork
 
     trimmed_net = RoadwayNetwork(
         links_df=trimmed_links_df,

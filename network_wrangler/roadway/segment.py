@@ -395,6 +395,9 @@ def identify_segment_endpoints(
             considered a segment. Defaults to 2.
 
     """
+    raise NotImplementedError(
+        "This function has not been revisited or refactored to work."
+    )
     SEGMENT_IDENTIFIERS = ["name", "ref"]
 
     NAME_PER_NODE = 4

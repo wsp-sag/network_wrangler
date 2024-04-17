@@ -1,4 +1,3 @@
-import json
 import time
 
 from dataclasses import dataclass, field
@@ -13,7 +12,6 @@ import pandera as pa
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
 from pandera import check_input, check_output
-from pydantic import BaseModel
 
 from ..logger import WranglerLogger
 
@@ -147,7 +145,8 @@ def read_links(
     )
     links_df.params.source_file = filename
     WranglerLogger.info(
-        f"Read + transformed {len(links_df)} links from {filename} in {round(time.time() - start_time,2)}."
+        f"Read + transformed {len(links_df)} links from \
+            {filename} in {round(time.time() - start_time,2)}."
     )
     return links_df
 
@@ -309,6 +308,8 @@ class TrueShapeAccessor:
         self._links_df = links_df
 
     def __call__(self, shapes_df: ShapesSchema):
+        WranglerLogger.debug("Creating true shape from links and shapes.")
+        WranglerLogger.debug(f"shapes_df:\n{shapes_df}")
         links_df = self._links_df.merge(
             shapes_df[[shapes_df.params.primary_key, "geometry"]],
             left_on=self._links_df.params.fk_to_shape,
@@ -322,7 +323,7 @@ class TrueShapeAccessor:
 class ModeLinkAccessor:
     def __init__(self, links_df):
         self._links_df = links_df
-        if not links_df.params.table_type == "links":
+        if links_df.params.table_type != "links":
             raise NotLinksError("`mode_query` is only available to links dataframes.")
 
     def __call__(self, modes: List[str]):
@@ -351,7 +352,7 @@ class ModeLinkAccessor:
 class LinkOfTypeAccessor:
     def __init__(self, links_df):
         self._links_df = links_df
-        if not links_df.params.table_type == "links":
+        if links_df.params.table_type != "links":
             raise NotLinksError("`of_type` is only available to links dataframes.")
 
     @property
@@ -424,15 +425,14 @@ def write_links(
     links_df: gpd.GeoDataFrame,
     out_dir: Union[str, Path] = ".",
     prefix: str = "",
-    format: str = "json",
+    file_format: str = "json",
     overwrite: bool = False,
     include_geometry: bool = False,
 ) -> None:
-    if not include_geometry:
-        if format == "geojson":
-            format = "json"
+    if not include_geometry and file_format == "geojson":
+        file_format = "json"
 
-    links_file = Path(out_dir) / f"{prefix}link.{format}"
+    links_file = Path(out_dir) / f"{prefix}link.{file_format}"
 
     if not include_geometry:
         links_df = pd.DataFrame(links_df)
@@ -445,7 +445,7 @@ def write_links(
 class SetLinkPropAccessor:
     def __init__(self, links_df):
         self._links_df = links_df
-        if not links_df.params.table_type == "links":
+        if links_df.params.table_type != "links":
             raise NotLinksError("`set_link_prop` is only available to links dataframs.")
 
     @staticmethod
@@ -463,9 +463,8 @@ class SetLinkPropAccessor:
             else:
                 _exist_default = float(existing_val)
             return {"default": _exist_default + float(prop_dict["change"])}
-        elif isinstance(existing_val, dict):
-            if "default" in existing_val:
-                return {"default": existing_val["default"]}
+        elif isinstance(existing_val, dict) and "default" in existing_val:
+            return {"default": existing_val["default"]}
         return {}
 
     def _set_val_for_group(self, existing_val, prop_dict: dict):

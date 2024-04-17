@@ -93,7 +93,7 @@ def stpaul_ex_dir(example_dir):
 
 @pytest.fixture(scope="session")
 def small_ex_dir(example_dir):
-    return Path(example_dir) / "single"
+    return Path(example_dir) / "small"
 
 
 @pytest.fixture(scope="session")
@@ -103,7 +103,7 @@ def scratch_dir(base_dir):
 
 @pytest.fixture(scope="module")
 def stpaul_net(stpaul_ex_dir):
-    from network_wrangler import RoadwayNetwork
+    from network_wrangler.roadway.network import RoadwayNetwork
 
     shape_filename = stpaul_ex_dir / "shape.geojson"
     link_filename = stpaul_ex_dir / "link.json"

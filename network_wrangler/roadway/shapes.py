@@ -98,7 +98,7 @@ def df_to_shapes_df(
     """
     shapes_df.crs = crs
     shapes_df.gdf_name = "network_shapes"
-
+    shapes_df = ShapesSchema.validate(shapes_df, lazy=True)
     # make shapes parameters available as a dataframe property
     if shapes_params is None:
         shapes_params = ShapesParams()

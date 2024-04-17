@@ -45,7 +45,9 @@ class DictQueryAccessor:
             _type_: _description_
         """
         _selection_dict = {
-            k: v for k, v in selection_dict.items() if k in self._obj.columns and v is not None
+            k: v
+            for k, v in selection_dict.items()
+            if k in self._obj.columns and v is not None
         }
 
         if not _selection_dict:
@@ -178,7 +180,9 @@ def update_df_by_col_value(
             raise ValueError(f"Properties missing from source_df: {_source_miss}")
 
     if source_must_update_all:
-        _source_ids_miss = _s1_missing_s2_vals(source_df[join_col], destination_df[join_col])
+        _source_ids_miss = _s1_missing_s2_vals(
+            source_df[join_col], destination_df[join_col]
+        )
         if _source_ids_miss:
             raise ValueError(f"IDs missing from source_df:\n{_source_ids_miss}")
 
