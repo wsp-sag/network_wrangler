@@ -1,0 +1,48 @@
+# docker build -t wrangler-dev .
+# docker run -p 8888:8888 wrangler-dev:latest
+
+FROM jupyter/base-notebook
+
+USER root
+WORKDIR /tmp
+
+# Install git
+RUN apt-get update \
+     && apt-get install -y git \
+     && apt-get install -y libspatialindex-dev # needed to install rtree via pip per https://github.com/Toblerity/rtree/issues/26
+
+# changing all files in docker image to be read/write/execute
+RUN fix-permissions .  && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+
+RUN pip install --no-cache-dir --upgrade pip
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --requirement /tmp/requirements.txt && \
+    fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER && \
+    fix-permissions .
+
+COPY dev-requirements.txt .
+RUN pip install --no-cache-dir --requirement /tmp/dev-requirements.txt && \
+        fix-permissions $CONDA_DIR && \
+        fix-permissions /home/$NB_USER && \
+        fix-permissions .
+
+RUN fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER && \
+    fix-permissions /home/$NB_USER/.cache/ &&  \
+    fix-permissions .
+
+WORKDIR /home/jovyan/work
+
+# need to run this way so that egg-info is in right place
+# https://thekev.in/blog/2016-11-18-python-in-docker/index.html
+COPY . .
+RUN python setup.py develop
+
+USER $NB_UID
+
+ENTRYPOINT ["tini", "-g", "--"]
+CMD ["start-notebook.sh","--NotebookApp.password=''","--NotebookApp.token=''", "--allow-root"]

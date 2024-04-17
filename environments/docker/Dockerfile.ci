@@ -1,0 +1,27 @@
+# docker build -t wrangler-ci .
+# docker run -p 8888:8888 wrangler:latest
+
+FROM python:3.7-slim-stretch
+
+# Install git
+RUN apt-get update \
+     && apt-get install -y git \
+     && apt-get install -y libspatialindex-dev
+     # libspatialindex-dev  needed to install rtree via pip
+     #     per https://github.com/Toblerity/rtree/issues/26
+
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir --requirement /tmp/requirements.txt
+
+COPY requirements.dev.txt /tmp/
+RUN pip install --no-cache-dir --requirement /tmp/requirements.txt
+
+COPY . .
+RUN pip install -e .
+
+# RUN git clone http://github.com/wsp-sag/network_wrangler
+# RUN cd network_wrangler
+# RUN pip install -e .
+# RUN cd ..
+
+CMD ["py.test"]

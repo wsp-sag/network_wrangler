@@ -1,0 +1,42 @@
+version: "3.2"
+
+services:
+  wrangler-jupyter:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.jupyter
+    ports:
+      - 8888:8888
+    volumes:
+      - ../notebooks:/home/jovyan/work/notebooks
+  wrangler-ci:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ci
+  wrangler-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    volumes:
+      - ..:/home/jovyan/work
+      - type: bind
+        source: ../scratch
+        target: /home/jovyan/work/scratch
+        bind:
+          propagation: shared
+    ports:
+      - 8888:8888
+
+# Build all the containers
+#     docker-compose build
+# Build a specific container
+#     docker-compose wrangler-jupyter
+# To start up notebook server as at http://127.0.0.1:8888
+#     docker-compose up
+# Build and run a sepcific container
+#     docker-compose run wrangler-ci /bin/bash --build
+#
+# To start up a bash command line for a specific container
+#     docker-compose run wrangler-ci /bin/bash
+# To exit bash and shut downloads
+#     exit
