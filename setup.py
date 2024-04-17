@@ -20,9 +20,8 @@ with open("requirements.txt") as f:
 EXTRAS = ["tests", "viz", "docs"]
 extras_require = {}
 for e in EXTRAS:
-    with open(f"requirements.{e}.txt") as f:
-        extras_require[e] = [r.strip() for r in f.readlines()]
-
+    with open(f"requirements.{e}.txt", encoding='utf-8') as f:
+        extras_require[e] = [r.strip() for r in f if r.strip() and not r.startswith('#')]
 
 setup(
     name="network_wrangler",
