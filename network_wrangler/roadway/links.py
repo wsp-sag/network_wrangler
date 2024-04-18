@@ -96,7 +96,7 @@ class LinksSchema(pa.DataFrameModel):
     truck_access: Optional[Series[bool]] = pa.Field(
         coerce=True, nullable=True, default=True
     )
-    osm_link_id: Optional[Series[str]] = pa.Field(
+    osm_link_id: Series[str] = pa.Field(
         coerce=True, nullable=True, default=""
     )
     locationReferences: Optional[Series[List[dict]]] = pa.Field(
@@ -107,7 +107,7 @@ class LinksSchema(pa.DataFrameModel):
     shape_id: Optional[Series[str]] = pa.Field(nullable=True, default="", coerce=True)
 
     class Config:
-        name = "LinkSchema"
+        name = "LinksSchema"
         add_missing_columns = True
         coerce = True
 
@@ -140,7 +140,7 @@ def read_links(
     WranglerLogger.debug(
         f"Read {len(links_df)} links from file in {round(time.time() - start_time,2)}."
     )
-    links_df = _links_data_to_links_df(
+    links_df = data_to_links_df(
         links_df, links_crs=crs, links_params=links_params, nodes_df=nodes_df
     )
     links_df.params.source_file = filename
@@ -207,7 +207,7 @@ def _set_links_df_index(links_df: pd.DataFrame) -> pd.DataFrame:
 
 
 @check_output(LinksSchema, inplace=True)
-def _links_data_to_links_df(
+def data_to_links_df(
     links_df: Union[pd.DataFrame, List[dict]],
     links_crs: int = 4326,
     links_params: LinksParams = None,
@@ -276,7 +276,13 @@ def _links_data_to_links_df(
         _add_dist = links_df["distance"].isnull()
         links_df[_add_dist] = length_of_linestring_miles(links_df.loc[_add_dist])
 
+    # set dataframe-level variables
     links_df.gdf_name = "network_links"
+
+    # Validate and coerce to schema
+    links_df = LinksSchema.validate(links_df, lazy=True)
+
+    # Add parameters so that they can be accessed as dataframe variables
     assert "params" in links_df.__dict__
     _disp_c = [
         links_df.params.primary_key,
@@ -521,7 +527,7 @@ class SetLinkPropAccessor:
                         }
                     )
                 elif "change" in tod:
-                    if not type(existing_val) in [int, float]:
+                    if type(existing_val) not in [int, float]:
                         raise LinkChangeError(
                             "Change keyword invoked on non-numeric existing val"
                         )
@@ -577,7 +583,7 @@ class SetLinkPropAccessor:
                     }
                 )
             elif "change" in tod:
-                if not type(existing_val) in [int, float]:
+                if type(existing_val) not in [int, float]:
                     raise LinkChangeError(
                         "Change keyword invoked on non-numeric existing val"
                     )

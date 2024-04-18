@@ -39,6 +39,10 @@ class ShapesSchema(DataFrameModel):
     shape_id: Series[Any] = pa.Field(unique=True)
     geometry: GeoSeries = pa.Field()
 
+    class Config:
+        name = "ShapesSchema"
+        coerce = True
+
 
 @check_output(ShapesSchema, inplace=True)
 def read_shapes(
@@ -96,10 +100,14 @@ def df_to_shapes_df(
     Returns:
         pd.DataFrame: _description_
     """
+    # Set dataframe-level variables
     shapes_df.crs = crs
     shapes_df.gdf_name = "network_shapes"
+
+    # Validate and coerce to schema
     shapes_df = ShapesSchema.validate(shapes_df, lazy=True)
-    # make shapes parameters available as a dataframe property
+
+    # Add parameters so that they can be accessed as dataframe variables
     if shapes_params is None:
         shapes_params = ShapesParams()
 

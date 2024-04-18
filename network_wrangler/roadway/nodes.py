@@ -71,9 +71,8 @@ class NodesSchema(DataFrameModel):
     Y: Series[float] = pa.Field(coerce=True, nullable=False)
 
     # optional fields
-    osm_node_id: Optional[Series[str]] = pa.Field(
+    osm_node_id: Series[str] = pa.Field(
         coerce=True,
-        unique=True,
         nullable=True,
         default="",
     )
@@ -84,6 +83,11 @@ class NodesSchema(DataFrameModel):
     outboundReferenceIds: Optional[Series[List[str]]] = pa.Field(
         coerce=True, nullable=True
     )
+
+    class Config:
+        name = "NodesSchema"
+        add_missing_columns = True
+        coerce = True
 
 
 def read_nodes(
@@ -110,7 +114,7 @@ def read_nodes(
         f"Read {len(nodes_df)} nodes from file in {round(time.time() - start_time,2)}."
     )
 
-    nodes_df = _nodes_data_to_nodes_df(nodes_df, nodes_params=nodes_params, crs=crs)
+    nodes_df = data_to_nodes_df(nodes_df, nodes_params=nodes_params, crs=crs)
     nodes_df.params.source_file = filename
     WranglerLogger.info(
         f"Read {len(nodes_df)} nodes from {filename} in {round(time.time() - start_time,2)}."
@@ -156,7 +160,7 @@ def _create_node_geometries_from_xy(
 
 
 @check_output(NodesSchema, inplace=True)
-def _nodes_data_to_nodes_df(
+def data_to_nodes_df(
     nodes_df: gpd.GeoDataFrame,
     nodes_params: NodesParams = None,
     crs: int = 4326,
@@ -199,8 +203,13 @@ def _nodes_data_to_nodes_df(
             f"nodes_df:\n{nodes_df[['model_node_id','geometry','X','Y']]}"
         )
 
+    # set dataframe-level variables
     nodes_df.gdf_name = "network_nodes"
 
+    # Validate and coerce to schema
+    nodes_df = NodesSchema.validate(nodes_df, lazy=True)
+
+    # Add parameters so that they can be accessed as dataframe variables
     if nodes_params is None:
         nodes_params = NodesParams()
     nodes_df.__dict__["params"] = nodes_params
