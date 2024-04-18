@@ -761,6 +761,10 @@ class TransitNetwork(object):
                 elif key in routes:
                     routes = routes[routes[key].isin(selection[key])]
                     trips = trips[trips.route_id.isin(routes["route_id"])]
+                elif key == "shape_index":
+                    # shape_index is added to project card for better reviewing the netork
+                    # but don't use it for any filters
+                    continue
                 else:
                     WranglerLogger.error("Selection not supported %s", key)
                     raise ValueError
