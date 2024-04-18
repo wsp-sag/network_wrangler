@@ -382,7 +382,7 @@ class RoadwaySelection:
 
         self._selected_nodes_df = _selected_nodes_df
 
-        WranglerLogger.info(f"Final selected nodess: {len(_selected_nodes_df)}")
+        WranglerLogger.info(f"Final selected nodes: {len(_selected_nodes_df)}")
         if len(_selected_nodes_df) < 10:
             _cols = _selected_nodes_df.__dict__["params"].display_cols
             WranglerLogger.debug(f"\n{_selected_nodes_df[_cols]}")

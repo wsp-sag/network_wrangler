@@ -81,6 +81,14 @@ def test_convert(example_dir, test_dir):
     ), "The parquet and geojson networks differ."
 
 
+def test_roadway_model_coerce(small_net):
+    assert isinstance(small_net, RoadwayNetwork)
+    WranglerLogger.debug(f"small_net.nodes_df.cols:\n{small_net.nodes_df.columns}")
+    assert "osm_node_id" in small_net.nodes_df.columns
+    WranglerLogger.debug(f"small_net.links_df.cols:\n{small_net.links_df.columns}")
+    assert "osm_link_id" in small_net.links_df.columns
+
+
 @pytest.mark.parametrize("write_format", ["parquet", "geojson"])
 @pytest.mark.parametrize("ex", ["stpaul", "small"])
 def test_roadway_write(stpaul_net, small_net, test_out_dir, write_format, ex):

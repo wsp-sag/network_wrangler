@@ -10,7 +10,7 @@ from network_wrangler.utils import (
     linestring_from_nodes,
     length_of_linestring_miles,
 )
-from network_wrangler.roadway.links import _links_data_to_links_df
+from network_wrangler.roadway.links import data_to_links_df
 from .utils import compare_networks, compare_links, create_unique_shape_id
 
 """
@@ -418,7 +418,7 @@ class ModelRoadwayNetwork:
             "ref",
         ]
         _keep_ae_cols = [c for c in _keep_ae_cols if c in access_egress_df.columns]
-        access_egress_df = _links_data_to_links_df(
+        access_egress_df = data_to_links_df(
             access_egress_df[_keep_ae_cols],
             links_params=net.links_df.params,
             nodes_df=m_nodes_df,

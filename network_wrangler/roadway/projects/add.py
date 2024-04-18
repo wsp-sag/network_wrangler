@@ -2,8 +2,8 @@ import copy
 
 import geopandas as gpd
 
-from ..nodes import _nodes_data_to_nodes_df
-from ..links import _links_data_to_links_df
+from ..nodes import data_to_nodes_df
+from ..links import data_to_links_df
 from ...logger import WranglerLogger
 
 
@@ -36,13 +36,13 @@ def apply_new_roadway(
         f"Adding New Roadway Features:\n-Links:\n{add_links}\n-Nodes:\n{add_nodes}"
     )
     if add_nodes:
-        _new_nodes_df = _nodes_data_to_nodes_df(
+        _new_nodes_df = data_to_nodes_df(
             add_nodes, nodes_params=roadway_net.nodes_df.params
         )
         roadway_net.add_nodes(_new_nodes_df)
 
     if add_links:
-        _new_links_df = _links_data_to_links_df(
+        _new_links_df = data_to_links_df(
             add_links,
             links_params=roadway_net.links_df.params,
             nodes_df=roadway_net.nodes_df,
