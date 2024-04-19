@@ -1450,12 +1450,6 @@ class TransitNetwork(object):
                     # used to build stop_time
                     stop_id_list = [] 
 
-                    # used to add new stops if they are not in the stops.txt
-                    new_stop_id_list = []
-                    model_node_id_list = []
-                    stop_lat_list = []
-                    stop_lon_list = []
-
                     for s in stop_model_node_id_list:
                         s = int(float(s))
                         if s in stop_id_xref_dict.keys():
@@ -1485,35 +1479,34 @@ class TransitNetwork(object):
                             ):
                                 new_stop_id = existing_stop_id
                                 stop_id_list.append(new_stop_id)
-                                # add new stop to stops.txt
-                                new_stop_id_list.append(new_stop_id)
-                                model_node_id_list.append(s)
-                                stop_lat_list.append(model_node_coord_dict[s][1])
-                                stop_lon_list.append(model_node_coord_dict[s][0])
                                 stop_id_xref_dict.update({s: new_stop_id})
+                                # add new stop to stops.txt
+                                add_stops_df = pd.DataFrame([{
+                                    "stop_id" : new_stop_id,
+                                    "stop_lat" : model_node_coord_dict[s][1],
+                                    "stop_lon" : model_node_coord_dict[s][0],
+                                    "model_node_id" : s,
+                                    'trip_id': trip_id,
+                                    "agency_raw_name": route["agency_raw_name"]
+                                }]).astype(stop_col_dtypes)
+                                stops_final_df = pd.concat([stops_final_df, add_stops_df], ignore_index=True, sort=False)
                             else:
                                 stop_id_list.append(stop_id_xref_dict[s])
                         else:
                             new_stop_id = stop_id_max + 1
                             stop_id_list.append(new_stop_id)
-                            # add new stop to stops.txt
-                            new_stop_id_list.append(new_stop_id)
-                            model_node_id_list.append(s)
-                            stop_lat_list.append(model_node_coord_dict[s][1])
-                            stop_lon_list.append(model_node_coord_dict[s][0])
                             stop_id_xref_dict.update({s: new_stop_id})
                             stop_id_max += 1
-                    
-                    # add stops
-                    add_stops_df = pd.DataFrame({
-                        "stop_id" : new_stop_id_list,
-                        "stop_lat" : stop_lat_list,
-                        "stop_lon" : stop_lon_list,
-                        "model_node_id" : model_node_id_list,
-                        'trip_id': trip_id,
-                        "agency_raw_name": route["agency_raw_name"]
-                    }).astype(stop_col_dtypes)
-                    stops_final_df = pd.concat([stops_final_df, add_stops_df], ignore_index=True, sort=False)
+                            # add new stop to stops.txt
+                            add_stops_df = pd.DataFrame([{
+                                "stop_id" : new_stop_id,
+                                "stop_lat" : model_node_coord_dict[s][1],
+                                "stop_lon" : model_node_coord_dict[s][0],
+                                "model_node_id" : s,
+                                'trip_id': trip_id,
+                                "agency_raw_name": route["agency_raw_name"]
+                            }]).astype(stop_col_dtypes)
+                            stops_final_df = pd.concat([stops_final_df, add_stops_df], ignore_index=True, sort=False)
 
                     # add stop_times
                     # TODO: time_to_next_node_sec
