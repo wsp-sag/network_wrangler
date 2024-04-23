@@ -1564,10 +1564,10 @@ class TransitNetwork(object):
         frequencies_df = self.feed.frequencies.copy()
 
         delete_trip_list = trip_ids.tolist()
-        trips_df = trips_df[~trips_df.trip_id.isin(delete_trip_list)]
-        stop_times_df = stop_times_df[~stop_times_df.trip_id.isin(delete_trip_list)]
-        stops_df = stops_df[~stops_df.trip_id.isin(delete_trip_list)]
-        frequencies_df = frequencies_df[~frequencies_df.trip_id.isin(delete_trip_list)]
+        trips_df = trips_df[~trips_df.trip_id.isin(delete_trip_list)].reset_index(drop=True)
+        stop_times_df = stop_times_df[~stop_times_df.trip_id.isin(delete_trip_list)].reset_index(drop=True)
+        stops_df = stops_df[~stops_df.trip_id.isin(delete_trip_list)].reset_index(drop=True)
+        frequencies_df = frequencies_df[~frequencies_df.trip_id.isin(delete_trip_list)].reset_index(drop=True)
 
         # Replace self if in_place, else return
         if in_place:
