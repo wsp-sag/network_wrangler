@@ -158,6 +158,8 @@ class RoadwayNetwork(object):
     SP_WEIGHT_FACTOR = 100
     MANAGED_LANES_NODE_ID_SCALAR = 500000
     MANAGED_LANES_LINK_ID_SCALAR = 1000000
+    MANAGED_LANES_NODE_ID_MIN= 950001
+    MANAGED_LANES_NODE_ID_MAX= 1000000
 
     SELECTION_REQUIRES = ["link"]
 
@@ -1393,6 +1395,8 @@ class RoadwayNetwork(object):
         # if there is a set command, add that property to network
         self.validate_properties(properties)
 
+        p =1
+
         for i, p in enumerate(properties):
             attribute = p["property"]
 
@@ -1407,26 +1411,119 @@ class RoadwayNetwork(object):
                         "selected links".format(attribute)
                     )
 
-            if in_place:
-                if "set" in p.keys():
-                    self.links_df.loc[link_idx, attribute] = p["set"]
-                else:
-                    self.links_df.loc[link_idx, attribute] = (
-                        self.links_df.loc[link_idx, attribute] + p["change"]
-                    )
+            attr_value = ""
+
+            if "timeofday" in p.keys():
+                for idx in link_idx:
+                    attr_value = {}
+
+                    if "set" in p.keys():
+                        attr_value["default"] = p["set"]
+                    elif "change" in p.keys():
+                        # the attribute could have become an object column
+                        # if a ML project has been applied before to the network
+                        if isinstance(self.links_df.at[idx, attribute], dict):
+                            attr_value["default"] = self.links_df.at[idx, attribute]["default"] + p["change"]
+                        elif isinstance(self.links_df.at[idx, attribute], str):
+                            attr_value["default"] = int(self.links_df.at[idx, attribute]) + p["change"]
+                        else:
+                            attr_value["default"] = self.links_df.at[idx, attribute] + p["change"]
+
+                    attr_value["timeofday"] = []
+
+                    for tod in p["timeofday"]:
+                        if "set" in tod.keys():
+                            attr_value["timeofday"].append(
+                                {
+                                    "time": parse_time_spans(tod["time"]),
+                                    "value": tod["set"]
+                                }
+                            )
+                        elif "change" in tod.keys():
+                            # the attribute could have become an object column
+                            # if a ML project has been applied before to the network
+                            if isinstance(self.links_df.at[idx, attribute], dict):
+                                attr_value["timeofday"].append(
+                                    {
+                                        "time": parse_time_spans(tod["time"]),
+                                        "value": self.links_df.at[idx, attribute]["default"] + tod["change"]
+                                    }
+                                )
+                            elif isinstance(self.links_df.at[idx, attribute], str):
+                                attr_value["timeofday"].append(
+                                    {
+                                        "time": parse_time_spans(tod["time"]),
+                                        "value": int(self.links_df.at[idx, attribute]) + tod["change"]
+                                    }
+                                )
+                            else:
+                                attr_value["timeofday"].append(
+                                    {
+                                        "time": parse_time_spans(tod["time"]),
+                                        "value": self.links_df.at[idx, attribute] + tod["change"]
+                                    }
+                                )
+
+                    if in_place:
+                        if attribute in self.links_df.columns and not isinstance(
+                            attr_value, numbers.Number
+                        ):
+                            # if the attribute already exists
+                            # and the attr value we are trying to set is not numeric
+                            # then change the attribute type to object
+                            self.links_df[attribute] = self.links_df[attribute].astype(object)
+
+                        if attribute not in self.links_df.columns:
+                            # if it is a new attribute then initialize with NaN values
+                            self.links_df[attribute] = "NaN"
+
+                        self.links_df.at[idx, attribute] = attr_value
+
+                    else:
+                        if i == 1:
+                            updated_network = copy.deepcopy(self)
+
+                        if attribute in self.links_df.columns and not isinstance(
+                            attr_value, numbers.Number
+                        ):
+                            # if the attribute already exists
+                            # and the attr value we are trying to set is not numeric
+                            # then change the attribute type to object
+                            updated_network.links_df[attribute] = updated_network.links_df[
+                                attribute
+                            ].astype(object)
+
+                        if attribute not in updated_network.links_df.columns:
+                            # if it is a new attribute then initialize with NaN values
+                            updated_network.links_df[attribute] = "NaN"
+
+                        updated_network.links_df.at[idx, attribute] = attr_value
+
+                        if p == len(properties):
+                            return updated_network
+                        else:
+                            p = p + 1
             else:
-                if i == 0:
-                    updated_network = copy.deepcopy(self)
-
-                if "set" in p.keys():
-                    updated_network.links_df.loc[link_idx, attribute] = p["set"]
+                if in_place:
+                    if "set" in p.keys():
+                        self.links_df.loc[link_idx, attribute] = p["set"]
+                    else:
+                        self.links_df.loc[link_idx, attribute] = (
+                            self.links_df.loc[link_idx, attribute] + p["change"]
+                        )
                 else:
-                    updated_network.links_df.loc[link_idx, attribute] = (
-                        updated_network.links_df.loc[link_idx, attribute] + p["change"]
-                    )
+                    if i == 0:
+                        updated_network = copy.deepcopy(self)
 
-                if i == len(properties) - 1:
-                    return updated_network
+                    if "set" in p.keys():
+                        updated_network.links_df.loc[link_idx, attribute] = p["set"]
+                    else:
+                        updated_network.links_df.loc[link_idx, attribute] = (
+                            updated_network.links_df.loc[link_idx, attribute] + p["change"]
+                        )
+
+                    if i == len(properties) - 1:
+                        return updated_network
 
     def apply_managed_lane_feature_change(
         self, link_idx: list, properties: dict, in_place: bool = True
@@ -2172,12 +2269,20 @@ class RoadwayNetwork(object):
             )
             return out_location_reference
 
-        ml_links_df["A"] = (
-            ml_links_df["A"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
+        # ml_links_df["A"] = (
+        #     ml_links_df["A"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
+        # )
+        # ml_links_df["B"] = (
+        #     ml_links_df["B"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
+        # )
+        unique_ids = pd.concat([ml_links_df['A'], ml_links_df['B']]).unique()
+        available_ids = (iter(range(RoadwayNetwork.MANAGED_LANES_NODE_ID_MIN, 
+                                    RoadwayNetwork.MANAGED_LANES_NODE_ID_MAX))
         )
-        ml_links_df["B"] = (
-            ml_links_df["B"] + RoadwayNetwork.MANAGED_LANES_NODE_ID_SCALAR
-        )
+        ml_node_mapping = {original_id: next(available_ids) for original_id in unique_ids}
+        ml_links_df["A"] = ml_links_df['A'].map(ml_node_mapping)
+        ml_links_df["B"] = ml_links_df['B'].map(ml_node_mapping)
+
         ml_links_df[RoadwayNetwork.UNIQUE_LINK_KEY] = (
             ml_links_df[RoadwayNetwork.UNIQUE_LINK_KEY]
             + RoadwayNetwork.MANAGED_LANES_LINK_ID_SCALAR
