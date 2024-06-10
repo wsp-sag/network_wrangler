@@ -30,7 +30,7 @@ if __name__ == "__main__":
     try:
         parser = argparse.ArgumentParser(
             description="Trim a transit network based on a given boundary.",
-            usage="%(prog)s [options] <network_path> <boundary> <out_dir>"
+            usage="%(prog)s [options] <network_path> <boundary> <out_dir>",
         )
         parser.add_argument(
             "network_path",
