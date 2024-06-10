@@ -36,9 +36,11 @@ jobs:
         pip install -e .[test]
     - name: Run Tests with Coverage
       run: |
-        coverage run -m pytest "not skipci"
-        coverage report
+        pytest --cache-clear --cov=app test/ > pytest-coverage.txt
     - name: Configure Git user
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
+    - name: If a pull request, add a comment about coverage
+      if: github.event_name == 'pull_request' 
+      uses: coroo/pytest-coverage-commentator@v1.0.2
