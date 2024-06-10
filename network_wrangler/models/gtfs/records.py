@@ -35,7 +35,7 @@ print(stop)
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from pydantic.networks import HttpUrl
 
 from .._base.geo import Longitude, Latitude
@@ -120,9 +120,6 @@ class StopRecord(BaseModel):
     stop_lat: Latitude
     stop_lon: Longitude
 
-    # wrangler specific
-    trip_id: TripID
-
     # Optional
     stop_code: Optional[StopCode]
     stop_name: Optional[StopName]
@@ -134,6 +131,10 @@ class StopRecord(BaseModel):
     parent_station: Optional[ParentStation]
     stop_timezone: Optional[Timezone]
     wheelchair_boarding: Optional[WheelchairAccessible]
+
+
+class WranglerStopRecord(StopRecord):
+    trip_id: TripID
 
 
 class RouteRecord(BaseModel):
@@ -164,11 +165,13 @@ class ShapeRecord(BaseModel):
     shape_pt_lon: Longitude
     shape_pt_sequence: ShapePtSequence
 
-    # Wrangler Specific
-    shape_model_node_id: int
-
     # Optional
     shape_dist_traveled: Optional[ShapeDistTraveled]
+
+
+class WranglerShapeRecord(ShapeRecord):
+    # Wrangler Specific
+    shape_model_node_id: int
 
 
 class StopTimeRecord(BaseModel):
@@ -182,15 +185,20 @@ class StopTimeRecord(BaseModel):
     stop_id: StopID
     stop_sequence: StopSequence
 
-    # Wrangler Specific
-    model_node_id: int
-
     # Optional
     stop_headsign: Optional[StopHeadsign]
     pickup_type: Optional[PickupType]
     drop_off_type: Optional[DropoffType]
     shape_dist_traveled: Optional[ShapeDistTraveled]
     timepoint: Optional[Timepoint]
+
+
+class WranglerStopTimeRecord(StopTimeRecord):
+    model_node_id: int
+
+    model_config = ConfigDict(
+        protected_namespaces=(),
+    )
 
 
 class TripRecord(BaseModel):
@@ -208,32 +216,3 @@ class TripRecord(BaseModel):
     shape_id: ShapeID
     wheelchair_accessible: WheelchairAccessible
     bikes_allowed: BikesAllowed
-
-
-def validate_agency_record(record: AgencyRecord) -> AgencyRecord:
-    # Validate and process the agency record
-    # ...
-    return record
-
-
-def validate_stop_record(record: StopRecord) -> StopRecord:
-    # Validate and process the stop record
-    # ...
-    return record
-
-
-# Usage example
-agency_data = {
-    "agency_id": "1",
-    "agency_name": "Transit Agency",
-    "agency_url": "https://example.com",
-    "agency_timezone": "America/New_York",
-    "agency_lang": "en",
-    "agency_phone": "123-456-7890",
-    "agency_fare_url": "https://example.com/fares",
-    "agency_email": "info@example.com",
-}
-
-agency_record = AgencyRecord(**agency_data)
-validated_agency_record = validate_agency_record(agency_record)
-print(validated_agency_record)

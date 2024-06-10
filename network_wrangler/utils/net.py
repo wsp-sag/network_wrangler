@@ -1,14 +1,32 @@
+"""Functions to help with network manipulations in dataframes.
+"""
+
+from pandas import DataFrame
+
 from ..logger import WranglerLogger
 
 
 def point_seq_to_links(
-    point_seq_df: "pd.DataFrame",
+    point_seq_df: DataFrame,
     id_field: str,
     seq_field: str,
     node_id_field: str,
     from_field: str = "A",
     to_field: str = "B",
-) -> "pd.DataFrame":
+) -> DataFrame:
+    """Translates a df with tidy data representing a sequence of points into links.
+
+    Args:
+        point_seq_df (pd.DataFrame): Dataframe with source breadcrumbs
+        id_field (str): Trace ID
+        seq_field (str): Order of breadcrumbs within ID_field
+        node_id_field (str): field denoting the node ID
+        from_field (str, optional): Field to export from_field to. Defaults to "A".
+        to_field (str, optional): Field to export to_field to. Defaults to "B".
+
+    Returns:
+        pd.DataFrame: Link records with id_field, from_field, to_field
+    """
     point_seq_df = point_seq_df.sort_values(by=[id_field, seq_field])
 
     links = point_seq_df.add_suffix(f"_{from_field}").join(

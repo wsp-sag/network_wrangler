@@ -1,7 +1,11 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, time
 from typing import Annotated, List, Any, Union
 
+
 from pydantic import Field
+
+from network_wrangler.utils.time import str_to_time
+from network_wrangler.utils.time import duration_dt
 
 
 class TimeFormatError(Exception):
@@ -16,7 +20,7 @@ TimeString = Annotated[
     str,
     Field(
         description="A time string in the format HH:MM or HH:MM:SS",
-        pattern=r"^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$",
+        pattern=r"^(24:00|([0-1]?\d|2[0-3]):([0-5]\d)(:[0-5]\d)?)$",
     ),
 ]
 
@@ -26,84 +30,6 @@ TimespanString = Annotated[
 ]
 
 TimeType = Union[time, str, int]
-
-
-def dt_overlaps(timespans: List[List[datetime]]) -> bool:
-    """Check if any of the timespans overlap."""
-    for i in range(len(timespans)):
-        for j in range(i + 1, len(timespans)):
-            if (timespans[i][0] < timespans[j][1]) and (
-                timespans[j][0] < timespans[i][1]
-            ):
-                return True
-    return False
-
-
-def dt_overlap_duration(timedelta1: timedelta, timedelta2: timedelta) -> timedelta:
-    """Check if two timespans overlap and return the amount of overlap."""
-    overlap_start = max(timedelta1.start_time, timedelta2.start_time)
-    overlap_end = min(timedelta1.end_time, timedelta2.end_time)
-    overlap_duration = max(overlap_end - overlap_start, timedelta(0))
-    return overlap_duration
-
-
-def dt_contains(timespan1: list[time], timespan2: list[time]) -> bool:
-    """
-    Check if one timespan contains another.
-
-    Args:
-        timespan1 (list[time]): The first timespan represented as a list containing the start time and end time.
-        timespan2 (list[time]): The second timespan represented as a list containing the start time and end time.
-
-    Returns:
-        bool: True if the first timespan contains the second timespan, False otherwise.
-    """
-    start_time_dt, end_time_dt = timespan1
-    start_time_dt2, end_time_dt2 = timespan2
-    return (start_time_dt <= start_time_dt2) and (end_time_dt >= end_time_dt2)
-
-
-def dt_overlap(timespans: List[List[datetime]]) -> bool:
-    """Check if any of the timespans overlap.
-
-    Args:
-        timespans (List[List[datetime]]): A list of timespans, where each timespan is represented as a list of two datetime objects.
-
-    Returns:
-        bool: True if any of the timespans overlap, False otherwise.
-    """
-    for i in range(len(timespans)):
-        for j in range(i + 1, len(timespans)):
-            if dt_overlaps(
-                timespans[i][0], timespans[i][1], timespans[j][0], timespans[j][1]
-            ):
-                return True
-    return False
-
-
-def _str_to_time(time: str) -> time:
-    if len(time.split(":")) == 2:
-        return datetime.datetime.strptime(time, "%H:%M").time()
-    elif len(time.split(":")) == 3:
-        return datetime.datetime.strptime(time, "%H:%M:%S").time()
-    else:
-        raise TimeFormatError("time strings must be in the format HH:MM or HH:MM:SS")
-
-
-def _duration_dt(start_time_dt: time, end_time_dt: time) -> timedelta:
-    """Returns a datetime.timedelta object representing the duration of the timespan.
-
-    If end_time is less than start_time, the duration will assume that it crosses over
-    midnight.
-    """
-    if end_time_dt < start_time_dt:
-        return timedelta(
-            hours=24 - start_time_dt.hour + end_time_dt.hour,
-            minutes=end_time_dt.minute - start_time_dt.minute,
-            seconds=end_time_dt.second - start_time_dt.second,
-        )
-    else:
-        return end_time_dt - start_time_dt
 
 
 class Time:
@@ -133,7 +59,7 @@ class Time:
         if value is time:
             self.datetime = value
         elif value is str:
-            self.datetime = _str_to_time(value)
+            self.datetime = str_to_time(value)
         elif value is int:
             self.datetime = datetime.datetime.fromtimestamp(value).time()
         else:
@@ -296,7 +222,7 @@ class Timespan:
 
     @property
     def duration(self):
-        return _duration_dt(self.start_time, self.end_time)
+        return duration_dt(self.start_time, self.end_time)
 
     @property
     def duration_sec(self):

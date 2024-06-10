@@ -2,6 +2,8 @@ black
 "black[jupyter]"
 coverage
 flake8
+mypy
 pytest
 pytest-benchmark
 pytest-cov
+vulture

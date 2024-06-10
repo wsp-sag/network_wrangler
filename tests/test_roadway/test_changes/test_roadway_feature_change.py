@@ -269,34 +269,6 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_bad_properties_statements(request, small_net):
-    """
-    Makes sure new fields can be added from a project card and that
-    they will be the right type.
-    """
-
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    net = copy.deepcopy(small_net)
-    ok_properties_change = {"lanes": {"change": 1}}
-    bad_properties_change = {"my_random_var": {"change": 1}}
-    bad_properties_existing = {"my_random_var": {"existing": 1}}
-
-    with pytest.raises(ValueError):
-        net.validate_properties(net.links_df, bad_properties_change)
-
-    with pytest.raises(ValueError):
-        net.validate_properties(
-            net.links_df, ok_properties_change, require_existing_for_change=True
-        )
-
-    with pytest.raises(ValueError):
-        net.validate_properties(
-            net.links_df, bad_properties_existing, ignore_existing=False
-        )
-
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
 def test_change_node_xy(request, small_net):
     """Tests if X and Y property changes from a project card also update the node/link geometry."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -351,18 +323,6 @@ def test_change_node_xy(request, small_net):
     )
     _first_point_in_link = _updated_link.geometry.coords[0]
     assert (_first_point_in_link[0], _first_point_in_link[1]) == (
-        _expected_X,
-        _expected_Y,
-    )
-
-    # Make sure geometry also updated shape
-    _updated_shape = net.shapes_df.loc[net.links_df.loc[_test_link_idx, "shape_id"]]
-    WranglerLogger.info(
-        f"Updated Shape Geometry:\n\
-            {_updated_shape[['geometry']].values}"
-    )
-    _first_point_in_shape = _updated_shape.geometry.coords[0]
-    assert (_first_point_in_shape[0], _first_point_in_shape[1]) == (
         _expected_X,
         _expected_Y,
     )

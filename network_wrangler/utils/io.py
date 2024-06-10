@@ -1,21 +1,34 @@
+"""Helper functions for reading and writing files to reduce boilerplate."""
+
 import tempfile
 import shutil
 import weakref
-from pathlib import Path
 
+from pathlib import Path
 from typing import Union
 
 import geopandas as gpd
 import pandas as pd
 
+from ..params import EST_PD_READ_SPEED
+
 from ..logger import WranglerLogger
+from .time import format_time
 
 try:
     gpd.options.io_engine = "pyogrio"
 except:
-    WranglerLogger.warning(
-        "pyogrio not installed, falling back to default engine (fiona)"
-    )
+    if gpd.__version__ < "0.12.0":
+        WranglerLogger.warning(
+            f"Installed Geopandas version {gpd.__version__ } isn't recent enough to support\
+                pyogrio. Falling back to default engine (fiona).\
+                Update geopandas and install pyogrio to benefit."
+        )
+    else:
+        WranglerLogger.warning(
+            "Geopandas is not using pyogrio as the I/O engine.\
+                Install pyogrio to benefit from faster I/O."
+        )
 
 
 class FileReadError(Exception):
@@ -60,7 +73,10 @@ def write_table(
         df.to_csv(filename, index=False, date_format="%H:%M:%S", **kwargs)
     elif "geojson" in filename.suffix:
         # required due to issues with list-like columns
-        data = df.to_json()
+        if isinstance(df, gpd.GeoDataFrame):
+            data = df.to_json(drop_id=True)
+        else:
+            data = df.to_json(orient="records", index=False)
         with open(filename, "w", encoding="utf-8") as file:
             file.write(data)
     elif "json" in filename.suffix:
@@ -68,6 +84,22 @@ def write_table(
             f.write(df.to_json(orient="records"))
     else:
         raise NotImplementedError(f"Filetype {filename.suffix} not implemented.")
+
+
+def _estimate_read_time_of_file(filepath: Union[str, Path]):
+    """Estimates read time in seconds based on a given file size and speed factor.
+    The speed factor is MB per second which you can adjust based on empirical data.
+
+    TODO: implement based on file type and emirical
+    """
+    # MB per second
+    filepath = Path(filepath)
+    file_size_mb = filepath.stat().st_size / (1024 * 1024)  # Convert bytes to MB
+    filetype = filepath.suffix[1:]
+    if filetype in EST_PD_READ_SPEED:
+        return format_time(file_size_mb * EST_PD_READ_SPEED[filetype])
+    else:
+        return "unknown"
 
 
 def read_table(
@@ -88,7 +120,9 @@ def read_table(
     filename = Path(filename)
     if filename.suffix == ".zip":
         filename = unzip_file(filename) / sub_filename
-
+    WranglerLogger.debug(
+        f"Estimated read time: {_estimate_read_time_of_file(filename)}."
+    )
     if any([x in filename.suffix for x in ["geojson", "shp", "csv"]]):
         try:
             return gpd.read_file(filename)

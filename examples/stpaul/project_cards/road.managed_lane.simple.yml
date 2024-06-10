@@ -1,7 +1,7 @@
 project: test managed lane project
 tags:
    - 'managed lanes'
-roadway_managed_lanes:
+roadway_property_change:
   facility:
     links:
       model_link_id:
@@ -10,12 +10,12 @@ roadway_managed_lanes:
   property_changes:
     lanes:
       set: 3
-      timeofday:
-        - timespan: ['6:00', '9:00']
+      scoped:
+        - timespans: ['6:00', '9:00']
           set: 2
     ML_lanes:
       set: 0
-      timeofday:
+      scoped:
         - timespan: ['6:00', '9:00']
           set: 1
     segment_id:
@@ -24,8 +24,8 @@ roadway_managed_lanes:
       set: 5
     HOV:
       set: 5
-    ML_access:
+    ML_access_point:
       set: 'all'
-    ML_egress:
+    ML_egress_point:
       set: 'all'
 notes: Placeholder for notes

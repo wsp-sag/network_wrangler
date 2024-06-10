@@ -39,6 +39,7 @@ dependencies:
   - proj=9.3.1=h81faed2_0
   - pyarrow=15.0.2=py310hce9b33c_0_cpu
   - pycodestyle=2.11.1=pyhd8ed1ab_0
+  - pyogrio=0.7.2=py310h28a5548_1
   - pydantic=2.6.1=pyhd8ed1ab_0
   - pyparsing=3.0.9=pyhd8ed1ab_0
   - pyproj=3.6.1=py310hd30efd9_5

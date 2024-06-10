@@ -8,7 +8,7 @@ import pandas as pd
 from pandera import DataFrameModel
 from pandera.errors import SchemaErrors
 
-from ...utils import fk_in_pk
+from ...utils.data import fk_in_pk
 
 from ...logger import WranglerLogger
 

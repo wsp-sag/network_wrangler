@@ -7,19 +7,18 @@ changes:
       - model_node_id: 314159
         X: -93.18389
         Y: 44.96898
-        osm_node_id: ''
-        drive_node: 1
-        walk_node: 0
-        bike_node: 0
-        transit_node: 1
   - roadway_deletion:
       links:
         model_link_id:
           - 281
           - 477533
+        modes: 
+         - "any"
+        ignore_missing: False
       nodes:
         model_node_id:
           - 314159
+        ignore_missing: False
   - roadway_addition:
       links:
       - A: 3230
@@ -36,8 +35,6 @@ changes:
         rail_only: 0
         roadway: residential
         distance: 0.10462
-        ttime_assert: 0.0
-        OPERATION_final: A
       - A: 3262
         B: 3230
         model_link_id: 999997
@@ -52,15 +49,8 @@ changes:
         rail_only: 0
         roadway: residential
         distance: 0.10462
-        ttime_assert: 0.0
-        OPERATION_final: A
       nodes:
       - model_node_id: 354388
         X: -93.18389
         Y: 44.96898
-        osm_node_id: ''
-        drive_node: 1
-        walk_node: 0
-        bike_node: 0
-        transit_node: 1
 notes: project card with multiple category of add and delete changes

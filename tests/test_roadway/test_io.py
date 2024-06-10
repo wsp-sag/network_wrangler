@@ -6,30 +6,28 @@ To run with print statments, use `pytest -s tests/test_roadway/test_io.py`
 import time
 
 import pytest
-from pathlib import Path
 
 from network_wrangler import (
-    load_roadway,
     write_roadway,
     load_roadway_from_dir,
     WranglerLogger,
 )
-from network_wrangler.roadway import diff_nets, convert_roadway
+from network_wrangler.roadway import diff_nets, convert_roadway_file_serialization
 from network_wrangler.roadway.network import RoadwayNetwork
 
 
-@pytest.mark.xfail
-def test_convert(example_dir, test_dir):
+def test_convert(example_dir, tmpdir):
     """
     Test that the convert function works for both geojson and parquet.
 
     Also makes sure that the converted network is the same as the original when the original
-    is geographically complete (it will have added information when it is not geographically complete).
+    is geographically complete (it will have added information when it is not geographically
+    complete).
     """
-    out_dir = test_dir / "out"
+    out_dir = tmpdir
 
     # convert EX from geojson to parquet
-    convert_roadway(
+    convert_roadway_file_serialization(
         example_dir / "small",
         "parquet",
         out_dir,
@@ -38,8 +36,20 @@ def test_convert(example_dir, test_dir):
         True,
     )
 
+    output_files_parq = [
+        out_dir / "simple_link.parquet",
+        out_dir / "simple_node.parquet",
+    ]
+
+    missing_parq = [i for i in output_files_parq if not i.exists()]
+    if missing_parq:
+        WranglerLogger.error(
+            f"Missing {len(missing_parq)} parquet output files: {missing_parq})"
+        )
+        raise FileNotFoundError("Missing converted parquet files.")
+
     # convert parquet to geojson
-    convert_roadway(
+    convert_roadway_file_serialization(
         out_dir,
         "geojson",
         out_dir,
@@ -48,21 +58,17 @@ def test_convert(example_dir, test_dir):
         True,
     )
 
-    output_files_parq = [
-        out_dir / "simple_link.parquet",
-        out_dir / "simple_node.parquet",
-        out_dir / "simple_shape.parquet",
-    ]
-
     output_files_geojson = [
         out_dir / "simple_link.json",
         out_dir / "simple_node.geojson",
-        out_dir / "simple_shape.geojson",
     ]
 
-    for f in output_files_parq + output_files_geojson:
-        if not f.exists():
-            raise FileNotFoundError(f"File {f} was not created")
+    missing_geojson = [i for i in output_files_geojson if not i.exists()]
+    if missing_geojson:
+        WranglerLogger.error(
+            f"Missing {len(missing_geojson)} geojson output files: {missing_geojson})"
+        )
+        raise FileNotFoundError("Missing converted geojson files.")
 
     WranglerLogger.debug("Reading in og network to test that it is equal.")
     in_net = load_roadway_from_dir(example_dir / "small", suffix="geojson")
@@ -89,46 +95,22 @@ def test_roadway_model_coerce(small_net):
     assert "osm_link_id" in small_net.links_df.columns
 
 
-@pytest.mark.parametrize("write_format", ["parquet", "geojson"])
+@pytest.mark.parametrize("io_format", ["geojson", "parquet"])
 @pytest.mark.parametrize("ex", ["stpaul", "small"])
-def test_roadway_write(stpaul_net, small_net, test_out_dir, write_format, ex):
-    if ex == "stpaul":
-        net = stpaul_net
-    else:
-        net = small_net
-    write_dir = test_out_dir / ex
+def test_roadway_geojson_read_write_read(example_dir, test_out_dir, ex, io_format):
+    read_dir = example_dir / ex
+    net = load_roadway_from_dir(read_dir)
+    test_io_dir = test_out_dir / ex
     t_0 = time.time()
-    write_roadway(net, file_format=write_format, out_dir=write_dir, overwrite=True)
+    write_roadway(net, file_format=io_format, out_dir=test_io_dir, overwrite=True)
     t_write = time.time() - t_0
     WranglerLogger.info(
-        f"{int(t_write // 60):02d}:{int(t_write % 60):02d} – {ex} write to {write_format}"
+        f"{int(t_write // 60):02d}:{int(t_write % 60):02d} – {ex} write to {io_format}"
     )
-
-
-@pytest.mark.parametrize("read_format", ["geojson", "parquet"])
-@pytest.mark.parametrize("ex", ["stpaul", "small"])
-def test_roadway_read(example_dir, test_out_dir, read_format, ex):
-    read_dir = example_dir / ex
-    if read_format in ["parquet"]:
-        read_dir = test_out_dir / ex
-
     t_0 = time.time()
-    net = load_roadway_from_dir(read_dir, suffix=read_format)
+    net = load_roadway_from_dir(test_io_dir, suffix=io_format)
     t_read = time.time() - t_0
     WranglerLogger.info(
-        f"{int(t_read // 60):02d}:{int(t_read % 60):02d} – {ex} read from {read_format}"
+        f"{int(t_read // 60):02d}:{int(t_read % 60):02d} – {ex} read from {io_format}"
     )
     assert isinstance(net, RoadwayNetwork)
-
-
-def test_quick_roadway_read_write(request, scratch_dir, small_net):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    out_prefix = "t_readwrite"
-    out_shape_file = Path(scratch_dir) / (out_prefix + "_" + "shape.geojson")
-    out_link_file = Path(scratch_dir) / (out_prefix + "_" + "link.json")
-    out_node_file = Path(scratch_dir) / (out_prefix + "_" + "node.geojson")
-    write_roadway(small_net, prefix=out_prefix, out_dir=scratch_dir)
-    _ = load_roadway(
-        links_file=out_link_file, nodes_file=out_node_file, shapes_file=out_shape_file
-    )
-    WranglerLogger.info(f"--Finished: {request.node.name}")

@@ -1,18 +1,23 @@
+"""Helper geographic manipulation functions."""
+import copy
 import math
 
-from typing import List, Tuple, Union
+from typing import List, Union
 from pathlib import Path
 
 import pandas as pd
 import geopandas as gpd
-from pyproj import Proj, Transformer
+from pyproj import Proj, Transformer, CRS
 from shapely.geometry import LineString, Point
 from shapely.ops import transform
 from geographiclib.geodesic import Geodesic
 
+from network_wrangler.utils.data import update_df_by_col_value
+
+from ..params import METERS_CRS, LAT_LON_CRS
 from ..logger import WranglerLogger
 from ..models._base.geo import LatLongCoordinates
-from ..models.roadway.types import LocationReference, LocationReferences
+from ..models.roadway.types import LocationReference
 
 
 # key:value (from espg, to espg): pyproj transform object
@@ -37,8 +42,7 @@ def get_bearing(lat1, lon1, lat2, lon2):
 def offset_point_with_distance_and_bearing(
     lon: float, lat: float, distance: float, bearing: float
 ) -> List[float]:
-    """
-    Get the new lon-lat (in degrees) given current point (lon-lat), distance and bearing
+    """Get the new lon-lat (in degrees) given current point (lon-lat), distance and bearing
 
     args:
         lon: longitude of original point
@@ -72,50 +76,30 @@ def offset_point_with_distance_and_bearing(
     return [out_lon, out_lat]
 
 
-def haversine_distance(origin: list, destination: list) -> float:
-    """
-    Returns haversine distance in miles between the coordinates of two points in lat/lon.
-
-    Args:
-    origin: lat/lon for point A
-    destination: lat/lon for point B
-
-    Returns: string
-    """
-
-    lon1, lat1 = origin
-    lon2, lat2 = destination
-    radius = 6378137  # meter
-
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat / 2) * math.sin(dlat / 2) + math.cos(
-        math.radians(lat1)
-    ) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) * math.sin(dlon / 2)
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    d = radius * c  # meters
-    d = d * 0.000621371  # miles
-
-    return d
-
-
 def length_of_linestring_miles(
     gdf: Union[gpd.GeoSeries, gpd.GeoDataFrame]
 ) -> pd.Series:
-    """
-    Returns a Series with the linestring length in miles.
+    """Returns a Series with the linestring length in miles.
 
     Args:
         gdf: GeoDataFrame with linestring geometry.  If given a GeoSeries will attempt to convert
             to a GeoDataFrame.
     """
+    # WranglerLogger.debug(f"length_of_linestring_miles.gdf input:\n{gdf}.")
     if isinstance(gdf, gpd.GeoSeries):
         gdf = gpd.GeoDataFrame(geometry=gdf)
 
     p_crs = gdf.estimate_utm_crs()
     gdf = gdf.to_crs(p_crs)
     METERS_IN_MILES = 1609.34
-    return gdf.geometry.length / METERS_IN_MILES
+    length_miles = gdf.geometry.length / METERS_IN_MILES
+    length_s = pd.Series(length_miles, index=gdf.index)
+
+    return length_s
+
+
+class MissingNodesError(Exception):
+    pass
 
 
 def linestring_from_nodes(
@@ -125,8 +109,7 @@ def linestring_from_nodes(
     to_node: str = "B",
     node_pk: str = "model_node_id",
 ) -> gpd.GeoSeries:
-    """
-    Creates a LineString geometry GeoSeries from a DataFrame of links and a DataFrame of nodes.
+    """Creates a LineString geometry GeoSeries from a DataFrame of links and a DataFrame of nodes.
 
     Args:
         links_df: DataFrame with columns for from_node and to_node.
@@ -137,58 +120,74 @@ def linestring_from_nodes(
     """
     assert "geometry" in nodes_df.columns, "nodes_df must have a 'geometry' column"
 
-    # need to continuously reset the index to make sure the index is the same as the link index
-    _link_idx = links_df.params.idx_col
+    idx_name = "index" if links_df.index.name is None else links_df.index.name
+    WranglerLogger.debug(f"Index name: {idx_name}")
+    required_link_cols = [from_node, to_node]
 
-    links_df = (
-        links_df[[from_node, to_node]]
-        .reset_index()
+    if not all([col in links_df.columns for col in required_link_cols]):
+        WranglerLogger.error(
+            f"links_df.columns missing required columns.\n\
+                            links_df.columns: {links_df.columns}\n\
+                            required_link_cols: {required_link_cols}"
+        )
+        raise ValueError(
+            f"links_df must have columns {required_link_cols} to create linestring from nodes"
+        )
+
+    links_geo_df = links_df[required_link_cols].copy()
+    # need to continuously reset the index to make sure the index is the same as the link index
+    links_geo_df = (
+        links_geo_df.reset_index()
         .merge(
             nodes_df[[node_pk, "geometry"]],
             left_on=from_node,
             right_on=node_pk,
             how="left",
         )
-        .set_index(_link_idx)
+        .set_index(idx_name)
     )
 
-    links_df = links_df.rename(columns={"geometry": "geometry_A"})
+    links_geo_df = links_geo_df.rename(columns={"geometry": "geometry_A"})
 
-    links_df = (
-        links_df.reset_index()
+    links_geo_df = (
+        links_geo_df.reset_index()
         .merge(
             nodes_df[[node_pk, "geometry"]],
             left_on=to_node,
             right_on=node_pk,
             how="left",
         )
-        .set_index(_link_idx)
+        .set_index(idx_name)
     )
 
-    links_df = links_df.rename(columns={"geometry": "geometry_B"})
+    links_geo_df = links_geo_df.rename(columns={"geometry": "geometry_B"})
 
     # makes sure all nodes exist
-    _missing_geo_links_df = links_df[
-        links_df["geometry_A"].isnull() | links_df["geometry_B"].isnull()
+    _missing_geo_links_df = links_geo_df[
+        links_geo_df["geometry_A"].isnull() | links_geo_df["geometry_B"].isnull()
     ]
     if not _missing_geo_links_df.empty:
         missing_nodes = _missing_geo_links_df[[from_node, to_node]].values
-        raise ValueError(f"Missing from/to nodes in nodes_df: {missing_nodes}")
+        WranglerLogger.error(
+            f"Cannot create link geometry from nodes because the nodes are\
+                             missing from the network. Missing nodes: {missing_nodes}"
+        )
+        raise MissingNodesError("Specified from/to nodes are missing in nodes_df")
 
     # create geometry from points
-    links_df["geometry"] = links_df.apply(
+    links_geo_df["geometry"] = links_geo_df.apply(
         lambda row: LineString([row["geometry_A"], row["geometry_B"]]), axis=1
     )
 
     # convert to GeoDataFrame
-    links_gdf = gpd.GeoDataFrame(links_df, geometry="geometry")
-
+    links_gdf = gpd.GeoDataFrame(
+        links_geo_df["geometry"], geometry=links_geo_df["geometry"]
+    )
     return links_gdf["geometry"]
 
 
 def linestring_from_lats_lons(df, lat_fields, lon_fields) -> gpd.GeoSeries:
-    """
-    Create a LineString geometry from a DataFrame with lon/lat fields.
+    """Create a LineString geometry from a DataFrame with lon/lat fields.
 
     Args:
         df: DataFrame with columns for lon/lat fields.
@@ -196,7 +195,7 @@ def linestring_from_lats_lons(df, lat_fields, lon_fields) -> gpd.GeoSeries:
         lon_fields: list of column names for the lon fields.
     """
     if len(lon_fields) != len(lat_fields):
-        raise ValueError("lon_fields and lat_fields must have the same length")
+        raise ValueError("lon_fields and lat_fields lists must have the same length")
 
     line_geometries = gpd.GeoSeries(
         [
@@ -210,9 +209,35 @@ def linestring_from_lats_lons(df, lat_fields, lon_fields) -> gpd.GeoSeries:
     return gpd.GeoSeries(line_geometries)
 
 
-def point_from_xy(x, y, xy_crs: int = 4326, point_crs: int = 4326):
+class InvalidCRSError(Exception):
+    pass
+
+
+def check_point_valid_for_crs(point: Point, crs: int):
+    """Check if a point is valid for a given coordinate reference system.
+
+    Args:
+        point: Shapely Point
+        crs: coordinate reference system in ESPG code
+
+    raises: InvalidCRSError if point is not valid for the given crs
     """
-    Creates a point geometry from x and y coordinates.
+    crs = CRS.from_user_input(crs)
+    minx, miny, maxx, maxy = crs.area_of_use.bounds
+    ok_bounds = True
+    if not minx <= point.x <= maxx:
+        WranglerLogger.error(f"Invalid X coordinate for CRS {crs}: {point.x}")
+        ok_bounds = False
+    if not miny <= point.y <= maxy:
+        WranglerLogger.error(f"Invalid Y coordinate for CRS {crs}: {point.y}")
+        ok_bounds = False
+
+    if not ok_bounds:
+        raise InvalidCRSError(f"Invalid coordinate for CRS {crs}: {point.x}, {point.y}")
+
+
+def point_from_xy(x, y, xy_crs: int = LAT_LON_CRS, point_crs: int = LAT_LON_CRS):
+    """Creates point geometry from x and y coordinates.
 
     Args:
         x: x coordinate, in xy_crs
@@ -227,6 +252,7 @@ def point_from_xy(x, y, xy_crs: int = 4326, point_crs: int = 4326):
     point = Point(x, y)
 
     if xy_crs == point_crs:
+        check_point_valid_for_crs(point, point_crs)
         return point
 
     if (xy_crs, point_crs) not in transformers:
@@ -260,21 +286,20 @@ def update_nodes_in_linestring_geometry(
     updated_nodes_df: gpd.GeoDataFrame,
     position: int,
 ) -> gpd.GeoSeries:
-    """
-    Updates the nodes in a linestring geometry and returns updated geometry.
+    """Updates the nodes in a linestring geometry and returns updated geometry.
 
     Args:
-        original_df: GeoDataFrame with the node primary key and linestring geometry
+        original_df: GeoDataFrame with the `model_node_id` and linestring geometry
         updated_nodes_df: GeoDataFrame with updated node geometries.
         position: position in the linestring to update with the node.
     """
-    nodes_pk = updated_nodes_df.params.primary_key
-    orig_pk = original_df.params.primary_key
+    LINK_FK_NODE = ["A", "B"]
+    original_index = original_df.index
 
-    updated_df = original_df.merge(
-        updated_nodes_df[["geometry"]],
-        left_on=nodes_pk,
-        right_index=True,
+    updated_df = original_df.reset_index().merge(
+        updated_nodes_df[["model_node_id", "geometry"]],
+        left_on=LINK_FK_NODE[position],
+        right_on="model_node_id",
         suffixes=("", "_node"),
     )
 
@@ -285,9 +310,9 @@ def update_nodes_in_linestring_geometry(
         axis=1,
     )
 
-    updated_df = updated_df.set_index(orig_pk)
+    updated_df = updated_df.reset_index().set_index(original_index.names)
 
-    # WranglerLogger.debug(f"updated_df - AFTER: \n {updated_df}")
+    WranglerLogger.debug(f"updated_df - AFTER: \n {updated_df.geometry}")
     return updated_df["geometry"]
 
 
@@ -331,7 +356,7 @@ def location_ref_from_point(
     return LocationReference(**lr)
 
 
-def location_refs_from_linestring(geometry: LineString) -> LocationReferences:
+def location_refs_from_linestring(geometry: LineString) -> List[LocationReference]:
     """Generates a shared street location reference from linestring.
 
     Args:
@@ -340,24 +365,22 @@ def location_refs_from_linestring(geometry: LineString) -> LocationReferences:
     Returns:
         LocationReferences: As defined by sharedStreets.io schema
     """
-    return LocationReferences(
-        [
-            location_ref_from_point(
-                point,
-                sequence=i + 1,
-                distance_to_next_ref=point.distance(geometry.coords[i + 1]),
-                bearing=get_bearing(*point.coords[0], *geometry.coords[i + 1]),
-            )
-            for i, point in enumerate(geometry.coords[:-1])
-        ]
-    )
+    return [
+        location_ref_from_point(
+            point,
+            sequence=i + 1,
+            distance_to_next_ref=point.distance(geometry.coords[i + 1]),
+            bearing=get_bearing(*point.coords[0], *geometry.coords[i + 1]),
+        )
+        for i, point in enumerate(geometry.coords[:-1])
+    ]
 
 
 def get_bounding_polygon(
     boundary_geocode: Union[str, dict] = None,
     boundary_file: Union[str, Path] = None,
     boundary_gdf: gpd.GeoDataFrame = None,
-    crs: int = 4326,  # WGS84
+    crs: int = LAT_LON_CRS,  # WGS84
 ) -> gpd.GeoSeries:
     """Get the bounding polygon for a given boundary first prioritizing the
 
@@ -414,3 +437,129 @@ def get_bounding_polygon(
     boundary_gs = gpd.GeoSeries([boundary_gdf.geometry.unary_union], crs=crs)
 
     return boundary_gs
+
+
+def _harmonize_crs(df: pd.DataFrame, crs: int = LAT_LON_CRS) -> pd.DataFrame:
+    if isinstance(df, gpd.GeoDataFrame) and df.crs != crs:
+        df = df.to_crs(crs)
+    return df
+
+
+def _offset_geometry_meters(
+    geo_s: gpd.GeoSeries, offset_distance_meters: float
+) -> gpd.GeoSeries:
+    og_crs = geo_s.crs
+    geo_s.to_crs(METERS_CRS)
+    offset_geo = geo_s.apply(lambda x: x.offset_curve(offset_distance_meters))
+    return offset_geo.to_crs(og_crs)
+
+
+def to_points_gdf(
+    table: pd.DataFrame,
+    ref_nodes_df: gpd.GeoDataFrame = None,
+    ref_road_net: "RoadwayNetwork" = None,
+    **kwargs,
+) -> gpd.GeoDataFrame:
+    """
+    Convert a table to a GeoDataFrame.
+
+    If the table is already a GeoDataFrame, return it as is. Otherwise, attempt to convert the
+    table to a GeoDataFrame using the following methods:
+    1. If the table has a 'geometry' column, return a GeoDataFrame using that column.
+    2. If the table has 'lat' and 'lon' columns, return a GeoDataFrame using those columns.
+    3. If the table has a '*model_node_id' column, return a GeoDataFrame using that column and the
+         nodes_df provided.
+    If none of the above, raise a ValueError.
+
+    Args:
+        table: DataFrame to convert to GeoDataFrame.
+        ref_nodes_df: GeoDataFrame of nodes to use to convert model_node_id to geometry.
+        ref_road_net: RoadwayNetwork object to use to convert model_node_id to geometry.
+
+    Returns:
+        GeoDataFrame: GeoDataFrame representation of the table.
+    """
+    if table is gpd.GeoDataFrame:
+        return table
+
+    WranglerLogger.debug("Converting GTFS table to GeoDataFrame")
+    if "geometry" in table.columns:
+        return gpd.GeoDataFrame(table, geometry="geometry")
+
+    lat_cols = list(filter(lambda col: "lat" in col, table.columns))
+    lon_cols = list(filter(lambda col: "lon" in col, table.columns))
+    model_node_id_cols = list(filter(lambda col: "model_node_id" in col, table.columns))
+
+    if not (lat_cols and lon_cols) or not model_node_id_cols:
+        raise ValueError(
+            "Could not find lat/long, geometry columns or *model_node_id column in \
+                         table necessary to convert to GeoDataFrame"
+        )
+
+    if lat_cols and lon_cols:
+        # using first found lat and lon columns
+        return gpd.GeoDataFrame(
+            table,
+            geometry=gpd.points_from_xy(table[lon_cols[0]], table[lat_cols[0]]),
+            crs="EPSG:4326",
+        )
+
+    if model_node_id_cols:
+        node_id_col = model_node_id_cols[0]
+
+        if ref_nodes_df is None:
+            if ref_road_net is None:
+                raise ValueError(
+                    "Must provide either nodes_df or road_net to convert \
+                                 model_node_id to geometry"
+                )
+            ref_nodes_df = ref_road_net.nodes_df
+
+        WranglerLogger.debug("Converting table to GeoDataFrame using model_node_id")
+
+        _table = table.merge(
+            ref_nodes_df[["model_node_id", "geometry"]],
+            left_on=node_id_col,
+            right_on="model_node_id",
+        )
+        return gpd.GeoDataFrame(_table, geometry="geometry")
+
+    raise ValueError(
+        "Could not find lat/long, geometry columns or *model_node_id column in table \
+                     necessary to convert to GeoDataFrame"
+    )
+
+
+def update_point_geometry(
+    df: pd.DataFrame,
+    ref_point_df: pd.DataFrame,
+    lon_field: str = "X",
+    lat_field: str = "Y",
+    id_field: str = "model_node_id",
+    ref_lon_field: str = "X",
+    ref_lat_field: str = "Y",
+    ref_id_field: str = "model_node_id",
+) -> pd.DataFrame:
+    """Returns copy of df with lat and long fields updated with geometry from ref_point_df.
+
+    NOTE: does not update "geometry" field if it exists.
+    """
+
+    df = copy.deepcopy(df)
+
+    ref_df = ref_point_df.rename(
+        columns={
+            ref_lon_field: lon_field,
+            ref_lat_field: lat_field,
+            ref_id_field: id_field,
+        }
+    )
+
+    updated_df = update_df_by_col_value(
+        df,
+        ref_df[[id_field, lon_field, lat_field]],
+        id_field,
+        properties=[lat_field, lon_field],
+        fail_if_missing=False,
+    )
+    return updated_df

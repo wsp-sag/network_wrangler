@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 import os
-import glob
 import copy
 import pprint
 
@@ -12,30 +11,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import Union, Collection
 
-import geopandas as gpd
 
 from projectcard import read_cards, ProjectCard, SubProject
 
 from .logger import WranglerLogger
+from .params import (
+    BASE_SCENARIO_SUGGESTED_PROPS,
+    ROADWAY_CARD_TYPES,
+    SECONDARY_TRANSIT_CARD_TYPES,
+    TRANSIT_CARD_TYPES,
+)
 from .roadway.io import load_roadway, write_roadway
 from .transit.io import load_transit, write_transit
-from .utils import topological_sort
-
-BASE_SCENARIO_SUGGESTED_PROPS = [
-    "road_net",
-    "transit_net",
-    "applied_projects",
-    "conflicts",
-]
-
-TRANSIT_CARD_TYPES = ["transit_property_change"]
-ROADWAY_CARD_TYPES = [
-    "roadway_deletion",
-    "roadway_addition",
-    "roadway_property_change",
-    "roadway_managed_lanes",
-]
-SECONDARY_TRANSIT_CARD_TYPES = ["roadway_deletion"]
+from .utils.utils import topological_sort
 
 
 class ScenarioConflictError(Exception):
@@ -130,7 +118,7 @@ class Scenario(object):
         """
         WranglerLogger.info("Creating Scenario")
 
-        if type(base_scenario) == "Scenario":
+        if isinstance(base_scenario, Scenario):
             base_scenario = base_scenario.__dict__
 
         if not set(BASE_SCENARIO_SUGGESTED_PROPS) <= set(base_scenario.keys()):
@@ -486,9 +474,8 @@ class Scenario(object):
             self.transit_net.apply(change)
 
         if change.change_type not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES:
-            # WranglerLogger.debug(f"Project {change.project}:Change .change_type {change.change_type} and ._change_type:{change._change_type}")
             raise ProjectCardError(
-                f"Project {change.project}: Don't understand project category: {change.change_type}"
+                f"Project {change.project}: Don't understand project cat: {change.change_type}"
             )
 
     def _apply_project(self, project_name: str) -> None:

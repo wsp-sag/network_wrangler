@@ -3,6 +3,7 @@ import hashlib
 import pandas as pd
 
 from .graph import links_nodes_to_ox_graph
+from .links.links import node_ids_in_links
 from ..logger import WranglerLogger
 
 
@@ -67,7 +68,7 @@ class Subnet:
             subnet_links_df (pd.DataFrame, optional): Initial links to include in subnet.
                 Optional if define a selection_dict and will default to result of
                 self.generate_subnet_from_selection_dict(selection_dict)
-            selection_dict (dict optional): RoadwaySelection dictionary for initial links to
+            selection_dict (dict optional): RoadwayLinkSelection dictionary for initial links to
                 include in subnet.
 
                 Example:
@@ -163,7 +164,7 @@ class Subnet:
             raise ValueError(
                 "Must set self.subnet_links_df before accessing subnet_nodes."
             )
-        return self.net.node_ids_in_links(self.subnet_links_df)
+        return node_ids_in_links(self.subnet_links_df, self.net.nodes_df)
 
     @property
     def subnet_nodes_df(self):

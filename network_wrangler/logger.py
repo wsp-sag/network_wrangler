@@ -7,7 +7,6 @@ import os
 import sys
 import logging
 
-__all__ = ["WranglerLogger", "setup_logging"]
 
 WranglerLogger = logging.getLogger("WranglerLogger")
 
@@ -17,7 +16,7 @@ def setup_logging(
     debug_log_filename: str = "wrangler_{}.debug.log".format(
         datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
     ),
-    log_to_console: bool = False,
+    std_out_level: str = "info",
 ):
     """
     Sets up the WranglerLogger w.r.t. the debug file location and if logging to console.
@@ -30,10 +29,9 @@ def setup_logging(
         debug_log_filename: the location of the log file that will get created to add the DEBUG log
             The DEBUG log is very noisy, for debugging. Defaults to file in cwd()
             `wrangler_[datetime].log`. To turn off logging to a file, use log_filename = None.
-        log_to_console: if True, logging will go to the console at DEBUG level. Defaults to False.
+        std_out_level: the level of logging to the console. One of "info", "warning", "debug".
+            Defaults to "info" but will be set to ERROR if nothing provided matches.
     """
-    # fiona is VERY noisy when writing to parquet.
-    logging.getLogger("fiona").setLevel(logging.INFO)
 
     # add function variable so that we know if logging has been called
     setup_logging.called = True
@@ -66,8 +64,15 @@ def setup_logging(
         debug_log_handler.setFormatter(FORMAT)
         WranglerLogger.addHandler(debug_log_handler)
 
-    if log_to_console:
-        console_handler = logging.StreamHandler(sys.stdout)
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(FORMAT)
+    WranglerLogger.addHandler(console_handler)
+    if std_out_level == "debug":
         console_handler.setLevel(logging.DEBUG)
-        console_handler.setFormatter(FORMAT)
-        WranglerLogger.addHandler(console_handler)
+    elif std_out_level == "info":
+        console_handler.setLevel(logging.DEBUG)
+    elif std_out_level == "warning":
+        console_handler.setLevel(logging.WARNING)
+    else:
+        console_handler.setLevel(logging.ERROR)

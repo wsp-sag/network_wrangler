@@ -6,5 +6,6 @@ pandas >= 1.6
 pandera[geopandas]
 pydantic >= 2
 pyarrow
+pyogrio
 projectcard
 pyyaml

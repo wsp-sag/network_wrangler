@@ -4,13 +4,14 @@ from typing import Union, Literal
 import pandas as pd
 import geopandas as gpd
 
-from .feed import Feed
+from ..utils.geo import to_points_gdf
+
+from .feed.feed import Feed
 from .network import TransitNetwork
 from ..models.gtfs.gtfs import GtfsModel
 from ..models._base.db import RequiredTableError
 from ..logger import WranglerLogger
-from ..utils import unzip_file
-from ..utils.io import write_table
+from ..utils.io import unzip_file, write_table
 
 
 class FeedReadError(Exception):
@@ -231,7 +232,7 @@ def write_feed_geo(
     out_prefix=None,
     overwrite: bool = True,
 ) -> None:
-    from .geo import shapes_to_shape_links_gdf, to_points_gdf
+    from .geo import shapes_to_shape_links_gdf
 
     out_dir = Path(out_dir)
     if not out_dir.is_dir():

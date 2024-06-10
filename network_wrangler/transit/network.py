@@ -5,15 +5,16 @@ from __future__ import annotations
 
 import copy
 from typing import Union
-from pathlib import Path
 
 import networkx as nx
-import pandas as pd
+
+from .validate import transit_road_net_consistency
 
 from projectcard import ProjectCard, SubProject
 
 from ..logger import WranglerLogger
-from ..utils import dict_to_hexkey
+from ..utils.utils import dict_to_hexkey
+from ..utils.geo import to_points_gdf
 from ..roadway.network import RoadwayNetwork
 from .projects import (
     apply_transit_routing_change,
@@ -21,11 +22,10 @@ from .projects import (
     apply_calculated_transit,
 )
 from .selection import TransitSelection
-from .feed import Feed, transit_road_net_consistency
+from .feed.feed import Feed
 
 from .geo import (
     shapes_to_shape_links_gdf,
-    to_points_gdf,
     stop_times_to_stop_time_links_gdf,
     stop_times_to_stop_time_points_gdf,
     shapes_to_trip_shapes_gdf,
@@ -65,6 +65,8 @@ class TransitNetwork(object):
         args:
             feed: Feed object mimicing partridge feed
         """
+        WranglerLogger.debug("Creating new TransitNetwork.")
+
         self._road_net: "RoadwayNetwork" = None
         self.feed: Feed = feed
         self.graph: nx.MultiDiGraph = None

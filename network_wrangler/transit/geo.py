@@ -1,12 +1,17 @@
+"""Geographic functions for GTFS tables."""
+from __future__ import annotations
+
 import geopandas as gpd
 import pandas as pd
 
 from shapely import LineString
 
-from ..logger import WranglerLogger
-
 from .feed import unique_shape_links, unique_stop_time_links
-from .feed import (
+
+from ..params import LAT_LON_CRS
+from ..utils.geo import linestring_from_lats_lons, update_point_geometry
+
+from ..models.gtfs.tables import (
     WranglerShapesTable,
     WranglerStopTimesTable,
     WranglerStopsTable,
@@ -14,89 +19,11 @@ from .feed import (
 )
 
 
-def to_points_gdf(
-    table: pd.DataFrame,
-    ref_nodes_df: gpd.GeoDataFrame = None,
-    ref_road_net: "RoadwayNetwork" = None,
-    **kwargs,
-) -> gpd.GeoDataFrame:
-    """
-    Convert a table to a GeoDataFrame.
-
-    If the table is already a GeoDataFrame, return it as is. Otherwise, attempt to convert the table
-    to a GeoDataFrame using the following methods:
-    1. If the table has a 'geometry' column, return a GeoDataFrame using that column.
-    2. If the table has 'lat' and 'lon' columns, return a GeoDataFrame using those columns.
-    3. If the table has a '*model_node_id' column, return a GeoDataFrame using that column and the
-         nodes_df provided.
-    If none of the above, raise a ValueError.
-
-    Args:
-        table: DataFrame to convert to GeoDataFrame.
-        ref_nodes_df: GeoDataFrame of nodes to use to convert model_node_id to geometry.
-        ref_road_net: RoadwayNetwork object to use to convert model_node_id to geometry.
-
-    Returns:
-        GeoDataFrame: GeoDataFrame representation of the table.
-    """
-    if table is gpd.GeoDataFrame:
-        return table
-
-    WranglerLogger.debug("Converting GTFS table to GeoDataFrame")
-    if "geometry" in table.columns:
-        return gpd.GeoDataFrame(table, geometry="geometry")
-
-    lat_cols = list(filter(lambda col: "lat" in col, table.columns))
-    lon_cols = list(filter(lambda col: "lon" in col, table.columns))
-    model_node_id_cols = list(filter(lambda col: "model_node_id" in col, table.columns))
-
-    if not (lat_cols and lon_cols) or not model_node_id_cols:
-        raise ValueError(
-            "Could not find lat/long, geometry columns or *model_node_id column in \
-                         table necessary to convert to GeoDataFrame"
-        )
-
-    if lat_cols and lon_cols:
-        # using first found lat and lon columns
-        return gpd.GeoDataFrame(
-            table,
-            geometry=gpd.points_from_xy(table[lon_cols[0]], table[lat_cols[0]]),
-            crs="EPSG:4326",
-        )
-
-    if model_node_id_cols:
-        node_id_col = model_node_id_cols[0]
-
-        if ref_nodes_df is None:
-            if ref_road_net is None:
-                raise ValueError(
-                    "Must provide either nodes_df or road_net to convert \
-                                 model_node_id to geometry"
-                )
-            ref_nodes_df = ref_road_net.nodes_df
-
-        WranglerLogger.debug(
-            "Converting GTFS table to GeoDataFrame using model_node_id"
-        )
-
-        _table = table.merge(
-            ref_nodes_df[["model_node_id,geometry"]],
-            left_on=node_id_col,
-            right_on="model_node_id",
-        )
-        return gpd.GeoDataFrame(_table, geometry="geometry")
-
-    raise ValueError(
-        "Could not find lat/long, geometry columns or *model_node_id column in table \
-                     necessary to convert to GeoDataFrame"
-    )
-
-
 def shapes_to_trip_shapes_gdf(
     shapes: "WranglerShapesTable",
     # trips: TripsTable,
     ref_nodes_df: gpd.GeoDataFrame = None,
-    crs: int = 4326,
+    crs: int = LAT_LON_CRS,
 ) -> gpd.GeoDataFrame:
     """
     Geodataframe with one polyline shape per shape_id.
@@ -128,46 +55,25 @@ def shapes_to_trip_shapes_gdf(
     return route_shapes_gdf
 
 
-def update_point_geometry(
-    df: pd.DataFrame,
-    ref_point_df: pd.DataFrame,
-    lon_field: str = "X",
-    lat_field: str = "Y",
-    id_field: str = "model_node_id",
-    ref_lon_field: str = "X",
-    ref_lat_field: str = "Y",
-    ref_id_field: str = "model_node_id",
-) -> pd.DataFrame:
-    from ..utils.data import update_df_by_col_value
-    import copy
+def update_stops_geometry(
+    stops: WranglerStopsTable, ref_nodes_df
+) -> WranglerStopsTable:
+    """Returns stops table with geometry updated from ref_nodes_df.
 
-    df = copy.deepcopy(df)
-
-    ref_df = ref_point_df.rename(
-        columns={
-            ref_lon_field: lon_field,
-            ref_lat_field: lat_field,
-            ref_id_field: id_field,
-        }
-    )
-
-    updated_df = update_df_by_col_value(
-        df,
-        ref_df[[id_field, lon_field, lat_field]],
-        id_field,
-        properties=[lat_field, lon_field],
-        source_must_update_all=False,
-    )
-    return updated_df
-
-
-def update_stops_geometry(stops: "WranglerStopsTable", ref_nodes_df):
+    NOTE: does not update "geometry" field if it exists.
+    """
     return update_point_geometry(
         stops, ref_nodes_df, lon_field="stop_lon", lat_field="stop_lat"
     )
 
 
-def update_shapes_geometry(shapes: "WranglerShapesTable", ref_nodes_df):
+def update_shapes_geometry(
+    shapes: WranglerShapesTable, ref_nodes_df
+) -> WranglerShapesTable:
+    """Returns shapes table with geometry updated from ref_nodes_df.
+
+    NOTE: does not update "geometry" field if it exists.
+    """
     return update_point_geometry(
         shapes,
         ref_nodes_df,
@@ -182,7 +88,7 @@ def shapes_to_shape_links_gdf(
     ref_nodes_df: gpd.GeoDataFrame = None,
     from_field: str = "A",
     to_field: str = "B",
-    crs: int = 4326,
+    crs: int = LAT_LON_CRS,
 ) -> gpd.GeoDataFrame:
     """Translates shapes to shape links geodataframe using geometry from ref_nodes_df if provided.
 
@@ -195,13 +101,11 @@ def shapes_to_shape_links_gdf(
         from_field: Field used for the link's from node `model_node_id`. Defaults to "A".
         to_field: Field used for the link's to node `model_node_id`. Defaults to "B".
         crs (int, optional): Coordinate reference system. SHouldn't be changed unless you know
-            what you are doing. Defaults to 4326 which is WGS84 lat/long.
+            what you are doing. Defaults to LAT_LON_CRS which is WGS84 lat/long.
 
     Returns:
         gpd.GeoDataFrame: _description_
     """
-    from ..utils.geo import linestring_from_lats_lons
-
     if ref_nodes_df is not None:
         shapes = update_shapes_geometry(shapes, ref_nodes_df)
     tr_links = unique_shape_links(shapes, from_field=from_field, to_field=to_field)
@@ -244,7 +148,7 @@ def stop_times_to_stop_time_points_gdf(
         geometry=gpd.points_from_xy(
             stop_times_geo["stop_lon"], stop_times_geo["stop_lat"]
         ),
-        crs=4326,
+        crs=LAT_LON_CRS,
     )
 
 

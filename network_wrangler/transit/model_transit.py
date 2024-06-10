@@ -62,7 +62,7 @@ class ModelTransit:
         """
         # Traversed nodes without a stop should be negative integers
         net = copy.deepcopy(self)
-        all_stops = net.feed.stops[TransitNetwork.STOPS_FOREIGN_KEY].tolist()
+        all_stops = net.feed.stops["model_link_id"].tolist()
         node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
 
         net.apply(

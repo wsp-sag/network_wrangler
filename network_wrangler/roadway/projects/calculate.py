@@ -1,10 +1,17 @@
+"""Wrapper function for applying code to change roadway network."""
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from ...logger import WranglerLogger
+
+if TYPE_CHECKING:
+    from ..network import RoadwayNetwork
 
 
 def apply_calculated_roadway(
-    roadway_net: "RoadwayNetwork",
+    roadway_net: RoadwayNetwork,
     pycode: str,
-) -> "RoadwayNetwork":
+) -> RoadwayNetwork:
     """
     Changes roadway network object by executing pycode.
 

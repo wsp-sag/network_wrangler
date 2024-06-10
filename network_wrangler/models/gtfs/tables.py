@@ -13,7 +13,7 @@ Each table model leverages the Pydantic data models defined in the records modul
 data model for the corresponding table. The classes also include additional configurations for, 
 such as uniqueness constraints.
 
-There is NOT any foreign key validation in the data models. 
+There is NOT any foreign key validation in the data models.
 
 Additionally, the module includes a custom check method called "uniqueness" that can be used to 
 check for uniqueness of values in a DataFrame.
@@ -104,6 +104,7 @@ class StopsTable(pa.DataFrameModel):
     """
 
     stop_id: Series[str] = pa.Field(coerce=True, nullable=False, unique=True)
+    # TODO why is that here?
     model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=False, ge=-90, le=90)
     stop_lon: Series[float] = pa.Field(coerce=True, nullable=False, ge=-180, le=180)
@@ -136,6 +137,7 @@ class StopsTable(pa.DataFrameModel):
 
 class WranglerStopsTable(StopsTable):
     model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
+    # TODO should this be in base
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=True, ge=-90, le=90)
     stop_lon: Series[float] = pa.Field(coerce=True, nullable=True, ge=-180, le=180)
 

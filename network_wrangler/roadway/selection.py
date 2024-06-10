@@ -1,11 +1,31 @@
-import pandas as pd
+from __future__ import annotations
 
 import copy
 import hashlib
 
+from typing import TYPE_CHECKING
+
+import pandas as pd
+
 from ..logger import WranglerLogger
-from ..utils import coerce_dict_to_df_types, findkeys
+
+from ..models.projects.roadway_selection import (
+    SelectFacility,
+    SelectNodesDict,
+    SelectLinksDict,
+)
+from ..utils.models import (
+    coerce_extra_fields_to_type_in_df,
+    DatamodelDataframeIncompatableError,
+)
 from .segment import Segment
+from .links.filters import filter_links_to_modes
+
+
+if TYPE_CHECKING:
+    from pandera.typing import DataFrame
+    from .network import RoadwayNetwork
+    from ..models.roadway.tables import RoadwayLinksTable, RoadwayNodeTable
 
 
 class SelectionFormatError(Exception):
@@ -16,478 +36,421 @@ class SelectionError(Exception):
     pass
 
 
-# Project card facility selection keys that are associated with node properties
-NODE_SELECTION_KEYS = ["nodes", "from", "to"]
-
-# Project card facility selectionnkeys that are associated with link properties
-LINK_SELECTION_KEYS = ["links"]
-
-# Project card facility selectionnkeys
-SEGMENT_SELECTION_KEYS = ["from", "to", "links"]
-
-# Default modes for searching if not specified in the project card using `modes` keyword.
-DEFAULT_SEARCH_MODES = ["drive"]
-
-
-class RoadwaySelection:
-    """Object to perform and store information about a selection from a project card "facility".
+class RoadwayLinkSelection:
+    """Object to perform and store information about selection from a project card `facility` key.
 
     Properties:
-        net: roadway network related to the selection
-        sel_key: unique selection key based on selection dictionary
-        selection_dictionary
-        modes: list of modes that to search for links for. Provided using the "modes" keyword in
-            the selection_dictionary. If not provided, will default to DEFAULT_SEARCH_MODES
-            which defaults to ["drive"]
-        link_selection_dict: all selection criteria for links
-        node_selection_dict: all selection criteria for nodes
-        explicit_link_id_selection_dict: link selection criteria that uses explicit IDs
-        explicit_node_id_selection_dict: node selection criteria that uses explicit IDs
-        additional_link_selection_dict: link selection criteria that is layered on top of a
-            segment-search, all, or explict ID search (i.e. "lanes": [1,2,3], "drive_access": True)
-        additional_node_selection_dict: node selection criteria that is layered on top of a
-            all or explicit ID search. Not typically used.
-        selection_type(str): one of "explicit_link_id", "explicit_node_id" or "segment_search"
-            or "all_links" or "all_nodes"
-        selected_nodes_df: lazily-evaluated selected node. sDefaults to None if not a
-            nodes selection.
-        selected_links_df: lazily-evaluated selected links. Defaults to None if not a
-            links selection.
-        link_selection(bool): True if selection is for links
-        node_selection(bool): True if selection is for nodes
-        feature_types(list): list of selected features containing  "links" and/or "nodes
-        ignore_missing(bool):  If True, will error if explict ID specified but not found.
+        net (RoadwayNetwork): roadway network related to the selection
+        raw_selection_dictionary (dict): raw selection dictionary as input to the object used to
+            generate `sel_key`.
+        sel_key (str): unique selection key based on selection dictionary
+        selection_dictionary (dict): dictionary conforming to `SelectFacility` model
+            with a `links` key
+        selection_data (SelectFacility): selection dictionary as a SelectFacility model
+        selection_types (str): one of `explicit_ids`, `segment` or `all`.
+            From selection dictionary.
+        feature_types (str): returns `links`.  From selection dictionary.
+        ignore_missing (bool): True if missing links should be ignored. From selection dictionary.
+        modes (list[str]): list of modes that to search for links for. From selection dictionary.
+            "any" will return all links without filtering modes.
+        explicit_id_sel_dict (dict): explicit link selection criteria. From selection dictionary.
+        additional_sel_dict: link selection criteria that is layered on top of a segment, all,
+            or explict ID search (i.e. "lanes": [1,2,3], "drive_access": True).  From selection
+            dictionary.
+        found (bool): True if links were found
+        selected_links (list): list of selected link ids
+        selected_links_df (DataFrame[RoadwayLinksTable]): lazily-evaluated selected links.
+        segment (Segment): segment object if selection type is segment. Defaults to None if not a
+            segment selection.
     """
 
     def __init__(
         self,
         net: "RoadwayNetwork",
         selection_dict: dict,
-        ignore_missing: bool = True,
     ):
-        """Constructor for RoadwaySelection object.
+        """Constructor for RoadwayLinkSelection object.
 
         Args:
             net (RoadwayNetwork): Roadway network object to select from.
-            selection_dict (dict): Selection dictionary.
-            ignore_missing: If True, will error if explict ID specified but not found.
+            selection_dict (dict):  dictionary conforming to `SelectFacility` model with
+                a "links" key.
         """
         self.net = net
 
         WranglerLogger.debug(
-            f"Creating selection from selection dictionary:\n\{selection_dict}"
+            f"Creating selection from selection dictionary:\n {selection_dict}"
         )
+
+        # Coerce the selection dictionary to model types; fill unspecified with default params
         self.selection_dict = selection_dict
-        self.ignore_missing = ignore_missing
 
-        _modes = list(findkeys(selection_dict, "modes"))
-        if _modes:
-            self.modes = _modes[0]
-        else:
-            self.modes = DEFAULT_SEARCH_MODES
-
-        self.link_selection_dict = self.calc_link_selection_dict(self.selection_dict)
-        self.node_selection_dict = self.calc_node_selection_dict(self.selection_dict)
-
-        self.sel_key = self._assign_selection_key(self.selection_dict)
-
-        self.selection_type = self.get_selection_type(self.selection_dict, self.net)
-
-        self._stored_net_hash = copy.deepcopy(self.net.network_hash)
         self._selected_links_df = None
-        self._selected_nodes_df = None
         self._segment = None
 
         WranglerLogger.debug(f"Created selection of type:{self.selection_type}")
 
-        self.validate_selection()
-
     def __nonzero__(self):
-        if len(self.selected_links) > 0:
-            return True
-        if len(self.selected_nodes) > 0:
-            return True
-        return False
+        return len(self.selected_links) > 0
 
     @property
-    def selected_links(self) -> list:
+    def feature_types(self):
+        """Return the feature type of the selection. Always returns `links`."""
+        return "links"
+
+    @property
+    def raw_selection_dict(self) -> dict:
+        """Raw selection dictionary as input into `net.get_selection()`.
+
+        Used for generating `self.sel_key` and then fed into SelectLinksDict data model where
+        additional defaults are set.
+        """
+        return self._raw_selection_dict
+
+    @raw_selection_dict.setter
+    def raw_selection_dict(self, selection_dict: dict):
+        self._raw_selection_dict = selection_dict
+        self._selection_key = _create_selection_key(selection_dict)
+
+    @property
+    def sel_key(self):
+        """Return the selection key as generated from `self.raw_selection_dict`."""
+        return self._sel_key
+
+    @property
+    def selection_data(self):
+        """Link selection data from SelectLinksDict."""
+        return self._selection_data
+
+    @property
+    def selection_type(self):
+        """Link selection type from SelectLinksDict: either `all`, `explicit_ids`, or `segment`."""
+        return self.selection_data.links.selection_type
+
+    @property
+    def selection_dict(self) -> dict:
+        """Selection dictionary dictating the selection settings."""
+        return self._selection_dict
+
+    @selection_dict.setter
+    def selection_dict(self, selection_dict: dict):
+        self.raw_selection_dict = selection_dict
+        self._selection_dict = self.validate_selection(selection_dict)
+        self._selection_data = SelectFacility(**self._selection_dict)
+        self._stored_net_hash = copy.deepcopy(self.net.network_hash)
+
+    @property
+    def ignore_missing(self) -> bool:
+        """True if missing links should be ignored. From selection dictionary."""
+        return self.selection_data.links.ignore_missing
+
+    @property
+    def modes(self) -> list[str]:
+        """List of modes to search for links for. From selection dictionary.
+
+        `any` will return all links without filtering modes."""
+        return self.selection_data.links.modes
+
+    @property
+    def explicit_id_sel_dict(self):
+        """Return a dictionary of fields that are explicit ids. From selection dictionary."""
+        return self.selection_data.links.explicit_id_selection_dict
+
+    @property
+    def additional_sel_dict(self):
+        """Return a dictionary of fields that are not part of the initial selection fields.
+
+        From selection dictionary.
+        """
+        return self.selection_data.links.additional_selection_dict
+
+    @property
+    def selected_links(self) -> list[int]:
+        """List of selected link ids."""
         if self.selected_links_df is None:
             return []
         return self.selected_links_df.index.tolist()
 
     @property
-    def selected_nodes(self) -> list:
-        if self.selected_nodes_df is None:
-            return []
-        return self.selected_nodes_df.index.tolist()
-
-    @property
     def found(self) -> bool:
-        if self.selected_links_df is not None:
-            return True
-        if self.selected_nodes_df is not None:
-            return True
-        return False
+        """Return True if links were found."""
+        return self.selected_links_df is not None
 
     @property
     def segment(self):
-        if self._segment is None and self.selection_type == "segment_search":
+        """Return the segment object if selection type is segment."""
+        if self._segment is None and self.selection_type == "segment":
             WranglerLogger.debug("Creating new segment")
             self._segment = Segment(self.net, self)
         return self._segment
 
     @property
-    def link_selection(self) -> bool:
-        LINK_SELECTIONS = ["all_links", "explicit_link_id", "segment_search"]
-        return self.selection_type in LINK_SELECTIONS
-
-    @property
-    def node_selection(self) -> bool:
-        NODE_SELECTIONS = ["all_nodes", "explicit_node_id"]
-        return self.selection_type in NODE_SELECTIONS
-
-    @property
-    def feature_types(self) -> list:
-        _t = []
-        if self.node_selection:
-            _t.append("nodes")
-        if self.link_selection:
-            _t.append("links")
-        if not _t:
-            raise SelectionFormatError(
-                "Should be one of type node or links but found neither."
-            )
-        return _t
-
-    def calc_node_selection_dict(self, selection_dict: dict) -> list:
-        """Dictionary of properties nodes are selected by in following sub-dictionaries:
-
-        Also coerces the values to the matching type of the network nodes.
-
-        - "nodes": should be either "all" or a dictionary of properties.
-        - "from": should be of length 1 and only be there for segment-based search
-        - "to": should be of length 1 and only be there for segment-based search
-
-        args:
-            selection_dict: raw selection dictionary
-        returns: dictionary with any of "nodes", "from" or "to values
-        """
-
-        _node_prop_dict = {
-            k: v for k, v in selection_dict.items() if k in NODE_SELECTION_KEYS
-        }
-        _typed_node_prop_dict = {
-            k: coerce_dict_to_df_types(v, self.net.nodes_df, skip_keys=["all"])
-            for k, v in _node_prop_dict.items()
-        }
-        return _typed_node_prop_dict
-
-    def calc_link_selection_dict(self, selection_dict) -> list:
-        """Dictionary of link selection properties.
-
-        Also coerces the values to the matching type of the network links.
-        """
-        _link_prop_dict = {
-            k: v
-            for i in LINK_SELECTION_KEYS
-            for k, v in selection_dict.get(i, {}).items()
-        }
-        _typed_link_prop_dict = coerce_dict_to_df_types(
-            _link_prop_dict, self.net.links_df, skip_keys=["all", "modes"]
-        )
-
-        return _typed_link_prop_dict
-
-    @property
-    def explicit_link_id_selection_dict(self):
-        _eid_sel_dict = {
-            k: v
-            for k, v in self.link_selection_dict.items()
-            if k in self.net.links_df.params.explicit_ids
-        }
-        return _eid_sel_dict
-
-    @property
-    def explicit_node_id_selection_dict(self):
-        _eid_sel_dict = {
-            k: v
-            for k, v in self.node_selection_dict.get("nodes", {}).items()
-            if k in self.net.nodes_df.params.explicit_ids
-        }
-        return _eid_sel_dict
-
-    @property
-    def additional_link_selection_dict(self):
-        _exclude = self.net.links_df.params.explicit_ids + [
-            "name",
-            "link",
-            "links",
-            "ref",
-        ]
-        _eid_sel_dict = {
-            k: v for k, v in self.link_selection_dict.items() if k not in _exclude
-        }
-        return _eid_sel_dict
-
-    @property
-    def additional_node_selection_dict(self):
-        _exclude = self.net.links_df.params.explicit_ids + ["node", "nodes"]
-        _eid_sel_dict = {
-            k: v for k, v in self.node_selection_dict.items() if k not in _exclude
-        }
-        return _eid_sel_dict
-
-    @staticmethod
-    def _assign_selection_key(selection_dict: dict) -> tuple:
-        """
-        Selections are stored by a sha1 hash of the bit-encoded string of the selection dictionary.
-
-        Args:
-            selection_dictonary: Selection Dictionary
-
-        Returns: Hex code for hash
-        """
-        return hashlib.sha1(str(selection_dict).encode()).hexdigest()
-
-    @staticmethod
-    def get_selection_type(selection_dict: dict, net) -> str:
-        """Determines what type of selection it is based on format of selection dict.
-
-        Args:
-            selection_dict (dict): Selection dictionary from project card.
-            net: Roadway Network for selection
-
-        Returns:
-            str: Selection type value
-        """
-
-        selection_keys = list(selection_dict.keys())
-
-        if set(SEGMENT_SELECTION_KEYS).issubset(selection_keys):
-            return "segment_search"
-
-        if "all" in selection_dict.get("links", {}):
-            return "all_links"
-
-        if "all" in selection_dict.get("nodes", {}):
-            return "all_nodes"
-
-        if not set(net.links_df.params.explicit_ids).isdisjoint(
-            selection_dict.get("links", {}).keys()
-        ):
-            return "explicit_link_id"
-
-        if not set(net.nodes_df.params.explicit_ids).isdisjoint(
-            selection_dict.get("nodes", {}).keys()
-        ):
-            return "explicit_node_id"
-
-        msg = f"Expected one of: {net.links_df.params.explicit_ids}, \
-                {net.nodes_df.params.explicit_ids} or {SEGMENT_SELECTION_KEYS}"
-        WranglerLogger.error(f"Selection type not found for : {selection_dict}")
-        WranglerLogger.error(msg)
-        raise SelectionFormatError(
-            "Invalid Selection Format - Can't find selection type"
-        )
-
-    @property
-    def selected_links_df(self) -> pd.DataFrame:
+    def selected_links_df(self) -> DataFrame[RoadwayLinksTable]:
         """Lazily evaluates selection for links or returns stored value in self._selected_links_df.
 
         Will re-evaluate if the current network hash is different than the stored one from the
         last selection.
-
-        Returns:
-            _type_: _description_
         """
-        if not self.link_selection:
-            msg = f"selected_links_df accessed for invalid selection type: {self.selection_type}"
-            WranglerLogger.error(msg)
-            raise SelectionError(msg)
         if (
-            self._selected_links_df is not None
-        ) and self._stored_net_hash == self.net.network_hash:
-            return self._selected_links_df
+            self._selected_links_df is None
+            or self._stored_net_hash != self.net.network_hash
+        ):
+            self._stored_net_hash = copy.deepcopy(self.net.network_hash)
+            self._selected_links_df = self._perform_selection()
 
-        self._stored_net_hash = copy.deepcopy(self.net.network_hash)
+        return self._selected_links_df
 
-        if self.selection_type == "explicit_link_id":
-            WranglerLogger.info("Selecting links based on explict IDs ...")
+    def validate_selection(self, selection_dict: SelectFacility) -> dict:
+        """Validates that selection_dict is compatible with the network."""
+        sel_model = SelectFacility(**selection_dict)
+
+        sel_dict = sel_model.model_dump(exclude_none=True, by_alias=True)
+        if "links" not in sel_dict:
+            raise SelectionFormatError("Link Selection does not contain links field.")
+        try:
+            sel_dict["links"] = coerce_extra_fields_to_type_in_df(
+                sel_dict["links"], SelectLinksDict, self.net.links_df
+            )
+        except DatamodelDataframeIncompatableError as e:
+            WranglerLogger.error(f"Invalid link selection fields: {e}")
+            raise e
+        return sel_dict
+
+    def _perform_selection(self):
+        # 1. Initial selection based on selection type
+        WranglerLogger.debug(
+            f"Initial link selection type: \
+                             {self.selection_type}.{self.selection_data.links.selection_type}"
+        )
+        if self.selection_data.links.selection_type == "explicit_ids":
             _selected_links_df = self._select_explicit_link_id()
 
-        elif self.selection_type == "segment_search":
-            WranglerLogger.debug("Selecting links from a segment...")
+        elif self.selection_type == "segment":
             _selected_links_df = self.segment.segment_links_df
 
-        elif self.selection_type == "all_links":
-            WranglerLogger.debug("Selecting all links...")
-            _selected_links_df = self.net.links_df.mode_query(modes=self.modes)
+        elif self.selection_data.links.selection_type == "all":
+            _selected_links_df = self.net.links_df
         else:
             raise SelectionFormatError("Doesn't have known link selection type")
 
-        if self.additional_link_selection_dict:
+        # 2. Mode selection
+        _selected_links_df = filter_links_to_modes(
+            _selected_links_df, self.selection_data.links.modes
+        )
+
+        # 3. Additional attributes within initial selection
+        if self.additional_sel_dict:
             WranglerLogger.debug(f"Initially selected links: {len(_selected_links_df)}")
             if len(_selected_links_df) < 10:
                 _cols = _selected_links_df.__dict__["params"].display_cols
                 WranglerLogger.debug(f"\n{_selected_links_df[_cols]}")
-
             WranglerLogger.debug(
-                f"Selecting from selection based on: {self.additional_link_selection_dict}"
+                f"Selecting from selection based on: {self.additional_sel_dict}"
             )
-            _selected_links_df = _selected_links_df.dict_query(
-                self.additional_link_selection_dict
-            )
+            _selected_links_df = _selected_links_df.dict_query(self.additional_sel_dict)
 
-            WranglerLogger.info
-            (f"Selection with additional restrictions links: {len(_selected_links_df)}")
-
-        self._selected_links_df = _selected_links_df
+        if not len(_selected_links_df):
+            WranglerLogger.warning("No links found matching criteria.")
 
         WranglerLogger.info(f"Final selected links: {len(_selected_links_df)}")
         if len(_selected_links_df) < 10:
             _cols = _selected_links_df.__dict__["params"].display_cols
             WranglerLogger.debug(f"\n{_selected_links_df[_cols]}")
 
-        return self._selected_links_df
+        return _selected_links_df
+
+    def _select_explicit_link_id(self):
+        """Select links based on a explicit link id in selection_dict."""
+        WranglerLogger.info("Selecting using explicit link identifiers.")
+        WranglerLogger.debug(
+            f"Explicit link selection dictionary: {self.explicit_id_sel_dict}"
+        )
+        missing_values = {
+            col: list(set(values) - set(self.net.links_df[col]))
+            for col, values in self.explicit_id_sel_dict.items()
+        }
+        missing_df = pd.DataFrame(missing_values)
+        if len(missing_df) > 0:
+            WranglerLogger.warning(f"Missing explicit link selections:\n{missing_df}")
+            if not self.ignore_missing:
+                raise SelectionError("Missing explicit link selections.")
+
+        _sel_links_mask = self.net.links_df.isin(self.explicit_id_sel_dict).any(axis=1)
+        _sel_links_df = self.net.links_df.loc[_sel_links_mask]
+
+        return _sel_links_df
+
+
+class RoadwayNodeSelection:
+    """Object to perform and store information about node selection from a project card "facility".
+
+    Properties:
+        net (RoadwayNetwork): roadway network related to the selection
+        raw_selection_dictionary (dict): raw selection dictionary as input to the object used to
+            generate `sel_key`.
+        sel_key (str): unique selection key based on selection dictionary
+        selection_dictionary (dict): dictionary conforming to `SelectFacility` model
+            with a `nodes` key
+        selection_data (SelectFacility): selection dictionary as a SelectFacility model
+        selection_types (str): one of `explicit_ids`, `segment` or `all`.
+            From selection dictionary.
+        feature_types (str): returns `nodes`.  From selection dictionary.
+        ignore_missing (bool): True if missing links should be ignored. From selection dictionary.
+        explicit_id_sel_dict (dict): explicit link selection criteria. From selection dictionary.
+        found (bool): True if nodes were found
+        selected_nodes (list[int]): list of selected nodes ids
+        selected_nodes_df (DataFrame[RoadwayNodesTable]): lazily-evaluated selected nodes.
+    """
+
+    def __init__(
+        self,
+        net: "RoadwayNetwork",
+        selection_dict: dict,
+    ):
+        """Constructor for RoadwayNodeSelection object.
+
+        Args:
+            net (RoadwayNetwork): Roadway network object to select from.
+            selection_dict (dict): Selection dictionary.
+        """
+        self.net = net
+
+        WranglerLogger.debug(
+            f"Creating selection from selection dictionary:\n{selection_dict}"
+        )
+        # Coerce the selection dictionary to model types; fill unspecified with default params
+        self.selection_dict = selection_dict
+
+        self._selected_nodes_df = None
+        self._segment = None
+
+        WranglerLogger.debug(f"Created selection of type:{self.selection_type}")
+
+    def __nonzero__(self):
+        return len(self.selected_nodes) > 0
 
     @property
-    def selected_nodes_df(self) -> pd.DataFrame:
+    def sel_key(self):
+        """Return the selection key as generated from `self.raw_selection_dict`."""
+        return self._sel_key
+
+    @property
+    def feature_types(self):
+        """Return the feature type of the selection. Always returns `nodes`."""
+        return "nodes"
+
+    @property
+    def selection_data(self):
+        """Node selection data from SelectNodesDict."""
+        return self._selection_data
+
+    @property
+    def selection_type(self):
+        """Node selection type from SelectNodesDict: either `all` or `explicit_ids`."""
+        return self.selection_data.nodes.selection_type
+
+    @property
+    def raw_selection_dict(self) -> dict:
+        """Raw selection dictionary as input into `net.get_selection()`.
+
+        Used for generating `self.sel_key` and then fed into SelectNodesDict data model where
+        additional defaults are set.
+        """
+        return self._raw_selection_dict
+
+    @raw_selection_dict.setter
+    def raw_selection_dict(self, selection_dict: dict):
+        self._raw_selection_dict = selection_dict
+        self._selection_key = _create_selection_key(selection_dict)
+
+    @property
+    def selection_dict(self) -> dict:
+        """Selection dictionary dictating the selection settings."""
+        return self._selection_dict
+
+    @selection_dict.setter
+    def selection_dict(self, selection_dict: dict):
+        self.raw_selection_dict = selection_dict
+        self._selection_dict = self.validate_selection(selection_dict)
+        self._selection_data = SelectFacility(**self._selection_dict)
+        self._stored_net_hash = copy.deepcopy(self.net.network_hash)
+
+    @property
+    def ignore_missing(self) -> bool:
+        """True if missing nodes should be ignored."""
+        return self.selection_data.nodes.ignore_missing
+
+    @property
+    def explicit_id_sel_dict(self) -> dict:
+        """Return a dictionary of field that are explicit ids."""
+        return self.selection_data.nodes.explicit_id_selection_dict
+
+    @property
+    def selected_nodes(self) -> list[int]:
+        """List of selected node ids."""
+        if self.selected_nodes_df is None:
+            return []
+        return self.selected_nodes_df.index.tolist()
+
+    @property
+    def found(self) -> bool:
+        """True if nodes were found."""
+        return self.selected_nodes_df is not None
+
+    @property
+    def selected_nodes_df(self) -> DataFrame[RoadwayNodeTable]:
         """Lazily evaluates selection for nodes or returns stored value in self._selected_nodes_df.
 
         Will re-evaluate if the current network hash is different than the stored one from the
         last selection.
         """
-        if not self.node_selection:
-            msg = f"selected_nodes_df accessed for invalid selection type: {self.selection_type}"
-            WranglerLogger.error(msg)
-            raise SelectionError(msg)
         if (
-            self._selected_nodes_df is not None
-        ) and self._stored_net_hash == self.net.network_hash:
-            return self._selected_nodes_df
+            self._selected_nodes_df is None
+            or self._stored_net_hash != self.net.network_hash
+        ):
+            self._stored_net_hash = self.net.network_hash
+            self._selected_nodes_df = self._perform_selection()
 
-        self._stored_net_hash = self.net.network_hash
+        return self._selected_nodes_df
 
-        if self.selection_type == "explicit_node_id":
+    def validate_selection(self, selection_dict: SelectFacility) -> bool:
+        """
+        Validate that selection_dict is compatible with the network.
+        """
+        sel_model = SelectFacility(**selection_dict)
+
+        sel_dict = sel_model.model_dump(exclude_none=True, by_alias=True)
+
+        if "nodes" not in sel_dict:
+            raise SelectionFormatError("Node Selection does not contain nodes field.")
+
+        try:
+            sel_dict["nodes"] = coerce_extra_fields_to_type_in_df(
+                sel_dict["nodes"], SelectNodesDict, self.net.nodes_df
+            )
+        except DatamodelDataframeIncompatableError as e:
+            WranglerLogger.error(f"Invalid node selection fields: {e}")
+            raise e
+
+        return sel_dict
+
+    def _perform_selection(self):
+        if self.selection_type == "explicit_ids":
             _selected_nodes_df = self._select_explicit_node_id()
-        elif self.selecton_type == "all_nodes":
+        elif self.selection_type == "all":
             _selected_nodes_df = self.net.nodes_df
         else:
-            raise SelectionFormatError("Doesn't have known node selection type")
-
-        if self.additional_node_selection_dict:
-            _selected_nodes_df = _selected_nodes_df.dict_query(
-                self.additional_node_selection_dict
+            WranglerLogger.error(
+                f"Didn't understand selection type: {self.selection_type}"
             )
-
-        self._selected_nodes_df = _selected_nodes_df
+            raise SelectionFormatError("Doesn't have known node selection type")
 
         WranglerLogger.info(f"Final selected nodes: {len(_selected_nodes_df)}")
         if len(_selected_nodes_df) < 10:
             _cols = _selected_nodes_df.__dict__["params"].display_cols
             WranglerLogger.debug(f"\n{_selected_nodes_df[_cols]}")
 
-        return self._selected_nodes_df
-
-    def _validate_node_selection(self) -> bool:
-        """Validates that network has node properties that are specified in selection.
-
-        Returns:
-            bool:True if node selection is compatable with network
-        """
-
-        _node_props = set(
-            [
-                k
-                for c in NODE_SELECTION_KEYS
-                for k in self.node_selection_dict.get(c, {}).keys()
-            ]
-        )
-
-        _missing_node_props = _node_props - set(self.net.nodes_df.columns) - {"all"}
-
-        if _missing_node_props:
-            msg = f"Node selection uses properties not in net.nodes_df:\
-                {','.join(_missing_node_props)}"
-            WranglerLogger.error(msg)
-            raise SelectionError(msg)
-
-        return True
-
-    def _validate_link_selection(self) -> bool:
-        """Validates that network has link properties that are specified in selection.
-
-        Args:
-            coerce_types: if true, will coerce the types of the link selection values to what
-                they are in the associated network.
-
-        Returns:
-            bool:True if link selection is compatable with network
-        """
-
-        _missing_link_props = (
-            set(list(self.link_selection_dict.keys()))
-            - set(self.net.links_df.columns)
-            - {"all"}
-        )
-
-        if _missing_link_props:
-            msg = f"Link selection uses properties not in net.links_df:\
-                {','.join(_missing_link_props)}"
-            WranglerLogger.error(msg)
-            raise SelectionError(msg)
-
-        return True
-
-    def validate_selection(self) -> bool:
-        """
-        Validate that selection_dict is compatible with the network.
-
-        Args:
-            selection: selection dictionary to be evaluated
-
-        Returns: boolean value as to whether the selection dictonary is valid.
-        """
-        _links_valid = self._validate_link_selection()
-        _nodes_valid = self._validate_node_selection()
-
-        return _links_valid and _nodes_valid
-
-    def _select_explicit_link_id(
-        self,
-    ):
-        """Select links based on a explicit link id in selection_dict."""
-        WranglerLogger.info("Selecting using explicit link identifiers.")
-
-        missing_values = {
-            col: list(set(values) - set(self.net.links_df[col]))
-            for col, values in self.explicit_link_id_selection_dict.items()
-        }
-        missing_df = pd.DataFrame(missing_values)
-        if len(missing_df) > 0:
-            WranglerLogger.warning("Missing explicit link selections:\n{missing_df}")
-            if not self.ignore_missing:
-                raise SelectionError("Missing explicit link selections.")
-
-        _sel_links_mask = self.net.links_df.isin(
-            self.explicit_link_id_selection_dict
-        ).any(axis=1)
-        _selected_links_df = self.net.links_df.loc[_sel_links_mask]
-        WranglerLogger.debug(
-            f"{len(_selected_links_df)} links selected with explicit links dict:\
-                {self.explicit_link_id_selection_dict}"
-        )
-
-        # make sure in mode
-        _selected_links_df = _selected_links_df.mode_query(modes=self.modes)
-        WranglerLogger.debug(
-            f"{len(_selected_links_df)} links selected with modes: {self.modes}"
-        )
-
-        if not len(_selected_links_df):
-            WranglerLogger.warning("No links found matching criteria.")
-
-        return _selected_links_df
+        return _selected_nodes_df
 
     def _select_explicit_node_id(
         self,
@@ -497,25 +460,27 @@ class RoadwaySelection:
 
         missing_values = {
             col: list(set(values) - set(self.net.nodes_df[col]))
-            for col, values in self.explicit_node_id_selection_dict.items()
+            for col, values in self.explicit_id_sel_dict.items()
         }
         missing_df = pd.DataFrame(missing_values)
         if len(missing_df) > 0:
-            WranglerLogger.warning("Missing explicit link selections:\n{missing_df}")
+            WranglerLogger.warning("Missing explicit node selections:\n{missing_df}")
             if not self.ignore_missing:
-                raise SelectionError("Missing explicit link selections.")
+                raise SelectionError("Missing explicit node selections.")
 
-        _sel_nodes_mask = self.net.nodes_df.isin(
-            self.explicit_node_id_selection_dict
-        ).any(axis=1)
+        _sel_nodes_mask = self.net.nodes_df.isin(self.explicit_id_sel_dict).any(axis=1)
         _selected_nodes_df = self.net.nodes_df.loc[_sel_nodes_mask]
 
-        WranglerLogger.debug(
-            f"{len(_selected_nodes_df)} links selected with explicit links dict:\
-                {self.explicit_node_id_selection_dict}"
-        )
-
-        if not _sel_nodes_mask.any():
-            WranglerLogger.warning("No nodes found matching criteria.")
-
         return _selected_nodes_df
+
+
+def _create_selection_key(selection_dict: dict) -> str:
+    """
+    Selections are stored by a sha1 hash of the bit-encoded string of the selection dictionary.
+
+    Args:
+        selection_dictonary: Selection Dictionary
+
+    Returns: Hex code for hash
+    """
+    return hashlib.sha1(str(selection_dict).encode()).hexdigest()

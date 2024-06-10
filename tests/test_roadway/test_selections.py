@@ -7,8 +7,11 @@ import pytest
 
 from projectcard import read_card
 from network_wrangler import WranglerLogger
-from network_wrangler.roadway.selection import RoadwaySelection
-from network_wrangler.utils import dict_to_query
+from network_wrangler.roadway.selection import (
+    RoadwayNodeSelection,
+    RoadwayLinkSelection,
+)
+from network_wrangler.utils.data import dict_to_query
 
 """
 Run just the tests labeled basic using `pytest tests/test_roadway/test_selections.py`
@@ -29,24 +32,6 @@ def test_dfhash(request, stpaul_net):
     hash2 = df.df_hash()
     WranglerLogger.debug(f"Full Nodes\nhash1: {hash1}\nhash2: {hash2}")
     assert hash1 == hash2
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-def test_links_in_path(request, stpaul_net):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    links_df = pd.DataFrame(
-        {
-            "A": [1, 1, 2, 4, 3],
-            "B": [2, 4, 4, 5, 5],
-            "id": ["one", "two", "three", "four", "five"],
-        }
-    )
-    path = [1, 4, 5]
-    path_links_df = stpaul_net.links_in_path(links_df, path)
-    WranglerLogger.info(f"Path Nodes: {path}")
-    WranglerLogger.info(f"Path Links:\n {path_links_df}")
-    answer_ids = ["two", "four"]
-    assert path_links_df["id"].tolist() == answer_ids
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
@@ -80,7 +65,7 @@ TEST_SELECTIONS = [
         "from": {"osm_node_id": "954746969"},
         "to": {"osm_node_id": "3071141242"},
     },
-    {  # SELECTION 5
+    {  # SELECTION 5 FIXME
         "links": {
             "osm_link_id": ["221685893"],
         },
@@ -105,99 +90,15 @@ TEST_SELECTIONS = [
         },
     },
     {  # SELECTION 9
-        "modes": ["walk"],
         "links": {
             "name": ["Valley Street"],
+            "modes": ["walk"],
         },
         "from": {"model_node_id": 174762},
         "to": {"model_node_id": 43041},
     },
 ]
 
-
-node_sel_dict_answers = [
-    {
-        "from": {"osm_node_id": "187899923"},
-        "to": {"osm_node_id": "187865924"},
-    },
-    {
-        "from": {"osm_node_id": "2292977517"},
-        "to": {"osm_node_id": "507951637"},
-    },
-    {
-        "from": {"osm_node_id": "716319401"},
-        "to": {"model_node_id": 62153},
-    },
-    {
-        "from": {"osm_node_id": "954746969"},
-        "to": {"osm_node_id": "3071141242"},
-    },
-    {
-        "from": {"model_node_id": 131209},
-        "to": {"model_node_id": 131221},
-    },
-    {},
-    {},
-    {},
-    {
-        "from": {"model_node_id": 174762},
-        "to": {"model_node_id": 43041},
-    },
-]
-
-
-@pytest.mark.parametrize(
-    "selection,answer", zip(TEST_SELECTIONS, node_sel_dict_answers)
-)
-def test_calc_node_selection_dict(request, selection, answer, stpaul_net):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    s = RoadwaySelection(stpaul_net, selection)
-    d = s.calc_node_selection_dict(selection)
-    assert d == answer
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-link_sel_dict_answers = [
-    {
-        "name": ["6th", "Sixth", "sixth"],
-    },
-    {
-        "name": ["Lafayette"],
-    },
-    {
-        "name": ["University Ave"],
-        "lanes": [1],
-    },
-    {
-        "name": ["I 35E"],
-    },
-    {
-        "osm_link_id": ["221685893"],
-    },
-    {
-        "model_link_id": [390239, 391206, 281, 1464],
-        "lanes": [1, 2],
-    },
-    {
-        "lanes": [1, 2],
-    },
-    {},
-    {"name": ["Valley Street"]},
-]
-
-
-@pytest.mark.parametrize(
-    "selection,answer", zip(TEST_SELECTIONS, link_sel_dict_answers)
-)
-def test_calc_link_selection_dict(request, selection, answer, stpaul_net):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    s = RoadwaySelection(stpaul_net, selection)
-    d = s.calc_link_selection_dict(selection)
-    assert d == answer
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-#  134543, 488245
 
 answer_selected_links = [
     [134543, 85185, 154004],  # SELECTION 1
@@ -224,7 +125,7 @@ def test_select_roadway_features(request, selection, answer, stpaul_net):
     _show_f = ["A", "B", "name", "osm_link_id", "model_link_id", "lanes"]
     selected_link_indices = _selection.selected_links
     WranglerLogger.info(f"{len(_selection.selected_links)} links selected")
-    if _selection.selection_type == "segment_search":
+    if _selection.selection_type == "segment":
         WranglerLogger.info(f"Segment Path: \n{_selection.segment.segment_nodes}")
         WranglerLogger.info(
             f"Segment Links: \n{_selection.segment.segment_links_df[_show_f]}"
@@ -266,13 +167,13 @@ def test_select_roadway_features_from_projectcard(request, stpaul_net, stpaul_ex
 
 variable_queries = [
     ({"v": "lanes", "category": "sov", "timespan": ["12:00", "12:30"]}, 3),
-    ({"v": "lanes", "category": None, "timespan": ["12:00", "12:30"]}, 3),
-    ({"v": "lanes", "category": None, "timespan": ["7:00", "9:00"]}, 2),
+    ({"v": "lanes", "timespan": ["12:00", "12:30"]}, 3),
+    ({"v": "lanes", "timespan": ["7:00", "9:00"]}, 2),
     ({"v": "ML_price", "category": "sov", "timespan": ["7:00", "9:00"]}, 1.5),
     (
         {
             "v": "ML_price",
-            "category": ["hov3", "hov2"],
+            "categories": ["hov3", "hov2"],
             "timespan": ["7:00", "9:00"],
         },
         1,
@@ -297,19 +198,19 @@ def test_query_roadway_property_by_time_group(
 
     v_series = net.get_property_by_timespan_and_group(
         _query["v"],
-        category=_query["category"],
-        timespan=_query["timespan"],
+        category=_query.get("category"),
+        timespan=_query.get("timespan"),
     )
 
     _selected_links = net.get_selection(
-        project_card.roadway_managed_lanes["facility"]
+        project_card.roadway_property_change["facility"]
     ).selected_links
     WranglerLogger.debug(f"QUERY:\n{_query}")
     WranglerLogger.debug(f"EXPECTED ANSWER: {_answer}")
     WranglerLogger.debug(f"QUERY RESULT:\n{v_series.loc[_selected_links]}")
     WranglerLogger.debug(f"NET:\n{net.links_df.loc[_selected_links[0]][ _query['v']]}")
 
-    assert (v_series.loc[_selected_links] == _answer).all()
+    assert (v_series.loc[_selected_links, _query["v"]] == _answer).all()
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 

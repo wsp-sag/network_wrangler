@@ -1,19 +1,22 @@
+from __future__ import annotations
 import hashlib
 
-from typing import List, Union
-from pathlib import Path
+from typing import List, Union, TYPE_CHECKING, Optional
 import pandas as pd
-import geopandas as gpd
-
-from shapely import LineString
 
 from ..logger import WranglerLogger
-from ..utils import diff_dfs
+from ..utils.data import diff_dfs
+
+if TYPE_CHECKING:
+    from shapely import LineString
+
+    from .network import RoadwayNetwork
+    from .model_roadway import ModelRoadwayNetwork
 
 
 def compare_networks(
     nets: List[Union["RoadwayNetwork", "ModelRoadwayNetwork"]],
-    names: List[str] = None,
+    names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     if names is None:
         names = ["net" + str(i) for i in range(1, len(nets) + 1)]
@@ -23,7 +26,7 @@ def compare_networks(
 
 def compare_links(
     links: List[pd.DataFrame],
-    names: List[str] = None,
+    names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     if names is None:
         names = ["links" + str(i) for i in range(1, len(links) + 1)]
@@ -62,10 +65,25 @@ def diff_nets(net1, net2) -> bool:
     WranglerLogger.info("----Comparing nodes----")
     diff_nodes = diff_dfs(net1.nodes_df, net2.nodes_df, ignore=IGNORE_COLS)
     WranglerLogger.info("----Comparing shapes----")
-    diff_shapes = diff_dfs(net1.shapes_df, net2.shapes_df)
+    if net1.shapes_df is None and net1.shapes_df.empty:
+        diff_shapes = False
+    else:
+        diff_shapes = diff_dfs(net1.shapes_df, net2.shapes_df, ignore=IGNORE_COLS)
     diff = any([diff_links, diff_nodes, diff_shapes])
     if diff:
         WranglerLogger.error("!!! Differences in networks.")
     else:
         WranglerLogger.info("Networks same for properties in common")
     return diff
+
+
+def set_df_index_to_pk(df: pd.DataFrame) -> pd.DataFrame:
+    """Sets the index of the dataframe to be a copy of the primary key.
+
+    Args:
+        links_df (pd.DataFrame): links dataframe
+    """
+    if df.index.name != df.params.idx_col:
+        df[df.params.idx_col] = df[df.params.primary_key]
+        df = df.set_index(df.params.idx_col)
+    return df

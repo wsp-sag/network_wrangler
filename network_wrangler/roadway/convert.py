@@ -2,7 +2,7 @@ from .io import load_roadway_from_dir, write_roadway
 from ..logger import WranglerLogger
 
 
-def convert_roadway(
+def convert_roadway_file_serialization(
     input_path,
     output_format,
     out_dir,

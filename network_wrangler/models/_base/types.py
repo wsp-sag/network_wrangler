@@ -14,18 +14,8 @@ PandasSeries = TypeVar("pandas.core.series.Series")
 ForcedStr = Annotated[Any, BeforeValidator(lambda x: str(x))]
 
 
-AllOf = Annotated[
-    List[str],
-    Field(
-        description=[
-            "List fields where all are required for the data model to be valid."
-        ]
-    ),
-]
-
-
 OneOf = Annotated[
-    List[Union[str, AllOf]],
+    List[List[List[str]]],
     Field(
         description=[
             "List fields where at least one is required for the data model to be valid."
@@ -33,12 +23,20 @@ OneOf = Annotated[
     ),
 ]
 
-
-AnyOf = Annotated[
-    List[Union[str, AllOf]],
+ConflictsWith = Annotated[
+    List[List[str]],
     Field(
         description=[
-            "List fields, AllOf where any are required for the data model to be valid."
+            "List of pairs of fields where if one is present, the other cannot be present."
+        ]
+    ),
+]
+
+AnyOf = Annotated[
+    List[List[List[str]]],
+    Field(
+        description=[
+            "List fields where any are required for the data model to be valid."
         ]
     ),
 ]

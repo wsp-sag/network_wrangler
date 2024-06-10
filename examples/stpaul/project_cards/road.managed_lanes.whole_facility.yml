@@ -1,7 +1,7 @@
 project: another test managed lane project
 tags:
    - 'example'
-roadway_managed_lanes:
+roadway_property_change:
   facility:
     links:
       name:
@@ -13,35 +13,35 @@ roadway_managed_lanes:
   property_changes:
     lanes:
       set: 3
-      timeofday:
+      scoped:
         - timespan: ['6:00', '9:00']
           set: 2
         - timespan: ['16:00', '19:00']
           set: 2
     ML_lanes:
       set: 0
-      timeofday:
+      scoped:
         - timespan: ['6:00', '9:00']
           set: 1
         - timespan: ['16:00', '19:00']
           set: 1
     ML_price:
       set: 0
-      group:
-        - category: ['sov']
-          timeofday:
-            - timespan: ['6:00', '9:00']
-              set: 1.5
-            - timespan: ['16:00', '19:00']
-              set: 2.5
-        - category: ['hov2']
-          timeofday:
-            - timespan: ['6:00', '9:00']
-              set: 1.0
-            - timespan: ['16:00', '19:00']
-              set: 2.0
-    ML_access:
+      scoped:
+        - category: 'sov'
+          timespan: ['6:00', '9:00']
+          set: 1.5
+        - category: 'sov'
+          timespan: ['16:00', '19:00']
+          set: 2.5
+        - category: 'hov2'
+          timespan: ['6:00', '9:00']
+          set: 1.0
+        - category: 'hov2'
+          timespan: ['16:00', '19:00']
+          set: 2.0
+    ML_access_point:
       set: 'all'
-    ML_egress:
+    ML_egress_point:
       set: 'all'
 notes: Placeholder for notes

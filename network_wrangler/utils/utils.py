@@ -1,7 +1,10 @@
-from typing import Union, Tuple, Any
+"""General utility functions used throughout package.
+"""
 import hashlib
 import re
-from pathlib import Path
+
+from typing import Union
+
 import pandas as pd
 
 from ..logger import WranglerLogger
@@ -10,8 +13,23 @@ from ..logger import WranglerLogger
 def topological_sort(adjacency_list, visited_list):
     """
     Topological sorting for Acyclic Directed Graph
-    """
 
+    Parameters:
+    - adjacency_list (dict): A dictionary representing the adjacency list of the graph.
+    - visited_list (list): A list representing the visited status of each vertex in the graph.
+
+    Returns:
+    - output_stack (list): A list containing the vertices in topological order.
+
+    This function performs a topological sort on an acyclic directed graph. It takes an adjacency list
+    and a visited list as input. The adjacency list represents the connections between vertices in the graph,
+    and the visited list keeps track of the visited status of each vertex.
+
+    The function uses a recursive helper function to perform the topological sort. It starts by iterating over
+    each vertex in the visited list. For each unvisited vertex, it calls the helper function, which recursively
+    visits all the neighbors of the vertex and adds them to the output stack in reverse order. Finally, it returns
+    the output stack, which contains the vertices in topological order.
+    """
     output_stack = []
 
     def _topology_sort_util(vertex):
@@ -27,10 +45,8 @@ def topological_sort(adjacency_list, visited_list):
     return output_stack
 
 
-def make_slug(text, delimiter: str = "_"):
-    """
-    makes a slug from text
-    """
+def make_slug(text: str, delimiter: str = "_") -> str:
+    """Makes a slug from text."""
 
     text = re.sub("[,.;@#?!&$']+", "", text.lower())
     return re.sub("[\ ]+", delimiter, text)
@@ -62,11 +78,20 @@ def delete_keys_from_dict(dictionary: dict, keys: list) -> dict:
 
 
 def get_overlapping_range(ranges: list[Union[tuple[int], range]]) -> Union[None, range]:
-    """Returns overlapping range for a list of ranges or tuples defining ranges.
+    """Returns the overlapping range for a list of ranges or tuples defining ranges.
 
-    If no overlap found, returns None.
+    Args:
+        ranges (list[Union[tuple[int], range]]): A list of ranges or tuples defining ranges.
+
+    Returns:
+        Union[None, range]: The overlapping range if found, otherwise None.
+
+    Example:
+        >>> ranges = [(1, 5), (3, 7), (6, 10)]
+        >>> get_overlapping_range(ranges)
+        range(3, 5)
+
     """
-
     _ranges = [r if isinstance(r, range) else range(r[0], r[1]) for r in ranges]
 
     _overlap_start = max(r.start for r in _ranges)
@@ -78,84 +103,11 @@ def get_overlapping_range(ranges: list[Union[tuple[int], range]]) -> Union[None,
         return None
 
 
-def coerce_val_to_series_type(val, s: pd.Series):
-    """Coerces a calue to match type of pandas series.
-
-    Will try not to fail so if you give it a value that can't convert to a number, it will
-    return a string.
-
-    Args:
-        val: Any type of singleton value
-        s (pd.Series): series to match the type to
-    """
-    # WranglerLogger.debug(f"Input val: {val} of type {type(val)} to match with series type \
-    #    {pd.api.types.infer_dtype(s)}.")
-    if pd.api.types.infer_dtype(s) in ["integer", "floating"]:
-        try:
-            v = float(val)
-        except:
-            v = str(val)
-    elif pd.api.types.infer_dtype(s) == "boolean":
-        v = bool(val)
-    else:
-        v = str(val)
-    # WranglerLogger.debug(f"Return value: {v}")
-    return v
-
-
-def coerce_dict_to_df_types(
-    d: dict, df: pd.DataFrame, skip_keys: list = [], return_skipped: bool = False
-) -> dict:
-    """Coerce dictionary values to match the type of a dataframe columns matching dict keys.
-
-    Will also coerce a list of values.
-
-    Args:
-        d (dict): dictionary to coerce with singleton or list values
-        df (pd.DataFrame): dataframe to get types from
-        skip_keys: list of dict keys to skip. Defaults to []/
-        return_skipped: keep the uncoerced, skipped keys/vals in the resulting dict.
-            Defaults to False.
-
-    Returns:
-        dict: dict with coerced types
-    """
-    coerced_dict = {}
-    for k, vals in d.items():
-        if k in skip_keys:
-            if return_skipped:
-                coerced_dict[k] = vals
-            continue
-        if pd.api.types.infer_dtype(df[k]) == "integer":
-            if isinstance(vals, list):
-                coerced_v = [int(float(v)) for v in vals]
-            else:
-                coerced_v = int(float(vals))
-        elif pd.api.types.infer_dtype(df[k]) == "floating":
-            if isinstance(vals, list):
-                coerced_v = [float(v) for v in vals]
-            else:
-                coerced_v = float(vals)
-        elif pd.api.types.infer_dtype(df[k]) == "boolean":
-            if isinstance(vals, list):
-                coerced_v = [bool(v) for v in vals]
-            else:
-                coerced_v = bool(vals)
-        else:
-            if isinstance(vals, list):
-                coerced_v = [str(v) for v in vals]
-            else:
-                coerced_v = str(vals)
-        coerced_dict[k] = coerced_v
-    return coerced_dict
-
-
 def findkeys(node, kv):
     """Returns values of all keys in various objects.
 
     Adapted from arainchi on Stack Overflow:
     https://stackoverflow.com/questions/9807634/find-all-occurrences-of-a-key-in-nested-dictionaries-and-lists
-
     """
     if isinstance(node, list):
         for i in node:
@@ -169,31 +121,32 @@ def findkeys(node, kv):
                 yield x
 
 
-def fk_in_pk(
-    pk: Union[pd.Series, list], fk: Union[pd.Series, list]
-) -> Tuple[bool, list]:
-    if isinstance(fk, list):
-        fk = pd.Series(fk)
-
-    missing_flag = ~fk.isin(pk)
-
-    if missing_flag.any():
-        WranglerLogger.warning(
-            f"Following keys referenced in {fk.name} but missing\
-            in primary key table:\n{fk[missing_flag]} "
-        )
-        return False, fk[missing_flag].tolist()
-
-    return True, []
-
-
 def split_string_prefix_suffix_from_num(input_string: str):
     """Split a string prefix and suffix from *last* number.
 
-    Define a regular expression pattern to capture:
-    1. Any character sequence at the start, including digits (.*?), lazily.
-    2. The last numeric sequence in the string (\d+), ensuring it's followed by
-      non-digit characters (\D*) until the end of the string.
+    Args:
+        input_string (str): The input string to be processed.
+
+    Returns:
+        tuple: A tuple containing the prefix (including preceding numbers),
+               the last numeric part as an integer, and the suffix.
+
+    Notes:
+        This function uses regular expressions to split a string into three parts:
+        the prefix, the last numeric part, and the suffix. The prefix includes any
+        preceding numbers, the last numeric part is converted to an integer, and
+        the suffix includes any non-digit characters after the last numeric part.
+
+    Examples:
+        >>> split_string_prefix_suffix_from_num("abc123def456")
+        ('abc', 123, 'def456')
+
+        >>> split_string_prefix_suffix_from_num("hello")
+        ('hello', 0, '')
+
+        >>> split_string_prefix_suffix_from_num("123")
+        ('', 123, '')
+
     """
     input_string = str(input_string)
     pattern = re.compile(r"(.*?)(\d+)(\D*)$")
@@ -245,7 +198,22 @@ def generate_list_of_new_ids(
     id_scalar: int,
     iter_val: int = 10,
     max_iter: int = 1000,
-):
+) -> list[str]:
+    """
+    Generates a list of new IDs based on the input IDs, existing IDs, and other parameters.
+
+    Args:
+        input_ids (list[str]): The input IDs for which new IDs need to be generated.
+        existing_ids (pd.Series): The existing IDs that should be avoided when generating new IDs.
+        id_scalar (int): The scalar value used to generate new IDs.
+        iter_val (int, optional): The iteration value used in the generation process.
+            Defaults to 10.
+        max_iter (int, optional): The maximum number of iterations allowed in the generation
+            process. Defaults to 1000.
+
+    Returns:
+        list[str]: A list of new IDs generated based on the input IDs and other parameters.
+    """
     # keep new_ids as list to preserve order
     new_ids = []
     existing_ids = set(existing_ids)
@@ -272,3 +240,75 @@ def dict_to_hexkey(d: dict) -> str:
         str: hexdigest of the sha1 hash of dictionary
     """
     return hashlib.sha1(str(d).encode()).hexdigest()
+
+
+def combine_unique_unhashable_list(list1: list, list2: list):
+    """
+    Combines two lists, preserving the order of elements from the first list,
+    and removing any duplicates from the second list.
+
+    Args:
+        list1 (list): The first list.
+        list2 (list): The second list.
+
+    Returns:
+        list: A new list containing the elements from list1 followed by the
+        unique elements from list2.
+
+    Example:
+        >>> list1 = [1, 2, 3]
+        >>> list2 = [2, 3, 4, 5]
+        >>> combine_unique_unhashable_list(list1, list2)
+        [1, 2, 3, 4, 5]
+    """
+    return [item for item in list1 if item not in list2] + list2
+
+
+def normalize_to_lists(mixed_list: list[Union[str, list]]) -> list[list]:
+    """Turn a mixed list of scalars and lists into a list of lists."""
+    normalized_list = []
+    for item in mixed_list:
+        if isinstance(item, str):
+            normalized_list.append([item])
+        else:
+            normalized_list.append(item)
+    return normalized_list
+
+
+def list_elements_subset_of_single_element(
+    mixed_list: list[Union[str, list[str]]]
+) -> bool:
+    # Find the first list in the mixed_list
+    potential_supersets = []
+    for item in mixed_list:
+        if isinstance(item, list) and len(item) > 0:
+            potential_supersets.append(set(item))
+
+    # If no list is found, return False
+    if not potential_supersets:
+        return False
+
+    normalized_list = normalize_to_lists(mixed_list)
+
+    valid_supersets = []
+    for ss in potential_supersets:
+        if all(ss.issuperset(i) for i in normalized_list):
+            valid_supersets.append(ss)
+
+    return len(valid_supersets) == 1
+
+
+def check_one_or_one_superset_present(
+    mixed_list: list[Union[str, list[str]]], all_fields_present: list[str]
+) -> bool:
+    """Checks that exactly one of the fields in mixed_list is in fields_present or one superset."""
+    normalized_list = normalize_to_lists(mixed_list)
+
+    list_items_present = [
+        i for i in normalized_list if set(i).issubset(all_fields_present)
+    ]
+
+    if len(list_items_present) == 1:
+        return True
+
+    return list_elements_subset_of_single_element(list_items_present)

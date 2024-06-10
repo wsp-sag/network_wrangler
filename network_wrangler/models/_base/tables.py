@@ -3,9 +3,25 @@ from enum import Enum
 import pandas as pd
 from pandera.extensions import register_check_method
 
-from pydantic import ValidationError
-
 from ...logger import WranglerLogger
+
+
+def validate_list_of_pyd(item_list, pyd_model):
+    try:
+        item_valid = [validate_pyd(i, pyd_model) for i in item_list]
+        return all(item_valid)
+    except:
+        WranglerLogger.error(f"{item_list} didn't validate to {pyd_model}")
+        return False
+
+
+def validate_pyd(item, pyd_model):
+    try:
+        pyd_model(item)
+        return True
+    except:
+        WranglerLogger.error(f"Item: {item} didn't validate to {pyd_model}")
+        return False
 
 
 @register_check_method

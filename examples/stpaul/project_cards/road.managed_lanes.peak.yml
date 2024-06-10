@@ -1,5 +1,5 @@
 project: I394E Parallel Lanes
-roadway_managed_lanes:
+roadway_property_change:
   facility:
     links:
       model_link_id:
@@ -11,12 +11,12 @@ roadway_managed_lanes:
   property_changes:
     ML_lanes:
       set: 0
-      timeofday:
+      scoped:
         - timespan: ['6:00', '9:00']
           set: 1
-    ML_access:
+    ML_access_point:
       set: 'all'
-    ML_egress:
+    ML_egress_point:
       set: 'all'
     ML_HOV:
       set: 5

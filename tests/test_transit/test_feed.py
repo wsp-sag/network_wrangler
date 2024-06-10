@@ -8,12 +8,14 @@ import pytest
 import pandas as pd
 from network_wrangler import WranglerLogger
 
-from network_wrangler.transit.feed import (
-    stop_times_for_trip_id,
+from network_wrangler.transit.feed.shapes import (
     shape_id_for_trip_id,
-    shapes_for_trip_id,
+)
+from network_wrangler.transit.feed.stops import stop_id_pattern_for_trip
+from network_wrangler.transit.feed.shapes import shapes_for_trip_id
+from network_wrangler.transit.feed.stop_times import (
     stop_times_for_pickup_dropoff_trip_id,
-    stop_id_pattern_for_trip,
+    stop_times_for_trip_id,
 )
 
 
@@ -36,10 +38,10 @@ def test_table_names_with_field(request, small_transit_net, prop, expected_table
 
 def test_trip_stop_times(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    from network_wrangler.transit.feed import stop_times_for_trip_id
+    from network_wrangler.transit.feed.stop_times import stop_times_for_trip_id
 
     trip_id = "blue-2"
-    stop_times = stop_times_for_trip_id(small_transit_net.feed, trip_id)
+    stop_times = stop_times_for_trip_id(small_transit_net.feed.stop_times, trip_id)
 
     result = stop_times.stop_id.to_list()
     expected = ["111", "333", "444"]
@@ -51,10 +53,10 @@ def test_trip_stop_times(request, small_transit_net):
 
 def test_trip_shape_id(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    from network_wrangler.transit.feed import shape_id_for_trip_id
+    from network_wrangler.transit.feed.shapes import shape_id_for_trip_id
 
     trip_id = "blue-1"
-    result = shape_id_for_trip_id(small_transit_net.feed, trip_id)
+    result = shape_id_for_trip_id(small_transit_net.feed.trips, trip_id)
     WranglerLogger.debug(f"test_trip_shape_id result: {result}")
     expected = "shape1"
 
@@ -65,10 +67,12 @@ def test_trip_shape_id(request, small_transit_net):
 
 def test_trip_shape(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    from network_wrangler.transit.feed import shapes_for_trip_id
+    from network_wrangler.transit.feed.shapes import shapes_for_trip_id
 
     trip_id = "blue-2"
-    shape = shapes_for_trip_id(small_transit_net.feed, trip_id)
+    shape = shapes_for_trip_id(
+        small_transit_net.feed.shapes, small_transit_net.feed.trips, trip_id
+    )
 
     # shape_id is "9020001"
     result = shape.shape_model_node_id.to_list()
@@ -161,10 +165,12 @@ TEST_TRIP_PATTERNS = [
 @pytest.mark.parametrize("tpat_test", TEST_TRIP_PATTERNS)
 def test_trip_stop_pattern(request, tpat_test, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    from network_wrangler.transit.feed import stop_id_pattern_for_trip
+    from network_wrangler.transit.feed.stops import stop_id_pattern_for_trip
 
     result = stop_id_pattern_for_trip(
-        stpaul_transit_net.feed, tpat_test["trip_id"], tpat_test["pickup_type"]
+        stpaul_transit_net.feed.stop_times,
+        tpat_test["trip_id"],
+        tpat_test["pickup_type"],
     )
 
     assert result == tpat_test["answer"]
@@ -175,7 +181,7 @@ def test_trip_stop_pattern(request, tpat_test, stpaul_transit_net):
 def test_stop_times_for_trip_id(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     trip_id = "blue-2"
-    stoptimes = stop_times_for_trip_id(small_transit_net.feed, trip_id)
+    stoptimes = stop_times_for_trip_id(small_transit_net.feed.stop_times, trip_id)
     result = stoptimes[["trip_id", "stop_id"]].reset_index(drop=True)
     expected = pd.DataFrame(
         {
@@ -190,7 +196,7 @@ def test_stop_times_for_trip_id(request, small_transit_net):
 def test_shape_id_for_trip_id(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     trip_id = "blue-1"
-    result = shape_id_for_trip_id(small_transit_net.feed, trip_id)
+    result = shape_id_for_trip_id(small_transit_net.feed.trips, trip_id)
     expected = "shape1"
     assert result == expected
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -199,7 +205,9 @@ def test_shape_id_for_trip_id(request, small_transit_net):
 def test_shapes_for_trip_id(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     trip_id = "blue-2"
-    shapes = shapes_for_trip_id(small_transit_net.feed, trip_id)
+    shapes = shapes_for_trip_id(
+        small_transit_net.feed.shapes, small_transit_net.feed.trips, trip_id
+    )
     _cols = ["shape_id", "shape_pt_sequence", "shape_model_node_id"]
     result = shapes[_cols].reset_index(drop=True)
     expected = pd.DataFrame(
@@ -218,7 +226,7 @@ def test_stop_times_for_pickup_dropoff_trip_id(request, small_transit_net):
     trip_id = "blue-2"
     pickup_dropoff = "either"
     stop_times = stop_times_for_pickup_dropoff_trip_id(
-        small_transit_net.feed, trip_id, pickup_dropoff
+        small_transit_net.feed.stop_times, trip_id, pickup_dropoff
     )
     _cols = ["trip_id", "stop_id", "model_node_id"]
     result = stop_times[_cols].reset_index(drop=True)
@@ -239,7 +247,7 @@ def test_stop_id_pattern_for_trip(request, small_transit_net):
     trip_id = "blue-2"
     pickup_dropoff = "either"
     result = stop_id_pattern_for_trip(
-        small_transit_net.feed, trip_id, pickup_dropoff=pickup_dropoff
+        small_transit_net.feed.stop_times, trip_id, pickup_dropoff=pickup_dropoff
     )
     expected = ["111", "333", "444"]
     assert result == expected
@@ -271,7 +279,7 @@ def test_feed_equality(request, small_transit_net):
 
 def test_filter_shapes_to_links(request):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    from network_wrangler.transit.feed import filter_shapes_to_links
+    from network_wrangler.transit.feed.shapes import shapes_for_road_links
 
     links_df = links_df = pd.DataFrame({"A": [1, 2, 3], "B": [2, 3, 4]})
     shapes_df = pd.DataFrame(
@@ -297,7 +305,7 @@ def test_filter_shapes_to_links(request):
         }
     )
 
-    result = filter_shapes_to_links(shapes_df, links_df)
+    result = shapes_for_road_links(shapes_df, links_df)
     WranglerLogger.debug(f"result:\n{result}")
 
     expected = shapes_df.loc[shapes_df.should_retain].reset_index(drop=True)
@@ -308,7 +316,7 @@ def test_filter_shapes_to_links(request):
 
 def test_filter_stop_times_to_links(request):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    from network_wrangler.transit.feed import filter_stop_times_to_shapes
+    from network_wrangler.transit.feed.stop_times import stop_times_for_shapes
 
     stop_times = pd.DataFrame(
         {
@@ -340,7 +348,7 @@ def test_filter_stop_times_to_links(request):
     )
 
     # Function under test
-    result = filter_stop_times_to_shapes(stop_times, shapes, trips)
+    result = stop_times_for_shapes(stop_times, shapes, trips)
     # WranglerLogger.debug(f"original:\n{stop_times}")
     # WranglerLogger.debug(f"result:\n{result}")
     # WranglerLogger.debug(f"expected:\n{expected}")

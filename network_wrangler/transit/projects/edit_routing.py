@@ -3,31 +3,31 @@ import copy
 import numpy as np
 import pandas as pd
 
+from ...params import TRANSIT_SHAPE_ID_SCALAR, TRANSIT_STOP_ID_SCALAR
+
+from ..feed.trips import trip_ids_for_shape_id
+from ..feed.stops import node_is_stop
+from ..feed.stop_times import stop_times_for_trip_id
+from ..feed.shapes import (
+    node_pattern_for_shape_id,
+    shape_ids_for_trip_ids,
+    shapes_for_shape_id,
+)
+
+from ..feed.shapes import find_nearest_stops
+
 from ...models.gtfs.tables import (
     WranglerShapesTable,
     WranglerStopTimesTable,
     WranglerStopsTable,
     TripsTable,
 )
-from ..feed import (
-    stop_times_for_trip_id,
-    node_pattern_for_shape_id,
+from ..validate import (
     shape_links_without_road_links,
-    shape_ids_for_trip_ids,
-    trip_ids_for_shape_id,
-    node_is_stop,
-    find_nearest_stops,
-    shapes_for_shape_id,
 )
 from ...logger import WranglerLogger
 from ...utils.utils import generate_list_of_new_ids, generate_new_id
 from ...utils.data import segment_data_by_selection_min_overlap
-
-# Default initial scalar value to add to duplicated shape_ids to create a new shape_id
-SHAPE_ID_SCALAR = 1000000
-
-# Default initial scalar value to add to node id to create a new stop_id
-STOP_ID_SCALAR = 1000000
 
 
 class TransitRoutingChangeError(Exception):
@@ -112,7 +112,7 @@ def _add_new_shape_copy(
     old_shape_id: str,
     trip_ids: list[str],
     feed: "Feed",
-    id_scalar=SHAPE_ID_SCALAR,
+    id_scalar=TRANSIT_SHAPE_ID_SCALAR,
 ) -> tuple[WranglerShapesTable, TripsTable, str]:
     """Create an identical new shape_id from shape matching old_shape_id for the trip_ids.
 
@@ -166,7 +166,7 @@ def _replace_shapes_segment(
     """
     routing_to_replace = [int(abs(int(i))) for i in routing_to_replace]
 
-    existing_shape_df = shapes_for_shape_id(feed, shape_id)
+    existing_shape_df = shapes_for_shape_id(feed.shapes, shape_id)
 
     _disp_col = ["shape_id", "shape_pt_sequence", "shape_model_node_id"]
     WranglerLogger.debug(f"\nExisting Shape\n{existing_shape_df[_disp_col]}")
@@ -221,18 +221,22 @@ def _replace_stop_times_segment_for_trip(
         WranglerStopTimesTable: stop_time records for a trip_id with updated segment
     """
     WranglerLogger.debug(f"Replacing existing nodes pattern: {existing_stop_nodes}")
-    this_trip_stoptimes = stop_times_for_trip_id(feed, trip_id)
+    this_trip_stoptimes = stop_times_for_trip_id(feed.stop_times, trip_id)
 
     _disp_col = ["stop_id", "model_node_id", "stop_sequence"]
 
     # if start or end nodes are not in stops, get closest ones from shapes
     start_n, end_n = abs(existing_stop_nodes[0]), abs(existing_stop_nodes[-1])
-    if start_n != 0 and not node_is_stop(feed, start_n, trip_id):
-        start_n, _ = find_nearest_stops(feed, trip_id, start_n)
+    if start_n != 0 and not node_is_stop(feed.stops, feed.stop_times, start_n, trip_id):
+        start_n, _ = find_nearest_stops(
+            feed.shapes, feed.trips, feed.stop_times, trip_id, start_n
+        )
         if start_n != 0:
             set_stops_nodes = [start_n] + set_stops_nodes
-    if end_n != 0 and not node_is_stop(feed, end_n, trip_id):
-        _, end_n = find_nearest_stops(feed, trip_id, end_n)
+    if end_n != 0 and not node_is_stop(feed.stops, feed.stop_times, end_n, trip_id):
+        _, end_n = find_nearest_stops(
+            feed.shapes, feed.trips, feed.stop_times, trip_id, end_n
+        )
         if end_n != 0:
             set_stops_nodes = set_stops_nodes + [end_n]
 
@@ -284,7 +288,7 @@ def _consistent_routing(feed, shape_id, existing_routing, set_routing) -> bool:
 
     if not existing_routing:
         return False
-    existing_pattern = node_pattern_for_shape_id(feed, shape_id)
+    existing_pattern = node_pattern_for_shape_id(feed.shapes, shape_id)
     # WranglerLogger.debug(f"Existing pattern: {existing_pattern}")
     # WranglerLogger.debug(f"Existing routing: {existing_routing}")
     # WranglerLogger.debug(f"Set routing: {set_routing}")
@@ -333,7 +337,7 @@ def _update_shapes_and_trips(
         return feed.shapes, feed.trips
 
     # --- Create new shape if `shape_id` is used by trips that are not in selected trip_ids --
-    all_trips_using_shape_id = set(trip_ids_for_shape_id(feed, shape_id))
+    all_trips_using_shape_id = set(trip_ids_for_shape_id(feed.trips, shape_id))
     sel_trips_using_shape_id = set(trip_ids) & all_trips_using_shape_id
     if sel_trips_using_shape_id != all_trips_using_shape_id:
         # adds copied shape with new shape_id to feed.shapes + references it in feed.trips
@@ -470,7 +474,7 @@ def _update_stop_times_for_trip(
     WranglerLogger.debug(f"Delete stops: {del_stops_nodes}")
 
     # --------------- replace segment, delete stops, or replace whole thing ---------------
-    this_trip_stop_times = stop_times_for_trip_id(feed, trip_id)
+    this_trip_stop_times = stop_times_for_trip_id(feed.stop_times, trip_id)
 
     if existing_stops_nodes and set_stops_nodes:
         this_trip_stop_times = _replace_stop_times_segment_for_trip(
@@ -515,8 +519,8 @@ def apply_transit_routing_change(
     net: "TransitNetwork",
     selection: "Selection",
     routing_change: dict,
-    shape_id_scalar: int = SHAPE_ID_SCALAR,
-    stop_id_scalar: int = STOP_ID_SCALAR,
+    shape_id_scalar: int = TRANSIT_SHAPE_ID_SCALAR,
+    stop_id_scalar: int = TRANSIT_STOP_ID_SCALAR,
     reference_road_net: "RoadwayNetwork" = None,
 ) -> "TransitNetwork":
     """Apply a routing change to the transit network, including stop updates.
@@ -557,7 +561,7 @@ def apply_transit_routing_change(
         )
 
     # ---- update each shape that is used by selected trips to use new routing -------
-    shape_ids = shape_ids_for_trip_ids(updated_feed, trip_ids)
+    shape_ids = shape_ids_for_trip_ids(updated_feed.trips, trip_ids)
     WranglerLogger.debug(f"shape_ids: {shape_ids}")
     for shape_id in shape_ids:
         updated_feed.shapes, updated_feed.trips = _update_shapes_and_trips(

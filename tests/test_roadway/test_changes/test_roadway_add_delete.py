@@ -13,7 +13,6 @@ Usage:  `pytest tests/test_roadway/test_changes/test_roadway_add_delete.py`
 """
 
 
-@pytest.mark.failing
 def test_add_roadway_link_project_card(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -21,9 +20,9 @@ def test_add_roadway_link_project_card(request, small_net):
     _category = "roadway_addition"
     _links = [
         {
-            "A": 3494,
-            "B": 3230,
-            "model_link_id": 123456,
+            "A": 1,
+            "B": 5,
+            "model_link_id": 1155,
             "roadway": "bus_guideway",
             "walk_access": 0,
             "drive_access": 0,
@@ -34,9 +33,9 @@ def test_add_roadway_link_project_card(request, small_net):
             "name": "new busway link",
         },
         {
-            "A": 3230,
-            "B": 3494,
-            "model_link_id": 123457,
+            "A": 5,
+            "B": 1,
+            "model_link_id": 5511,
             "roadway": "bus_guideway",
             "walk_access": 0,
             "drive_access": 0,
@@ -70,7 +69,6 @@ def test_add_roadway_link_project_card(request, small_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.failing
 def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -90,9 +88,10 @@ def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
 
     assert net_links == expected_net_links
     assert net_nodes == expected_net_nodes
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_multiple_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
+def test_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     net = copy.deepcopy(stpaul_net)
@@ -111,6 +110,7 @@ def test_multiple_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex
 
     assert net_links == expected_net_links
     assert net_nodes == expected_net_nodes
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
@@ -134,7 +134,6 @@ def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
-@pytest.mark.failing
 def test_add_nodes(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_net)
@@ -165,7 +164,7 @@ def test_add_nodes(request, small_net):
 
     # should fail when adding a node with a model_node_id that already exists
     bad_node_properties = node_properties.copy()
-    bad_node_properties["model_node_id"] = 3494
+    bad_node_properties["model_node_id"] = 1
     WranglerLogger.debug(
         "Trying to add node 3494 into network but should fail b/c already there"
     )

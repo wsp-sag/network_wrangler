@@ -6,13 +6,13 @@ import os
 
 import pytest
 
-import pandas as pd
 
+from network_wrangler.transit.feed.stop_times import stop_times_for_trip_id
 from projectcard import read_card
 from network_wrangler.roadway.network import RoadwayNetwork
 from network_wrangler.transit.network import TransitNetwork
 from network_wrangler import WranglerLogger
-from network_wrangler.transit.feed import shapes_for_trip_id, stop_times_for_trip_id
+from network_wrangler.transit.feed.shapes import shapes_for_trip_id
 
 TEST_ROUTING_REPLACEMENT = [
     {
@@ -58,7 +58,7 @@ TEST_ROUTING_REPLACEMENT = [
 def test_replace_shapes_segment(request, test_routing, small_transit_net, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     WranglerLogger.info(f"...evaluating {test_routing['name']}")
-    from network_wrangler.projects.transit_routing_change import _replace_shapes_segment
+    from network_wrangler.transit.projects.edit_routing import _replace_shapes_segment
 
     net = copy.deepcopy(small_transit_net)
     shape_id = "shape2"
@@ -176,7 +176,7 @@ TEST_STOP_CHANGES = [
 @pytest.mark.parametrize("test_routing", TEST_ROUTING_CHANGES + TEST_STOP_CHANGES)
 def test_route_changes(request, small_transit_net, small_net, test_routing):
     WranglerLogger.info(f"--Starting: {request.node.name} - {test_routing['name']}")
-    from network_wrangler.projects.transit_routing_change import (
+    from network_wrangler.transit.projects.edit_routing import (
         apply_transit_routing_change,
     )
 
@@ -190,11 +190,11 @@ def test_route_changes(request, small_transit_net, small_net, test_routing):
     net = apply_transit_routing_change(net, sel, test_routing["routing_change"])
 
     # Select a representative trip id to test
-    trip_shape_nodes = shapes_for_trip_id(net.feed, repr_trip_id)[
-        "shape_model_node_id"
-    ].to_list()
+    trip_shape_nodes = shapes_for_trip_id(
+        net.feed.shapes, net.feed.trips, repr_trip_id
+    )["shape_model_node_id"].to_list()
     trip_stop_times_nodes = stop_times_for_trip_id(
-        net.feed, repr_trip_id
+        net.feed.stop_times, repr_trip_id
     ).model_node_id.to_list()
 
     if "expected_routing" in test_routing:
@@ -235,7 +235,6 @@ def test_route_changes(request, small_transit_net, small_net, test_routing):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.failing
 def test_route_changes_project_card(
     request,
     stpaul_net: RoadwayNetwork,
@@ -311,7 +310,6 @@ def test_route_changes_project_card(
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.failing
 def test_wo_existing(
     request, stpaul_net: RoadwayNetwork, stpaul_transit_net: TransitNetwork
 ):

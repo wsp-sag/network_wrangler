@@ -8,16 +8,16 @@ from .graph import links_nodes_to_ox_graph
 
 
 def selection_map(
-    selection: "RoadwaySelection",
+    selection: "Union[RoadwayNodeSelection,RoadwayLinkSelection]",
 ) -> folium.map:
     """
     Shows which links are selected based on a selection instance.
 
     Args:
-        selection: RoadwaySelectioninstance
+        selection: RoadwayNodeSelection or RoadwayLink seleciton instance
     """
     WranglerLogger.debug("Creating selection map.")
-    if selection.selection_type == "segment_search":
+    if selection.selection_type == "segment":
         G = selection.segment.graph
     else:
         G = links_nodes_to_ox_graph(
@@ -48,7 +48,7 @@ def selection_map(
         )
         return node_marker
 
-    if selection.selection_type == "segment_search":
+    if selection.selection_type == "segment":
         _folium_node(
             selection.selected_nodes_df.loc[selection.segment.O_pk],
             color="green",

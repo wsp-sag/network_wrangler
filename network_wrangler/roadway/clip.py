@@ -20,12 +20,15 @@ write_roadway(clipped_network, out_dir, prefix="ecolab", format="geojson", true_
 ```
 
 """
+from __future__ import annotations
 from typing import Union
 from pathlib import Path
 
 import geopandas as gpd
 
-from ..utils import get_bounding_polygon
+from .links.links import node_ids_in_links
+from ..utils.geo import get_bounding_polygon
+from ..logger import WranglerLogger
 
 
 def clip_roadway_to_dfs(
@@ -61,21 +64,31 @@ def clip_roadway_to_dfs(
 
     # make sure boundary_gdf.crs == network.crs
     if boundary_gdf.crs != network.crs:
+        WranglerLogger.debug(
+            f"Making boundary CRS consistent with network CRS: {network.crs}"
+        )
         boundary_gdf = boundary_gdf.to_crs(network.crs)
     # get the boundary as a single polygon
     boundary = boundary_gdf.geometry.unary_union
     # get the links that intersect the boundary
-    trimmed_links_df = network.links_df[network.links_df.geometry.intersects(boundary)]
-
+    WranglerLogger.debug(
+        "Finding roadway links that intersect boundary (spatial join)."
+    )
+    filtered_links_df = network.links_df[network.links_df.geometry.intersects(boundary)]
+    WranglerLogger.debug(f"filtered_links_df:\n{filtered_links_df.head()}")
     # get the nodes that the links connect to
-    trimmed_node_ids = network.node_ids_in_links(trimmed_links_df)
-    trimmed_nodes_df = network.nodes_df[network.nodes_df.index.isin(trimmed_node_ids)]
-
+    # WranglerLogger.debug("Finding roadway nodes that clipped links connect to.")
+    filtered_node_ids = node_ids_in_links(filtered_links_df, network.nodes_df)
+    filtered_nodes_df = network.nodes_df[network.nodes_df.index.isin(filtered_node_ids)]
+    # WranglerLogger.debug(f"filtered_nodes_df:\n{filtered_nodes_df.head()}")
     # get shapes the links use
-    trimmed_shapes_df = network.shapes_df[
-        network.shapes_df.index.isin(trimmed_links_df["shape_id"])
+    WranglerLogger.debug("Finding roadway shapes that clipped links connect to.")
+    filtered_shapes_df = network.shapes_df[
+        network.shapes_df.index.isin(filtered_links_df["shape_id"])
     ]
-
+    trimmed_links_df = filtered_links_df.copy()
+    trimmed_nodes_df = filtered_nodes_df.copy()
+    trimmed_shapes_df = filtered_shapes_df.copy()
     return trimmed_links_df, trimmed_nodes_df, trimmed_shapes_df
 
 

@@ -1,18 +1,22 @@
+from __future__ import annotations
 import copy
 
 from typing import List, Union
 
 import pandas as pd
 
-from ..utils import dict_to_hexkey
+from ..models.projects.transit_selection import (
+    SelectTransitLinks,
+    SelectTransitNodes,
+    SelectTransitTrips,
+    SelectTripProperties,
+)
+
+from ..utils.utils import dict_to_hexkey
 from ..logger import WranglerLogger
 
-from ..models.projects.types import (
-    SelectTransitTrips,
+from ..models.projects.transit_selection import (
     SelectRouteProperties,
-    SelectTripProperties,
-    SelectTransitNodes,
-    SelectTransitLinks,
 )
 from ..models._base.time import Timespan
 
@@ -91,7 +95,7 @@ class TransitSelection:
             ValidationError: if format not consistent with SelectTransitTrips
         """
         selection_dict = SelectTransitTrips(**selection_dict)
-        selection_dict = selection_dict.model_dump(exclude_none=True)
+        selection_dict = selection_dict.model_dump(exclude_none=True, by_alias=True)
         WranglerLogger.debug(f"SELECT DICT - before Validation:\n{selection_dict}")
         _trip_selection_fields = list(
             (selection_dict.get("trip_properties", {}) or {}).keys()

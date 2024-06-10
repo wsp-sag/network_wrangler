@@ -169,10 +169,7 @@ def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
 
     _links_df = net.links_df.mode_query(mode)
 
-    _nodes_df = net.nodes_in_links(
-        net.links_df,
-        net.nodes_df,
-    )
+    _nodes_df = net.nodes_in_links()
 
     G = links_nodes_to_ox_graph(_links_df, _nodes_df)
 

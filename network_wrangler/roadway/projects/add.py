@@ -1,10 +1,15 @@
-import copy
+"""Functions for applying roadway link or node addition project cards to the roadway network."""
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-import geopandas as gpd
+import pandas as pd
 
-from ..nodes import data_to_nodes_df
-from ..links import data_to_links_df
+from ..nodes.create import data_to_nodes_df
+from ..links.create import data_to_links_df
 from ...logger import WranglerLogger
+
+if TYPE_CHECKING:
+    from ..network import RoadwayNetwork
 
 
 class NewRoadwayError(Exception):
@@ -12,9 +17,9 @@ class NewRoadwayError(Exception):
 
 
 def apply_new_roadway(
-    roadway_net: "RoadwayNetwork",
+    roadway_net: RoadwayNetwork,
     roadway_addition: dict,
-) -> "RoadwayNetwork":
+) -> RoadwayNetwork:
     """
     Add the new roadway features defined in the project card.
 
@@ -37,7 +42,7 @@ def apply_new_roadway(
     )
     if add_nodes:
         _new_nodes_df = data_to_nodes_df(
-            add_nodes, nodes_params=roadway_net.nodes_df.params
+            pd.DataFrame(add_nodes), nodes_params=roadway_net.nodes_df.params
         )
         roadway_net.add_nodes(_new_nodes_df)
 
@@ -51,12 +56,3 @@ def apply_new_roadway(
         roadway_net.add_links(_new_links_df)
 
     return roadway_net
-
-
-def _create_new_shapes_from_links(
-    roadway_net: "RoadwayNetwork", links_df: gpd.GeoDataFrame
-) -> gpd.GeoDataFrame:
-    new_shapes_df = copy.deepcopy(
-        links_df[[roadway_net.shapes_df.params.primary_key, "geometry"]]
-    )
-    return new_shapes_df

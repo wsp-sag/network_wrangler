@@ -48,10 +48,8 @@ Submodules which define and extend the links, nodes, and shapes dataframe object
 
 ### Supporting Classes, Methods + Parameters
 
-:: network_wrangler.roadway.RoadwaySelection
-:: network_wrangler.roadway.NODE_PROJECT_CARD_KEYS
-:: network_wrangler.roadway.LINK_PROJECT_CARD_KEYS
-:: network_wrangler.roadway.DEFAULT_SEARCH_MODES
+:: network_wrangler.roadway.selection.RoadwayLinkSelection
+:: network_wrangler.roadway.selection.RoadwayNodeSelection
 :: network_wrangler.roadway.Segment
 :: network_wrangler.roadway.DEFAULT_MAX_SEARCH_BREADTH
 :: network_wrangler.roadway.DEFAULT_SEARCH_BREADTH
