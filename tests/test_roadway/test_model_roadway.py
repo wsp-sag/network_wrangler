@@ -161,7 +161,8 @@ def test_create_ml_network_shape(request, small_net):
 
 
 def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_dir):
-    """Tests usage of ML_access_point and ML_egress_point when they are set to a list of nodes instead of "all"
+    """Tests usage of ML_access_point and ML_egress_point when they are set to a list of nodes 
+    instead of "all"
 
     - With 'all' as access/egress, there would be total of 8 connector links (4 access, 4 egress)
     - With restricted access/egress, this project card should create 4 connector links
@@ -171,6 +172,12 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
     net = copy.deepcopy(stpaul_net)
 
     project_card_name = "road.managed_lanes.restricted_access.yml"
+    """
+    ML_access_point:
+      set: [38765, 87982]
+    ML_egress_point:
+      set: [87993, 37457]
+    """
     project_card_path = stpaul_ex_dir / "project_cards" / project_card_name
     project_card = read_card(project_card_path, validate=False)
 
@@ -179,24 +186,18 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
     _m_links_df = net.model_net.links_df
     dummy_links_df = _m_links_df.of_type.dummy
 
-    WranglerLogger.debug(f"Dummy Links:\n {dummy_links_df}")
+    WranglerLogger.debug(f"Dummy Links:\n {dummy_links_df[['model_link_id','A', 'B']]}")
 
     pcard_gp_link_ids = project_card.facility["links"]["model_link_id"]
     pcard_access_points = project_card.roadway_property_change["property_changes"][
         "ML_access_point"
-    ]
+    ]["set"]
     pcard_egress_points = project_card.roadway_property_change["property_changes"][
         "ML_egress_point"
-    ]
+    ]["set"]
 
     expected_ml_link_ids = [
         net.model_net._link_id_to_managed_lane_link_id(x) for x in pcard_gp_link_ids
-    ]
-    expected_access_link_ids = [
-        net.model_net._access_model_link_id(x) for x in pcard_gp_link_ids
-    ]
-    expected_egress_link_ids = [
-        net.model_net._egress_model_link_id(x) for x in pcard_gp_link_ids
     ]
 
     net_gp_links = _m_links_df.of_type.parallel_general_purpose
@@ -212,20 +213,14 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
         \n***GP Links\n{net_gp_links[_display_c]}\
         \n***Access Links\n{net_access_links[_display_c]}\
         \n***Expected Access Points\n{pcard_access_points}\
-        \n***Expected Access Link IDs\n{expected_access_link_ids}\
         \n***Egress Links\n{net_egress_links[_display_c]}\
         \n***Expected Egress Points\n{pcard_egress_points}\
-        \n***Expected Egress Link IDs\n{expected_egress_link_ids}\
         "
     )
 
     # Assert managed lane link IDs are expected
     assert set(net_ml_links["model_link_id"].tolist()) == set(expected_ml_link_ids)
-    assert set(net_access_links["model_link_id"].tolist()) == set(
-        expected_access_link_ids
-    )
-    assert set(net_egress_links["model_link_id"].tolist()) == set(
-        expected_egress_link_ids
-    )
+    assert set(net_access_links["A"].tolist()) == set(pcard_access_points)
+    assert set(net_egress_links["B"].tolist()) == set(pcard_egress_points)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

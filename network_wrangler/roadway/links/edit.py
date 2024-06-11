@@ -24,6 +24,8 @@ import copy
 
 from typing import Union, Any
 
+import pandas as pd
+
 from pydantic import validate_call
 from pandera.typing import DataFrame
 
@@ -192,6 +194,32 @@ def _edit_scoped_link_property(
     return updated_scoped_prop_value_list
 
 
+def _edit_ml_access_egress_points(
+    links_df: DataFrame[RoadLinksTable],
+    prop_name: str,
+    prop_change: RoadPropertyChange,
+    link_idx: list[int],
+):
+    """Edit ML access or egress points on links."""
+    prop_to_node_col = {"ML_access_point": "A", "ML_egress_point": "B"}
+    node_col = prop_to_node_col[prop_name]
+    if prop_change.set == "all":
+        WranglerLogger.debug(f"Setting all {prop_name} to True")
+        links_df.loc[link_idx, prop_name] = True
+    elif isinstance(prop_change.set, list):
+        mask = (links_df[node_col].isin(prop_change.set)) & (links_df.index.isin(link_idx))
+
+        WranglerLogger.debug(f"Setting {prop_name} to True for {len(links_df.loc[mask])} links:\n\
+                            {links_df.loc[mask, ['model_link_id', 'A', 'B']]}")
+        links_df.loc[mask, prop_name] = True
+    else:
+        WranglerLogger.error(f"Invalid value for {prop_name}. Must be list of ints or \
+                                'all': {prop_change.set}")
+        raise ValueError(f"Invalid value for {prop_name}: {prop_change.set}")
+
+    return links_df
+
+
 def _edit_link_property(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
@@ -202,6 +230,10 @@ def _edit_link_property(
     overwrite_conflicting_scoped: bool = True,
 ) -> RoadLinksTable:
     """Return edited (in place) RoadLinksTable with property changes for a list of links.
+
+    If prop_name starts with ML, will initialize managed lane attributes if not already.
+    If prop_name not in links_df, will initialize to default value from RoadLinksTable model
+        if it exists.
 
     Does NOT validate to RoadLinksTable.
 
@@ -241,8 +273,17 @@ def _edit_link_property(
     # WranglerLogger.debug(f"links_df idx|prop_name \
     #   Before:\n {links_df.loc[link_idx,prop_name].head()}")
 
+    # Access and egress points are special cases.
+    if prop_name in ["ML_access_point", "ML_egress_point"]:
+        links_df = _edit_ml_access_egress_points(links_df, prop_name, prop_change, link_idx)
+        WranglerLogger.debug(
+            f"links_df.loc[link_idx,prop_name] \
+            After:\n {links_df.loc[link_idx, prop_name].head()}"
+        )
+        return links_df
+
     # `set` and `change` just affect the simple property
-    if prop_change.set is not None:
+    elif prop_change.set is not None:
         WranglerLogger.debug(f"Setting {prop_name} to {prop_change.set}")
         links_df.loc[link_idx, prop_name] = prop_change.set
 

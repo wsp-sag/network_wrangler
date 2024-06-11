@@ -47,7 +47,7 @@ def test_apply_pycode_roadway(request, small_net):
     )
     WranglerLogger.debug(f"RoadwayNetwork type after apply: {type(net)}")
     assert "RoadwayNetwork" in str(type(net))
-    _link_sel = net.links_df.loc[net.links_df["model_link_id"] == _link_sel_idx]
+    _link_sel = net.links_df.loc[_link_sel_idx]
     WranglerLogger.debug(f"After Change:\n{_link_sel[_show_fields]}")
 
     assert _link_sel["lanes"].eq(_expected_value).all()

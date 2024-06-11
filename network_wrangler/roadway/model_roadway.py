@@ -133,10 +133,10 @@ class ModelRoadwayNetwork:
         return self.ml_link_id_scalar + model_link_id
 
     def _access_model_link_id(self, model_link_id):
-        return 1 + model_link_id + self._link_id_to_managed_lane_link_id(model_link_id)
+        return 1 + model_link_id + self.ml_link_id_scalar
 
     def _egress_model_link_id(self, model_link_id):
-        return 2 + model_link_id + self._link_id_to_managed_lane_link_id(model_link_id)
+        return 2 + model_link_id + self.ml_link_id_scalar
 
     def write(
         self,
@@ -289,6 +289,7 @@ def _create_dummy_connector_links(
 
     returns: GeoDataFrame of access and egress dummy connector links to add to m_links_df
     """
+    WranglerLogger.debug("Creating access and egress dummy connector links")
     # 1. Align the managed lane and associated general purpose lanes in the same records
     copy_cols = [c for c in COPY_TO_ACCESS_EGRESS if c in links_df.columns]
 

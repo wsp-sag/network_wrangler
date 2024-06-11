@@ -183,47 +183,9 @@ def filter_links_to_path(
     return filter_links_to_ids(links_df, selected_link_ds)
 
 
-def _filter_link_to_ml_access_egress_points(
-    links_df: pd.DataFrame, match_col: str, match_node_col: str
-) -> pd.DataFrame:
-    """_summary_
-
-    Args:
-        links_df (pd.DataFrame): links dataframe.
-        match_col (str): column in links_df which determines which links are access/egress
-            points. In RoadLinksTable that is either "ML_access_point" or "ML_egress_point"
-        match_node_col (str): The node column to match the match_col to. In RoadLinksTable
-            that is either "A" or "B" which corresponds with "ML_access_point" or "ML_egress_point"
-            respectively.
-
-    Returns:
-        pd.DataFrame: _description_
-    """
-    if match_col not in links_df.columns or links_df[match_col].isnull().all():
-        WranglerLogger.warning(
-            f"{match_col} either doesn't exist or is all null;\
-        Assuming all managed lane links are access/egress points."
-        )
-        return filter_links_managed_lanes(links_df)
-
-    exploded_df = links_df.explode(match_col)
-    mask_all = exploded_df[match_col] == "all"
-    mask_match = exploded_df[match_node_col] == exploded_df[match_col]
-
-    return links_df.loc[exploded_df[mask_all | mask_match].index]
+def filter_links_to_ml_access_points(links_df: pd.DataFrame) -> pd.DataFrame:
+    return links_df.loc[links_df["ML_access_point"]]
 
 
 def filter_links_to_ml_egress_points(links_df: pd.DataFrame) -> pd.DataFrame:
-    return _filter_link_to_ml_access_egress_points(
-        links_df,
-        match_col="ML_egress_point",
-        match_node_col="B",
-    )
-
-
-def filter_links_to_ml_access_points(links_df: pd.DataFrame) -> pd.DataFrame:
-    return _filter_link_to_ml_access_egress_points(
-        links_df,
-        match_col="ML_access_point",
-        match_node_col="A",
-    )
+    return links_df.loc[links_df["ML_egress_point"]]

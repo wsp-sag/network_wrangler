@@ -58,15 +58,13 @@ class RoadLinksTable(DataFrameModel):
     ML_access: Optional[Series[Any]] = pa.Field(
         coerce=True, nullable=True, default=True
     )
-    ML_access_point: Optional[Series[Any]] = pa.Field(
+    ML_access_point: Optional[Series[bool]] = pa.Field(
         coerce=True,
-        nullable=True,
-        default=None,
+        default=False,
     )
-    ML_egress_point: Optional[Series[Any]] = pa.Field(
+    ML_egress_point: Optional[Series[bool]] = pa.Field(
         coerce=True,
-        nullable=True,
-        default=None,
+        default=False,
     )
     sc_ML_lanes: Optional[Series[object]] = pa.Field(
         coerce=True,
