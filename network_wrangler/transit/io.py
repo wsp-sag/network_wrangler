@@ -156,18 +156,20 @@ def load_transit(
 
     """
     if feed is str or Path:
-        feed = load_feed_from_path(feed, suffix=suffix)
+        feed_obj = load_feed_from_path(feed, suffix=suffix)
+        feed_obj.feed_path = feed
     elif feed is dict:
-        feed = load_feed_from_dfs(feed)
+        feed_obj = load_feed_from_dfs(feed)
     elif feed is GtfsModel:
-        feed = Feed(feed)
+        feed_obj = Feed(feed)
+    else:
+        if not isinstance(feed, Feed):
+            raise ValueError(
+                f"TransitNetwork must be seeded with a Feed, dict of dfs or Path. Found {type(feed)}"
+            )
+        feed_obj = feed
 
-    if not isinstance(feed, Feed):
-        raise ValueError(
-            f"TransitNetwork must be seeded with a Feed, dict of dfs or Path. Found {type(feed)}"
-        )
-
-    return TransitNetwork(feed)
+    return TransitNetwork(feed_obj)
 
 
 def write_transit(

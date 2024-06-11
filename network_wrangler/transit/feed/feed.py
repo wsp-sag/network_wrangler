@@ -1,6 +1,7 @@
 """Main functionality for GTFS tables including Feed object."""
 from __future__ import annotations
 from typing import Union, Literal
+from pathlib import Path
 
 import pandas as pd
 
@@ -76,6 +77,7 @@ class Feed(DBModelMixin):
 
     def __init__(self, **kwargs):
         self._net = None
+        self.feed_path: Path = None
         self.initialize_tables(**kwargs)
 
         # Set extra provided attributes but just FYI in logger.

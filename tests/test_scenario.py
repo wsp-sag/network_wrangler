@@ -192,7 +192,7 @@ def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_base_scenario):
 
     my_scenario.apply_all_projects()
 
-    my_scenario.summarize()
+    WranglerLogger.debug(my_scenario.summarize())
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 

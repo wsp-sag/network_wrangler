@@ -553,42 +553,58 @@ class Scenario(object):
             string of summary
 
         """
+        return scenario_summary(self, project_detail, outfile, mode)
 
-        WranglerLogger.info(f"Summarizing Scenario {self.name}")
-        report_str = "------------------------------\n"
-        report_str += f"Scenario created on {datetime.now()}\n"
 
-        report_str += "Base Scenario:\n"
-        report_str += "--Road Network:\n"
-        report_str += f"----Link File: {self.base_scenario['road_net']._links_file}\n"
-        report_str += f"----Node File: {self.base_scenario['road_net']._nodes_file}\n"
-        report_str += f"----Shape File: {self.base_scenario['road_net']._shapes_file}\n"
-        report_str += "--Transit Network:\n"
-        report_str += (
-            f"----Feed Path: {self.base_scenario['transit_net'].feed.feed_path}\n"
-        )
+def scenario_summary(
+    scenario: Scenario, project_detail: bool = True, outfile: str = "", mode: str = "a") -> str:
+    """
+    A high level summary of the created scenario.
 
-        report_str += "\nProject Cards:\n -"
-        report_str += "\n-".join([str(pc.file) for p, pc in self.project_cards.items()])
+    Args:
+        scenario: Scenario instance to summarize.
+        project_detail: If True (default), will write out project card summaries.
+        outfile: If specified, will write scenario summary to text file.
+        mode: Outfile open mode. 'a' to append 'w' to overwrite.
 
-        report_str += "\nApplied Projects:\n-"
-        report_str += "\n-".join(self.applied_projects)
+    Returns:
+        string of summary
+    """
+    WranglerLogger.info(f"Summarizing Scenario {scenario.name}")
+    report_str = "------------------------------\n"
+    report_str += f"Scenario created on {datetime.now()}\n"
 
-        if project_detail:
-            report_str += "\n---Project Card Details---\n"
-            for p in self.project_cards:
-                report_str += "\n{}".format(
-                    pprint.pformat(
-                        [self.project_cards[p].__dict__ for p in self.applied_projects]
-                    )
+    report_str += "Base Scenario:\n"
+    report_str += "--Road Network:\n"
+    report_str += f"----Link File: {scenario.base_scenario['road_net']._links_file}\n"
+    report_str += f"----Node File: {scenario.base_scenario['road_net']._nodes_file}\n"
+    report_str += f"----Shape File: {scenario.base_scenario['road_net']._shapes_file}\n"
+    report_str += "--Transit Network:\n"
+    report_str += (
+        f"----Feed Path: {scenario.base_scenario['transit_net'].feed.feed_path}\n"
+    )
+
+    report_str += "\nProject Cards:\n -"
+    report_str += "\n-".join([str(pc.file) for p, pc in scenario.project_cards.items()])
+
+    report_str += "\nApplied Projects:\n-"
+    report_str += "\n-".join(scenario.applied_projects)
+
+    if project_detail:
+        report_str += "\n---Project Card Details---\n"
+        for p in scenario.project_cards:
+            report_str += "\n{}".format(
+                pprint.pformat(
+                    [scenario.project_cards[p].__dict__ for p in scenario.applied_projects]
                 )
+            )
 
-        if outfile:
-            with open(outfile, mode) as f:
-                f.write(report_str)
-            WranglerLogger.info(f"Wrote Scenario Report to: {outfile}")
+    if outfile:
+        with open(outfile, mode) as f:
+            f.write(report_str)
+        WranglerLogger.info(f"Wrote Scenario Report to: {outfile}")
 
-        return report_str
+    return report_str
 
 
 def create_base_scenario(
