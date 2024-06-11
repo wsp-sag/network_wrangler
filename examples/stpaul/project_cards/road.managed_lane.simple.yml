@@ -11,7 +11,7 @@ roadway_property_change:
     lanes:
       set: 3
       scoped:
-        - timespans: ['6:00', '9:00']
+        - timespan: ['6:00', '9:00']
           set: 2
     ML_lanes:
       set: 0
