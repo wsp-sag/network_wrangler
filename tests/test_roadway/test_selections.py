@@ -36,21 +36,21 @@ def test_dfhash(request, stpaul_net):
 
 
 TEST_SELECTIONS = [
-    {  # SELECTION 1
+    {  # SELECTION 0
         "links": {
             "name": ["6th", "Sixth", "sixth"],
         },
         "from": {"osm_node_id": "187899923"},
         "to": {"osm_node_id": "187865924"},
     },
-    {  # SELECTION 2
+    {  # SELECTION 1
         "links": {
             "name": ["Lafayette"],
         },
         "from": {"osm_node_id": "2292977517"},
         "to": {"osm_node_id": "507951637"},
     },
-    {  # SELECTION 3
+    {  # SELECTION 2
         "links": {
             "name": ["University Ave"],
             "lanes": [1],
@@ -58,38 +58,38 @@ TEST_SELECTIONS = [
         "from": {"osm_node_id": "716319401"},
         "to": {"model_node_id": "62153"},
     },
-    {  # SELECTION 4
+    {  # SELECTION 3
         "links": {
             "name": ["I 35E"],
         },
         "from": {"osm_node_id": "954746969"},
         "to": {"osm_node_id": "3071141242"},
     },
-    {  # SELECTION 5 FIXME
+    {  # SELECTION 4 FIXME
         "links": {
             "osm_link_id": ["221685893"],
         },
         "from": {"model_node_id": "131209"},
         "to": {"model_node_id": "131221"},
     },
-    {  # SELECTION 6
+    {  # SELECTION 5
         "links": {
             "model_link_id": ["390239", "391206", "281", "1464"],
+            "lanes": [1, 2],
+        },
+    },
+    {  # SELECTION 6
+        "links": {
+            "all": True,
             "lanes": [1, 2],
         },
     },
     {  # SELECTION 7
         "links": {
             "all": True,
-            "lanes": [1, 2],
         },
     },
     {  # SELECTION 8
-        "links": {
-            "all": True,
-        },
-    },
-    {  # SELECTION 9
         "links": {
             "name": ["Valley Street"],
             "modes": ["walk"],
@@ -101,15 +101,15 @@ TEST_SELECTIONS = [
 
 
 answer_selected_links = [
-    [134543, 85185, 154004],  # SELECTION 1
-    [386035, 401018, 401019],  # SELECTION 2
-    [412924, 389361],  # SELECTION 3
-    [381412, 392837, 394194, 394196, 391146],  # SELECTION 4
-    [294513, 294518, 294532],  # SELECTION 5
-    [281, 1464],  # SELECTION 6
-    None,  # SELECTION 7 - all links
-    None,  # SELECTION 8 - all links with some features
-    [460228, 481940],  # SELECTION 9 - Valley Street Pedestrian Ways
+    [134543, 85185, 154004],  # SELECTION 0
+    [386035, 401018, 401019],  # SELECTION 1
+    [412924, 389361],  # SELECTION 2
+    [381412, 392837, 394194, 394196, 391146],  # SELECTION 3
+    [294513, 294518, 294532],  # SELECTION 4
+    [281, 1464],  # SELECTION 5
+    None,  # SELECTION 6 - all links
+    None,  # SELECTION 7 - all links with some features
+    [460228, 481940],  # SELECTION 8 - Valley Street Pedestrian Ways
 ]
 
 

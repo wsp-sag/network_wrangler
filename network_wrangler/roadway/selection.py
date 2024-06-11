@@ -125,7 +125,7 @@ class RoadwayLinkSelection:
     @property
     def selection_type(self):
         """Link selection type from SelectLinksDict: either `all`, `explicit_ids`, or `segment`."""
-        return self.selection_data.links.selection_type
+        return self.selection_data.selection_type
 
     @property
     def selection_dict(self) -> dict:
@@ -220,15 +220,15 @@ class RoadwayLinkSelection:
         # 1. Initial selection based on selection type
         WranglerLogger.debug(
             f"Initial link selection type: \
-                             {self.selection_type}.{self.selection_data.links.selection_type}"
+                             {self.feature_types}.{self.selection_data.selection_type}"
         )
-        if self.selection_data.links.selection_type == "explicit_ids":
+        if self.selection_type == "explicit_ids":
             _selected_links_df = self._select_explicit_link_id()
 
         elif self.selection_type == "segment":
             _selected_links_df = self.segment.segment_links_df
 
-        elif self.selection_data.links.selection_type == "all":
+        elif self.selection_data.selection_type == "all":
             _selected_links_df = self.net.links_df
         else:
             raise SelectionFormatError("Doesn't have known link selection type")

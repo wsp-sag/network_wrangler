@@ -215,7 +215,10 @@ class SelectLinksDict(RecordModel):
             return "all"
         if self.explicit_id_fields:
             return "explicit_ids"
-        return "segment"
+        else:
+            raise SelectionFormatError(
+                "If not a segment, Select Links should have either `all` or an explicit id."
+            )
 
     @property
     def explicit_id_selection_dict(self):
@@ -260,7 +263,7 @@ class SelectFacility(RecordModel):
     ]
 
     @property
-    def feature_types(self):
+    def feature_types(self) -> str:
         if self.links and self.from_ and self.to:
             return "segment"
         if self.links:
@@ -268,3 +271,12 @@ class SelectFacility(RecordModel):
         if self.nodes:
             return "nodes"
         raise ValueError("SelectFacility must have either links or nodes defined.")
+
+    @property
+    def selection_type(self) -> str:
+        if self.feature_types == "segment":
+            return "segment"
+        if self.feature_types == "links":
+            return self.links.selection_type
+        if self.feature_types == "nodes":
+            return self.nodes.selection_type
