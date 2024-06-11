@@ -553,3 +553,32 @@ def test_segment_list_by_list(request, ref_list, item_list, expected_result):
     else:
         calc_answer = segment_data_by_selection(item_list, ref_list)
         assert expected_result == calc_answer
+
+
+def test_update_props_from_one_to_many():
+    # Create destination_df
+    from network_wrangler.utils.data import _update_props_from_one_to_many
+    destination_df = pd.DataFrame(
+        {
+            "trip_id": [2, 2, 3, 4],
+            "property1": [10, 20, 30, 40],
+            "property2": [100, 200, 300, 400],
+        }
+    )
+    # Create source_df
+    source_df = pd.DataFrame(
+        {"trip_id": [2, 3], "property1": [25, pd.NA], "property2": [None, 350]}
+    )
+    # Expected updated_df
+    expected_df = pd.DataFrame(
+        {
+            "trip_id": [2, 2, 3, 4],
+            "property1": [25, 25, 30, 40],
+            "property2": [100, 200, 350, 400],
+        }
+    )
+    # Call the function
+    updated_df = _update_props_from_one_to_many(
+        destination_df, source_df, "trip_id", ["property1", "property2"])
+    # Check if the updated_df matches the expected_df
+    pd.testing.assert_frame_equal(updated_df, expected_df)

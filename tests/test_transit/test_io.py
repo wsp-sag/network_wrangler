@@ -1,5 +1,9 @@
+from pathlib import Path
+
 import pytest
+
 from pandera.errors import SchemaErrors
+
 from network_wrangler import load_transit, write_transit
 from network_wrangler.transit.network import TransitNetwork
 from network_wrangler import WranglerLogger
@@ -70,5 +74,20 @@ def test_write_feed_geo(request, small_transit_net, small_net, test_out_dir):
         small_transit_net.feed,
         ref_nodes_df=small_net.nodes_df,
         out_dir=test_out_dir,
-        out_prefix="write_feed_geo",
+        out_prefix="write_feed_geo_small",
     )
+    assert Path(test_out_dir / "write_feed_geo_small_trn_stops.geojson").exists()
+    assert Path(test_out_dir / "write_feed_geo_small_trn_shapes.geojson").exists()
+
+
+def test_write_feed_geo_w_shapes(request, stpaul_transit_net, stpaul_net, test_out_dir):
+    from network_wrangler.transit.io import write_feed_geo
+
+    write_feed_geo(
+        stpaul_transit_net.feed,
+        ref_nodes_df=stpaul_net.nodes_df,
+        out_dir=test_out_dir,
+        out_prefix="write_feed_geo_stpaul",
+    )
+    assert Path(test_out_dir / "write_feed_geo_stpaul_trn_stops.geojson").exists()
+    assert Path(test_out_dir / "write_feed_geo_stpaul_trn_shapes.geojson").exists()

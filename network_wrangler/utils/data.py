@@ -161,9 +161,13 @@ def _update_props_from_one_to_many(
 
     Allows 1:many between source and destination relationship via `join_col`.
     """
+    destination_df.set_index(join_col, inplace=True)
+    source_df.set_index(join_col, inplace=True)
+
     merged_df = destination_df.merge(
-        source_df[[join_col] + properties],
-        on=join_col,
+        source_df[properties],
+        left_index=True,
+        right_index=True,
         how="left",
         suffixes=("", "_new"),
     )
@@ -175,6 +179,9 @@ def _update_props_from_one_to_many(
         if len(update_idx) == 1:
             update_vals = update_vals.values[0]
         destination_df.loc[update_idx, prop] = update_vals
+
+    destination_df.reset_index(inplace=True)
+    source_df.reset_index(inplace=True)
     return destination_df
 
 
