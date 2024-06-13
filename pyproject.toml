@@ -1,3 +1,28 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[project]
+name = "network-wrangler"
+version = "0.3.0"
+description = ""
+license =  {file = "LICENSE"}
+readme = "README.md"
+authors = [
+    { name = "Elizabeth Sall", email = "elizabeth@urbanlabs.io" },
+    { name = "Sijia Wang", email = "Sijia.Wang@wsp.com"},
+    { name = "Lisa Zorn", email = "lzorn@bayareametro.gov"},
+    { name = "Ashish Kulshrestha", email = "Ashish.Kulshrestha@wsp.com"}
+]
+
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+
 [tool.ruff]
 line-length = 99
 
@@ -12,3 +37,4 @@ convention = "google"
 "**/__init__.py" = ["F401", "F403"]
 "test_dependencies.py" = ["F401"]
 "bin/*.py" = ["E501"]
+
