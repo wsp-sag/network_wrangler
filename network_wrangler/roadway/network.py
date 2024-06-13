@@ -54,7 +54,7 @@ from .links.links import shape_ids_unique_to_link_ids, node_ids_unique_to_link_i
 from .links.filters import filter_links_to_ids, filter_links_to_node_ids
 from .links.delete import delete_links_by_ids
 from .links.edit import edit_link_geometry_from_nodes
-from .nodes.filters import node_ids_without_links
+from .nodes.nodes import node_ids_without_links
 from .nodes.filters import filter_nodes_to_links
 from .nodes.delete import delete_nodes_by_ids
 from .nodes.edit import edit_node_geometry
@@ -498,7 +498,7 @@ class RoadwayNetwork(BaseModel):
 
         NOTE: does not check if these nodes are used by transit, so use with caution.
         """
-        from .nodes.filters import node_ids_without_links
+        from .nodes.nodes import node_ids_without_links
 
         node_ids = node_ids_without_links(self.nodes_df, self.links_df)
         self.nodes_df = self.nodes_df.drop(node_ids)

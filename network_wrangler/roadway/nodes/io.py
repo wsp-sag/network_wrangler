@@ -15,12 +15,12 @@ from ...logger import WranglerLogger
 from ...utils.io import read_table, write_table
 from ...params import NodesParams, LAT_LON_CRS
 from ...models.roadway.tables import RoadNodesTable
+from ...models._base.types import GeoFileTypes
 from .create import data_to_nodes_df
 
 if TYPE_CHECKING:
     from ...transit.network import TransitNetwork
     from ..network import RoadwayNetwork
-    from ...models._base.types import GeoFileTypes
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)

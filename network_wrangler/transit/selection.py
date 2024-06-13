@@ -25,53 +25,6 @@ Access the selected trip ids or dataframe as follows:
 Note: The selection dictionary should conform to the SelectTransitTrips model defined in
 the models.projects.transit_selection module.
 """
-
-from __future__ import annotations
-import copy
-
-from typing import List, Union, TYPE_CHECKING
-
-import pandas as pd
-
-from pandera.typing import DataFrame
-
-from ..models.projects.transit_selection import (
-    SelectTransitLinks,
-    SelectTransitNodes,
-    SelectTransitTrips,
-    SelectTripProperties,
-)
-
-from ..utils.utils import dict_to_hexkey
-from ..logger import WranglerLogger
-
-from ..models.projects.transit_selection import (
-    SelectRouteProperties,
-)
-from ..time import Timespan
-
-if TYPE_CHECKING:
-    from .feed.feed import Feed
-    from .network import TransitNetwork
-    from ..models.gtfs.tables import (
-        TripsTable,
-        WranglerShapesTable,
-        FrequenciesTable,
-        WranglerRoutesTable,
-    )
-
-
-class TransitSelectionError(Exception):
-    """Base error for transit selection errors."""
-
-    pass
-
-
-# Rest of the code...
-"""
-
-
-"""
 from __future__ import annotations
 import copy
 

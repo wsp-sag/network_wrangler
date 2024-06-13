@@ -11,14 +11,11 @@ from pydantic import validate_call
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...models.roadway.tables import RoadLinksTable
+from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
+from ...models._base.types import GeoFileTypes
 from ...params import LinksParams, LAT_LON_CRS
 from ...utils.io import read_table, write_table
 from .create import data_to_links_df
-
-if TYPE_CHECKING:
-    from ...models._base.types import GeoFileTypes
-    from ...models.roadway.tables import RoadNodesTable
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
