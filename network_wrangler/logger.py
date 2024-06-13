@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Logging utilities for Network Wrangler."""
 
 # Utility functions for logging
 from datetime import datetime
@@ -18,10 +17,12 @@ def setup_logging(
     ),
     std_out_level: str = "info",
 ):
-    """
-    Sets up the WranglerLogger w.r.t. the debug file location and if logging to console.
+    """Sets up the WranglerLogger w.r.t. the debug file location and if logging to console.
 
-    args:
+    Called by the test_logging fixture in conftest.py and can be called by the user to setup
+    logging for their session. If called multiple times, the logger will be reset.
+
+    Args:
         info_log_filename: the location of the log file that will get created to add the INFO log.
             The INFO Log is terse, just gives the bare minimum of details.
             Defaults to file in cwd() `wrangler_[datetime].log`. To turn off logging to a file,
@@ -32,7 +33,6 @@ def setup_logging(
         std_out_level: the level of logging to the console. One of "info", "warning", "debug".
             Defaults to "info" but will be set to ERROR if nothing provided matches.
     """
-
     # add function variable so that we know if logging has been called
     setup_logging.called = True
 
@@ -47,9 +47,7 @@ def setup_logging(
     if not info_log_filename:
         info_log_filename = os.path.join(
             os.getcwd(),
-            "network_wrangler_{}.info.log".format(
-                datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
-            ),
+            "network_wrangler_{}.info.log".format(datetime.now().strftime("%Y_%m_%d__%H_%M_%S")),
         )
 
     info_file_handler = logging.StreamHandler(open(info_log_filename, "w"))

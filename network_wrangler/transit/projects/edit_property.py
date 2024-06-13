@@ -1,5 +1,14 @@
+"""Functions for editing transit properties in a TransitNetwork."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from ...logger import WranglerLogger
 
+if TYPE_CHECKING:
+    from ...transit.network import TransitNetwork
+    from ...transit.selection import TransitSelection
 
 TABLE_TO_APPLY_BY_PROPERTY = {
     "headway_secs": "frequencies",
@@ -10,12 +19,24 @@ IMPLEMENTED_TABLES = ["trips", "frequencies", "stop_times"]
 
 
 class TransitPropertyChangeError(Exception):
+    """Error raised when applying transit property changes."""
+
     pass
 
 
 def apply_transit_property_change(
-    net: "TransitNetwork", selection: "Selection", property_changes: dict
-) -> "TransitNetwork":
+    net: TransitNetwork, selection: TransitSelection, property_changes: dict
+) -> TransitNetwork:
+    """Apply changes to transit properties.
+
+    Args:
+        net (TransitNetwork): Network to modify.
+        selection (TransitSelection): Selection of trips to modify.
+        property_changes (dict): Dictionary of properties to change.
+
+    Returns:
+        TransitNetwork: Modified network.
+    """
     WranglerLogger.debug("Applying transit property change project.")
 
     for property, property_change in property_changes.items():
@@ -31,9 +52,7 @@ def apply_transit_property_change(
             raise NotImplementedError("No table found to modify: {property}")
 
         if table not in IMPLEMENTED_TABLES:
-            raise NotImplementedError(
-                f"{table} table changes not currently implemented."
-            )
+            raise NotImplementedError(f"{table} table changes not currently implemented.")
 
         WranglerLogger.debug(f"...modifying {property} in {table}.")
         net = _apply_transit_property_change_to_table(
@@ -44,12 +63,12 @@ def apply_transit_property_change(
 
 
 def _apply_transit_property_change_to_table(
-    net: "TransitNetwork",
-    selection: "Selection",
+    net: TransitNetwork,
+    selection: TransitSelection,
     table_name: str,
     property: str,
     property_change: dict,
-) -> "TransitNetwork":
+) -> TransitNetwork:
     table_df = net.feed.get_table(table_name)
     # Grab only those records matching trip_ids (aka selection)
     set_df = table_df[table_df.trip_id.isin(selection.selected_trips)].copy()

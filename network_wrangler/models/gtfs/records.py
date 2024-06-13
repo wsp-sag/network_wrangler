@@ -1,5 +1,4 @@
-"""
-This module contains pydantic data models for GTFS records.
+"""This module contains pydantic data models for GTFS records.
 
 1. Validates input or output of function matches the data model.
 
@@ -90,9 +89,7 @@ from .types import (
 
 
 class AgencyRecord(BaseModel):
-    """
-    Represents a transit agency.
-    """
+    """Represents a transit agency."""
 
     agency_id: AgencyID
     agency_name: Optional[AgencyName]
@@ -105,6 +102,8 @@ class AgencyRecord(BaseModel):
 
 
 class FrequencyRecord(BaseModel):
+    """Represents headway (time between trips) for routes with variable frequency."""
+
     trip_id: TripID
     start_time: StartTime
     end_time: EndTime
@@ -112,9 +111,7 @@ class FrequencyRecord(BaseModel):
 
 
 class StopRecord(BaseModel):
-    """
-    Represents a stop or station where vehicles pick up or drop off passengers.
-    """
+    """Represents a stop or station where vehicles pick up or drop off passengers."""
 
     stop_id: StopID
     stop_lat: Latitude
@@ -134,13 +131,13 @@ class StopRecord(BaseModel):
 
 
 class WranglerStopRecord(StopRecord):
+    """Wrangler-flavored StopRecord."""
+
     trip_id: TripID
 
 
 class RouteRecord(BaseModel):
-    """
-    Represents a transit route.
-    """
+    """Represents a transit route."""
 
     route_id: RouteID
     agency_id: AgencyID
@@ -156,9 +153,7 @@ class RouteRecord(BaseModel):
 
 
 class ShapeRecord(BaseModel):
-    """
-    Represents a point on a path (shape) that a transit vehicle takes.
-    """
+    """Represents a point on a path (shape) that a transit vehicle takes."""
 
     shape_id: ShapeID
     shape_pt_lat: Latitude
@@ -170,14 +165,13 @@ class ShapeRecord(BaseModel):
 
 
 class WranglerShapeRecord(ShapeRecord):
-    # Wrangler Specific
+    """Wrangler-flavored ShapeRecord."""
+
     shape_model_node_id: int
 
 
 class StopTimeRecord(BaseModel):
-    """
-    Times that a vehicle arrives at and departs from stops for each trip.
-    """
+    """Times that a vehicle arrives at and departs from stops for each trip."""
 
     trip_id: TripID
     arrival_time: ArrivalTime
@@ -194,6 +188,8 @@ class StopTimeRecord(BaseModel):
 
 
 class WranglerStopTimeRecord(StopTimeRecord):
+    """Wrangler-flavored StopTimeRecord."""
+
     model_node_id: int
 
     model_config = ConfigDict(
@@ -202,9 +198,7 @@ class WranglerStopTimeRecord(StopTimeRecord):
 
 
 class TripRecord(BaseModel):
-    """
-    Describes trips which are sequences of two or more stops that occur at specific time.
-    """
+    """Describes trips which are sequences of two or more stops that occur at specific time."""
 
     route_id: RouteID
     service_id: ServiceID

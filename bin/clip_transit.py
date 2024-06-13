@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
-"""
-Usage: python clip_transit.py <network_path> <boundary> <out_dir> [--out_prefix <prefix>] [--out_format <format>]
+"""Trims a transit network based on a given boundary and outputs the trimmed network.
 
-This script trims a transit network based on a given boundary and outputs the trimmed network.
+Usage: python clip_transit.py <network_path> <boundary> <out_dir> [--out_prefix <prefix>]
+    [--out_format <format>].
 
 Arguments:
 - network_path: Path to the input transit network directory.
-- boundary: Path to the boundary file (shapefile or GeoJSON) or a geocode representing the boundary (e.g. "Raleigh, NC, USA").
+- boundary: Path to the boundary file (shapefile or GeoJSON) or a geocode representing the \
+    boundary (e.g. "Raleigh, NC, USA").
 - out_dir: Path to the output directory where the trimmed network will be saved.
 - --out_prefix <prefix>: Prefix for the output file name. (optional)
-- --out_format <format>: Output file format. Supported formats: 'csv', 'parquet'. Default: 'csv'. (optional)
-- -o: Overwrite the output files if they already exist. Otherwise, will bork if files exist. (optional)
+- --out_format <format>: Output file format. Supported formats: 'csv', 'parquet'. Default: 'csv'. \
+    (optional)
+- -o: Overwrite the output files if they already exist. Otherwise, will bork if files exist. \
+    (optional)
 
 Example usage:
-python clip_transit.py /path/to/network_dir /path/to/boundary.shp /path/to/output_dir --out_prefix clip --out_format geojson
+python clip_transit.py /path/to/network_dir /path/to/boundary.shp /path/to/output_dir \
+    --out_prefix clip --out_format geojson
 
 """
+
 import argparse
 import sys
 
@@ -40,7 +45,8 @@ if __name__ == "__main__":
         parser.add_argument(
             "boundary",
             type=str,
-            help="Path to the boundary file (shapefile, geoparquet or GeoJSON) or a geocode representing the boundary.",
+            help="Path to the boundary file (shapefile, geoparquet or GeoJSON) or a geocode \
+                representing the boundary.",
         )
         parser.add_argument(
             "out_dir",

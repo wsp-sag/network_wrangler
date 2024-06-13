@@ -1,25 +1,39 @@
-from network_wrangler.logger import WranglerLogger
-from network_wrangler.models.gtfs.tables import (
-    WranglerShapesTable,
-    WranglerStopTimesTable,
-)
-from network_wrangler.transit.feed.feed import Feed
+"""Functions to check for transit network validity and consistency with roadway network."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from network_wrangler.transit.feed.transit_links import unique_stop_time_links
-from network_wrangler.transit.feed.transit_links import unique_shape_links
+from pandera.typing import DataFrame
+
+from ..logger import WranglerLogger
+
+from ..models.gtfs.tables import (
+    WranglerShapesTable,
+    WranglerStopTimesTable,
+)
+from ..transit.feed.feed import Feed
+from ..transit.feed.transit_links import unique_stop_time_links, unique_shape_links
+
+if TYPE_CHECKING:
+    from ..roadway.network import RoadwayNetwork
+    from ..models.roadway.tables import RoadLinksTable, RoadNodesTable
 
 
 def transit_nodes_without_road_nodes(
-    feed: Feed, nodes_df: "RoadwayNodes" = None, rd_field: str = "model_node_id"
+    feed: Feed,
+    nodes_df: DataFrame[RoadNodesTable] = None,
+    rd_field: str = "model_node_id",
 ) -> list[int]:
     """Validate all of a transit feeds node foreign keys exist in referenced roadway nodes.
 
     Args:
+        feed: Transit Feed to query.
         nodes_df (pd.DataFrame, optional): Nodes dataframe from roadway network to validate
             foreign key to. Defaults to self.roadway_net.nodes_df
+        rd_field: field in roadway nodes to check against. Defaults to "model_node_id"
 
     Returns:
         boolean indicating if relationships are all valid
@@ -42,13 +56,13 @@ def transit_nodes_without_road_nodes(
 
 
 def shape_links_without_road_links(
-    tr_shapes: WranglerShapesTable,
-    rd_links_df: "RoadwayLinks",
+    tr_shapes: DataFrame[WranglerShapesTable],
+    rd_links_df: DataFrame[RoadLinksTable],
 ) -> pd.DataFrame:
     """Validate that links in transit shapes exist in referenced roadway links.
 
     Args:
-        tr_shapes_df: transit shapes from shapes.txt to validate foreign key to.
+        tr_shapes: transit shapes from shapes.txt to validate foreign key to.
         rd_links_df: Links dataframe from roadway network to validate
 
     Returns:
@@ -57,9 +71,7 @@ def shape_links_without_road_links(
     tr_shape_links = unique_shape_links(tr_shapes)
     # WranglerLogger.debug(f"Unique shape links: \n {tr_shape_links}")
     rd_links_transit_ok = rd_links_df[
-        (rd_links_df["drive_access"] == True)
-        | (rd_links_df["bus_only"] == True)
-        | (rd_links_df["rail_only"] == True)
+        (rd_links_df["drive_access"]) | (rd_links_df["bus_only"]) | (rd_links_df["rail_only"])
     ]
 
     merged_df = tr_shape_links.merge(
@@ -69,9 +81,7 @@ def shape_links_without_road_links(
         indicator=True,
     )
 
-    missing_links_df = merged_df.loc[
-        merged_df._merge == "left_only", ["shape_id", "A", "B"]
-    ]
+    missing_links_df = merged_df.loc[merged_df._merge == "left_only", ["shape_id", "A", "B"]]
     if len(missing_links_df):
         WranglerLogger.error(
             f"! Transit shape links missing in roadway network: \n {missing_links_df}"
@@ -80,8 +90,8 @@ def shape_links_without_road_links(
 
 
 def stop_times_without_road_links(
-    tr_stop_times: WranglerStopTimesTable,
-    rd_links_df: "RoadwayLinks",
+    tr_stop_times: DataFrame[WranglerStopTimesTable],
+    rd_links_df: DataFrame[RoadLinksTable],
 ) -> pd.DataFrame:
     """Validate that links in transit shapes exist in referenced roadway links.
 
@@ -95,9 +105,7 @@ def stop_times_without_road_links(
     tr_links = unique_stop_time_links(tr_stop_times)
 
     rd_links_transit_ok = rd_links_df[
-        (rd_links_df["drive_access"] == True)
-        | (rd_links_df["bus_only"] == True)
-        | (rd_links_df["rail_only"] == True)
+        (rd_links_df["drive_access"]) | (rd_links_df["bus_only"]) | (rd_links_df["rail_only"])
     ]
 
     merged_df = tr_links.merge(
@@ -107,9 +115,7 @@ def stop_times_without_road_links(
         indicator=True,
     )
 
-    missing_links_df = merged_df.loc[
-        merged_df._merge == "left_only", ["trip_id", "A", "B"]
-    ]
+    missing_links_df = merged_df.loc[merged_df._merge == "left_only", ["trip_id", "A", "B"]]
     if len(missing_links_df):
         WranglerLogger.error(
             f"! Transit stop_time links missing in roadway network: \n {missing_links_df}"
@@ -117,11 +123,11 @@ def stop_times_without_road_links(
     return missing_links_df[["trip_id", "A", "B"]]
 
 
-def transit_road_net_consistency(feed: Feed, road_net: "RoadwayNetwork") -> bool:
+def transit_road_net_consistency(feed: Feed, road_net: RoadwayNetwork) -> bool:
     """Checks foreign key and network link relationships between transit feed and a road_net.
 
     Args:
-        transit_net: Feed.
+        feed: Transit Feed.
         road_net (RoadwayNetwork): Roadway network to check relationship with.
 
     Returns:

@@ -14,7 +14,7 @@ scratch/*
 cache
 tests/t_*
 tests/*.txt
-tests/out/** 
+tests/out/**
 # Logs
 *.log
 scenario_log.txt

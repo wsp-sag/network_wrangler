@@ -17,10 +17,10 @@ from .time import format_time
 
 try:
     gpd.options.io_engine = "pyogrio"
-except:
+except:  # noqa: E722
     if gpd.__version__ < "0.12.0":
         WranglerLogger.warning(
-            f"Installed Geopandas version {gpd.__version__ } isn't recent enough to support\
+            f"Installed Geopandas version {gpd.__version__} isn't recent enough to support\
                 pyogrio. Falling back to default engine (fiona).\
                 Update geopandas and install pyogrio to benefit."
         )
@@ -32,10 +32,14 @@ except:
 
 
 class FileReadError(Exception):
+    """Raised when there is an error reading a file."""
+
     pass
 
 
 class FileWriteError(Exception):
+    """Raised when there is an error writing a file."""
+
     pass
 
 
@@ -50,7 +54,7 @@ def write_table(
     Args:
         df (pd.DataFrame): dataframe to write.
         filename (Path): filename to write to.
-        overwriter (bool): whether to overwrite the file if it exists. Defaults to False.
+        overwrite (bool): whether to overwrite the file if it exists. Defaults to False.
         kwargs: additional arguments to pass to the writer.
 
     """
@@ -88,6 +92,7 @@ def write_table(
 
 def _estimate_read_time_of_file(filepath: Union[str, Path]):
     """Estimates read time in seconds based on a given file size and speed factor.
+
     The speed factor is MB per second which you can adjust based on empirical data.
 
     TODO: implement based on file type and emirical
@@ -102,9 +107,7 @@ def _estimate_read_time_of_file(filepath: Union[str, Path]):
         return "unknown"
 
 
-def read_table(
-    filename: Path, sub_filename: str = None
-) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
+def read_table(filename: Path, sub_filename: str = None) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
     """Read file and return a dataframe or geodataframe.
 
     If filename is a zip file, will unzip to a temporary directory.
@@ -120,20 +123,18 @@ def read_table(
     filename = Path(filename)
     if filename.suffix == ".zip":
         filename = unzip_file(filename) / sub_filename
-    WranglerLogger.debug(
-        f"Estimated read time: {_estimate_read_time_of_file(filename)}."
-    )
+    WranglerLogger.debug(f"Estimated read time: {_estimate_read_time_of_file(filename)}.")
     if any([x in filename.suffix for x in ["geojson", "shp", "csv"]]):
         try:
             return gpd.read_file(filename)
-        except:
+        except:  # noqa: E722
             if "csv" in filename.suffix:
                 return pd.read_csv(filename)
             raise FileReadError
     elif "parquet" in filename.suffix:
         try:
             return gpd.read_parquet(filename)
-        except:
+        except:  # noqa: E722
             return pd.read_parquet(filename)
     elif "json" in filename.suffix:
         with open(filename) as f:
@@ -142,6 +143,7 @@ def read_table(
 
 
 def unzip_file(path: Path) -> Path:
+    """Unzips a file to a temporary directory and returns the directory path."""
     tmpdir = tempfile.mkdtemp()
     shutil.unpack_archive(path, tmpdir)
 

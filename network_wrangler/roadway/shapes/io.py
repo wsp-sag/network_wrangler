@@ -1,9 +1,8 @@
 """Functions to read and write RoadShapesTable."""
+
 import time
 from pathlib import Path
 from typing import Union
-
-import geopandas as gpd
 
 from pydantic import validate_call
 from pandera.typing import DataFrame
@@ -22,8 +21,9 @@ def read_shapes(
     in_crs: int = LAT_LON_CRS,
     shapes_params: Union[dict, ShapesParams, None] = None,
 ) -> DataFrame[RoadShapesTable]:
-    """Reads shapes and returns a geodataframe of shapes if filename is found. Otherwise, returns
-        empty GeoDataFrame conforming to ShapesSchema.
+    """Reads shapes and returns a geodataframe of shapes if filename is found.
+
+    Otherwise, returns empty GeoDataFrame conforming to ShapesSchema.
 
     Sets index to be a copy of the primary key.
     Validates output dataframe using ShapesSchema.
@@ -38,21 +38,19 @@ def read_shapes(
             f"Shapes file {filename} not found, but is optional. \
                                Returning empty shapes dataframe."
         )
-        return empty_df_from_datamodel(RoadShapesTable).set_index(
-            "shape_id_idx", inplace=True
-        )
+        return empty_df_from_datamodel(RoadShapesTable).set_index("shape_id_idx", inplace=True)
 
     start_time = time.time()
     WranglerLogger.debug(f"Reading shapes from {filename}.")
 
     shapes_df = read_table(filename)
     WranglerLogger.debug(
-        f"Read {len(shapes_df)} shapes from file in {round(time.time() - start_time,2)}."
+        f"Read {len(shapes_df)} shapes from file in {round(time.time() - start_time, 2)}."
     )
     shapes_df = df_to_shapes_df(shapes_df, in_crs=in_crs, shapes_params=shapes_params)
     shapes_df.params.source_file = filename
     WranglerLogger.info(
-        f"Read {len(shapes_df)} shapes from {filename} in {round(time.time() - start_time,2)}."
+        f"Read {len(shapes_df)} shapes from {filename} in {round(time.time() - start_time, 2)}."
     )
     return shapes_df
 
@@ -64,5 +62,14 @@ def write_shapes(
     format: str,
     overwrite: bool,
 ) -> None:
+    """Writes shapes to file.
+
+    Args:
+        shapes_df: DataFrame of shapes to write.
+        out_dir: directory to write shapes to.
+        prefix: prefix to add to file name.
+        format: format to write shapes in.
+        overwrite: whether to overwrite file if it exists.
+    """
     shapes_file = Path(out_dir) / f"{prefix}shape.{format}"
     write_table(shapes_df, shapes_file, overwrite=overwrite)

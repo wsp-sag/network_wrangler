@@ -2,6 +2,7 @@ from enum import Enum
 
 import pandas as pd
 from pandera.extensions import register_check_method
+from pydantic import ValidationError
 
 from ...logger import WranglerLogger
 
@@ -10,7 +11,7 @@ def validate_list_of_pyd(item_list, pyd_model):
     try:
         item_valid = [validate_pyd(i, pyd_model) for i in item_list]
         return all(item_valid)
-    except:
+    except ValidationError:
         WranglerLogger.error(f"{item_list} didn't validate to {pyd_model}")
         return False
 
@@ -19,15 +20,14 @@ def validate_pyd(item, pyd_model):
     try:
         pyd_model(item)
         return True
-    except:
+    except ValidationError:
         WranglerLogger.error(f"Item: {item} didn't validate to {pyd_model}")
         return False
 
 
 @register_check_method
 def uniqueness(df, *, cols: list[str]):
-    """
-    Custom check method to check for uniqueness of values in a DataFrame.
+    """Custom check method to check for uniqueness of values in a DataFrame.
 
     Args:
         df (pandas.DataFrame): The DataFrame to check for uniqueness.
@@ -40,7 +40,7 @@ def uniqueness(df, *, cols: list[str]):
     if dupes.sum():
         WranglerLogger.error(
             f"Non-Unique values found in column/column-set: \
-                              {cols}:\n{df.loc[dupes, cols]}"
+                              {cols}: \n{df.loc[dupes, cols]}"
         )
     return dupes.sum() == 0
 

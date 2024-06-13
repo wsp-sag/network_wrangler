@@ -1,3 +1,8 @@
+"""Tests for public api of feed.py.
+
+Run just these tests using `pytest tests/test_transit/test_feed.py`
+"""
+
 from pathlib import Path
 
 import pytest
@@ -15,11 +20,13 @@ Run just the tests using `pytest tests/test_transit/test_io.py`
 
 
 def test_transit_read_write_small(request, small_transit_net, scratch_dir):
-    """Checks that reading a network, writing it to a file and then reading it again
+    """Check read-write-read consistency for small transit network.
+
+    Checks that reading a network, writing it to a file and then reading it again
     results in a valid TransitNetwork.
     """
     write_transit(small_transit_net, out_dir=scratch_dir)
-    WranglerLogger.debug(f"Transit Write Directory:{scratch_dir}")
+    WranglerLogger.debug(f"Transit Write Directory: {scratch_dir}")
     small_transit_net_read_write = load_transit(scratch_dir)
     assert isinstance(small_transit_net_read_write, TransitNetwork)
 
@@ -27,11 +34,13 @@ def test_transit_read_write_small(request, small_transit_net, scratch_dir):
 
 
 def test_transit_read_write(request, stpaul_transit_net, scratch_dir):
-    """Checks that reading a network, writing it to a file and then reading it again
+    """Check read-write-read consistency for larger transit network.
+
+    Checks that reading a network, writing it to a file and then reading it again
     results in a valid TransitNetwork.
     """
     write_transit(stpaul_transit_net, out_dir=scratch_dir)
-    WranglerLogger.debug(f"Transit Write Directory:{scratch_dir}")
+    WranglerLogger.debug(f"Transit Write Directory: {scratch_dir}")
     stpaul_transit_net_read_write = load_transit(scratch_dir)
     assert isinstance(stpaul_transit_net_read_write, TransitNetwork)
 
@@ -39,7 +48,7 @@ def test_transit_read_write(request, stpaul_transit_net, scratch_dir):
 
 
 def test_bad_dir(request):
-    with pytest.raises(NotADirectoryError):
+    with pytest.raises(FileExistsError):
         load_transit("I don't exist")
 
 

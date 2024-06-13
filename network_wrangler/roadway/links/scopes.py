@@ -31,6 +31,7 @@ model_links_df["lanes_AM_sov"] = prop_for_scope(links_df, ["6:00":"9:00"], categ
 ```
 
 """
+
 import copy
 from typing import Union
 
@@ -39,26 +40,25 @@ from pydantic import validate_call
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...models._base.time import TimeString
+from ...models._base.types import TimeString
 from ...models.projects.roadway_property_change import (
     IndivScopedPropertySetItem,
-    ScopedPropertySetList,
 )
 from ...models.roadway.tables import RoadLinksTable, ExplodedScopedLinkPropertyTable
 from ...models.roadway.types import ScopedLinkValueItem
 from ...params import DEFAULT_CATEGORY, DEFAULT_TIMESPAN
-from ...utils.utils import combine_unique_unhashable_list
 from ...utils.time import (
     filter_df_to_overlapping_timespans,
     dt_list_overlaps,
     convert_timespan_to_start_end_dt,
     str_to_time,
     dt_contains,
-    str_to_time_list,
 )
 
 
 class InvalidScopedLinkValue(Exception):
+    """Raised when there is an issue with a scoped link value."""
+
     pass
 
 
@@ -95,11 +95,7 @@ def _filter_to_matching_category_scopes(
     """
     if category == DEFAULT_CATEGORY:
         return scoped_values
-    return [
-        s
-        for s in scoped_values
-        if s.category in category or s.category == DEFAULT_CATEGORY
-    ]
+    return [s for s in scoped_values if s.category in category or s.category == DEFAULT_CATEGORY]
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
@@ -123,7 +119,7 @@ def _filter_to_matching_scope(
 def _filter_to_overlapping_timespan_scopes(
     scoped_values: list[ScopedLinkValueItem], timespan: list[TimeString]
 ) -> list[ScopedLinkValueItem]:
-    """_summary_
+    """_summary_.
 
     `overlapping` scope value: a scope that fully or partially overlaps a given category OR
         timespan combination.  This includes the default scopes, all `matching` scopes and
@@ -155,9 +151,7 @@ def _filter_to_overlapping_scopes(
         all scopes where at least one minute of timespan or one category overlap.
     """
     scoped_prop_list = _filter_to_matching_category_scopes(scoped_prop_list, category)
-    scoped_prop_list = _filter_to_overlapping_timespan_scopes(
-        scoped_prop_list, timespan
-    )
+    scoped_prop_list = _filter_to_overlapping_timespan_scopes(scoped_prop_list, timespan)
     return scoped_prop_list
 
 
@@ -211,7 +205,7 @@ def _filter_to_conflicting_scopes(
 
 
 def _create_exploded_df_for_scoped_prop(
-    links_df: RoadLinksTable,
+    links_df: DataFrame[RoadLinksTable],
     prop_name: str,
     default_timespan=DEFAULT_TIMESPAN,
     default_category=DEFAULT_CATEGORY,
@@ -227,38 +221,31 @@ def _create_exploded_df_for_scoped_prop(
         5. Separate timespan to start_time and end_time of dt type to facilitate queries
         6. Tidy up and align with data model for export
     """
-
     # 1. Filter to records that have scoped values
     keep_cols = ["model_link_id", prop_name, f"sc_{prop_name}"]
     scoped_values_df = links_df.loc[links_df[f"sc_{prop_name}"].notna(), keep_cols]
 
     # 2. Create a record for each scope
     exp_df = scoped_values_df.explode(f"sc_{prop_name}")
-    WranglerLogger.debug(f"Exploded Records:\n{exp_df}")
+    WranglerLogger.debug(f"Exploded Records: \n{exp_df}")
 
     # 3. normalize dictionary to columns for each dictionary key: category, timespan, value
     #       convert to dictionary from data model
-    exp_df[f"sc_{prop_name}"] = exp_df[f"sc_{prop_name}"].apply(
-        lambda x: x.model_dump()
-    )
-    normalized_scope_df = pd.json_normalize(exp_df.pop(f"sc_{prop_name}")).set_index(
-        exp_df.index
-    )
+    exp_df[f"sc_{prop_name}"] = exp_df[f"sc_{prop_name}"].apply(lambda x: x.model_dump())
+    normalized_scope_df = pd.json_normalize(exp_df.pop(f"sc_{prop_name}")).set_index(exp_df.index)
     exp_df = scoped_values_df[["model_link_id"]].join(normalized_scope_df)
-    WranglerLogger.debug(f"Exploded columns:\n{exp_df}")
+    WranglerLogger.debug(f"Exploded columns: \n{exp_df}")
 
     # 4. Fill default category (timespan query should take care of this itself)
     exp_df.loc[exp_df["category"].isna(), "category"] = default_category
 
     # 5. Separate timespan to start_time and end_time of dt type to facilitate queries
-    exp_df[["start_time", "end_time"]] = convert_timespan_to_start_end_dt(
-        exp_df.timespan
-    )
+    exp_df[["start_time", "end_time"]] = convert_timespan_to_start_end_dt(exp_df.timespan)
 
     # 6. Tidy up and align with data model for export
     exp_df = exp_df.rename(columns={"value": "scoped"})
     exp_df = ExplodedScopedLinkPropertyTable(exp_df)
-    WranglerLogger.debug(f"exp_df:\n{exp_df}")
+    WranglerLogger.debug(f"exp_df: \n{exp_df}")
 
     return exp_df
 
@@ -274,18 +261,17 @@ def _filter_exploded_df_to_scope(
 ) -> pd.DataFrame:
     """Queries an exploded dataframe of prop_name to determine value for scope for each link.
 
-    args:
+    Args:
         exp_scoped_prop_df: `ExplodedScopedLinkPropertyTable` for property `prop_name `
         prop_name: name of property to query
         timespan: TimespanString of format ['HH:MM','HH:MM'] to query orig_df for overlapping
-            records.
-        strict_match: boolean indicating if the returned df should only contain
+            records. Defaults to DEFAULT_TIMESPAN.
+        category: category to query orig_df for overlapping records. Defaults to DEFAULT_CATEGORY.
+        strict_timespan_match: boolean indicating if the returned df should only contain
             records that fully contain the query timespan. If set to True, min_overlap_minutes
             does not apply. Defaults to False.
         min_overlap_minutes: minimum number of minutes the timespans need to overlap to keep.
             Defaults to 0.
-        keep_max_of_cols: list of fields to return the maximum value of overlap for.  If None,
-            will return all overlapping time periods. Defaults to `['model_link_id']`
 
     Returns:
         pd.DataFrame with `model_link_id` and `prop_name`
@@ -294,8 +280,7 @@ def _filter_exploded_df_to_scope(
     # Filter dataframe based on matching category and timespan
     if category != DEFAULT_CATEGORY:
         match_df = match_df[
-            (match_df["category"] == category)
-            | (match_df["category"] == DEFAULT_CATEGORY)
+            (match_df["category"] == category) | (match_df["category"] == DEFAULT_CATEGORY)
         ]
 
     if timespan != DEFAULT_TIMESPAN:
@@ -305,7 +290,7 @@ def _filter_exploded_df_to_scope(
             strict_match=strict_timespan_match,
             min_overlap_minutes=min_overlap_minutes,
         )
-    WranglerLogger.debug(f"match_df:\n{match_df}")
+    WranglerLogger.debug(f"match_df: \n{match_df}")
     return match_df
 
 
@@ -322,17 +307,18 @@ def prop_for_scope(
     """Creates a df with the value of a property for a given category and timespan.
 
     Args:
-        links_df (RoadLinksTable): _description_
+        links_df:(RoadLinksTable
         prop_name: name of property to query
         timespan: TimespanString of format ['HH:MM','HH:MM'] to query orig_df for overlapping
             records.
-        strict_match: boolean indicating if the returned df should only contain
+        category: category to query orig_df for overlapping records. Defaults to None.
+        strict_timespan_match: boolean indicating if the returned df should only contain
             records that fully contain the query timespan. If set to True, min_overlap_minutes
             does not apply. Defaults to False.
         min_overlap_minutes: minimum number of minutes the timespans need to overlap to keep.
             Defaults to 0.
-        keep_max_of_cols: list of fields to return the maximum value of overlap for.  If None,
-            will return all overlapping time periods. Defaults to `['model_link_id']`
+        allow_default: boolean indicating if the default value should be returned if no scoped
+            values are found. Defaults to True.
 
     Returns:
         pd.DataFrame with `model_link_id` and `prop_name`
@@ -344,18 +330,13 @@ def prop_for_scope(
         raise ValueError(f"{prop_name} not in dataframe.")
 
     # Check if scoped values even exist and if can just return the default.
-    if (
-        f"sc_{prop_name}" not in links_df.columns
-        or links_df[f"sc_{prop_name}"].isna().all()
-    ):
+    if f"sc_{prop_name}" not in links_df.columns or links_df[f"sc_{prop_name}"].isna().all():
         if not allow_default:
             WranglerLogger.error(
                 "{prop_name} does not have a scoped property column: \
                                  sc_{prop_name} or it is all null - and allow_default is False."
             )
-            raise ValueError(
-                f"sc_{prop_name} not a column/is null - and no default allowed."
-            )
+            raise ValueError(f"sc_{prop_name} not a column/is null - and no default allowed.")
         WranglerLogger.debug(f"No scoped values {prop_name}. Returning default.")
         return copy.deep_copy(links_df[["model_link_id", prop_name]])
 
@@ -376,6 +357,6 @@ def prop_for_scope(
     result_df = copy.deepcopy(links_df[["model_link_id", prop_name]])
     result_df.loc[scoped_prop_df.index, prop_name] = scoped_prop_df["scoped"]
     WranglerLogger.debug(
-        f"result_df[prop_name]:\n{result_df.loc[scoped_prop_df.index, prop_name]}"
+        f"result_df[prop_name]: \n{result_df.loc[scoped_prop_df.index, prop_name]}"
     )
     return result_df

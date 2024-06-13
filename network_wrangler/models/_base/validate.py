@@ -1,4 +1,5 @@
-"Wrappers around validation functions that produce more legible output and logging."
+"""Wrappers around validation functions that produce more legible output and logging."""
+
 from pandas import DataFrame
 from pandera import DataFrameModel
 from pandera.errors import SchemaErrors
@@ -24,7 +25,7 @@ def validate_df_to_model(df: DataFrame, model: DataFrameModel) -> DataFrame:
         # Log the summary of errors
         WranglerLogger.error(
             f"Validation to {model.__name__} failed with {len(e.failure_cases)} \
-            errors:\n{e.failure_cases}"
+            errors: \n{e.failure_cases}"
         )
 
         # If there are many errors, save them to a file

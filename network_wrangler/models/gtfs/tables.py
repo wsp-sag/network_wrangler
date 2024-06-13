@@ -1,5 +1,4 @@
-"""
-This module defines the data models for various GTFS tables using pandera library.
+"""This module defines the data models for various GTFS tables using pandera library.
 
 The module includes the following classes:
 - AgencyTable: Represents the Agency table in the GTFS dataset.
@@ -10,12 +9,12 @@ The module includes the following classes:
 - TripsTable: Represents the Trips table in the GTFS dataset.
 
 Each table model leverages the Pydantic data models defined in the records module to define the
-data model for the corresponding table. The classes also include additional configurations for, 
+data model for the corresponding table. The classes also include additional configurations for,
 such as uniqueness constraints.
 
 There is NOT any foreign key validation in the data models.
 
-Additionally, the module includes a custom check method called "uniqueness" that can be used to 
+Additionally, the module includes a custom check method called "uniqueness" that can be used to
 check for uniqueness of values in a DataFrame.
 
 For more examples of how to use Pandera DataModels, see the Pandera documentation at:
@@ -50,14 +49,14 @@ Usage examples:
     df = pd.DataFrame(...)  # DataFrame to check uniqueness
     is_unique = uniqueness(df, cols=["column1", "column2"])
 """
-from typing import Optional, ClassVar
+
+from typing import Optional
 
 import pandera as pa
 
-from pandas import Timestamp, CategoricalDtype
+from pandas import Timestamp
 from pandera.typing import Series, Category
 
-from .._base.tables import uniqueness
 from .types import (
     LocationType,
     WheelchairAccessible,
@@ -71,8 +70,7 @@ from .table_types import HttpURL
 
 
 class AgenciesTable(pa.DataFrameModel):
-    """
-    Represents the Agency table in the GTFS dataset.
+    """Represents the Agency table in the GTFS dataset.
 
     Configurations:
     - dtype: PydanticModel(AgencyRecord)
@@ -89,14 +87,15 @@ class AgenciesTable(pa.DataFrameModel):
     agency_email: Series[str] = pa.Field(coerce=True, nullable=True)
 
     class Config:
+        """Config for the AgenciesTable data model."""
+
         coerce = True
         add_missing_columns = True
         _pk = ["agency_id"]
 
 
 class StopsTable(pa.DataFrameModel):
-    """
-    Represents the Stops table in the GTFS dataset.
+    """Represents the Stops table in the GTFS dataset.
 
     Configurations:
     - dtype: PydanticModel(StopRecord)
@@ -129,6 +128,8 @@ class StopsTable(pa.DataFrameModel):
     stop_timezone: Optional[Series[str]] = pa.Field(nullable=True, coerce=True)
 
     class Config:
+        """Config for the StopsTable data model."""
+
         coerce = True
         add_missing_columns = True
         _pk = ["stop_id"]
@@ -136,6 +137,8 @@ class StopsTable(pa.DataFrameModel):
 
 
 class WranglerStopsTable(StopsTable):
+    """Wrangler flavor of GTFS StopsTable."""
+
     model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
     # TODO should this be in base
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=True, ge=-90, le=90)
@@ -143,8 +146,7 @@ class WranglerStopsTable(StopsTable):
 
 
 class RoutesTable(pa.DataFrameModel):
-    """
-    Represents the Routes table in the GTFS dataset.
+    """Represents the Routes table in the GTFS dataset.
 
     Configurations:
     - dtype: PydanticModel(RouteRecord)
@@ -166,6 +168,8 @@ class RoutesTable(pa.DataFrameModel):
     route_text_color: Optional[Series[str]] = pa.Field(nullable=True, coerce=True)
 
     class Config:
+        """Config for the RoutesTable data model."""
+
         coerce = True
         add_missing_columns = True
         _pk = ["route_id"]
@@ -173,8 +177,7 @@ class RoutesTable(pa.DataFrameModel):
 
 
 class ShapesTable(pa.DataFrameModel):
-    """
-    Represents the Shapes table in the GTFS dataset.
+    """Represents the Shapes table in the GTFS dataset.
 
     Configurations:
     - dtype: PydanticModel(ShapeRecord)
@@ -187,11 +190,11 @@ class ShapesTable(pa.DataFrameModel):
     shape_pt_sequence: Series[int] = pa.Field(coerce=True, nullable=False, ge=0)
 
     # Optional
-    shape_dist_traveled: Optional[Series[float]] = pa.Field(
-        coerce=True, nullable=True, ge=0
-    )
+    shape_dist_traveled: Optional[Series[float]] = pa.Field(coerce=True, nullable=True, ge=0)
 
     class Config:
+        """Config for the ShapesTable data model."""
+
         coerce = True
         add_missing_columns = True
         _pk = ["shape_id", "shape_pt_sequence"]
@@ -200,12 +203,13 @@ class ShapesTable(pa.DataFrameModel):
 
 
 class WranglerShapesTable(ShapesTable):
+    """Wrangler flavor of GTFS ShapesTable."""
+
     shape_model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
 
 
 class TripsTable(pa.DataFrameModel):
-    """
-    Represents the Trips table in the GTFS dataset.
+    """Represents the Trips table in the GTFS dataset.
 
     Configurations:
     - dtype: PydanticModel(TripRecord)
@@ -233,6 +237,8 @@ class TripsTable(pa.DataFrameModel):
     )
 
     class Config:
+        """Config for the TripsTable data model."""
+
         coerce = True
         add_missing_columns = True
         _pk = ["trip_id"]
@@ -240,8 +246,7 @@ class TripsTable(pa.DataFrameModel):
 
 
 class FrequenciesTable(pa.DataFrameModel):
-    """
-    Represents the Agency table in the GTFS dataset.
+    """Represents the Frequency table in the GTFS dataset.
 
     Configurations:
     - dtype: PydanticModel(FrequencyRecord)
@@ -258,6 +263,8 @@ class FrequenciesTable(pa.DataFrameModel):
     )
 
     class Config:
+        """Config for the FrequenciesTable data model."""
+
         coerce = True
         add_missing_columns = True
         unique = ["trip_id", "start_time"]
@@ -266,8 +273,7 @@ class FrequenciesTable(pa.DataFrameModel):
 
 
 class StopTimesTable(pa.DataFrameModel):
-    """
-    Represents the Stop Times table in the GTFS dataset.
+    """Represents the Stop Times table in the GTFS dataset.
 
     Configurations:
     - dtype: PydanticModel(StopTimeRecord)
@@ -291,14 +297,14 @@ class StopTimesTable(pa.DataFrameModel):
     departure_time: Series[Timestamp] = pa.Field(nullable=False, coerce=True)
 
     # Optional
-    shape_dist_traveled: Optional[Series[float]] = pa.Field(
-        coerce=True, nullable=True, ge=0
-    )
+    shape_dist_traveled: Optional[Series[float]] = pa.Field(coerce=True, nullable=True, ge=0)
     timepoint: Optional[Series[Category]] = pa.Field(
         dtype_kwargs={"categories": TimepointType}, coerce=True, default=0
     )
 
     class Config:
+        """Config for the StopTimesTable data model."""
+
         coerce = True
         add_missing_columns = True
         _pk = ["trip_id", "stop_sequence"]
@@ -310,6 +316,8 @@ class StopTimesTable(pa.DataFrameModel):
 
 
 class WranglerStopTimesTable(StopTimesTable):
+    """Wrangler flavor of GTFS StopTimesTable."""
+
     model_node_id: Series[int] = pa.Field(coerce=True)
     arrival_time: Optional[Series[Timestamp]] = pa.Field(
         coerce=True, nullable=True, default=Timestamp("00:00:00")

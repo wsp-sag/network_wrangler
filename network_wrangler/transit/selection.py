@@ -1,9 +1,39 @@
+"""Classes and functions for selecting transit trips from a transit network.
+
+Usage:
+
+Create a TransitSelection object by providing a TransitNetwork object and a selection dictionary:
+
+    ```python
+    selection_dict = {
+        "links": {...},
+        "nodes": {...},
+        "route_properties": {...},
+        "trip_properties": {...},
+        "timespan": {...}
+    }
+    transit_selection = TransitSelection(transit_network, selection_dict)
+    ```
+
+Access the selected trip ids or dataframe as follows:
+
+    ```python
+    selected_trips = transit_selection.selected_trips
+    selected_trips_df = transit_selection.selected_trips_df
+    ```
+
+Note: The selection dictionary should conform to the SelectTransitTrips model defined in
+the models.projects.transit_selection module.
+"""
+
 from __future__ import annotations
 import copy
 
-from typing import List, Union
+from typing import List, Union, TYPE_CHECKING
 
 import pandas as pd
+
+from pandera.typing import DataFrame
 
 from ..models.projects.transit_selection import (
     SelectTransitLinks,
@@ -18,18 +48,80 @@ from ..logger import WranglerLogger
 from ..models.projects.transit_selection import (
     SelectRouteProperties,
 )
-from ..models._base.time import Timespan
+from ..time import Timespan
+
+if TYPE_CHECKING:
+    from .feed.feed import Feed
+    from .network import TransitNetwork
+    from ..models.gtfs.tables import (
+        TripsTable,
+        WranglerShapesTable,
+        FrequenciesTable,
+        WranglerRoutesTable,
+    )
 
 
 class TransitSelectionError(Exception):
+    """Base error for transit selection errors."""
+
+    pass
+
+
+# Rest of the code...
+"""
+
+
+"""
+from __future__ import annotations
+import copy
+
+from typing import List, Union, TYPE_CHECKING
+
+import pandas as pd
+
+from pandera.typing import DataFrame
+
+from ..models.projects.transit_selection import (
+    SelectTransitLinks,
+    SelectTransitNodes,
+    SelectTransitTrips,
+    SelectTripProperties,
+)
+
+from ..utils.utils import dict_to_hexkey
+from ..logger import WranglerLogger
+
+from ..models.projects.transit_selection import (
+    SelectRouteProperties,
+)
+from ..time import Timespan
+
+if TYPE_CHECKING:
+    from .feed.feed import Feed
+    from .network import TransitNetwork
+    from ..models.gtfs.tables import (
+        TripsTable,
+        WranglerShapesTable,
+        FrequenciesTable,
+        WranglerRoutesTable,
+    )
+
+
+class TransitSelectionError(Exception):
+    """Base error for transit selection errors."""
+
     pass
 
 
 class TransitSelectionEmptyError(Exception):
+    """Error for when no transit trips are selected."""
+
     pass
 
 
 class TransitSelectionNetworkConsistencyError(TransitSelectionError):
+    """Error for when transit selection dictionary is not consistent with transit network."""
+
     pass
 
 
@@ -46,8 +138,8 @@ class TransitSelection:
 
     def __init__(
         self,
-        net,
-        selection_dict: SelectTransitTrips,
+        net: TransitNetwork,
+        selection_dict: Union[dict, SelectTransitTrips],
     ):
         """Constructor for TransitSelection object.
 
@@ -77,12 +169,10 @@ class TransitSelection:
         return self._selection_dict
 
     @selection_dict.setter
-    def selection_dict(self, value: dict):
+    def selection_dict(self, value: Union[dict, SelectTransitTrips]):
         self._selection_dict = self.validate_selection_dict(value)
 
-    def validate_selection_dict(
-        self, selection_dict: SelectTransitTrips
-    ) -> SelectTransitTrips:
+    def validate_selection_dict(self, selection_dict: Union[dict, SelectTransitTrips]) -> dict:
         """Check that selection dictionary has valid and used properties consistent with network.
 
         Checks that selection_dict is a valid TransitSelectionDict:
@@ -94,27 +184,20 @@ class TransitSelection:
             TransitSelectionNetworkConsistencyError: If not consistent with transit network
             ValidationError: if format not consistent with SelectTransitTrips
         """
-        selection_dict = SelectTransitTrips(**selection_dict)
+        if not isinstance(selection_dict, SelectTransitTrips):
+            selection_dict = SelectTransitTrips(**selection_dict)
         selection_dict = selection_dict.model_dump(exclude_none=True, by_alias=True)
-        WranglerLogger.debug(f"SELECT DICT - before Validation:\n{selection_dict}")
-        _trip_selection_fields = list(
-            (selection_dict.get("trip_properties", {}) or {}).keys()
-        )
-        _missing_trip_fields = set(_trip_selection_fields) - set(
-            self.net.feed.trips.columns
-        )
+        WranglerLogger.debug(f"SELECT DICT - before Validation: \n{selection_dict}")
+        _trip_selection_fields = list((selection_dict.get("trip_properties", {}) or {}).keys())
+        _missing_trip_fields = set(_trip_selection_fields) - set(self.net.feed.trips.columns)
 
         if _missing_trip_fields:
             raise TransitSelectionNetworkConsistencyError(
                 f"Fields in trip selection dictionary but not trips.txt: {_missing_trip_fields}"
             )
 
-        _route_selection_fields = list(
-            (selection_dict.get("route_properties", {}) or {}).keys()
-        )
-        _missing_route_fields = set(_route_selection_fields) - set(
-            self.net.feed.routes.columns
-        )
+        _route_selection_fields = list((selection_dict.get("route_properties", {}) or {}).keys())
+        _missing_route_fields = set(_route_selection_fields) - set(self.net.feed.routes.columns)
 
         if _missing_route_fields:
             raise TransitSelectionNetworkConsistencyError(
@@ -130,32 +213,28 @@ class TransitSelection:
         return self.selected_trips_df.trip_id.tolist()
 
     @property
-    def selected_trips_df(self) -> pd.DataFrame:
+    def selected_trips_df(self) -> DataFrame[TripsTable]:
         """Lazily evaluates selection for trips or returns stored value in self._selected_trips_df.
 
         Will re-evaluate if the current network hash is different than the stored one from the
         last selection.
 
         Returns:
-            pd.DataFrame: DataFrame of selected trips
+            DataFrame[TripsTable] of selected trips
         """
-        if (
-            self._selected_trips_df is not None
-        ) and self._stored_feed_hash == self.net.feed_hash:
+        if (self._selected_trips_df is not None) and self._stored_feed_hash == self.net.feed_hash:
             return self._selected_trips_df
 
         self._selected_trips_df = self._select_trips()
         self._stored_feed_hash = copy.deepcopy(self.net.feed_hash)
         return self._selected_trips_df
 
-    def _select_trips(self) -> pd.DataFrame:
-        """
-        Selects transit trips based on selection dictionary.
+    def _select_trips(self) -> DataFrame[TripsTable]:
+        """Selects transit trips based on selection dictionary.
 
         Returns:
-            pd.DataFrame: trips_df DataFrame of selected trips
+            DataFrame[TripsTable]: trips_df DataFrame of selected trips
         """
-
         return _filter_trips_by_selection_dict(
             self.net.feed,
             self.selection_dict,
@@ -163,9 +242,9 @@ class TransitSelection:
 
 
 def _filter_trips_by_selection_dict(
-    feed: "Feed",
+    feed: Feed,
     sel: SelectTransitTrips,
-):
+) -> DataFrame[TripsTable]:
     trips_df = feed.trips
     _routes_df = feed.routes
     _shapes_df = feed.shapes
@@ -179,19 +258,19 @@ def _filter_trips_by_selection_dict(
             _shapes_df,
             sel["links"],
         )
-        WranglerLogger.debug(f"# Trips after links filter:  {len(trips_df)}")
+        WranglerLogger.debug(f"# Trips after links filter: {len(trips_df)}")
     if sel.get("nodes"):
         trips_df = _filter_trips_by_nodes(trips_df, _shapes_df, sel["nodes"])
-        WranglerLogger.debug(f"# Trips after node filter:  {len(trips_df)}")
+        WranglerLogger.debug(f"# Trips after node filter: {len(trips_df)}")
     if sel.get("route_properties"):
         trips_df = _filter_trips_by_route(trips_df, _routes_df, sel["route_properties"])
-        WranglerLogger.debug(f"# Trips after route property filter:  {len(trips_df)}")
+        WranglerLogger.debug(f"# Trips after route property filter: {len(trips_df)}")
     if sel.get("trip_properties"):
         trips_df = _filter_trips_by_trip(trips_df, sel["trip_properties"])
         WranglerLogger.debug(f"# Trips after trip property filter: {len(trips_df)}")
     if sel.get("timespan"):
         trips_df = _filter_trips_by_timespan(trips_df, _freq_df, sel["timespan"])
-        WranglerLogger.debug(f"# Trips after timespan filter:  {len(trips_df)}")
+        WranglerLogger.debug(f"# Trips after timespan filter: {len(trips_df)}")
 
     _num_sel_trips = len(trips_df)
     WranglerLogger.debug(f"Selected {_num_sel_trips}/{_tot_trips} trips.")
@@ -203,22 +282,21 @@ def _filter_trips_by_selection_dict(
 
 
 def _filter_trips_by_links(
-    trips_df: pd.DataFrame,
-    shapes_df: pd.DataFrame,
+    trips_df: DataFrame[TripsTable],
+    shapes_df: DataFrame[WranglerShapesTable],
     select_links: Union[SelectTransitLinks, None],
-) -> pd.DataFrame:
+) -> DataFrame[TripsTable]:
     if select_links is None:
         return trips_df
     raise NotImplementedError("Filtering transit by links not implemented yet.")
 
 
 def _filter_trips_by_nodes(
-    trips_df: pd.DataFrame,
-    shapes_df: pd.DataFrame,
+    trips_df: DataFrame[TripsTable],
+    shapes_df: DataFrame[WranglerShapesTable],
     select_nodes: SelectTransitNodes,
-) -> pd.DataFrame:
-    """
-    Selects transit trips that use any one of a list of nodes in shapes.txt.
+) -> DataFrame[TripsTable]:
+    """Selects transit trips that use any one of a list of nodes in shapes.txt.
 
     If require = all, the returned trip_ids must traverse all of the nodes
     Else, filter any shapes that use any one of the nodes in node_ids
@@ -230,7 +308,6 @@ def _filter_trips_by_nodes(
     Returns:
         Copy of filtered trips_df
     """
-
     _tot_trips = len(trips_df)
     # WranglerLogger.debug(f"Filtering {_tot_trips} trips by nodes.")
 
@@ -242,9 +319,7 @@ def _filter_trips_by_nodes(
     if require == "all":
         shape_ids = (
             shapes_df.groupby("shape_id").filter(
-                lambda x: all(
-                    i in x["shape_model_node_id"].tolist() for i in model_node_ids
-                )
+                lambda x: all(i in x["shape_model_node_id"].tolist() for i in model_node_ids)
             )
         ).shape_id.drop_duplicates()
     elif require == "any":
@@ -265,8 +340,8 @@ def _filter_trips_by_nodes(
 
 
 def _filter_trips_by_trip(
-    trips_df: pd.DataFrame, select_trip_properties: SelectTripProperties
-) -> pd.DataFrame:
+    trips_df: DataFrame[TripsTable], select_trip_properties: SelectTripProperties
+) -> DataFrame[TripsTable]:
     """Filter trips by trip properties.
 
     Args:
@@ -276,7 +351,6 @@ def _filter_trips_by_trip(
     Returns:
         pd.DataFrame: Filtered trips
     """
-
     _missing = set(select_trip_properties.keys()) - set(trips_df.columns)
     if _missing:
         raise TransitSelectionNetworkConsistencyError(
@@ -301,10 +375,10 @@ def _filter_trips_by_trip(
 
 
 def _filter_trips_by_route(
-    trips_df: pd.DataFrame,
-    routes_df: pd.DataFrame,
+    trips_df: DataFrame[TripsTable],
+    routes_df: DataFrame[WranglerRoutesTable],
     select_route_properties: SelectRouteProperties,
-) -> pd.DataFrame:
+) -> DataFrame[TripsTable]:
     """Filter trips by route properties.
 
     Args:
@@ -340,8 +414,10 @@ def _filter_trips_by_route(
 
 
 def _filter_trips_by_timespan(
-    trips_df: pd.DataFrame, freq_df: pd.DataFrame, timespans: List[Timespan]
-) -> pd.DataFrame:
+    trips_df: DataFrame[TripsTable],
+    freq_df: DataFrame[FrequenciesTable],
+    timespans: List[Timespan],
+) -> DataFrame[TripsTable]:
     _unfiltered_trips = len(trips_df)
     # WranglerLogger.debug(f"Filtering {_unfiltered_trips} trips by timespan.")
     # Filter freq to trips in selection

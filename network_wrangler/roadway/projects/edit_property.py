@@ -1,4 +1,5 @@
 """Functions for applying roadway property change project cards to the roadway network."""
+
 from __future__ import annotations
 from typing import Union, TYPE_CHECKING
 
@@ -20,6 +21,8 @@ if TYPE_CHECKING:
 
 
 class RoadwayPropertyChangeError(Exception):
+    """Raised when there is an issue with applying a roadway property change."""
+
     pass
 
 
@@ -35,22 +38,16 @@ def _node_geo_change_from_property_changes(
         WranglerLogger.error(
             f"! Shouldn't move >1 node to the same geography. Selected {len(node_idx)}"
         )
-        raise RoadwayPropertyChangeError(
-            "Shouldn't move >1 node to the same geography."
-        )
+        raise RoadwayPropertyChangeError("Shouldn't move >1 node to the same geography.")
 
     if not all(f in property_changes for f in ["X", "Y"]):
         WranglerLogger.error(
             f"! Must provide both X and Y to move node to new location. Got {property_changes}"
         )
-        raise RoadwayPropertyChangeError(
-            "Must provide both X and Y to move node to new location."
-        )
+        raise RoadwayPropertyChangeError("Must provide both X and Y to move node to new location.")
 
     geo_changes = {
-        k: v["set"]
-        for k, v in property_changes.items()
-        if k in NodeGeometryChange.model_fields
+        k: v["set"] for k, v in property_changes.items() if k in NodeGeometryChange.model_fields
     }
     geo_changes["model_node_id"] = node_idx[0]
     if "in_crs" not in geo_changes:
@@ -64,9 +61,7 @@ def apply_roadway_property_change(
     selection: Union[RoadwayNodeSelection, RoadwayLinkSelection],
     property_changes: dict[str, RoadPropertyChange],
 ) -> RoadwayNetwork:
-    """
-    Changes the roadway attributes for the selected features based on the
-    project card information passed
+    """Changes roadway properties for the selected features based on the project card.
 
     Args:
         roadway_net: input RoadwayNetwork to apply change to
@@ -92,15 +87,12 @@ def apply_roadway_property_change(
 
     elif "nodes" in selection.feature_types:
         non_geo_changes = {
-            k: v
-            for k, v in property_changes.items()
-            if k not in NodeGeometryChange.model_fields
+            k: v for k, v in property_changes.items() if k not in NodeGeometryChange.model_fields
         }
         for property, property_dict in non_geo_changes.items():
-            prop_dict = RoadPropertyChange(**property_dict)
-            prop_dict = prop_dict.model_dump(by_alias=True, exclude_none=True)
+            prop_change = RoadPropertyChange(**property_dict)
             roadway_net.nodes_df = edit_node_property(
-                roadway_net.nodes_df, selection.selected_nodes, property, prop_dict
+                roadway_net.nodes_df, selection.selected_nodes, property, prop_change
             )
 
         geo_changes_df = _node_geo_change_from_property_changes(
@@ -110,8 +102,6 @@ def apply_roadway_property_change(
             roadway_net.move_nodes(geo_changes_df)
 
     else:
-        raise RoadwayPropertyChangeError(
-            "geometry_type must be either 'links' or 'nodes'"
-        )
+        raise RoadwayPropertyChangeError("geometry_type must be either 'links' or 'nodes'")
 
     return roadway_net

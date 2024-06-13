@@ -1,10 +1,11 @@
+"""Functions for reading and writing nodes data."""
+
 from __future__ import annotations
 
 import time
 from pathlib import Path
 from typing import Union, TYPE_CHECKING, Optional
 
-import pandas as pd
 import geopandas as gpd
 
 from pydantic import validate_call
@@ -19,6 +20,7 @@ from .create import data_to_nodes_df
 if TYPE_CHECKING:
     from ...transit.network import TransitNetwork
     from ..network import RoadwayNetwork
+    from ...models._base.types import GeoFileTypes
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
@@ -43,24 +45,24 @@ def read_nodes(
 
     nodes_df = read_table(filename)
     WranglerLogger.debug(
-        f"Read {len(nodes_df)} nodes from file in {round(time.time() - start_time,2)}."
+        f"Read {len(nodes_df)} nodes from file in {round(time.time() - start_time, 2)}."
     )
 
     nodes_df = data_to_nodes_df(nodes_df, nodes_params=nodes_params, in_crs=in_crs)
     nodes_df.params.source_file = filename
     WranglerLogger.info(
-        f"Read {len(nodes_df)} nodes from {filename} in {round(time.time() - start_time,2)}."
+        f"Read {len(nodes_df)} nodes from {filename} in {round(time.time() - start_time, 2)}."
     )
     return nodes_df
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def nodes_df_to_geojson(nodes_df: DataFrame[RoadNodesTable], properties: list[str]):
-    """
-    Author: Geoff Boeing:
-    https://geoffboeing.com/2015/10/exporting-python-data-geojson/
-    """
+    """Converts a nodes dataframe to a geojson.
 
+    Attribution: Geoff Boeing:
+    https://geoffboeing.com/2015/10/exporting-python-data-geojson/.
+    """
     geojson = {"type": "FeatureCollection", "features": []}
     for _, row in nodes_df.iterrows():
         feature = {
@@ -81,10 +83,20 @@ def write_nodes(
     nodes_df: DataFrame[RoadNodesTable],
     out_dir: Union[str, Path],
     prefix: str,
-    format: str,
-    overwrite: bool,
+    file_format: GeoFileTypes = "geojson",
+    overwrite: bool = True,
 ) -> None:
-    nodes_file = Path(out_dir) / f"{prefix}node.{format}"
+    """Writes RoadNodesTable to file.
+
+    Args:
+        nodes_df: nodes dataframe
+        out_dir: directory to write nodes to
+        prefix: prefix to add to nodes file name
+        file_format: format to write nodes in. e.g. "geojson" shp" "parquet" "csv" "txt". Defaults
+            to "geojson".
+        overwrite: whether to overwrite existing nodes file. Defaults to True.
+    """
+    nodes_file = Path(out_dir) / f"{prefix}node.{file_format}"
     write_table(nodes_df, nodes_file, overwrite=overwrite)
 
 
@@ -93,6 +105,13 @@ def get_nodes(
     roadway_net: Optional[RoadwayNetwork] = None,
     roadway_path: Optional[Union[str, Path]] = None,
 ) -> gpd.GeoDataFrame:
+    """Get nodes from a transit network, roadway network, or roadway file.
+
+    Args:
+        transit_net: TransitNetwork instance
+        roadway_net: RoadwayNetwork instance
+        roadway_path: path to roadway network file
+    """
     if transit_net is not None and transit_net.road_net is not None:
         return transit_net.road_net.nodes_df
     if roadway_net is not None:

@@ -1,4 +1,5 @@
 """Filters, queries of a gtfs shapes table and node patterns."""
+
 from __future__ import annotations
 
 import pandas as pd
@@ -19,9 +20,7 @@ from ..feed.transit_segments import (
 from .feed import PickupDropoffAvailability
 
 
-def shape_ids_for_trip_ids(
-    trips: DataFrame[TripsTable], trip_ids: list[str]
-) -> list[str]:
+def shape_ids_for_trip_ids(trips: DataFrame[TripsTable], trip_ids: list[str]) -> list[str]:
     """Returns a list of shape_ids for a given list of trip_ids."""
     return trips[trips["trip_id"].isin(trip_ids)].shape_id.unique().tolist()
 
@@ -63,7 +62,7 @@ def shapes_with_stop_id_for_trip_id(
 ) -> DataFrame[WranglerShapesTable]:
     """Returns shapes.txt for a given trip_id with the stop_id added based on pickup_type.
 
-    args:
+    Args:
         shapes: WranglerShapesTable
         trips: TripsTable
         stop_times: WranglerStopTimesTable
@@ -101,9 +100,7 @@ def shapes_with_stop_id_for_trip_id(
     return shape_with_trip_stops
 
 
-def node_pattern_for_shape_id(
-    shapes: DataFrame[WranglerShapesTable], shape_id: str
-) -> list[int]:
+def node_pattern_for_shape_id(shapes: DataFrame[WranglerShapesTable], shape_id: str) -> list[int]:
     """Returns node pattern of a shape."""
     shape_df = shapes.loc[shapes["shape_id"] == shape_id]
     shape_df = shape_df.sort_values(by=["shape_pt_sequence"])
@@ -116,8 +113,7 @@ def shapes_with_stops_for_shape_id(
     stop_times: DataFrame[WranglerStopTimesTable],
     shape_id: str,
 ) -> DataFrame[WranglerShapesTable]:
-    """
-    Returns a DataFrame containing shapes with associated stops for a given shape_id.
+    """Returns a DataFrame containing shapes with associated stops for a given shape_id.
 
     Parameters:
         shapes (DataFrame[WranglerShapesTable]): DataFrame containing shape data.
@@ -132,10 +128,7 @@ def shapes_with_stops_for_shape_id(
 
     trip_ids = trip_ids_for_shape_id(trips, shape_id)
     all_shape_stop_times = pd.concat(
-        [
-            shapes_with_stop_id_for_trip_id(shapes, trips, stop_times, t)
-            for t in trip_ids
-        ]
+        [shapes_with_stop_id_for_trip_id(shapes, trips, stop_times, t) for t in trip_ids]
     )
     shapes_with_stops = all_shape_stop_times[all_shape_stop_times["stop_id"].notna()]
     shapes_with_stops = shapes_with_stops.sort_values(by=["shape_pt_sequence"])
@@ -197,7 +190,6 @@ def shapes_for_road_links(
     2   3
     3   4
     """
-
     """
     > shape_links
 
@@ -240,7 +232,7 @@ def shapes_for_road_links(
         {"A": 171270, "B": 57484},
     ]
     WranglerLogger.debug(
-        f"DEBUG AB:\n\
+        f"DEBUG AB: \n\
         {shape_links_w_links[shape_links_w_links[['A', 'B']].isin(_debug_AB).all(axis=1)]}"
     )
 
@@ -307,7 +299,7 @@ def find_nearest_stops(
     )
     WranglerLogger.debug(f"Looking for stops near node_id: {node_id}")
     if node_id not in shapes["shape_model_node_id"].values:
-        raise ValueError(f"Node ID {node_id} not found in shapes for trip {trip_id}")
+        raise ValueError(f"Node ID {node_id} not in shapes for trip {trip_id}")
     # Find index of node_id in shapes
     node_idx = shapes[shapes["shape_model_node_id"] == node_id].index[0]
 
@@ -319,7 +311,7 @@ def find_nearest_stops(
     else:
         stop_node_before = stops_before.iloc[-1]["shape_model_node_id"]
 
-    nodes_after = shapes.loc[node_idx + 1 :]
+    nodes_after = shapes.loc[node_idx + 1 :]  # noqa: E203
     stops_after = nodes_after.loc[nodes_after["stop_id"].notna()]
     if stops_after.empty:
         stop_node_after = 0

@@ -3,7 +3,7 @@ transit_property_change:
   service:
     trip_properties:
       route_id: [21-111, 53-111]
-    timespans: 
+    timespans:
     - ['09:00', '15:00']
   property_changes:
     headway_secs:

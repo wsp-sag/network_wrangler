@@ -1,3 +1,5 @@
+"""Pydantic data models for transit selection properties."""
+
 from __future__ import annotations
 
 from typing import Annotated, ClassVar, List, Literal, Optional, Union
@@ -6,7 +8,7 @@ from pydantic import ConfigDict, Field
 
 from .._base.records import RecordModel
 from .._base.types import ForcedStr, AnyOf, OneOf
-from .types import Timespan
+from .._base.types import TimespanString
 
 
 SelectionRequire = Union[Literal["any"], Literal["all"]]
@@ -117,9 +119,11 @@ class SelectRouteProperties(RecordModel):
 
 
 class SelectTransitTrips(RecordModel):
+    """Selection properties for transit trips."""
+
     trip_properties: Optional[SelectTripProperties] = None
     route_properties: Optional[SelectRouteProperties] = None
-    timespans: Annotated[Optional[List[Timespan]], Field(None, min_length=1)]
+    timespans: Annotated[Optional[List[TimespanString]], Field(None, min_length=1)]
     nodes: Optional[SelectTransitNodes] = None
     links: Optional[SelectTransitLinks] = None
 

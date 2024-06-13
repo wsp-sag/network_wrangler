@@ -1,3 +1,5 @@
+"""Utility functions for pandas data manipulation."""
+
 from __future__ import annotations
 
 import copy
@@ -36,12 +38,8 @@ def dict_to_query(
         else:
             return k + "==" + str(v)
 
-    query = (
-        "("
-        + " and ".join([_kv_to_query_part(k, v) for k, v in selection_dict.items()])
-        + ")"
-    )
-    WranglerLogger.debug(f"Selection query:\n{query}")
+    query = "(" + " and ".join([_kv_to_query_part(k, v) for k, v in selection_dict.items()]) + ")"
+    WranglerLogger.debug(f"Selection query: \n{query}")
     return query
 
 
@@ -58,10 +56,14 @@ def _common_df_cols(df1, df2):
 
 
 class MissingPropertiesError(Exception):
+    """Raised when properties are missing from the dataframe."""
+
     pass
 
 
 class InvalidJoinFieldError(Exception):
+    """Raised when the join field is not unique."""
+
     pass
 
 
@@ -108,45 +110,32 @@ def update_df_by_col_value(
         fail_if_missing (bool): If True, will raise an error if there are missing IDs in
             destination_df that exist in source_df.
     """
-
     # 1. Identify which properties should be updated; and if they exist in both DFs.
     if properties is None:
         properties = [
-            c
-            for c in source_df.columns
-            if c in destination_df.columns and c != join_col
+            c for c in source_df.columns if c in destination_df.columns and c != join_col
         ]
     else:
         _dest_miss = _df_missing_cols(destination_df, properties + [join_col])
         if _dest_miss:
-            raise MissingPropertiesError(
-                f"Properties missing from destination_df: {_dest_miss}"
-            )
+            raise MissingPropertiesError(f"Properties missing from destination_df: {_dest_miss}")
         _source_miss = _df_missing_cols(source_df, properties + [join_col])
         if _source_miss:
-            raise MissingPropertiesError(
-                f"Properties missing from source_df: {_source_miss}"
-            )
+            raise MissingPropertiesError(f"Properties missing from source_df: {_source_miss}")
 
     # 2. Identify if there are IDs missing from destintation_df that exist in source_df
     if fail_if_missing:
         missing_ids = set(source_df[join_col]) - set(destination_df[join_col])
         if missing_ids:
-            raise InvalidJoinFieldError(f"IDs missing from source_df:\n{missing_ids}")
+            raise InvalidJoinFieldError(f"IDs missing from source_df: \n{missing_ids}")
 
-    WranglerLogger.debug(
-        f"Updating properties for {len(source_df)} records: {properties}."
-    )
+    WranglerLogger.debug(f"Updating properties for {len(source_df)} records: {properties}.")
 
     if not source_df[join_col].is_unique:
-        InvalidJoinFieldError(
-            "Can't join from source_df when join_col: {join_col} is not unique."
-        )
+        InvalidJoinFieldError("Can't join from source_df when join_col: {join_col} is not unique.")
 
     if not destination_df[join_col].is_unique:
-        return _update_props_from_one_to_many(
-            destination_df, source_df, join_col, properties
-        )
+        return _update_props_from_one_to_many(destination_df, source_df, join_col, properties)
 
     return _update_props_for_common_idx(destination_df, source_df, join_col, properties)
 
@@ -224,7 +213,7 @@ def _update_props_for_common_idx(
 def list_like_columns(df, item_type: type = None) -> list[str]:
     """Find columns in a dataframe that contain list-like items that can't be json-serialized.
 
-    args:
+    Args:
         df: dataframe to check
         item_type: if not None, will only return columns where all items are of this type by
             checking **only** the first item in the column.  Defaults to None.
@@ -240,11 +229,8 @@ def list_like_columns(df, item_type: type = None) -> list[str]:
     return list_like_columns
 
 
-def compare_df_values(
-    df1, df2, join_col: str = None, ignore: list[str] = [], atol=1e-5
-):
+def compare_df_values(df1, df2, join_col: str = None, ignore: list[str] = [], atol=1e-5):
     """Compare overlapping part of dataframes and returns where there are differences."""
-
     comp_c = [
         c
         for c in df1.columns
@@ -259,16 +245,12 @@ def compare_df_values(
             suffixes=["_a", "_b"],
         )
     else:
-        comp_df = df1[comp_c].merge(
-            df2[comp_c], how="inner", on=join_col, suffixes=["_a", "_b"]
-        )
+        comp_df = df1[comp_c].merge(df2[comp_c], how="inner", on=join_col, suffixes=["_a", "_b"])
 
     # Filter columns by data type
     numeric_cols = [col for col in comp_c if np.issubdtype(df1[col].dtype, np.number)]
     ll_cols = list_like_columns(df1)
-    other_cols = [
-        col for col in comp_c if col not in numeric_cols and col not in ll_cols
-    ]
+    other_cols = [col for col in comp_c if col not in numeric_cols and col not in ll_cols]
 
     # For numeric columns, use np.isclose
     if numeric_cols:
@@ -279,9 +261,7 @@ def compare_df_values(
 
     if ll_cols:
         for ll_c in ll_cols:
-            comp_df[ll_c] = diff_list_like_series(
-                comp_df[ll_c + "_a"], comp_df[ll_c + "_b"]
-            )
+            comp_df[ll_c] = diff_list_like_series(comp_df[ll_c + "_a"], comp_df[ll_c + "_b"])
 
     # For non-numeric columns, use direct comparison
     if other_cols:
@@ -292,9 +272,7 @@ def compare_df_values(
 
     # Filter columns and rows where no differences
     cols_w_diffs = [col for col in comp_c if comp_df[col].any()]
-    out_cols = [
-        col for subcol in cols_w_diffs for col in (f"{subcol}_a", f"{subcol}_b", subcol)
-    ]
+    out_cols = [col for subcol in cols_w_diffs for col in (f"{subcol}_a", f"{subcol}_b", subcol)]
     comp_df = comp_df[out_cols]
     comp_df = comp_df.loc[comp_df[cols_w_diffs].any(axis=1)]
 
@@ -303,7 +281,6 @@ def compare_df_values(
 
 def diff_dfs(df1, df2, ignore: list[str] = []) -> bool:
     """Compare two dataframes and log differences."""
-
     diff = False
     if set(df1.columns) != set(df2.columns):
         WranglerLogger.warning(
@@ -327,7 +304,7 @@ def diff_dfs(df1, df2, ignore: list[str] = []) -> bool:
     diff_df = compare_df_values(df1, df2)
 
     if not diff_df.empty:
-        WranglerLogger.error(f"!!! Differences dfs:\n{diff_df}")
+        WranglerLogger.error(f"!!! Differences dfs: \n{diff_df}")
         return True
 
     if not diff:
@@ -336,7 +313,7 @@ def diff_dfs(df1, df2, ignore: list[str] = []) -> bool:
 
 
 def diff_list_like_series(s1, s2) -> bool:
-    """Compare two series that contain list-like items as strings"""
+    """Compare two series that contain list-like items as strings."""
     diff_df = pd.concat([s1, s2], axis=1, keys=["s1", "s2"])
     diff_df["diff"] = diff_df.apply(lambda x: str(x["s1"]) != str(x["s2"]), axis=1)
 
@@ -391,7 +368,7 @@ def segment_data_by_selection(
     # --------Find the start and end indices -----------------------------------
     start_idxs = list(set([i for i, item in enumerate(ref_data) if item == start_item]))
     if not start_idxs:
-        raise ValueError(f"Segment start item: {start_item} not found in data.")
+        raise ValueError(f"Segment start item: {start_item} not in data.")
     if len(start_idxs) > 1:
         WranglerLogger.warning(
             f"Found multiple starting locations for data segment: {start_item}.\
@@ -400,14 +377,10 @@ def segment_data_by_selection(
     start_idx = min(start_idxs)
 
     # find the end node starting from the start index.
-    end_idxs = [
-        i + start_idx for i, item in enumerate(ref_data[start_idx:]) if item == end_item
-    ]
+    end_idxs = [i + start_idx for i, item in enumerate(ref_data[start_idx:]) if item == end_item]
     # WranglerLogger.debug(f"End indexes: {end_idxs}")
     if not end_idxs:
-        raise ValueError(
-            f"Segment end item: {end_item} not found in data after starting idx."
-        )
+        raise ValueError(f"Segment end item: {end_item} not in data after starting idx.")
     if len(end_idxs) > 1:
         WranglerLogger.warning(
             f"Found multiple ending locations for data segment: {end_item}.\
@@ -452,7 +425,6 @@ def segment_data_by_selection_min_overlap(
     After segment = everything after
 
     Example:
-
     selection_list = [2,5]
     data = pd.DataFrame({"i":[1,2,3,4,5,6]})
     field = "i"
@@ -474,7 +446,6 @@ def segment_data_by_selection_min_overlap(
         - updated replacement_list
         - tuple of before, selected segment, and after data
     """
-
     before_segment, segment_df, after_segment = segment_data_by_selection(
         selection_list, data, field=field, end_val=end_val
     )
@@ -486,19 +457,13 @@ def segment_data_by_selection_min_overlap(
             [before_segment, segment_df.iloc[:1]], ignore_index=True, sort=False
         )
         segment_df = segment_df.iloc[1:]
-        WranglerLogger.debug(
-            f"item start overlaps with replacement. Repl: {replacements_list}"
-        )
+        WranglerLogger.debug(f"item start overlaps with replacement. Repl: {replacements_list}")
     if replacements_list and replacements_list[-1] == data[field].iat[-1]:
         # move last item from selected segment to the after_segment df
         replacements_list = replacements_list[:-1]
-        after_segment = pd.concat(
-            [data.iloc[-1:], after_segment], ignore_index=True, sort=False
-        )
+        after_segment = pd.concat([data.iloc[-1:], after_segment], ignore_index=True, sort=False)
         segment_df = segment_df.iloc[:-1]
-        WranglerLogger.debug(
-            f"item end overlaps with replacement. Repl: {replacements_list}"
-        )
+        WranglerLogger.debug(f"item end overlaps with replacement. Repl: {replacements_list}")
 
     return replacements_list, (before_segment, segment_df, after_segment)
 
@@ -506,7 +471,7 @@ def segment_data_by_selection_min_overlap(
 def coerce_gdf(
     df: pd.DataFrame, geometry: GeoSeries = None, in_crs: int = LAT_LON_CRS
 ) -> GeoDataFrame:
-    "Coerce a DataFrame to a GeoDataFrame, optionally with a new geometry."
+    """Coerce a DataFrame to a GeoDataFrame, optionally with a new geometry."""
     if isinstance(df, GeoDataFrame):
         if df.crs is None:
             df.crs = in_crs
@@ -516,15 +481,13 @@ def coerce_gdf(
         p = copy.deepcopy(df.params)
 
     if "geometry" not in df and geometry is None:
-        raise ValueError(
-            "Must give geometry argument if don't have Geometry in dataframe"
-        )
+        raise ValueError("Must give geometry argument if don't have Geometry in dataframe")
 
     geometry = geometry if geometry is not None else df["geometry"]
     if not isinstance(geometry, GeoSeries):
         try:
             geometry = GeoSeries(geometry)
-        except:
+        except:  # noqa: E722
             geometry = geometry.apply(wkt.loads)
     df = GeoDataFrame(df, geometry=geometry, crs=in_crs)
 
@@ -545,9 +508,7 @@ def attach_parameters_to_df(df: pd.DataFrame, params) -> pd.DataFrame:
     return df
 
 
-def validate_existing_value_in_df(
-    df: pd.DataFrame, idx: list[int], field: str, expected_value
-):
+def validate_existing_value_in_df(df: pd.DataFrame, idx: list[int], field: str, expected_value):
     """Validate if df[field]==expected_value for all indices in idx."""
     if field not in df.columns:
         WranglerLogger.warning(f"!! {field} Not an existing field.")
@@ -556,11 +517,45 @@ def validate_existing_value_in_df(
         WranglerLogger.warning(
             f"Existing value defined for {field} in project card \
             does not match the value in the selection links. \n\
-            Specified Existing:{expected_value}\n\
-            Actual Existing:\n {df.loc[idx, field]}."
+            Specified Existing: {expected_value}\n\
+            Actual Existing: \n {df.loc[idx, field]}."
         )
         return False
     return True
+
+
+def coerce_val_to_df_types(
+    field: str,
+    val: Union[str, int, float, bool, list[Union[str, int, float, bool]]],
+    df: pd.DataFrame,
+) -> dict:
+    """Coerce field value to match the type of a matching dataframe columns.
+
+    Args:
+        field: field to lookup
+        val: value or list of values to coerce
+        df (pd.DataFrame): dataframe to get types from
+
+    Returns: coerced value or list of values
+    """
+    if field not in df.columns:
+        raise ValueError(f"Field {field} not in dataframe columns.")
+    if pd.api.types.infer_dtype(df[field]) == "integer":
+        if isinstance(val, list):
+            return [int(float(v)) for v in val]
+        return int(float(val))
+    elif pd.api.types.infer_dtype(df[field]) == "floating":
+        if isinstance(val, list):
+            return [float(v) for v in val]
+        return float(val)
+    elif pd.api.types.infer_dtype(df[field]) == "boolean":
+        if isinstance(val, list):
+            return [bool(v) for v in val]
+        return bool(val)
+    else:
+        if isinstance(val, list):
+            return [str(v) for v in val]
+        return str(val)
 
 
 def coerce_dict_to_df_types(
@@ -627,7 +622,7 @@ def coerce_val_to_series_type(val, s: pd.Series):
     if pd.api.types.infer_dtype(s) in ["integer", "floating"]:
         try:
             v = float(val)
-        except:
+        except:  # noqa: E722
             v = str(val)
     elif pd.api.types.infer_dtype(s) == "boolean":
         v = bool(val)
@@ -637,9 +632,8 @@ def coerce_val_to_series_type(val, s: pd.Series):
     return v
 
 
-def fk_in_pk(
-    pk: Union[pd.Series, list], fk: Union[pd.Series, list]
-) -> Tuple[bool, list]:
+def fk_in_pk(pk: Union[pd.Series, list], fk: Union[pd.Series, list]) -> Tuple[bool, list]:
+    """Check if all foreign keys are in the primary keys."""
     if isinstance(fk, list):
         fk = pd.Series(fk)
 
@@ -647,8 +641,8 @@ def fk_in_pk(
 
     if missing_flag.any():
         WranglerLogger.warning(
-            f"Following keys referenced in {fk.name} but missing\
-            in primary key table:\n{fk[missing_flag]} "
+            f"Following keys referenced in {fk.name} but missing in\
+            primary key table: \n{fk[missing_flag]} "
         )
         return False, fk[missing_flag].tolist()
 
@@ -659,10 +653,6 @@ def dict_fields_in_df(d: dict, df: pd.DataFrame) -> bool:
     """Check if all fields in dict are in dataframe."""
     missing_fields = [f for f in d.keys() if f not in df.columns]
     if missing_fields:
-        WranglerLogger.error(
-            f"Fields in dictionary missing from dataframe: {missing_fields}."
-        )
-        raise ValueError(
-            f"Fields in dictionary missing from dataframe: {missing_fields}."
-        )
+        WranglerLogger.error(f"Fields in dictionary missing from dataframe: {missing_fields}.")
+        raise ValueError(f"Fields in dictionary missing from dataframe: {missing_fields}.")
     return True

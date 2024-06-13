@@ -1,9 +1,12 @@
 """Main functionality for GTFS tables including Feed object."""
+
 from __future__ import annotations
 from typing import Union, Literal
 from pathlib import Path
 
 import pandas as pd
+
+from pandera.typing import DataFrame
 
 from ...models._base.db import DBModelMixin
 from ...models.gtfs.tables import (
@@ -24,12 +27,13 @@ from ..convert import gtfs_to_wrangler_stop_times
 
 # Raised when there is an issue with the validation of the GTFS data.
 class FeedValidationError(Exception):
+    """Raised when there is an issue with the validation of the GTFS data."""
+
     pass
 
 
 class Feed(DBModelMixin):
-    """
-    Wrapper class around Wrangler flavored GTFS feed.
+    """Wrapper class around Wrangler flavored GTFS feed.
 
     Most functionality derives from mixin class DBModelMixin which provides:
     - validation of tables to schemas when setting a table attribute (e.g. self.trips = trips_df)
@@ -76,6 +80,11 @@ class Feed(DBModelMixin):
     optional_table_names = ["agencies"]
 
     def __init__(self, **kwargs):
+        """Create a Feed object from a dictionary of DataFrames representing a GTFS feed.
+
+        Args:
+            kwargs: A dictionary containing DataFrames representing the tables of a GTFS feed.
+        """
         self._net = None
         self.feed_path: Path = None
         self.initialize_tables(**kwargs)
@@ -83,9 +92,7 @@ class Feed(DBModelMixin):
         # Set extra provided attributes but just FYI in logger.
         extra_attr = {k: v for k, v in kwargs.items() if k not in self.table_names}
         if extra_attr:
-            WranglerLogger.info(
-                f"Adding additional attributes to Feed: {extra_attr.keys()}"
-            )
+            WranglerLogger.info(f"Adding additional attributes to Feed: {extra_attr.keys()}")
         for k, v in extra_attr:
             self.__setattr__(k, v)
 
@@ -96,8 +103,7 @@ class Feed(DBModelMixin):
         id_property: str = "trip_id",
         properties: list[str] = None,
     ):
-        """
-        Set property values in a specific table for a list of IDs.
+        """Set property values in a specific table for a list of IDs.
 
         Args:
             table_name (str): Name of the table to modify.
@@ -108,9 +114,7 @@ class Feed(DBModelMixin):
                 all properties.
         """
         table_df = self.get_table(table_name)
-        updated_df = update_df_by_col_value(
-            table_df, set_df, id_property, properties=properties
-        )
+        updated_df = update_df_by_col_value(table_df, set_df, id_property, properties=properties)
         self.__dict__[table_name] = updated_df
 
 
@@ -124,7 +128,7 @@ PickupDropoffAvailability = Union[
 
 
 def stop_count_by_trip(
-    stop_times: WranglerStopTimesTable,
+    stop_times: DataFrame[WranglerStopTimesTable],
 ) -> pd.DataFrame:
     """Returns dataframe with trip_id and stop_count from stop_times."""
     stops_count = stop_times.groupby("trip_id").size()
@@ -132,8 +136,10 @@ def stop_count_by_trip(
 
 
 def merge_shapes_to_stop_times(
-    stop_times: WranglerStopTimesTable, shapes: WranglerShapesTable, trips: TripsTable
-) -> WranglerStopTimesTable:
+    stop_times: DataFrame[WranglerStopTimesTable],
+    shapes: DataFrame[WranglerShapesTable],
+    trips: DataFrame[TripsTable],
+) -> DataFrame[WranglerStopTimesTable]:
     """Add shape_id and shape_pt_sequence to stop_times dataframe.
 
     Args:

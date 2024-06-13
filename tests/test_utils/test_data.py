@@ -1,3 +1,8 @@
+"""Tests for /utils/data.
+
+Run just these tests using `pytest tests/test_utils/test_data.py`
+"""
+
 import pytest
 
 import pandas as pd
@@ -11,7 +16,6 @@ from network_wrangler.utils.data import (
     segment_data_by_selection_min_overlap,
     dict_to_query,
     list_like_columns,
-    update_df_by_col_value,
     diff_dfs,
     segment_data_by_selection,
     validate_existing_value_in_df,
@@ -47,8 +51,8 @@ def test_update_df_by_col_value():
     # Call the function
     updated_df = update_df_by_col_value(destination_df, source_df, "trip_id")
 
-    WranglerLogger.debug(f"expected_df\n{expected_df}")
-    WranglerLogger.debug(f"updated_df:\n{updated_df}")
+    WranglerLogger.debug(f"expected_df: \n{expected_df}")
+    WranglerLogger.debug(f"updated_df: \n{updated_df}")
     # Check if the updated_df matches the expected_df
     pd.testing.assert_frame_equal(updated_df, expected_df)
 
@@ -74,9 +78,7 @@ def test_update_df_by_col_value_missing_ids():
 
     # Call the function with fail_if_missing=True
     with pytest.raises(InvalidJoinFieldError):
-        update_df_by_col_value(
-            destination_df, source_df, "trip_id", fail_if_missing=True
-        )
+        update_df_by_col_value(destination_df, source_df, "trip_id", fail_if_missing=True)
 
 
 def test_update_df_by_col_value_missing_properties():
@@ -131,7 +133,7 @@ def test_update_df_by_col_value_non_unique_join_col():
     WranglerLogger.debug(f"expected_df\n{expected_df}")
     # Call the function
     updated_df = update_df_by_col_value(destination_df, source_df, "trip_id")
-    WranglerLogger.debug(f"updated_df:\n{updated_df}")
+    WranglerLogger.debug(f"updated_df: \n{updated_df}")
     # Check if the updated_df matches the expected_df
     pd.testing.assert_frame_equal(updated_df, expected_df)
 
@@ -219,9 +221,7 @@ def test_list_like_columns_with_item_type_numpy_array():
 
 def test_list_like_columns_no_list_like_columns():
     # Create a dataframe without any list-like columns
-    df = pd.DataFrame(
-        {"column1": [1, 2, 3], "column2": [4, 5, 6], "column3": [7, 8, 9]}
-    )
+    df = pd.DataFrame({"column1": [1, 2, 3], "column2": [4, 5, 6], "column3": [7, 8, 9]})
 
     # Expected empty list
     expected_columns = []
@@ -242,7 +242,7 @@ def test_diff_dfs_same_data():
     result = diff_dfs(df1, df2)
 
     # Check if the result is False
-    assert result == False
+    assert not result
 
 
 def test_diff_dfs_different_columns():
@@ -254,7 +254,7 @@ def test_diff_dfs_different_columns():
     result = diff_dfs(df1, df2)
 
     # Check if the result is True
-    assert result == True
+    assert result
 
 
 def test_diff_dfs_different_length():
@@ -266,7 +266,7 @@ def test_diff_dfs_different_length():
     result = diff_dfs(df1, df2)
 
     # Check if the result is True
-    assert result == True
+    assert result
 
 
 def test_diff_dfs_different_values():
@@ -278,7 +278,7 @@ def test_diff_dfs_different_values():
     result = diff_dfs(df1, df2)
 
     # Check if the result is True
-    assert result == True
+    assert result
 
 
 def test_segment_data_by_selection_dataframe():
@@ -312,9 +312,7 @@ def test_segment_data_by_selection_series():
     item_list = [20, 40]
 
     # Call the function
-    before_segment, selected_segment, after_segment = segment_data_by_selection(
-        item_list, series
-    )
+    before_segment, selected_segment, after_segment = segment_data_by_selection(item_list, series)
 
     # Define the expected segments
     expected_before_segment = pd.Series([10])
@@ -373,15 +371,9 @@ def test_segment_data_by_selection_min_overlap():
     assert updated_replacements_list == expected_replacements_list
 
     # Check if the updated_data matches the expected_data
-    pd.testing.assert_frame_equal(
-        updated_data[0].reset_index(drop=True), expected_data[0]
-    )
-    pd.testing.assert_frame_equal(
-        updated_data[1].reset_index(drop=True), expected_data[1]
-    )
-    pd.testing.assert_frame_equal(
-        updated_data[2].reset_index(drop=True), expected_data[2]
-    )
+    pd.testing.assert_frame_equal(updated_data[0].reset_index(drop=True), expected_data[0])
+    pd.testing.assert_frame_equal(updated_data[1].reset_index(drop=True), expected_data[1])
+    pd.testing.assert_frame_equal(updated_data[2].reset_index(drop=True), expected_data[2])
 
     # now test where i needs to udpat the replacement list
     selection_list = [2, 5]
@@ -402,18 +394,12 @@ def test_segment_data_by_selection_min_overlap():
 
     assert updated_replacements_list == expected_replacements_list
 
-    WranglerLogger.debug(f"Expected data:\n{expected_data}")
-    WranglerLogger.debug(f"Returned Data:\n{updated_data}")
+    WranglerLogger.debug(f"Expected data: \n{expected_data}")
+    WranglerLogger.debug(f"Returned Data: \n{updated_data}")
     # Check if the updated_data matches the expected_data
-    pd.testing.assert_frame_equal(
-        updated_data[0].reset_index(drop=True), expected_data[0]
-    )
-    pd.testing.assert_frame_equal(
-        updated_data[1].reset_index(drop=True), expected_data[1]
-    )
-    pd.testing.assert_frame_equal(
-        updated_data[2].reset_index(drop=True), expected_data[2]
-    )
+    pd.testing.assert_frame_equal(updated_data[0].reset_index(drop=True), expected_data[0])
+    pd.testing.assert_frame_equal(updated_data[1].reset_index(drop=True), expected_data[1])
+    pd.testing.assert_frame_equal(updated_data[2].reset_index(drop=True), expected_data[2])
 
 
 def test_validate_existing_value_in_df_existing_field():
@@ -453,7 +439,7 @@ def test_validate_existing_value_in_df_non_existing_field():
     result = validate_existing_value_in_df(df, [1, 2, 3], "height", 170)
 
     # Check if the result is False
-    assert result == False
+    assert not result
 
 
 def test_validate_existing_value_in_df_mismatched_value():
@@ -470,7 +456,7 @@ def test_validate_existing_value_in_df_mismatched_value():
     result = validate_existing_value_in_df(df, [1, 2, 3], "age", 45)
 
     # Check if the result is False
-    assert result == False
+    assert not result
 
 
 def test_segment_series_by_list(request):
@@ -486,8 +472,8 @@ def test_segment_series_by_list(request):
 
     calc_answer = segment_data_by_selection(item_list, s)
     for calc, exp in zip(calc_answer, exp_answer):
-        WranglerLogger.debug(f"\ncalc:\n{calc}")
-        WranglerLogger.debug(f"\nexp:\n{exp}")
+        WranglerLogger.debug(f"\ncalc: \n{calc}")
+        WranglerLogger.debug(f"\nexp: \n{exp}")
         tm.assert_series_equal(calc, exp)
 
 
@@ -558,6 +544,7 @@ def test_segment_list_by_list(request, ref_list, item_list, expected_result):
 def test_update_props_from_one_to_many():
     # Create destination_df
     from network_wrangler.utils.data import _update_props_from_one_to_many
+
     destination_df = pd.DataFrame(
         {
             "trip_id": [2, 2, 3, 4],
@@ -579,6 +566,7 @@ def test_update_props_from_one_to_many():
     )
     # Call the function
     updated_df = _update_props_from_one_to_many(
-        destination_df, source_df, "trip_id", ["property1", "property2"])
+        destination_df, source_df, "trip_id", ["property1", "property2"]
+    )
     # Check if the updated_df matches the expected_df
     pd.testing.assert_frame_equal(updated_df, expected_df)

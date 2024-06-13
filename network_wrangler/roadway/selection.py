@@ -1,9 +1,11 @@
+"""Roadway selection classes for selecting links and nodes from a roadway network."""
+
 from __future__ import annotations
 
 import copy
 import hashlib
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import pandas as pd
 
@@ -29,10 +31,14 @@ if TYPE_CHECKING:
 
 
 class SelectionFormatError(Exception):
+    """Raised when there is an issue with the format of a selection."""
+
     pass
 
 
 class SelectionError(Exception):
+    """Raised when there is an issue with a selection."""
+
     pass
 
 
@@ -66,31 +72,30 @@ class RoadwayLinkSelection:
 
     def __init__(
         self,
-        net: "RoadwayNetwork",
-        selection_dict: dict,
+        net: RoadwayNetwork,
+        selection_data: Union[SelectFacility, dict],
     ):
         """Constructor for RoadwayLinkSelection object.
 
         Args:
             net (RoadwayNetwork): Roadway network object to select from.
-            selection_dict (dict):  dictionary conforming to `SelectFacility` model with
-                a "links" key.
+            selection_data: dictionary conforming to
+                `SelectFacility` model with a "links" key or SelectFacility instance.
         """
         self.net = net
 
-        WranglerLogger.debug(
-            f"Creating selection from selection dictionary:\n {selection_dict}"
-        )
+        WranglerLogger.debug(f"Creating selection from selection dictionary: \n {selection_data}")
 
         # Coerce the selection dictionary to model types; fill unspecified with default params
-        self.selection_dict = selection_dict
+        self.selection_dict = selection_data
 
         self._selected_links_df = None
         self._segment = None
 
-        WranglerLogger.debug(f"Created selection of type:{self.selection_type}")
+        WranglerLogger.debug(f"Created selection of type: {self.selection_type}")
 
-    def __nonzero__(self):
+    def __nonzero__(self) -> bool:
+        """Return True if links were selected."""
         return len(self.selected_links) > 0
 
     @property
@@ -133,10 +138,18 @@ class RoadwayLinkSelection:
         return self._selection_dict
 
     @selection_dict.setter
-    def selection_dict(self, selection_dict: dict):
-        self.raw_selection_dict = selection_dict
-        self._selection_dict = self.validate_selection(selection_dict)
-        self._selection_data = SelectFacility(**self._selection_dict)
+    def selection_dict(self, selection_input: Union[SelectFacility, dict]):
+        if isinstance(selection_input, SelectFacility):
+            self.raw_selection_dict = selection_input.model_dump(exclude_none=True, by_alias=True)
+        else:
+            self.raw_selection_dict = selection_input
+
+        if not isinstance(selection_input, SelectFacility):
+            self._selection_data = self.validate_selection(SelectFacility(**selection_input))
+        else:
+            self._selection_data = self.validate_selection(selection_input)
+
+        self._selection_dict = self._selection_data.model_dump(exclude_none=True, by_alias=True)
         self._stored_net_hash = copy.deepcopy(self.net.network_hash)
 
     @property
@@ -148,7 +161,8 @@ class RoadwayLinkSelection:
     def modes(self) -> list[str]:
         """List of modes to search for links for. From selection dictionary.
 
-        `any` will return all links without filtering modes."""
+        `any` will return all links without filtering modes.
+        """
         return self.selection_data.links.modes
 
     @property
@@ -191,30 +205,24 @@ class RoadwayLinkSelection:
         Will re-evaluate if the current network hash is different than the stored one from the
         last selection.
         """
-        if (
-            self._selected_links_df is None
-            or self._stored_net_hash != self.net.network_hash
-        ):
+        if self._selected_links_df is None or self._stored_net_hash != self.net.network_hash:
             self._stored_net_hash = copy.deepcopy(self.net.network_hash)
             self._selected_links_df = self._perform_selection()
 
         return self._selected_links_df
 
-    def validate_selection(self, selection_dict: SelectFacility) -> dict:
+    def validate_selection(self, sel_data: SelectFacility) -> SelectFacility:
         """Validates that selection_dict is compatible with the network."""
-        sel_model = SelectFacility(**selection_dict)
-
-        sel_dict = sel_model.model_dump(exclude_none=True, by_alias=True)
-        if "links" not in sel_dict:
+        if sel_data.links is None:
             raise SelectionFormatError("Link Selection does not contain links field.")
         try:
-            sel_dict["links"] = coerce_extra_fields_to_type_in_df(
-                sel_dict["links"], SelectLinksDict, self.net.links_df
+            sel_data.links = coerce_extra_fields_to_type_in_df(
+                sel_data.links, SelectLinksDict, self.net.links_df
             )
         except DatamodelDataframeIncompatableError as e:
             WranglerLogger.error(f"Invalid link selection fields: {e}")
             raise e
-        return sel_dict
+        return sel_data
 
     def _perform_selection(self):
         # 1. Initial selection based on selection type
@@ -244,9 +252,7 @@ class RoadwayLinkSelection:
             if len(_selected_links_df) < 10:
                 _cols = _selected_links_df.__dict__["params"].display_cols
                 WranglerLogger.debug(f"\n{_selected_links_df[_cols]}")
-            WranglerLogger.debug(
-                f"Selecting from selection based on: {self.additional_sel_dict}"
-            )
+            WranglerLogger.debug(f"Selecting from selection based on: {self.additional_sel_dict}")
             _selected_links_df = _selected_links_df.dict_query(self.additional_sel_dict)
 
         if not len(_selected_links_df):
@@ -262,16 +268,14 @@ class RoadwayLinkSelection:
     def _select_explicit_link_id(self):
         """Select links based on a explicit link id in selection_dict."""
         WranglerLogger.info("Selecting using explicit link identifiers.")
-        WranglerLogger.debug(
-            f"Explicit link selection dictionary: {self.explicit_id_sel_dict}"
-        )
+        WranglerLogger.debug(f"Explicit link selection dictionary: {self.explicit_id_sel_dict}")
         missing_values = {
             col: list(set(values) - set(self.net.links_df[col]))
             for col, values in self.explicit_id_sel_dict.items()
         }
         missing_df = pd.DataFrame(missing_values)
         if len(missing_df) > 0:
-            WranglerLogger.warning(f"Missing explicit link selections:\n{missing_df}")
+            WranglerLogger.warning(f"Missing explicit link selections: \n{missing_df}")
             if not self.ignore_missing:
                 raise SelectionError("Missing explicit link selections.")
 
@@ -304,29 +308,29 @@ class RoadwayNodeSelection:
 
     def __init__(
         self,
-        net: "RoadwayNetwork",
-        selection_dict: dict,
+        net: RoadwayNetwork,
+        selection_data: Union[dict, SelectFacility],
     ):
         """Constructor for RoadwayNodeSelection object.
 
         Args:
             net (RoadwayNetwork): Roadway network object to select from.
-            selection_dict (dict): Selection dictionary.
+            selection_data (Union[dict, SelectFacility]): Selection dictionary with "nodes" key
+                conforming to SelectFacility format, or SelectFacility instance.
         """
         self.net = net
 
-        WranglerLogger.debug(
-            f"Creating selection from selection dictionary:\n{selection_dict}"
-        )
+        WranglerLogger.debug(f"Creating selection from selection data: \n{selection_data}")
         # Coerce the selection dictionary to model types; fill unspecified with default params
-        self.selection_dict = selection_dict
+        self.selection_dict = selection_data
 
         self._selected_nodes_df = None
         self._segment = None
 
-        WranglerLogger.debug(f"Created selection of type:{self.selection_type}")
+        WranglerLogger.debug(f"Created selection of type: {self.selection_type}")
 
-    def __nonzero__(self):
+    def __nonzero__(self) -> bool:
+        """Return True if nodes were selected."""
         return len(self.selected_nodes) > 0
 
     @property
@@ -369,10 +373,18 @@ class RoadwayNodeSelection:
         return self._selection_dict
 
     @selection_dict.setter
-    def selection_dict(self, selection_dict: dict):
-        self.raw_selection_dict = selection_dict
-        self._selection_dict = self.validate_selection(selection_dict)
-        self._selection_data = SelectFacility(**self._selection_dict)
+    def selection_dict(self, selection_input: Union[dict, SelectFacility]):
+        if isinstance(selection_input, SelectFacility):
+            self.raw_selection_dict = selection_input.model_dump(exclude_none=True, by_alias=True)
+        else:
+            self.raw_selection_dict = selection_input
+
+        if not isinstance(selection_input, SelectFacility):
+            self._selection_data = self.validate_selection(SelectFacility(**selection_input))
+        else:
+            self._selection_data = self.validate_selection(selection_input)
+
+        self._selection_dict = self._selection_data.model_dump(exclude_none=True, by_alias=True)
         self._stored_net_hash = copy.deepcopy(self.net.network_hash)
 
     @property
@@ -404,35 +416,26 @@ class RoadwayNodeSelection:
         Will re-evaluate if the current network hash is different than the stored one from the
         last selection.
         """
-        if (
-            self._selected_nodes_df is None
-            or self._stored_net_hash != self.net.network_hash
-        ):
+        if self._selected_nodes_df is None or self._stored_net_hash != self.net.network_hash:
             self._stored_net_hash = self.net.network_hash
             self._selected_nodes_df = self._perform_selection()
 
         return self._selected_nodes_df
 
-    def validate_selection(self, selection_dict: SelectFacility) -> bool:
-        """
-        Validate that selection_dict is compatible with the network.
-        """
-        sel_model = SelectFacility(**selection_dict)
-
-        sel_dict = sel_model.model_dump(exclude_none=True, by_alias=True)
-
-        if "nodes" not in sel_dict:
+    def validate_selection(self, selection_data: SelectFacility) -> SelectFacility:
+        """Validate that selection_dict is compatible with the network."""
+        if selection_data.nodes is None:
             raise SelectionFormatError("Node Selection does not contain nodes field.")
 
         try:
-            sel_dict["nodes"] = coerce_extra_fields_to_type_in_df(
-                sel_dict["nodes"], SelectNodesDict, self.net.nodes_df
+            selection_data.nodes = coerce_extra_fields_to_type_in_df(
+                selection_data.nodes, SelectNodesDict, self.net.nodes_df
             )
         except DatamodelDataframeIncompatableError as e:
             WranglerLogger.error(f"Invalid node selection fields: {e}")
             raise e
 
-        return sel_dict
+        return selection_data
 
     def _perform_selection(self):
         if self.selection_type == "explicit_ids":
@@ -440,9 +443,7 @@ class RoadwayNodeSelection:
         elif self.selection_type == "all":
             _selected_nodes_df = self.net.nodes_df
         else:
-            WranglerLogger.error(
-                f"Didn't understand selection type: {self.selection_type}"
-            )
+            WranglerLogger.error(f"Didn't understand selection type: {self.selection_type}")
             raise SelectionFormatError("Doesn't have known node selection type")
 
         WranglerLogger.info(f"Final selected nodes: {len(_selected_nodes_df)}")
@@ -475,11 +476,10 @@ class RoadwayNodeSelection:
 
 
 def _create_selection_key(selection_dict: dict) -> str:
-    """
-    Selections are stored by a sha1 hash of the bit-encoded string of the selection dictionary.
+    """Selections are stored by a sha1 hash of the bit-encoded string of the selection dictionary.
 
     Args:
-        selection_dictonary: Selection Dictionary
+        selection_dict: Selection Dictionary
 
     Returns: Hex code for hash
     """

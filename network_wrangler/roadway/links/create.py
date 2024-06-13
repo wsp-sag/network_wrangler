@@ -1,4 +1,4 @@
-"""Creates RoadLinksTables"""
+"""Functions for creating RoadLinksTables."""
 
 import time
 
@@ -26,6 +26,8 @@ from ...utils.geo import (
 
 
 class LinkCreationError(Exception):
+    """Raised when there is an issue with creating links."""
+
     pass
 
 
@@ -33,6 +35,7 @@ class LinkCreationError(Exception):
 def shape_id_from_link_geometry(
     links_df: pd.DataFrame,
 ) -> gpd.GeoDataFrame:
+    """Create a unique shape_id from the geometry of the link."""
     shape_ids = links_df["geometry"].apply(create_unique_shape_id)
     return shape_ids
 
@@ -40,8 +43,7 @@ def shape_id_from_link_geometry(
 def _fill_missing_link_geometries_from_nodes(
     links_df: pd.DataFrame, nodes_df: DataFrame[RoadNodesTable] = None
 ) -> gpd.GeoDataFrame:
-    """
-    Create location references and link geometries from nodes.
+    """Create location references and link geometries from nodes.
 
     If already has either, then will just fill NA.
     """
@@ -50,17 +52,13 @@ def _fill_missing_link_geometries_from_nodes(
     if links_df.geometry.isna().values.any():
         geo_start_t = time.time()
         if nodes_df is None:
-            raise LinkCreationError(
-                "Must give nodes_df argument if don't have Geometry"
-            )
+            raise LinkCreationError("Must give nodes_df argument if don't have Geometry")
         # TODO FIX
-        updated_links_df = linestring_from_nodes(
-            links_df.loc[links_df.geometry.isna()], nodes_df
-        )
+        updated_links_df = linestring_from_nodes(links_df.loc[links_df.geometry.isna()], nodes_df)
         links_df.update(updated_links_df)
         # WranglerLogger.debug(f"links with updated geometries:\n{links_df}")
         WranglerLogger.debug(
-            f"Created link geo from nodes in {round(time.time() - geo_start_t,2)}."
+            f"Created link geo from nodes in {round(time.time() - geo_start_t, 2)}."
         )
     return links_df
 
@@ -95,6 +93,7 @@ def data_to_links_df(
         links_params: a LinkParams instance. Defaults to a default LinkParams instance..
         nodes_df: Associated notes geodataframe to use if geometries or location references not
             present. Defaults to None.
+
     Returns:
         pd.DataFrame: _description_
     """
@@ -102,7 +101,7 @@ def data_to_links_df(
     if not isinstance(links_df, pd.DataFrame):
         links_df = pd.DataFrame(links_df)
     if len(links_df) < 21:
-        WranglerLogger.debug(f"data_to_links_df.links_df input:\n{links_df}.")
+        WranglerLogger.debug(f"data_to_links_df.links_df input: \n{links_df}.")
     links_df = _fill_missing_link_geometries_from_nodes(links_df, nodes_df)
     # Now that have geometry, make sure is GDF
     links_df = coerce_gdf(links_df, in_crs=in_crs, geometry=links_df.geometry)
@@ -125,7 +124,7 @@ def data_to_links_df(
 
     if len(links_df) < 10:
         WranglerLogger.debug(
-            f"New Links:\n{links_df[links_df.params.display_cols+['geometry']]}"
+            f"New Links: \n{links_df[links_df.params.display_cols + ['geometry']]}"
         )
     else:
         WranglerLogger.debug(f"{len(links_df)} new links.")

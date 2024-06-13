@@ -1,8 +1,8 @@
-"""
-Tests for public api of feed.py
+"""Tests for public api of feed.py.
 
 Run just these tests using `pytest tests/test_transit/test_feed.py`
 """
+
 import pytest
 
 import pandas as pd
@@ -306,10 +306,10 @@ def test_filter_shapes_to_links(request):
     )
 
     result = shapes_for_road_links(shapes_df, links_df)
-    WranglerLogger.debug(f"result:\n{result}")
+    WranglerLogger.debug(f"result: \n{result}")
 
     expected = shapes_df.loc[shapes_df.should_retain].reset_index(drop=True)
-    WranglerLogger.debug(f"expected:\n{expected}")
+    WranglerLogger.debug(f"expected: \n{expected}")
     pd.testing.assert_frame_equal(result, expected)
     WranglerLogger.info(f"--Finished: {request.node.name}")
 

@@ -1,7 +1,34 @@
+"""Segment class and related functions for working with segments of a RoadwayNetwork.
+
+A segment is a contiguous length of RoadwayNetwork defined by start/end nodes + link selections.
+
+Segments are defined by a selection dictionary and then searched for on the network using
+a shortest path graph search.
+
+Usage:
+
+```
+selection_dict = {
+    "links": {"name":['6th','Sixth','sixth']},
+    "from": {"osm_node_id": '187899923'},
+    "to": {"osm_node_id": '187865924'}
+}
+
+segment = Segment(net: RoadwayNetwork = net, selection_dict = selection_dict)
+segment.segment_links_df
+segment.segment_nodes
+```
+"""
+
+from __future__ import annotations
+
 import copy
+from typing import Union, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
+
+from pandera.typing import DataFrame
 
 from ..params import (
     DEFAULT_SP_WEIGHT_FACTOR,
@@ -15,22 +42,29 @@ from .graph import shortest_path
 from .links.filters import filter_links_to_path
 from ..models.projects.roadway_selection import SelectNodeDict
 
+if TYPE_CHECKING:
+    from .network import RoadwayNetwork
+    from .selection import RoadwayNodeSelection, RoadwayLinkSelection
+    from ..models.roadway.tables import RoadNodesTable, RoadLinksTable
+
 
 class SegmentFormatError(Exception):
+    """Error in segment format."""
+
     pass
 
 
 class SegmentSelectionError(Exception):
+    """Error in segment selection."""
+
     pass
 
 
 class Segment:
-    """Segment is a contiguous section of the roadway network defined by a start and end node and
-    a facility of one or more names.
+    """A contiguous length of RoadwayNetwork defined by start/end nodes + link selections.
 
     Segments are defined by a selection dictionary and then searched for on the network using
     a shortest path graph search.
-
 
     Usage:
 
@@ -70,8 +104,8 @@ class Segment:
 
     def __init__(
         self,
-        net: "RoadwayNetwork",
-        selection: "Union[RoadwayNodeSelection,RoadwayLinkSelection]",
+        net: RoadwayNetwork,
+        selection: Union[RoadwayNodeSelection, RoadwayLinkSelection],
         sp_weight_col: str = DEFAULT_SP_WEIGHT_COL,
         sp_weight_factor: int = DEFAULT_SP_WEIGHT_FACTOR,
         max_search_breadth: int = DEFAULT_MAX_SEARCH_BREADTH,
@@ -91,7 +125,6 @@ class Segment:
                 need to be changed unless network contains a lot of ambiguity. Defaults to
                 DEFAULT_MAX_SEARCH_BREADTH which defaults to 10.
         """
-
         self.net = net
         if not selection.selection_type == "segment":
             raise SegmentFormatError(
@@ -116,7 +149,8 @@ class Segment:
         WranglerLogger.info(f"Segment created: {self}")
 
     @property
-    def modes(self) -> list:
+    def modes(self) -> list[str]:
+        """List of modes in the selection."""
         return self.selection.selection_data.links.modes
 
     @property
@@ -125,7 +159,7 @@ class Segment:
         return self.selection.selection_data.links.segment_selection_dict
 
     @property
-    def from_node_id(self):
+    def from_node_id(self) -> int:
         """Find start node in selection dict and return its primary key."""
         if self._from_node_id is not None:
             return self._from_node_id
@@ -133,7 +167,7 @@ class Segment:
         return self._from_node_id
 
     @property
-    def to_node_id(self):
+    def to_node_id(self) -> int:
         """Find end node in selection dict and return its primary key."""
         if self._to_node_id is not None:
             return self._to_node_id
@@ -141,26 +175,38 @@ class Segment:
         return self._to_node_id
 
     @property
-    def segment_nodes(self) -> list:
+    def segment_nodes(self) -> list[int]:
+        """Primary keys of nodes in segment."""
         if self._segment_nodes is None:
-            WranglerLogger.debug(
-                "Segment not found yet so conducting connected_path_search."
-            )
+            WranglerLogger.debug("Segment not found yet so conducting connected_path_search.")
             self.connected_path_search()
         return self._segment_nodes
 
     @property
-    def segment_nodes_df(self):
+    def segment_nodes_df(self) -> DataFrame[RoadNodesTable]:
+        """Roadway network nodes filtered to nodes in segment."""
         return self.net.nodes_df[self.net.nodes_df.loc(self.segment_nodes)]
 
     @property
-    def segment_links_df(self):
+    def segment_from_node_s(self) -> DataFrame[RoadNodesTable]:
+        """Roadway network nodes filtered to segment start node."""
+        return self.segment_nodes_df.loc[self.from_node_id]
+
+    @property
+    def segment_to_node_s(self) -> DataFrame[RoadNodesTable]:
+        """Roadway network nodes filtered to segment end node."""
+        return self.segment_nodes_df.loc[self.to_node_id]
+
+    @property
+    def segment_links_df(self) -> DataFrame[RoadLinksTable]:
+        """Roadway network links filtered to segment links."""
         modal_links_df = self.net.links_df.mode_query(self.modes)
         segment_links_df = filter_links_to_path(modal_links_df, self.segment_nodes)
         return segment_links_df
 
     @property
-    def segment_links(self):
+    def segment_links(self) -> list[int]:
+        """Primary keys of links in segment."""
         return self.segment_links_df.index.tolist()
 
     def get_node_id(self, node_selection_data: SelectNodeDict):
@@ -174,17 +220,13 @@ class Segment:
         _sel_node_mask = self.net.nodes_df.isin(sel_d).any(axis=1)
         node_df = self.net.nodes_df.loc[_sel_node_mask]
         if len(node_df) != 1:
-            raise SegmentSelectionError(
-                f"Node selection not unique. Found {len(node_df)} nodes."
-            )
+            raise SegmentSelectionError(f"Node selection not unique. Found {len(node_df)} nodes.")
         return node_df
 
     def connected_path_search(
         self,
     ) -> None:
-        """
-        Finds a path from from_node_id to to_node_id based on the weight col value/factor.
-        """
+        """Finds a path from from_node_id to to_node_id based on the weight col value/factor."""
         WranglerLogger.debug(f"Initial set of nodes: {self.subnet.subnet_nodes}")
 
         # expand network to find at least the origin and destination nodes
@@ -203,7 +245,7 @@ class Segment:
         if not _found:
             WranglerLogger.debug(
                 f"No connected path found from {self.O.pk} and {self.D_pk}\n\
-                self.subnet_links_df:\n{self.subnet_links_df}"
+                self.subnet_links_df: \n{self.subnet_links_df}"
             )
             raise SegmentSelectionError(
                 f"No connected path found from {self.O.pk} and {self.D_pk}"
@@ -215,7 +257,7 @@ class Segment:
         First will search based on "name" in selection_dict but if not found, will search
         using the "ref" field instead.
 
-        args:
+        Args:
             selection_dict: selection dictionary to use for generating subnet
         """
         if not selection_dict:
@@ -228,9 +270,7 @@ class Segment:
         if "ref" in selection_dict:
             _selection_dict["name"] += _selection_dict["ref"]
             del _selection_dict["ref"]
-        WranglerLogger.info(
-            f"Initially dictionary for subnet search: {_selection_dict}"
-        )
+        WranglerLogger.info(f"Initially dictionary for subnet search: {_selection_dict}")
         subnet = Subnet(
             self.net,
             modes=self.modes,
@@ -269,9 +309,7 @@ class Segment:
             del _selection_dict["name"]
             _selection_dict["ref"] = selection_dict["name"]
 
-            WranglerLogger.info(
-                f"Trying subnet search using name as ref: {_selection_dict}"
-            )
+            WranglerLogger.info(f"Trying subnet search using name as ref: {_selection_dict}")
             subnet = Subnet(
                 self.net,
                 modes=self.modes,
@@ -282,9 +320,7 @@ class Segment:
             )
 
         if not subnet.exists:
-            WranglerLogger.error(
-                f"Selection didn't return subnet links: {_selection_dict}"
-            )
+            WranglerLogger.error(f"Selection didn't return subnet links: {_selection_dict}")
             raise SegmentSelectionError("No links found with selection.")
         WranglerLogger.info(
             f"Found subnet with {len(subnet.subnet_links_df)} searching name in ref"
@@ -301,7 +337,6 @@ class Segment:
         Returns:
             bool: True if shortest path was found
         """
-
         WranglerLogger.debug(
             f"Calculating shortest path from {self.from_node_id} to {self.to_node_id}\
             using {self._sp_weight_col} as weight with a factor of {self._sp_weight_factor}"
@@ -309,14 +344,10 @@ class Segment:
         self.subnet._sp_weight_col = self._sp_weight_col
         self.subnet._weight_factor = self._sp_weight_factor
 
-        self._segment_nodes = shortest_path(
-            self.subnet.graph, self.from_node_id, self.to_node_id
-        )
+        self._segment_nodes = shortest_path(self.subnet.graph, self.from_node_id, self.to_node_id)
 
         if not self._segment_nodes:
-            WranglerLogger.debug(
-                f"No SP from {self.from_node_id} to {self.to_node_id} Found."
-            )
+            WranglerLogger.debug(f"No SP from {self.from_node_id} to {self.to_node_id} Found.")
             return False
 
         return True
@@ -340,9 +371,7 @@ def identify_segment_endpoints(
             considered a segment. Defaults to 2.
 
     """
-    raise NotImplementedError(
-        "This function has not been revisited or refactored to work."
-    )
+    raise NotImplementedError("This function has not been revisited or refactored to work.")
     SEGMENT_IDENTIFIERS = ["name", "ref"]
 
     NAME_PER_NODE = 4
@@ -364,9 +393,7 @@ def identify_segment_endpoints(
     # WranglerLogger.debug(f"Node/Link table elements: {len(_nodes_df)}"")
 
     # Screen out segments that have blank name AND refs
-    _nodes_df = _nodes_df.replace(r"^\s*$", np.nan, regex=True).dropna(
-        subset=["name", "ref"]
-    )
+    _nodes_df = _nodes_df.replace(r"^\s*$", np.nan, regex=True).dropna(subset=["name", "ref"])
 
     # WranglerLogger.debug(f"Node/Link recs after dropping empty name AND ref : {len(_nodes_df)}")
 
@@ -391,8 +418,8 @@ def identify_segment_endpoints(
         "ref_freq",
         "name_freq",
     ]
-    msg = f"Node/Link table has n = {len(_nodes_df)} after screening segments for min length:\n\
-        { _nodes_df[_display_cols]}"
+    msg = f"Node/Link table has n = {len(_nodes_df)} after screening segments for min length: \n\
+        {_nodes_df[_display_cols]}"
     WranglerLogger.debug(msg)
 
     # ----------------------------------------
@@ -404,9 +431,7 @@ def identify_segment_endpoints(
     _max_name_endpoints = NAME_PER_NODE / 2
     # - Attach frequency  of node/ref
     _nodes_df = _nodes_df.merge(
-        _nodes_df.groupby(by=[net.nodes_df.params.primary_key, "ref"])
-        .size()
-        .rename("ref_N_freq"),
+        _nodes_df.groupby(by=[net.nodes_df.params.primary_key, "ref"]).size().rename("ref_N_freq"),
         on=[net.nodes_df.params.primary_key, "ref"],
     )
 
@@ -452,9 +477,7 @@ def identify_segment_endpoints(
     # ----------------------------------------
     _nodes_df["segment_id"], _segments = pd.factorize(_nodes_df.name + _nodes_df.ref)
 
-    WranglerLogger.debug(
-        f"{len(_segments)} Segments:\n{chr(10).join(_segments.tolist())}"
-    )
+    WranglerLogger.debug(f"{len(_segments)} Segments: \n{chr(10).join(_segments.tolist())}")
 
     # ----------------------------------------
     # Drop segments without at least two nodes
@@ -469,7 +492,7 @@ def identify_segment_endpoints(
         >= _min_nodes
     ]
 
-    msg = f"{len(_nodes_df)} segments with at least { _min_nodes} nodes:\n\
+    msg = f"{len(_nodes_df)} segments with at least {_min_nodes} nodes: \n\
         {_nodes_df.groupby(['segment_id'])}"
     # WranglerLogger.debug(msg)
 
@@ -484,9 +507,7 @@ def identify_segment_endpoints(
 
     _nodes_df["seg_distance"] = _nodes_df.apply(_max_segment_distance, axis=1)
     _nodes_df = _nodes_df.merge(
-        _nodes_df.groupby("segment_id")
-        .seg_distance.agg(max)
-        .rename("max_seg_distance"),
+        _nodes_df.groupby("segment_id").seg_distance.agg(max).rename("max_seg_distance"),
         on="segment_id",
     )
 
@@ -509,7 +530,7 @@ def identify_segment_endpoints(
     ]
 
     WranglerLogger.debug(
-        f"Start and end of {len(_segments)} Segments:\n{_nodes_df[_display_cols]}"
+        f"Start and end of {len(_segments)} Segments: \n{_nodes_df[_display_cols]}"
     )
 
     _return_cols = [

@@ -1,5 +1,5 @@
-"""General utility functions used throughout package.
-"""
+"""General utility functions used throughout package."""
+
 import hashlib
 import re
 
@@ -11,8 +11,7 @@ from ..logger import WranglerLogger
 
 
 def topological_sort(adjacency_list, visited_list):
-    """
-    Topological sorting for Acyclic Directed Graph
+    """Topological sorting for Acyclic Directed Graph.
 
     Parameters:
     - adjacency_list (dict): A dictionary representing the adjacency list of the graph.
@@ -21,14 +20,15 @@ def topological_sort(adjacency_list, visited_list):
     Returns:
     - output_stack (list): A list containing the vertices in topological order.
 
-    This function performs a topological sort on an acyclic directed graph. It takes an adjacency list
-    and a visited list as input. The adjacency list represents the connections between vertices in the graph,
-    and the visited list keeps track of the visited status of each vertex.
+    This function performs a topological sort on an acyclic directed graph. It takes an adjacency
+    list and a visited list as input. The adjacency list represents the connections between
+    vertices in the graph, and the visited list keeps track of the visited status of each vertex.
 
-    The function uses a recursive helper function to perform the topological sort. It starts by iterating over
-    each vertex in the visited list. For each unvisited vertex, it calls the helper function, which recursively
-    visits all the neighbors of the vertex and adds them to the output stack in reverse order. Finally, it returns
-    the output stack, which contains the vertices in topological order.
+    The function uses a recursive helper function to perform the topological sort. It starts by
+    iterating over each vertex in the visited list. For each unvisited vertex, it calls the helper
+    function, which recursively visits all the neighbors of the vertex and adds them to the output
+    stack in reverse order. Finally, it returns the output stack, which contains the vertices in
+    topological order.
     """
     output_stack = []
 
@@ -47,9 +47,8 @@ def topological_sort(adjacency_list, visited_list):
 
 def make_slug(text: str, delimiter: str = "_") -> str:
     """Makes a slug from text."""
-
     text = re.sub("[,.;@#?!&$']+", "", text.lower())
-    return re.sub("[\ ]+", delimiter, text)
+    return re.sub("[\ ]+", delimiter, text)  # noqa: W605
 
 
 def delete_keys_from_dict(dictionary: dict, keys: list) -> dict:
@@ -71,9 +70,9 @@ def delete_keys_from_dict(dictionary: dict, keys: list) -> dict:
             if isinstance(value, dict):
                 modified_dict[key] = delete_keys_from_dict(value, keys_set)
             else:
-                modified_dict[
-                    key
-                ] = value  # or copy.deepcopy(value) if a copy is desired for non-dicts.
+                modified_dict[key] = (
+                    value  # or copy.deepcopy(value) if a copy is desired for non-dicts.
+                )
     return modified_dict
 
 
@@ -173,12 +172,13 @@ def generate_new_id(
 
     TODO: check a registry rather than existing IDs
 
-    args:
+    Args:
         input_id: id to use to generate new id.
         existing_ids: series that has existing IDs that should be unique
         id_scalar: scalar value to initially use to create the new id.
+        iter_val: iteration value to use in the generation process.
+        max_iter: maximum number of iterations allowed in the generation process.
     """
-
     str_prefix, input_id, str_suffix = split_string_prefix_suffix_from_num(input_id)
 
     for i in range(1, max_iter + 1):
@@ -186,9 +186,7 @@ def generate_new_id(
         if new_id not in existing_ids.values:
             return new_id
         elif i == max_iter:
-            WranglerLogger.error(
-                f"Cannot generate new id within max iters of {max_iter}."
-            )
+            WranglerLogger.error(f"Cannot generate new id within max iters of {max_iter}.")
             raise ValueError("Cannot create unique new id.")
 
 
@@ -199,8 +197,7 @@ def generate_list_of_new_ids(
     iter_val: int = 10,
     max_iter: int = 1000,
 ) -> list[str]:
-    """
-    Generates a list of new IDs based on the input IDs, existing IDs, and other parameters.
+    """Generates a list of new IDs based on the input IDs, existing IDs, and other parameters.
 
     Args:
         input_ids (list[str]): The input IDs for which new IDs need to be generated.
@@ -243,9 +240,7 @@ def dict_to_hexkey(d: dict) -> str:
 
 
 def combine_unique_unhashable_list(list1: list, list2: list):
-    """
-    Combines two lists, preserving the order of elements from the first list,
-    and removing any duplicates from the second list.
+    """Combines lists preserving order of first and removing duplicates.
 
     Args:
         list1 (list): The first list.
@@ -275,10 +270,8 @@ def normalize_to_lists(mixed_list: list[Union[str, list]]) -> list[list]:
     return normalized_list
 
 
-def list_elements_subset_of_single_element(
-    mixed_list: list[Union[str, list[str]]]
-) -> bool:
-    # Find the first list in the mixed_list
+def list_elements_subset_of_single_element(mixed_list: list[Union[str, list[str]]]) -> bool:
+    """Find the first list in the mixed_list."""
     potential_supersets = []
     for item in mixed_list:
         if isinstance(item, list) and len(item) > 0:
@@ -304,9 +297,7 @@ def check_one_or_one_superset_present(
     """Checks that exactly one of the fields in mixed_list is in fields_present or one superset."""
     normalized_list = normalize_to_lists(mixed_list)
 
-    list_items_present = [
-        i for i in normalized_list if set(i).issubset(all_fields_present)
-    ]
+    list_items_present = [i for i in normalized_list if set(i).issubset(all_fields_present)]
 
     if len(list_items_present) == 1:
         return True

@@ -4,7 +4,7 @@ tags:
 transit_routing_change:
   service:
     trip_properties:
-      route_id: 
+      route_id:
         - 294-111
       direction_id: 1
   routing:

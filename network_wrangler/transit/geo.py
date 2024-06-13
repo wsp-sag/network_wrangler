@@ -1,10 +1,13 @@
 """Geographic functions for GTFS tables."""
+
 from __future__ import annotations
 
+from typing import Optional, TYPE_CHECKING
+
 import geopandas as gpd
-import pandas as pd
 
 from shapely import LineString
+from pandera.typing import DataFrame
 
 from .feed import unique_shape_links, unique_stop_time_links
 
@@ -15,18 +18,19 @@ from ..models.gtfs.tables import (
     WranglerShapesTable,
     WranglerStopTimesTable,
     WranglerStopsTable,
-    TripsTable,
 )
+
+if TYPE_CHECKING:
+    from ..models.roadway.tables import RoadNodesTable
 
 
 def shapes_to_trip_shapes_gdf(
-    shapes: "WranglerShapesTable",
+    shapes: DataFrame[WranglerShapesTable],
     # trips: TripsTable,
-    ref_nodes_df: gpd.GeoDataFrame = None,
+    ref_nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
     crs: int = LAT_LON_CRS,
 ) -> gpd.GeoDataFrame:
-    """
-    Geodataframe with one polyline shape per shape_id.
+    """Geodataframe with one polyline shape per shape_id.
 
     TODO: add information about the route and trips.
 
@@ -37,7 +41,6 @@ def shapes_to_trip_shapes_gdf(
             geometry in shapes file. Defaults to None.
         crs: int, optional, default 4326
     """
-
     if ref_nodes_df is not None:
         shapes = update_shapes_geometry(shapes, ref_nodes_df)
 
@@ -48,28 +51,24 @@ def shapes_to_trip_shapes_gdf(
         .apply(lambda x: LineString(zip(x[1], x[0])), axis=1)
     )
 
-    route_shapes_gdf = gpd.GeoDataFrame(
-        data=shape_geom.index, geometry=shape_geom.values, crs=crs
-    )
+    route_shapes_gdf = gpd.GeoDataFrame(data=shape_geom.index, geometry=shape_geom.values, crs=crs)
 
     return route_shapes_gdf
 
 
 def update_stops_geometry(
-    stops: WranglerStopsTable, ref_nodes_df
-) -> WranglerStopsTable:
+    stops: DataFrame[WranglerStopsTable], ref_nodes_df: DataFrame[RoadNodesTable]
+) -> DataFrame[WranglerStopsTable]:
     """Returns stops table with geometry updated from ref_nodes_df.
 
     NOTE: does not update "geometry" field if it exists.
     """
-    return update_point_geometry(
-        stops, ref_nodes_df, lon_field="stop_lon", lat_field="stop_lat"
-    )
+    return update_point_geometry(stops, ref_nodes_df, lon_field="stop_lon", lat_field="stop_lat")
 
 
 def update_shapes_geometry(
-    shapes: WranglerShapesTable, ref_nodes_df
-) -> WranglerShapesTable:
+    shapes: DataFrame[WranglerShapesTable], ref_nodes_df: DataFrame[RoadNodesTable]
+) -> DataFrame[WranglerShapesTable]:
     """Returns shapes table with geometry updated from ref_nodes_df.
 
     NOTE: does not update "geometry" field if it exists.
@@ -84,8 +83,8 @@ def update_shapes_geometry(
 
 
 def shapes_to_shape_links_gdf(
-    shapes: WranglerShapesTable,
-    ref_nodes_df: gpd.GeoDataFrame = None,
+    shapes: DataFrame[WranglerShapesTable],
+    ref_nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
     from_field: str = "A",
     to_field: str = "B",
     crs: int = LAT_LON_CRS,
@@ -122,9 +121,9 @@ def shapes_to_shape_links_gdf(
 
 
 def stop_times_to_stop_time_points_gdf(
-    stop_times: "WranglerStopTimesTable",
-    stops: "WranglerStopsTable",
-    ref_nodes_df: pd.DataFrame = None,
+    stop_times: DataFrame[WranglerStopTimesTable],
+    stops: DataFrame[WranglerStopsTable],
+    ref_nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
 ) -> gpd.GeoDataFrame:
     """Stoptimes geodataframe as points using geometry from stops.txt or optionally another df.
 
@@ -145,17 +144,15 @@ def stop_times_to_stop_time_points_gdf(
     )
     return gpd.GeoDataFrame(
         stop_times_geo,
-        geometry=gpd.points_from_xy(
-            stop_times_geo["stop_lon"], stop_times_geo["stop_lat"]
-        ),
+        geometry=gpd.points_from_xy(stop_times_geo["stop_lon"], stop_times_geo["stop_lat"]),
         crs=LAT_LON_CRS,
     )
 
 
 def stop_times_to_stop_time_links_gdf(
-    stop_times: "WranglerStopTimesTable",
-    stops: "WranglerStopsTable",
-    ref_nodes_df: pd.DataFrame = None,
+    stop_times: DataFrame[WranglerStopTimesTable],
+    stops: DataFrame[WranglerStopsTable],
+    ref_nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
     from_field: str = "A",
     to_field: str = "B",
 ) -> gpd.GeoDataFrame:
@@ -176,9 +173,7 @@ def stop_times_to_stop_time_links_gdf(
 
     lat_fields = []
     lon_fields = []
-    tr_links = unique_stop_time_links(
-        stop_times, from_field=from_field, to_field=to_field
-    )
+    tr_links = unique_stop_time_links(stop_times, from_field=from_field, to_field=to_field)
     for f in (from_field, to_field):
         tr_links = tr_links.merge(
             stops[["stop_id", "stop_lat", "stop_lon"]],

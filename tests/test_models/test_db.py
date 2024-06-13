@@ -1,6 +1,4 @@
-"""
-Tests db mixin class for network_wrangler.models._base.db module.
-"""
+"""Tests db mixin class for network_wrangler.models._base.db module."""
 
 import pandas as pd
 import pytest
@@ -44,6 +42,4 @@ def test_validate_db_table():
         db.table_b = pd.DataFrame({"B_ID": [4, 5, 6], "a_value": [3, 4, 5]})
 
     with pytest.raises(SchemaErrors):
-        db.table_a = pd.DataFrame(
-            {"B_ID": ["hi", "there", "buddy"], "a_value": [3, 4, 5]}
-        )
+        db.table_a = pd.DataFrame({"B_ID": ["hi", "there", "buddy"], "a_value": [3, 4, 5]})

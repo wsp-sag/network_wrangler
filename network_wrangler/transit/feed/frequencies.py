@@ -1,4 +1,5 @@
 """Filters and queries of a gtfs frequencies table."""
+
 from __future__ import annotations
 from pandera.typing import DataFrame
 

@@ -1,4 +1,5 @@
 """Filters and queries of a gtfs stop_times table."""
+
 from __future__ import annotations
 
 import pandas as pd
@@ -34,7 +35,7 @@ def stop_times_for_min_stops(
 ) -> DataFrame[WranglerStopTimesTable]:
     """Filter stop_times dataframe to only the records which have >= min_stops for the trip.
 
-    args:
+    Args:
         stop_times: stoptimestable to filter
         min_stops: minimum stops to require to keep trip in stoptimes
     """
@@ -87,8 +88,8 @@ def stop_times_for_pickup_dropoff_trip_id(
         2 - Must phone agency to arrange pickup/dropoff.
         3 - Must coordinate with driver to arrange pickup/dropoff.
 
-    args:
-        feed: Feed object
+    Args:
+        stop_times: A WranglerStopTimesTable to query.
         trip_id: trip_id to get stop pattern for
         pickup_dropoff: str indicating logic for selecting stops based on pickup and dropoff
             availability at stop. Defaults to "either".
@@ -104,10 +105,8 @@ def stop_times_for_pickup_dropoff_trip_id(
         return trip_stop_pattern
 
     pickup_type_selection = {
-        "either": (trip_stop_pattern.pickup_type != 1)
-        | (trip_stop_pattern.drop_off_type != 1),
-        "both": (trip_stop_pattern.pickup_type != 1)
-        & (trip_stop_pattern.drop_off_type != 1),
+        "either": (trip_stop_pattern.pickup_type != 1) | (trip_stop_pattern.drop_off_type != 1),
+        "both": (trip_stop_pattern.pickup_type != 1) & (trip_stop_pattern.drop_off_type != 1),
         "pickup_only": (trip_stop_pattern.pickup_type != 1)
         & (trip_stop_pattern.drop_off_type == 1),
         "dropoff_only": (trip_stop_pattern.drop_off_type != 1)
@@ -129,21 +128,17 @@ def stop_times_for_longest_segments(
     """
     stop_times = stop_times.sort_values(by=["trip_id", "stop_sequence"])
 
-    stop_times["prev_stop_sequence"] = stop_times.groupby("trip_id")[
-        "stop_sequence"
-    ].shift(1)
-    stop_times["gap"] = (
-        stop_times["stop_sequence"] - stop_times["prev_stop_sequence"]
-    ).ne(1) | stop_times["prev_stop_sequence"].isna()
+    stop_times["prev_stop_sequence"] = stop_times.groupby("trip_id")["stop_sequence"].shift(1)
+    stop_times["gap"] = (stop_times["stop_sequence"] - stop_times["prev_stop_sequence"]).ne(
+        1
+    ) | stop_times["prev_stop_sequence"].isna()
 
     stop_times["segment_id"] = stop_times["gap"].cumsum()
     # WranglerLogger.debug(f"stop_times with segment_id:\n{stop_times}")
 
     # Calculate the length of each segment
     segment_lengths = (
-        stop_times.groupby(["trip_id", "segment_id"])
-        .size()
-        .reset_index(name="segment_length")
+        stop_times.groupby(["trip_id", "segment_id"]).size().reset_index(name="segment_length")
     )
 
     # Identify the longest segment for each trip
@@ -173,7 +168,7 @@ def stop_times_for_trip_node_segment(
 ) -> DataFrame[WranglerStopTimesTable]:
     """Returns stop_times for a given trip_id between two nodes or with those nodes included.
 
-    args:
+    Args:
         stop_times: WranglerStopTimesTable
         trip_id: trip id to select
         node_id_start: int of the starting node
@@ -240,7 +235,6 @@ def stop_times_for_shapes(
     t1          s1
     t2          s2
     """
-
     """
     > stop_times_w_shapes
 
@@ -267,9 +261,7 @@ def stop_times_for_shapes(
     *t2          2                  t3       3               s2          2
 
     """
-    filtered_stop_times = stop_times_w_shapes[
-        stop_times_w_shapes["shape_pt_sequence"].notna()
-    ]
+    filtered_stop_times = stop_times_w_shapes[stop_times_w_shapes["shape_pt_sequence"].notna()]
     # WranglerLogger.debug(f"filtered_stop_times:\n{filtered_stop_times}")
 
     # Filter out any stop_times the shape_pt_sequence is not ascending

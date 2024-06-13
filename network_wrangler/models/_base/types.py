@@ -1,9 +1,21 @@
 from __future__ import annotations
-from typing import Annotated, Any, List, TypeVar, Union
+
+from datetime import time
+from typing import Annotated, Any, List, TypeVar, Union, Literal
+
 from pydantic import (
     BeforeValidator,
     Field,
 )
+
+GeoFileTypes = Union[
+    Literal["json"],
+    Literal["geojson"],
+    Literal["shp"],
+    Literal["parquet"],
+    Literal["csv"],
+    Literal["txt"],
+]
 
 PandasDataFrame = TypeVar("pandas.core.frame.DataFrame")
 
@@ -17,9 +29,7 @@ ForcedStr = Annotated[Any, BeforeValidator(lambda x: str(x))]
 OneOf = Annotated[
     List[List[List[str]]],
     Field(
-        description=[
-            "List fields where at least one is required for the data model to be valid."
-        ]
+        description=["List fields where at least one is required for the data model to be valid."]
     ),
 ]
 
@@ -34,26 +44,23 @@ ConflictsWith = Annotated[
 
 AnyOf = Annotated[
     List[List[List[str]]],
-    Field(
-        description=[
-            "List fields where any are required for the data model to be valid."
-        ]
-    ),
+    Field(description=["List fields where any are required for the data model to be valid."]),
 ]
 
 Latitude = Annotated[float, Field(ge=-90, le=90, description="Latitude of stop.")]
 
 Longitude = Annotated[float, Field(ge=-180, le=180, description="Longitude of stop.")]
 
-PhoneNum = Annotated[
-    str, Field("", description="Phone number for the specified location.")
-]
-
+PhoneNum = Annotated[str, Field("", description="Phone number for the specified location.")]
 TimeString = Annotated[
     str,
     Field(
-        examples=["12:34", "12:34:56"],
-        description="Time of day in 24-hour format. Seconds are optional.",
-        pattern="^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$",
+        description="A time string in the format HH:MM or HH:MM:SS",
+        pattern=r"^(24:00|([0-1]?\d|2[0-3]):([0-5]\d)(:[0-5]\d)?)$",
     ),
 ]
+TimespanString = Annotated[
+    List[TimeString],
+    Field(min_length=2, max_length=2),
+]
+TimeType = Union[time, str, int]

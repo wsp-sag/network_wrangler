@@ -1,4 +1,5 @@
 """Filters and queries of a gtfs stops table and stop_ids."""
+
 from __future__ import annotations
 
 from typing import Union
@@ -19,7 +20,7 @@ def stop_id_pattern_for_trip(
 ) -> list[str]:
     """Returns a stop pattern for a given trip_id given by a list of stop_ids.
 
-    args:
+    Args:
         stop_times: WranglerStopTimesTable
         trip_id: trip_id to get stop pattern for
         pickup_dropoff: str indicating logic for selecting stops based on piackup and dropoff
@@ -56,10 +57,8 @@ def stops_for_trip_id(
     trip_id: str,
     pickup_dropoff: PickupDropoffAvailability = "any",
 ) -> DataFrame[WranglerStopsTable]:
-    """Returns stops.txt which are used for a given trip_id"""
-    stop_ids = stop_id_pattern_for_trip(
-        stop_times, trip_id, pickup_dropoff=pickup_dropoff
-    )
+    """Returns stops.txt which are used for a given trip_id."""
+    stop_ids = stop_id_pattern_for_trip(stop_times, trip_id, pickup_dropoff=pickup_dropoff)
     return stops.loc[stops.stop_id.isin(stop_ids)]
 
 
@@ -76,9 +75,7 @@ def node_ids_for_stop_id(
     elif isinstance(stop_id, str):
         return stops.at[stops["stop_id"] == stop_id, "model_node_id"]
     else:
-        raise ValueError(
-            f"Expecting list of strings or string for stop_id; got {type(stop_id)}"
-        )
+        raise ValueError(f"Expecting list of strings or string for stop_id. Got {type(stop_id)}")
 
 
 def node_is_stop(
@@ -90,7 +87,7 @@ def node_is_stop(
 ) -> Union[bool, list[bool]]:
     """Returns boolean indicating if a (or list of) node(s)) is (are) stops for a given trip_id.
 
-    args:
+    Args:
         stops: WranglerStopsTable
         stop_times: WranglerStopTimesTable
         node_id: node ID for roadway
@@ -102,9 +99,9 @@ def node_is_stop(
             "pickup_only": only pickup > 0
             "dropoff_only": only dropoff > 0
     """
-    trip_stop_nodes = stops_for_trip_id(
-        stops, stop_times, trip_id, pickup_dropoff=pickup_dropoff
-    )["model_node_id"]
+    trip_stop_nodes = stops_for_trip_id(stops, stop_times, trip_id, pickup_dropoff=pickup_dropoff)[
+        "model_node_id"
+    ]
     if isinstance(node_id, list):
         return [n in trip_stop_nodes.values for n in node_id]
     return node_id in trip_stop_nodes.values

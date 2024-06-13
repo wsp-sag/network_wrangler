@@ -1,8 +1,12 @@
+"""Tests for public api of transit clipping.
+
+Run just these tests using `pytest tests/test_transit/tet_clip.py`
+"""
+
 import geopandas as gpd
-import pandas as pd
 
 from network_wrangler.transit.clip import clip_transit
-from network_wrangler.transit.io import write_transit, write_feed_geo
+from network_wrangler.transit.io import write_feed_geo
 
 from network_wrangler import WranglerLogger
 
@@ -14,13 +18,13 @@ def test_clip_transit_node_ids(small_transit_net, test_dir):
     # Assert that the clipped network is not empty
     assert len(clipped_network.feed.stops) > 0
     assert len(clipped_network.feed.routes) > 0
-    WranglerLogger.debug(f"\nClipped Stops:\n{clipped_network.feed.stops}")
+    WranglerLogger.debug(f"\nClipped Stops: \n{clipped_network.feed.stops}")
     assert 2 in clipped_network.feed.stops.model_node_id.values
     assert 3 not in clipped_network.feed.stops.model_node_id.values
-    WranglerLogger.debug(f"\nClipped Shapes:\n{clipped_network.feed.shapes}")
+    WranglerLogger.debug(f"\nClipped Shapes: \n{clipped_network.feed.shapes}")
     assert 2 in clipped_network.feed.shapes.shape_model_node_id.values
     assert 3 not in clipped_network.feed.shapes.shape_model_node_id.values
-    WranglerLogger.debug(f"\nClipped Stop Times:\n{clipped_network.feed.stop_times}")
+    WranglerLogger.debug(f"\nClipped Stop Times: \n{clipped_network.feed.stop_times}")
     assert 2 in clipped_network.feed.stop_times.model_node_id.values
     assert 3 not in clipped_network.feed.stop_times.model_node_id.values
 
@@ -37,12 +41,12 @@ def test_clip_transit_min_stops(small_transit_net, test_dir):
     assert len(clipped_network.feed.routes) > 0
 
     # assert that it kept blue-2 but not blue-1 which only has 2 stops
-    WranglerLogger.debug(f"\nClipped Stops:\n{clipped_network.feed.stops}")
+    WranglerLogger.debug(f"\nClipped Stops: \n{clipped_network.feed.stops}")
     assert 3 in clipped_network.feed.stops.model_node_id.values
-    WranglerLogger.debug(f"\nClipped Stop Times:\n{clipped_network.feed.stop_times}")
+    WranglerLogger.debug(f"\nClipped Stop Times: \n{clipped_network.feed.stop_times}")
     assert "blue-1" not in clipped_network.feed.stop_times.trip_id.values
     assert "blue-2" in clipped_network.feed.stop_times.trip_id.values
-    WranglerLogger.debug(f"\nClipped Trips:\n{clipped_network.feed.trips}")
+    WranglerLogger.debug(f"\nClipped Trips: \n{clipped_network.feed.trips}")
     assert "blue-1" not in clipped_network.feed.trips.trip_id.values
     assert "blue-2" in clipped_network.feed.trips.trip_id.values
 

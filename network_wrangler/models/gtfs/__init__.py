@@ -1,9 +1,14 @@
+"""Models for when you want to use vanilla (non wrangler) GTFS."""
+
 from .types import *
 from .records import *
 
 
 class MockPaModel:
+    """Mock model for when Pandera is not installed."""
+
     def __init__(self, **kwargs):
+        """Mock modle initiation."""
         for key, value in kwargs.items():
             setattr(self, key, value)
 

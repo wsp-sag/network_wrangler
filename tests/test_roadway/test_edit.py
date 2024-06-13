@@ -1,12 +1,12 @@
+"""Tests roadway network editing functions."""
+
 import copy
 import pytest
 
 import pandas as pd
 
-from pandas.testing import assert_frame_equal
 from pandera.errors import SchemaError
 
-from network_wrangler.roadway.network import RoadwayNetwork
 from network_wrangler.logger import WranglerLogger
 
 
@@ -60,7 +60,7 @@ def test_add_links(request, small_net):
     net.add_links(add_links_df)
 
     new_links_in_links_df = net.links_df.loc[new_link_ids]
-    WranglerLogger.debug(f"Added Links:\n{new_links_in_links_df}")
+    WranglerLogger.debug(f"Added Links: \n{new_links_in_links_df}")
 
     # Check if the nodes were added correctly
     assert len(net.links_df) == og_link_count + len(new_link_ids)
@@ -88,7 +88,7 @@ def test_add_shapes(request, small_net):
     net.add_shapes(add_shapes_df)
 
     # Assert that the shapes_df property has been updated with the added shapes
-    WranglerLogger.debug(f"Shapes:\n{net.shapes_df}")
+    WranglerLogger.debug(f"Shapes: \n{net.shapes_df}")
     assert len(net.shapes_df.loc[new_shape_ids]) == len(new_shape_ids)
 
     # should raise an error if try to add again.
@@ -109,7 +109,7 @@ def test_delete_links_by_name(request, small_net):
 
     # Delete the links based on the selection dictionary
     net.delete_links(selection_dict)
-    WranglerLogger.debug(f"net.links_df:\n{net.links_df}")
+    WranglerLogger.debug(f"net.links_df: \n{net.links_df}")
     # Check if the links are deleted from the links dataframe
     assert len(net.links_df[net.links_df.name.str.contains("7th St")]) == 0
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -125,12 +125,12 @@ def test_delete_links_by_id_with_associated_nodes(request, small_net):
         "model_link_id": del_link_ids,
     }
     net.delete_links(selection_dict, clean_nodes=True)
-    WranglerLogger.debug(f"net.nodes_df:\n{net.nodes_df}")
-    WranglerLogger.debug(f"net.links_df:\n{net.links_df}")
+    WranglerLogger.debug(f"net.nodes_df: \n{net.nodes_df}")
+    WranglerLogger.debug(f"net.links_df: \n{net.links_df}")
     # Check if the links are deleted from the links dataframe
     assert not any([link_id in net.links_df.model_link_id for link_id in del_link_ids])
 
-    WranglerLogger.debug(f"net.nodes_df:\n{net.nodes_df}")
+    WranglerLogger.debug(f"net.nodes_df: \n{net.nodes_df}")
     # Check if the nodes associated with the deleted links are also deleted
     assert not any([node_id in net.nodes_df.model_node_id for node_id in del_node_ids])
 
@@ -181,7 +181,7 @@ def test_move_nodes(request, small_net):
     # Define the expected results after moving the nodes
     for node_id in moved_node_ids:
         WranglerLogger.debug(
-            f"Node ID: {node_id}:\n{net.nodes_df.loc[node_id,['X', 'Y', 'geometry']]}"
+            f"Node ID: {node_id}: \n{net.nodes_df.loc[node_id, ['X', 'Y', 'geometry']]}"
         )
         assert net.nodes_df.loc[node_id, "X"] == new_geo.loc[node_id, "X"]
         assert net.nodes_df.loc[node_id, "Y"] == new_geo.loc[node_id, "Y"]
@@ -194,31 +194,21 @@ def test_move_nodes(request, small_net):
     ].model_link_id.to_list()
     for link_id in moved_A_link_ids:
         WranglerLogger.debug(
-            f"link ID: {link_id}:\n{net.links_df.loc[link_id,['A', 'geometry']]}"
+            f"link ID: {link_id}: \n{net.links_df.loc[link_id, ['A', 'geometry']]}"
         )
         a_id = net.links_df.loc[link_id, "A"]
-        assert (
-            net.links_df.loc[link_id, "geometry"].coords[0][0] == new_geo.loc[a_id, "X"]
-        )
-        assert (
-            net.links_df.loc[link_id, "geometry"].coords[0][1] == new_geo.loc[a_id, "Y"]
-        )
+        assert net.links_df.loc[link_id, "geometry"].coords[0][0] == new_geo.loc[a_id, "X"]
+        assert net.links_df.loc[link_id, "geometry"].coords[0][1] == new_geo.loc[a_id, "Y"]
 
     moved_B_link_ids = net.links_df.loc[
         net.links_df.B.isin(moved_node_ids)
     ].model_link_id.to_list()
     for link_id in moved_B_link_ids:
         WranglerLogger.debug(
-            f"link ID: {link_id}:\n{net.links_df.loc[link_id,['B', 'geometry']]}"
+            f"link ID: {link_id}: \n{net.links_df.loc[link_id, ['B', 'geometry']]}"
         )
         b_id = net.links_df.loc[link_id, "B"]
-        assert (
-            net.links_df.loc[link_id, "geometry"].coords[-1][0]
-            == new_geo.loc[b_id, "X"]
-        )
-        assert (
-            net.links_df.loc[link_id, "geometry"].coords[-1][1]
-            == new_geo.loc[b_id, "Y"]
-        )
+        assert net.links_df.loc[link_id, "geometry"].coords[-1][0] == new_geo.loc[b_id, "X"]
+        assert net.links_df.loc[link_id, "geometry"].coords[-1][1] == new_geo.loc[b_id, "Y"]
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

@@ -1,3 +1,5 @@
+"""Functions for creating nodes from data sources."""
+
 import copy
 import time
 
@@ -16,13 +18,15 @@ from ...utils.geo import point_from_xy, get_point_geometry_from_linestring
 
 
 class NodeAddError(Exception):
+    """Raised when there is an issue with adding nodes."""
+
     pass
 
 
 def _create_node_geometries_from_xy(
     nodes_df: pd.DataFrame, in_crs: int = LAT_LON_CRS
 ) -> gpd.GeoDataFrame:
-    """Fixes geometries in nodes_df if necessary using X and Y columns
+    """Fixes geometries in nodes_df if necessary using X and Y columns.
 
     Args:
         nodes_df: nodes dataframe to fix geometries in.
@@ -39,12 +43,10 @@ def _create_node_geometries_from_xy(
     geo_start_time = time.time()
     if "geometry" in nodes_df:
         nodes_df["geometrys"] = nodes_df["geometry"].fillna(
-            lambda x: point_from_xy(
-                x["X"], x["Y"], xy_crs=in_crs, point_crs=LAT_LON_CRS
-            ),
+            lambda x: point_from_xy(x["X"], x["Y"], xy_crs=in_crs, point_crs=LAT_LON_CRS),
         )
         WranglerLogger.debug(
-            f"Filled missing geometry from X and Y in {round(time.time() - geo_start_time,2)}."
+            f"Filled missing geometry from X and Y in {round(time.time() - geo_start_time, 2)}."
         )
         return nodes_df
 
@@ -53,7 +55,7 @@ def _create_node_geometries_from_xy(
         axis=1,
     )
     WranglerLogger.debug(
-        f"Created node geometries from X and Y in {round(time.time() - geo_start_time,2)}."
+        f"Created node geometries from X and Y in {round(time.time() - geo_start_time, 2)}."
     )
     nodes_gdf = gpd.GeoDataFrame(nodes_df, geometry=node_geometries)
     return nodes_gdf
@@ -91,10 +93,7 @@ def data_to_nodes_df(
             nodes_df.crs = in_crs
         nodes_df = nodes_df.to_crs(LAT_LON_CRS)
 
-    if (
-        not isinstance(nodes_df, gpd.GeoDataFrame)
-        or nodes_df.geometry.isnull().values.any()
-    ):
+    if not isinstance(nodes_df, gpd.GeoDataFrame) or nodes_df.geometry.isnull().values.any():
         nodes_df = _create_node_geometries_from_xy(nodes_df, in_crs=in_crs)
 
     # Make sure values are consistent
@@ -102,9 +101,7 @@ def data_to_nodes_df(
     nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.y)
 
     if len(nodes_df) < 5:
-        WranglerLogger.debug(
-            f"nodes_df:\n{nodes_df[['model_node_id','geometry','X','Y']]}"
-        )
+        WranglerLogger.debug(f"nodes_df: \n{nodes_df[['model_node_id', 'geometry', 'X', 'Y']]}")
 
     # set dataframe-level variables
     nodes_df.gdf_name = "network_nodes"
@@ -141,9 +138,8 @@ def _create_nodes_from_link(
     Returns:
         DataFrame[RoadNodesTable]
     """
-
     nodes_df = copy.deepcopy(links_df[[node_key_field, "geometry"]].drop_duplicates())
-    
+
     nodes_df = nodes_df.rename(columns={node_key_field: "model_node_id"})
 
     nodes_df["geometry"] = nodes_df["geometry"].apply(

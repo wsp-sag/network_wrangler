@@ -1,26 +1,28 @@
 """Functions related to parsing and comparing time objects and series.
 
-
 Internal function terminology for timespan scopes:
 
 - `matching`: a scope that could be applied for a given timespan combination.
-    This includes the default timespan as well as scopes wholely contained within. 
-- `overlapping`: a timespan that fully or partially overlaps a given timespan.  
+    This includes the default timespan as well as scopes wholely contained within.
+- `overlapping`: a timespan that fully or partially overlaps a given timespan.
     This includes the default timespan, all `matching` timespans and all timespans where
     at least one minute overlap.
 - `conflicting`: a timespan that is overlapping but not matching. By definition default
      scope values are not conflicting.
 - `independent` a timespan that is not overlapping.
 """
+
 from __future__ import annotations
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
-import numpy as np
 import pandas as pd
 from pydantic import validate_call
 
-from ..params import DEFAULT_TIMESPAN
 from ..logger import WranglerLogger
+
+if TYPE_CHECKING:
+    from ..models._base.types import TimespanString, TimeString
 
 
 def str_to_time(time_str: TimeString) -> datetime:
@@ -30,14 +32,14 @@ def str_to_time(time_str: TimeString) -> datetime:
     hours, min_sec = time_str.split(":", 1)
     if int(hours) >= 24:
         n_days, hour_of_day = divmod(int(hours), 24)
-        time_str = f"{hour_of_day}:{min_sec}"
+        time_str = f"{hour_of_day}:{min_sec}"  # noqa E231
 
     if len(time_str.split(":")) == 2:
         base_time = datetime.strptime(time_str, "%H:%M")
     elif len(time_str.split(":")) == 3:
         base_time = datetime.strptime(time_str, "%H:%M:%S")
     else:
-        from ..models._base.time import TimeFormatError
+        from ..time import TimeFormatError
 
         raise TimeFormatError("time strings must be in the format HH:MM or HH:MM:SS")
 
@@ -52,7 +54,8 @@ def str_to_time_list(timespan: list[TimeString]) -> list[list[datetime]]:
     return list(map(str_to_time, timespan))
 
 
-def timespan_str_list_to_dt(timespans: list[TimespanStr]) -> list[list[datetime]]:
+def timespan_str_list_to_dt(timespans: list[TimespanString]) -> list[list[datetime]]:
+    """Convert list of TimespanStrings to list of datetime.time objects."""
     [str_to_time_list(ts) for ts in timespans]
 
 
@@ -65,7 +68,7 @@ def filter_df_to_overlapping_timespans(
 ) -> pd.DataFrame:
     """Filters dataframe for entries that have maximum overlap with the given query timespan.
 
-    args:
+    Args:
         orig_df: dataframe to query timespans for with `start_time` and `end_time`.
         query_timespan: TimespanString of format ['HH:MM','HH:MM'] to query orig_df for overlapping
             records.
@@ -84,9 +87,7 @@ def filter_df_to_overlapping_timespans(
     orig_df["overlap_duration"] = (overlap_end - overlap_start).dt.total_seconds() / 60
 
     if strict_match:
-        overlap_df = orig_df.loc[
-            (orig_df.start_time <= q_start) & (orig_df.end_time >= q_end)
-        ]
+        overlap_df = orig_df.loc[(orig_df.start_time <= q_start) & (orig_df.end_time >= q_end)]
     else:
         overlap_df = orig_df.loc[orig_df.overlap_duration > min_overlap_minutes]
     WranglerLogger.debug(f"overlap_df: \n{overlap_df}")
@@ -118,8 +119,10 @@ def dt_contains(timespan1: list[datetime], timespan2: list[datetime]) -> bool:
     """Check if one timespan inclusively contains another.
 
     Args:
-        timespan1 (list[time]): The first timespan represented as a list containing the start time and end time.
-        timespan2 (list[time]): The second timespan represented as a list containing the start time and end time.
+        timespan1 (list[time]): The first timespan represented as a list containing the start
+            time and end time.
+        timespan2 (list[time]): The second timespan represented as a list containing the start
+            time and end time.
 
     Returns:
         bool: True if the first timespan contains the second timespan, False otherwise.
@@ -143,6 +146,11 @@ def dt_overlaps(timespan1: list[datetime], timespan2: list[datetime]) -> bool:
 
 @validate_call
 def filter_dt_list_to_overlaps(timespans: list[list[datetime]]) -> list[list[datetime]]:
+    """Filter a list of timespans to only include those that overlap.
+
+    `overlapping`: a timespan that fully or partially overlaps a given timespan.
+    This includes and all timespans where at least one minute overlap.
+    """
     overlaps = []
     for i in range(len(timespans)):
         for j in range(i + 1, len(timespans)):

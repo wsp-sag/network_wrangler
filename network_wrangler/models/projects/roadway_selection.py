@@ -1,3 +1,5 @@
+"""Pydantic Roadway Selection Models which should align with ProjectCard data models."""
+
 from __future__ import annotations
 
 from typing import Annotated, Optional, ClassVar
@@ -12,6 +14,8 @@ from ...logger import WranglerLogger
 
 
 class SelectionFormatError(Exception):
+    """Raised when there is an issue with the selection format."""
+
     pass
 
 
@@ -30,16 +34,15 @@ class SelectNodeDict(RecordModel):
 
     @property
     def selection_type(self):
+        """One of `all` or `explicit_ids`."""
         _explicit_ids = [k for k in self.explicit_id_fields if getattr(self, k)]
         if _explicit_ids:
             return "explicit_ids"
         WranglerLogger.debug(
             f"SelectNode should have an explicit id: {self.explicit_id_fields} \
-                Found none in selection dict:\n{self.model_dump(by_alias=True)}"
+                Found none in selection dict: \n{self.model_dump(by_alias=True)}"
         )
-        raise SelectionFormatError(
-            "Select Node should have either `all` or an explicit id."
-        )
+        raise SelectionFormatError("Select Node should have either `all` or an explicit id.")
 
     @property
     def explicit_id_selection_dict(self) -> dict:
@@ -88,28 +91,30 @@ class SelectNodesDict(RecordModel):
 
     @property
     def asdict(self) -> dict:
+        """Model as a dictionary."""
         return self.model_dump(exclude_none=True, by_alias=True)
 
     @property
     def fields(self) -> list[str]:
+        """List of fields in the selection."""
         return list(self.model_dump(exclude_none=True, by_alias=True).keys())
 
     @property
     def selection_type(self):
+        """One of `all` or `explicit_ids`."""
         if self.all:
             return "all"
         if self.explicit_id_fields:
             return "explicit_ids"
         WranglerLogger.debug(
             f"SelectNodes should have either `all` or an explicit id: {self.explicit_id_fields}. \
-                Found neither in nodes selection:\n{self.model_dump(by_alias=True)}"
+                Found neither in nodes selection: \n{self.model_dump(by_alias=True)}"
         )
-        raise SelectionFormatError(
-            "Select Node should have either `all` or an explicit id."
-        )
+        raise SelectionFormatError("Select Node should have either `all` or an explicit id.")
 
     @property
     def explicit_id_fields(self) -> list[str]:
+        """Fields which can be used in a selection on their own."""
         return [k for k in self._explicit_id_fields if getattr(self, k)]
 
     @property
@@ -119,11 +124,9 @@ class SelectNodesDict(RecordModel):
 
 
 class SelectLinksDict(RecordModel):
-    """
-    requirements for describing links in the `facility` section of a project card.
+    """requirements for describing links in the `facility` section of a project card.
 
-    examples:
-
+    Examples:
     ```python
         {'name': ['Main St'], 'modes': ['drive']}
         {'osm_link_id': ['123456789']}
@@ -142,9 +145,7 @@ class SelectLinksDict(RecordModel):
         ["osm_link_id", "name"],
         ["model_link_id", "name"],
     ]
-    require_any_of: ClassVar[AnyOf] = [
-        ["name", "ref", "osm_link_id", "model_link_id", "all"]
-    ]
+    require_any_of: ClassVar[AnyOf] = [["name", "ref", "osm_link_id", "model_link_id", "all"]]
     _initial_selection_fields: ClassVar[list[str]] = [
         "name",
         "ref",
@@ -179,38 +180,48 @@ class SelectLinksDict(RecordModel):
 
     @property
     def asdict(self) -> dict:
+        """Model as a dictionary."""
         return self.model_dump(exclude_none=True, by_alias=True)
 
     @property
     def fields(self) -> list[str]:
+        """All fields in the selection."""
         return list(self.model_dump(exclude_none=True, by_alias=True).keys())
 
     @property
     def initial_selection_fields(self) -> list[str]:
+        """Fields used in the initial selection of links."""
         if self.all:
             return ["all"]
         return [f for f in self._initial_selection_fields if getattr(self, f)]
 
     @property
     def explicit_id_fields(self) -> list[str]:
+        """Fields that can be used in a slection on their own.
+
+        e.g. `osm_link_id` and `model_link_id`.
+        """
         return [k for k in self._explicit_id_fields if getattr(self, k)]
 
     @property
     def segment_id_fields(self) -> list[str]:
+        """Fields that can be used in an intial segment selection.
+
+        e.g. `name`, `ref`, `osm_link_id`, or `model_link_id`.
+        """
         return [k for k in self._segment_id_fields if getattr(self, k)]
 
     @property
     def additional_selection_fields(self):
         """Return a list of fields that are not part of the initial selection fields."""
         _potential = list(
-            set(self.fields)
-            - set(self.initial_selection_fields)
-            - set(self._special_fields)
+            set(self.fields) - set(self.initial_selection_fields) - set(self._special_fields)
         )
         return [f for f in _potential if getattr(self, f)]
 
     @property
     def selection_type(self):
+        """One of `all`, `explicit_ids`, or `segment`."""
         if self.all:
             return "all"
         if self.explicit_id_fields:
@@ -233,11 +244,7 @@ class SelectLinksDict(RecordModel):
     @property
     def additional_selection_dict(self):
         """Return a dictionary of fields that are not part of the initial selection fields."""
-        return {
-            k: v
-            for k, v in self.asdict.items()
-            if k in self.additional_selection_fields
-        }
+        return {k: v for k, v in self.asdict.items() if k in self.additional_selection_fields}
 
 
 class SelectFacility(RecordModel):
@@ -264,6 +271,7 @@ class SelectFacility(RecordModel):
 
     @property
     def feature_types(self) -> str:
+        """One of `segment`, `links`, or `nodes`."""
         if self.links and self.from_ and self.to:
             return "segment"
         if self.links:
@@ -274,6 +282,7 @@ class SelectFacility(RecordModel):
 
     @property
     def selection_type(self) -> str:
+        """One of `segment`, `links`, or `nodes`."""
         if self.feature_types == "segment":
             return "segment"
         if self.feature_types == "links":

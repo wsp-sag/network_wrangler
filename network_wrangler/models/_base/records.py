@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict, List, Union
+from typing import ClassVar, List, Union
 
 from pydantic import BaseModel, ConfigDict, model_validator
 from .types import AnyOf, OneOf, ConflictsWith
@@ -58,9 +58,7 @@ class RecordModel(BaseModel):
         _fields_present = [k for k, v in values.items() if v is not None]
         for pair in cls.require_conflicts_with:
             conflicts = [
-                pair
-                for pair in cls.require_conflicts_with
-                if set(pair).issubset(_fields_present)
+                pair for pair in cls.require_conflicts_with if set(pair).issubset(_fields_present)
             ]
 
             if conflicts:
@@ -96,7 +94,7 @@ class RecordModel(BaseModel):
             _err_str = list(map(str, _not_passing))
             WranglerLogger.error(
                 f"{cls} should have exactly one of: {'and one of: '.join(_err_str)}. \
-                Fields present: \n{ _fields_present}."
+                Fields present: \n{_fields_present}."
             )
             raise OneOfError(f"{cls} failed one_of validation.")
         return values
@@ -111,8 +109,7 @@ class RecordModel(BaseModel):
 
     @model_validator(mode="before")
     def check_any_of(cls, values):
-        """
-        Validates that at least one of the specified fields in `require_any_of` exists in `values`.
+        """Validates that at least one of the specified fields in `require_any_of` exists in `values`.
 
         When require_any_of is a list of lists, this method will check that at least one of the
         fields in all of the inner lists is present in `values`.

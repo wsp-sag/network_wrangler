@@ -18,13 +18,12 @@ Usage:
     # Returns copy of links_df with geometry of links with node_ids updated based on nodes_df
     links_df = edit_link_geometry_from_nodes(links_df, nodes_df, node_ids)
 """
+
 from __future__ import annotations
 
 import copy
 
 from typing import Union, Any
-
-import pandas as pd
 
 from pydantic import validate_call
 from pandera.typing import DataFrame
@@ -50,6 +49,8 @@ from .scopes import (
 
 
 class LinkChangeError(Exception):
+    """Raised when there is an error in changing a link property."""
+
     pass
 
 
@@ -62,9 +63,7 @@ def _initialize_links_as_managed_lanes(
     for f in initialize_if_missing:
         if f not in links_df:
             links_df[f] = default_from_datamodel(RoadLinksTable, f)
-    _ml_wo_geometry = links_df.loc[
-        links_df["ML_geometry"].isna() & links_df["managed"] == 1
-    ].index
+    _ml_wo_geometry = links_df.loc[links_df["ML_geometry"].isna() & links_df["managed"] == 1].index
     links_df.loc[_ml_wo_geometry, "ML_geometry"] = _offset_geometry_meters(
         links_df.loc[_ml_wo_geometry, "geometry"], LINK_ML_OFFSET_METERS
     )
@@ -88,11 +87,11 @@ def _resolve_conflicting_scopes(
             return [i for i in scoped_values not in conflicting_existing]
         else:
             WranglerLogger.error(
-                f"Existing link value conflicts with change.  Either update to \
-                set overwrite_conflicting = True to overwrite with set value \
-                or update the scoped value to not conflict.\n \
-                Conflicting existing value(s): {conflicting_existing}\n \
-                Set value: {scoped_item} "
+                f"""Existing link value conflicts with change.  Either update to
+                set overwrite_conflicting = True to overwrite with set value
+                or update the scoped value to not conflict.\n
+                Conflicting existing value(s): {conflicting_existing}\n
+                Set value: {scoped_item} """
             )
 
 
@@ -209,17 +208,22 @@ def _edit_ml_access_egress_points(
     elif isinstance(prop_change.set, list):
         mask = (links_df[node_col].isin(prop_change.set)) & (links_df.index.isin(link_idx))
 
-        WranglerLogger.debug(f"Setting {prop_name} to True for {len(links_df.loc[mask])} links:\n\
-                            {links_df.loc[mask, ['model_link_id', 'A', 'B']]}")
+        WranglerLogger.debug(
+            f"Setting {prop_name} to True for {len(links_df.loc[mask])} links: \n\
+                            {links_df.loc[mask, ['model_link_id', 'A', 'B']]}"
+        )
         links_df.loc[mask, prop_name] = True
     else:
-        WranglerLogger.error(f"Invalid value for {prop_name}. Must be list of ints or \
-                                'all': {prop_change.set}")
+        WranglerLogger.error(
+            f"Invalid value for {prop_name}. Must be list of ints or \
+                                'all': {prop_change.set}"
+        )
         raise ValueError(f"Invalid value for {prop_name}: {prop_change.set}")
 
     return links_df
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
 def _edit_link_property(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
@@ -228,7 +232,7 @@ def _edit_link_property(
     existing_value_conflict_error: bool = False,
     overwrite_all_scoped: bool = False,
     overwrite_conflicting_scoped: bool = True,
-) -> RoadLinksTable:
+) -> DataFrame[RoadLinksTable]:
     """Return edited (in place) RoadLinksTable with property changes for a list of links.
 
     If prop_name starts with ML, will initialize managed lane attributes if not already.
@@ -237,7 +241,7 @@ def _edit_link_property(
 
     Does NOT validate to RoadLinksTable.
 
-    args:
+    Args:
         links_df: links to edit
         link_idx: list of link indices to change
         prop_name: property name to change
@@ -247,11 +251,10 @@ def _edit_link_property(
             Otherwise, will only trigger a warning. Defaults to False.
         overwrite_all_scoped: If True, will overwrite all scoped values for link property with
             scoped_prop_value_set. Defaults to False.
-        overwrite_conflicting_scoped: If True will overwrite any conflicting scopes.  Otherwise, will
-            raise an Exception on conflicting, but not matching, scopes.
+        overwrite_conflicting_scoped: If True will overwrite any conflicting scopes.
+            Otherwise, will raise an Exception on conflicting, but not matching, scopes.
 
     """
-
     WranglerLogger.debug(f"Editing {prop_name} on links {link_idx}")
     # WranglerLogger.debug(f"links_df | link_idx:\n {links_df.loc[link_idx].head()}")
     if prop_change.existing is not None:
@@ -277,8 +280,8 @@ def _edit_link_property(
     if prop_name in ["ML_access_point", "ML_egress_point"]:
         links_df = _edit_ml_access_egress_points(links_df, prop_name, prop_change, link_idx)
         WranglerLogger.debug(
-            f"links_df.loc[link_idx,prop_name] \
-            After:\n {links_df.loc[link_idx, prop_name].head()}"
+            f"links_df.loc[link_idx, prop_name] \
+            After: \n {links_df.loc[link_idx, prop_name].head()}"
         )
         return links_df
 
@@ -296,9 +299,7 @@ def _edit_link_property(
         sc_prop_name = f"sc_{prop_name}"
         WranglerLogger.debug(f"setting {sc_prop_name} to {prop_change.scoped}")
         if sc_prop_name not in links_df:
-            links_df[sc_prop_name] = default_from_datamodel(
-                RoadLinksTable, sc_prop_name
-            )
+            links_df[sc_prop_name] = default_from_datamodel(RoadLinksTable, sc_prop_name)
         links_df.loc[link_idx, sc_prop_name] = links_df.loc[link_idx].apply(
             lambda x: _edit_scoped_link_property(
                 x[sc_prop_name],
@@ -326,7 +327,7 @@ def edit_link_property(
 ) -> DataFrame[RoadLinksTable]:
     """Return copy of RoadLinksTable with edited link property for a list of links IDS.
 
-    args:
+    Args:
         links_df: links to edit
         link_idx: list of link indices to change
         prop_name: property name to change
@@ -346,7 +347,7 @@ def edit_link_property(
     )
     links_df = validate_df_to_model(links_df, RoadLinksTable)
     WranglerLogger.debug(
-        f"Edited links_df.loc[link_idx, property]:\
+        f"Edited links_df.loc[link_idx, property]: \
                          \n {links_df.loc[link_idx, property]}"
     )
     return links_df
@@ -361,7 +362,7 @@ def edit_link_properties(
 ) -> DataFrame[RoadLinksTable]:
     """Return copy of RoadLinksTable with edited link properties for a list of links.
 
-    args:
+    Args:
         links_df: links to edit
         link_idx: list of link indices to change
         property_changes: dictionary of property changes
@@ -374,7 +375,7 @@ def edit_link_properties(
     # WranglerLogger.debug(f"property_changes: \n{property_changes}")
     for property, prop_change in property_changes.items():
         WranglerLogger.debug(f"prop_dict: \n{prop_change}")
-        _edit_link_property(
+        links_df = _edit_link_property(
             links_df, link_idx, property, prop_change, existing_value_conflict_error
         )
 
@@ -387,12 +388,14 @@ def edit_link_geometry_from_nodes(
     nodes_df: DataFrame[RoadNodesTable],
     node_ids: list[int],
 ) -> DataFrame[RoadLinksTable]:
-    """Returns a copy of links with updated geometry for given links for a given list of nodes
+    """Returns a copy of links with updated geometry for given links for a given list of nodes.
 
     Should be called by any function that changes a node location.
 
     Args:
-        updated_node_ids: list of node PKs with updated geometry
+        links_df: RoadLinksTable to update
+        nodes_df: RoadNodesTable to get updated node geometry from
+        node_ids: list of node PKs with updated geometry
     """
     # WranglerLogger.debug(f"nodes_df.loc[node_ids]:\n {nodes_df.loc[node_ids]}")
 
@@ -409,7 +412,5 @@ def edit_link_geometry_from_nodes(
     links_df.update(updated_b_geometry)
 
     _a_or_b_mask = links_df.A.isin(node_ids) | links_df.B.isin(node_ids)
-    WranglerLogger.debug(
-        f"links_df: \n{links_df.loc[_a_or_b_mask, ['A', 'B', 'geometry']]}"
-    )
+    WranglerLogger.debug(f"links_df: \n{links_df.loc[_a_or_b_mask, ['A', 'B', 'geometry']]}")
     return links_df

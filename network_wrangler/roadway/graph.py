@@ -1,3 +1,9 @@
+"""Functions to convert RoadwayNetwork to osmnx graph and perform graph operations."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import networkx as nx
 import osmnx as ox
 
@@ -6,20 +12,19 @@ from geopandas import GeoDataFrame
 
 from ..logger import WranglerLogger
 
+if TYPE_CHECKING:
+    from .network import RoadwayNetwork
 
 ox_major_version = int(ox.__version__.split(".")[0])
 
 
 def _drop_complex_df_columns(df: DataFrame) -> DataFrame:
-    "Returns dataframe without columns with lists, tuples or dictionaries types."
-
+    """Returns dataframe without columns with lists, tuples or dictionaries types."""
     _cols_to_exclude = ["geometry"]
     _cols_to_search = [c for c in df.columns if c not in _cols_to_exclude]
     _drop_types = (list, dict, tuple)
 
-    _drop_cols = [
-        c for c in _cols_to_search if df[c].apply(type).isin(_drop_types).any()
-    ]
+    _drop_cols = [c for c in _cols_to_search if df[c].apply(type).isin(_drop_types).any()]
 
     df = df.drop(_drop_cols, axis=1)
 
@@ -37,7 +42,6 @@ def _nodes_to_graph_nodes(nodes_df: GeoDataFrame) -> GeoDataFrame:
     Args:
         nodes_df (GeoDataFrame): nodes geodataframe from RoadwayNetwork instance
     """
-
     graph_nodes_df = nodes_df.copy()
     graph_nodes_df.gdf_name = "network_nodes"
 
@@ -109,8 +113,7 @@ def links_nodes_to_ox_graph(
     sp_weight_col: str = "distance",
     sp_weight_factor: float = 1,
 ):
-    """
-    create an osmnx-flavored network graph from nodes and links dfs
+    """Create an osmnx-flavored network graph from nodes and links dfs.
 
     osmnx doesn't like values that are arrays, so remove the variables
     that have arrays.  osmnx also requires that certain variables
@@ -156,8 +159,8 @@ def links_nodes_to_ox_graph(
     return G
 
 
-def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
-    """Converts a network to a MultiDiGraph
+def net_to_graph(net: RoadwayNetwork, mode: str = None) -> nx.MultiDiGraph:
+    """Converts a network to a MultiDiGraph.
 
     Args:
         net: RoadwayNetwork object
@@ -166,7 +169,6 @@ def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
 
     Returns: networkx: osmnx: DiGraph  of network
     """
-
     _links_df = net.links_df.mode_query(mode)
 
     _nodes_df = net.nodes_in_links()
@@ -177,7 +179,7 @@ def net_to_graph(net: "RoadwayNetwork", mode: str = None) -> nx.MultiDiGraph:
 
 
 def shortest_path(G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight") -> tuple:
-    """
+    """Calculates the shortest path between two nodes in a network.
 
     Args:
         G: osmnx MultiDiGraph, created using links_nodes_to_ox_graph
@@ -192,7 +194,6 @@ def shortest_path(G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight") -
     - route of shortest path nodes as List
     - links in shortest path selected from links_df
     """
-
     try:
         sp_route = nx.shortest_path(G, O_id, D_id, weight=sp_weight_property)
         WranglerLogger.debug("Shortest path successfully routed")
@@ -206,15 +207,15 @@ def shortest_path(G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight") -
 
 
 def assess_connectivity(
-    net: "RoadwayNetwork",
+    net: RoadwayNetwork,
     mode: str = "",
     ignore_end_nodes: bool = True,
 ):
-    """Returns a network graph and list of disconnected subgraphs
-    as described by a list of their member nodes.
+    """Network graph and list of disconnected subgraphs described by a list of their member nodes.
 
     Args:
-        mode:  list of modes of the network, one of `drive`,`transit`,
+        net: RoadwayNetwork object
+        mode:  mode of the network, one of `drive`,`transit`,
             `walk`, `bike`
         ignore_end_nodes: if True, ignores stray singleton nodes
 
@@ -228,8 +229,7 @@ def assess_connectivity(
     G = net.get_modal_graph(mode)
 
     sub_graph_nodes = [
-        list(s)
-        for s in sorted(nx.strongly_connected_components(G), key=len, reverse=True)
+        list(s) for s in sorted(nx.strongly_connected_components(G), key=len, reverse=True)
     ]
 
     # sorted on decreasing length, dropping the main sub-graph

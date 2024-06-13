@@ -12,7 +12,7 @@ changes:
         model_link_id:
           - 281
           - 477533
-        modes: 
+        modes:
          - "any"
         ignore_missing: False
       nodes:

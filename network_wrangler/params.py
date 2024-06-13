@@ -1,3 +1,5 @@
+"""Parameters for Network Wrangler."""
+
 from dataclasses import dataclass, field
 from typing import List, Literal
 
@@ -30,6 +32,8 @@ ROAD_SHAPE_ID_SCALAR = 1000
 
 @dataclass
 class NodesParams:
+    """Parameters for RoadNodesTable."""
+
     primary_key: str = field(default="model_node_id")
     _addtl_unique_ids: list[str] = field(default_factory=lambda: ["osm_node_id"])
     _addtl_explicit_ids: list[str] = field(default_factory=lambda: [])
@@ -40,29 +44,36 @@ class NodesParams:
 
     @property
     def geometry_props(self) -> List[str]:
+        """List of geometry properties."""
         return [self.x_field, self.y_field, "geometry"]
 
     @property
     def idx_col(self) -> str:
+        """Column to make the index of the table."""
         return self.primary_key + "_idx"
 
     @property
     def unique_ids(self) -> List[str]:
+        """List of unique ids for the table."""
         _uids = self._addtl_unique_ids + [self.primary_key]
         return list(set(_uids))
 
     @property
     def explicit_ids(self) -> List[str]:
+        """List of columns that can be used to easily find specific records the table."""
         _eids = self._addtl_unique_ids + self.unique_ids
         return list(set(_eids))
 
     @property
-    def display_cols(self):
+    def display_cols(self) -> List[str]:
+        """Columns to display in the table."""
         return self.explicit_ids
 
 
 @dataclass
 class LinksParams:
+    """Parameters for RoadLinksTable."""
+
     primary_key: str = field(default="model_link_id")
     _addtl_unique_ids: list[str] = field(default_factory=lambda: [])
     _addtl_explicit_ids: list[str] = field(default_factory=lambda: ["osm_link_id"])
@@ -77,40 +88,49 @@ class LinksParams:
 
     @property
     def idx_col(self):
+        """Column to make the index of the table."""
         return self.primary_key + "_idx"
 
     @property
     def fks_to_nodes(self):
+        """Foreign keys to nodes in the network."""
         return [self.from_node, self.to_node]
 
     @property
-    def unique_ids(self):
+    def unique_ids(self) -> List[str]:
+        """List of unique ids for the table."""
         _uids = self._addtl_unique_ids + [self.primary_key]
         return list(set(_uids))
 
     @property
-    def explicit_ids(self):
+    def explicit_ids(self) -> List[str]:
+        """List of columns that can be used to easily find specific row sin the table."""
         return list(set(self.unique_ids + self._addtl_explicit_ids))
 
     @property
-    def display_cols(self):
+    def display_cols(self) -> List[str]:
+        """List of columns to display in the table."""
         _addtl = ["lanes"]
         return list(set(self.explicit_ids + self.fks_to_nodes + _addtl))
 
 
 @dataclass
 class ShapesParams:
+    """Parameters for RoadShapesTable."""
+
     primary_key: str = field(default="shape_id")
     _addtl_unique_ids: list[str] = field(default_factory=lambda: [])
     table_type: Literal["shapes"] = field(default="shapes")
     source_file: str = field(default=None)
 
     @property
-    def idx_col(self):
+    def idx_col(self) -> str:
+        """Column to make the index of the table."""
         return self.primary_key + "_idx"
 
     @property
-    def unique_ids(self):
+    def unique_ids(self) -> list[str]:
+        """List of unique ids for the table."""
         return list(set(self._addtl_unique_ids.append(self.primary_key)))
 
 

@@ -1,6 +1,10 @@
-"""Functions for querying RoadLinksTable"""
+"""Functions for querying RoadLinksTable."""
+
+from typing import Optional
 
 import pandas as pd
+
+from pandera.typing import DataFrame
 
 from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
 from ...utils.data import fk_in_pk
@@ -10,11 +14,13 @@ from .validate import validate_links_have_nodes
 
 
 class NotLinksError(Exception):
+    """Raised when a dataframe is not a RoadLinksTable."""
+
     pass
 
 
 def node_ids_in_links(
-    links_df: RoadLinksTable, nodes_df: RoadNodesTable = None
+    links_df: DataFrame[RoadLinksTable], nodes_df: Optional[DataFrame[RoadNodesTable]] = None
 ) -> list[int]:
     """Returns the unique node_ids in a links dataframe.
 
@@ -34,7 +40,9 @@ def node_ids_in_links(
 
 
 def node_ids_in_link_ids(
-    link_ids: list[int], links_df: RoadLinksTable, nodes_df: RoadNodesTable = None
+    link_ids: list[int],
+    links_df: DataFrame[RoadLinksTable],
+    nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
 ) -> list[int]:
     """Returns the unique node_ids in a list of link_ids.
 
@@ -50,19 +58,20 @@ def node_ids_in_link_ids(
 
 
 def node_ids_unique_to_link_ids(
-    link_ids: list[int], links_df: RoadLinksTable, nodes_df: RoadNodesTable = None
+    link_ids: list[int],
+    links_df: DataFrame[RoadLinksTable],
+    nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
 ) -> list[int]:
+    """Returns the unique node_ids in a list of link_ids that are not in other links."""
     selected_link_node_ids = node_ids_in_link_ids(link_ids, links_df, nodes_df=nodes_df)
     _unselected_links_df = filter_links_not_in_ids(links_df, link_ids)
-    unselected_link_node_ids = node_ids_in_links(
-        _unselected_links_df, nodes_df=nodes_df
-    )
+    unselected_link_node_ids = node_ids_in_links(_unselected_links_df, nodes_df=nodes_df)
 
     return list(set(selected_link_node_ids) - set(unselected_link_node_ids))
 
 
 def shape_ids_in_links(
-    links_df: RoadLinksTable, shapes_df: RoadShapesTable = None
+    links_df: DataFrame[RoadLinksTable], shapes_df: Optional[DataFrame[RoadShapesTable]] = None
 ) -> list[int]:
     """Returns the unique shape_ids in a links dataframe.
 
@@ -76,34 +85,34 @@ def shape_ids_in_links(
     if shapes_df is not None:
         fk_valid, fk_missing = fk_in_pk(shapes_df.index, shape_ids)
         if not fk_valid:
-            WranglerLogger.error(
-                f"Shapes missing that are specified in links: {fk_missing}"
-            )
+            WranglerLogger.error(f"Shapes missing that are specified in links: {fk_missing}")
     return shape_ids
 
 
 def shape_ids_in_link_ids(
-    link_ids: list[int], links_df: RoadLinksTable, shapes_df: RoadShapesTable = None
+    link_ids: list[int],
+    links_df: DataFrame[RoadLinksTable],
+    shapes_df: Optional[DataFrame[RoadShapesTable]] = None,
 ) -> list[int]:
+    """Returns the unique shape_ids in a list of link_ids."""
     _links_df = filter_links_to_ids(links_df, link_ids)
     return shape_ids_in_links(_links_df, shapes_df=shapes_df)
 
 
 def shape_ids_unique_to_link_ids(
-    link_ids: list[int], links_df: RoadLinksTable, shapes_df: RoadShapesTable = None
+    link_ids: list[int],
+    links_df: DataFrame[RoadLinksTable],
+    shapes_df: Optional[DataFrame[RoadShapesTable]] = None,
 ) -> list[int]:
-    selected_link_shape_ids = shape_ids_in_link_ids(
-        link_ids, links_df, shapes_df=shapes_df
-    )
+    """Returns the unique shape_ids in a list of link_ids."""
+    selected_link_shape_ids = shape_ids_in_link_ids(link_ids, links_df, shapes_df=shapes_df)
     _unselected_links_df = filter_links_not_in_ids(links_df, link_ids)
-    unselected_link_shape_ids = shape_ids_in_links(
-        _unselected_links_df, shapes_df=shapes_df
-    )
+    unselected_link_shape_ids = shape_ids_in_links(_unselected_links_df, shapes_df=shapes_df)
 
     return list(set(selected_link_shape_ids) - set(unselected_link_shape_ids))
 
 
-def calc_lane_miles(links_df: RoadLinksTable) -> pd.Series:
+def calc_lane_miles(links_df: DataFrame[RoadLinksTable]) -> pd.Series:
     """Calculates default lane miles for each link in the links dataframe.
 
     For non road links, calculates the lane miles as the distance of the link.

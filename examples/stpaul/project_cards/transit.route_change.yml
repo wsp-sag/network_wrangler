@@ -3,7 +3,7 @@ transit_routing_change:
   service:
     trip_properties:
       route_id: [53-111]
-    timespans: 
+    timespans:
     - ['09:00', '15:00']
   routing:
     existing:

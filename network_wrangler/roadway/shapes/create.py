@@ -22,11 +22,7 @@ def df_to_shapes_df(
     in_crs: int = LAT_LON_CRS,
     shapes_params: Union[None, ShapesParams] = None,
 ) -> DataFrame[RoadShapesTable]:
-    """
-
-    Sets index to be a copy of the primary key.
-    Validates output dataframe using LinksSchema.
-    Converts to LAT_LON_CRS.
+    """Sets index to be a copy of the primary key, validates to RoadShapesTable and aligns CRS.
 
     Args:
         shapes_df (gpd.GeoDataFrame): _description_
@@ -56,11 +52,11 @@ def df_to_shapes_df(
 
 
 def create_offset_shapes(
-    shapes_df: RoadShapesTable,
+    shapes_df: DataFrame[RoadShapesTable],
     shape_ids: list,
     offset_dist_meters: float = 10,
     id_scalar: int = ROAD_SHAPE_ID_SCALAR,
-) -> RoadShapesTable:
+) -> DataFrame[RoadShapesTable]:
     """Create a RoadShapesTable of new shape records for shape_ids which are offset.
 
     Args:
@@ -73,7 +69,6 @@ def create_offset_shapes(
       RoadShapesTable: of offset shapes and a column `ref_shape_id` which references
             the shape_id which was offset to create it.
     """
-
     offset_shapes_df = pd.DataFrame(
         {
             "shape_id": generate_list_of_new_ids(
@@ -89,9 +84,7 @@ def create_offset_shapes(
         ref_shapes_df.shape_id.to_list, shapes_df.shape_ids.to_list, id_scalar
     )
 
-    ref_shapes_df["geometry"] = _offset_geometry_meters(
-        ref_shapes_df.geometry, offset_dist_meters
-    )
+    ref_shapes_df["geometry"] = _offset_geometry_meters(ref_shapes_df.geometry, offset_dist_meters)
 
     offset_shapes_df = ref_shapes_df.rename(
         columns={
@@ -100,9 +93,7 @@ def create_offset_shapes(
         }
     )
 
-    offset_shapes_gdf = gpd.GeoDataFrame(
-        offset_shapes_df, geometry="geometry", crs=shapes_df.crs
-    )
+    offset_shapes_gdf = gpd.GeoDataFrame(offset_shapes_df, geometry="geometry", crs=shapes_df.crs)
 
     offset_shapes_gdf = RoadShapesTable.validate(offset_shapes_gdf, lazy=True)
 
@@ -110,11 +101,11 @@ def create_offset_shapes(
 
 
 def add_offset_shapes(
-    shapes_df: RoadShapesTable,
+    shapes_df: DataFrame[RoadShapesTable],
     shape_ids: list,
     offset_dist_meters: float = 10,
     id_scalar: int = ROAD_SHAPE_ID_SCALAR,
-) -> RoadShapesTable:
+) -> DataFrame[RoadShapesTable]:
     """Appends a RoadShapesTable with new shape records for shape_ids which are offset from orig.
 
     Args:
@@ -127,9 +118,7 @@ def add_offset_shapes(
         RoadShapesTable: with added offset shape_ids and a column `ref_shape_id` which references
             the shape_id which was offset to create it.
     """
-    offset_shapes_df = create_offset_shapes(
-        shapes_df, shape_ids, offset_dist_meters, id_scalar
-    )
+    offset_shapes_df = create_offset_shapes(shapes_df, shape_ids, offset_dist_meters, id_scalar)
     shapes_df = pd.concat([shapes_df, offset_shapes_df])
     shapes_df = RoadShapesTable.validate(shapes_df, lazy=True)
     return shapes_df

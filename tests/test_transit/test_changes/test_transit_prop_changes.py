@@ -1,3 +1,8 @@
+"""Tests for transit property change.
+
+Run just these tests using `pytest tests/test_transit/test_transit_prop_changes.py`
+"""
+
 import copy
 import pandas as pd
 import pytest
@@ -39,7 +44,7 @@ def test_force_invalid_field_value(request, small_transit_net):
 
 
 def test_valid_field_value_set(request, small_transit_net):
-    """Checks that setting a valid field value will pass"""
+    """Checks that setting a valid field value will pass."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_transit_net)
     feed = net.feed
@@ -60,7 +65,7 @@ def test_valid_field_value_set(request, small_transit_net):
 
 @pytest.mark.xfail
 def test_coerce_over24hr_times(request, small_transit_net):
-    """Checks that setting a valid field value will pass"""
+    """Checks that setting a valid field value will pass."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
     feed = small_transit_net.feed
     # Should be ok b/c GTFS can last "several days"
@@ -69,5 +74,5 @@ def test_coerce_over24hr_times(request, small_transit_net):
     feed.stop_times = _new_stop_times
     assert feed.stop_times.loc[2, "arrival_time"] == pd.Timestamp("42:00:00")
 
-    WranglerLogger.debug(f"feed.stop_times:\n{feed.stop_times}")
+    WranglerLogger.debug(f"feed.stop_times: \n{feed.stop_times}")
     WranglerLogger.info(f"--Finished: {request.node.name}")

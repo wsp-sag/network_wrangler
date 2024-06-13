@@ -1,5 +1,4 @@
-"""
-Functions to clip a TransitNetwork object to a boundary.
+"""Functions to clip a TransitNetwork object to a boundary.
 
 Clipped transit is an independent transit network that is a subset of the original transit network.
 
@@ -16,6 +15,7 @@ write_transit(clipped_network, out_dir, prefix="ecolab", format="geojson", true_
 ```
 
 """
+
 from __future__ import annotations
 from typing import Union, Optional
 from pathlib import Path
@@ -59,13 +59,15 @@ DEFAULT_MIN_STOPS: int = 2
 def clip_feed_to_roadway(
     feed: Feed,
     roadway_net: RoadwayNetwork,
-    min_stops: Optional[int] = DEFAULT_MIN_STOPS,
+    min_stops: int = DEFAULT_MIN_STOPS,
 ) -> Feed:
     """Returns a copy of transit feed clipped to the roadway network.
 
     Args:
         feed (Feed): Transit Feed to clip.
         roadway_net: Roadway network to clip to.
+        min_stops: minimum number of stops needed to retain a transit trip within clipped area.
+            Defaults to DEFAULT_MIN_STOPS which is set to 2.
 
     Raises:
         ValueError: If no stops found within the roadway network.
@@ -75,15 +77,13 @@ def clip_feed_to_roadway(
     """
     WranglerLogger.info("Clipping transit network to roadway network.")
 
-    clipped_feed = _remove_links_from_feed(
-        feed, roadway_net.links_df, min_stops=min_stops
-    )
+    clipped_feed = _remove_links_from_feed(feed, roadway_net.links_df, min_stops=min_stops)
 
     return clipped_feed
 
 
 def _remove_links_from_feed(
-    feed: Feed, links_df: pd.DataFrame, min_stops: Optional[int] = DEFAULT_MIN_STOPS
+    feed: Feed, links_df: pd.DataFrame, min_stops: int = DEFAULT_MIN_STOPS
 ) -> Feed:
     WranglerLogger.info("Clipping transit network to link A and Bs.")
 
@@ -91,15 +91,13 @@ def _remove_links_from_feed(
     # First find the shapes that are on the links; retaining only the longest segment of each shape
     _valid_shapes = shapes_for_road_links(feed.shapes, links_df)
     WranglerLogger.debug(
-        f"_valid_shapes:\n\
-        {_valid_shapes[['shape_id','shape_pt_sequence', 'shape_model_node_id']]}"
+        f"_valid_shapes: \n\
+        {_valid_shapes[['shape_id', 'shape_pt_sequence', 'shape_model_node_id']]}"
     )
     # Filter stop_times to relevant trips first so don't have to do complicated filtering on whole
-    _trips_for_valid_shapes = feed.trips.loc[
-        feed.trips.shape_id.isin(_valid_shapes.shape_id)
-    ]
+    _trips_for_valid_shapes = feed.trips.loc[feed.trips.shape_id.isin(_valid_shapes.shape_id)]
     WranglerLogger.debug(
-        f"_trips_for_valid_shapes:\n{_trips_for_valid_shapes[['trip_id', 'shape_id']]}"
+        f"_trips_for_valid_shapes: \n{_trips_for_valid_shapes[['trip_id', 'shape_id']]}"
     )
     _stop_times_for_valid_trips = feed.stop_times.loc[
         feed.stop_times.trip_id.isin(_trips_for_valid_shapes.trip_id)
@@ -108,45 +106,27 @@ def _remove_links_from_feed(
     _valid_stop_times = stop_times_for_shapes(
         _stop_times_for_valid_trips, _valid_shapes, _trips_for_valid_shapes
     )
-    clipped_feed_dfs["stop_times"] = stop_times_for_min_stops(
-        _valid_stop_times, min_stops
-    )
+    clipped_feed_dfs["stop_times"] = stop_times_for_min_stops(_valid_stop_times, min_stops)
     WranglerLogger.debug(
-        f"clipped_feed_dfs['stop_times']:\n\
-        {clipped_feed_dfs['stop_times'][['trip_id', 'stop_id', 'stop_sequence','model_node_id']]}"
+        f"clipped_feed_dfs['stop_times']: \n\
+        {clipped_feed_dfs['stop_times'][['trip_id', 'stop_id', 'stop_sequence', 'model_node_id']]}"
     )
     WranglerLogger.debug(
         f"Keeping {len(clipped_feed_dfs['stop_times'])}/{len(feed.stop_times)} stop_times."
     )
 
     # reselect trips + shapes so we aren't retaining ones that only had one stop in the stop_times
-    clipped_feed_dfs["trips"] = trips_for_stop_times(
-        feed.trips, clipped_feed_dfs["stop_times"]
-    )
-    WranglerLogger.debug(
-        f"Keeping {len(clipped_feed_dfs['trips'])}/{len(feed.trips)} trips."
-    )
+    clipped_feed_dfs["trips"] = trips_for_stop_times(feed.trips, clipped_feed_dfs["stop_times"])
+    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['trips'])}/{len(feed.trips)} trips.")
 
-    clipped_feed_dfs["shapes"] = shapes_for_trips(
-        _valid_shapes, clipped_feed_dfs["trips"]
-    )
-    WranglerLogger.debug(
-        f"Keeping {len(clipped_feed_dfs['shapes'])}/{len(feed.shapes)} shapes."
-    )
+    clipped_feed_dfs["shapes"] = shapes_for_trips(_valid_shapes, clipped_feed_dfs["trips"])
+    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['shapes'])}/{len(feed.shapes)} shapes.")
 
-    clipped_feed_dfs["stops"] = stops_for_stop_times(
-        feed.stops, clipped_feed_dfs["stop_times"]
-    )
-    WranglerLogger.debug(
-        f"Keeping {len(clipped_feed_dfs['stops'])}/{len(feed.stops)} stops."
-    )
+    clipped_feed_dfs["stops"] = stops_for_stop_times(feed.stops, clipped_feed_dfs["stop_times"])
+    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['stops'])}/{len(feed.stops)} stops.")
 
-    clipped_feed_dfs["routes"] = routes_for_trips(
-        feed.routes, clipped_feed_dfs["trips"]
-    )
-    WranglerLogger.debug(
-        f"Keeping {len(clipped_feed_dfs['routes'])}/{len(feed.routes)} routes."
-    )
+    clipped_feed_dfs["routes"] = routes_for_trips(feed.routes, clipped_feed_dfs["trips"])
+    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['routes'])}/{len(feed.routes)} routes.")
 
     clipped_feed_dfs["frequencies"] = frequencies_for_trips(
         feed.frequencies, clipped_feed_dfs["trips"]
@@ -161,10 +141,10 @@ def _remove_links_from_feed(
 def clip_feed_to_boundary(
     feed: Feed,
     ref_nodes_df: gpd.GeoDataFrame,
-    boundary_gdf: Optional[Union[None, gpd.GeoDataFrame]] = None,
-    boundary_geocode: Optional[Union[str, dict, None]] = None,
-    boundary_file: Optional[Union[str, Path, None]] = None,
-    min_stops: Optional[int] = DEFAULT_MIN_STOPS,
+    boundary_gdf: Optional[gpd.GeoDataFrame] = None,
+    boundary_geocode: Optional[Union[str, dict]] = None,
+    boundary_file: Optional[Union[str, Path]] = None,
+    min_stops: int = DEFAULT_MIN_STOPS,
 ) -> Feed:
     """Clips a transit Feed object to a boundary and returns the resulting GeoDataFrames.
 
@@ -205,9 +185,7 @@ def clip_feed_to_boundary(
     clipped_shape_links = shape_links_gdf[shape_links_gdf.geometry.intersects(boundary)]
 
     # nodes within clipped_shape_links
-    node_ids = list(
-        set(clipped_shape_links.A.to_list() + clipped_shape_links.B.to_list())
-    )
+    node_ids = list(set(clipped_shape_links.A.to_list() + clipped_shape_links.B.to_list()))
     WranglerLogger.debug(f"Clipping network to {len(node_ids)} nodes.")
     if not node_ids:
         raise ValueError("No nodes found within the boundary.")
@@ -217,7 +195,7 @@ def clip_feed_to_boundary(
 def _clip_feed_to_nodes(
     feed: Feed,
     node_ids: list[str],
-    min_stops: Optional[int] = DEFAULT_MIN_STOPS,
+    min_stops: int = DEFAULT_MIN_STOPS,
 ) -> Feed:
     """Clip a transit feed object to a set of nodes.
 
@@ -234,34 +212,22 @@ def _clip_feed_to_nodes(
     clipped_feed_dfs = {}
 
     clipped_feed_dfs["stops"] = feed.stops[feed.stops.model_node_id.isin(node_ids)]
-    WranglerLogger.debug(
-        f"Keeping {len(clipped_feed_dfs['stops'])}/{len(feed.stops)} stops."
-    )
+    WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['stops'])}/{len(feed.stops)} stops.")
 
     # don't retain stop_times unless they are more than min stops
-    _clipped_stop_times = stop_times_for_stops(
-        feed.stop_times, clipped_feed_dfs["stops"]
-    )
-    clipped_feed_dfs["stop_times"] = stop_times_for_min_stops(
-        _clipped_stop_times, min_stops
-    )
+    _clipped_stop_times = stop_times_for_stops(feed.stop_times, clipped_feed_dfs["stops"])
+    clipped_feed_dfs["stop_times"] = stop_times_for_min_stops(_clipped_stop_times, min_stops)
 
     # reselect stops so we aren't retaining ones that only had one in the stop_times
     clipped_feed_dfs["stops"] = stops_for_stop_times(
         clipped_feed_dfs["stops"], clipped_feed_dfs["stop_times"]
     )
 
-    clipped_feed_dfs["trips"] = trips_for_stop_times(
-        feed.trips, clipped_feed_dfs["stop_times"]
-    )
-    clipped_feed_dfs["routes"] = routes_for_trips(
-        feed.routes, clipped_feed_dfs["trips"]
-    )
+    clipped_feed_dfs["trips"] = trips_for_stop_times(feed.trips, clipped_feed_dfs["stop_times"])
+    clipped_feed_dfs["routes"] = routes_for_trips(feed.routes, clipped_feed_dfs["trips"])
 
     # don't retain shapes unless trip is retained
-    clipped_feed_dfs["shapes"] = shapes_for_trips(
-        feed.shapes, clipped_feed_dfs["trips"]
-    )
+    clipped_feed_dfs["shapes"] = shapes_for_trips(feed.shapes, clipped_feed_dfs["trips"])
     clipped_feed_dfs["shapes"] = clipped_feed_dfs["shapes"][
         clipped_feed_dfs["shapes"].shape_model_node_id.isin(node_ids)
     ]
@@ -281,7 +247,7 @@ def clip_transit(
     boundary_gdf: Optional[Union[None, gpd.GeoDataFrame]] = None,
     ref_nodes_df: Optional[Union[None, gpd.GeoDataFrame]] = None,
     roadway_net: Optional[Union[None, RoadwayNetwork]] = None,
-    min_stops: Optional[int] = DEFAULT_MIN_STOPS,
+    min_stops: int = DEFAULT_MIN_STOPS,
 ) -> "TransitNetwork":
     """Returns a new TransitNetwork clipped to a boundary as determined by arguments.
 
@@ -298,6 +264,7 @@ def clip_transit(
 
     Args:
         network (TransitNetwork): TransitNetwork to clip.
+        node_ids (list[str], optional): A list of node_ids to clip to. Defaults to None.
         boundary_geocode (Union[str, dict], optional): A geocode string or dictionary
             representing the boundary. Only used if node_ids are None. Defaults to None.
         boundary_file (Union[str, Path], optional): A path to the boundary file. Only used if
@@ -311,7 +278,6 @@ def clip_transit(
         min_stops: minimum number of stops needed to retain a transit trip within clipped area.
             Defaults to DEFAULT_MIN_STOPS which is set to 2.
     """
-
     if not isinstance(network, TransitNetwork):
         network = load_transit(network)
     set_roadway_network = False

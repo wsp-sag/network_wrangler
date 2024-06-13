@@ -1,13 +1,9 @@
-import copy
-import glob
-import re
-
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
-from network_wrangler import WranglerLogger, load_roadway
+from network_wrangler import load_roadway
 
 
 pd.set_option("display.max_rows", 500)
@@ -42,7 +38,7 @@ def example_dir(base_dir):
 
 @pytest.fixture(scope="session")
 def example_dirnames(example_dir):
-    """List of directories in example_dir"""
+    """List of directories in example_dir."""
     return list(example_dir.iterdir())
 
 
@@ -72,15 +68,6 @@ def clear_out_dir(test_out_dir):
         f.unlink()
 
 
-@pytest.fixture
-def stpaul_base_scenario(stpaul_ex_dir, stpaul_net, stpaul_transit_net):
-    base_scenario = {
-        "road_net": copy.deepcopy(stpaul_net),
-        "transit_net": copy.deepcopy(stpaul_transit_net),
-    }
-    return base_scenario
-
-
 @pytest.fixture(scope="session")
 def stpaul_card_dir(stpaul_ex_dir):
     return Path(stpaul_ex_dir) / "project_cards"
@@ -103,8 +90,6 @@ def scratch_dir(base_dir):
 
 @pytest.fixture(scope="module")
 def stpaul_net(stpaul_ex_dir):
-    from network_wrangler.roadway.network import RoadwayNetwork
-
     shape_filename = stpaul_ex_dir / "shape.geojson"
     link_filename = stpaul_ex_dir / "link.json"
     node_filename = stpaul_ex_dir / "node.geojson"
@@ -149,7 +134,7 @@ def small_transit_net(small_ex_dir):
 
 @pytest.fixture(scope="session")
 def bad_project_cards(test_dir):
-    """Card files which should fail"""
+    """Card files which should fail."""
     bad_card_dir = Path(test_dir) / "data" / "project_cards_fail"
     bad_card_files = list(bad_card_dir.iterdir())
     return bad_card_files

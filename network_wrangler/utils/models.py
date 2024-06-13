@@ -1,6 +1,7 @@
 """Helper functions for data models."""
 
-from typing import Any, Union, get_type_hints
+import copy
+from typing import Union, get_type_hints, Optional
 
 import pandas as pd
 import geopandas as gpd
@@ -8,9 +9,10 @@ import pandera as pa
 
 from pandera import DataFrameModel
 from pydantic import ValidationError, BaseModel
+from pydantic._internal._model_construction import ModelMetaclass
 from pandera.errors import SchemaError
 
-from .data import coerce_dict_to_df_types
+from .data import coerce_val_to_df_types
 from ..params import LAT_LON_CRS
 from ..logger import WranglerLogger
 
@@ -21,7 +23,7 @@ def empty_df_from_datamodel(
     """Create an empty DataFrame or GeoDataFrame with the specified columns.
 
     Args:
-        schema (BaseModel): A pandera schema to create an empty [Geo]DataFrame from.
+        model (BaseModel): A pandera data model to create empty [Geo]DataFrame from.
         crs: if schema has geometry, will use this as the geometry's crs. Defaults to LAT_LONG_CRS
     Returns:
         An empty [Geo]DataFrame that validates to the specified model.
@@ -49,18 +51,19 @@ def identify_model(
 
     Args:
         data (Union[pd.DataFrame, dict]): The input data to identify.
-        models (list[DataFrameModel,BaseModel]): A list of models to validate the input data against.
+        models (list[DataFrameModel,BaseModel]): A list of models to validate the input
+          data against.
     """
     for m in models:
         try:
             if isinstance(data, pd.DataFrame):
-                model_instance = m.validate(data)
+                m.validate(data)
             else:
-                model_instance = m(**data)
+                m(**data)
             return m
-        except ValidationError as e:
+        except ValidationError:
             continue
-        except SchemaError as e:
+        except SchemaError:
             continue
 
     WranglerLogger.error(
@@ -68,18 +71,37 @@ def identify_model(
                          \nInput data: {data}\
                          \nData Models: {models}"
     )
-    raise ValueError(
-        "The input dictionary does not conform to any of the provided models."
-    )
+    raise ValueError("The input dictionary does not conform to any of the provided models.")
 
 
 class DatamodelDataframeIncompatableError(Exception):
+    """Raised when a data model and a dataframe are not compatable."""
+
     pass
 
 
+def extra_attributes_undefined_in_model(instance: BaseModel, model: BaseModel) -> list:
+    """Find the extra attributes in a pydantic model that are not defined in the model."""
+    defined_fields = model.model_fields
+    all_attributes = list(instance.model_dump(exclude_none=True, by_alias=True).keys())
+    extra_attributes = [a for a in all_attributes if a not in defined_fields]
+    return extra_attributes
+
+
+def submodel_fields_in_model(model: BaseModel, instance: Optional[BaseModel] = None) -> list:
+    """Find the fields in a pydantic model that are submodels."""
+    types = get_type_hints(model)
+    model_type = Union[ModelMetaclass, BaseModel]
+    submodels = [f for f in model.model_fields if isinstance(types.get(f), model_type)]
+    if instance is not None:
+        defined = list(instance.model_dump(exclude_none=True, by_alias=True).keys())
+        return [f for f in submodels if f in defined]
+    return submodels
+
+
 def coerce_extra_fields_to_type_in_df(
-    data: dict, model: BaseModel, df: pd.DataFrame
-) -> dict:
+    data: BaseModel, model: BaseModel, df: pd.DataFrame
+) -> BaseModel:
     """Coerce extra fields in data that aren't specified in Pydantic model to the type in the df.
 
     Note: will not coerce lists of submodels, etc.
@@ -89,29 +111,18 @@ def coerce_extra_fields_to_type_in_df(
         model (BaseModel): The Pydantic model to validate the data against.
         df (pd.DataFrame): The DataFrame to coerce the data to.
     """
-    out_data = data.copy()
-    types = get_type_hints(model)
-    for key, value in data.items():
-        # if key is in the model, then it will be coerced by the model - but we want to look for subclasses
-        if key in model.model_fields:
-            if isinstance(types[key], BaseModel):
-                # Recursively coerce sub-models
-                out_data[key] = coerce_extra_fields_to_type_in_df(
-                    value, model.__annotations__[key], df
-                )
-            else:
-                # don't need to coerce values in themodel
-                continue
-        else:
-            if key not in df.columns:
-                WranglerLogger.error(
-                    f"Dataframe missing requested data property: {key}"
-                )
-                raise DatamodelDataframeIncompatableError(
-                    f"Dataframe missing requested data property: {key}"
-                )
-            updated_d = coerce_dict_to_df_types(
-                {key: value}, df, skip_keys=model.model_fields.keys()
-            )
-            out_data.update(updated_d)
+    out_data = copy.deepcopy(data)
+
+    # Coerce submodels
+    for field in submodel_fields_in_model(model, data):
+        out_data.__dict__[field] = coerce_extra_fields_to_type_in_df(
+            data.__dict__[field], model.__annotations__[field], df
+        )
+
+    for field in extra_attributes_undefined_in_model(data, model):
+        try:
+            v = coerce_val_to_df_types(field, data.model_extra[field], df)
+        except ValueError as e:
+            raise DatamodelDataframeIncompatableError(e)
+        out_data.model_extra[field] = v
     return out_data

@@ -1,3 +1,11 @@
+"""Module for visualizing roadway and transit networks using Mapbox tiles.
+
+This module provides a function `net_to_mapbox` that creates and serves Mapbox tiles on a local web server based on roadway and transit networks.
+
+Example usage:
+    net_to_mapbox(roadway, transit)
+"""
+
 import os
 from pathlib import Path
 from typing import Union
@@ -18,8 +26,7 @@ def net_to_mapbox(
     overwrite: bool = True,
     port: str = "9000",
 ):
-    """
-    Creates and serves mapbox tiles on local web server based on roadway and transit networks.
+    """Creates and serves mapbox tiles on local web server based on roadway and transit networks.
 
     Args:
         roadway: a RoadwayNetwork instance, geodataframe with roadway linetrings, or path to a
@@ -40,26 +47,28 @@ def net_to_mapbox(
     # test for mapbox token
     try:
         os.getenv("MAPBOX_ACCESS_TOKEN")
-    except:
-        raise (
+    except:  # noqa: E722
+        WranglerLogger.error(
+            "NEED TO SET MAPBOX ACCESS TOKEN IN ENVIRONMENT VARIABLES/n \
+                In command line: >>export MAPBOX_ACCESS_TOKEN='pk.0000.1111' # \
+                replace value with your mapbox public access token"
+        )
+        raise Exception(
             "NEED TO SET MAPBOX ACCESS TOKEN IN ENVIRONMENT VARIABLES/n \
                 In command line: >>export MAPBOX_ACCESS_TOKEN='pk.0000.1111' # \
                 replace value with your mapbox public access token"
         )
 
     if isinstance(transit, TransitNetwork):
-        transit = transit.shapes_gdf()
-    if isinstance(transit, RoadwayNetwork):
-        roadway = RoadwayNetwork.roadway_net_to_gdf(roadway)
-
-    if isinstance(transit, gpd.GeoDataFrame):
+        transit = transit.shape_links_gdf
         transit.to_file(transit_geojson_out, driver="GeoJSON")
     elif Path(transit).exists():
         transit_geojson_out = transit
     else:
         raise ValueError(f"Don't understand transit input: {transit}")
 
-    if isinstance(roadway, gpd.GeoDataFrame):
+    if isinstance(roadway, RoadwayNetwork):
+        roadway = roadway.link_shapes_df
         roadway.to_file(roadway_geojson_out, driver="GeoJSON")
     elif Path(roadway).exists():
         roadway_geojson_out = roadway
@@ -75,28 +84,30 @@ def net_to_mapbox(
 
     try:
         WranglerLogger.info(
-            "Running tippecanoe with following options: {}".format(
-                " ".join(tippe_options_list)
-            )
+            f"Running tippecanoe with following options: {' '.join(tippe_options_list)}"
         )
         subprocess.run(["tippecanoe"] + tippe_options_list)
-    except:
-        WranglerLogger.error()
-        raise (
+    except:  # noqa: E722
+        WranglerLogger.error(
+            "If tippecanoe isn't installed, try `brew install tippecanoe` or \
+                visit https://github.com/mapbox/tippecanoe"
+        )
+        raise ValueError(
             "If tippecanoe isn't installed, try `brew install tippecanoe` or \
                 visit https://github.com/mapbox/tippecanoe"
         )
 
     try:
         WranglerLogger.info(
-            "Running mbview with following options: {}".format(
-                " ".join(tippe_options_list)
-            )
+            "Running mbview with following options: {}".format(" ".join(tippe_options_list))
         )
-        subprocess.run(["mbview", "--port", port, f",/{mbtiles_out}"])
-    except:
-        WranglerLogger.error()
-        raise (
+        subprocess.run(["mbview", "--port", port, f", /{mbtiles_out}"])
+    except:  # noqa: E722
+        WranglerLogger.error(
+            "If mbview isn't installed, try `npm install -g @mapbox/mbview` or \
+                visit https://github.com/mapbox/mbview"
+        )
+        raise Exception(
             "If mbview isn't installed, try `npm install -g @mapbox/mbview` or \
                 visit https://github.com/mapbox/mbview"
         )

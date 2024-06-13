@@ -1,0 +1,14 @@
+[tool.ruff]
+line-length = 99
+
+[tool.ruff.lint]
+select = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D103", "D106", "D101", "D104", "D100"]
+"**/__init__.py" = ["F401", "F403"]
+"test_dependencies.py" = ["F401"]
+"bin/*.py" = ["E501"]

@@ -1,8 +1,8 @@
 """Wrapper function for applying roadway deletion project card to RoadwayNetwork."""
+
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from pydantic import validate_call
 
 from ...logger import WranglerLogger
 
@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 
 
 class RoadwayDeletionError(Exception):
+    """Raised when there is an issue with applying a roadway deletion."""
+
     pass
 
 
@@ -20,8 +22,7 @@ def apply_roadway_deletion(
     roadway_net: RoadwayNetwork,
     roadway_deletion: RoadwayDeletion,
 ) -> RoadwayNetwork:
-    """
-    Delete the roadway links or nodes defined in the project card.
+    """Delete the roadway links or nodes defined in the project card.
 
     If deleting links and specified in RoadwayDeletion, will also clean up the shapes and nodes
     used by links. Defaults to not cleaning up shapes or nodes.
@@ -31,7 +32,7 @@ def apply_roadway_deletion(
         roadway_deletion: dictionary conforming to RoadwayDeletion
     """
     r_del = RoadwayDeletion(**roadway_deletion)
-    WranglerLogger.debug(f"Deleting Roadway Features:\n{r_del}")
+    WranglerLogger.debug(f"Deleting Roadway Features: \n{r_del}")
 
     if r_del.links:
         roadway_net.delete_links(

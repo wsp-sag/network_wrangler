@@ -1,4 +1,3 @@
-import os
 import pytest
 
 
@@ -20,3 +19,5 @@ def test_dependencies_api(request):
     from geopandas.geodataframe import GeoDataFrame
     from pandas.core.frame import DataFrame
     from shapely.geometry import Point, LineString
+    import pandera
+    import pydantic

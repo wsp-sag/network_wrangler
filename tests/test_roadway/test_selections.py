@@ -1,3 +1,8 @@
+"""Tests related to selecting roadway features.
+
+To run with print statments, use `pytest -s tests/test_roadway/test_selections.py`
+"""
+
 import copy
 import os
 
@@ -7,16 +12,8 @@ import pytest
 
 from projectcard import read_card
 from network_wrangler import WranglerLogger
-from network_wrangler.roadway.selection import (
-    RoadwayNodeSelection,
-    RoadwayLinkSelection,
-)
-from network_wrangler.utils.data import dict_to_query
 
-"""
-Run just the tests labeled basic using `pytest tests/test_roadway/test_selections.py`
-To run with print statments, use `pytest -s tests/test_roadway/test_selections.py`
-"""
+from network_wrangler.utils.data import dict_to_query
 
 
 def test_dfhash(request, stpaul_net):
@@ -113,9 +110,7 @@ answer_selected_links = [
 ]
 
 
-@pytest.mark.parametrize(
-    "selection,answer", zip(TEST_SELECTIONS, answer_selected_links)
-)
+@pytest.mark.parametrize("selection,answer", zip(TEST_SELECTIONS, answer_selected_links))
 def test_select_roadway_features(request, selection, answer, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = stpaul_net
@@ -127,15 +122,11 @@ def test_select_roadway_features(request, selection, answer, stpaul_net):
     WranglerLogger.info(f"{len(_selection.selected_links)} links selected")
     if _selection.selection_type == "segment":
         WranglerLogger.info(f"Segment Path: \n{_selection.segment.segment_nodes}")
-        WranglerLogger.info(
-            f"Segment Links: \n{_selection.segment.segment_links_df[_show_f]}"
-        )
+        WranglerLogger.info(f"Segment Links: \n{_selection.segment.segment_links_df[_show_f]}")
     WranglerLogger.info("Selected Links")
 
     if len(selected_link_indices) < 10:
-        WranglerLogger.info(
-            f"Selected Links: \n{_selection.selected_links_df[_show_f]}"
-        )
+        WranglerLogger.info(f"Selected Links: \n{_selection.selected_links_df[_show_f]}")
 
     if answer:
         WranglerLogger.info(f"Answer Links: {answer}")
@@ -182,9 +173,7 @@ variable_queries = [
 
 
 @pytest.mark.parametrize("variable_query", variable_queries)
-def test_query_roadway_property_by_time_group(
-    request, variable_query, stpaul_net, stpaul_ex_dir
-):
+def test_query_roadway_property_by_time_group(request, variable_query, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
 
@@ -205,10 +194,10 @@ def test_query_roadway_property_by_time_group(
     _selected_links = net.get_selection(
         project_card.roadway_property_change["facility"]
     ).selected_links
-    WranglerLogger.debug(f"QUERY:\n{_query}")
+    WranglerLogger.debug(f"QUERY: \n{_query}")
     WranglerLogger.debug(f"EXPECTED ANSWER: {_answer}")
-    WranglerLogger.debug(f"QUERY RESULT:\n{v_series.loc[_selected_links]}")
-    WranglerLogger.debug(f"NET:\n{net.links_df.loc[_selected_links[0]][ _query['v']]}")
+    WranglerLogger.debug(f"QUERY RESULT: \n{v_series.loc[_selected_links]}")
+    WranglerLogger.debug(f"NET: \n{net.links_df.loc[_selected_links[0]][_query['v']]}")
 
     assert (v_series.loc[_selected_links, _query["v"]] == _answer).all()
 
@@ -222,18 +211,12 @@ def test_get_modal_network(request, stpaul_net):
     _links_df = net.links_df.mode_query(mode)
 
     test_links_of_selection = _links_df["model_link_id"].tolist()
-    WranglerLogger.debug(
-        f"TEST - Number of selected links: {len(test_links_of_selection)}"
-    )
+    WranglerLogger.debug(f"TEST - Number of selected links: {len(test_links_of_selection)}")
 
     control_links_of_selection = []
     for m in net.links_df.params.modes_to_network_link_variables[mode]:
-        control_links_of_selection.extend(
-            net.links_df.loc[net.links_df[m], "model_link_id"]
-        )
-    WranglerLogger.debug(
-        f"CONTROL - Number of selected links: {len(control_links_of_selection)}"
-    )
+        control_links_of_selection.extend(net.links_df.loc[net.links_df[m], "model_link_id"])
+    WranglerLogger.debug(f"CONTROL - Number of selected links: {len(control_links_of_selection)}")
 
     all_model_link_ids = _links_df["model_link_id"].tolist()
     WranglerLogger.debug(f"CONTROL - Number of total links: {len(all_model_link_ids)}")
@@ -333,8 +316,8 @@ def test_query_builder(request, test_spec, stpaul_net):
 
     sel_query = dict_to_query(selection)
 
-    WranglerLogger.debug(f"\nsel_query:\n{sel_query}")
-    WranglerLogger.debug(f"\nanswer:\n{answer}")
+    WranglerLogger.debug(f"\nsel_query: \n{sel_query}")
+    WranglerLogger.debug(f"\nanswer: \n{answer}")
     assert sel_query == answer
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

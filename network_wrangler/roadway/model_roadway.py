@@ -1,3 +1,5 @@
+"""Functions to create a model roadway network from a roadway network."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -22,7 +24,7 @@ from .links.create import data_to_links_df
 from .links.filters import (
     filter_links_to_ml_access_points,
     filter_links_to_ml_egress_points,
-    filter_link_properties_managed_lanes
+    filter_link_properties_managed_lanes,
 )
 from .nodes.create import _create_nodes_from_link
 from .io import write_roadway
@@ -60,8 +62,7 @@ class ModelRoadwayNetwork:
         ml_link_id_scalar=MANAGED_LANES_LINK_ID_SCALAR,
         ml_node_id_scalar=MANAGED_LANES_NODE_ID_SCALAR,
     ):
-        """
-        Constructor for ModelRoadwayNetwork.
+        """Constructor for ModelRoadwayNetwork.
 
         NOTE: in order to be associated with the RoadwayNetwork, this should be called from
         RoadwayNetwork.model_net which will lazily construct it.
@@ -76,7 +77,6 @@ class ModelRoadwayNetwork:
                 managed lane. Defaults to MANAGED_LANES_NODE_ID_SCALAR which defaults to
                 500,000
         """
-
         self.net = net
         self.ml_link_id_scalar = ml_link_id_scalar
         self.ml_node_id_scalar = ml_node_id_scalar
@@ -108,19 +108,18 @@ class ModelRoadwayNetwork:
 
     @property
     def summary(self) -> dict:
-        """Quick summary dictionary of number of links, nodes"""
+        """Quick summary dictionary of number of links, nodes."""
         d = {"links": len(self.links_df), "nodes": len(self.nodes_df)}
         return d
 
     @property
     def compare_links_df(self) -> pd.DataFrame:
-        return compare_links(
-            [self.net.links_df, self.links_df], names=["Roadway", "ModelRoadway"]
-        )
+        """Comparison of the original network and the model network."""
+        return compare_links([self.net.links_df, self.links_df], names=["Roadway", "ModelRoadway"])
 
     @property
     def compare_net_df(self) -> pd.DataFrame:
-        """Comparison of the original network and the model network"""
+        """Comparison of the original network and the model network."""
         return compare_networks([self.net, self], names=["Roadway", "ModelRoadway"])
 
     def _node_id_to_managed_lane_node_id(self, model_node_id):
@@ -146,9 +145,9 @@ class ModelRoadwayNetwork:
         overwrite: bool = True,
         true_shape: bool = False,
     ) -> None:
-        """Writes a network in the roadway network standard
+        """Writes a network in the roadway network standard.
 
-        args:
+        Args:
             out_dir: the path were the output will be saved
             prefix: the name prefix of the roadway files that will be generated
             file_format: the format of the output files. Defaults to "geojson"
@@ -160,14 +159,14 @@ class ModelRoadwayNetwork:
 
 
 def model_links_nodes_from_net(
-    net: 'RoadwayNetwork', ml_link_id_scalar: int, ml_node_id_scalar: int
-) -> tuple[pd.DataFrame]:
+    net: "RoadwayNetwork", ml_link_id_scalar: int, ml_node_id_scalar: int
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Create a roadway network with managed lanes links separated out.
 
     Add new parallel managed lane links, access/egress links,
     and add shapes corresponding to the new links
 
-    args:
+    Args:
         net: RoadwayNetwork instance
         ml_link_id_scalar: scalar value added to the general purpose lanes'
             `model_link_id` when creating an associated link for a parallel managed lane
@@ -200,10 +199,12 @@ def _separate_ml_links(
     ml_links_df = _create_separate_managed_lane_links(
         links_df, ml_link_id_scalar, ml_node_id_scalar
     )
-    WranglerLogger.debug(f"Separated ML links: \
+    WranglerLogger.debug(
+        f"Separated ML links: \
         \n  no parallel ML: {len(no_ml_links_df)}\
-        \n  parallel GP:    {len(gp_links_df)}\
-        \n  separate ML:    {len(ml_links_df)}")
+        \n  parallel GP: {len(gp_links_df)}\
+        \n  separate ML: {len(ml_links_df)}"
+    )
 
     m_links_df = pd.concat([ml_links_df, gp_links_df, no_ml_links_df])
 
@@ -225,7 +226,6 @@ def _create_separate_managed_lane_links(
     ml_node_id_scalar: int,
 ) -> Tuple[gpd.GeoDataFrame]:
     """Creates df with separate links for managed lanes."""
-
     # make sure there are correct fields even if managed = 1 was set outside of wrangler
     links_df = _initialize_links_as_managed_lanes(links_df, links_df.of_type.managed.index.values)
 
@@ -276,10 +276,9 @@ def _create_dummy_connector_links(
     ml_link_id_scalar: int,
     ml_node_id_scalar: int,
 ) -> DataFrame[RoadLinksTable]:
-    """
-    Create dummy connector links between the general purpose and managed lanes
+    """Create dummy connector links between the general purpose and managed lanes.
 
-    args:
+    Args:
         links_df: RoadLinksTable of network links
         m_nodes_df: GeoDataFrame of model nodes
         ml_link_id_scalar: scalar value added to the general purpose lanes'
@@ -335,9 +334,7 @@ def _create_dummy_connector_links(
 
     # 5 - Add geometry
     access_egress_df = data_to_links_df(access_egress_df, nodes_df=m_nodes_df)
-    WranglerLogger.debug(
-        f"access_egress_df['geometry']: \n {access_egress_df['geometry']}"
-    )
+    WranglerLogger.debug(f"access_egress_df['geometry']: \n {access_egress_df['geometry']}")
 
     WranglerLogger.debug(f"Access Egress Links Created: {len(access_egress_df)}")
 
@@ -347,7 +344,7 @@ def _create_dummy_connector_links(
 def _create_ml_nodes_from_links(
     ml_links_df, ml_node_id_scalar: int = MANAGED_LANES_NODE_ID_SCALAR
 ) -> DataFrame[RoadNodesTable]:
-    "Creates managed lane nodes from geometry already generated by links"
+    """Creates managed lane nodes from geometry already generated by links."""
     a_nodes_df = _create_nodes_from_link(ml_links_df.of_type.managed, 0, "A")
     b_nodes_df = _create_nodes_from_link(ml_links_df.of_type.managed, -1, "B")
     ml_nodes_df = a_nodes_df.combine_first(b_nodes_df)
@@ -357,7 +354,7 @@ def _create_ml_nodes_from_links(
 
 
 def strip_ML_from_prop_list(property_list: list[str]) -> list[str]:
-    """Strips 'ML_' from property list but keeps necessary access/egress point cols"""
+    """Strips 'ML_' from property list but keeps necessary access/egress point cols."""
     keep_same = ["ML_access_point", "ML_egress_point"]
     pl = [p.removeprefix("ML_") if p not in keep_same else p for p in property_list]
     pl = [p.replace("_ML_", "_") if p not in keep_same else p for p in pl]

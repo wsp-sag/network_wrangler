@@ -3,7 +3,6 @@ import os
 
 import pandas as pd
 
-import pytest
 from projectcard import read_card
 
 from network_wrangler import WranglerLogger
@@ -74,8 +73,8 @@ def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
             ScopedLinkValueItem(timespan=_am_period, value=1),
             ScopedLinkValueItem(timespan=_pm_period, value=1),
         ],
-        "ML_access_point": "all",
-        "ML_egress_point": "all",
+        "ML_access_point": True,
+        "ML_egress_point": True,
         "ML_price": 0,
         "sc_ML_price": [
             ScopedLinkValueItem(category="sov", timespan=_am_period, value=1.5),
@@ -93,15 +92,13 @@ def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
     _orig_links = net.links_df.loc[
         _selected_link_idx, net.links_df.columns.intersection(_p_to_track)
     ].copy()
-    WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
+    WranglerLogger.debug(f"_orig_links: \n{_orig_links}")
 
     # apply change
     net = net.apply(_project_card_dict)
 
-    _rev_links = net.links_df.loc[
-        _selected_link_idx, list(_expected_property_values.keys())
-    ]
-    WranglerLogger.debug(f"_rev_links:\n{_rev_links.iloc[0]}")
+    _rev_links = net.links_df.loc[_selected_link_idx, list(_expected_property_values.keys())]
+    WranglerLogger.debug(f"_rev_links: \n{_rev_links.iloc[0]}")
     pass_test = True
     _non_scoped_expected_property_values = {
         k: v for k, v in _expected_property_values.items() if not k.startswith("sc_")
@@ -112,16 +109,16 @@ def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
     for p, _expected_value in _non_scoped_expected_property_values.items():
         not_equal_elements = _rev_links[p][_rev_links[p].ne(_expected_value)]
         if not_equal_elements.size > 0:
-            WranglerLogger.debug(f"Expected_value of {p}:\n{_expected_value}")
-            WranglerLogger.error(f"Elements not equal for {p}:\n{not_equal_elements}")
+            WranglerLogger.debug(f"Expected_value of {p}: \n{_expected_value}")
+            WranglerLogger.error(f"Elements not equal for {p}: \n{not_equal_elements}")
             pass_test = False
     # this is dumb, but pandas wont consider lists equal when comparing with vector op
     for idx in _selected_link_idx:
         for p, _expected_value in _scoped_expected_property_values.items():
             if net.links_df.loc[idx, p] != _expected_value:
-                WranglerLogger.debug(f"Expected_value of {p}:\n{_expected_value}")
+                WranglerLogger.debug(f"Expected_value of {p}: \n{_expected_value}")
                 WranglerLogger.error(
-                    f"Elements not equal for {p},idx: {idx}:\n\
+                    f"Elements not equal for {p}, idx: {idx}: \n\
                                      {net.links_df.loc[idx, p]}"
                 )
                 pass_test = False
@@ -148,25 +145,21 @@ def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info("      start: select_roadway_features")
     _selected_link_idx = net.get_selection(project_card.facility).selected_links
 
-    attributes_to_update = list(
-        project_card.roadway_property_change["property_changes"].keys()
-    )
+    attributes_to_update = list(project_card.roadway_property_change["property_changes"].keys())
 
     _orig_links = net.links_df.loc[
         _selected_link_idx, net.links_df.columns.intersection(attributes_to_update)
     ].copy()
 
-    WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
+    WranglerLogger.debug(f"_orig_links: \n{_orig_links}")
     net = net.apply(project_card)
 
-    _rev_links = net.links_df.loc[
-        _selected_link_idx, list(_expected_property_values.keys())
-    ]
-    WranglerLogger.debug(f"_rev_links:\n{_rev_links.iloc[0]}")
+    _rev_links = net.links_df.loc[_selected_link_idx, list(_expected_property_values.keys())]
+    WranglerLogger.debug(f"_rev_links: \n{_rev_links.iloc[0]}")
 
     for p, _expected_value in _expected_property_values.items():
-        WranglerLogger.debug(f"Expected_value of {p}:\n{_expected_value}")
-        WranglerLogger.debug(f"Actual Values of {p}:\n{_rev_links[p].iloc[0]}")
+        WranglerLogger.debug(f"Expected_value of {p}: \n{_expected_value}")
+        WranglerLogger.debug(f"Actual Values of {p}: \n{_rev_links[p].iloc[0]}")
         assert _rev_links[p].eq(_expected_value).all()
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

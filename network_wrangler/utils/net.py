@@ -1,9 +1,6 @@
-"""Functions to help with network manipulations in dataframes.
-"""
+"""Functions to help with network manipulations in dataframes."""
 
 from pandas import DataFrame
-
-from ..logger import WranglerLogger
 
 
 def point_seq_to_links(

@@ -1,25 +1,38 @@
+"""ModelTransit class and functions for managing consistency between roadway and transit networks.
+
+NOTE: this is not thoroughly tested and may not be fully functional.
+"""
+
+from __future__ import annotations
 import copy
 
-import pandas as pd
+from typing import TYPE_CHECKING
+
+from ..roadway.network import RoadwayNetwork
+
+if TYPE_CHECKING:
+    from ..transit.network import TransitNetwork
 
 
 class ModelTransit:
+    """ModelTransit class for managing consistency between roadway and transit networks."""
+
     def __init__(
         self,
-        transit_net: "TransitNetwork",
-        roadway_net: "RoadwayNetwork",
+        transit_net: TransitNetwork,
+        roadway_net: RoadwayNetwork,
         shift_transit_to_managed_lanes: bool = True,
     ):
+        """ModelTransit class for managing consistency between roadway and transit networks."""
         self.transit_net = transit_net
         self.roadway_net = roadway_net
         self._roadway_net_hash = None
         self._transit_feed_hash = None
         self._transit_shifted_to_ML = shift_transit_to_managed_lanes
 
-        self._m_feed = self.create_model_transit_feed(transit_net, roadway_net)
-
     @property
     def model_roadway_net(self):
+        """ModelRoadwayNetwork associated with this ModelTransit."""
         return self.roadway_net.model_net
 
     @property
@@ -44,32 +57,3 @@ class ModelTransit:
         if not self._transit_shifted_to_ML:
             self._m_feed = self.transit_net.feed.copy()
             return self._m_feed
-
-    def _shift_transit_to_managed_lanes(
-        self,
-        trip_ids: pd.Series,
-        node_ids: list,
-    ) -> "TransitNetwork":
-        """_summary_
-
-        FIXME
-        Args:
-            selftrip_ids (pd.Series): _description_
-            node_ids (list): _description_
-
-        Returns:
-            TransitNetwork: _description_
-        """
-        # Traversed nodes without a stop should be negative integers
-        net = copy.deepcopy(self)
-        all_stops = net.feed.stops["model_link_id"].tolist()
-        node_ids = [int(x) if str(x) in all_stops else int(x) * -1 for x in node_ids]
-
-        net.apply(
-            net.get_selection({"trip_id": trip_ids}),
-            properties={
-                "existing": node_ids,
-                "set": RoadwayNetwork.get_managed_lane_node_ids(node_ids),
-            },
-        )
-        return net

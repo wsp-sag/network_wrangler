@@ -1,18 +1,25 @@
+"""Visualization functions for RoadwayNetwork and RoadwayLinkSelection."""
+
+from __future__ import annotations
 import randint
+
+from typing import TYPE_CHECKING
 
 import folium
 import osmnx as ox
 
 from .logger import WranglerLogger
-from .graph import links_nodes_to_ox_graph
+
+if TYPE_CHECKING:
+    from .selection import RoadwayLinkSelection
 
 
 def selection_map(
-    selection: "Union[RoadwayNodeSelection,RoadwayLinkSelection]",
+    selection: RoadwayLinkSelection,
 ) -> folium.map:
-    """
-    Shows which links are selected based on a selection instance.
+    """Shows which links are selected based on a selection instance.
 
+    FIXME
     Args:
         selection: RoadwayNodeSelection or RoadwayLink seleciton instance
     """
@@ -20,9 +27,12 @@ def selection_map(
     if selection.selection_type == "segment":
         G = selection.segment.graph
     else:
+        raise NotImplementedError()
+        """FIXME
         G = links_nodes_to_ox_graph(
             selection.selected_links_df, selection.selected_nodes_df
         )
+        """
 
     # base map plot with whole graph
     m = ox.plot_graph_folium(
@@ -50,13 +60,13 @@ def selection_map(
 
     if selection.selection_type == "segment":
         _folium_node(
-            selection.selected_nodes_df.loc[selection.segment.O_pk],
+            selection.segment.segment_from_node_s,
             color="green",
             icon="play",
         ).add_to(m)
 
         _folium_node(
-            selection.selected_nodes_df.loc[selection.segment.D_pk],
+            selection.segment.segment_to_node_s,
             color="red",
             icon="star",
         ).add_to(m)

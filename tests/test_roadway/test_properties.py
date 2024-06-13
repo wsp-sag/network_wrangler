@@ -1,6 +1,4 @@
-"""
-To run these tests, use `pytest -s tests/test_roadway/test_properties.py`
-"""
+"""To run these tests, use `pytest -s tests/test_roadway/test_properties.py`."""
 
 from network_wrangler import WranglerLogger
 from network_wrangler.roadway.graph import assess_connectivity

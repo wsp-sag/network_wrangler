@@ -203,7 +203,7 @@ my_network.apply_project_card(...) # returns
 my_network.write_roadway_network(...) # returns
 
 ## Scenario Building
-my_scenario = Scenario.create_scenario(
+my_scenario = network_wrangler.create_scenario(
           base_scenario=my_base_scenario,
           card_search_dir=project_card_directory,
           tags = ["baseline-2050"]

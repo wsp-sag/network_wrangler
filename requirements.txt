@@ -4,8 +4,8 @@ geopandas >= 0.8.0
 osmnx >= 0.12
 pandas >= 1.6
 pandera[geopandas]
-pydantic >= 2
-pyarrow
-pyogrio
 projectcard
+pyarrow
+pydantic >= 2
+pyogrio
 pyyaml

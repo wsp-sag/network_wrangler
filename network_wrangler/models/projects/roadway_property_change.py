@@ -1,3 +1,5 @@
+"""Pydantic models for roadway property changes which align with ProjectCard schemas."""
+
 from __future__ import annotations
 
 import itertools
@@ -21,23 +23,25 @@ from ...params import LAT_LON_CRS, DEFAULT_CATEGORY, DEFAULT_TIMESPAN
 from .._base.records import RecordModel
 from .._base.root import RootListMixin
 from .._base.types import OneOf
-from .types import Timespan
+from .._base.types import TimespanString
 from ...utils.time import str_to_time_list, dt_overlaps
 
 from ...logger import WranglerLogger
 
 
 class ScopeConflictError(Exception):
+    """Raised when there is a scope conflict in a list of ScopedPropertySetItems."""
+
     pass
 
 
 class IndivScopedPropertySetItem(BaseModel):
-    """Value for setting property value for a single time of day and category"""
+    """Value for setting property value for a single time of day and category."""
 
     model_config = ConfigDict(extra="forbid", exclude_none=True)
 
     category: Optional[Union[str, int]] = DEFAULT_CATEGORY
-    timespan: Optional[Timespan] = DEFAULT_TIMESPAN
+    timespan: Optional[TimespanString] = DEFAULT_TIMESPAN
     set: Optional[Any] = None
     existing: Optional[Any] = None
     change: Optional[Union[int, float]] = None
@@ -49,11 +53,13 @@ class IndivScopedPropertySetItem(BaseModel):
 
     @property
     def timespan_dt(self) -> list[list[datetime]]:
+        """Convert timespan to list of datetime objects."""
         return str_to_time_list(self.timespan)
 
     @model_validator(mode="before")
     @classmethod
     def check_set_or_change(cls, data: dict):
+        """Validate that each item has a set or change value."""
         if not isinstance(data, dict):
             return data
         if data.get("set") and data.get("change"):
@@ -66,14 +72,13 @@ class IndivScopedPropertySetItem(BaseModel):
                 f"Must have `set` or `change` in IndivScopedPropertySetItem. \
                            Found: {data}"
             )
-            raise ValueError(
-                "Must have `set` or `change` in IndivScopedPropertySetItem"
-            )
+            raise ValueError("Must have `set` or `change` in IndivScopedPropertySetItem")
         return data
 
     @model_validator(mode="before")
     @classmethod
     def check_categories_or_timespans(cls, data: Any) -> Any:
+        """Validate that each item has a category or timespan value."""
         if not isinstance(data, dict):
             return data
         require_any_of = ["category", "timespan"]
@@ -83,14 +88,14 @@ class IndivScopedPropertySetItem(BaseModel):
 
 
 class GroupedScopedPropertySetItem(BaseModel):
-    """Value for setting property value for a single time of day and category"""
+    """Value for setting property value for a single time of day and category."""
 
     model_config = ConfigDict(extra="forbid", exclude_none=True)
 
     category: Optional[Union[str, int]] = None
-    timespan: Optional[Timespan] = None
+    timespan: Optional[TimespanString] = None
     categories: Optional[list[Any]] = []
-    timespans: Optional[list[Timespan]] = []
+    timespans: Optional[list[TimespanString]] = []
     set: Optional[Any] = None
     existing: Optional[Any] = None
     change: Optional[Union[int, float]] = None
@@ -103,6 +108,7 @@ class GroupedScopedPropertySetItem(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def check_set_or_change(cls, data: dict):
+        """Validate that each item has a set or change value."""
         if not isinstance(data, dict):
             return data
         if "set" in data and "change" in data:
@@ -113,6 +119,7 @@ class GroupedScopedPropertySetItem(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def check_categories_or_timespans(cls, data: Any) -> Any:
+        """Validate that each item has a category or timespan value."""
         if not isinstance(data, dict):
             return data
         require_any_of = ["category", "timespan", "categories", "timespans"]
@@ -123,9 +130,7 @@ class GroupedScopedPropertySetItem(BaseModel):
 
 @validate_call
 def _grouped_to_indiv_list_of_scopedpropsetitem(
-    scoped_prop_set_list: list[
-        Union[GroupedScopedPropertySetItem, IndivScopedPropertySetItem]
-    ]
+    scoped_prop_set_list: list[Union[GroupedScopedPropertySetItem, IndivScopedPropertySetItem]],
 ) -> list[IndivScopedPropertySetItem]:
     """Converts a list of ScopedPropertySetItem to a list of IndivScopedPropertySetItem.
 
@@ -166,16 +171,20 @@ def _grouped_to_indiv_list_of_scopedpropsetitem(
 
 
 class ScopedPropertySetList(RootListMixin, RootModel):
+    """List of ScopedPropertySetItems used to evaluate and apply changes to roadway properties."""
+
     root: list[IndivScopedPropertySetItem]
 
     @model_validator(mode="before")
     @classmethod
     def check_set_or_change(cls, data: list):
+        """Validate that each item has a set or change value."""
         data = _grouped_to_indiv_list_of_scopedpropsetitem(data)
         return data
 
     @model_validator(mode="after")
     def check_conflicting_scopes(self):
+        """Check for conflicting scopes in the list of ScopedPropertySetItem."""
         conflicts = []
         for i in self:
             if i.timespan == DEFAULT_TIMESPAN:
@@ -187,29 +196,30 @@ class ScopedPropertySetList(RootListMixin, RootModel):
                 if j.category == i.category:
                     conflicts.append((i, j))
         if conflicts:
-            WranglerLogger.error(
-                "Found conflicting scopes in ScopedPropertySetList:\n{conflicts}"
-            )
+            WranglerLogger.error("Found conflicting scopes in ScopedPropertySetList:\n{conflicts}")
             raise ScopeConflictError("Conflicting scopes in ScopedPropertySetList")
 
         return self
 
-    def overlapping_timespans(self, timespan: Timespan):
+    def overlapping_timespans(self, timespan: TimespanString) -> list[IndivScopedPropertySetItem]:
+        """Return a list of items that overlap with the given timespan."""
         timespan_dt = str_to_time_list(timespan)
         return [i for i in self if dt_overlaps(i.timespan_dt, timespan_dt)]
 
     @property
-    def change_items(self):
+    def change_items(self) -> list[IndivScopedPropertySetItem]:
+        """Filter out items that do not have a change value."""
         WranglerLogger.debug(f"self.root[0]: {self.root[0]}")
         return [i for i in self if i.change is not None]
 
     @property
     def set_items(self):
+        """Filter out items that do not have a set value."""
         return [i for i in self if i.set is not None]
 
 
 class RoadPropertyChange(RecordModel):
-    """Value for setting property value for a time of day and category"""
+    """Value for setting property value for a time of day and category."""
 
     model_config = ConfigDict(extra="forbid", exclude_none=True)
 
@@ -252,17 +262,21 @@ class RoadPropertyChange(RecordModel):
 
 
 class NodeGeometryChangeTable(DataFrameModel):
+    """DataFrameModel for setting node geometry given a model_node_id."""
+
     model_node_id: Series[int]
     X: Series[float] = Field(coerce=True)
     Y: Series[float] = Field(coerce=True)
     in_crs: Series[int] = Field(default=LAT_LON_CRS)
 
     class Config:
+        """Config for NodeGeometryChangeTable."""
+
         add_missing_columns = True
 
 
 class NodeGeometryChange(RecordModel):
-    """Value for setting node geometry given a model_node_id"""
+    """Value for setting node geometry given a model_node_id."""
 
     model_config = ConfigDict(extra="ignore")
     X: float

@@ -1,5 +1,4 @@
-"""
-Functions to clip a RoadwayNetwork object to a boundary.
+"""Functions to clip a RoadwayNetwork object to a boundary.
 
 Clipped roadway is an independent roadway network that is a subset of the original roadway network.
 
@@ -20,8 +19,9 @@ write_roadway(clipped_network, out_dir, prefix="ecolab", format="geojson", true_
 ```
 
 """
+
 from __future__ import annotations
-from typing import Union
+from typing import Union, Optional, TYPE_CHECKING
 from pathlib import Path
 
 import geopandas as gpd
@@ -30,12 +30,15 @@ from .links.links import node_ids_in_links
 from ..utils.geo import get_bounding_polygon
 from ..logger import WranglerLogger
 
+if TYPE_CHECKING:
+    from .network import RoadwayNetwork
+
 
 def clip_roadway_to_dfs(
-    network: "RoadwayNetwork",
+    network: RoadwayNetwork,
     boundary_gdf: gpd.GeoDataFrame = None,
-    boundary_geocode: Union[str, dict] = None,
-    boundary_file: Union[str, Path] = None,
+    boundary_geocode: Optional[Union[str, dict]] = None,
+    boundary_file: Optional[Union[str, Path]] = None,
 ) -> tuple:
     """Clips a RoadwayNetwork object to a boundary and returns the resulting GeoDataFrames.
 
@@ -64,18 +67,14 @@ def clip_roadway_to_dfs(
 
     # make sure boundary_gdf.crs == network.crs
     if boundary_gdf.crs != network.crs:
-        WranglerLogger.debug(
-            f"Making boundary CRS consistent with network CRS: {network.crs}"
-        )
+        WranglerLogger.debug(f"Making boundary CRS consistent with network CRS: {network.crs}")
         boundary_gdf = boundary_gdf.to_crs(network.crs)
     # get the boundary as a single polygon
     boundary = boundary_gdf.geometry.unary_union
     # get the links that intersect the boundary
-    WranglerLogger.debug(
-        "Finding roadway links that intersect boundary (spatial join)."
-    )
+    WranglerLogger.debug("Finding roadway links that intersect boundary (spatial join).")
     filtered_links_df = network.links_df[network.links_df.geometry.intersects(boundary)]
-    WranglerLogger.debug(f"filtered_links_df:\n{filtered_links_df.head()}")
+    WranglerLogger.debug(f"filtered_links_df: \n{filtered_links_df.head()}")
     # get the nodes that the links connect to
     # WranglerLogger.debug("Finding roadway nodes that clipped links connect to.")
     filtered_node_ids = node_ids_in_links(filtered_links_df, network.nodes_df)
@@ -93,13 +92,12 @@ def clip_roadway_to_dfs(
 
 
 def clip_roadway(
-    network: "RoadwayNetwork",
+    network: RoadwayNetwork,
     boundary_gdf: gpd.GeoDataFrame = None,
-    boundary_geocode: Union[str, dict] = None,
-    boundary_file: Union[str, Path] = None,
-) -> "RoadwayNetwork":
-    """
-    Clip a RoadwayNetwork object to a boundary.
+    boundary_geocode: Optional[Union[str, dict]] = None,
+    boundary_file: Optional[Union[str, Path]] = None,
+) -> RoadwayNetwork:
+    """Clip a RoadwayNetwork object to a boundary.
 
     Retains only the links within or crossing the boundary and all the nodes that those links
     connect to.  At least one of boundary_gdf, boundary_geocode, or boundary_file must be provided.
@@ -117,7 +115,6 @@ def clip_roadway(
 
     Returns: RoadwayNetwork clipped to the defined boundary.
     """
-
     trimmed_links_df, trimmed_nodes_df, trimmed_shapes_df = clip_roadway_to_dfs(
         network=network,
         boundary_gdf=boundary_gdf,

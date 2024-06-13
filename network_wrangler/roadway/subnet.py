@@ -1,17 +1,33 @@
+"""Subnet class for RoadwayNetwork object."""
+
+from __future__ import annotations
+import copy
 import hashlib
+from typing import TYPE_CHECKING
 
 import pandas as pd
+
+from pandera.typing import DataFrame
 
 from .graph import links_nodes_to_ox_graph
 from .links.links import node_ids_in_links
 from ..logger import WranglerLogger
 
+if TYPE_CHECKING:
+    from .network import RoadwayNetwork
+    from ..models.roadway.tables import RoadLinksTable, RoadNodesTable
+    from networkx import MultiDiGraph
+
 
 class SubnetExpansionError(Exception):
+    """Raised when a subnet can't be expanded to include a node or set of nodes."""
+
     pass
 
 
 class SubnetCreationError(Exception):
+    """Raised when a subnet can't be created."""
+
     pass
 
 
@@ -51,7 +67,7 @@ class Subnet:
 
     def __init__(
         self,
-        net: "RoadwayNetwork",
+        net: RoadwayNetwork,
         modes: list = ["drive"],
         subnet_links_df: pd.DataFrame = None,
         selection_dict: dict = None,
@@ -70,8 +86,17 @@ class Subnet:
                 self.generate_subnet_from_selection_dict(selection_dict)
             selection_dict (dict optional): RoadwayLinkSelection dictionary for initial links to
                 include in subnet.
+            i: Expansion iteration number. Shouldn't need to change this as it will be done
+                internally. Defaults to 0.
+            sp_weight_col: Column to use for weights in shortest path.  Will not
+                likely need to be changed. Defaults to "weight".
+            sp_weight_factor: Factor to multiply sp_weight_col by to use for
+                weights in shortest path.  Will not likely need to be changed. Defaults to 1.
+            max_search_breadth: Maximum expansions of the subnet network to find
+                the shortest path after the initial selection based on `name`. Will not likely
+                need to be changed unless network contains a lot of ambiguity. Defaults to 10.
 
-                Example:
+        Example:
                     ```
                     selection_dict = {
                         "name":['6th','Sixth','sixth'],
@@ -108,7 +133,8 @@ class Subnet:
         self._graph_link_hash = None
 
     @property
-    def exists(self):
+    def exists(self) -> bool:
+        """Returns True if subnet_links_df is not None and has at least one link."""
         if self.subnet_links_df is None:
             return False
         if len(self.subnet_links_df) == 0:
@@ -118,7 +144,8 @@ class Subnet:
         raise SubnetCreationError("Something's not right.")
 
     @property
-    def subnet_links_df(self):
+    def subnet_links_df(self) -> DataFrame[RoadLinksTable]:
+        """Links in the subnet. If not set, will generate from selection_dict."""
         if self._subnet_links_df is None:
             if self.selection_dict is None:
                 raise SubnetCreationError(
@@ -126,13 +153,14 @@ class Subnet:
                     or selection_dict"
                 )
 
-            self._subnet_links_df = self.generate_subnet_from_selection_dict(
-                self.selection_dict
-            )
+            selection = self.net.get_selection(self.selection_dict)
+            subnet_links_df = copy.deepcopy(selection.selected_links_df)
+            subnet_links_df["i"] = 0
+            self._subnet_links_df = subnet_links_df
         return self._subnet_links_df
 
     @property
-    def graph_hash(self):
+    def graph_hash(self) -> str:
         """Hash of the links in order to detect a network change from when graph created."""
         _value = [
             self.subnet_links_df.df_hash(),
@@ -144,7 +172,8 @@ class Subnet:
         return _hash
 
     @property
-    def graph(self):
+    def graph(self) -> MultiDiGraph:
+        """nx.MultiDiGraph of the subnet."""
         if self.graph_hash != self._graph_link_hash:
             self._graph = links_nodes_to_ox_graph(
                 self.subnet_links_df,
@@ -156,37 +185,20 @@ class Subnet:
 
     @property
     def num_links(self):
+        """Number of links in the subnet."""
         return len(self.subnet_links_df)
 
     @property
-    def subnet_nodes(self):
+    def subnet_nodes(self) -> list[int]:
+        """List of node_ids in the subnet."""
         if self.subnet_links_df is None:
-            raise ValueError(
-                "Must set self.subnet_links_df before accessing subnet_nodes."
-            )
+            raise ValueError("Must set self.subnet_links_df before accessing subnet_nodes.")
         return node_ids_in_links(self.subnet_links_df, self.net.nodes_df)
 
     @property
-    def subnet_nodes_df(self):
+    def subnet_nodes_df(self) -> DataFrame[RoadNodesTable]:
+        """Nodes filtered to subnet."""
         return self.net.nodes_df.loc[self.subnet_nodes]
-
-    def generate_subnet_from_selection_dict(
-        self,
-        selection_dict: dict,
-    ) -> "Subnet":
-        WranglerLogger.debug("Generating subnet from selection dict.")
-        WranglerLogger.debug(f"selection_dict: {selection_dict}")
-        WranglerLogger.debug(f"modes: {self.modes}")
-
-        _modal_links_df = self.net.links_df.mode_query(self.modes)
-
-        _subnet_links_df = _modal_links_df.dict_query(selection_dict).copy()
-        _subnet_links_df["i"] = 0
-        WranglerLogger.debug(f"{len(_subnet_links_df)} links found for subnet.")
-        if len(_subnet_links_df) == 0:
-            WranglerLogger.warning(f"No links found using selection: {selection_dict}")
-
-        return _subnet_links_df
 
     def expand_subnet_to_include_nodes(self, nodes_list: list):
         """Expand network to include list of nodes.
@@ -194,16 +206,14 @@ class Subnet:
         Will stop expanding and generate a SubnetExpansionError if meet max_search_breadth before
         finding the nodes.
 
-        args:
+        Args:
             nodes_list: a list of node primary keys to expand subnet to include.
         """
-
         WranglerLogger.debug(f"Expanding subnet to includes nodes: {nodes_list}")
 
         # expand network to find nodes in the list
         while (
-            not set(nodes_list).issubset(self.subnet_nodes)
-            and self._i <= self._max_search_breadth
+            not set(nodes_list).issubset(self.subnet_nodes) and self._i <= self._max_search_breadth
         ):
             self._expand_subnet_breadth()
 
@@ -214,9 +224,7 @@ class Subnet:
             )
 
     def _expand_subnet_breadth(self) -> None:
-        """
-        Add one degree of breadth to self.subnet_links_df and add property
-        """
+        """Add one degree of breadth to self.subnet_links_df and add property."""
         self._i += 1
 
         WranglerLogger.debug(
@@ -230,29 +238,25 @@ class Subnet:
             & ~_modal_links_df[self.net.links_df.params.to_node].isin(self.subnet_nodes)
         ]
 
-        WranglerLogger.debug(f"_outbound_links_df links: {len( _outbound_links_df)}")
+        WranglerLogger.debug(f"_outbound_links_df links: {len(_outbound_links_df)}")
 
         # find links where B node is connected to subnet but not A node
         _inbound_links_df = _modal_links_df.loc[
             _modal_links_df[self.net.links_df.params.to_node].isin(self.subnet_nodes)
-            & ~_modal_links_df[self.net.links_df.params.from_node].isin(
-                self.subnet_nodes
-            )
+            & ~_modal_links_df[self.net.links_df.params.from_node].isin(self.subnet_nodes)
         ]
 
-        WranglerLogger.debug(f"_inbound_links_df links: {len( _inbound_links_df)}")
+        WranglerLogger.debug(f"_inbound_links_df links: {len(_inbound_links_df)}")
 
         # find links where A and B nodes are connected to subnet but not in subnet
         _both_AB_connected_links_df = _modal_links_df.loc[
             _modal_links_df[self.net.links_df.params.to_node].isin(self.subnet_nodes)
-            & _modal_links_df[self.net.links_df.params.from_node].isin(
-                self.subnet_nodes
-            )
+            & _modal_links_df[self.net.links_df.params.from_node].isin(self.subnet_nodes)
             & ~_modal_links_df.index.isin(self.subnet_links_df.index.tolist())
         ]
 
         WranglerLogger.debug(
-            f"{len( _both_AB_connected_links_df)} links where both A and B are connected to subnet\
+            f"{len(_both_AB_connected_links_df)} links where both A and B are connected to subnet\
              but aren't in subnet."
         )
 

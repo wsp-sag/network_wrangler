@@ -1,8 +1,6 @@
 import copy
 import os
 
-import pytest
-
 from pandera.errors import SchemaError
 
 from projectcard import read_card
@@ -61,7 +59,7 @@ def test_add_roadway_link_project_card(request, small_net):
     _expected_new_link_fks = [(i["A"], i["B"]) for i in _links]
     _new_links = net.links_df.loc[_new_link_idxs]
 
-    WranglerLogger.debug(f"New Links:\n{_new_links}")
+    WranglerLogger.debug(f"New Links: \n{_new_links}")
     assert len(_new_links) == len(_links)
 
     assert set(list(zip(_new_links.A, _new_links.B))) == set(_expected_new_link_fks)
@@ -156,7 +154,7 @@ def test_add_nodes(request, small_net):
     )
 
     WranglerLogger.debug(
-        f"Added Node 1234567:\n{net.nodes_df.loc[net.nodes_df.model_node_id == 1234567]}"
+        f"Added Node 1234567: \n{net.nodes_df.loc[net.nodes_df.model_node_id == 1234567]}"
     )
 
     assert 1234567 in net.nodes_df.model_node_id.tolist()
@@ -165,9 +163,7 @@ def test_add_nodes(request, small_net):
     # should fail when adding a node with a model_node_id that already exists
     bad_node_properties = node_properties.copy()
     bad_node_properties["model_node_id"] = 1
-    WranglerLogger.debug(
-        "Trying to add node 3494 into network but should fail b/c already there"
-    )
+    WranglerLogger.debug("Trying to add node 3494 into network but should fail b/c already there")
     try:
         net = net.apply(
             {

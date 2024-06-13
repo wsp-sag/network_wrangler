@@ -1,3 +1,8 @@
+"""Tests for transit selection.
+
+Run just these tests using `pytesttests/test_transit/test_selections.py`
+"""
+
 import pytest
 
 from network_wrangler import WranglerLogger
@@ -7,16 +12,11 @@ from network_wrangler.transit.selection import (
 )
 from pydantic import ValidationError
 
-"""
-Run just the tests using `pytest tests/test_transit/test_selections.py`
-"""
 
 TEST_SELECTIONS = [
     {
         "name": "1. simple trip_id",
-        "service": {
-            "trip_properties": {"trip_id": ["14940701-JUN19-MVS-BUS-Weekday-01"]}
-        },
+        "service": {"trip_properties": {"trip_id": ["14940701-JUN19-MVS-BUS-Weekday-01"]}},
         "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
     },
     {
@@ -160,11 +160,9 @@ def test_select_transit_features_by_properties(
     selected_trips = set(stpaul_transit_net.get_selection(sel).selected_trips)
     answer = set(selection["answer"])
     if selected_trips - answer:
-        WranglerLogger.error(f"!!! Trips overselected:\n   {selected_trips-answer}")
+        WranglerLogger.error(f"!!! Trips overselected: \n   {selected_trips - answer}")
     if answer - selected_trips:
-        WranglerLogger.error(
-            f"!!! Trips missing in selection:\n   {answer-selected_trips}"
-        )
+        WranglerLogger.error(f"!!! Trips missing in selection: \n   {answer - selected_trips}")
 
     assert selected_trips == answer
 
@@ -312,11 +310,9 @@ def test_select_transit_features_by_nodes(
     selected_trips = set(stpaul_transit_net.get_selection(sel).selected_trips)
     answer = set(selection["answer"])
     if selected_trips - answer:
-        WranglerLogger.error(f"!!! Trips overselected:\n   {selected_trips-answer}")
+        WranglerLogger.error(f"!!! Trips overselected: \n   {selected_trips - answer}")
     if answer - selected_trips:
-        WranglerLogger.error(
-            f"!!! Trips missing in selection:\n   {answer-selected_trips}"
-        )
+        WranglerLogger.error(f"!!! Trips missing in selection: \n   {answer - selected_trips}")
 
     assert selected_trips == answer
 
@@ -373,11 +369,9 @@ def test_select_transit_features_by_links(
         selected_trips = set(stpaul_transit_net.get_selection(sel).selected_trips)
         answer = set(selection["answer"])
         if selected_trips - answer:
-            WranglerLogger.error(f"!!! Trips overselected:\n   {selected_trips-answer}")
+            WranglerLogger.error(f"!!! Trips overselected: \n   {selected_trips - answer}")
         if answer - selected_trips:
-            WranglerLogger.error(
-                f"!!! Trips missing in selection:\n   {answer-selected_trips}"
-            )
+            WranglerLogger.error(f"!!! Trips missing in selection: \n   {answer - selected_trips}")
 
         # assert selected_trips == answer
 

@@ -1,5 +1,7 @@
+"""Functions for reading and writing transit feeds and networks."""
+
 from pathlib import Path
-from typing import Union, Literal
+from typing import Union, Literal, Optional
 
 import pandas as pd
 import geopandas as gpd
@@ -15,21 +17,22 @@ from ..utils.io import unzip_file, write_table
 
 
 class FeedReadError(Exception):
+    """Raised when there is an error reading a transit feed."""
+
     pass
 
 
 def _feed_path_ref(path: Path) -> Path:
     if path.suffix == ".zip":
         path = unzip_file(path)
-    if not path.is_dir:
+    if not path.exists():
         raise FileExistsError(f"Feed cannot be found at: {path}")
 
     return path
 
 
 def load_feed_from_path(feed_path: Union[Path, str], suffix: str = "txt") -> Feed:
-    """
-    Create a Feed object from the path to a GTFS transit feed.
+    """Create a Feed object from the path to a GTFS transit feed.
 
     Args:
         feed_path (Union[Path, str]): The path to the GTFS transit feed.
@@ -55,8 +58,8 @@ def load_feed_from_path(feed_path: Union[Path, str], suffix: str = "txt") -> Fee
     if _missing_files:
         WranglerLogger.debug(f"!!! Missing transit files: {_missing_files}")
         raise RequiredTableError(
-            f"Required GTFS Feed table(s) not found in {feed_path}:\n \
-                                - {_missing_files}"
+            f"Required GTFS Feed table(s) not in {feed_path}: \n \
+                                {_missing_files}"
         )
 
     # but don't want to have more than one file per search
@@ -68,9 +71,7 @@ def load_feed_from_path(feed_path: Union[Path, str], suffix: str = "txt") -> Fee
         )
 
     feed_files = {t: f[0] for t, f in feed_possible_files.items()}
-    feed_dfs = {
-        table: _read_table_from_file(table, file) for table, file in feed_files.items()
-    }
+    feed_dfs = {table: _read_table_from_file(table, file) for table, file in feed_files.items()}
 
     return load_feed_from_dfs(feed_dfs)
 
@@ -88,11 +89,10 @@ def _read_table_from_file(table: str, file: Path) -> pd.DataFrame:
 
 
 def load_feed_from_dfs(feed_dfs: dict) -> Feed:
-    """
-    Create a TransitNetwork object from a dictionary of DataFrames representing a GTFS transit feed.
+    """Create a TransitNetwork object from a dictionary of DataFrames representing a GTFS feed.
 
     Args:
-        feed_dfs (dict): A dictionary containing DataFrames representing the tables of a GTFS transit feed.
+        feed_dfs (dict): A dictionary containing DataFrames representing the tables of a GTFS feed.
 
     Returns:
         Feed: A Feed object representing the transit network.
@@ -111,9 +111,7 @@ def load_feed_from_dfs(feed_dfs: dict) -> Feed:
         >>> feed = load_feed_from_dfs(feed_dfs)
     """
     if not all([table in feed_dfs for table in Feed.table_names]):
-        raise ValueError(
-            f"feed_dfs must contain the following tables: {Feed.table_names}"
-        )
+        raise ValueError(f"feed_dfs must contain the following tables: {Feed.table_names}")
 
     feed = Feed(**feed_dfs)
 
@@ -124,8 +122,7 @@ def load_transit(
     feed: Union[Feed, GtfsModel, dict[str, pd.DataFrame], str, Path],
     suffix: str = "txt",
 ) -> "TransitNetwork":
-    """
-    Create a TransitNetwork object.
+    """Create a TransitNetwork object.
 
     This function takes in a `feed` parameter, which can be one of the following types:
     - `Feed`: A Feed object representing a transit feed.
@@ -155,17 +152,18 @@ def load_transit(
     ```
 
     """
-    if feed is str or Path:
+    if isinstance(feed, str) or isinstance(feed, Path):
         feed_obj = load_feed_from_path(feed, suffix=suffix)
         feed_obj.feed_path = feed
-    elif feed is dict:
+    elif isinstance(feed, dict):
         feed_obj = load_feed_from_dfs(feed)
-    elif feed is GtfsModel:
+    elif isinstance(feed, GtfsModel):
         feed_obj = Feed(feed)
     else:
         if not isinstance(feed, Feed):
             raise ValueError(
-                f"TransitNetwork must be seeded with a Feed, dict of dfs or Path. Found {type(feed)}"
+                f"TransitNetwork must be seeded with a Feed, dict of dfs or Path. \
+                    Found {type(feed)}"
             )
         feed_obj = feed
 
@@ -175,17 +173,17 @@ def load_transit(
 def write_transit(
     transit_net,
     out_dir: Union[Path, str] = ".",
-    prefix: Union[Path, str] = None,
+    prefix: Optional[Union[Path, str]] = None,
     file_format: Union[Literal["txt"], Literal["csv"], Literal["parquet"]] = "txt",
     overwrite: bool = True,
 ) -> None:
-    """
-    Writes a network in the transit network standard
+    """Writes a network in the transit network standard.
 
     Args:
         transit_net: a TransitNetwork instance
         out_dir: directory to write the network to
-        format: the format of the output files. Defaults to "txt" which is csv with txt suffix.
+        file_format: the format of the output files. Defaults to "txt" which is csv with txt
+            suffix.
         prefix: prefix to add to the file name
         overwrite: if True, will overwrite the files if they already exist. Defaults to True
     """
@@ -199,22 +197,29 @@ def write_transit(
 
 
 def convert_transit_serialization(
-    input_path,
-    output_format,
-    out_dir,
-    input_suffix,
-    out_prefix,
-    overwrite,
+    input_path: Union[str, Path],
+    output_format: Union[Literal["txt"], Literal["csv"], Literal["parquet"]],
+    out_dir: Union[Path, str] = ".",
+    input_suffix: Union[Literal["txt"], Literal["csv"], Literal["parquet"]] = "txt",
+    out_prefix: str = "",
+    overwrite: bool = True,
 ):
+    """Converts a transit network from one serialization to another.
+
+    Args:
+        input_path: path to the input network
+        output_format: the format of the output files. Should be txt, csv, or parquet.
+        out_dir: directory to write the network to. Defaults to current directory.
+        input_suffix: the suffix of the files to read. Should be txt, csv, or parquet.
+            Defaults to "txt"
+        out_prefix: prefix to add to the file name. Defaults to ""
+        overwrite: if True, will overwrite the files if they already exist. Defaults to True
+    """
     if input_suffix is None:
         input_suffix = "csv"
-    WranglerLogger.info(
-        f"Loading transit net from {input_path} with input type {input_suffix}"
-    )
+    WranglerLogger.info(f"Loading transit net from {input_path} with input type {input_suffix}")
     net = load_transit(input_path, suffix=input_suffix)
-    WranglerLogger.info(
-        f"Writing transit network to {out_dir} in {output_format} format."
-    )
+    WranglerLogger.info(f"Writing transit network to {out_dir} in {output_format} format.")
     write_transit(
         net,
         prefix=out_prefix,
@@ -228,12 +233,20 @@ def write_feed_geo(
     feed: Feed,
     ref_nodes_df: gpd.GeoDataFrame,
     out_dir: Union[str, Path],
-    file_format: Union[
-        Literal["geojson"], Literal["shp"], Literal["parquet"]
-    ] = "geojson",
+    file_format: Union[Literal["geojson"], Literal["shp"], Literal["parquet"]] = "geojson",
     out_prefix=None,
     overwrite: bool = True,
 ) -> None:
+    """Write a Feed object to a directory in a geospatial format.
+
+    Args:
+        feed: Feed object to write
+        ref_nodes_df: Reference nodes dataframe to use for geometry
+        out_dir: directory to write the network to
+        file_format: the format of the output files. Defaults to "geojson"
+        out_prefix: prefix to add to the file name
+        overwrite: if True, will overwrite the files if they already exist. Defaults to True
+    """
     from .geo import shapes_to_shape_links_gdf
 
     out_dir = Path(out_dir)

@@ -1,8 +1,8 @@
-"""
-Tests functions for separating managed lanes from general purpose lanes as separate links.
+"""Tests functions for separating managed lanes from general purpose lanes as separate links.
 
 Run just the tests in this file `pytest tests/test_roadway/test_model_roadway.py`
 """
+
 import copy
 
 from projectcard import read_card
@@ -10,9 +10,7 @@ from network_wrangler import WranglerLogger
 
 
 def test_add_adhoc_managed_lane_field(request, small_net):
-    """
-    Makes sure new fields can be added to the network for managed lanes that get moved there.
-    """
+    """Makes sure new fields can be added to the network for managed lanes that get moved there."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
     MODEL_LINK_ID = 112
     AD_HOC_PROP = "my_ad_hoc_field"
@@ -45,15 +43,11 @@ def test_add_adhoc_managed_lane_field(request, small_net):
     m_net = net.model_net
 
     _ml_model_link_id = m_net._link_id_to_managed_lane_link_id(MODEL_LINK_ID)
-    WranglerLogger.debug(
-        f"model_link_id: {MODEL_LINK_ID }\nml_model_link_id: {_ml_model_link_id}"
-    )
+    WranglerLogger.debug(f"model_link_id: {MODEL_LINK_ID}\nml_model_link_id: {_ml_model_link_id}")
     _display_cols = ["model_link_id", "name", "my_ad_hoc_field", "lanes"]
     WranglerLogger.debug(f"\nManaged Lane Network\n{m_net.links_df[_display_cols]}")
 
-    _managed_lane_record = m_net.links_df.loc[
-        m_net.links_df["model_link_id"] == _ml_model_link_id
-    ]
+    _managed_lane_record = m_net.links_df.loc[m_net.links_df["model_link_id"] == _ml_model_link_id]
     _managed_lane_record = _managed_lane_record.iloc[0]
 
     WranglerLogger.debug(
@@ -108,6 +102,7 @@ def test_create_ml_network_shape(request, small_net):
     }
 
     net = net.apply(project_card_dictionary)
+
     LINK_SCALAR = net.model_net.ml_link_id_scalar
     base_model_link_ids = _facility["links"]["model_link_id"]
     ml_model_link_ids = [LINK_SCALAR + x for x in base_model_link_ids]
@@ -140,33 +135,25 @@ def test_create_ml_network_shape(request, small_net):
         \n***Egress Links\n{egress_links[_display_c]}"
     )
     assert len(
-        net.model_net.links_df[
-            net.model_net.links_df["model_link_id"].isin(ml_model_link_ids)
-        ]
+        net.model_net.links_df[net.model_net.links_df["model_link_id"].isin(ml_model_link_ids)]
     ) == len(ml_model_link_ids)
 
     assert len(
-        net.model_net.links_df[
-            net.model_net.links_df["model_link_id"].isin(access_model_link_ids)
-        ]
+        net.model_net.links_df[net.model_net.links_df["model_link_id"].isin(access_model_link_ids)]
     ) == len(access_model_link_ids)
 
     assert len(
-        net.model_net.links_df[
-            net.model_net.links_df["model_link_id"].isin(egress_model_link_ids)
-        ]
+        net.model_net.links_df[net.model_net.links_df["model_link_id"].isin(egress_model_link_ids)]
     ) == len(egress_model_link_ids)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_dir):
-    """Tests usage of ML_access_point and ML_egress_point when they are set to a list of nodes 
-    instead of "all"
+    """Tests usage of ML_access/egress_point when they are set to a list of nodes instead of "all".
 
     - With 'all' as access/egress, there would be total of 8 connector links (4 access, 4 egress)
     - With restricted access/egress, this project card should create 4 connector links
-
     """
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
@@ -186,7 +173,7 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
     _m_links_df = net.model_net.links_df
     dummy_links_df = _m_links_df.of_type.dummy
 
-    WranglerLogger.debug(f"Dummy Links:\n {dummy_links_df[['model_link_id','A', 'B']]}")
+    WranglerLogger.debug(f"Dummy Links: \n {dummy_links_df[['model_link_id', 'A', 'B']]}")
 
     pcard_gp_link_ids = project_card.facility["links"]["model_link_id"]
     pcard_access_points = project_card.roadway_property_change["property_changes"][

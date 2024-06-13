@@ -1,16 +1,16 @@
+"""Basic transit testing.
+
+Run just the tests here by running pytest tests/test_transit/test_transit.py`
+"""
+
 import os
 
-
 import pytest
-
-import pandas as pd
 
 from projectcard import read_card
 from network_wrangler import WranglerLogger
 
-"""
-Run just the tests here by running pytest tests/test_transit/test_transit.py`
-"""
+
 TEST_PROJECT_CARDS = [
     {
         "file": "transit.prop_change.trip_time.yml",

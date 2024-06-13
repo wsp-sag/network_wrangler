@@ -1,17 +1,19 @@
 """Edits RoadShapesTable properties.
 
-NOTE: Each public method will return a new, whole copy of the RoadShapesTable with associated edits.
+NOTE: Each public method will return a whole copy of the RoadShapesTable with associated edits.
 Private methods may return mutated originals.
 """
+
+from pandera.typing import DataFrame
 
 from ...utils.geo import update_nodes_in_linestring_geometry
 from ...models.roadway.tables import RoadShapesTable, RoadLinksTable, RoadNodesTable
 
 
 def edit_shape_geometry_from_nodes(
-    shapes_df: RoadShapesTable,
-    links_df: RoadLinksTable,
-    nodes_df: RoadNodesTable,
+    shapes_df: DataFrame[RoadShapesTable],
+    links_df: DataFrame[RoadLinksTable],
+    nodes_df: DataFrame[RoadNodesTable],
     node_ids: list[int],
 ) -> None:
     """Updates the geometry for shapes for a given list of nodes.
@@ -22,7 +24,10 @@ def edit_shape_geometry_from_nodes(
             ...but not the nodes in-between.  Something to consider.
 
     Args:
-        updated_node_ids: list of node PKs with updated geometry
+        shapes_df: RoadShapesTable
+        links_df: RoadLinksTable
+        nodes_df: RoadNodesTable
+        node_ids: list of node PKs with updated geometry
     """
     shapes_df = shapes_df.copy()
     links_A_df = links_df.loc[links_df.A.isin(node_ids)]

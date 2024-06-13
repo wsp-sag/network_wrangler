@@ -1,12 +1,27 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""TransitNetwork class for representing a transit network.
+
+Transit Networks are represented as a Wrangler-flavored GTFS Feed and optionally mapped to
+a RoadwayNetwork object. The TransitNetwork object is the primary object for managing transit
+networks in Wrangler.
+
+Usage:
+
+    ```python
+    import network_wrangler as wr
+    t = wr.load_transit(stpaul_gtfs)
+    t.road_net = wr.load_roadway(stpaul_roadway)
+    t = t.apply(project_card)
+    write_transit(t, "output_dir")
+    ```
+"""
 
 from __future__ import annotations
 
 import copy
-from typing import Union
+from typing import Union, Optional
 
 import networkx as nx
+import geopandas as gpd
 
 from .validate import transit_road_net_consistency
 
@@ -33,12 +48,13 @@ from .geo import (
 
 
 class TransitRoadwayConsistencyError(Exception):
+    """Error raised when transit network is inconsistent with roadway network."""
+
     pass
 
 
 class TransitNetwork(object):
-    """
-    Representation of a Transit Network.
+    """Representation of a Transit Network.
 
     Typical usage example:
     ``` py
@@ -59,15 +75,14 @@ class TransitNetwork(object):
     TIME_COLS = ["arrival_time", "departure_time", "start_time", "end_time"]
 
     def __init__(self, feed: Feed):
-        """
-        Constructor for TransitNetwork.
+        """Constructor for TransitNetwork.
 
-        args:
+        Args:
             feed: Feed object mimicing partridge feed
         """
         WranglerLogger.debug("Creating new TransitNetwork.")
 
-        self._road_net: "RoadwayNetwork" = None
+        self._road_net: Optional[RoadwayNetwork] = None
         self.feed: Feed = feed
         self.graph: nx.MultiDiGraph = None
 
@@ -75,7 +90,7 @@ class TransitNetwork(object):
         self._consistent_with_road_net = False
 
         # cached selections
-        self._selections = {}
+        self._selections: dict[str, dict] = {}
 
     @property
     def feed_path(self):
@@ -89,6 +104,7 @@ class TransitNetwork(object):
 
     @property
     def feed(self):
+        """Feed associated with the transit network."""
         return self._feed
 
     @feed.setter
@@ -102,15 +118,14 @@ class TransitNetwork(object):
             self._feed = feed
             self._stored_feed_hash = copy.deepcopy(feed.hash)
         else:
-            WranglerLogger.error(
-                "Can't assign Feed inconsistent with set Roadway Network."
-            )
+            WranglerLogger.error("Can't assign Feed inconsistent with set Roadway Network.")
             raise TransitRoadwayConsistencyError(
                 "Can't assign Feed inconsistent with set RoadwayNetwork."
             )
 
     @property
-    def road_net(self):
+    def road_net(self) -> RoadwayNetwork:
+        """Roadway network associated with the transit network."""
         return self._road_net
 
     @road_net.setter
@@ -129,12 +144,11 @@ class TransitNetwork(object):
                 "Can't assign inconsistent RoadwayNetwork - Roadway Network not \
                                  set, but can be referenced separately."
             )
-            raise TransitRoadwayConsistencyError(
-                "Can't assign inconsistent RoadwayNetwork."
-            )
+            raise TransitRoadwayConsistencyError("Can't assign inconsistent RoadwayNetwork.")
 
     @property
     def feed_hash(self):
+        """Return the hash of the feed."""
         return self.feed.hash
 
     @property
@@ -152,9 +166,7 @@ class TransitNetwork(object):
         updated_feed = self.feed_hash != self._stored_feed_hash
 
         if updated_road or updated_feed:
-            self._consistent_with_road_net = transit_road_net_consistency(
-                self.feed, self.road_net
-            )
+            self._consistent_with_road_net = transit_road_net_consistency(self.feed, self.road_net)
             self._stored_road_net_hash = copy.deepcopy(self.road_net.network_hash)
             self._stored_feed_hash = copy.deepcopy(self.feed_hash)
         return self._consistent_with_road_net
@@ -181,10 +193,11 @@ class TransitNetwork(object):
         return copied_net
 
     def deepcopy(self):
+        """Returns copied TransitNetwork instance with deep copy of Feed but not roadway net."""
         return copy.deepcopy(self)
 
     @property
-    def stops_gdf(self) -> "gpd.GeoDataFrame":
+    def stops_gdf(self) -> gpd.GeoDataFrame:
         """Return stops as a GeoDataFrame using set roadway geometry."""
         if self.road_net is not None:
             ref_nodes = self.road_net.nodes_df
@@ -193,7 +206,7 @@ class TransitNetwork(object):
         return to_points_gdf(self.feed.stops, nodes_df=ref_nodes)
 
     @property
-    def shapes_gdf(self) -> "gpd.GeoDataFrame":
+    def shapes_gdf(self) -> gpd.GeoDataFrame:
         """Return aggregated shapes as a GeoDataFrame using set roadway geometry."""
         if self.road_net is not None:
             ref_nodes = self.road_net.nodes_df
@@ -202,7 +215,7 @@ class TransitNetwork(object):
         return shapes_to_trip_shapes_gdf(self.feed.shapes, ref_nodes_df=ref_nodes)
 
     @property
-    def shape_links_gdf(self) -> "gpd.GeoDataFrame":
+    def shape_links_gdf(self) -> gpd.GeoDataFrame:
         """Return shape-links as a GeoDataFrame using set roadway geometry."""
         if self.road_net is not None:
             ref_nodes = self.road_net.nodes_df
@@ -211,7 +224,7 @@ class TransitNetwork(object):
         return shapes_to_shape_links_gdf(self.feed.shapes, ref_nodes_df=ref_nodes)
 
     @property
-    def stop_time_links_gdf(self) -> "gpd.GeoDataFrame":
+    def stop_time_links_gdf(self) -> gpd.GeoDataFrame:
         """Return stop-time-links as a GeoDataFrame using set roadway geometry."""
         if self.road_net is not None:
             ref_nodes = self.road_net.nodes_df
@@ -222,12 +235,13 @@ class TransitNetwork(object):
         )
 
     @property
-    def stop_times_points_gdf(self) -> "gpd.GeoDataFrame":
+    def stop_times_points_gdf(self) -> gpd.GeoDataFrame:
+        """Return stop-time-points as a GeoDataFrame using set roadway geometry."""
         if self.road_net is not None:
             ref_nodes = self.road_net.nodes_df
         else:
             ref_nodes = None
-        """Return stop-time-points as a GeoDataFrame using set roadway geometry."""
+
         return stop_times_to_stop_time_points_gdf(
             self.feed.stop_times, self.feed.stops, ref_nodes_df=ref_nodes
         )
@@ -258,25 +272,19 @@ class TransitNetwork(object):
 
         if not self._selections[key]:
             WranglerLogger.debug(
-                f"No links or nodes found for selection dict:\n {selection_dict}"
+                f"No links or nodes found for selection dict: \n {selection_dict}"
             )
             raise ValueError("Selection not successful.")
         return self._selections[key]
 
-    def apply(
-        self, project_card: Union[ProjectCard, dict], **kwargs
-    ) -> "TransitNetwork":
-        """
-        Wrapper method to apply a roadway project, returning a new TransitNetwork instance.
+    def apply(self, project_card: Union[ProjectCard, dict], **kwargs) -> "TransitNetwork":
+        """Wrapper method to apply a roadway project, returning a new TransitNetwork instance.
 
         Args:
             project_card: either a dictionary of the project card object or ProjectCard instance
+            **kwargs: keyword arguments to pass to project application
         """
-
-        if not (
-            isinstance(project_card, ProjectCard)
-            or isinstance(project_card, SubProject)
-        ):
+        if not (isinstance(project_card, ProjectCard) or isinstance(project_card, SubProject)):
             project_card = ProjectCard(project_card)
 
         if not project_card.valid:
@@ -294,13 +302,11 @@ class TransitNetwork(object):
     def _apply_change(
         self,
         change: Union[ProjectCard, SubProject],
-        reference_road_net: "RoadwayNetwork" = None,
+        reference_road_net: Optional[RoadwayNetwork] = None,
     ) -> TransitNetwork:
         """Apply a single change: a single-project project or a sub-project."""
         if not isinstance(change, SubProject):
-            WranglerLogger.info(
-                f"Applying Project to Transit Network: {change.project}"
-            )
+            WranglerLogger.info(f"Applying Project to Transit Network: {change.project}")
 
         if change.change_type == "transit_property_change":
             return apply_transit_property_change(
@@ -319,7 +325,7 @@ class TransitNetwork(object):
 
         elif change.change_type == "roadway_deletion":
             # FIXME
-            return NotImplementedError("Roadway deletion check not yet implemented.")
+            raise NotImplementedError("Roadway deletion check not yet implemented.")
 
         elif change.change_type == "pycode":
             return apply_calculated_transit(self, change.pycode)

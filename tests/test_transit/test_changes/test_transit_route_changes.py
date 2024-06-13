@@ -1,6 +1,5 @@
-"""
-Run just the tests using `pytest tests/test_transit/test_changes/test_transit_route_changes.py`
-"""
+"""Run just the tests using `pytest tests/test_transit/test_changes/test_transit_route_changes.py`."""
+
 import copy
 import os
 
@@ -190,9 +189,9 @@ def test_route_changes(request, small_transit_net, small_net, test_routing):
     net = apply_transit_routing_change(net, sel, test_routing["routing_change"])
 
     # Select a representative trip id to test
-    trip_shape_nodes = shapes_for_trip_id(
-        net.feed.shapes, net.feed.trips, repr_trip_id
-    )["shape_model_node_id"].to_list()
+    trip_shape_nodes = shapes_for_trip_id(net.feed.shapes, net.feed.trips, repr_trip_id)[
+        "shape_model_node_id"
+    ].to_list()
     trip_stop_times_nodes = stop_times_for_trip_id(
         net.feed.stop_times, repr_trip_id
     ).model_node_id.to_list()
@@ -211,24 +210,18 @@ def test_route_changes(request, small_transit_net, small_net, test_routing):
     elif "expected_stops" in test_routing:
         expected_stops_nodes = test_routing["expected_stops"]
 
-    missing_stop_times_nodes = list(
-        set(expected_stops_nodes) - set(trip_stop_times_nodes)
-    )
-    extra_stop_times_nodes = list(
-        set(trip_stop_times_nodes) - set(expected_stops_nodes)
-    )
+    missing_stop_times_nodes = list(set(expected_stops_nodes) - set(trip_stop_times_nodes))
+    extra_stop_times_nodes = list(set(trip_stop_times_nodes) - set(expected_stops_nodes))
     if missing_stop_times_nodes:
         WranglerLogger.error(f"Missing stop_times: {missing_stop_times_nodes}")
     if missing_stop_times_nodes:
         WranglerLogger.error(f"Extra unexpected stop_times: {extra_stop_times_nodes}")
     assert expected_stops_nodes == trip_stop_times_nodes
 
-    missing_in_stops = list(
-        set(expected_stops_nodes) - set(net.feed.stops.model_node_id)
-    )
+    missing_in_stops = list(set(expected_stops_nodes) - set(net.feed.stops.model_node_id))
     if missing_in_stops:
         WranglerLogger.debug(
-            f"stops.model_node_id:\n{net.feed.stops[['model_node_id','stop_id']]}"
+            f"stops.model_node_id: \n{net.feed.stops[['model_node_id', 'stop_id']]}"
         )
         WranglerLogger.error(f"Stops missing in stops.txt: {missing_in_stops}")
     assert not missing_in_stops
@@ -244,9 +237,7 @@ def test_route_changes_project_card(
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     transit_net = copy.deepcopy(stpaul_transit_net)
-    project_card = read_card(
-        os.path.join(stpaul_card_dir, "transit.routing_change.yml")
-    )
+    project_card = read_card(os.path.join(stpaul_card_dir, "transit.routing_change.yml"))
 
     WranglerLogger.debug(f"Project Card: {project_card.__dict__}")
     WranglerLogger.debug(f"Types: {project_card.change_types}")
@@ -310,16 +301,12 @@ def test_route_changes_project_card(
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_wo_existing(
-    request, stpaul_net: RoadwayNetwork, stpaul_transit_net: TransitNetwork
-):
+def test_wo_existing(request, stpaul_net: RoadwayNetwork, stpaul_transit_net: TransitNetwork):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     transit_net = copy.deepcopy(stpaul_transit_net)
 
-    selection_dict = {
-        "trip_properties": {"trip_id": ["14986385-JUN19-MVS-BUS-Weekday-01"]}
-    }
+    selection_dict = {"trip_properties": {"trip_id": ["14986385-JUN19-MVS-BUS-Weekday-01"]}}
     change_dict = {
         "project": "test_wo_existing",
         "transit_routing_change": {

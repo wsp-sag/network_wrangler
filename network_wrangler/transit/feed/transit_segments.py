@@ -1,5 +1,8 @@
+"""Functions to create segments from shapes and shape_links."""
+
 import pandas as pd
 
+from pandera.typing import DataFrame
 from network_wrangler.models.gtfs.tables import WranglerShapesTable
 
 
@@ -9,10 +12,7 @@ def shape_links_to_segments(shape_links) -> pd.DataFrame:
     Returns: DataFrame with shape_id, segment_id, segment_start_shape_pt_seq,
         segment_end_shape_pt_seq
     """
-
-    shape_links["gap"] = (
-        shape_links.groupby("shape_id")["shape_pt_sequence_A"].diff().gt(1)
-    )
+    shape_links["gap"] = shape_links.groupby("shape_id")["shape_pt_sequence_A"].diff().gt(1)
     shape_links["segment_id"] = shape_links.groupby("shape_id")["gap"].cumsum()
 
     # Define segment starts and ends
@@ -51,8 +51,8 @@ def shape_links_to_longest_shape_segments(shape_links) -> pd.DataFrame:
 
 
 def filter_shapes_to_segments(
-    shapes: WranglerShapesTable, segments: pd.DataFrame
-) -> WranglerShapesTable:
+    shapes: DataFrame[WranglerShapesTable], segments: pd.DataFrame
+) -> DataFrame[WranglerShapesTable]:
     """Filter shapes dataframe to records associated with segments dataframe.
 
     Args:
@@ -67,14 +67,8 @@ def filter_shapes_to_segments(
 
     # Retain only those points within the segment sequences
     filtered_shapes = shapes_w_segs[
-        (
-            shapes_w_segs["shape_pt_sequence"]
-            >= shapes_w_segs["segment_start_shape_pt_seq"]
-        )
-        & (
-            shapes_w_segs["shape_pt_sequence"]
-            <= shapes_w_segs["segment_end_shape_pt_seq"]
-        )
+        (shapes_w_segs["shape_pt_sequence"] >= shapes_w_segs["segment_start_shape_pt_seq"])
+        & (shapes_w_segs["shape_pt_sequence"] <= shapes_w_segs["segment_end_shape_pt_seq"])
     ]
 
     drop_cols = [

@@ -66,8 +66,7 @@ class DBModelMixin:
     _converters: ClassVar[dict[str, Callable]] = {}
 
     def __setattr__(self, key, value):
-        """
-        Override the default setattr behavior to handle DataFrame validation.
+        """Override the default setattr behavior to handle DataFrame validation.
 
         Note: this is NOT called when a dataframe is mutated in place!
 
@@ -86,9 +85,7 @@ class DBModelMixin:
         else:
             super().__setattr__(key, value)
 
-    def validate_coerce_table(
-        self, table_name: str, table: pd.DataFrame
-    ) -> pd.DataFrame:
+    def validate_coerce_table(self, table_name: str, table: pd.DataFrame) -> pd.DataFrame:
         if table_name not in self._table_models:
             return table
         table_model = self._table_models[table_name]
@@ -112,8 +109,7 @@ class DBModelMixin:
         return validated_df
 
     def initialize_tables(self, **kwargs):
-        """
-        Initializes the tables for the database.
+        """Initializes the tables for the database.
 
         Args:
             **kwargs: Keyword arguments representing the tables to be initialized.
@@ -126,7 +122,7 @@ class DBModelMixin:
         if _missing_tables:
             raise RequiredTableError(
                 f"{_missing_tables} is/are required \
-                                        but not given in initialization."
+                                        but not in initialization."
             )
 
         # Add provided optional tables
@@ -164,24 +160,20 @@ class DBModelMixin:
                 pks_as_fks[fk_table][fk_field].append([t, f])
         return pks_as_fks
 
-    def check_referenced_fk(
-        self, table_name, field: str, table: pd.DataFrame = None
-    ) -> bool:
+    def check_referenced_fk(self, table_name, field: str, table: pd.DataFrame = None) -> bool:
         """True if table.field has the values referenced in any table referencing fields as fk.
 
         For example. If routes.route_id is referenced in trips table, we need to check that
         if a route_id is deleted, it isn't referenced in trips.route_id.
         """
-        WranglerLogger.debug(
-            f"Checking tables which referenced {table_name}.{field} as an FK"
-        )
+        WranglerLogger.debug(f"Checking tables which referenced {table_name}.{field} as an FK")
         if table is None:
             table = self.get_table(table_name)
 
         if field not in table:
             WranglerLogger.warning(
-                f"Foreign key value {field} not in {table_name} \
-                                    - skipping fk validation"
+                f"Foreign key value {field} not in {table_name} - \
+                 skipping fk validation"
             )
             return True
 
@@ -194,8 +186,8 @@ class DBModelMixin:
         for ref_table_name, ref_field in fields_as_fks[table_name][field]:
             if ref_table_name not in self.table_names:
                 WranglerLogger.debug(
-                    f"Referencing table {ref_table_name} not in self.table_names \
-                                    - skipping fk validation."
+                    f"Referencing table {ref_table_name} not in self.table_names - \
+                    skipping fk validation."
                 )
                 continue
             try:
@@ -203,7 +195,7 @@ class DBModelMixin:
             except RequiredTableError:
                 WranglerLogger.warning(
                     f"Referencing table {ref_table_name} not yet set in \
-                                       {type(self)} - skipping fk validation."
+                     {type(self)} - skipping fk validation."
                 )
                 continue
 
@@ -212,7 +204,7 @@ class DBModelMixin:
             if _missing:
                 WranglerLogger.error(
                     f"Following values missing from {table_name}.{field} that \
-                                    are referenced by {ref_table}:\n{_missing}"
+                      are referenced by {ref_table}: \n{_missing}"
                 )
         return all_valid
 
@@ -237,7 +229,7 @@ class DBModelMixin:
     ) -> bool:
         """Return True if the foreign key fields in table have valid references.
 
-        Note: will return true and give a warning if the specified foreign key table does not exist.
+        Note: will return true and give a warning if the specified foreign key table doesn't exist.
         """
         WranglerLogger.debug(f"Checking foreign keys for {table_name}")
         fks = self.fks()
@@ -250,15 +242,15 @@ class DBModelMixin:
             fk_table_name, fk_field = fk
             if field not in table:
                 WranglerLogger.warning(
-                    f"Foreign key value {field} not in {table_name} \
-                    - skipping validation"
+                    f"Foreign key value {field} not in {table_name} -\
+                    skipping validation"
                 )
                 continue
 
             if fk_table_name not in self.table_names:
                 WranglerLogger.warning(
                     f"Table {fk_table_name} for specified FK \
-                                       {table_name}.{field} not in table list - skipping validation."
+                    {table_name}.{field} not in table list - skipping validation."
                 )
                 continue
             try:
@@ -266,8 +258,8 @@ class DBModelMixin:
             except RequiredTableError:
                 WranglerLogger.warning(
                     f"Table {fk_table_name} for specified FK \
-                                        {table_name}.{field} not in {type(self)} \
-                                        - skipping validation."
+                    {table_name}.{field} not in {type(self)}-  \
+                    skipping validation."
                 )
                 continue
             if fk_field not in fk_table:
@@ -281,15 +273,13 @@ class DBModelMixin:
             if missing:
                 WranglerLogger.error(
                     f"!!! {fk_table_name}.{fk_field} missing values used as FK\
-                                    in {table_name}.{field}:\n_missing"
+                      in {table_name}.{field}: \n_missing"
                 )
             all_valid = valid and all_valid
 
         if not all_valid:
             if raise_error:
-                raise ForeignKeyValueError(
-                    "FK fields/ values referenced in {table_name} missing."
-                )
+                raise ForeignKeyValueError("FK fields/ values referenced in {table_name} missing.")
             return False
         return True
 
@@ -297,7 +287,9 @@ class DBModelMixin:
         """Check all FKs in set of tables."""
         all_valid = True
         for table_name in self.table_names:
-            valid = self.check_table_fks(table_name, raise_error=False)
+            valid = self.check_table_fks(
+                table_name, self.tables_dict[table_name], raise_error=False
+            )
             all_valid = valid and all_valid
         return all_valid
 
@@ -328,7 +320,7 @@ class DBModelMixin:
 
     @property
     def hash(self) -> str:
-        """A hash representing the contents of the tables in self.table_names"""
+        """A hash representing the contents of the tables in self.table_names."""
         _table_hashes = [self.get_table(t).df_hash() for t in self.table_names]
         _value = str.encode("-".join(_table_hashes))
 
@@ -336,7 +328,7 @@ class DBModelMixin:
         return _hash
 
     def __eq__(self, other):
-        """Override the default Equals behavior"""
+        """Override the default Equals behavior."""
         if isinstance(other, self.__class__):
             return self.hash == other.hash
         return False

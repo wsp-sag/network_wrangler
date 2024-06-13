@@ -1,4 +1,9 @@
+"""Transit conversion functions for converting GTFS to Wrangler tables."""
+
+from typing import Optional
+
 from pandera.errors import SchemaErrors
+from pandera.typing import DataFrame
 
 from ..logger import WranglerLogger
 
@@ -10,17 +15,22 @@ from ..models.gtfs.tables import (
 
 
 def gtfs_to_wrangler_stop_times(
-    in_stop_times: StopTimesTable,
-    stops: WranglerStopsTable = None,
+    in_stop_times: DataFrame[StopTimesTable],
+    stops: Optional[DataFrame[WranglerStopsTable]] = None,
     **kwargs,
-) -> WranglerStopTimesTable:
+) -> DataFrame[WranglerStopTimesTable]:
+    """Convert GTFS stop times to Wrangler stop times.
+
+    Args:
+        in_stop_times: GTFS stop times table
+        stops: Wrangler stops table to merge with stop times
+        kwargs: additional arguments which aren't used
+    """
     WranglerLogger.debug("Converting GTFS stop_times to Wrangler stop_times")
     try:
         out_stop_times = StopTimesTable.validate(in_stop_times)
     except SchemaErrors as e:
-        WranglerLogger.error(
-            "Failed validating StopTimes to generic gtfs StopTimes table."
-        )
+        WranglerLogger.error("Failed validating StopTimes to generic gtfs StopTimes table.")
         raise e
     if stops is None:
         raise ValueError("Must provide stops to convert stop_times")

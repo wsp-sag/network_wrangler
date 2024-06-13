@@ -1,3 +1,8 @@
+"""Tests for /utils.
+
+Run just these tests using `pytest tests/test_utils/test_utils.py`
+"""
+
 import pytest
 
 from shapely.geometry import LineString

@@ -1,3 +1,5 @@
+"""Data Model for Pure GTFS Feed (not wrangler-flavored)."""
+
 from ...models._base.db import DBModelMixin
 from .tables import (
     AgenciesTable,
@@ -11,12 +13,13 @@ from .tables import (
 
 
 class GtfsValidationError(Exception):
+    """Exception raised for errors in the GTFS feed."""
+
     pass
 
 
 class GtfsModel(DBModelMixin):
-    """
-    Wrapper class around GTFS feed.
+    """Wrapper class around GTFS feed.
 
     Most functionality derives from mixin class DBModelMixin which provides:
     - validation of tables to schemas when setting a table attribute (e.g. self.trips = trips_df)
@@ -60,6 +63,7 @@ class GtfsModel(DBModelMixin):
     optional_table_names = ["agencies"]
 
     def __init__(self, **kwargs):
+        """Initialize GTFS model."""
         self.initialize_tables(**kwargs)
 
         # Set extra provided attributes.

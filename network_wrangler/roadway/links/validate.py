@@ -1,4 +1,5 @@
 """Utilities for validating a RoadLinksTable beyond its data model."""
+
 import pandas as pd
 
 from ...logger import WranglerLogger
@@ -6,6 +7,8 @@ from ...utils.data import fk_in_pk
 
 
 class NodesInLinksMissingError(Exception):
+    """Raised when there is an issue with validating links and nodes."""
+
     pass
 
 

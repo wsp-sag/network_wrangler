@@ -1,5 +1,5 @@
 from projectcard import read_cards
-from projectcard import ValidationError as CardValidationError
+from projectcard.validate import ProjectCardValidationError
 
 from network_wrangler.logger import WranglerLogger
 
@@ -13,7 +13,7 @@ def test_example_project_cards_valid(request, stpaul_card_dir):
         WranglerLogger.debug(f"Evaluating: {project}")
         try:
             assert card.valid
-        except CardValidationError as e:
+        except ProjectCardValidationError as e:
             errors.append(project)
             WranglerLogger.error(e)
         except AssertionError as e:
@@ -26,7 +26,7 @@ def test_example_project_cards_valid(request, stpaul_card_dir):
     WranglerLogger.debug(f"Valid Cards: {_delim}{_delim.join(ok)}")
     if errors:
         WranglerLogger.error(f"Card Validation Errors: {_delim}{_delim.join(errors)}")
-        raise CardValidationError(
+        raise ProjectCardValidationError(
             f"Errors in {len(errors)} of {len(cards)} example project cards"
         )
 
@@ -39,8 +39,8 @@ def test_bad_project_cards_fail(request, bad_project_cards):
     for s in bad_project_cards:
         try:
             cards = read_cards(s)
-            assert all([c.valid for c in cards.values()])
-        except:
+            [c.validate() for c in cards.values()]
+        except ProjectCardValidationError:
             pass
         else:
             WranglerLogger.error(f"Schema should not be valid: {s}")

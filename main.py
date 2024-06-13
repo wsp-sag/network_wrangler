@@ -1,24 +1,21 @@
-"Macros for MkDocs"
+"""Macros for MkDocs."""
+
 import os
 import re
 
 
 def define_env(env):
-    """
-    This is the hook for defining variables, macros and filters
+    """This is the hook for defining variables, macros and filters.
 
     - variables: the dictionary that contains the environment variables
     - macro: a decorator function, to declare a macro.
     """
 
     @env.macro
-    def include_file(
-        filename: str, downshift_h1=True, start_line: int = 0, end_line: int = None
-    ):
-        """
-        Include a file, optionally indicating start_line and end_line.
+    def include_file(filename: str, downshift_h1=True, start_line: int = 0, end_line: int = None):
+        """Include a file, optionally indicating start_line and end_line.
 
-        args:
+        Args:
             filename: file to include, relative to the top directory of the documentation project.
             downshift_h1: If true, will downshift headings by 1 if h1 heading found.
                 Defaults to True.

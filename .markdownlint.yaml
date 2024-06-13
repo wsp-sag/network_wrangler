@@ -10,3 +10,6 @@ MD013: false
 
 # Remove "no emphasis as heading"
 MD036: false
+
+# Remove "no first line must by h1" b/c sometimes importing from other sources
+MD041: false

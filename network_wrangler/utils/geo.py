@@ -1,8 +1,11 @@
 """Helper geographic manipulation functions."""
+
+from __future__ import annotations
+
 import copy
 import math
 
-from typing import List, Union
+from typing import List, Union, TYPE_CHECKING, Optional
 from pathlib import Path
 
 import pandas as pd
@@ -19,14 +22,15 @@ from ..logger import WranglerLogger
 from ..models._base.geo import LatLongCoordinates
 from ..models.roadway.types import LocationReference
 
+if TYPE_CHECKING:
+    from ..roadway.network import RoadwayNetwork
 
 # key:value (from espg, to espg): pyproj transform object
 transformers = {}
 
 
 def get_bearing(lat1, lon1, lat2, lon2):
-    """
-    calculate the bearing (forward azimuth) b/w the two points
+    """Calculate the bearing (forward azimuth) b/w the two points.
 
     returns: bearing in radians
     """
@@ -42,9 +46,9 @@ def get_bearing(lat1, lon1, lat2, lon2):
 def offset_point_with_distance_and_bearing(
     lon: float, lat: float, distance: float, bearing: float
 ) -> List[float]:
-    """Get the new lon-lat (in degrees) given current point (lon-lat), distance and bearing
+    """Get the new lon-lat (in degrees) given current point (lon-lat), distance and bearing.
 
-    args:
+    Args:
         lon: longitude of original point
         lat: latitude of original point
         distance: distance in meters to offset point by
@@ -76,9 +80,7 @@ def offset_point_with_distance_and_bearing(
     return [out_lon, out_lat]
 
 
-def length_of_linestring_miles(
-    gdf: Union[gpd.GeoSeries, gpd.GeoDataFrame]
-) -> pd.Series:
+def length_of_linestring_miles(gdf: Union[gpd.GeoSeries, gpd.GeoDataFrame]) -> pd.Series:
     """Returns a Series with the linestring length in miles.
 
     Args:
@@ -99,6 +101,8 @@ def length_of_linestring_miles(
 
 
 class MissingNodesError(Exception):
+    """Raised when referenced nodes are missing from the network."""
+
     pass
 
 
@@ -180,9 +184,7 @@ def linestring_from_nodes(
     )
 
     # convert to GeoDataFrame
-    links_gdf = gpd.GeoDataFrame(
-        links_geo_df["geometry"], geometry=links_geo_df["geometry"]
-    )
+    links_gdf = gpd.GeoDataFrame(links_geo_df["geometry"], geometry=links_geo_df["geometry"])
     return links_gdf["geometry"]
 
 
@@ -199,9 +201,7 @@ def linestring_from_lats_lons(df, lat_fields, lon_fields) -> gpd.GeoSeries:
 
     line_geometries = gpd.GeoSeries(
         [
-            LineString(
-                [(row[lon], row[lat]) for lon, lat in zip(lon_fields, lat_fields)]
-            )
+            LineString([(row[lon], row[lat]) for lon, lat in zip(lon_fields, lat_fields)])
             for _, row in df.iterrows()
         ]
     )
@@ -210,6 +210,8 @@ def linestring_from_lats_lons(df, lat_fields, lon_fields) -> gpd.GeoSeries:
 
 
 class InvalidCRSError(Exception):
+    """Raised when a point is not valid for a given coordinate reference system."""
+
     pass
 
 
@@ -248,7 +250,6 @@ def point_from_xy(x, y, xy_crs: int = LAT_LON_CRS, point_crs: int = LAT_LON_CRS)
 
     Returns: Shapely Point in point_crs
     """
-
     point = Point(x, y)
 
     if xy_crs == point_crs:
@@ -317,6 +318,12 @@ def update_nodes_in_linestring_geometry(
 
 
 def get_point_geometry_from_linestring(polyline_geometry, pos: int = 0):
+    """Get a point geometry from a linestring geometry.
+
+    Args:
+        polyline_geometry: shapely LineString instance
+        pos: position in the linestring to get the point from. Defaults to 0.
+    """
     # WranglerLogger.debug(
     #    f"get_point_geometry_from_linestring.polyline_geometry.coords[0]: \
     #    {polyline_geometry.coords[0]}."
@@ -377,12 +384,12 @@ def location_refs_from_linestring(geometry: LineString) -> List[LocationReferenc
 
 
 def get_bounding_polygon(
-    boundary_geocode: Union[str, dict] = None,
-    boundary_file: Union[str, Path] = None,
-    boundary_gdf: gpd.GeoDataFrame = None,
+    boundary_geocode: Optional[Union[str, dict]] = None,
+    boundary_file: Optional[Union[str, Path]] = None,
+    boundary_gdf: Optional[gpd.GeoDataFrame] = None,
     crs: int = LAT_LON_CRS,  # WGS84
 ) -> gpd.GeoSeries:
-    """Get the bounding polygon for a given boundary first prioritizing the
+    """Get the bounding polygon for a given boundary first prioritizing the.
 
     This function retrieves the bounding polygon for a given boundary. The boundary can be provided
     as a GeoDataFrame, a geocode string or dictionary, or a boundary file. The resulting polygon
@@ -400,7 +407,6 @@ def get_bounding_polygon(
     Returns:
         gpd.GeoSeries: The polygon geometry representing the bounding polygon.
     """
-
     import osmnx as ox
 
     if sum(x is not None for x in [boundary_gdf, boundary_geocode, boundary_file]) != 1:
@@ -445,9 +451,7 @@ def _harmonize_crs(df: pd.DataFrame, crs: int = LAT_LON_CRS) -> pd.DataFrame:
     return df
 
 
-def _offset_geometry_meters(
-    geo_s: gpd.GeoSeries, offset_distance_meters: float
-) -> gpd.GeoSeries:
+def _offset_geometry_meters(geo_s: gpd.GeoSeries, offset_distance_meters: float) -> gpd.GeoSeries:
     og_crs = geo_s.crs
     geo_s.to_crs(METERS_CRS)
     offset_geo = geo_s.apply(lambda x: x.offset_curve(offset_distance_meters))
@@ -458,10 +462,8 @@ def to_points_gdf(
     table: pd.DataFrame,
     ref_nodes_df: gpd.GeoDataFrame = None,
     ref_road_net: "RoadwayNetwork" = None,
-    **kwargs,
 ) -> gpd.GeoDataFrame:
-    """
-    Convert a table to a GeoDataFrame.
+    """Convert a table to a GeoDataFrame.
 
     If the table is already a GeoDataFrame, return it as is. Otherwise, attempt to convert the
     table to a GeoDataFrame using the following methods:
@@ -544,7 +546,6 @@ def update_point_geometry(
 
     NOTE: does not update "geometry" field if it exists.
     """
-
     df = copy.deepcopy(df)
 
     ref_df = ref_point_df.rename(

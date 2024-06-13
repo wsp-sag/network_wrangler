@@ -1,3 +1,5 @@
+"""Setup script for network_wrangler."""
+
 from setuptools import setup
 
 classifiers = [
@@ -21,9 +23,7 @@ EXTRAS = ["tests", "viz", "docs"]
 extras_require = {}
 for e in EXTRAS:
     with open(f"requirements.{e}.txt", encoding="utf-8") as f:
-        extras_require[e] = [
-            r.strip() for r in f if r.strip() and not r.startswith("#")
-        ]
+        extras_require[e] = [r.strip() for r in f if r.strip() and not r.startswith("#")]
 
 setup(
     name="network_wrangler",

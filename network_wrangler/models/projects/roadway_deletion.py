@@ -1,3 +1,5 @@
+"""For roadway deletion project card (e.g. to delete)."""
+
 from __future__ import annotations
 
 from typing import Optional, ClassVar
