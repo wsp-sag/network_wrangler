@@ -32,7 +32,7 @@ jobs:
       run: ruff check --output-format=github .
     - name: Run Tests with Coverage
       run: |
-        pytest --cache-clear --cov=app test/ > pytest-coverage.txt
+        pytest --cache-clear --cov=network_wtangler tests/ > pytest-coverage.txt
     - name: Configure Git user
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"

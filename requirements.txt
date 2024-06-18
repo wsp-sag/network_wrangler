@@ -4,7 +4,7 @@ geopandas >= 0.8.0
 osmnx >= 0.12
 pandas >= 1.6
 pandera[geopandas]
-git+https://github.com/network-wrangler/projectcard.git
+git+https://github.com/network-wrangler/projectcard.git@master
 pyarrow
 pydantic >= 2
 pyogrio
