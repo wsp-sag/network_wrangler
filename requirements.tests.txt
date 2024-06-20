@@ -1,7 +1,4 @@
-"black[jupyter]"
-black
 coverage
-flake8
 mypy
 pytest
 pytest-benchmark

@@ -25,6 +25,7 @@ Access the selected trip ids or dataframe as follows:
 Note: The selection dictionary should conform to the SelectTransitTrips model defined in
 the models.projects.transit_selection module.
 """
+
 from __future__ import annotations
 import copy
 

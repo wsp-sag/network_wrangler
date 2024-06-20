@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools", "setuptools-scm", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "network-wrangler"
@@ -13,7 +14,6 @@ authors = [
     { name = "Lisa Zorn", email = "lzorn@bayareametro.gov"},
     { name = "Ashish Kulshrestha", email = "Ashish.Kulshrestha@wsp.com"}
 ]
-
 classifiers = [
     "Development Status :: 1 - Planning",
     "License :: OSI Approved :: Apache Software License",
@@ -21,6 +21,50 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "geographiclib",
+    "geojson",
+    "geopandas >= 0.8.0",
+    "osmnx >= 0.12",
+    "pandas >= 1.6",
+    "pandera[geopandas]",
+    "projectcard @ git+ssh://git@github.com/network-wrangler/projectcard.git",
+    "pyarrow",
+    "pydantic >= 2",
+    "pyogrio",
+    "pyyaml",
+]
+
+
+[project.optional-dependencies]
+viz = [
+    "folium",
+    "jupyter",
+    "notebook",
+]
+docs = [
+    "fontawesome_markdown",
+    "jupyter",
+    "markdown == 3.3.1",
+    "mike",
+    "mkdocs",
+    "mkdocs-autorefs",
+    "mkdocs-awesome-pages-plugin",
+    "mkdocs-jupyter",
+    "mkdocs-macros-plugin",
+    "mkdocs-material",
+    "mkdocstrings",
+    "mkdocstrings-python",
+]
+tests = [
+    "coverage",
+    "mypy",
+    "pytest",
+    "pytest-benchmark",
+    "pytest-cov",
+    "ruff",
+    "vulture",
 ]
 
 [tool.ruff]
