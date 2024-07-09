@@ -843,8 +843,8 @@ class TransitNetwork(object):
                 )
 
                 nodes = shapes_foreign_key.tolist()
-                index_replacement_starts = [i for i,d in enumerate(nodes) if d == str(int(row.A))][0]
-                index_replacement_ends = [i for i,d in enumerate(nodes) if d == str(int(row.B))][-1]
+                index_replacement_starts = [i for i,d in enumerate(nodes) if str(d) == str(int(row.A))][0]
+                index_replacement_ends = [i for i,d in enumerate(nodes) if str(d) == str(int(row.B))][-1]
                 shapes_foreign_key = pd.concat(
                     [
                         shapes_foreign_key.iloc[:index_replacement_starts],
