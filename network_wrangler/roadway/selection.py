@@ -92,7 +92,7 @@ class RoadwayLinkSelection:
         self._selected_links_df = None
         self._segment = None
 
-        WranglerLogger.debug(f"Created selection of type: {self.selection_type}")
+        WranglerLogger.debug(f"Created LinkSelection of type: {self.selection_type}")
 
     def __nonzero__(self) -> bool:
         """Return True if links were selected."""
@@ -139,6 +139,12 @@ class RoadwayLinkSelection:
 
     @selection_dict.setter
     def selection_dict(self, selection_input: Union[SelectFacility, dict]):
+
+        if isinstance(selection_input, SelectLinksDict):
+            selection_input = SelectFacility(links=selection_input)
+        elif isinstance(selection_input, SelectNodesDict):
+            selection_input = SelectFacility(nodes=selection_input)
+
         if isinstance(selection_input, SelectFacility):
             self.raw_selection_dict = selection_input.model_dump(exclude_none=True, by_alias=True)
         else:
@@ -238,6 +244,7 @@ class RoadwayLinkSelection:
 
         elif self.selection_data.selection_type == "all":
             _selected_links_df = self.net.links_df
+
         else:
             raise SelectionFormatError("Doesn't have known link selection type")
 
@@ -327,7 +334,7 @@ class RoadwayNodeSelection:
         self._selected_nodes_df = None
         self._segment = None
 
-        WranglerLogger.debug(f"Created selection of type: {self.selection_type}")
+        WranglerLogger.debug(f"Created NodeSelection of type: {self.selection_type}")
 
     def __nonzero__(self) -> bool:
         """Return True if nodes were selected."""
@@ -475,7 +482,8 @@ class RoadwayNodeSelection:
         return _selected_nodes_df
 
 
-def _create_selection_key(selection_dict: dict) -> str:
+def _create_selection_key(
+        selection_dict: Union[SelectLinksDict, SelectNodesDict, SelectFacility, dict]) -> str:
     """Selections are stored by a sha1 hash of the bit-encoded string of the selection dictionary.
 
     Args:
@@ -483,4 +491,15 @@ def _create_selection_key(selection_dict: dict) -> str:
 
     Returns: Hex code for hash
     """
+    if isinstance(selection_dict, SelectLinksDict):
+        selection_dict = SelectFacility(links=selection_dict)
+    elif isinstance(selection_dict, SelectNodesDict):
+        selection_dict = SelectFacility(nodes=selection_dict)
+
+    if isinstance(selection_dict, SelectFacility):
+        selection_dict = selection_dict.model_dump(exclude_none=True, by_alias=True)
+    elif not isinstance(selection_dict, dict):
+        WranglerLogger.error(f"`selection_dict` arg must be a dictionary or SelectFacility model.\
+                             Received: {selection_dict} of type {type(selection_dict)}")
+        raise SelectionError("selection_dict arg must be a dictionary or SelectFacility model")
     return hashlib.sha1(str(selection_dict).encode()).hexdigest()

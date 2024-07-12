@@ -14,7 +14,7 @@ selection_dict = {
     "to": {"osm_node_id": '187865924'}
 }
 
-segment = Segment(net: RoadwayNetwork = net, selection_dict = selection_dict)
+segment = Segment(net, selection)
 segment.segment_links_df
 segment.segment_nodes
 ```
@@ -22,7 +22,6 @@ segment.segment_nodes
 
 from __future__ import annotations
 
-import copy
 from typing import Union, TYPE_CHECKING
 
 import numpy as np
@@ -37,7 +36,7 @@ from ..params import (
 )
 
 from ..logger import WranglerLogger
-from .subnet import Subnet
+from .subnet import Subnet, generate_subnet_from_link_selection_dict
 from .graph import shortest_path
 from .links.filters import filter_links_to_path
 from ..models.projects.roadway_selection import SelectNodeDict
@@ -77,7 +76,7 @@ class Segment:
 
     net = RoadwayNetwork(...)
 
-    segment = Segment(net = net, selection_dict = selection_dict)
+    segment = Segment(net = net, selection)
 
     # lazily evaluated dataframe of links in segment (if found) from segment.net
     segment.segment_links_df
@@ -88,7 +87,7 @@ class Segment:
 
     attr:
         net: Associated RoadwayNetwork object
-        selection: segment selection
+        selection: RoadwayLinkSelection
         from_node_id: value of the primary key (usually model_node_id) for segment start node
         to_node_id: value of the primary key (usually model_node_id) for segment end node
         subnet: Subnet object (and associated graph) on which to do shortest path search
@@ -105,7 +104,7 @@ class Segment:
     def __init__(
         self,
         net: RoadwayNetwork,
-        selection: Union[RoadwayNodeSelection, RoadwayLinkSelection],
+        selection: RoadwayLinkSelection,
         sp_weight_col: str = DEFAULT_SP_WEIGHT_COL,
         sp_weight_factor: int = DEFAULT_SP_WEIGHT_FACTOR,
         max_search_breadth: int = DEFAULT_MAX_SEARCH_BREADTH,
@@ -126,7 +125,7 @@ class Segment:
                 DEFAULT_MAX_SEARCH_BREADTH which defaults to 10.
         """
         self.net = net
-        if not selection.selection_type == "segment":
+        if selection.selection_type != "segment":
             raise SegmentFormatError(
                 "Selection object passed to Segment must be of type\
                                       `segment`"
@@ -137,14 +136,14 @@ class Segment:
         self._sp_weight_factor = sp_weight_factor
         self._max_search_breadth = max_search_breadth
 
-        self.subnet = self._generate_subnet(self.segment_sel_dict)
-
         # segment members are identified by storing nodes along a route
         self._segment_nodes = None
 
         # Initialize calculated, read-only attr.
         self._from_node_id = None
         self._to_node_id = None
+
+        self.subnet = self._generate_subnet(self.segment_sel_dict)
 
         WranglerLogger.info(f"Segment created: {self}")
 
@@ -227,13 +226,6 @@ class Segment:
         self,
     ) -> None:
         """Finds a path from from_node_id to to_node_id based on the weight col value/factor."""
-        WranglerLogger.debug(f"Initial set of nodes: {self.subnet.subnet_nodes}")
-
-        # expand network to find at least the origin and destination nodes
-        self.subnet.expand_subnet_to_include_nodes([self.from_node_id, self.to_node_id])
-
-        # Once have A and B in graph try calculating shortest path and iteratively
-        #    expand if not found.
         WranglerLogger.debug("Calculating shortest path from graph")
         _found = False
         _found = self._find_subnet_shortest_path()
@@ -254,9 +246,6 @@ class Segment:
     def _generate_subnet(self, selection_dict: dict) -> Subnet:
         """Generate a subnet of the roadway network on which to search for connected segment.
 
-        First will search based on "name" in selection_dict but if not found, will search
-        using the "ref" field instead.
-
         Args:
             selection_dict: selection dictionary to use for generating subnet
         """
@@ -264,67 +253,15 @@ class Segment:
             raise SegmentFormatError("No selection provided to generate subnet from.")
 
         WranglerLogger.info(f"Creating subnet from dictionary: {selection_dict}")
-        _selection_dict = copy.deepcopy(selection_dict)
-        # First search for initial set of links using "name" field, combined with values from "ref"
-
-        if "ref" in selection_dict:
-            _selection_dict["name"] += _selection_dict["ref"]
-            del _selection_dict["ref"]
-        WranglerLogger.info(f"Initially dictionary for subnet search: {_selection_dict}")
-        subnet = Subnet(
+        subnet = generate_subnet_from_link_selection_dict(
             self.net,
-            modes=self.modes,
-            selection_dict=_selection_dict,
+            link_selection_dict=selection_dict,
             sp_weight_col=self._sp_weight_col,
             sp_weight_factor=self._sp_weight_factor,
             max_search_breadth=self._max_search_breadth,
         )
-        if subnet.exists:
-            WranglerLogger.info(
-                f"Found subnet with {len(subnet.subnet_links_df)} links searching name"
-            )
-            return subnet
-
-        if "ref" in selection_dict:
-            del _selection_dict["name"]
-            _selection_dict["ref"] = selection_dict["ref"]
-
-            WranglerLogger.info(f"Trying subnet search with 'ref': {_selection_dict}")
-            subnet = Subnet(
-                self.net,
-                modes=self.modes,
-                selection_dict=_selection_dict,
-                sp_weight_col=self._sp_weight_col,
-                sp_weight_factor=self._sp_weight_factor,
-                max_search_breadth=self._max_search_breadth,
-            )
-        if subnet.exists:
-            WranglerLogger.info(
-                f"Found subnet with {len(subnet.subnet_links_df)} links searching for ref in ref"
-            )
-            return subnet
-
-        if "name" in selection_dict:
-            _selection_dict = copy.deepcopy(selection_dict)
-            del _selection_dict["name"]
-            _selection_dict["ref"] = selection_dict["name"]
-
-            WranglerLogger.info(f"Trying subnet search using name as ref: {_selection_dict}")
-            subnet = Subnet(
-                self.net,
-                modes=self.modes,
-                selection_dict=_selection_dict,
-                sp_weight_col=self._sp_weight_col,
-                sp_weight_factor=self._sp_weight_factor,
-                max_search_breadth=self._max_search_breadth,
-            )
-
-        if not subnet.exists:
-            WranglerLogger.error(f"Selection didn't return subnet links: {_selection_dict}")
-            raise SegmentSelectionError("No links found with selection.")
-        WranglerLogger.info(
-            f"Found subnet with {len(subnet.subnet_links_df)} searching name in ref"
-        )
+        # expand network to find at least the origin and destination nodes
+        subnet.expand_to_nodes([self.from_node_id, self.to_node_id])
         return subnet
 
     def _find_subnet_shortest_path(

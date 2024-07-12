@@ -159,6 +159,7 @@ class SelectLinksDict(RecordModel):
         "ref",
         "osm_link_id",
         "model_link_id",
+        "modes"
     ]
     _special_fields: ClassVar[list[str]] = ["modes", "ignore_missing"]
     model_config = ConfigDict(extra="allow")
@@ -226,6 +227,8 @@ class SelectLinksDict(RecordModel):
             return "all"
         if self.explicit_id_fields:
             return "explicit_ids"
+        if self.segment_id_fields:
+            return "segment"
         else:
             raise SelectionFormatError(
                 "If not a segment, Select Links should have either `all` or an explicit id."

@@ -3,7 +3,7 @@
 from __future__ import annotations
 import copy
 import hashlib
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
 
@@ -11,6 +11,12 @@ from pandera.typing import DataFrame
 
 from .graph import links_nodes_to_ox_graph
 from .links.links import node_ids_in_links
+from ..params import (
+    DEFAULT_SP_WEIGHT_FACTOR,
+    DEFAULT_MAX_SEARCH_BREADTH,
+    DEFAULT_SP_WEIGHT_COL,
+)
+from ..models.projects.roadway_selection import SelectLinksDict, SelectFacility, SelectNodesDict, SelectNodeDict
 from ..logger import WranglerLogger
 
 if TYPE_CHECKING:
@@ -70,11 +76,10 @@ class Subnet:
         net: RoadwayNetwork,
         modes: list = ["drive"],
         subnet_links_df: pd.DataFrame = None,
-        selection_dict: dict = None,
         i: int = 0,
-        sp_weight_col: str = "weight",
-        sp_weight_factor=1,
-        max_search_breadth=10,
+        sp_weight_col: str = DEFAULT_SP_WEIGHT_COL,
+        sp_weight_factor=DEFAULT_SP_WEIGHT_FACTOR,
+        max_search_breadth=DEFAULT_MAX_SEARCH_BREADTH,
     ):
         """Generates and returns a Subnet object.
 
@@ -84,47 +89,21 @@ class Subnet:
             subnet_links_df (pd.DataFrame, optional): Initial links to include in subnet.
                 Optional if define a selection_dict and will default to result of
                 self.generate_subnet_from_selection_dict(selection_dict)
-            selection_dict (dict optional): RoadwayLinkSelection dictionary for initial links to
-                include in subnet.
             i: Expansion iteration number. Shouldn't need to change this as it will be done
                 internally. Defaults to 0.
             sp_weight_col: Column to use for weights in shortest path.  Will not
-                likely need to be changed. Defaults to "weight".
+                likely need to be changed. Defaults to DEFAULT_SP_WEIGHT_COL.
             sp_weight_factor: Factor to multiply sp_weight_col by to use for
-                weights in shortest path.  Will not likely need to be changed. Defaults to 1.
+                weights in shortest path.  Will not likely need to be changed.
+                Defaults to DEFAULT_SP_WEIGHT_FACTOR.
             max_search_breadth: Maximum expansions of the subnet network to find
                 the shortest path after the initial selection based on `name`. Will not likely
-                need to be changed unless network contains a lot of ambiguity. Defaults to 10.
-
-        Example:
-                    ```
-                    selection_dict = {
-                        "name":['6th','Sixth','sixth'],
-                        "from": {"osm_node_id": '187899923'},
-                        "to": {"osm_node_id": '187865924'}
-                    }
-                    ```
-                Defaults to None.
-            i (int, optional): Expansion iteration number. Shouldn't need to change this.
-                Defaults to 0.
-            sp_weight_col (str, optional): Column to use for weights in shortest path.  Will not
-                likely need to be changed. Defaults to "weight"".
-            sp_weight_factor (int, optional): Factor to multiply sp_weight_col by to use for
-                weights in shortest path.  Will not likely need to be changed. Defaults to 1`.
-            max_search_breadth (int, optional):Maximum expansions of the subnet network to find
-                the shortest path after the initial selection based on `name`. Will not likely
-                need to be changed unless network contains a lot of ambiguity. Defaults to 10.
-
-        Raises:
-            ValueError: _description_
+                need to be changed unless network contains a lot of ambiguity.
+                Defaults to DEFAULT_MAX_SEARCH_BREADTH.
         """
         self.net = net
         self.modes = modes
-        self._subnet_links_df = (
-            None if subnet_links_df is None else subnet_links_df.mode_query(self.modes)
-        )
-        self.selection_dict = selection_dict
-
+        self._subnet_links_df = subnet_links_df
         self._i = i
         self._sp_weight_col = sp_weight_col
         self._sp_weight_factor = sp_weight_factor
@@ -145,18 +124,7 @@ class Subnet:
 
     @property
     def subnet_links_df(self) -> DataFrame[RoadLinksTable]:
-        """Links in the subnet. If not set, will generate from selection_dict."""
-        if self._subnet_links_df is None:
-            if self.selection_dict is None:
-                raise SubnetCreationError(
-                    "Cannot create a subnet without one of subnet_links_df\
-                    or selection_dict"
-                )
-
-            selection = self.net.get_selection(self.selection_dict)
-            subnet_links_df = copy.deepcopy(selection.selected_links_df)
-            subnet_links_df["i"] = 0
-            self._subnet_links_df = subnet_links_df
+        """Links in the subnet."""
         return self._subnet_links_df
 
     @property
@@ -200,7 +168,7 @@ class Subnet:
         """Nodes filtered to subnet."""
         return self.net.nodes_df.loc[self.subnet_nodes]
 
-    def expand_subnet_to_include_nodes(self, nodes_list: list):
+    def expand_to_nodes(self, nodes_list: list):
         """Expand network to include list of nodes.
 
         Will stop expanding and generate a SubnetExpansionError if meet max_search_breadth before
@@ -272,3 +240,85 @@ class Subnet:
         self._subnet_links_df = pd.concat([self.subnet_links_df, _add_links_df])
 
         WranglerLogger.debug(f"{self.num_links} expanded subnet links")
+
+
+def _generate_subnet_link_selection_dict_options(
+    link_selection_dict: dict
+) -> list[SelectLinksDict]:
+    """Generates a list of link selection dictionaries based on a link selection dictionary.
+
+    Args:
+        link_selection_dict (SelectLinksDict): Link selection dictionary.
+
+    Returns:
+        list[SelectLinksDict]: List of link selection dictionaries.
+    """
+    options = []
+    # Option 1: As-is selection
+    _sd = copy.deepcopy(link_selection_dict)
+    options.append(_sd)
+
+    # Option 2: Search for name or ref in name field
+    if "ref" in link_selection_dict:
+        _sd = copy.deepcopy(link_selection_dict)
+        _sd["name"] += _sd["ref"]
+        del _sd["ref"]
+        options.append(_sd)
+
+    # Option 3: Search for name in ref field
+    if "name" in link_selection_dict:
+        _sd = copy.deepcopy(link_selection_dict)
+        _sd["ref"] = link_selection_dict["name"]
+        del _sd["name"]
+        options.append(_sd)
+
+    return options
+
+
+def generate_subnet_from_link_selection_dict(
+    net,
+    link_selection_dict: Optional[SelectLinksDict],
+    **kwargs,
+) -> Subnet:
+    """Generates a Subnet object from a link selection dictionary.
+
+    First will search based on "name" in selection_dict but if not found, will search
+        using the "ref" field instead.
+
+    Args:
+        net (RoadwayNetwork): RoadwayNetwork object.
+        link_selection_dict (SelectLinksDict): Link selection dictionary.
+        kwargs: other kwarts to pass to Subnet initiation
+
+    Returns:
+        Subnet: Subnet object.
+    """
+    if isinstance(link_selection_dict, SelectLinksDict):
+        link_selection_data = link_selection_dict
+    else:
+        link_selection_data = SelectLinksDict(**link_selection_dict)
+
+    link_selection_dict = link_selection_data.segment_selection_dict
+    link_sd_options = _generate_subnet_link_selection_dict_options(link_selection_dict)
+    for sd in link_sd_options:
+        WranglerLogger.debug(f"Trying link selection:\n{sd}")
+        subnet_links_df = copy.deepcopy(net.links_df.mode_query(link_selection_data.modes))
+        subnet_links_df = subnet_links_df.dict_query(sd)
+        if len(subnet_links_df) > 0:
+            break
+    if len(subnet_links_df) == 0:
+        WranglerLogger.error(f"Selection didn't return subnet links: {link_selection_dict}")
+        raise SubnetCreationError("No links found with selection.")
+
+    subnet_links_df["i"] = 0
+    subnet = Subnet(
+        net=net,
+        subnet_links_df=subnet_links_df,
+        modes=link_selection_data.modes,
+        **kwargs
+    )
+
+    WranglerLogger.info(
+        f"Found subnet from link selection with {len(subnet.subnet_links_df)} links."
+    )
+    return subnet

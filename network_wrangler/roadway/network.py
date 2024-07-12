@@ -8,7 +8,7 @@ Usage:
 from network_wrangler import load_roadway_from_dir, write_roadway
 
 net = load_roadway_from_dir("my_dir")
-net.get_selection({"link": [{"name": ["I 35E"]}]})
+net.get_selection({"links": [{"name": ["I 35E"]}]})
 net.apply("my_project_card.yml")
 
 write_roadway(net, "my_out_prefix", "my_dir", file_format = "parquet")
@@ -43,10 +43,10 @@ from .projects import (
 from ..logger import WranglerLogger
 from ..params import ShapesParams, LAT_LON_CRS, DEFAULT_CATEGORY, DEFAULT_TIMESPAN
 from ..models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
-from ..models.projects.roadway_selection import SelectLinksDict, SelectNodesDict
+from ..models.projects.roadway_selection import SelectLinksDict, SelectNodesDict, SelectFacility
 from ..models.projects.roadway_property_change import NodeGeometryChangeTable
 from ..utils.models import empty_df_from_datamodel
-from .selection import RoadwayLinkSelection, RoadwayNodeSelection, _create_selection_key
+from .selection import RoadwayLinkSelection, RoadwayNodeSelection, _create_selection_key, SelectionError
 from .model_roadway import ModelRoadwayNetwork
 from .nodes.create import data_to_nodes_df
 from .links.create import data_to_links_df
@@ -260,7 +260,7 @@ class RoadwayNetwork(BaseModel):
 
     def get_selection(
         self,
-        selection_dict: SelectFacility,
+        selection_dict: Union[dict, SelectFacility],
         overwrite: bool = False,
     ) -> Union[RoadwayNodeSelection, RoadwayLinkSelection]:
         """Return selection if it already exists, otherwise performs selection.
@@ -274,13 +274,27 @@ class RoadwayNetwork(BaseModel):
             WranglerLogger.debug(f"Using cached selection from key: {key}")
             return self._selections[key]
 
+        if isinstance(selection_dict, SelectFacility):
+            selection_data = selection_dict
+        elif isinstance(selection_dict, SelectLinksDict):
+            selection_data = SelectFacility(links=selection_dict)
+        elif isinstance(selection_dict, SelectNodesDict):
+            selection_data = SelectFacility(nodes=selection_dict)
+        elif isinstance(selection_dict, dict):
+            selection_data = SelectFacility(**selection_dict)
+        else:
+            WranglerLogger.error(f"`selection_dict` arg must be a dictionary or SelectFacility model.\
+                             Received: {selection_dict} of type {type(selection_dict)}")
+            raise SelectionError("selection_dict arg must be a dictionary or SelectFacility model")
+
         WranglerLogger.debug(f"Getting selection from key: {key}")
-        if "links" in selection_dict:
+        if selection_data.feature_types in ["links", "segment"]:
             return RoadwayLinkSelection(self, selection_dict)
-        elif "nodes" in selection_dict:
+        elif selection_data.feature_types == "nodes":
             return RoadwayNodeSelection(self, selection_dict)
         else:
-            raise ValueError("Selection dictionary must have either 'links' or 'nodes' key.")
+            WranglerLogger.error("Selection data should be of type 'segment', 'links' or 'nodes'.")
+            raise SelectionError("Selection data should be of type 'segment', 'links' or 'nodes'.")
 
     def modal_graph_hash(self, mode) -> str:
         """Hash of the links in order to detect a network change from when graph created."""
