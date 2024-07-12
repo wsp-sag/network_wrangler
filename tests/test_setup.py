@@ -10,6 +10,7 @@ def test_setup():
     subprocess.run(["wranglertest/bin/pip", "install", "network_wrangler"], check=True)
     # Test that network wrangler can be imported
     import network_wrangler
+
     # Test that dependencies were installed
     import osmnx
 

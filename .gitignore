@@ -15,6 +15,8 @@ cache
 tests/t_*
 tests/*.txt
 tests/out/**
+wranglertest/
+
 # Logs
 *.log
 scenario_log.txt

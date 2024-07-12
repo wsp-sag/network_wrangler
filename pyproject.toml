@@ -29,7 +29,7 @@ dependencies = [
     "osmnx >= 0.12",
     "pandas >= 1.6",
     "pandera[geopandas]",
-    "projectcard @ git+ssh://git@github.com/network-wrangler/projectcard.git",
+    "projectcard",
     "pyarrow",
     "pydantic >= 2",
     "pyogrio",
@@ -81,4 +81,3 @@ convention = "google"
 "**/__init__.py" = ["F401", "F403"]
 "test_dependencies.py" = ["F401"]
 "bin/*.py" = ["E501"]
-
