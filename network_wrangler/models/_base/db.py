@@ -2,7 +2,7 @@ import copy
 import hashlib
 
 from collections import defaultdict
-from typing import ClassVar, Callable
+from typing import ClassVar, Callable, Optional
 
 import pandas as pd
 from pandera import DataFrameModel
@@ -104,8 +104,8 @@ class DBModelMixin:
             validated_df = table_model.validate(converted_df, lazy=True)
 
         # Do this in both directions so that ordering of tables being added doesn't matter.
-        self.check_table_fks(table_name, table=table)
-        self.check_referenced_fks(table_name, table=table)
+        self.check_table_fks(table_name, table=validated_df)
+        self.check_referenced_fks(table_name, table=validated_df)
         return validated_df
 
     def initialize_tables(self, **kwargs):
@@ -160,36 +160,46 @@ class DBModelMixin:
                 pks_as_fks[fk_table][fk_field].append([t, f])
         return pks_as_fks
 
-    def check_referenced_fk(self, table_name, field: str, table: pd.DataFrame = None) -> bool:
+    def check_referenced_fk(
+        self,
+        pk_table_name,
+        pk_field: str,
+        pk_table: Optional[pd.DataFrame] = None
+    ) -> bool:
         """True if table.field has the values referenced in any table referencing fields as fk.
 
         For example. If routes.route_id is referenced in trips table, we need to check that
         if a route_id is deleted, it isn't referenced in trips.route_id.
         """
-        WranglerLogger.debug(f"Checking tables which referenced {table_name}.{field} as an FK")
-        if table is None:
-            table = self.get_table(table_name)
+        WranglerLogger.debug(
+            f"Checking tables which referenced {pk_table_name}.{pk_field} as an FK")
+        if pk_table is None:
+            pk_table = self.get_table(pk_table_name)
 
-        if field not in table:
+        if pk_field not in pk_table:
             WranglerLogger.warning(
-                f"Foreign key value {field} not in {table_name} - \
+                f"Foreign key value {pk_field} not in {pk_table_name} - \
                  skipping fk validation"
             )
             return True
 
         fields_as_fks = self.fields_as_fks()
-        if table_name not in fields_as_fks:
+
+        if pk_table_name not in fields_as_fks:
+            return True
+        if pk_field not in fields_as_fks[pk_table_name]:
             return True
 
         all_valid = True
 
-        for ref_table_name, ref_field in fields_as_fks[table_name][field]:
+        for ref_table_name, ref_field in fields_as_fks[pk_table_name][pk_field]:
             if ref_table_name not in self.table_names:
                 WranglerLogger.debug(
                     f"Referencing table {ref_table_name} not in self.table_names - \
                     skipping fk validation."
                 )
                 continue
+
             try:
                 ref_table = self.get_table(ref_table_name)
             except RequiredTableError:
@@ -199,16 +209,23 @@ class DBModelMixin:
                 )
                 continue
 
-            valid, _missing = fk_in_pk(table[field], ref_table[ref_field])
+            if ref_field not in ref_table:
+                WranglerLogger.debug(
+                    f"Referencing field {ref_field} not in {ref_table_name} - \
+                    skipping fk validation."
+                )
+                continue
+
+            valid, _missing = fk_in_pk(pk_table[pk_field], ref_table[ref_field])
             all_valid = all_valid and valid
             if _missing:
                 WranglerLogger.error(
-                    f"Following values missing from {table_name}.{field} that \
+                    f"Following values missing from {pk_table_name}.{pk_field} that \
                       are referenced by {ref_table}: \n{_missing}"
                 )
         return all_valid
 
-    def check_referenced_fks(self, table_name: str, table: pd.DataFrame) -> bool:
+    def check_referenced_fks(self, table_name: str, table: Optional[pd.DataFrame] = None) -> bool:
         """True if this table has the values referenced in any table referencing fields as fk.
 
         For example. If routes.route_id is referenced in trips table, we need to check that
@@ -220,12 +237,12 @@ class DBModelMixin:
             table = self.get_table(table_name)
         all_valid = True
         for field in self.fields_as_fks()[table_name].keys():
-            valid = self.check_referenced_fk(table_name, field, table=table)
+            valid = self.check_referenced_fk(table_name, field, pk_table=table)
             all_valid = valid and all_valid
         return all_valid
 
     def check_table_fks(
-        self, table_name: str, table: pd.DataFrame, raise_error: bool = True
+        self, table_name: str, table: Optional[pd.DataFrame] = None, raise_error: bool = True
     ) -> bool:
         """Return True if the foreign key fields in table have valid references.
 
@@ -239,7 +256,9 @@ class DBModelMixin:
             table = self.get_table(table_name)
         all_valid = True
         for field, fk in fks[table_name].items():
-            fk_table_name, fk_field = fk
+            WranglerLogger.debug(f"Checking {table_name}.{field} foreign key")
+            pkref_table_name, pkref_field = fk
+            WranglerLogger.debug(f"Looking for PK in {pkref_table_name}.{pkref_field}.")
             if field not in table:
                 WranglerLogger.warning(
                     f"Foreign key value {field} not in {table_name} -\
@@ -247,32 +266,37 @@ class DBModelMixin:
                 )
                 continue
 
-            if fk_table_name not in self.table_names:
+            if pkref_table_name not in self.table_names:
                 WranglerLogger.warning(
-                    f"Table {fk_table_name} for specified FK \
+                    f"PK table {pkref_table_name} for specified FK \
                     {table_name}.{field} not in table list - skipping validation."
                 )
                 continue
             try:
-                fk_table = self.get_table(fk_table_name)
+                pkref_table = self.get_table(pkref_table_name)
             except RequiredTableError:
                 WranglerLogger.warning(
-                    f"Table {fk_table_name} for specified FK \
+                    f"PK table {pkref_table_name} for specified FK \
                     {table_name}.{field} not in {type(self)}-  \
                     skipping validation."
                 )
                 continue
-            if fk_field not in fk_table:
+            if pkref_field not in pkref_table:
                 WranglerLogger.error(
-                    f"!!! {fk_table_name} missing {fk_field} field used as FK\
+                    f"!!! {pkref_table_name} missing {pkref_field} field used as FK\
                                     ref in {table_name}.{field}."
                 )
                 all_valid = False
                 continue
-            valid, missing = fk_in_pk(table[field], fk_table[fk_field])
+            if len(pkref_table) < 10:
+                WranglerLogger.debug(
+                    f"PK values:\n{pkref_table[pkref_field]}."
+                )
+            WranglerLogger.debug(f"Checking {table_name}.{field} foreign key")
+            valid, missing = fk_in_pk(pkref_table[pkref_field], table[field])
             if missing:
                 WranglerLogger.error(
-                    f"!!! {fk_table_name}.{fk_field} missing values used as FK\
+                    f"!!! {pkref_table_name}.{pkref_field} missing values used as FK\
                       in {table_name}.{field}: \n_missing"
                 )
             all_valid = valid and all_valid

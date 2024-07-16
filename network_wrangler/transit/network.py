@@ -63,7 +63,7 @@ class TransitNetwork(object):
     ```
 
     Attributes:
-        feed: Partridge feed mapping dataframes.
+        feed: gtfs feed object with interlinked tables.
         road_net (RoadwayNetwork): Associated roadway network object.
         graph (nx.MultiDiGraph): Graph for associated roadway network object.
         feed_path (str): Where the feed was read in from.
@@ -78,7 +78,7 @@ class TransitNetwork(object):
         """Constructor for TransitNetwork.
 
         Args:
-            feed: Feed object mimicing partridge feed
+            feed: Feed object representing the transit network gtfs tables
         """
         WranglerLogger.debug("Creating new TransitNetwork.")
 

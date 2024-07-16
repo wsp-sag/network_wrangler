@@ -49,7 +49,7 @@ class ModelTransit:
         """TransitNetwork.feed with updates for consistency with associated ModelRoadwayNetwork."""
         if self.consistent_nets:
             return self._m_feed
-
+        # NOTE: look at thi
         # If netoworks have changed, updated model transit and update reference hash
         self._roadway_net_hash = copy.deepcopy(self.roadway_net.network_hash)
         self._transit_feed_hash = copy.deepcopy(self.transit_net.feed_hash)

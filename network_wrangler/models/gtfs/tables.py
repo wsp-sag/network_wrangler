@@ -198,7 +198,7 @@ class ShapesTable(pa.DataFrameModel):
         coerce = True
         add_missing_columns = True
         _pk = ["shape_id", "shape_pt_sequence"]
-        _fk = {"shape_id": ["routes", "field"]}
+        _fk = {}
         unique = ["shape_id", "shape_pt_sequence"]
 
 
