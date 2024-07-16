@@ -36,7 +36,6 @@ dependencies = [
     "pyyaml",
 ]
 
-
 [project.optional-dependencies]
 viz = [
     "folium",
@@ -66,6 +65,9 @@ tests = [
     "ruff",
     "vulture",
 ]
+
+[tool.setuptools]
+packages = ["network_wrangler"]
 
 [tool.ruff]
 line-length = 99
