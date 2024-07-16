@@ -35,6 +35,7 @@ from .projects import (
     apply_transit_routing_change,
     apply_transit_property_change,
     apply_calculated_transit,
+    apply_add_transit_route_change,
 )
 from .selection import TransitSelection
 from .feed.feed import Feed
@@ -322,6 +323,9 @@ class TransitNetwork(object):
                 change.transit_routing_change,
                 reference_road_net=reference_road_net,
             )
+
+        elif change.change_type == "add_new_route":
+            return apply_add_transit_route_change(self, change.transit_route_addition)
 
         elif change.change_type == "roadway_deletion":
             # FIXME
