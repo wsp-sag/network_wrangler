@@ -632,8 +632,9 @@ def coerce_val_to_series_type(val, s: pd.Series):
     return v
 
 
-def fk_in_pk(pk: Union[pd.Series, list], fk: Union[pd.Series, list], ignore_nan: bool = True
-             ) -> Tuple[bool, list]:
+def fk_in_pk(
+    pk: Union[pd.Series, list], fk: Union[pd.Series, list], ignore_nan: bool = True
+) -> Tuple[bool, list]:
     """Check if all foreign keys are in the primary keys, optionally ignoring NaN."""
     if isinstance(fk, list):
         fk = pd.Series(fk)

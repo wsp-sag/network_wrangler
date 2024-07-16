@@ -161,10 +161,7 @@ class DBModelMixin:
         return pks_as_fks
 
     def check_referenced_fk(
-        self,
-        pk_table_name,
-        pk_field: str,
-        pk_table: Optional[pd.DataFrame] = None
+        self, pk_table_name, pk_field: str, pk_table: Optional[pd.DataFrame] = None
     ) -> bool:
         """True if table.field has the values referenced in any table referencing fields as fk.
 
@@ -172,7 +169,8 @@ class DBModelMixin:
         if a route_id is deleted, it isn't referenced in trips.route_id.
         """
         WranglerLogger.debug(
-            f"Checking tables which referenced {pk_table_name}.{pk_field} as an FK")
+            f"Checking tables which referenced {pk_table_name}.{pk_field} as an FK"
+        )
         if pk_table is None:
             pk_table = self.get_table(pk_table_name)
 
@@ -289,9 +287,7 @@ class DBModelMixin:
                 all_valid = False
                 continue
             if len(pkref_table) < 10:
-                WranglerLogger.debug(
-                    f"PK values:\n{pkref_table[pkref_field]}."
-                )
+                WranglerLogger.debug(f"PK values:\n{pkref_table[pkref_field]}.")
             WranglerLogger.debug(f"Checking {table_name}.{field} foreign key")
             valid, missing = fk_in_pk(pkref_table[pkref_field], table[field])
             if missing:

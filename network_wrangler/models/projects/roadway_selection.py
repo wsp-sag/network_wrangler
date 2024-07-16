@@ -159,7 +159,7 @@ class SelectLinksDict(RecordModel):
         "ref",
         "osm_link_id",
         "model_link_id",
-        "modes"
+        "modes",
     ]
     _special_fields: ClassVar[list[str]] = ["modes", "ignore_missing"]
     model_config = ConfigDict(extra="allow")

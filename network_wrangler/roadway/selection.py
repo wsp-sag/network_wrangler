@@ -139,7 +139,6 @@ class RoadwayLinkSelection:
 
     @selection_dict.setter
     def selection_dict(self, selection_input: Union[SelectFacility, dict]):
-
         if isinstance(selection_input, SelectLinksDict):
             selection_input = SelectFacility(links=selection_input)
         elif isinstance(selection_input, SelectNodesDict):
@@ -483,7 +482,8 @@ class RoadwayNodeSelection:
 
 
 def _create_selection_key(
-        selection_dict: Union[SelectLinksDict, SelectNodesDict, SelectFacility, dict]) -> str:
+    selection_dict: Union[SelectLinksDict, SelectNodesDict, SelectFacility, dict],
+) -> str:
     """Selections are stored by a sha1 hash of the bit-encoded string of the selection dictionary.
 
     Args:

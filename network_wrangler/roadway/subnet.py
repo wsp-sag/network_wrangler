@@ -16,7 +16,12 @@ from ..params import (
     DEFAULT_MAX_SEARCH_BREADTH,
     DEFAULT_SP_WEIGHT_COL,
 )
-from ..models.projects.roadway_selection import SelectLinksDict, SelectFacility, SelectNodesDict, SelectNodeDict
+from ..models.projects.roadway_selection import (
+    SelectLinksDict,
+    SelectFacility,
+    SelectNodesDict,
+    SelectNodeDict,
+)
 from ..logger import WranglerLogger
 
 if TYPE_CHECKING:
@@ -243,7 +248,7 @@ class Subnet:
 
 
 def _generate_subnet_link_selection_dict_options(
-    link_selection_dict: dict
+    link_selection_dict: dict,
 ) -> list[SelectLinksDict]:
     """Generates a list of link selection dictionaries based on a link selection dictionary.
 
@@ -312,10 +317,7 @@ def generate_subnet_from_link_selection_dict(
 
     subnet_links_df["i"] = 0
     subnet = Subnet(
-        net=net,
-        subnet_links_df=subnet_links_df,
-        modes=link_selection_data.modes,
-        **kwargs
+        net=net, subnet_links_df=subnet_links_df, modes=link_selection_data.modes, **kwargs
     )
 
     WranglerLogger.info(

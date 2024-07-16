@@ -46,7 +46,12 @@ from ..models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTa
 from ..models.projects.roadway_selection import SelectLinksDict, SelectNodesDict, SelectFacility
 from ..models.projects.roadway_property_change import NodeGeometryChangeTable
 from ..utils.models import empty_df_from_datamodel
-from .selection import RoadwayLinkSelection, RoadwayNodeSelection, _create_selection_key, SelectionError
+from .selection import (
+    RoadwayLinkSelection,
+    RoadwayNodeSelection,
+    _create_selection_key,
+    SelectionError,
+)
 from .model_roadway import ModelRoadwayNetwork
 from .nodes.create import data_to_nodes_df
 from .links.create import data_to_links_df
