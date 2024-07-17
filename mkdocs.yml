@@ -36,13 +36,13 @@ plugins:
       enable_inventory: true
       handlers:
         python:
+          paths: [.]
           selection:
             new_path_syntax: true
           rendering:
             show_root_heading: true
             show_source: true
             heading_level: 3
-      custom_templates: templates
   - search
   - macros
 
