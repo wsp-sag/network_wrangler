@@ -46,7 +46,7 @@ docs = [
     "fontawesome_markdown",
     "jupyter",
     "markdown == 3.3.1",
-    "mike",
+    "mike < 2.0",
     "mkdocs",
     "mkdocs-autorefs",
     "mkdocs-awesome-pages-plugin",
