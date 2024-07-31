@@ -338,7 +338,7 @@ def prop_for_scope(
             )
             raise ValueError(f"sc_{prop_name} not a column/is null - and no default allowed.")
         WranglerLogger.debug(f"No scoped values {prop_name}. Returning default.")
-        return copy.deep_copy(links_df[["model_link_id", prop_name]])
+        return copy.deepcopy(links_df[["model_link_id", prop_name]])
 
     # All possible scopings
     candidate_scoped_prop_df = _create_exploded_df_for_scoped_prop(links_df, prop_name)
