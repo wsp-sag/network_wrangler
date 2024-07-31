@@ -35,24 +35,23 @@ class RoadLinksTable(DataFrameModel):
     A: Series[int] = pa.Field(nullable=False, coerce=True)
     B: Series[int] = pa.Field(nullable=False, coerce=True)
     geometry: GeoSeries = pa.Field(nullable=False)
-    name: Series[str] = pa.Field(nullable=False)
+    name: Series[str] = pa.Field(nullable=True)
     rail_only: Series[bool] = pa.Field(coerce=True, nullable=False, default=False)
     bus_only: Series[bool] = pa.Field(coerce=True, nullable=False, default=False)
     drive_access: Series[bool] = pa.Field(coerce=True, nullable=False, default=True)
     bike_access: Series[bool] = pa.Field(coerce=True, nullable=False, default=True)
     walk_access: Series[bool] = pa.Field(coerce=True, nullable=False, default=True)
-    distance: Series[float] = pa.Field(coerce=True, nullable=False)
+    distance: Series[float] = pa.Field(coerce=True, nullable=True)
 
     roadway: Series[str] = pa.Field(nullable=False, default="road")
     managed: Series[int] = pa.Field(coerce=True, nullable=False, default=0)
 
     shape_id: Series[str] = pa.Field(coerce=True, nullable=True)
-    lanes: Series[int] = pa.Field(coerce=True, nullable=False)
+    lanes: Series[Any] = pa.Field(coerce=True, nullable=True, default=0)
     price: Series[float] = pa.Field(coerce=True, nullable=False, default=0)
 
     # Optional Fields
-
-    access: Optional[Series[Any]] = pa.Field(coerce=True, nullable=True, default=True)
+    access: Optional[Series[Any]] = pa.Field(coerce=True, nullable=True, default=None)
 
     sc_lanes: Optional[Series[object]] = pa.Field(coerce=True, nullable=True, default=None)
     sc_price: Optional[Series[object]] = pa.Field(coerce=True, nullable=True, default=None)
@@ -106,10 +105,10 @@ class RoadLinksTable(DataFrameModel):
         add_missing_columns = True
         coerce = True
 
-    @pa.dataframe_check
-    def unique_ab(cls, df: pd.DataFrame) -> bool:
-        """Check that combination of A and B are unique."""
-        return ~df[["A", "B"]].duplicated()
+    # @pa.dataframe_check
+    # def unique_ab(cls, df: pd.DataFrame) -> bool:
+    #     """Check that combination of A and B are unique."""
+    #     return ~df[["A", "B"]].duplicated()
 
     # TODO add check that if there is managed>1 anywhere, that ML_ columns are present.
 
@@ -168,8 +167,8 @@ class RoadNodesTable(DataFrameModel):
 class RoadShapesTable(DataFrameModel):
     """Datamodel used to validate if links_df is of correct format and types."""
 
-    shape_id: Series[str] = pa.Field(unique=True)
-    shape_id_idx: Optional[Series[int]] = pa.Field(unique=True)
+    shape_id: Series[str] = pa.Field(unique=False)
+    shape_id_idx: Optional[Series[int]] = pa.Field(unique=False)
 
     geometry: GeoSeries = pa.Field()
     ref_shape_id: Optional[Series] = pa.Field(nullable=True)
