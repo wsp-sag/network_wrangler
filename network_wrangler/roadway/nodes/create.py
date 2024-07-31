@@ -145,6 +145,7 @@ def _create_nodes_from_link(
     nodes_df["geometry"] = nodes_df["geometry"].apply(
         get_point_geometry_from_linestring, pos=link_pos
     )
+    nodes_df = gpd.GeoDataFrame(nodes_df, geometry='geometry')
     nodes_df["X"] = nodes_df.geometry.x
     nodes_df["Y"] = nodes_df.geometry.y
     nodes_df["model_node_id_idx"] = nodes_df["model_node_id"]
