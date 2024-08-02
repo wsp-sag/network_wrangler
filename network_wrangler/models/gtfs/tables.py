@@ -139,7 +139,7 @@ class StopsTable(pa.DataFrameModel):
 class WranglerStopsTable(StopsTable):
     """Wrangler flavor of GTFS StopsTable."""
 
-    model_node_id: Series[float] = pa.Field(coerce=True, nullable=True)
+    model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
     # TODO should this be in base
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=True, ge=-90, le=90)
     stop_lon: Series[float] = pa.Field(coerce=True, nullable=True, ge=-180, le=180)
