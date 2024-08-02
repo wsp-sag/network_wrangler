@@ -55,12 +55,12 @@ def gtfs_to_wrangler_stop_times(
     )
     # make sure each stop in stop_times exists in stops
     _missing_stops = _m_df.loc[_m_df["model_node_id"].isna(), "stop_id"]
-    # if not _missing_stops.empty:
-    #     WranglerLogger.error(
-    #         f"Missing stops in stops.txt that are found in \
-    #                          stop_times.txt: {_missing_stops.to_list()}"
-    #     )
-    #     raise ValueError("Stops and stop_times tables incompatable.")
+    if not _missing_stops.empty:
+        WranglerLogger.error(
+            f"Missing stops in stops.txt that are found in \
+                             stop_times.txt: {_missing_stops.to_list()}"
+        )
+        raise ValueError("Stops and stop_times tables incompatable.")
     # WranglerLogger.debug(f"Merged stop times df with stops:\n{_m_df}")
     out_stop_times["model_node_id"] = _m_df["model_node_id"]
     # WranglerLogger.debug(f"StopTimes with updated model_node_id:\n{stop_times}")

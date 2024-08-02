@@ -104,7 +104,7 @@ class StopsTable(pa.DataFrameModel):
 
     stop_id: Series[str] = pa.Field(coerce=True, nullable=False, unique=False)
     # TODO why is that here?
-    model_node_id: Series[float] = pa.Field(coerce=True, nullable=True)
+    model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=False, ge=-90, le=90)
     stop_lon: Series[float] = pa.Field(coerce=True, nullable=False, ge=-180, le=180)
 
@@ -205,7 +205,7 @@ class ShapesTable(pa.DataFrameModel):
 class WranglerShapesTable(ShapesTable):
     """Wrangler flavor of GTFS ShapesTable."""
 
-    shape_model_node_id: Series[float] = pa.Field(coerce=True, nullable=True)
+    shape_model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
 
 
 class TripsTable(pa.DataFrameModel):
@@ -318,7 +318,6 @@ class StopTimesTable(pa.DataFrameModel):
 class WranglerStopTimesTable(StopTimesTable):
     """Wrangler flavor of GTFS StopTimesTable."""
 
-    # model_node_id: Series[float] = pa.Field(coerce=True, nullable=True)
     arrival_time: Optional[Series[Timestamp]] = pa.Field(
         coerce=True, nullable=True, default=Timestamp("00:00:00")
     )

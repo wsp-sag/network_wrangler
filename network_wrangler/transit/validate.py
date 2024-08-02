@@ -135,6 +135,5 @@ def transit_road_net_consistency(feed: Feed, road_net: RoadwayNetwork) -> bool:
     """
     _missing_links = shape_links_without_road_links(feed.shapes, road_net.links_df)
     _missing_nodes = transit_nodes_without_road_nodes(feed, road_net.nodes_df)
-    # _consistency = _missing_links.empty and not _missing_nodes
-    _consistency = True
+    _consistency = _missing_links.empty and not _missing_nodes
     return _consistency
