@@ -332,8 +332,8 @@ class RoadwayNetwork(BaseModel):
 
         project_card.validate()
 
-        if project_card.sub_projects:
-            for sp in project_card.sub_projects:
+        if project_card._sub_projects:
+            for sp in project_card._sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
                 self._apply_change(sp)
             return self
