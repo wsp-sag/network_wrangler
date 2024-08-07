@@ -142,7 +142,9 @@ class TransitSelection:
             selection_dict = SelectTransitTrips(**selection_dict)
         selection_dict = selection_dict.model_dump(exclude_none=True, by_alias=True)
         WranglerLogger.debug(f"SELECT DICT - before Validation: \n{selection_dict}")
+        _trip_fields_in_SelectTripProperties = list(SelectTripProperties.__annotations__.keys())
         _trip_selection_fields = list((selection_dict.get("trip_properties", {}) or {}).keys())
+        _trip_selection_fields = list(set(_trip_selection_fields)&set(_trip_fields_in_SelectTripProperties))
         _missing_trip_fields = set(_trip_selection_fields) - set(self.net.feed.trips.columns)
 
         if _missing_trip_fields:
@@ -222,8 +224,8 @@ def _filter_trips_by_selection_dict(
     if sel.get("trip_properties"):
         trips_df = _filter_trips_by_trip(trips_df, sel["trip_properties"])
         WranglerLogger.debug(f"# Trips after trip property filter: {len(trips_df)}")
-    if sel.get("timespan"):
-        trips_df = _filter_trips_by_timespan(trips_df, _freq_df, sel["timespan"])
+    if sel.get("timespans"):
+        trips_df = _filter_trips_by_timespan(trips_df, _freq_df, sel["timespans"])
         WranglerLogger.debug(f"# Trips after timespan filter: {len(trips_df)}")
 
     _num_sel_trips = len(trips_df)
@@ -305,7 +307,10 @@ def _filter_trips_by_trip(
     Returns:
         pd.DataFrame: Filtered trips
     """
-    _missing = set(select_trip_properties.keys()) - set(trips_df.columns)
+    _trip_fields_in_SelectTripProperties = list(SelectTripProperties.__annotations__.keys())
+    _trip_selection_fields = list(select_trip_properties.keys())
+    _trip_selection_fields = list(set(_trip_selection_fields)&set(_trip_fields_in_SelectTripProperties))
+    _missing = set(_trip_selection_fields) - set(trips_df.columns)
     if _missing:
         raise TransitSelectionNetworkConsistencyError(
             f"Route selection properties missing from trips.txt: {_missing}"
@@ -380,10 +385,13 @@ def _filter_trips_by_timespan(
     # Filter freq to time that overlaps selection
     selected_freq_df = pd.DataFrame()
     for timespan in timespans:
-        selected_freq_df = selected_freq_df.append(
-            freq_df[
-                (freq_df["end_time"] >= timespan.start_time)
-                & (freq_df["start_time"] <= timespan.end_time)
+        selected_freq_df = pd.concat(
+            [
+                selected_freq_df,
+                freq_df[
+                    (freq_df["end_time"] >= timespan[0])
+                    & (freq_df["start_time"] <= timespan[1])
+                ],
             ]
         )
 
