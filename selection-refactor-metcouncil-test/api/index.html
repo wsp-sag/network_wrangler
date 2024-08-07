@@ -5282,8 +5282,8 @@ recognized in this collecton once they are moved to applied.</p>
         <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_cards</span><span class="p">[</span><span class="n">project_name</span><span class="p">]</span>
         <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;types: </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">change_types</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type: </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">change_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">sub_projects</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">sub_projects</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
                 <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- applying subproject: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">change_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
 
@@ -7841,8 +7841,8 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
 
         <span class="n">project_card</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">sub_projects</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">project_card</span><span class="o">.</span><span class="n">sub_projects</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
                 <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- applying subproject: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">change_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span>
@@ -8722,8 +8722,8 @@ nodes list rather than self.nodes_df</p>
 
     <span class="n">project_card</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">sub_projects</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">project_card</span><span class="o">.</span><span class="n">sub_projects</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
             <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- applying subproject: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">change_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
