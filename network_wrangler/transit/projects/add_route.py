@@ -32,7 +32,8 @@ def apply_transit_route_addtion(
 
     Args:
         net (TransitNetwork): Network to modify.
-        transit_route_addition: route dictionary to add to the feed
+        transit_route_addition: route dictionary to add to the feed.
+        reference_road_net: (RoadwayNetwork, optional): Reference roadway network to use for adding shapes and stops. Defaults to None.
 
     Returns:
         TransitNetwork: Modified network.
@@ -76,10 +77,12 @@ def _add_route_to_feed(
     Args:
         feed: Input transit feed.
         add_routes: List of route dictionaries to add to the feed.
-        reference_road_net: reference_road_net (RoadwayNetwork, optional): Reference roadway network to use for
-            updating shapes and stops. Defaults to None.
+        road_net: Reference roadway network to use for adding shapes and stops. Defaults to None.
         shape_id_scalar: Scalar used to generate unique shape IDs.
         stop_id_scalar: Scalar used to generate unique stop IDs.
+
+    Returns:
+        Feed: transit feed.
     """
     WranglerLogger.debug("Adding route to feed.")
 

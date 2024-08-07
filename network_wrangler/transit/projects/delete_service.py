@@ -28,7 +28,7 @@ def apply_transit_service_deletion(
 
     Args:
         net (TransitNetwork): Network to modify.
-        transit_service_deletion: dictionary of transit service to delete.
+        selection: TransitSelection object, created from a selection dictionary.
     
     Returns:
         TransitNetwork: Modified network.
