@@ -142,23 +142,12 @@ class TransitSelection:
             selection_dict = SelectTransitTrips(**selection_dict)
         selection_dict = selection_dict.model_dump(exclude_none=True, by_alias=True)
         WranglerLogger.debug(f"SELECT DICT - before Validation: \n{selection_dict}")
-        _trip_fields_in_SelectTripProperties = list(SelectTripProperties.__annotations__.keys())
         _trip_selection_fields = list((selection_dict.get("trip_properties", {}) or {}).keys())
-        _trip_selection_fields = list(set(_trip_selection_fields)&set(_trip_fields_in_SelectTripProperties))
-        _missing_trip_fields = set(_trip_selection_fields) - set(self.net.feed.trips.columns)
-
-        if _missing_trip_fields:
-            raise TransitSelectionNetworkConsistencyError(
-                f"Fields in trip selection dictionary but not trips.txt: {_missing_trip_fields}"
-            )
+        _trip_selection_fields = list(set(_trip_selection_fields) & set(self.net.feed.trips.columns))
 
         _route_selection_fields = list((selection_dict.get("route_properties", {}) or {}).keys())
-        _missing_route_fields = set(_route_selection_fields) - set(self.net.feed.routes.columns)
+        _route_selection_fields = list(set(_route_selection_fields) & set(self.net.feed.routes.columns))
 
-        if _missing_route_fields:
-            raise TransitSelectionNetworkConsistencyError(
-                f"Fields in route selection dictionary but not routes.txt: {_missing_route_fields}"
-            )
         return selection_dict
 
     @property
@@ -307,14 +296,8 @@ def _filter_trips_by_trip(
     Returns:
         pd.DataFrame: Filtered trips
     """
-    _trip_fields_in_SelectTripProperties = list(SelectTripProperties.__annotations__.keys())
     _trip_selection_fields = list(select_trip_properties.keys())
-    _trip_selection_fields = list(set(_trip_selection_fields)&set(_trip_fields_in_SelectTripProperties))
-    _missing = set(_trip_selection_fields) - set(trips_df.columns)
-    if _missing:
-        raise TransitSelectionNetworkConsistencyError(
-            f"Route selection properties missing from trips.txt: {_missing}"
-        )
+    _trip_selection_fields = list(set(_trip_selection_fields) & set(trips_df.columns))
 
     # Select
     _num_unfiltered_trips = len(trips_df)
@@ -389,8 +372,8 @@ def _filter_trips_by_timespan(
             [
                 selected_freq_df,
                 freq_df[
-                    (freq_df["end_time"] >= timespan[0])
-                    & (freq_df["start_time"] <= timespan[1])
+                    (freq_df["start_time"] >= timespan[0])
+                    & (freq_df["end_time"] <= timespan[1])
                 ],
             ]
         )
