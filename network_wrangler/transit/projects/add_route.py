@@ -252,6 +252,7 @@ def _add_route_to_feed(
                     "pickup_type": pickup_type,
                     "drop_off_type": drop_off_type,
                     "stop_id": stop_id_list,
+                    "model_node_id": stop_model_node_id_list,
                     "agency_raw_name": route["agency_raw_name"]
                 })
                 stop_times_df = pd.concat([stop_times_df, add_stop_times_df], ignore_index=True, sort=False)
