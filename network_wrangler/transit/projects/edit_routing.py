@@ -352,7 +352,7 @@ def _update_shapes_and_trips(
 
     # --- Create new shape if `shape_id` is used by trips that are not in selected trip_ids --
     all_trips_using_shape_id = set(trip_ids_for_shape_id(feed.trips, shape_id))
-    sel_trips_using_shape_id = list(set(trip_ids) & all_trips_using_shape_id)
+    sel_trips_using_shape_id = (set(trip_ids) & all_trips_using_shape_id)
     if sel_trips_using_shape_id != all_trips_using_shape_id:
         # adds copied shape with new shape_id to feed.shapes + references it in feed.trips
         feed.shapes, feed.trips, shape_id = _add_new_shape_copy(
