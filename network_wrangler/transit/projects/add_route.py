@@ -71,8 +71,7 @@ def _add_route_to_feed(
     shape_id_scalar: int = TRANSIT_SHAPE_ID_SCALAR,
     stop_id_scalar: int = TRANSIT_STOP_ID_SCALAR,
 ) -> Feed:
-    """
-    Adds routes to a transit feed, updating routes, shapes, trips, stops, stop times, and frequencies.
+    """Adds routes to a transit feed, updating routes, shapes, trips, stops, stop times, and frequencies.
 
     Args:
         feed: Input transit feed.
