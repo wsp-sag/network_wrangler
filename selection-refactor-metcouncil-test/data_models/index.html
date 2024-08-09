@@ -529,6 +529,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#network_wrangler.models.roadway.tables.RoadLinksTable.unique_ab" class="md-nav__link">
+    <span class="md-ellipsis">
+      unique_ab
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1708,6 +1717,15 @@
   <a href="#network_wrangler.models.roadway.tables.RoadLinksTable.check_scoped_fields" class="md-nav__link">
     <span class="md-ellipsis">
       check_scoped_fields
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network_wrangler.models.roadway.tables.RoadLinksTable.unique_ab" class="md-nav__link">
+    <span class="md-ellipsis">
+      unique_ab
     </span>
   </a>
   
@@ -3115,10 +3133,10 @@ Roadway Network tables.</p>
         <span class="n">add_missing_columns</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">coerce</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="c1"># @pa.dataframe_check</span>
-    <span class="c1"># def unique_ab(cls, df: pd.DataFrame) -&gt; bool:</span>
-    <span class="c1">#     &quot;&quot;&quot;Check that combination of A and B are unique.&quot;&quot;&quot;</span>
-    <span class="c1">#     return ~df[[&quot;A&quot;, &quot;B&quot;]].duplicated()</span>
+    <span class="nd">@pa</span><span class="o">.</span><span class="n">dataframe_check</span>
+    <span class="k">def</span> <span class="nf">unique_ab</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check that combination of A and B are unique.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">~</span><span class="n">df</span><span class="p">[[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span>
 
     <span class="c1"># TODO add check that if there is managed&gt;1 anywhere, that ML_ columns are present.</span>
 
@@ -3274,6 +3292,34 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
     <span class="c1"># Combine all results: True if all fields pass validation</span>
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">results</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="network_wrangler.models.roadway.tables.RoadLinksTable.unique_ab" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">unique_ab</span><span class="p">(</span><span class="n">df</span><span class="p">)</span></code>
+
+<a href="#network_wrangler.models.roadway.tables.RoadLinksTable.unique_ab" class="headerlink" title="Permanent link"> ¶</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Check that combination of A and B are unique.</p>
+
+            <details class="quote">
+              <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pa</span><span class="o">.</span><span class="n">dataframe_check</span>
+<span class="k">def</span> <span class="nf">unique_ab</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check that combination of A and B are unique.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="o">~</span><span class="n">df</span><span class="p">[[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3468,8 +3514,8 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 <span class="normal">180</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadShapesTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Datamodel used to validate if links_df is of correct format and types.&quot;&quot;&quot;</span>
 
-    <span class="n">shape_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">shape_id_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Series</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">shape_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">shape_id_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Series</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">geometry</span><span class="p">:</span> <span class="n">GeoSeries</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">()</span>
     <span class="n">ref_shape_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Series</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
