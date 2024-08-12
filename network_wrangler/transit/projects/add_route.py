@@ -18,7 +18,9 @@ class TransitRouteAddError(Exception):
 
 
 def apply_add_transit_route_change(net: TransitNetwork, add_route: dict) -> TransitNetwork:
-    """Add transit route to TransitNetwork.
+    """Adds routes to a transit feed object.
+
+    Will update: routes, shapes, trips, stops, stop times, and frequencies.
 
     Args:
         net (TransitNetwork): Network to modify.

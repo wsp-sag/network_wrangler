@@ -165,7 +165,12 @@ BASE_SCENARIO_SUGGESTED_PROPS = [
     "applied_projects",
     "conflicts",
 ]
-TRANSIT_CARD_TYPES = ["transit_property_change"]
+TRANSIT_CARD_TYPES = [
+    "transit_property_change",
+    "transit_routing_change",
+    "transit_route_addition",
+    "transit_service_deletion"
+]
 ROADWAY_CARD_TYPES = [
     "roadway_deletion",
     "roadway_addition",
