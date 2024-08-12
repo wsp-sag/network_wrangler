@@ -1751,6 +1751,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#network_wrangler.utils.time.filter_df_to_max_overlapping_timespans" class="md-nav__link">
+    <span class="md-ellipsis">
+      filter_df_to_max_overlapping_timespans
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#network_wrangler.utils.time.filter_df_to_overlapping_timespans" class="md-nav__link">
     <span class="md-ellipsis">
       filter_df_to_overlapping_timespans
@@ -1799,6 +1808,15 @@
   <a href="#network_wrangler.utils.time.timespan_str_list_to_dt" class="md-nav__link">
     <span class="md-ellipsis">
       timespan_str_list_to_dt
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network_wrangler.utils.time.timespans_overlap" class="md-nav__link">
+    <span class="md-ellipsis">
+      timespans_overlap
     </span>
   </a>
   
@@ -3651,6 +3669,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#network_wrangler.utils.time.filter_df_to_max_overlapping_timespans" class="md-nav__link">
+    <span class="md-ellipsis">
+      filter_df_to_max_overlapping_timespans
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#network_wrangler.utils.time.filter_df_to_overlapping_timespans" class="md-nav__link">
     <span class="md-ellipsis">
       filter_df_to_overlapping_timespans
@@ -3699,6 +3726,15 @@
   <a href="#network_wrangler.utils.time.timespan_str_list_to_dt" class="md-nav__link">
     <span class="md-ellipsis">
       timespan_str_list_to_dt
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network_wrangler.utils.time.timespans_overlap" class="md-nav__link">
+    <span class="md-ellipsis">
+      timespans_overlap
     </span>
   </a>
   
@@ -7049,7 +7085,8 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 80</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 79</span>
+<span class="normal"> 80</span>
 <span class="normal"> 81</span>
 <span class="normal"> 82</span>
 <span class="normal"> 83</span>
@@ -7585,8 +7622,7 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
 <span class="normal">613</span>
 <span class="normal">614</span>
 <span class="normal">615</span>
-<span class="normal">616</span>
-<span class="normal">617</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwayNetwork</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">616</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwayNetwork</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Representation of a Roadway Network.</span>
 
 <span class="sd">    Typical usage example:</span>
@@ -7797,8 +7833,8 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selection_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">selection_data</span> <span class="o">=</span> <span class="n">SelectFacility</span><span class="p">(</span><span class="o">**</span><span class="n">selection_dict</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`selection_dict` arg must be a dictionary or SelectFacility model.</span><span class="se">\</span>
-<span class="s2">                             Received: </span><span class="si">{</span><span class="n">selection_dict</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">selection_dict</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`selection_dict` arg must be a dictionary or SelectFacility</span><span class="se">\</span>
+<span class="s2">                              model. Received: </span><span class="si">{</span><span class="n">selection_dict</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">selection_dict</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">SelectionError</span><span class="p">(</span><span class="s2">&quot;selection_dict arg must be a dictionary or SelectFacility model&quot;</span><span class="p">)</span>
 
         <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting selection from key: </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -8350,7 +8386,8 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">575</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">574</span>
+<span class="normal">575</span>
 <span class="normal">576</span>
 <span class="normal">577</span>
 <span class="normal">578</span>
@@ -8391,8 +8428,7 @@ nodes list rather than self.nodes_df</p>
 <span class="normal">613</span>
 <span class="normal">614</span>
 <span class="normal">615</span>
-<span class="normal">616</span>
-<span class="normal">617</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">616</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">add_incident_link_data_to_nodes</span><span class="p">(</span>
     <span class="n">links_df</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">nodes_df</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -8485,15 +8521,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">385</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">384</span>
+<span class="normal">385</span>
 <span class="normal">386</span>
 <span class="normal">387</span>
 <span class="normal">388</span>
 <span class="normal">389</span>
 <span class="normal">390</span>
 <span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_links_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]):</span>
+<span class="normal">392</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_links_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined links_df with LinksSchema before adding to self.links_df.</span>
 
 <span class="sd">    Args:</span>
@@ -8552,15 +8588,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">395</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">394</span>
+<span class="normal">395</span>
 <span class="normal">396</span>
 <span class="normal">397</span>
 <span class="normal">398</span>
 <span class="normal">399</span>
 <span class="normal">400</span>
 <span class="normal">401</span>
-<span class="normal">402</span>
-<span class="normal">403</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_nodes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]):</span>
+<span class="normal">402</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_nodes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined nodes_df with NodesSchema before adding to self.nodes_df.</span>
 
 <span class="sd">    Args:</span>
@@ -8619,7 +8655,8 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">405</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">404</span>
+<span class="normal">405</span>
 <span class="normal">406</span>
 <span class="normal">407</span>
 <span class="normal">408</span>
@@ -8630,8 +8667,7 @@ nodes list rather than self.nodes_df</p>
 <span class="normal">413</span>
 <span class="normal">414</span>
 <span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_shapes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadShapesTable</span><span class="p">]]):</span>
+<span class="normal">416</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_shapes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadShapesTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined shapes_df with RoadShapesTable efore adding to self.shapes_df.</span>
 
 <span class="sd">    Args:</span>
@@ -8694,7 +8730,8 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">324</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">323</span>
+<span class="normal">324</span>
 <span class="normal">325</span>
 <span class="normal">326</span>
 <span class="normal">327</span>
@@ -8710,8 +8747,7 @@ nodes list rather than self.nodes_df</p>
 <span class="normal">337</span>
 <span class="normal">338</span>
 <span class="normal">339</span>
-<span class="normal">340</span>
-<span class="normal">341</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_card</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RoadwayNetwork</span><span class="p">:</span>
+<span class="normal">340</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_card</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RoadwayNetwork</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.</span>
 
 <span class="sd">    Args:</span>
@@ -8751,15 +8787,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">515</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">514</span>
+<span class="normal">515</span>
 <span class="normal">516</span>
 <span class="normal">517</span>
 <span class="normal">518</span>
 <span class="normal">519</span>
 <span class="normal">520</span>
 <span class="normal">521</span>
-<span class="normal">522</span>
-<span class="normal">523</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">522</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes any unused nodes from network that aren&#39;t referenced by links_df.</span>
 
 <span class="sd">    NOTE: does not check if these nodes are used by transit, so use with caution.</span>
@@ -8789,12 +8825,12 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">508</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">507</span>
+<span class="normal">508</span>
 <span class="normal">509</span>
 <span class="normal">510</span>
 <span class="normal">511</span>
-<span class="normal">512</span>
-<span class="normal">513</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">512</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes any unused shapes from network that aren&#39;t referenced by links_df.&quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.shapes.shapes</span> <span class="kn">import</span> <span class="n">shape_ids_without_links</span>
 
@@ -8821,7 +8857,8 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">157</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">156</span>
+<span class="normal">157</span>
 <span class="normal">158</span>
 <span class="normal">159</span>
 <span class="normal">160</span>
@@ -8830,8 +8867,7 @@ nodes list rather than self.nodes_df</p>
 <span class="normal">163</span>
 <span class="normal">164</span>
 <span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;nodes_df&quot;</span><span class="p">,</span> <span class="s2">&quot;links_df&quot;</span><span class="p">)</span>
+<span class="normal">166</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;nodes_df&quot;</span><span class="p">,</span> <span class="s2">&quot;links_df&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">coerce_crs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Coerce crs of nodes_df and links_df to network crs.&quot;&quot;&quot;</span>
     <span class="n">net_crs</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;crs&quot;</span><span class="p">]</span>
@@ -8930,7 +8966,8 @@ deleted links. Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">419</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">418</span>
+<span class="normal">419</span>
 <span class="normal">420</span>
 <span class="normal">421</span>
 <span class="normal">422</span>
@@ -8981,8 +9018,7 @@ deleted links. Defaults to False.</p>
 <span class="normal">467</span>
 <span class="normal">468</span>
 <span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_links</span><span class="p">(</span>
+<span class="normal">470</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_links</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">selection_dict</span><span class="p">:</span> <span class="n">SelectLinksDict</span><span class="p">,</span>
     <span class="n">clean_nodes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -9124,7 +9160,8 @@ Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">473</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">472</span>
+<span class="normal">473</span>
 <span class="normal">474</span>
 <span class="normal">475</span>
 <span class="normal">476</span>
@@ -9156,8 +9193,7 @@ Defaults to False.</p>
 <span class="normal">502</span>
 <span class="normal">503</span>
 <span class="normal">504</span>
-<span class="normal">505</span>
-<span class="normal">506</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_nodes</span><span class="p">(</span>
+<span class="normal">505</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_nodes</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">selection_dict</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">SelectNodesDict</span><span class="p">],</span>
     <span class="n">remove_links</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -9240,7 +9276,8 @@ Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">311</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">310</span>
+<span class="normal">311</span>
 <span class="normal">312</span>
 <span class="normal">313</span>
 <span class="normal">314</span>
@@ -9250,8 +9287,7 @@ Defaults to False.</p>
 <span class="normal">318</span>
 <span class="normal">319</span>
 <span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_modal_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultiDiGraph</span><span class="p">:</span>
+<span class="normal">321</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_modal_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultiDiGraph</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a networkx graph of the network for a specific mode.</span>
 
 <span class="sd">    Args:</span>
@@ -9373,7 +9409,8 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">233</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">232</span>
+<span class="normal">233</span>
 <span class="normal">234</span>
 <span class="normal">235</span>
 <span class="normal">236</span>
@@ -9403,8 +9440,7 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 <span class="normal">260</span>
 <span class="normal">261</span>
 <span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_property_by_timespan_and_group</span><span class="p">(</span>
+<span class="normal">263</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_property_by_timespan_and_group</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">link_property</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">category</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_CATEGORY</span><span class="p">,</span>
@@ -9500,7 +9536,8 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">266</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">265</span>
+<span class="normal">266</span>
 <span class="normal">267</span>
 <span class="normal">268</span>
 <span class="normal">269</span>
@@ -9535,8 +9572,7 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 <span class="normal">298</span>
 <span class="normal">299</span>
 <span class="normal">300</span>
-<span class="normal">301</span>
-<span class="normal">302</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_selection</span><span class="p">(</span>
+<span class="normal">301</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_selection</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">selection_dict</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">SelectFacility</span><span class="p">],</span>
     <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -9561,8 +9597,8 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">selection_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">selection_data</span> <span class="o">=</span> <span class="n">SelectFacility</span><span class="p">(</span><span class="o">**</span><span class="n">selection_dict</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`selection_dict` arg must be a dictionary or SelectFacility model.</span><span class="se">\</span>
-<span class="s2">                         Received: </span><span class="si">{</span><span class="n">selection_dict</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">selection_dict</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`selection_dict` arg must be a dictionary or SelectFacility</span><span class="se">\</span>
+<span class="s2">                          model. Received: </span><span class="si">{</span><span class="n">selection_dict</span><span class="si">}</span><span class="s2"> of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">selection_dict</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">SelectionError</span><span class="p">(</span><span class="s2">&quot;selection_dict arg must be a dictionary or SelectFacility model&quot;</span><span class="p">)</span>
 
     <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting selection from key: </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -9623,15 +9659,15 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">553</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">552</span>
+<span class="normal">553</span>
 <span class="normal">554</span>
 <span class="normal">555</span>
 <span class="normal">556</span>
 <span class="normal">557</span>
 <span class="normal">558</span>
 <span class="normal">559</span>
-<span class="normal">560</span>
-<span class="normal">561</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">560</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns true if network has links with AB values.</span>
 
 <span class="sd">    Args:</span>
@@ -9690,15 +9726,15 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">543</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">542</span>
+<span class="normal">543</span>
 <span class="normal">544</span>
 <span class="normal">545</span>
 <span class="normal">546</span>
 <span class="normal">547</span>
 <span class="normal">548</span>
 <span class="normal">549</span>
-<span class="normal">550</span>
-<span class="normal">551</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_node_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">550</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_node_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Queries if network has node based on model_node_id.</span>
 
 <span class="sd">    Args:</span>
@@ -9758,7 +9794,8 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">563</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">562</span>
+<span class="normal">563</span>
 <span class="normal">564</span>
 <span class="normal">565</span>
 <span class="normal">566</span>
@@ -9767,8 +9804,7 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 <span class="normal">569</span>
 <span class="normal">570</span>
 <span class="normal">571</span>
-<span class="normal">572</span>
-<span class="normal">573</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">572</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines if the network graph is &quot;strongly&quot; connected.</span>
 
 <span class="sd">    A graph is strongly connected if each vertex is reachable from every other vertex.</span>
@@ -9800,9 +9836,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_link_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_link_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return subset of links_df based on link_ids list.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_links_to_ids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -9826,9 +9862,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return subset of links_df based on node_ids list.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_links_to_node_ids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -9852,12 +9888,12 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">304</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">303</span>
+<span class="normal">304</span>
 <span class="normal">305</span>
 <span class="normal">306</span>
 <span class="normal">307</span>
-<span class="normal">308</span>
-<span class="normal">309</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">modal_graph_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">308</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">modal_graph_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Hash of the links in order to detect a network change from when graph created.&quot;&quot;&quot;</span>
     <span class="n">_value</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="o">.</span><span class="n">df_hash</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">mode</span><span class="p">)</span>
     <span class="n">_hash</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">_value</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
@@ -9913,7 +9949,8 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">525</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">524</span>
+<span class="normal">525</span>
 <span class="normal">526</span>
 <span class="normal">527</span>
 <span class="normal">528</span>
@@ -9928,8 +9965,7 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 <span class="normal">537</span>
 <span class="normal">538</span>
 <span class="normal">539</span>
-<span class="normal">540</span>
-<span class="normal">541</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">move_nodes</span><span class="p">(</span>
+<span class="normal">540</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">move_nodes</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">node_geometry_change_table</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">NodeGeometryChangeTable</span><span class="p">],</span>
 <span class="p">):</span>
@@ -9967,9 +10003,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nodes_in_links</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nodes_in_links</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns subset of self.nodes_df that are in self.links_df.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_nodes_to_links</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_df</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -14992,11 +15028,11 @@ data against.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">convert_timespan_to_start_end_dt</span><span class="p">(</span><span class="n">timespan_s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">convert_timespan_to_start_end_dt</span><span class="p">(</span><span class="n">timespan_s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Covert a timespan string [&#39;12:00&#39;,&#39;14:00] to start_time and end_time datetime cols in df.&quot;&quot;&quot;</span>
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">timespan_s</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">str_to_time</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
     <span class="n">end_time</span> <span class="o">=</span> <span class="n">timespan_s</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">str_to_time</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
@@ -15090,22 +15126,22 @@ time and end time.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">dt_contains</span><span class="p">(</span><span class="n">timespan1</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">],</span> <span class="n">timespan2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if one timespan inclusively contains another.</span>
 
@@ -15144,16 +15180,16 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">dt_list_overlaps</span><span class="p">(</span><span class="n">timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if any of the timespans overlap.</span>
 
@@ -15184,13 +15220,13 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">dt_overlap_duration</span><span class="p">(</span><span class="n">timedelta1</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timedelta2</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two timespans overlap and return the amount of overlap.&quot;&quot;&quot;</span>
     <span class="n">overlap_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">timedelta1</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="n">timedelta2</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
@@ -15220,16 +15256,16 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">dt_overlaps</span><span class="p">(</span><span class="n">timespan1</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">],</span> <span class="n">timespan2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two timespans overlap.</span>
 
@@ -15262,20 +15298,20 @@ midnight.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">duration_dt</span><span class="p">(</span><span class="n">start_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">end_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">duration_dt</span><span class="p">(</span><span class="n">start_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">end_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a datetime.timedelta object representing the duration of the timespan.</span>
 
 <span class="sd">    If end_time is less than start_time, the duration will assume that it crosses over</span>
@@ -15298,10 +15334,10 @@ midnight.</p>
 <div class="doc doc-object doc-function">
 
 
-<h2 id="network_wrangler.utils.time.filter_df_to_overlapping_timespans" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">filter_df_to_overlapping_timespans</span><span class="p">(</span><span class="n">orig_df</span><span class="p">,</span> <span class="n">query_timespan</span><span class="p">,</span> <span class="n">strict_match</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">min_overlap_minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keep_max_of_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;model_link_id&#39;</span><span class="p">])</span></code>
+<h2 id="network_wrangler.utils.time.filter_df_to_max_overlapping_timespans" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">filter_df_to_max_overlapping_timespans</span><span class="p">(</span><span class="n">orig_df</span><span class="p">,</span> <span class="n">query_timespan</span><span class="p">,</span> <span class="n">strict_match</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">min_overlap_minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">keep_max_of_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;model_link_id&#39;</span><span class="p">])</span></code>
 
-<a href="#network_wrangler.utils.time.filter_df_to_overlapping_timespans" class="headerlink" title="Permanent link"> ¶</a></h2>
+<a href="#network_wrangler.utils.time.filter_df_to_max_overlapping_timespans" class="headerlink" title="Permanent link"> ¶</a></h2>
 
 
     <div class="doc doc-contents ">
@@ -15327,7 +15363,7 @@ midnight.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>dataframe to query timespans for with <code>start_time</code> and <code>end_time</code>.</p>
+                <p>dataframe to query timespans for with <code>start_time</code> and <code>end_time</code> fields.</p>
               </div>
             </td>
             <td>
@@ -15400,43 +15436,43 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span>
-<span class="normal">86</span>
-<span class="normal">87</span>
-<span class="normal">88</span>
-<span class="normal">89</span>
-<span class="normal">90</span>
-<span class="normal">91</span>
-<span class="normal">92</span>
-<span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span>
-<span class="normal">97</span>
-<span class="normal">98</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">filter_df_to_overlapping_timespans</span><span class="p">(</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">filter_df_to_max_overlapping_timespans</span><span class="p">(</span>
     <span class="n">orig_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">query_timespan</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimeString</span><span class="p">],</span>
     <span class="n">strict_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -15446,7 +15482,7 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Filters dataframe for entries that have maximum overlap with the given query timespan.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        orig_df: dataframe to query timespans for with `start_time` and `end_time`.</span>
+<span class="sd">        orig_df: dataframe to query timespans for with `start_time` and `end_time` fields.</span>
 <span class="sd">        query_timespan: TimespanString of format [&#39;HH:MM&#39;,&#39;HH:MM&#39;] to query orig_df for overlapping</span>
 <span class="sd">            records.</span>
 <span class="sd">        strict_match: boolean indicating if the returned df should only contain</span>
@@ -15482,6 +15518,118 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
 <div class="doc doc-object doc-function">
 
 
+<h2 id="network_wrangler.utils.time.filter_df_to_overlapping_timespans" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">filter_df_to_overlapping_timespans</span><span class="p">(</span><span class="n">orig_df</span><span class="p">,</span> <span class="n">query_timespan</span><span class="p">)</span></code>
+
+<a href="#network_wrangler.utils.time.filter_df_to_overlapping_timespans" class="headerlink" title="Permanent link"> ¶</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Filters dataframe for entries that have any overlap with the given query timespan.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>orig_df</code></td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>dataframe to query timespans for with <code>start_time</code> and <code>end_time</code> fields.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>query_timespan</code></td>
+            <td>
+                  <code>list[<span title="network_wrangler.models._base.types.TimeString">TimeString</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>TimespanString of format [&lsquo;HH:MM&rsquo;,&rsquo;HH:MM&rsquo;] to query orig_df for overlapping
+records.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+            <details class="quote">
+              <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">filter_df_to_overlapping_timespans</span><span class="p">(</span>
+    <span class="n">orig_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">query_timespan</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimeString</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filters dataframe for entries that have any overlap with the given query timespan.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        orig_df: dataframe to query timespans for with `start_time` and `end_time` fields.</span>
+<span class="sd">        query_timespan: TimespanString of format [&#39;HH:MM&#39;,&#39;HH:MM&#39;] to query orig_df for overlapping</span>
+<span class="sd">            records.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">q_start</span><span class="p">,</span> <span class="n">q_end</span> <span class="o">=</span> <span class="n">str_to_time_list</span><span class="p">(</span><span class="n">query_timespan</span><span class="p">)</span>
+    <span class="c1"># WranglerLogger.debug(f&quot;q_start_time: {q_start}&quot;)</span>
+    <span class="c1"># WranglerLogger.debug(f&quot;q_end_time:{q_end}&quot;)</span>
+    <span class="c1"># make sure start_time and end_time are datetime objects</span>
+    <span class="n">df_start_time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">])</span>
+    <span class="n">df_end_time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;end_time&quot;</span><span class="p">])</span>
+
+    <span class="c1"># WranglerLogger.debug(f&quot;df_start_time: \n{df_start_time}&quot;)</span>
+    <span class="c1"># WranglerLogger.debug(f&quot;df_end_time: \n{df_end_time}&quot;)</span>
+    <span class="n">overlap_df</span> <span class="o">=</span> <span class="n">orig_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df_start_time</span> <span class="o">&lt;</span> <span class="n">q_end</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df_end_time</span> <span class="o">&gt;</span> <span class="n">q_start</span><span class="p">)]</span>
+
+    <span class="c1"># WranglerLogger.debug(f&quot;time overlap_df: \n{overlap_df}&quot;)</span>
+    <span class="k">return</span> <span class="n">overlap_df</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h2 id="network_wrangler.utils.time.filter_dt_list_to_overlaps" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">filter_dt_list_to_overlaps</span><span class="p">(</span><span class="n">timespans</span><span class="p">)</span></code>
 
@@ -15496,22 +15644,22 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">filter_dt_list_to_overlaps</span><span class="p">(</span><span class="n">timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Filter a list of timespans to only include those that overlap.</span>
 
@@ -15548,16 +15696,16 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">format_time</span><span class="p">(</span><span class="n">seconds</span><span class="p">):</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">format_time</span><span class="p">(</span><span class="n">seconds</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Formats seconds into a human-friendly string for log files.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">seconds</span> <span class="o">&lt;</span> <span class="mi">60</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
@@ -15577,14 +15725,59 @@ This includes and all timespans where at least one minute overlap.</p>
 
 
 <h2 id="network_wrangler.utils.time.str_to_time" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">str_to_time</span><span class="p">(</span><span class="n">time_str</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">str_to_time</span><span class="p">(</span><span class="n">time_str</span><span class="p">,</span> <span class="n">base_date</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 <a href="#network_wrangler.utils.time.str_to_time" class="headerlink" title="Permanent link"> ¶</a></h2>
 
 
     <div class="doc doc-contents ">
 
-      <p>Convert TimeString (HH:MM&lt;:SS&gt;) to datetime.time object.</p>
+      <p>Convert TimeString (HH:MM&lt;:SS&gt;) to datetime object.</p>
+<p>If HH &gt; 24, will add a day to the base_date.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>time_str</code></td>
+            <td>
+                  <code><span title="network_wrangler.models._base.types.TimeString">TimeString</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>TimeString in HH:MM:SS or HH:MM format.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>base_date</code></td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="datetime.datetime.date">date</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>optional date to base the datetime on. Defaults to None.
+If not provided, will use today.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
@@ -15609,28 +15802,46 @@ This includes and all timespans where at least one minute overlap.</p>
 <span class="normal">46</span>
 <span class="normal">47</span>
 <span class="normal">48</span>
-<span class="normal">49</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">str_to_time</span><span class="p">(</span><span class="n">time_str</span><span class="p">:</span> <span class="n">TimeString</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert TimeString (HH:MM&lt;:SS&gt;) to datetime.time object.&quot;&quot;&quot;</span>
-    <span class="n">n_days</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="c1"># Convert to the next day</span>
-    <span class="n">hours</span><span class="p">,</span> <span class="n">min_sec</span> <span class="o">=</span> <span class="n">time_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">hours</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">24</span><span class="p">:</span>
-        <span class="n">n_days</span><span class="p">,</span> <span class="n">hour_of_day</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">hours</span><span class="p">),</span> <span class="mi">24</span><span class="p">)</span>
-        <span class="n">time_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hour_of_day</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">min_sec</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa E231</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">str_to_time</span><span class="p">(</span><span class="n">time_str</span><span class="p">:</span> <span class="n">TimeString</span><span class="p">,</span> <span class="n">base_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert TimeString (HH:MM&lt;:SS&gt;) to datetime object.</span>
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">base_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">time_str</span><span class="p">,</span> <span class="s2">&quot;%H:%M&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="n">base_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">time_str</span><span class="p">,</span> <span class="s2">&quot;%H:%M:%S&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">..time</span> <span class="kn">import</span> <span class="n">TimeFormatError</span>
+<span class="sd">    If HH &gt; 24, will add a day to the base_date.</span>
 
-        <span class="k">raise</span> <span class="n">TimeFormatError</span><span class="p">(</span><span class="s2">&quot;time strings must be in the format HH:MM or HH:MM:SS&quot;</span><span class="p">)</span>
+<span class="sd">    Args:</span>
+<span class="sd">        time_str: TimeString in HH:MM:SS or HH:MM format.</span>
+<span class="sd">        base_date: optional date to base the datetime on. Defaults to None.</span>
+<span class="sd">            If not provided, will use today.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Set the base date to today if not provided</span>
+    <span class="k">if</span> <span class="n">base_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">base_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
 
-    <span class="n">total_time</span> <span class="o">=</span> <span class="n">base_time</span>
-    <span class="k">if</span> <span class="n">n_days</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">total_time</span> <span class="o">=</span> <span class="n">base_time</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">n_days</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">total_time</span>
+    <span class="c1"># Split the time string to extract hours, minutes, and seconds</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">time_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">minutes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="c1"># Calculate total number of days to add to base_date based on hours</span>
+    <span class="n">days_to_add</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">//</span> <span class="mi">24</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">%</span> <span class="mi">24</span>
+
+    <span class="c1"># Create a time object with the adjusted hours, minutes, and seconds</span>
+    <span class="n">adjusted_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hours</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">minutes</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;%H:%M:%S&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="c1"># Combine the base date with the adjusted time and add the extra days if needed</span>
+    <span class="n">combined_datetime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">base_date</span><span class="p">,</span> <span class="n">adjusted_time</span><span class="p">)</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days_to_add</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">combined_datetime</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -15652,9 +15863,9 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">str_to_time_list</span><span class="p">(</span><span class="n">timespan</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimeString</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">str_to_time_list</span><span class="p">(</span><span class="n">timespan</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimeString</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert list of TimeStrings (HH:MM&lt;:SS&gt;) to list of datetime.time objects.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">str_to_time</span><span class="p">,</span> <span class="n">timespan</span><span class="p">))</span>
 </code></pre></div></td></tr></table></div>
@@ -15678,11 +15889,51 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">timespan_str_list_to_dt</span><span class="p">(</span><span class="n">timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">timespan_str_list_to_dt</span><span class="p">(</span><span class="n">timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert list of TimespanStrings to list of datetime.time objects.&quot;&quot;&quot;</span>
     <span class="p">[</span><span class="n">str_to_time_list</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="n">timespans</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="network_wrangler.utils.time.timespans_overlap" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">timespans_overlap</span><span class="p">(</span><span class="n">timespan1</span><span class="p">,</span> <span class="n">timespan2</span><span class="p">)</span></code>
+
+<a href="#network_wrangler.utils.time.timespans_overlap" class="headerlink" title="Permanent link"> ¶</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Check if two timespan strings overlap.</p>
+<p><code>overlapping</code>: a timespan that fully or partially overlaps a given timespan.
+This includes and all timespans where at least one minute overlap.</p>
+
+            <details class="quote">
+              <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">timespans_overlap</span><span class="p">(</span><span class="n">timespan1</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">],</span> <span class="n">timespan2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two timespan strings overlap.</span>
+
+<span class="sd">    `overlapping`: a timespan that fully or partially overlaps a given timespan.</span>
+<span class="sd">    This includes and all timespans where at least one minute overlap.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timespan1</span> <span class="o">=</span> <span class="n">str_to_time_list</span><span class="p">(</span><span class="n">timespan1</span><span class="p">)</span>
+    <span class="n">timespan2</span> <span class="o">=</span> <span class="n">str_to_time_list</span><span class="p">(</span><span class="n">timespan2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dt_overlaps</span><span class="p">(</span><span class="n">timespan1</span><span class="p">,</span> <span class="n">timespan2</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
