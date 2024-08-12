@@ -13,8 +13,8 @@ Internal function terminology for timespan scopes:
 """
 
 from __future__ import annotations
-from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from datetime import datetime, timedelta, date
+from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
 from pydantic import validate_call
@@ -25,28 +25,37 @@ if TYPE_CHECKING:
     from ..models._base.types import TimespanString, TimeString
 
 
-def str_to_time(time_str: TimeString) -> datetime:
-    """Convert TimeString (HH:MM<:SS>) to datetime.time object."""
-    n_days = 0
-    # Convert to the next day
-    hours, min_sec = time_str.split(":", 1)
-    if int(hours) >= 24:
-        n_days, hour_of_day = divmod(int(hours), 24)
-        time_str = f"{hour_of_day}:{min_sec}"  # noqa E231
+def str_to_time(time_str: TimeString, base_date: Optional[datetime.date] = None) -> datetime:
+    """Convert TimeString (HH:MM<:SS>) to datetime object.
 
-    if len(time_str.split(":")) == 2:
-        base_time = datetime.strptime(time_str, "%H:%M")
-    elif len(time_str.split(":")) == 3:
-        base_time = datetime.strptime(time_str, "%H:%M:%S")
-    else:
-        from ..time import TimeFormatError
+    If HH > 24, will add a day to the base_date.
 
-        raise TimeFormatError("time strings must be in the format HH:MM or HH:MM:SS")
+    Args:
+        time_str: TimeString in HH:MM:SS or HH:MM format.
+        base_date: optional date to base the datetime on. Defaults to None.
+            If not provided, will use today.
+    """
+    # Set the base date to today if not provided
+    if base_date is None:
+        base_date = date.today()
 
-    total_time = base_time
-    if n_days > 0:
-        total_time = base_time + timedelta(days=n_days)
-    return total_time
+    # Split the time string to extract hours, minutes, and seconds
+    parts = time_str.split(':')
+    hours = int(parts[0])
+    minutes = int(parts[1])
+    seconds = int(parts[2]) if len(parts) == 3 else 0
+
+    # Calculate total number of days to add to base_date based on hours
+    days_to_add = hours // 24
+    hours = hours % 24
+
+    # Create a time object with the adjusted hours, minutes, and seconds
+    adjusted_time = datetime.strptime(f"{hours:02}:{minutes:02}:{seconds:02}", "%H:%M:%S").time()
+
+    # Combine the base date with the adjusted time and add the extra days if needed
+    combined_datetime = datetime.combine(base_date, adjusted_time) + timedelta(days=days_to_add)
+
+    return combined_datetime
 
 
 def str_to_time_list(timespan: list[TimeString]) -> list[list[datetime]]:
@@ -62,6 +71,32 @@ def timespan_str_list_to_dt(timespans: list[TimespanString]) -> list[list[dateti
 def filter_df_to_overlapping_timespans(
     orig_df: pd.DataFrame,
     query_timespan: list[TimeString],
+) -> pd.DataFrame:
+    """Filters dataframe for entries that have any overlap with the given query timespan.
+
+    Args:
+        orig_df: dataframe to query timespans for with `start_time` and `end_time` fields.
+        query_timespan: TimespanString of format ['HH:MM','HH:MM'] to query orig_df for overlapping
+            records.
+    """
+    q_start, q_end = str_to_time_list(query_timespan)
+    # WranglerLogger.debug(f"q_start_time: {q_start}")
+    # WranglerLogger.debug(f"q_end_time:{q_end}")
+    # make sure start_time and end_time are datetime objects
+    df_start_time = pd.to_datetime(orig_df["start_time"])
+    df_end_time = pd.to_datetime(orig_df["end_time"])
+
+    # WranglerLogger.debug(f"df_start_time: \n{df_start_time}")
+    # WranglerLogger.debug(f"df_end_time: \n{df_end_time}")
+    overlap_df = orig_df.loc[(df_start_time < q_end) & (df_end_time > q_start)]
+
+    # WranglerLogger.debug(f"time overlap_df: \n{overlap_df}")
+    return overlap_df
+
+
+def filter_df_to_max_overlapping_timespans(
+    orig_df: pd.DataFrame,
+    query_timespan: list[TimeString],
     strict_match: bool = False,
     min_overlap_minutes: int = 0,
     keep_max_of_cols: list[str] = ["model_link_id"],
@@ -69,7 +104,7 @@ def filter_df_to_overlapping_timespans(
     """Filters dataframe for entries that have maximum overlap with the given query timespan.
 
     Args:
-        orig_df: dataframe to query timespans for with `start_time` and `end_time`.
+        orig_df: dataframe to query timespans for with `start_time` and `end_time` fields.
         query_timespan: TimespanString of format ['HH:MM','HH:MM'] to query orig_df for overlapping
             records.
         strict_match: boolean indicating if the returned df should only contain
@@ -142,6 +177,17 @@ def dt_overlaps(timespan1: list[datetime], timespan2: list[datetime]) -> bool:
     if (timespan1[0] < timespan2[1]) and (timespan2[0] < timespan1[1]):
         return True
     return False
+
+
+def timespans_overlap(timespan1: list[TimespanString], timespan2: list[TimespanString]) -> bool:
+    """Check if two timespan strings overlap.
+
+    `overlapping`: a timespan that fully or partially overlaps a given timespan.
+    This includes and all timespans where at least one minute overlap.
+    """
+    timespan1 = str_to_time_list(timespan1)
+    timespan2 = str_to_time_list(timespan2)
+    return dt_overlaps(timespan1, timespan2)
 
 
 @validate_call

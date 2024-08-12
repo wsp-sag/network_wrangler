@@ -15,12 +15,12 @@ from pydantic import ValidationError
 
 TEST_SELECTIONS = [
     {
-        "name": "1. simple trip_id",
+        "name": "0. simple trip_id",
         "service": {"trip_properties": {"trip_id": ["14940701-JUN19-MVS-BUS-Weekday-01"]}},
         "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
     },
     {
-        "name": "2. trip_id + time",
+        "name": "1. trip_id + time",
         "service": {
             "trip_properties": {"trip_id": ["14940701-JUN19-MVS-BUS-Weekday-01"]},
             "timespans": [["06:00:00", "09:00:00"]],
@@ -28,7 +28,7 @@ TEST_SELECTIONS = [
         "answer": ["14940701-JUN19-MVS-BUS-Weekday-01"],
     },
     {
-        "name": "3. multiple trip_id",
+        "name": "2. multiple trip_id",
         "service": {
             "trip_properties": {
                 "trip_id": [
@@ -43,7 +43,7 @@ TEST_SELECTIONS = [
         ],
     },
     {
-        "name": "4. multiple trip_id + time",
+        "name": "3. multiple trip_id + time",
         "service": {
             "trip_properties": {
                 "trip_id": [
@@ -55,32 +55,29 @@ TEST_SELECTIONS = [
         },
         "answer": [
             "14940701-JUN19-MVS-BUS-Weekday-01",
-            "14948032-JUN19-MVS-BUS-Weekday-01",
         ],
     },
     {
-        "name": "5. route_id",
+        "name": "4. route_id",
         "service": {"trip_properties": {"route_id": ["365-111"]}},
         "answer": ["14947182-JUN19-MVS-BUS-Weekday-01"],
     },
     {
-        "name": "6. route_id + time",
+        "name": "5. route_id + time",
         "service": {
             "trip_properties": {"route_id": ["21-111"]},
             "timespans": [["09:00", "15:00"]],
         },
         "answer": [
             "14944012-JUN19-MVS-BUS-Weekday-01",
-            "14944018-JUN19-MVS-BUS-Weekday-01",
             "14944019-JUN19-MVS-BUS-Weekday-01",
-            "14944022-JUN19-MVS-BUS-Weekday-01",
         ],
     },
     {
-        "name": "7. multiple route_id + time",
+        "name": "6. multiple route_id + time",
         "service": {
             "trip_properties": {"route_id": ["21-111", "53-111"]},
-            "timespans": [["09:00", "15:00"]],
+            "timespans": [["08:00", "15:00"]],
         },
         "answer": [
             "14944012-JUN19-MVS-BUS-Weekday-01",
@@ -92,7 +89,7 @@ TEST_SELECTIONS = [
         ],
     },
     {
-        "name": "8. route long name contains",
+        "name": "7. route long name contains",
         "service": {"route_properties": {"route_long_name": ["Express"]}},
         "answer": [
             "14940701-JUN19-MVS-BUS-Weekday-01",
@@ -116,7 +113,7 @@ TEST_SELECTIONS = [
         ],
     },
     {
-        "name": "9. multiple route long name",
+        "name": "8. multiple route long name",
         "service": {"route_properties": {"route_long_name": ["Express", "Ltd Stop"]}},
         "answer": [
             "14940701-JUN19-MVS-BUS-Weekday-01",

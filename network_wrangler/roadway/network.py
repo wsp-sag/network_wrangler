@@ -70,7 +70,6 @@ from .shapes.create import df_to_shapes_df
 
 if TYPE_CHECKING:
     from networkx import MultiDiGraph
-    from ..models.projects.roadway_selection import SelectFacility
     from ..models._base.types import TimespanString
 
 
@@ -288,8 +287,8 @@ class RoadwayNetwork(BaseModel):
         elif isinstance(selection_dict, dict):
             selection_data = SelectFacility(**selection_dict)
         else:
-            WranglerLogger.error(f"`selection_dict` arg must be a dictionary or SelectFacility model.\
-                             Received: {selection_dict} of type {type(selection_dict)}")
+            WranglerLogger.error(f"`selection_dict` arg must be a dictionary or SelectFacility\
+                              model. Received: {selection_dict} of type {type(selection_dict)}")
             raise SelectionError("selection_dict arg must be a dictionary or SelectFacility model")
 
         WranglerLogger.debug(f"Getting selection from key: {key}")
