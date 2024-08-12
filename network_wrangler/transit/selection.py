@@ -10,7 +10,7 @@ Create a TransitSelection object by providing a TransitNetwork object and a sele
         "nodes": {...},
         "route_properties": {...},
         "trip_properties": {...},
-        "timespan": {...}
+        "timespans": {...}
     }
     transit_selection = TransitSelection(transit_network, selection_dict)
     ```
@@ -222,9 +222,9 @@ def _filter_trips_by_selection_dict(
     if sel.get("trip_properties"):
         trips_df = _filter_trips_by_trip(trips_df, sel["trip_properties"])
         WranglerLogger.debug(f"# Trips after trip property filter: {len(trips_df)}")
-    if sel.get("timespan"):
-        trips_df = _filter_trips_by_timespan(trips_df, _freq_df, sel["timespan"])
-        WranglerLogger.debug(f"# Trips after timespan filter: {len(trips_df)}")
+    if sel.get("timespans"):
+        trips_df = _filter_trips_by_timespan(trips_df, _freq_df, sel["timespans"])
+        WranglerLogger.debug(f"# Trips after timespans filter: {len(trips_df)}")
 
     _num_sel_trips = len(trips_df)
     WranglerLogger.debug(f"Selected {_num_sel_trips}/{_tot_trips} trips.")
