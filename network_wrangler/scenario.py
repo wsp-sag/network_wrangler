@@ -497,8 +497,8 @@ class Scenario(object):
         p = self.project_cards[project_name]
         WranglerLogger.debug(f"types: {p.change_types}")
         WranglerLogger.debug(f"type: {p.change_type}")
-        if p.sub_projects:
-            for sp in p.sub_projects:
+        if p._sub_projects:
+            for sp in p._sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
                 self._apply_change(sp)
 

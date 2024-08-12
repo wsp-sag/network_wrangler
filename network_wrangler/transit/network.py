@@ -292,8 +292,8 @@ class TransitNetwork(object):
             WranglerLogger.error("Invalid Project Card: {project_card}")
             raise ValueError(f"Project card {project_card.project} not valid.")
 
-        if project_card.sub_projects:
-            for sp in project_card.sub_projects:
+        if project_card._sub_projects:
+            for sp in project_card._sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
                 self._apply_change(sp, **kwargs)
             return self
