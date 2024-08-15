@@ -1,0 +1,191 @@
+[
+  {
+    "model_link_id": 111,
+    "A": 1,
+    "B": 2,
+    "walk_access":true,
+    "bike_access": true,
+    "county": 13,
+    "rail_only":false,
+    "bus_only": false,
+    "centroidconnect": false,
+    "assign_group":13,
+    "roadway_class": 103,
+    "area_type": 1,
+    "bike": 0,
+    "walk": 1,
+    "roadway": "residential",
+    "name": "9th St East",
+    "lanes": {
+      "default": 1,
+      "timeofday": [
+        {
+          "time": ["8:00","10:00"],
+          "value": 2
+        }
+      ]
+    }
+  },
+  {
+    "model_link_id": 112,
+    "A": 2,
+    "B": 1,
+    "roadway": "residential",
+    "name": "9th St East",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 113,
+    "A": 2,
+    "B": 3,
+    "roadway": "residential",
+    "name": "9th St East",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 114,
+    "A": 3,
+    "B": 1,
+    "roadway": "residential",
+    "name": "9th St East",
+    "lanes": 2,
+    "price": {
+      "default": 0,
+      "timeofday": [
+        {
+          "time": ["12:00","3:00"],
+          "group": "HOV2",
+          "value": 1.0
+        }
+      ]
+    }
+  },
+  {
+    "model_link_id": 115,
+    "A": 3,
+    "B": 4,
+    "roadway": "residential",
+    "name": "9th St East",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 116,
+    "A": 4,
+    "B": 3,
+    "roadway": "residential",
+    "name": "9th St East",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 117,
+    "A": 4,
+    "B": 5,
+    "roadway": "residential",
+    "name": "Temperance Street",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 118,
+    "A": 5,
+    "B": 4,
+    "roadway": "residential",
+    "name": "Temperance Street",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 119,
+    "A": 5,
+    "B": 6,
+    "roadway": "residential",
+    "name": "7th St East",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 120,
+    "A": 6,
+    "B": 5,
+    "roadway": "residential",
+    "name": "7th St East",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 121,
+    "A": 6,
+    "B": 7,
+    "roadway": "residential",
+    "name": "7th St East",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 122,
+    "A": 7,
+    "B": 6,
+    "roadway": "residential",
+    "name": "7th St East",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 123,
+    "A": 7,
+    "B": 8,
+    "roadway": "residential",
+    "name": "7th St East",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 124,
+    "A": 8,
+    "B": 7,
+    "roadway": "residential",
+    "name": "7th St East",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 125,
+    "A": 1,
+    "B": 8,
+    "roadway": "residential",
+    "name": "N Minnesota Street",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 126,
+    "A": 8,
+    "B": 1,
+    "roadway": "residential",
+    "name": "N Minnesota Street",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 127,
+    "A": 2,
+    "B": 7,
+    "roadway": "residential",
+    "name": "Robert Street N",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 128,
+    "A": 7,
+    "B": 2,
+    "roadway": "residential",
+    "name": "Robert Street N",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 129,
+    "A": 3,
+    "B": 6,
+    "roadway": "residential",
+    "name": "Jackson Street",
+    "lanes": 2
+  },
+  {
+    "model_link_id": 130,
+    "A": 6,
+    "B": 3,
+    "roadway": "residential",
+    "name": "Jackson Street",
+    "lanes": 2
+  }
+]

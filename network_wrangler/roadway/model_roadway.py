@@ -324,7 +324,7 @@ def _create_dummy_connector_links(
     egress_df.set_index("model_link_id_idx", inplace=True)
 
     # combine to one dataframe
-    access_egress_df = pd.concat([access_df, egress_df])
+    access_egress_df = pd.concat([access_df, egress_df], axis=0)
 
     # 3 - Determine property values
     access_egress_df["lanes"] = 1

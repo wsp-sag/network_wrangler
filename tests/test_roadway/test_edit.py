@@ -67,7 +67,7 @@ def test_add_links(request, small_net):
     assert len(new_links_in_links_df) == len(new_link_ids)
 
     # should raise an error if try to add again.
-    with pytest.raises(SchemaError):
+    with pytest.raises(ValueError):
         net.add_links(add_links_df)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

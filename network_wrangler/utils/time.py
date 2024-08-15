@@ -40,7 +40,7 @@ def str_to_time(time_str: TimeString, base_date: Optional[datetime.date] = None)
         base_date = date.today()
 
     # Split the time string to extract hours, minutes, and seconds
-    parts = time_str.split(':')
+    parts = time_str.split(":")
     hours = int(parts[0])
     minutes = int(parts[1])
     seconds = int(parts[2]) if len(parts) == 3 else 0

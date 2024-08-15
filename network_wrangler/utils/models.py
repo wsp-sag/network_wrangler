@@ -40,7 +40,8 @@ def empty_df_from_datamodel(
 def default_from_datamodel(data_model: pa.DataFrameModel, field: str):
     """Returns default value from pandera data model for a given field name."""
     if field in data_model.__fields__:
-        return data_model.__fields__[field][1].default
+        if hasattr(data_model.__fields__[field][1], "default"):
+            return data_model.__fields__[field][1].default
     return None
 
 

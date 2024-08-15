@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 import time
-from typing import Union, TYPE_CHECKING
+from typing import Union
 from pathlib import Path
 
 import pandas as pd
@@ -24,6 +24,7 @@ def read_links(
     in_crs: int = LAT_LON_CRS,
     links_params: Union[dict, LinksParams, None] = None,
     nodes_df: DataFrame[RoadNodesTable] = None,
+    filter_to_nodes: bool = False,
 ) -> DataFrame[RoadLinksTable]:
     """Reads links and returns a geodataframe of links conforming to RoadLinksTable.
 
@@ -37,10 +38,23 @@ def read_links(
         links_params: a LinkParams instance. Defaults to a default LinkParams instance.
         nodes_df: a RoadNodesTable to gather geometry from. Necesary if geometry is not
             provided. Defaults to None.
+        filter_to_nodes: if True, will filter links to only those that connect to nodes. Requires
+            nodes_df to be provided. Defaults to False.
     """
     WranglerLogger.info(f"Reading links from {filename}.")
     start_t = time.time()
+
+    if filter_to_nodes is True and nodes_df is None:
+        raise ValueError("If filter_to_nodes is True, nodes_df must be provided.")
+
     links_df = read_table(filename)
+
+    if filter_to_nodes:
+        WranglerLogger.debug("Filtering links to only those that connect to nodes.")
+        links_df = links_df[
+            links_df["A"].isin(nodes_df.model_node_id) & links_df["B"].isin(nodes_df.model_node_id)
+        ]
+
     WranglerLogger.debug(f"Read {len(links_df)} links in {round(time.time() - start_t, 2)}.")
     links_df = data_to_links_df(
         links_df, in_crs=in_crs, links_params=links_params, nodes_df=nodes_df

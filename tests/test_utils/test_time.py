@@ -10,8 +10,15 @@ str_to_time_cases = [
     ("27:45:00", datetime.date(2024, 8, 12), datetime.datetime(2024, 8, 13, 3, 45, 0)),
     ("51:30:00", datetime.date(2024, 8, 12), datetime.datetime(2024, 8, 14, 3, 30, 0)),
     ("14:30", datetime.date(2024, 8, 12), datetime.datetime(2024, 8, 12, 14, 30, 0)),
-    ("10:15", None, datetime.datetime.combine(datetime.date.today(), datetime.datetime.strptime("10:15", "%H:%M").time())),
+    (
+        "10:15",
+        None,
+        datetime.datetime.combine(
+            datetime.date.today(), datetime.datetime.strptime("10:15", "%H:%M").time()
+        ),
+    ),
 ]
+
 
 @pytest.mark.parametrize("case", str_to_time_cases)
 def test_str_to_time(case):

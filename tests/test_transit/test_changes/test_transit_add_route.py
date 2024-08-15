@@ -14,6 +14,7 @@ from network_wrangler.transit.projects.add_route import (
 )
 
 
+@pytest.mark.skip("Not implemented")
 def test_add_route_to_feed_dict(
     request,
     small_transit_net: TransitNetwork,
@@ -21,12 +22,12 @@ def test_add_route_to_feed_dict(
     WranglerLogger.info(f"--Starting: {request.node.name}")
     feed = copy.deepcopy(small_transit_net.feed)
     # TODO: Add test for adding route to small tiny network using a dict
-    updated_feed =  _add_route_to_feed(feed, add_route_change)
+    updated_feed = _add_route_to_feed(feed, add_route_change)
     # TODO Add assertions
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-
+@pytest.mark.skip("Not implemented")
 def test_add_route_to_net_dict(
     request,
     small_transit_net: TransitNetwork,

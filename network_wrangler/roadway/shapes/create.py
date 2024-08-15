@@ -33,12 +33,20 @@ def df_to_shapes_df(
     Returns:
         DataFrame[RoadShapesTable]
     """
+    ALT_SHAPE_ID = "id"
     WranglerLogger.debug(f"Creating {len(shapes_df)} shapes.")
     if not isinstance(shapes_df, gpd.GeoDataFrame):
         shapes_df = coerce_gdf(shapes_df, in_crs=in_crs)
 
     if shapes_df.crs != LAT_LON_CRS:
         shapes_df = shapes_df.to_crs(LAT_LON_CRS)
+
+    if "shape_id" not in shapes_df.columns:
+        if ALT_SHAPE_ID not in shapes_df.columns:
+            raise ValueError(
+                "shapes_df must have a column named 'shape_id' or 'id' to use as the shape_id."
+            )
+        shapes_df = shapes_df.rename(columns={ALT_SHAPE_ID: "shape_id"})
 
     shapes_params = ShapesParams() if shapes_params is None else shapes_params
     shapes_df = attach_parameters_to_df(shapes_df, shapes_params)

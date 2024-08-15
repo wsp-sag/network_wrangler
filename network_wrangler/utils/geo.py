@@ -388,8 +388,10 @@ def get_bounding_polygon(
     boundary_file: Optional[Union[str, Path]] = None,
     boundary_gdf: Optional[gpd.GeoDataFrame] = None,
     crs: int = LAT_LON_CRS,  # WGS84
-) -> gpd.GeoSeries:
-    """Get the bounding polygon for a given boundary first prioritizing the.
+) -> Union[None, gpd.GeoSeries]:
+    """Get the bounding polygon for a given boundary.
+
+    Will return None if no arguments given. Will raise a ValueError if more than one given.
 
     This function retrieves the bounding polygon for a given boundary. The boundary can be provided
     as a GeoDataFrame, a geocode string or dictionary, or a boundary file. The resulting polygon
@@ -409,7 +411,10 @@ def get_bounding_polygon(
     """
     import osmnx as ox
 
-    if sum(x is not None for x in [boundary_gdf, boundary_geocode, boundary_file]) != 1:
+    nargs = sum(x is not None for x in [boundary_gdf, boundary_geocode, boundary_file])
+    if nargs == 0:
+        return None
+    if nargs != 1:
         raise ValueError(
             "Exacly one of boundary_gdf, boundary_geocode, or boundary_shp must \
                          be provided"

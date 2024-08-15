@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Union, TYPE_CHECKING, Optional
 
-import geopandas as gpd
+from geopandas import GeoDataFrame
 
 from pydantic import validate_call
 from pandera.typing import DataFrame
@@ -28,6 +28,9 @@ def read_nodes(
     filename: Union[Path, str],
     in_crs: int = LAT_LON_CRS,
     nodes_params: Optional[Union[dict, NodesParams, None]] = None,
+    boundary_gdf: Optional[GeoDataFrame] = None,
+    boundary_geocode: Optional[str] = None,
+    boundary_file: Optional[Path] = None,
 ) -> DataFrame[RoadNodesTable]:
     """Reads nodes and returns a geodataframe of nodes.
 
@@ -38,12 +41,23 @@ def read_nodes(
         filename (Path,str): file to read links in from.
         in_crs: coordinate reference system number that node data is in. Defaults to 4323.
         nodes_params: a NodesParams instance. Defaults to a default odesParams instance.
+        boundary_gdf: GeoDataFrame to filter the input data to. Only used for geographic data.
+            efaults to None.
+        boundary_geocode: Geocode to filter the input data to. Only used for geographic data.
+            Defaults to None.
+        boundary_file: File to load as a boundary to filter the input data to. Only used for
+            geographic data. Defaults to None.
     """
     WranglerLogger.debug(f"Reading nodes from {filename}.")
 
     start_time = time.time()
 
-    nodes_df = read_table(filename)
+    nodes_df = read_table(
+        filename,
+        boundary_gdf=boundary_gdf,
+        boundary_geocode=boundary_geocode,
+        boundary_file=boundary_file,
+    )
     WranglerLogger.debug(
         f"Read {len(nodes_df)} nodes from file in {round(time.time() - start_time, 2)}."
     )

@@ -184,6 +184,22 @@ class TransitSelection:
         self._stored_feed_hash = copy.deepcopy(self.net.feed_hash)
         return self._selected_trips_df
 
+    @property
+    def selected_shapes_df(self) -> DataFrame[WranglerShapesTable]:
+        """DataFrame of selected shapes.
+
+        Can visualize the selected shapes quickly using the following code:
+
+        ```python
+        all_routes = net.feed.shapes.plot(color='gray')
+        selection.selected_shapes_df.plot(ax=all_routes, color="red")
+        ```
+
+        """
+        return self.net.feed.shapes.loc[
+            self.net.feed.shapes.shape_id.isin(self.selected_trips_df.shape_id)
+        ]
+
     def _select_trips(self) -> DataFrame[TripsTable]:
         """Selects transit trips based on selection dictionary.
 

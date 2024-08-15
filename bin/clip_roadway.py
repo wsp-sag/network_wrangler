@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Usage: python clip_roadway.py <network_path> <boundary> <out_dir> [--out_prefix <prefix>] [--out_format <format>].
 
 This script trims a roadway network based on a given boundary and outputs the trimmed network.

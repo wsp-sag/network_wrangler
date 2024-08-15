@@ -64,7 +64,7 @@ def test_create_ml_network_shape(request, small_net):
     net = copy.deepcopy(small_net)
 
     # Set facility selection
-    _model_link_ids = net.links_df["model_link_id"].iloc[1:2].tolist()
+    _model_link_ids = [115]
     _facility = {"links": {"model_link_id": _model_link_ids}}
 
     # Set ML Properties
