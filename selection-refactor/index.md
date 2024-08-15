@@ -21,7 +21,7 @@ Requirements for basic network_wranglerare functionality as well as enhanced *de
 
 !!! tip "create a new conda environment for wrangler"
 
-    ```bash 
+    ```bash
     conda config --add channels conda-forge
     conda create python=3.7 -n wrangler
     conda activate wrangler
@@ -50,7 +50,7 @@ Ready to install network wrangler?
     ```
 
     !!! note
-    
+
         If you wanted to install from a specific tag/version number or branch, replace `@master` with `@<branchname>`  or `@tag`
 
 === "From Clone"
