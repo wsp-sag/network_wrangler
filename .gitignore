@@ -16,6 +16,8 @@ tests/t_*
 tests/*.txt
 tests/out/**
 wranglertest/
+.coverage
+coverage.xml
 
 # Logs
 *.log

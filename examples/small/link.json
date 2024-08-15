@@ -3,9 +3,26 @@
     "model_link_id": 111,
     "A": 1,
     "B": 2,
+    "walk_access":true,
+    "bike_access": true,
+    "county": 13,
+    "rail_only":false,
+    "bus_only": false,
+    "centroidconnect": false,
+    "assign_group":13,
+    "roadway_class": 103,
+    "area_type": 1,
+    "bike": 0,
+    "walk": 1,
     "roadway": "residential",
     "name": "9th St East",
-    "lanes": 2
+    "lanes": 2,
+    "sc_lanes": [
+      {
+        "timespan": ["8:00","10:00"],
+        "value": 2
+      }
+    ]
   },
   {
     "model_link_id": 112,
@@ -29,7 +46,15 @@
     "B": 1,
     "roadway": "residential",
     "name": "9th St East",
-    "lanes": 2
+    "lanes": 2,
+    "price": 0,
+    "sc_price": [
+      {
+          "timespan": ["12:00","3:00"],
+          "category": "HOV2",
+          "value": 1.0
+      }
+    ]
   },
   {
     "model_link_id": 115,
