@@ -105,13 +105,7 @@ class RoadLinksTable(DataFrameModel):
         name = "RoadLinksTable"
         add_missing_columns = True
         coerce = True
-
-    @pa.dataframe_check
-    def unique_ab(cls, df: pd.DataFrame) -> bool:
-        """Check that combination of A and B are unique."""
-        return ~df[["A", "B"]].duplicated()
-
-    # TODO add check that if there is managed>1 anywhere, that ML_ columns are present.
+        unique = ["A", "B"]
 
     @pa.dataframe_check
     def check_scoped_fields(cls, df: pd.DataFrame) -> Series[bool]:

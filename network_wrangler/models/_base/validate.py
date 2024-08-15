@@ -1,9 +1,13 @@
 """Wrappers around validation functions that produce more legible output and logging."""
 
+import pandas as pd
+
 from pandas import DataFrame
 from pandera import DataFrameModel
 from pandera.errors import SchemaErrors
 from pydantic import validate_call
+
+from ...utils.models import default_from_datamodel
 from ...logger import WranglerLogger
 
 
@@ -20,7 +24,16 @@ def validate_df_to_model(df: DataFrame, model: DataFrameModel) -> DataFrame:
         model: Pandera DataFrameModel to validate against.
     """
     try:
-        return model(df)
+        model_df = model(df)
+        for c in model_df.columns:
+            default_value = default_from_datamodel(model, c)
+            if default_value is None:
+                model_df[c] = model_df[c].where(pd.notna(model_df[c]), None)
+            else:
+                model_df[c] = model_df[c].fillna(default_value)
+
+        return model_df
+
     except SchemaErrors as e:
         # Log the summary of errors
         WranglerLogger.error(
