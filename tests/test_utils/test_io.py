@@ -15,10 +15,14 @@ def test_convert_in_chunks(example_dir, tmpdir):
     assert (tmpdir / "not_chunked_links.parquet").stat().st_size > 0
 
     # make sure they are the same size
-    assert (tmpdir / "chunked_links.parquet").stat().st_size == (tmpdir / "not_chunked_links.parquet").stat().st_size
+    assert (tmpdir / "chunked_links.parquet").stat().st_size == (
+        tmpdir / "not_chunked_links.parquet"
+    ).stat().st_size
 
     # make sure they are the same
-    assert (tmpdir / "chunked_links.parquet").read_bytes() == (tmpdir / "not_chunked_links.parquet").read_bytes()
+    assert (tmpdir / "chunked_links.parquet").read_bytes() == (
+        tmpdir / "not_chunked_links.parquet"
+    ).read_bytes()
 
     # clean up
     (tmpdir / "chunked_links.parquet").unlink()
