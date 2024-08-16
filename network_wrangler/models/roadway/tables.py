@@ -35,7 +35,7 @@ class RoadLinksTable(DataFrameModel):
     A: Series[int] = pa.Field(nullable=False, coerce=True)
     B: Series[int] = pa.Field(nullable=False, coerce=True)
     geometry: GeoSeries = pa.Field(nullable=False)
-    name: Series[str] = pa.Field(nullable=False)
+    name: Series[str] = pa.Field(nullable=False, default="unknown")
     rail_only: Series[bool] = pa.Field(coerce=True, nullable=False, default=False)
     bus_only: Series[bool] = pa.Field(coerce=True, nullable=False, default=False)
     drive_access: Series[bool] = pa.Field(coerce=True, nullable=False, default=True)
