@@ -226,6 +226,15 @@ EST_PD_READ_SPEED = {
     "txt": 0.04,
 }
 
+# ---------------------------------------------------------------------
+# ------ MODEL NETWORK MANAGED LANES PARAMETER ------
+# ---------------------------------------------------------------------
+
+"""
+(float): offset in meters for managed lanes centerlines
+"""
+ML_OFFSET_METERS = -5
+
 """
 (list(str)): list of attributes
 to copy from a general purpose lane to managed lane so long as a ML_<prop_name> doesn't exist.
@@ -265,13 +274,11 @@ MANAGED_LANES_REQUIRED_ATTRIBUTES = [
 ]
 
 """
-scalar value added to the general purpose lanes' `model_link_id` when creating
-    an associated link for a parallel managed lane
+Range of model_link_ids to use when creating an associated link for a parallel managed lane.
 """
-MANAGED_LANES_LINK_ID_SCALAR = 1000000
+MANAGED_LANES_LINK_ID_RANGE = (950000, 999999)
 
 """
-scalar value added to the general purpose lanes' `model_node_id` when creating
-    an associated node for a parallel managed lane
+Range of model_node_ids to use when creating an associated node for a parallel managed lane.
 """
-MANAGED_LANES_NODE_ID_SCALAR = 500000
+MANAGED_LANES_NODE_ID_RANGE = (950000, 999999)

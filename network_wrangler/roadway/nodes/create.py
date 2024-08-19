@@ -152,3 +152,24 @@ def _create_nodes_from_link(
     nodes_df = RoadNodesTable.validate(nodes_df, lazy=True)
     # WranglerLogger.debug(f"ct3: nodes_df:\n{nodes_df}")
     return nodes_df
+
+
+def generate_node_ids(nodes_df: DataFrame[RoadNodesTable], range: tuple[int], n: int) -> list[int]:
+    """Generate unique node ids for nodes_df.
+
+    Args:
+        nodes_df: nodes dataframe to generate unique ids for.
+        range: range of ids to generate from.
+        n: number of ids to generate.
+
+    Returns:
+        list[int]: list of unique node ids.
+    """
+    if n <= 0:
+        return []
+    existing_ids = set(nodes_df["model_node_id"].unique())
+    new_ids = set(range) - existing_ids
+    if len(new_ids) < n:
+        raise NodeAddError(f"Only {len(new_ids)} new ids available, need {n}.")
+
+    return list(new_ids)[:n]

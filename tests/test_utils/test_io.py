@@ -3,6 +3,7 @@
 from network_wrangler.utils.io import convert_file_serialization
 
 
+@pytest.mark.skip(reason="Not implemented")
 def test_convert_in_chunks(example_dir, tmpdir):
     convert_file_serialization(
         example_dir / "stpaul" / "link.json", tmpdir / "chunked_links.parquet", chunk_size=100

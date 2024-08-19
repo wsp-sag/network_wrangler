@@ -42,7 +42,7 @@ def test_add_adhoc_managed_lane_field(request, small_net):
 
     m_net = net.model_net
 
-    _ml_model_link_id = m_net._link_id_to_managed_lane_link_id(MODEL_LINK_ID)
+    _ml_model_link_id = m_net.ml_link_id_lookup[MODEL_LINK_ID]
     WranglerLogger.debug(f"model_link_id: {MODEL_LINK_ID}\nml_model_link_id: {_ml_model_link_id}")
     _display_cols = ["model_link_id", "name", "my_ad_hoc_field", "lanes"]
     WranglerLogger.debug(f"\nManaged Lane Network\n{m_net.links_df[_display_cols]}")
@@ -103,23 +103,20 @@ def test_create_ml_network_shape(request, small_net):
 
     net = net.apply(project_card_dictionary)
 
-    LINK_SCALAR = net.model_net.ml_link_id_scalar
-    base_model_link_ids = _facility["links"]["model_link_id"]
-    ml_model_link_ids = [LINK_SCALAR + x for x in base_model_link_ids]
-    access_model_link_ids = [x + 1 + LINK_SCALAR for x in base_model_link_ids]
-    egress_model_link_ids = [x + 2 + LINK_SCALAR for x in base_model_link_ids]
+    model_net = net.model_net
 
-    gp_links = net.model_net.links_df[
-        net.model_net.links_df["model_link_id"].isin(base_model_link_ids)
-    ]
-    ml_links = net.model_net.links_df[
-        net.model_net.links_df["model_link_id"].isin(ml_model_link_ids)
-    ]
+    base_model_link_ids = _facility["links"]["model_link_id"]
+    ml_model_link_ids = [model_net.ml_link_id_lookup[x] for x in base_model_link_ids]
+    access_model_link_ids = [1 + model_net.ml_link_id_lookup[x] for x in base_model_link_ids]
+    egress_model_link_ids = [2 + model_net.ml_link_id_lookup[x] for x in base_model_link_ids]
+
+    gp_links = model_net.links_df[model_net.links_df["model_link_id"].isin(base_model_link_ids)]
+    ml_links = model_net.links_df[net.model_net.links_df["model_link_id"].isin(ml_model_link_ids)]
     access_links = net.model_net.links_df[
-        net.model_net.links_df["model_link_id"].isin(access_model_link_ids)
+        model_net.links_df["model_link_id"].isin(access_model_link_ids)
     ]
     egress_links = net.model_net.links_df[
-        net.model_net.links_df["model_link_id"].isin(egress_model_link_ids)
+        model_net.links_df["model_link_id"].isin(egress_model_link_ids)
     ]
 
     # CHECK: new ML links, each ML link has 2 more acc/egr links for total of 3 links per ML link
@@ -183,9 +180,7 @@ def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_di
         "ML_egress_point"
     ]["set"]
 
-    expected_ml_link_ids = [
-        net.model_net._link_id_to_managed_lane_link_id(x) for x in pcard_gp_link_ids
-    ]
+    expected_ml_link_ids = [net.model_net.ml_link_id_lookup[x] for x in pcard_gp_link_ids]
 
     net_gp_links = _m_links_df.of_type.parallel_general_purpose
     net_ml_links = _m_links_df.of_type.managed

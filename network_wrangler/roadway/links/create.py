@@ -1,5 +1,6 @@
 """Functions for creating RoadLinksTables."""
 
+import copy
 import time
 
 from typing import List, Union
@@ -22,6 +23,7 @@ from ...utils.geo import (
     _harmonize_crs,
     length_of_linestring_miles,
     linestring_from_nodes,
+    offset_geometry_meters,
 )
 
 
@@ -100,7 +102,7 @@ def data_to_links_df(
     WranglerLogger.debug(f"Creating {len(links_df)} links.")
     if not isinstance(links_df, pd.DataFrame):
         links_df = pd.DataFrame(links_df)
-    if len(links_df) < 21:
+    if len(links_df) < 5:
         WranglerLogger.debug(f"data_to_links_df.links_df input: \n{links_df}.")
     links_df = _fill_missing_link_geometries_from_nodes(links_df, nodes_df)
     # Now that have geometry, make sure is GDF
@@ -130,3 +132,127 @@ def data_to_links_df(
         WranglerLogger.debug(f"{len(links_df)} new links.")
 
     return links_df
+
+
+def copy_links(
+    links_df: DataFrame[RoadLinksTable],
+    link_id_lookup: dict[int, int],
+    node_id_lookup: dict[int, int],
+    updated_geometry_col: str = None,
+    nodes_df: DataFrame[RoadNodesTable] = None,
+    offset_meters: float = -5,
+    copy_properties: list[str] = [],
+    rename_properties: dict[str, str] = {},
+    name_prefix: str = "copy of",
+    validate: bool = True,
+) -> DataFrame[RoadLinksTable]:
+    """Copy links and optionally offset them.
+
+    Will get geometry from another column if provided, otherwise will use nodes_df and then
+    offset_meters to offset from previous geometry.
+
+    Args:
+        links_df (DataFrame[RoadLinksTable]): links dataframe of links to copy
+        link_id_lookup (dict[int, int]): lookup of new link ID from old link id.
+        node_id_lookup (dict[int, int]): lookup of new node ID from old node id.
+        updated_geometry_col (str): name of the column to store the updated geometry.
+            Will nodes_df for missing geometries if provided and offset_meters if not.
+            Defaults to None.
+        nodes_df (DataFrame[RoadNodesTable]): nodes dataframe of nodes to use for new
+            link geometry. Defaults to None. If not provided, will use offset_meters.
+        offset_meters (float): distance to offset links if nodes_df is not provided.
+            Defaults to -5.
+        copy_properties (list[str], optional): properties to keep. Defaults to [].
+        rename_properties (dict[str, str], optional): properties to rename. Defaults to {}.
+            Will default to REQUIRED_RENAMES if keys in that dict are not provided.
+        name_prefix (str, optional): format string for new names. Defaults to "copy of".
+        validate (bool, optional): whether to validate the output dataframe. Defaults to True.
+            If set to false, you should validate the output dataframe before using it.
+
+    Returns:
+        DataFrame[RoadLinksTable]: offset links dataframe
+    """
+    REQUIRED_KEEP = ["A", "B", "name", "distance", "geometry", "model_link_id"]
+
+    # Should rename these columns to these columns - unless overriden by rename_properties
+    REQUIRED_RENAMES = {
+        "A": "source_A",
+        "B": "source_B",
+        "model_link_id": "source_model_link_id",
+        "geometry": "source_geometry",
+    }
+    # cannot rename a column TO these fields
+    FORBIDDEN_RENAMES = ["A", "B", "model_link_id", "geometry", "name"]
+    WranglerLogger.debug(f"Copying {len(links_df)} links.")
+
+    rename_properties = {k: v for k, v in rename_properties.items() if v not in FORBIDDEN_RENAMES}
+    REQUIRED_RENAMES.update(rename_properties)
+    # rename if different, otherwise copy
+    rename_properties = {k: v for k, v in REQUIRED_RENAMES.items() if k != v}
+    copy_properties += [
+        k for k, v in REQUIRED_RENAMES.items() if k == v and k not in copy_properties
+    ]
+
+    _missing_copy_properties = set(copy_properties) - set(links_df.columns)
+    if _missing_copy_properties:
+        WranglerLogger.warning(f"Specified properties to copy not found in links_df.\
+            Proceeding without copying: {_missing_copy_properties}")
+        copy_properties = [c for c in copy_properties if c not in _missing_copy_properties]
+
+    _missing_rename_properties = set(rename_properties.keys()) - set(links_df.columns)
+    if _missing_rename_properties:
+        WranglerLogger.warning(f"Specified properties to rename not found in links_df.\
+            Proceeding without renaming: {_missing_rename_properties}")
+        rename_properties = {
+            k: v for k, v in rename_properties.items() if k not in _missing_rename_properties
+        }
+
+    offset_links = copy.deepcopy(links_df)
+    drop_before_rename = [k for k in rename_properties.values() if k in offset_links.columns]
+    offset_links = offset_links.drop(columns=drop_before_rename)
+    offset_links = offset_links.rename(columns=rename_properties)
+
+    offset_links["A"] = offset_links["source_A"].map(node_id_lookup)
+    offset_links["B"] = offset_links["source_B"].map(node_id_lookup)
+    offset_links["model_link_id"] = offset_links["source_model_link_id"].map(link_id_lookup)
+    offset_links["name"] = name_prefix + " " + offset_links["name"]
+
+    if updated_geometry_col is not None:
+        offset_links = offset_links.rename(columns={updated_geometry_col: "geometry"})
+    else:
+        offset_links["geometry"] = None
+
+    if nodes_df is None and offset_links.geometry.isna().values.any():
+        WranglerLogger.debug(
+            f"Adding node-based geometry with for {sum(offset_links.geometry.isna())} links."
+        )
+        offset_links.loc[[offset_links.geometry.isna(), "geometry"]] = offset_geometry_meters(
+            offset_links["geometry"], offset_meters
+        )
+    if offset_links.geometry.isna().values.any():
+        WranglerLogger.debug(
+            f"Adding offset geometry with for {sum(offset_links.geometry.isna())} links."
+        )
+        offset_links.loc[[offset_links.geometry.isna(), "geometry"]] = linestring_from_nodes(
+            offset_links, nodes_df
+        )
+
+    offset_links = offset_links.set_geometry("geometry", inplace=False)
+    offset_links.crs = links_df.crs
+    offset_links["distance"] = length_of_linestring_miles(offset_links["geometry"])
+
+    keep_properties = list(set(copy_properties + REQUIRED_KEEP + list(rename_properties.values())))
+    offset_links = offset_links[keep_properties]
+
+    # create and set index for new model_link_ids
+    offset_links = offset_links.reset_index(drop=True)
+    offset_links["model_link_id_idx"] = offset_links["model_link_id"]
+    offset_links = offset_links.set_index("model_link_id_idx")
+
+    if validate:
+        offset_links = RoadLinksTable.validate(offset_links, lazy=True)
+    else:
+        WranglerLogger.warning(
+            "Skipping validation of offset links. Validate to RoadLinksTable before using."
+        )
+    return offset_links

@@ -41,7 +41,7 @@ from ...models.projects.roadway_property_change import (
     IndivScopedPropertySetItem,
     ScopedPropertySetList,
 )
-from ...utils.geo import update_nodes_in_linestring_geometry, _offset_geometry_meters
+from ...utils.geo import update_nodes_in_linestring_geometry, offset_geometry_meters
 from ...utils.models import default_from_datamodel
 from .scopes import (
     _filter_to_matching_scope,
@@ -66,7 +66,7 @@ def _initialize_links_as_managed_lanes(
         if f not in links_df:
             links_df[f] = default_from_datamodel(RoadLinksTable, f)
     _ml_wo_geometry = links_df.loc[links_df["ML_geometry"].isna() & links_df["managed"] == 1].index
-    links_df.loc[_ml_wo_geometry, "ML_geometry"] = _offset_geometry_meters(
+    links_df.loc[_ml_wo_geometry, "ML_geometry"] = offset_geometry_meters(
         links_df.loc[_ml_wo_geometry, "geometry"], LINK_ML_OFFSET_METERS
     )
 
@@ -388,12 +388,31 @@ def edit_link_properties(
 
     """
     links_df = copy.deepcopy(links_df)
+    ml_property_changes = bool([k for k in property_changes.keys() if k.startswith("ML_")])
+    existing_managed_lanes = len(links_df.loc[link_idx].of_type.managed) == 0
+    flag_create_managed_lane = existing_managed_lanes & ml_property_changes
+
     # WranglerLogger.debug(f"property_changes: \n{property_changes}")
     for property, prop_change in property_changes.items():
         WranglerLogger.debug(f"prop_dict: \n{prop_change}")
         links_df = _edit_link_property(
             links_df, link_idx, property, prop_change, existing_value_conflict_error
         )
+
+    # if a managed lane created without access or egress, set it to True for all selected links
+    if flag_create_managed_lane:
+        if links_df.loc[link_idx].ML_access_point.sum() == 0:
+            WranglerLogger.warning(
+                "Access point not set in project card for a new managed lane.\
+                                   \nSetting ML_access_point to True for selected links."
+            )
+            links_df.loc[link_idx, "ML_access_point"] = True
+        if links_df.loc[link_idx].ML_egress_point.sum() == 0:
+            WranglerLogger.warning(
+                "Egress point not set in project card for a new managed lane.\
+                                   \nSetting ML_egress_point to True for selected links."
+            )
+            links_df.loc[link_idx, "ML_egress_point"] = True
 
     return links_df
 
