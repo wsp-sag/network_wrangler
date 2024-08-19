@@ -1163,9 +1163,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#network_wrangler.params.MANAGED_LANES_LINK_ID_SCALAR" class="md-nav__link">
+  <a href="#network_wrangler.params.MANAGED_LANES_LINK_ID_RANGE" class="md-nav__link">
     <span class="md-ellipsis">
-      MANAGED_LANES_LINK_ID_SCALAR
+      MANAGED_LANES_LINK_ID_RANGE
     </span>
   </a>
   
@@ -1175,6 +1175,15 @@
   <a href="#network_wrangler.params.MANAGED_LANES_REQUIRED_ATTRIBUTES" class="md-nav__link">
     <span class="md-ellipsis">
       MANAGED_LANES_REQUIRED_ATTRIBUTES
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network_wrangler.params.ML_OFFSET_METERS" class="md-nav__link">
+    <span class="md-ellipsis">
+      ML_OFFSET_METERS
     </span>
   </a>
   
@@ -2123,6 +2132,15 @@
   <a href="#network_wrangler.utils.geo.location_refs_from_linestring" class="md-nav__link">
     <span class="md-ellipsis">
       location_refs_from_linestring
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network_wrangler.utils.geo.offset_geometry_meters" class="md-nav__link">
+    <span class="md-ellipsis">
+      offset_geometry_meters
     </span>
   </a>
   
@@ -3108,9 +3126,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#network_wrangler.params.MANAGED_LANES_LINK_ID_SCALAR" class="md-nav__link">
+  <a href="#network_wrangler.params.MANAGED_LANES_LINK_ID_RANGE" class="md-nav__link">
     <span class="md-ellipsis">
-      MANAGED_LANES_LINK_ID_SCALAR
+      MANAGED_LANES_LINK_ID_RANGE
     </span>
   </a>
   
@@ -3120,6 +3138,15 @@
   <a href="#network_wrangler.params.MANAGED_LANES_REQUIRED_ATTRIBUTES" class="md-nav__link">
     <span class="md-ellipsis">
       MANAGED_LANES_REQUIRED_ATTRIBUTES
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network_wrangler.params.ML_OFFSET_METERS" class="md-nav__link">
+    <span class="md-ellipsis">
+      ML_OFFSET_METERS
     </span>
   </a>
   
@@ -4068,6 +4095,15 @@
   <a href="#network_wrangler.utils.geo.location_refs_from_linestring" class="md-nav__link">
     <span class="md-ellipsis">
       location_refs_from_linestring
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network_wrangler.utils.geo.offset_geometry_meters" class="md-nav__link">
+    <span class="md-ellipsis">
+      offset_geometry_meters
     </span>
   </a>
   
@@ -11772,8 +11808,7 @@ that must be provided in managed lanes</p>
 
     <div class="doc doc-contents ">
 
-      <p>(list(str)): list of attributes
-to copy from a general purpose lane to managed lane so long as a ML_<prop_name> doesn&rsquo;t exist.</p>
+      <p>(float): offset in meters for managed lanes centerlines</p>
     </div>
 
 </div>
@@ -11782,20 +11817,19 @@ to copy from a general purpose lane to managed lane so long as a ML_<prop_name> 
 
 
 
-<h2 id="network_wrangler.params.MANAGED_LANES_LINK_ID_SCALAR" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">MANAGED_LANES_LINK_ID_SCALAR</span> <span class="o">=</span> <span class="mi">1000000</span></code>
+<h2 id="network_wrangler.params.MANAGED_LANES_LINK_ID_RANGE" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">MANAGED_LANES_LINK_ID_RANGE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">950000</span><span class="p">,</span> <span class="mi">999999</span><span class="p">)</span></code>
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
   </span>
 
-<a href="#network_wrangler.params.MANAGED_LANES_LINK_ID_SCALAR" class="headerlink" title="Permanent link"> ¶</a></h2>
+<a href="#network_wrangler.params.MANAGED_LANES_LINK_ID_RANGE" class="headerlink" title="Permanent link"> ¶</a></h2>
 
 
     <div class="doc doc-contents ">
 
-      <p>scalar value added to the general purpose lanes&rsquo; <code>model_node_id</code> when creating
-    an associated node for a parallel managed lane</p>
+      <p>Range of model_node_ids to use when creating an associated node for a parallel managed lane.</p>
     </div>
 
 </div>
@@ -11816,8 +11850,29 @@ to copy from a general purpose lane to managed lane so long as a ML_<prop_name> 
 
     <div class="doc doc-contents ">
 
-      <p>scalar value added to the general purpose lanes&rsquo; <code>model_link_id</code> when creating
-    an associated link for a parallel managed lane</p>
+      <p>Range of model_link_ids to use when creating an associated link for a parallel managed lane.</p>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="network_wrangler.params.ML_OFFSET_METERS" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">ML_OFFSET_METERS</span> <span class="o">=</span> <span class="o">-</span><span class="mi">5</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#network_wrangler.params.ML_OFFSET_METERS" class="headerlink" title="Permanent link"> ¶</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>(list(str)): list of attributes
+to copy from a general purpose lane to managed lane so long as a ML_<prop_name> doesn&rsquo;t exist.</p>
     </div>
 
 </div>
@@ -19602,7 +19657,7 @@ to a GeoDataFrame.</p>
             <span class="sa">f</span><span class="s2">&quot;links_df must have columns </span><span class="si">{</span><span class="n">required_link_cols</span><span class="si">}</span><span class="s2"> to create linestring from nodes&quot;</span>
         <span class="p">)</span>
 
-    <span class="n">links_geo_df</span> <span class="o">=</span> <span class="n">links_df</span><span class="p">[</span><span class="n">required_link_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">links_geo_df</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">links_df</span><span class="p">[</span><span class="n">required_link_cols</span><span class="p">])</span>
     <span class="c1"># need to continuously reset the index to make sure the index is the same as the link index</span>
     <span class="n">links_geo_df</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">links_geo_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
@@ -19927,6 +19982,91 @@ Defaults to None.</p>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">coords</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
     <span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="network_wrangler.utils.geo.offset_geometry_meters" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">offset_geometry_meters</span><span class="p">(</span><span class="n">geo_s</span><span class="p">,</span> <span class="n">offset_distance_meters</span><span class="p">)</span></code>
+
+<a href="#network_wrangler.utils.geo.offset_geometry_meters" class="headerlink" title="Permanent link"> ¶</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Offset a GeoSeries of LineStrings by a given distance in meters.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>geo_s</code></td>
+            <td>
+                  <code><span title="geopandas.GeoSeries">GeoSeries</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>GeoSeries of LineStrings to offset.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>offset_distance_meters</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>distance in meters to offset the LineStrings.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+            <details class="quote">
+              <summary>Source code in <code>network_wrangler/utils/geo.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">offset_geometry_meters</span><span class="p">(</span><span class="n">geo_s</span><span class="p">:</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoSeries</span><span class="p">,</span> <span class="n">offset_distance_meters</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoSeries</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Offset a GeoSeries of LineStrings by a given distance in meters.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        geo_s: GeoSeries of LineStrings to offset.</span>
+<span class="sd">        offset_distance_meters: distance in meters to offset the LineStrings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">og_crs</span> <span class="o">=</span> <span class="n">geo_s</span><span class="o">.</span><span class="n">crs</span>
+    <span class="n">geo_s</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">METERS_CRS</span><span class="p">)</span>
+    <span class="n">offset_geo</span> <span class="o">=</span> <span class="n">geo_s</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">offset_curve</span><span class="p">(</span><span class="n">offset_distance_meters</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">offset_geo</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">og_crs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -20342,13 +20482,7 @@ If none of the above, raise a ValueError.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/geo.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">466</span>
-<span class="normal">467</span>
-<span class="normal">468</span>
-<span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span>
-<span class="normal">472</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">472</span>
 <span class="normal">473</span>
 <span class="normal">474</span>
 <span class="normal">475</span>
@@ -20413,7 +20547,13 @@ If none of the above, raise a ValueError.</p>
 <span class="normal">534</span>
 <span class="normal">535</span>
 <span class="normal">536</span>
-<span class="normal">537</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">to_points_gdf</span><span class="p">(</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">to_points_gdf</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">ref_nodes_df</span><span class="p">:</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">ref_road_net</span><span class="p">:</span> <span class="s2">&quot;RoadwayNetwork&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -20650,13 +20790,7 @@ If none of the above, raise a ValueError.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/geo.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">540</span>
-<span class="normal">541</span>
-<span class="normal">542</span>
-<span class="normal">543</span>
-<span class="normal">544</span>
-<span class="normal">545</span>
-<span class="normal">546</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">546</span>
 <span class="normal">547</span>
 <span class="normal">548</span>
 <span class="normal">549</span>
@@ -20681,7 +20815,13 @@ If none of the above, raise a ValueError.</p>
 <span class="normal">568</span>
 <span class="normal">569</span>
 <span class="normal">570</span>
-<span class="normal">571</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_point_geometry</span><span class="p">(</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_point_geometry</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">ref_point_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">lon_field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;X&quot;</span><span class="p">,</span>
