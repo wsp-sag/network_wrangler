@@ -55,5 +55,5 @@ class ModelTransit:
         self._transit_feed_hash = copy.deepcopy(self.transit_net.feed_hash)
 
         if not self._transit_shifted_to_ML:
-            self._m_feed = self.transit_net.feed.copy()
+            self._m_feed = copy.deepcopy(self.transit_net.feed)
             return self._m_feed

@@ -4,8 +4,11 @@ NOTE: Each public method will return a new, whole copy of the RoadNodesTable wit
 Private methods may return mutated originals.
 """
 
-import geopandas as gpd
+import copy
+
 from typing import Union
+
+import geopandas as gpd
 
 from pydantic import validate_call
 from pandera.typing import DataFrame
@@ -106,7 +109,7 @@ def edit_node_property(
         if not exist_ok and existing_value_conflict_error:
             raise NodeChangeError("Conflict between specified existing and actual existing values")
 
-    nodes_df = nodes_df.copy()
+    nodes_df = copy.deepcopy(nodes_df)
 
     # if it is a new attribute then initialize with NaN values
     if prop_name not in nodes_df:

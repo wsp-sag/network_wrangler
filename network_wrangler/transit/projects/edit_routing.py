@@ -141,9 +141,9 @@ def _add_new_shape_copy(
     WranglerLogger.debug(
         f"Adding a new shape for shape_id: {old_shape_id} using scalar: {id_scalar}"
     )
-    shapes = feed.shapes.copy()
-    trips = feed.trips.copy()
-    new_shape = shapes[shapes.shape_id == old_shape_id].copy()
+    shapes = copy.deepcopy(feed.shapes)
+    trips = copy.deepcopy(feed.trips)
+    new_shape = copy.deepcopy(shapes[shapes.shape_id == old_shape_id])
     new_shape_id = generate_new_id(old_shape_id, shapes["shape_id"], id_scalar)
     new_shape["shape_id"] = new_shape_id
     shapes = pd.concat([shapes, new_shape], ignore_index=True)

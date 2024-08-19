@@ -300,7 +300,7 @@ def _filter_trips_by_nodes(
     else:
         raise ValueError("Require must be 'any' or 'all'")
 
-    trips_df = trips_df.loc[trips_df.shape_id.isin(shape_ids)].copy()
+    trips_df = copy.deepcopy(trips_df.loc[trips_df.shape_id.isin(shape_ids)])
 
     _sel_trips = len(trips_df)
     WranglerLogger.debug(f"Selected {_sel_trips}/{_tot_trips} trips.")

@@ -122,7 +122,7 @@ def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
 
     expected_net_links = -1
 
-    orig_links_count = len(net.links_df.copy())
+    orig_links_count = len(net.links_df).copy()
 
     net = net.apply(project_card)
     net_links = len(net.links_df) - orig_links_count

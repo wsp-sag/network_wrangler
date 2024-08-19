@@ -1,5 +1,8 @@
 """Functions to create RoadShapesTable from various data."""
 
+from __future__ import annotations
+import copy
+
 from typing import Union
 
 import pandas as pd
@@ -12,7 +15,7 @@ from ...models._base.validate import validate_df_to_model
 from ...params import ShapesParams, LAT_LON_CRS, ROAD_SHAPE_ID_SCALAR
 from ...utils.data import attach_parameters_to_df, coerce_gdf
 from ...utils.utils import generate_list_of_new_ids
-from ...utils.geo import _offset_geometry_meters
+from ...utils.geo import offset_geometry_meters
 from ...logger import WranglerLogger
 from ..utils import set_df_index_to_pk
 
@@ -86,13 +89,13 @@ def create_offset_shapes(
         }
     )
 
-    ref_shapes_df = shapes_df[shapes_df["shape_id"].isin(shape_ids)].copy()
+    ref_shapes_df = copy.deepcopy(shapes_df[shapes_df["shape_id"].isin(shape_ids)])
 
     ref_shapes_df["offset_shape_id"] = generate_list_of_new_ids(
         ref_shapes_df.shape_id.to_list, shapes_df.shape_ids.to_list, id_scalar
     )
 
-    ref_shapes_df["geometry"] = _offset_geometry_meters(ref_shapes_df.geometry, offset_dist_meters)
+    ref_shapes_df["geometry"] = offset_geometry_meters(ref_shapes_df.geometry, offset_dist_meters)
 
     offset_shapes_df = ref_shapes_df.rename(
         columns={

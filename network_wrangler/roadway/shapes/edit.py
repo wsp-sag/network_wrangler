@@ -4,6 +4,9 @@ NOTE: Each public method will return a whole copy of the RoadShapesTable with as
 Private methods may return mutated originals.
 """
 
+from __future__ import annotations
+import copy
+
 from pandera.typing import DataFrame
 
 from ...utils.geo import update_nodes_in_linestring_geometry
@@ -29,7 +32,7 @@ def edit_shape_geometry_from_nodes(
         nodes_df: RoadNodesTable
         node_ids: list of node PKs with updated geometry
     """
-    shapes_df = shapes_df.copy()
+    shapes_df = copy.deepcopy(shapes_df)
     links_A_df = links_df.loc[links_df.A.isin(node_ids)]
     _tempshape_A_df = shapes_df[["shape_id", "geometry"]].merge(
         links_A_df[["shape_id", "A"]], on="shape_id", how="inner"
