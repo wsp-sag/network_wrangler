@@ -1,5 +1,6 @@
 """Module for testing the utils.io module."""
 
+import pytest
 from network_wrangler.utils.io import convert_file_serialization
 
 

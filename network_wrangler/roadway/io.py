@@ -189,6 +189,7 @@ def load_roadway_from_dir(
 
 def write_roadway(
     net: Union[RoadwayNetwork, ModelRoadwayNetwork],
+    convert_complex_link_properties_to_single_field: bool = False,
     out_dir: Union[Path, str] = ".",
     prefix: str = "",
     file_format: GeoFileTypes = "geojson",
@@ -199,6 +200,9 @@ def write_roadway(
 
     Args:
         net: RoadwayNetwork or ModelRoadwayNetwork instance to write out
+        convert_complex_link_properties_to_single_field: if True, will convert complex link
+            properties to a single column consistent with v0 format.  This format is NOT valid
+            with parquet and many other softwares. Defaults to False.
         out_dir: the path were the output will be saved
         prefix: the name prefix of the roadway files that will be generated
         file_format: the format of the output files. Defaults to "geojson"
@@ -223,6 +227,7 @@ def write_roadway(
 
     write_links(
         net.links_df,
+        convert_complex_properties_to_single_field=convert_complex_link_properties_to_single_field,
         out_dir=out_dir,
         prefix=prefix,
         file_format=file_format,

@@ -68,6 +68,17 @@ def timespan_str_list_to_dt(timespans: list[TimespanString]) -> list[list[dateti
     [str_to_time_list(ts) for ts in timespans]
 
 
+def dt_to_seconds_from_midnight(dt: datetime) -> int:
+    """Convert a datetime object to the number of seconds since midnight."""
+    return (dt - dt.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+
+
+def str_to_seconds_from_midnight(time_str: TimeString) -> int:
+    """Convert a TimeString (HH:MM<:SS>) to the number of seconds since midnight."""
+    dt = str_to_time(time_str)
+    return dt_to_seconds_from_midnight(dt)
+
+
 def filter_df_to_overlapping_timespans(
     orig_df: pd.DataFrame,
     query_timespan: list[TimeString],

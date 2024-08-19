@@ -16,6 +16,10 @@ from ..utils import set_df_index_to_pk
 from ...logger import WranglerLogger
 from ...models._base.validate import validate_df_to_model
 from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
+from ...models.roadway.converters import (
+    detect_v0_scoped_link_properties,
+    translate_links_df_v0_to_v1,
+)
 from ...params import LinksParams, LAT_LON_CRS
 from ..utils import create_unique_shape_id
 from ...utils.data import coerce_gdf, attach_parameters_to_df
@@ -104,6 +108,11 @@ def data_to_links_df(
         links_df = pd.DataFrame(links_df)
     if len(links_df) < 5:
         WranglerLogger.debug(f"data_to_links_df.links_df input: \n{links_df}.")
+
+    v0_link_properties = detect_v0_scoped_link_properties(links_df)
+    if v0_link_properties:
+        links_df = translate_links_df_v0_to_v1(links_df, complex_properties=v0_link_properties)
+
     links_df = _fill_missing_link_geometries_from_nodes(links_df, nodes_df)
     # Now that have geometry, make sure is GDF
     links_df = coerce_gdf(links_df, in_crs=in_crs, geometry=links_df.geometry)

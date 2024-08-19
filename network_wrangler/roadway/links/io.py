@@ -12,6 +12,7 @@ from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
+from ...models.roadway.converters import translate_links_df_v1_to_v0
 from ...models._base.types import GeoFileTypes
 from ...params import LinksParams, LAT_LON_CRS
 from ...utils.io import read_table, write_table
@@ -70,6 +71,7 @@ def read_links(
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def write_links(
     links_df: DataFrame[RoadLinksTable],
+    convert_complex_properties_to_single_field: bool = False,
     out_dir: Union[str, Path] = ".",
     prefix: str = "",
     file_format: GeoFileTypes = "json",
@@ -80,6 +82,9 @@ def write_links(
 
     Args:
         links_df: DataFrame[RoadLinksTable] to write out.
+        convert_complex_properties_to_single_field: if True, will convert complex properties to a
+            single column consistent with v0 format.  This format is NOT valid
+            with parquet and many other softwares. Defaults to False.
         out_dir: directory to write files to. Defaults to ".".
         prefix: prefix to add to the filename. Defaults to "".
         file_format: file format to write out to. Defaults to "json".
@@ -90,6 +95,16 @@ def write_links(
         file_format = "json"
 
     links_file = Path(out_dir) / f"{prefix}link.{file_format}"
+
+    if convert_complex_properties_to_single_field:
+        if file_format == "parquet":
+            WranglerLogger.error(
+                "convert_complex_properties_to_single_column is not supported with parquet. \
+                Setting to False."
+            )
+            convert_complex_properties_to_single_field = False
+        v1_links_df = links_df.copy()
+        links_df = translate_links_df_v1_to_v0(v1_links_df)
 
     if not include_geometry:
         geo_cols = links_df.select_dtypes(include=["geometry"]).columns.tolist()
