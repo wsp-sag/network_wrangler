@@ -22,6 +22,7 @@ from typing import Union, Optional
 
 import networkx as nx
 import geopandas as gpd
+import pandas as pd
 
 from .validate import transit_road_net_consistency
 
@@ -340,7 +341,35 @@ class TransitNetwork(object):
 
         elif change.change_type == "roadway_deletion":
             # FIXME
-            raise NotImplementedError("Roadway deletion check not yet implemented.")
+            road_net = self.road_net if reference_road_net is None else reference_road_net
+            shapes_df = self.feed.shapes.copy()
+            # sort the shapes_df by agency_raw_name, shape_id and shape_pt_sequence
+            if "agency_raw_name" in shapes_df.columns:
+                shapes_df = shapes_df.sort_values(["agency_raw_name", "shape_id", "shape_pt_sequence"])
+            else:
+                shapes_df = shapes_df.sort_values(["shape_id", "shape_pt_sequence"])
+            # create shape_model_node_id_next column by using the value of the next row's shape_model_node_id
+            shapes_df["shape_model_node_id_next"] = shapes_df["shape_model_node_id"].shift(-1)
+            # create shape_id_next column by using the value of the next row's shape_id
+            shapes_df["shape_id_next"] = shapes_df["shape_id"].shift(-1)
+            # keep rows with the same shape_id_next and the shape_id
+            shapes_df = shapes_df[shapes_df["shape_id_next"] == shapes_df["shape_id"]]
+            # make sure shape_model_node_id_next and shape_model_node_id_next are numeric
+            shapes_df["shape_model_node_id_next"] = pd.to_numeric(shapes_df["shape_model_node_id_next"])
+            shapes_df["shape_model_node_id"] = pd.to_numeric(shapes_df["shape_model_node_id"])
+
+            shapes_df = shapes_df.merge(
+                road_net.links_df[["model_link_id", "A", "B"]], 
+                how="left", 
+                left_on=["shape_model_node_id", "shape_model_node_id_next"], 
+                right_on=["A", "B"]
+            )
+
+            shapes_df = shapes_df[shapes_df["model_link_id"].isnull()]
+            if len(shapes_df) > 0:
+                msg = f"Roadway deletion results in broken transit shape_ids: {shapes_df.shape_id.unique()}"
+                raise NotImplementedError(msg)
+                # TODO: fix broken shap
 
         elif change.change_type == "pycode":
             return apply_calculated_transit(self, change.pycode)

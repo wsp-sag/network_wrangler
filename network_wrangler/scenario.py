@@ -475,7 +475,7 @@ class Scenario(object):
                 raise ValueError("Missing Transit Network")
             self.transit_net.apply(change)
         if change.change_type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
-            self.transit_net.apply(change)
+            self.transit_net.apply(change, reference_road_net=self.road_net)
 
         if change.change_type not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES:
             raise ProjectCardError(
