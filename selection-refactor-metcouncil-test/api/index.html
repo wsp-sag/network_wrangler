@@ -7586,7 +7586,10 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
 <span class="normal">614</span>
 <span class="normal">615</span>
 <span class="normal">616</span>
-<span class="normal">617</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwayNetwork</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwayNetwork</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Representation of a Roadway Network.</span>
 
 <span class="sd">    Typical usage example:</span>
@@ -7839,7 +7842,10 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">project_card</span><span class="p">,</span> <span class="n">ProjectCard</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_card</span><span class="p">,</span> <span class="n">SubProject</span><span class="p">)):</span>
             <span class="n">project_card</span> <span class="o">=</span> <span class="n">ProjectCard</span><span class="p">(</span><span class="n">project_card</span><span class="p">)</span>
 
-        <span class="n">project_card</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+        <span class="c1"># project_card.validate()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">project_card</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid Project Card: </span><span class="si">{project_card}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Project card </span><span class="si">{</span><span class="n">project_card</span><span class="o">.</span><span class="n">project</span><span class="si">}</span><span class="s2"> not valid.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
@@ -8350,10 +8356,7 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">575</span>
-<span class="normal">576</span>
-<span class="normal">577</span>
-<span class="normal">578</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">578</span>
 <span class="normal">579</span>
 <span class="normal">580</span>
 <span class="normal">581</span>
@@ -8392,7 +8395,10 @@ nodes list rather than self.nodes_df</p>
 <span class="normal">614</span>
 <span class="normal">615</span>
 <span class="normal">616</span>
-<span class="normal">617</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">add_incident_link_data_to_nodes</span><span class="p">(</span>
     <span class="n">links_df</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">nodes_df</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -8485,15 +8491,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">388</span>
 <span class="normal">389</span>
 <span class="normal">390</span>
 <span class="normal">391</span>
 <span class="normal">392</span>
-<span class="normal">393</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_links_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]):</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_links_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined links_df with LinksSchema before adding to self.links_df.</span>
 
 <span class="sd">    Args:</span>
@@ -8552,15 +8558,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">398</span>
 <span class="normal">399</span>
 <span class="normal">400</span>
 <span class="normal">401</span>
 <span class="normal">402</span>
-<span class="normal">403</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_nodes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]):</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_nodes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined nodes_df with NodesSchema before adding to self.nodes_df.</span>
 
 <span class="sd">    Args:</span>
@@ -8619,10 +8625,7 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
-<span class="normal">408</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">408</span>
 <span class="normal">409</span>
 <span class="normal">410</span>
 <span class="normal">411</span>
@@ -8631,7 +8634,10 @@ nodes list rather than self.nodes_df</p>
 <span class="normal">414</span>
 <span class="normal">415</span>
 <span class="normal">416</span>
-<span class="normal">417</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_shapes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadShapesTable</span><span class="p">]]):</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_shapes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadShapesTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined shapes_df with RoadShapesTable efore adding to self.shapes_df.</span>
 
 <span class="sd">    Args:</span>
@@ -8711,7 +8717,10 @@ nodes list rather than self.nodes_df</p>
 <span class="normal">338</span>
 <span class="normal">339</span>
 <span class="normal">340</span>
-<span class="normal">341</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_card</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RoadwayNetwork</span><span class="p">:</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_card</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RoadwayNetwork</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.</span>
 
 <span class="sd">    Args:</span>
@@ -8720,7 +8729,10 @@ nodes list rather than self.nodes_df</p>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">project_card</span><span class="p">,</span> <span class="n">ProjectCard</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_card</span><span class="p">,</span> <span class="n">SubProject</span><span class="p">)):</span>
         <span class="n">project_card</span> <span class="o">=</span> <span class="n">ProjectCard</span><span class="p">(</span><span class="n">project_card</span><span class="p">)</span>
 
-    <span class="n">project_card</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+    <span class="c1"># project_card.validate()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">project_card</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid Project Card: </span><span class="si">{project_card}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Project card </span><span class="si">{</span><span class="n">project_card</span><span class="o">.</span><span class="n">project</span><span class="si">}</span><span class="s2"> not valid.&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
@@ -8751,15 +8763,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">515</span>
-<span class="normal">516</span>
-<span class="normal">517</span>
-<span class="normal">518</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">518</span>
 <span class="normal">519</span>
 <span class="normal">520</span>
 <span class="normal">521</span>
 <span class="normal">522</span>
-<span class="normal">523</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes any unused nodes from network that aren&#39;t referenced by links_df.</span>
 
 <span class="sd">    NOTE: does not check if these nodes are used by transit, so use with caution.</span>
@@ -8789,12 +8801,12 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">508</span>
-<span class="normal">509</span>
-<span class="normal">510</span>
-<span class="normal">511</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">511</span>
 <span class="normal">512</span>
-<span class="normal">513</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes any unused shapes from network that aren&#39;t referenced by links_df.&quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.shapes.shapes</span> <span class="kn">import</span> <span class="n">shape_ids_without_links</span>
 
@@ -8930,10 +8942,7 @@ deleted links. Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">422</span>
 <span class="normal">423</span>
 <span class="normal">424</span>
 <span class="normal">425</span>
@@ -8982,7 +8991,10 @@ deleted links. Defaults to False.</p>
 <span class="normal">468</span>
 <span class="normal">469</span>
 <span class="normal">470</span>
-<span class="normal">471</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_links</span><span class="p">(</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_links</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">selection_dict</span><span class="p">:</span> <span class="n">SelectLinksDict</span><span class="p">,</span>
     <span class="n">clean_nodes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -9124,10 +9136,7 @@ Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">473</span>
-<span class="normal">474</span>
-<span class="normal">475</span>
-<span class="normal">476</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">476</span>
 <span class="normal">477</span>
 <span class="normal">478</span>
 <span class="normal">479</span>
@@ -9157,7 +9166,10 @@ Defaults to False.</p>
 <span class="normal">503</span>
 <span class="normal">504</span>
 <span class="normal">505</span>
-<span class="normal">506</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_nodes</span><span class="p">(</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_nodes</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">selection_dict</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">SelectNodesDict</span><span class="p">],</span>
     <span class="n">remove_links</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -9623,15 +9635,15 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">553</span>
-<span class="normal">554</span>
-<span class="normal">555</span>
-<span class="normal">556</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">556</span>
 <span class="normal">557</span>
 <span class="normal">558</span>
 <span class="normal">559</span>
 <span class="normal">560</span>
-<span class="normal">561</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns true if network has links with AB values.</span>
 
 <span class="sd">    Args:</span>
@@ -9690,15 +9702,15 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">543</span>
-<span class="normal">544</span>
-<span class="normal">545</span>
-<span class="normal">546</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">546</span>
 <span class="normal">547</span>
 <span class="normal">548</span>
 <span class="normal">549</span>
 <span class="normal">550</span>
-<span class="normal">551</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_node_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_node_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Queries if network has node based on model_node_id.</span>
 
 <span class="sd">    Args:</span>
@@ -9758,17 +9770,17 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">563</span>
-<span class="normal">564</span>
-<span class="normal">565</span>
-<span class="normal">566</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">566</span>
 <span class="normal">567</span>
 <span class="normal">568</span>
 <span class="normal">569</span>
 <span class="normal">570</span>
 <span class="normal">571</span>
 <span class="normal">572</span>
-<span class="normal">573</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines if the network graph is &quot;strongly&quot; connected.</span>
 
 <span class="sd">    A graph is strongly connected if each vertex is reachable from every other vertex.</span>
@@ -9800,9 +9812,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_link_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_link_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return subset of links_df based on link_ids list.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_links_to_ids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -9826,9 +9838,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return subset of links_df based on node_ids list.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_links_to_node_ids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -9913,10 +9925,7 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">525</span>
-<span class="normal">526</span>
-<span class="normal">527</span>
-<span class="normal">528</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">528</span>
 <span class="normal">529</span>
 <span class="normal">530</span>
 <span class="normal">531</span>
@@ -9929,7 +9938,10 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 <span class="normal">538</span>
 <span class="normal">539</span>
 <span class="normal">540</span>
-<span class="normal">541</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">move_nodes</span><span class="p">(</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">move_nodes</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">node_geometry_change_table</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">NodeGeometryChangeTable</span><span class="p">],</span>
 <span class="p">):</span>
@@ -9967,9 +9979,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nodes_in_links</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nodes_in_links</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns subset of self.nodes_df that are in self.links_df.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_nodes_to_links</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_df</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
