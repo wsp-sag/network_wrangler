@@ -127,7 +127,7 @@ def _add_route_to_feed(
         for trip in route["trips"]:
             # add shape
             shape_id = generate_new_id(shape_id_max, shapes_df["shape_id"], shape_id_scalar)
-            shape_model_node_id_list = [list(item.keys())[0] if isinstance(item, dict) else item for item in trip["routing"]]
+            shape_model_node_id_list = [int(list(item.keys())[0]) if isinstance(item, dict) else int(item) for item in trip["routing"]]
             add_shapes_df = pd.DataFrame({
                 "shape_id": shape_id,
                 "shape_model_node_id": shape_model_node_id_list,
@@ -176,7 +176,7 @@ def _add_route_to_feed(
                         list(i.values())[0] is not None and 
                         list(i.values())[0].get('stop')
                     ):
-                        stop_model_node_id_list.append(list(i.keys())[0])
+                        stop_model_node_id_list.append(int(list(i.keys())[0]))
                         drop_off_type.append(0 if list(i.values())[0].get('alight', True) else 1)
                         pickup_type.append(0 if list(i.values())[0].get('board', True) else 1) 
 
