@@ -330,7 +330,10 @@ class RoadwayNetwork(BaseModel):
         if not (isinstance(project_card, ProjectCard) or isinstance(project_card, SubProject)):
             project_card = ProjectCard(project_card)
 
-        project_card.validate()
+        # project_card.validate()
+        if not project_card.valid:
+            WranglerLogger.error("Invalid Project Card: {project_card}")
+            raise ValueError(f"Project card {project_card.project} not valid.")
 
         if project_card._sub_projects:
             for sp in project_card._sub_projects:
