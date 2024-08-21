@@ -6357,10 +6357,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">653</span>
-<span class="normal">654</span>
-<span class="normal">655</span>
-<span class="normal">656</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">656</span>
 <span class="normal">657</span>
 <span class="normal">658</span>
 <span class="normal">659</span>
@@ -6399,7 +6396,10 @@ queue.</p>
 <span class="normal">692</span>
 <span class="normal">693</span>
 <span class="normal">694</span>
-<span class="normal">695</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_base_scenario</span><span class="p">(</span>
+<span class="normal">695</span>
+<span class="normal">696</span>
+<span class="normal">697</span>
+<span class="normal">698</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_base_scenario</span><span class="p">(</span>
     <span class="n">base_shape_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">base_link_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">base_node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -6452,7 +6452,7 @@ queue.</p>
 
 
 <h2 id="network_wrangler.scenario.create_scenario" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">create_scenario</span><span class="p">(</span><span class="n">base_scenario</span><span class="o">=</span><span class="p">{},</span> <span class="n">project_card_list</span><span class="o">=</span><span class="p">[],</span> <span class="n">project_card_filepath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filter_tags</span><span class="o">=</span><span class="p">[],</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">create_scenario</span><span class="p">(</span><span class="n">base_scenario</span><span class="o">=</span><span class="p">{},</span> <span class="n">project_card_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">project_card_filepath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filter_tags</span><span class="o">=</span><span class="p">[],</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
 
 <a href="#network_wrangler.scenario.create_scenario" class="headerlink" title="Permanent link"> ¶</a></h2>
 
@@ -6505,7 +6505,7 @@ to [].</p>
               </div>
             </td>
             <td>
-                  <code>[]</code>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -6598,9 +6598,12 @@ being adding it to the scenario. Defaults to True.</p>
 <span class="normal">598</span>
 <span class="normal">599</span>
 <span class="normal">600</span>
-<span class="normal">601</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_scenario</span><span class="p">(</span>
+<span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_scenario</span><span class="p">(</span>
     <span class="n">base_scenario</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Scenario</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
-    <span class="n">project_card_list</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">project_card_list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">project_card_filepath</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">filter_tags</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
     <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -6628,6 +6631,9 @@ being adding it to the scenario. Defaults to True.</p>
 <span class="sd">        validate (bool, optional): If True, will validate the projectcard before</span>
 <span class="sd">            being adding it to the scenario. Defaults to True.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">project_card_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">project_card_list</span> <span class="o">=</span> <span class="p">[]</span>
+
     <span class="n">scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="p">(</span><span class="n">base_scenario</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">project_card_filepath</span><span class="p">:</span>
@@ -6754,10 +6760,7 @@ being adding it to the scenario. Defaults to True.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">604</span>
-<span class="normal">605</span>
-<span class="normal">606</span>
-<span class="normal">607</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">607</span>
 <span class="normal">608</span>
 <span class="normal">609</span>
 <span class="normal">610</span>
@@ -6800,7 +6803,10 @@ being adding it to the scenario. Defaults to True.</p>
 <span class="normal">647</span>
 <span class="normal">648</span>
 <span class="normal">649</span>
-<span class="normal">650</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">scenario_summary</span><span class="p">(</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">scenario_summary</span><span class="p">(</span>
     <span class="n">scenario</span><span class="p">:</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">project_detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A high level summary of the created scenario.</span>
