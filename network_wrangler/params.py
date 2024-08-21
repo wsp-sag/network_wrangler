@@ -183,7 +183,7 @@ SECONDARY_TRANSIT_CARD_TYPES = ["roadway_deletion"]
 # ------ SEARCH PARAMS ------
 # ---------------------------------------------------------------------
 
-DEFAULT_SEARCH_MODES = ["drive"]
+DEFAULT_SEARCH_MODES = ["drive","walk","bike"]
 
 """
 (int): default for initial number of links from name-based
