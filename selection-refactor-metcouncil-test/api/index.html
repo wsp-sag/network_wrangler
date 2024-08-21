@@ -10474,7 +10474,9 @@ the road network.</p>
 <span class="normal">376</span>
 <span class="normal">377</span>
 <span class="normal">378</span>
-<span class="normal">379</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TransitNetwork</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TransitNetwork</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Representation of a Transit Network.</span>
 
 <span class="sd">    Typical usage example:</span>
@@ -10759,34 +10761,36 @@ the road network.</p>
 
         <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;roadway_deletion&quot;</span><span class="p">:</span>
             <span class="c1"># FIXME</span>
-            <span class="n">road_net</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span> <span class="k">if</span> <span class="n">reference_road_net</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">reference_road_net</span>
-            <span class="n">shapes_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="c1"># sort the shapes_df by agency_raw_name, shape_id and shape_pt_sequence</span>
-            <span class="k">if</span> <span class="s2">&quot;agency_raw_name&quot;</span> <span class="ow">in</span> <span class="n">shapes_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;agency_raw_name&quot;</span><span class="p">,</span> <span class="s2">&quot;shape_id&quot;</span><span class="p">,</span> <span class="s2">&quot;shape_pt_sequence&quot;</span><span class="p">])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;shape_id&quot;</span><span class="p">,</span> <span class="s2">&quot;shape_pt_sequence&quot;</span><span class="p">])</span>
-            <span class="c1"># create shape_model_node_id_next column by using the value of the next row&#39;s shape_model_node_id</span>
-            <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id_next&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="c1"># create shape_id_next column by using the value of the next row&#39;s shape_id</span>
-            <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_id_next&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="c1"># keep rows with the same shape_id_next and the shape_id</span>
-            <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="p">[</span><span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_id_next&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]]</span>
-            <span class="c1"># make sure shape_model_node_id_next and shape_model_node_id_next are numeric</span>
-            <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id_next&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id_next&quot;</span><span class="p">])</span>
-            <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">])</span>
+            <span class="c1"># road_net = self.road_net if reference_road_net is None else reference_road_net</span>
+            <span class="c1"># shapes_df = self.feed.shapes.copy()</span>
+            <span class="c1"># # sort the shapes_df by agency_raw_name, shape_id and shape_pt_sequence</span>
+            <span class="c1"># if &quot;agency_raw_name&quot; in shapes_df.columns:</span>
+            <span class="c1">#     shapes_df = shapes_df.sort_values([&quot;agency_raw_name&quot;, &quot;shape_id&quot;, &quot;shape_pt_sequence&quot;])</span>
+            <span class="c1"># else:</span>
+            <span class="c1">#     shapes_df = shapes_df.sort_values([&quot;shape_id&quot;, &quot;shape_pt_sequence&quot;])</span>
+            <span class="c1"># # create shape_model_node_id_next column by using the value of the next row&#39;s shape_model_node_id</span>
+            <span class="c1"># shapes_df[&quot;shape_model_node_id_next&quot;] = shapes_df[&quot;shape_model_node_id&quot;].shift(-1)</span>
+            <span class="c1"># # create shape_id_next column by using the value of the next row&#39;s shape_id</span>
+            <span class="c1"># shapes_df[&quot;shape_id_next&quot;] = shapes_df[&quot;shape_id&quot;].shift(-1)</span>
+            <span class="c1"># # keep rows with the same shape_id_next and the shape_id</span>
+            <span class="c1"># shapes_df = shapes_df[shapes_df[&quot;shape_id_next&quot;] == shapes_df[&quot;shape_id&quot;]]</span>
+            <span class="c1"># # make sure shape_model_node_id_next and shape_model_node_id_next are numeric</span>
+            <span class="c1"># shapes_df[&quot;shape_model_node_id_next&quot;] = pd.to_numeric(shapes_df[&quot;shape_model_node_id_next&quot;])</span>
+            <span class="c1"># shapes_df[&quot;shape_model_node_id&quot;] = pd.to_numeric(shapes_df[&quot;shape_model_node_id&quot;])</span>
 
-            <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-                <span class="n">road_net</span><span class="o">.</span><span class="n">links_df</span><span class="p">[[</span><span class="s2">&quot;model_link_id&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]],</span> 
-                <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> 
-                <span class="n">left_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">,</span> <span class="s2">&quot;shape_model_node_id_next&quot;</span><span class="p">],</span> 
-                <span class="n">right_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]</span>
-            <span class="p">)</span>
+            <span class="c1"># shapes_df = shapes_df.merge(</span>
+            <span class="c1">#     road_net.links_df[[&quot;model_link_id&quot;, &quot;A&quot;, &quot;B&quot;]], </span>
+            <span class="c1">#     how=&quot;left&quot;, </span>
+            <span class="c1">#     left_on=[&quot;shape_model_node_id&quot;, &quot;shape_model_node_id_next&quot;], </span>
+            <span class="c1">#     right_on=[&quot;A&quot;, &quot;B&quot;]</span>
+            <span class="c1"># )</span>
 
-            <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="p">[</span><span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;model_link_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()]</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapes_df</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Roadway deletion results in broken transit shape_ids: </span><span class="si">{</span><span class="n">shapes_df</span><span class="o">.</span><span class="n">shape_id</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="c1"># shapes_df = shapes_df[shapes_df[&quot;model_link_id&quot;].isnull()]</span>
+            <span class="c1"># if len(shapes_df) &gt; 0:</span>
+            <span class="c1">#     msg = f&quot;Roadway deletion results in broken transit shape_ids: {shapes_df.shape_id.unique()}&quot;</span>
+            <span class="c1">#     # raise NotImplementedError(msg)</span>
+            <span class="c1">#     WranglerLogger.warning(msg)</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Roadway deletion might result in broken transit shapes&quot;</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;pycode&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">apply_calculated_transit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="o">.</span><span class="n">pycode</span><span class="p">)</span>
