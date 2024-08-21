@@ -560,7 +560,7 @@ class Scenario(object):
 
 def create_scenario(
     base_scenario: Union[Scenario, dict] = {},
-    project_card_list=[],
+    project_card_list = None,
     project_card_filepath: Optional[Union[Collection[str], str]] = None,
     filter_tags: Collection[str] = [],
     validate=True,
@@ -588,6 +588,9 @@ def create_scenario(
         validate (bool, optional): If True, will validate the projectcard before
             being adding it to the scenario. Defaults to True.
     """
+    if project_card_list is None:
+        project_card_list = []
+
     scenario = Scenario(base_scenario)
 
     if project_card_filepath:
