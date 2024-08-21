@@ -138,7 +138,7 @@ def _add_route_to_feed(
             }) 
             shapes_df = pd.concat([shapes_df, add_shapes_df], ignore_index=True, sort=False)
 
-            for headway in trip["headway_sec"]:
+            for headway in trip["headway_secs"]:
                 # add trip
                 trip_id = f"trip{trip_index}_shp{shape_id}"
                 add_trips_df = pd.DataFrame([{
