@@ -369,7 +369,6 @@ class TransitNetwork(object):
             if len(shapes_df) > 0:
                 msg = f"Roadway deletion results in broken transit shape_ids: {shapes_df.shape_id.unique()}"
                 raise NotImplementedError(msg)
-                # TODO: fix broken shap
 
         elif change.change_type == "pycode":
             return apply_calculated_transit(self, change.pycode)
