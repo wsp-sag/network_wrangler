@@ -1,8 +1,12 @@
 # Compiled Source
 *.pyc
 
+# caches
+**/cache/*
+
 # Temp and test cache
 scratch/*
+tests/out/
 tests/temp/
 scratch/*
 *.mbtiles
@@ -13,6 +17,8 @@ scratch/*
 .cache
 tests/t_*
 tests/*.txt
+coverage.xml
+
 # Logs
 *.log
 scenario_log.txt
@@ -65,4 +71,5 @@ env/
 .project
 .pydevproject
 .settings
+.vscode
 *.hubstorinfo
