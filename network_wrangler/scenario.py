@@ -492,7 +492,8 @@ class Scenario(object):
         """
         project_name = project_name.lower()
 
-        WranglerLogger.info(f"Applying {project_name}")
+        WranglerLogger.info(f"Applying {project_name} from file:\
+                            {self.project_cards[project_name].file}")
 
         p = self.project_cards[project_name]
         WranglerLogger.debug(f"types: {p.change_types}")
