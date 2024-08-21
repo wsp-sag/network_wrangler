@@ -1,12 +1,8 @@
 # Compiled Source
 *.pyc
 
-# caches
-**/cache/*
-
 # Temp and test cache
 scratch/*
-tests/out/
 tests/temp/
 scratch/*
 *.mbtiles
@@ -15,8 +11,12 @@ scratch/*
 .pytest_cache
 *.bak
 .cache
+cache
 tests/t_*
 tests/*.txt
+tests/out/**
+wranglertest/
+.coverage
 coverage.xml
 
 # Logs

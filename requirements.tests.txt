@@ -1,3 +1,7 @@
-black
-flake8
+coverage
+mypy
 pytest
+pytest-benchmark
+pytest-cov
+ruff
+vulture

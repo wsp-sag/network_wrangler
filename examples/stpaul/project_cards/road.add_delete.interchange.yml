@@ -1,0 +1,438 @@
+project: convert intersection to interchange
+changes:
+- roadway_deletion:
+    links:
+      model_link_id:
+      - 2171
+      - 25856
+      - 383747
+      - 383790
+- roadway_addition:
+    links:
+      - A: 354386
+        name: interchange ramp
+        roadway: motorway_link
+        AADT: 770
+        count_AM: 192
+        B: 16214
+        bike_facility: 3
+        distance : 0.13201
+        count_daily: 770
+        access: 0
+        lanes: 1
+        model_link_id: 2171
+        count_MD: 192
+        count_NT: 192
+        count_PM: 192
+        roadway_class: 20
+        ttime_assert: 0.0
+        trn_priority: 0
+        bike_access: 1
+        bus_only: 0
+        rail_only: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 1
+      - A: 16214
+        name: interchange ramp
+        roadway: motorway_link
+        AADT: 0
+        count_AM: 0
+        B: 354386
+        bike_facility: 3
+        distance: 0.13201
+        count_daily: 0
+        access: 0
+        lanes: 1
+        model_link_id: 25856
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 10
+        ttime_assert: 0.0
+        trn_priority: 0
+        bike_access: 1
+        bus_only: 0
+        rail_only: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 1
+      - A: 4336
+        AADT: 770
+        count_AM: 192
+        name: interchange ramp
+        roadway: motorway_link
+        B: 354387
+        bike_facility: 3
+        distance: 0.14848
+        count_daily: 770
+        access: 0
+        lanes: 1
+        model_link_id: 2171
+        count_MD: 192
+        count_NT: 192
+        count_PM: 192
+        roadway_class: 20
+        ttime_assert: 0.0
+        trn_priority: 0
+        bus_only: 0
+        rail_only: 0
+        bike_access: 1
+        drive_access: 1
+        transit_access: 0
+        walk_access: 1
+      - A: 354387
+        AADT: 770
+        count_AM: 192
+        name: interchange ramp
+        roadway: motorway_link
+        B: 354386
+        bike_facility: 3
+        distance: 0.10981
+        count_daily: 770
+        access: 0
+        lanes: 1
+        model_link_id: 2171
+        count_MD: 192
+        count_NT: 192
+        count_PM: 192
+        roadway_class: 20
+        ttime_assert: 0.0
+        trn_priority: 0
+        bus_only: 0
+        rail_only: 0
+        bike_access: 1
+        drive_access: 1
+        transit_access: 0
+        walk_access: 1
+      - A: 354386
+        AADT: 0
+        count_AM: 0
+        name: interchange ramp
+        roadway: motorway_link
+        B: 354387
+        bike_facility: 3
+        distance: 0.10981
+        count_daily: 0
+        access: 0
+        lanes: 1
+        model_link_id: 25856
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 10
+        ttime_assert: 0.0
+        trn_priority: 0
+        bus_only: 0
+        rail_only: 0
+        bike_access: 1
+        drive_access: 1
+        transit_access: 0
+        walk_access: 1
+      - A: 354387
+        AADT: 0
+        count_AM: 0
+        name: interchange ramp
+        roadway: motorway_link
+        B: 4336
+        bike_facility: 3
+        distance: 0.14848
+        count_daily: 0
+        access: 0
+        lanes: 1
+        model_link_id: 25856
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 10
+        ttime_assert: 0.0
+        trn_priority: 0
+        bus_only: 0
+        rail_only: 0
+        bike_access: 1
+        drive_access: 1
+        transit_access: 0
+        walk_access: 1
+      - A: 354388
+        AADT: 0
+        count_AM: 0
+        name: interchange ramp
+        roadway: motorway_link
+        B: 13931
+        bike_facility: 0
+        distance: 0.55987
+        count_daily: 0
+        access: 0
+        lanes: 2
+        model_link_id: 383747
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 30
+        ttime_assert: 0.0
+        trn_priority: 0
+        bus_only: 0
+        rail_only: 0
+        bike_access: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+      - A: 12590
+        AADT: 0
+        name: interchange ramp
+        roadway: motorway_link
+        count_AM: 0
+        B: 354389
+        bike_facility: 0
+        distance: 0.15228
+        count_daily: 0
+        access: 0
+        lanes: 2
+        model_link_id: 383747
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 30
+        ttime_assert: 0.0
+        trn_priority: 0
+        bike_access: 0
+        bus_only: 0
+        rail_only: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+      - A: 354389
+        AADT: 0
+        count_AM: 0
+        name: interchange ramp
+        roadway: motorway_link
+        B: 354388
+        bike_facility: 0
+        distance: 0.16071
+        count_daily: 0
+        access: 0
+        lanes: 2
+        model_link_id: 383747
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 30
+        ttime_assert: 0.0
+        trn_priority: 0
+        bus_only: 0
+        rail_only: 0
+        bike_access: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+      - A: 12655
+        AADT: 0
+        count_AM: 0
+        name: interchange ramp
+        roadway: motorway_link
+        B: 354390
+        bike_facility: 0
+        distance: 0.21899
+        count_daily: 0
+        access: 0
+        lanes: 3
+        model_link_id: 383790
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 10
+        ttime_assert: 0.0
+        trn_priority: 0
+        bike_access: 0
+        bus_only: 0
+        rail_only: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+      - A: 354390
+        AADT: 0
+        count_AM: 0
+        name: interchange ramp
+        roadway: motorway_link
+        B: 354391
+        bike_facility: 0
+        distance: 0.21108
+        count_daily: 0
+        access: 0
+        lanes: 3
+        model_link_id: 383790
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 10
+        ttime_assert: 0.0
+        trn_priority: 0
+        bus_only: 0
+        rail_only: 0
+        bike_access: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+      - A: 354391
+        AADT: 0
+        count_AM: 0
+        B: 14248
+        name: interchange ramp
+        roadway: motorway_link
+        bike_facility: 0
+        distance: 0.36316
+        count_daily: 0
+        access: 0
+        lanes: 3
+        model_link_id: 383790
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 10
+        ttime_assert: 0.0
+        trn_priority: 0
+        bike_access: 0
+        bus_only: 0
+        rail_only: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+      - A: 354387
+        AADT: 0
+        count_AM: 0
+        name: interchange ramp
+        roadway: motorway_link
+        B: 354388
+        bike_facility: 0
+        distance: 0.09188
+        count_daily: 0
+        access: 0
+        lanes: 2
+        model_link_id: 384040
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 40
+        ttime_assert: 0.0
+        trn_priority: 0
+        bus_only: 0
+        rail_only: 0
+        bike_access: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+      - A: 354390
+        AADT: 0
+        count_AM: 0
+        name: interchange ramp
+        roadway: motorway_link
+        B: 354386
+        bike_facility: 0
+        distance: 0.12286
+        count_daily: 0
+        access: 0
+        lanes: 2
+        model_link_id: 384040
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 40
+        ttime_assert: 0.0
+        trn_priority: 0
+        bike_access: 0
+        bus_only: 0
+        rail_only: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+      - A: 354386
+        AADT: 0
+        count_AM: 0
+        name: interchange ramp
+        roadway: motorway_link
+        B: 354391
+        bike_facility: 0
+        distance: 0.08689
+        count_daily: 0
+        access: 0
+        lanes: 2
+        model_link_id: 384040
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 40
+        ttime_assert: 0.0
+        trn_priority: 0
+        bus_only: 0
+        rail_only: 0
+        bike_access: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+      - A: 354389
+        AADT: 0
+        count_AM: 0
+        B: 354387
+        name: interchange ramp
+        roadway: motorway_link
+        bike_facility: 0
+        distance: 0.09431
+        count_daily: 0
+        access: 0
+        lanes: 2
+        model_link_id: 384040
+        count_MD: 0
+        count_NT: 0
+        count_PM: 0
+        roadway_class: 40
+        ttime_assert: 0.0
+        trn_priority: 0
+        bike_access: 0
+        bus_only: 0
+        rail_only: 0
+        drive_access: 1
+        transit_access: 0
+        walk_access: 0
+    nodes:
+      - X: -93.14412
+        Y: 44.87497
+        bike_node: 1
+        drive_node: 1
+        transit_node: 0
+        walk_node: 1
+        model_node_id: 354386
+      - X: -93.14189
+        Y: 44.87499
+        bike_node: 1
+        drive_node: 1
+        transit_node: 0
+        walk_node: 1
+        model_node_id: 354387
+      - X: -93.14239
+        Y: 44.87644
+        bike_node: 0
+        drive_node: 1
+        transit_node: 0
+        walk_node: 0
+        model_node_id: 354388
+      - X: -93.14322
+        Y: 44.87414
+        bike_node: 0
+        drive_node: 1
+        transit_node: 0
+        walk_node: 0
+        model_node_id: 354389
+      - X: -93.14273
+        Y: 44.87648
+        bike_node: 0
+        drive_node: 1
+        transit_node: 0
+        walk_node: 0
+        model_node_id: 354390
+      - X: -93.14382
+        Y: 44.87355
+        bike_node: 0
+        drive_node: 1
+        transit_node: 0
+        walk_node: 0
+        model_node_id: 354391

@@ -1,13 +1,18 @@
+"""Tests related to scenarios.
+
+Run just the tests labeled scenario using `pytest tests/test_scenario.py`
+To run with print statments, use `pytest -s tests/test_scenario.py`
+"""
+
 import os
+import copy
 import sys
 import subprocess
 
 import pytest
 
-from network_wrangler import ProjectCard
-from network_wrangler import RoadwayNetwork
-from network_wrangler import TransitNetwork
-from network_wrangler import Scenario
+from projectcard import read_card, write_card, ProjectCard
+from network_wrangler.scenario import create_scenario
 from network_wrangler.scenario import (
     ScenarioConflictError,
     ScenarioCorequisiteError,
@@ -15,30 +20,25 @@ from network_wrangler.scenario import (
 )
 from network_wrangler.logger import WranglerLogger
 
-"""
-Run just the tests labeled scenario using `pytest tests/test_scenario.py`
-To run with print statments, use `pytest -s tests/test_scenario.py`
-"""
-
 
 def test_project_card_read(request, stpaul_card_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    in_file = os.path.join(stpaul_card_dir, "1_simple_roadway_attribute_change.yml")
-    project_card = ProjectCard.read(in_file)
+    in_file = os.path.join(stpaul_card_dir, "road.prop_change.simple.yml")
+    project_card = read_card(in_file)
     WranglerLogger.debug(project_card)
-    assert project_card.category == "Roadway Property Change"
-    print("--Finished:", request.node.name)
+    assert project_card.change_type == "roadway_property_change"
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_project_card_write(request, stpaul_card_dir, scratch_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    in_file = os.path.join(stpaul_card_dir, "1_simple_roadway_attribute_change.yml")
+    in_file = os.path.join(stpaul_card_dir, "road.prop_change.simple.yml")
     outfile = os.path.join(scratch_dir, "t_simple_roadway_attribute_change.yml")
-    project_card = ProjectCard.read(in_file)
-    project_card.write(outfile)
-    test_card = ProjectCard.read(in_file)
+    project_card = read_card(in_file)
+    write_card(project_card, outfile)
+    test_card = read_card(in_file)
     for k, v in project_card.__dict__.items():
         assert v == test_card.__dict__[k]
 
@@ -48,9 +48,7 @@ def test_project_card_write(request, stpaul_card_dir, scratch_dir):
 def test_scenario_conflicts(request, stpaul_card_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    project_a = ProjectCard(
-        {"project": "project a", "dependencies": {"conflicts": ["project b"]}}
-    )
+    project_a = ProjectCard({"project": "project a", "dependencies": {"conflicts": ["project b"]}})
     project_b = ProjectCard(
         {
             "project": "project b",
@@ -58,15 +56,13 @@ def test_scenario_conflicts(request, stpaul_card_dir):
     )
 
     project_card_list = [project_a, project_b]
-    scen = Scenario.create_scenario(
-        base_scenario={}, project_card_list=project_card_list, validate=False
-    )
+    scen = create_scenario(base_scenario={}, project_card_list=project_card_list, validate=False)
 
     # should raise an error whenever calling queued projects or when applying them.
-    with pytest.raises(ScenarioConflictError) as e_info:
+    with pytest.raises(ScenarioConflictError):
         WranglerLogger.info(scen.queued_projects)
 
-    with pytest.raises(ScenarioConflictError) as e_info:
+    with pytest.raises(ScenarioConflictError):
         scen.apply_all_projects()
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -88,20 +84,17 @@ def test_scenario_corequisites(request):
     )
 
     project_card_list = [project_a, project_b]
-    scen = Scenario.create_scenario(
-        base_scenario={}, project_card_list=project_card_list, validate=False
-    )
+    scen = create_scenario(base_scenario={}, project_card_list=project_card_list, validate=False)
 
     # should raise an error whenever calling queued projects or when applying them.
-    with pytest.raises(ScenarioCorequisiteError) as e_info:
+    with pytest.raises(ScenarioCorequisiteError):
         WranglerLogger.info(scen.queued_projects)
 
-    with pytest.raises(ScenarioCorequisiteError) as e_info:
+    with pytest.raises(ScenarioCorequisiteError):
         scen.apply_all_projects()
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.menow
 def test_scenario_prerequisites(request):
     """Shouldn't be able to apply projects if they don't have their pre-requisites applied first."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -119,30 +112,25 @@ def test_scenario_prerequisites(request):
     project_d = ProjectCard(
         {"project": "project d", "dependencies": {"prerequisites": ["project b"]}}
     )
-
-    expected_project_queue = ["project c", "project b", "project a", "project d"]
-    scen = Scenario.create_scenario(
-        base_scenario={}, project_card_list=[project_a], validate=False
-    )
+    scen = create_scenario(base_scenario={}, project_card_list=[project_a], validate=False)
 
     # should raise an error whenever calling queued projects or when applying them.
-    with pytest.raises(ScenarioPrerequisiteError) as e_info:
+    with pytest.raises(ScenarioPrerequisiteError):
         WranglerLogger.info(scen.queued_projects)
 
-    with pytest.raises(ScenarioPrerequisiteError) as e_info:
+    with pytest.raises(ScenarioPrerequisiteError):
         scen.apply_all_projects()
 
     # add other projects...
     scen.add_project_cards([project_b, project_c, project_d], validate=False)
 
     # if apply a project singuarly, it should also fail if it doesn't have prereqs
-    with pytest.raises(ScenarioPrerequisiteError) as e_info:
+    with pytest.raises(ScenarioPrerequisiteError):
         scen.apply_projects(["project b"])
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.failing
 def test_project_sort(request):
     """Make sure projects sort correctly before being applied."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -157,45 +145,49 @@ def test_project_sort(request):
     project_c = ProjectCard({"project": "project c"})
 
     project_d = ProjectCard(
-        {"project": "project d", "dependencies": {"prerequisites": ["project b"]}}
+        {
+            "project": "project d",
+            "dependencies": {"prerequisites": ["project b", "project a"]},
+        }
     )
 
     expected_project_queue = ["project c", "project b", "project a", "project d"]
 
-    scen = Scenario.create_scenario(
+    scen = create_scenario(
         base_scenario={},
         project_card_list=[project_a, project_b, project_c, project_d],
         validate=False,
     )
 
-    WranglerLogger.debug(f"scen.queued_projects:{scen.queued_projects}")
+    WranglerLogger.debug(f"scen.queued_projects: {scen.queued_projects}")
     assert list(scen.queued_projects) == expected_project_queue
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.menow
-def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_base_scenario):
+def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_net, stpaul_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
+    stpaul_base_scenario = {
+        "road_net": copy.deepcopy(stpaul_net),
+        "transit_net": copy.deepcopy(stpaul_transit_net),
+    }
+
     card_files = [
-        "3_multiple_roadway_attribute_change.yml",
-        "multiple_changes.yml",
-        "4_simple_managed_lane.yml",
+        "road.prop_change.multiple.yml",
+        "road.managed_lane.simple.yml",
     ]
 
-    project_card_path_list = [
-        os.path.join(stpaul_card_dir, filename) for filename in card_files
-    ]
+    project_card_path_list = [os.path.join(stpaul_card_dir, filename) for filename in card_files]
 
-    my_scenario = Scenario.create_scenario(
+    my_scenario = create_scenario(
         base_scenario=stpaul_base_scenario,
-        project_card_file_list=project_card_path_list,
+        project_card_filepath=project_card_path_list,
     )
 
     my_scenario.apply_all_projects()
 
-    my_scenario.scenario_summary()
+    WranglerLogger.debug(my_scenario.summarize())
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 

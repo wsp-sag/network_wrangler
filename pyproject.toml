@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "network-wrangler"
+version = "1.0-alpha.1"
+description = ""
+license =  {file = "LICENSE"}
+readme = "README.md"
+authors = [
+    { name = "Elizabeth Sall", email = "elizabeth@urbanlabs.io" },
+    { name = "Sijia Wang", email = "Sijia.Wang@wsp.com"},
+    { name = "Lisa Zorn", email = "lzorn@bayareametro.gov"},
+    { name = "Ashish Kulshrestha", email = "Ashish.Kulshrestha@wsp.com"}
+]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "geographiclib",
+    "geojson",
+    "geopandas >= 0.8.0",
+    "ijson",
+    "osmnx >= 0.12",
+    "pandas >= 1.6",
+    "pandera[geopandas]",
+    "projectcard",
+    "psutil",
+    "pyarrow",
+    "pydantic >= 2",
+    "pyogrio",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+viz = [
+    "folium",
+    "jupyter",
+    "notebook",
+]
+docs = [
+    "fontawesome_markdown",
+    "jupyter",
+    "markdown == 3.3.1",
+    "mike < 2.0",
+    "mkdocs",
+    "mkdocs-autorefs",
+    "mkdocs-awesome-pages-plugin",
+    "mkdocs-jupyter",
+    "mkdocs-macros-plugin",
+    "mkdocs-material",
+    "mkdocstrings",
+    "mkdocstrings-python",
+]
+tests = [
+    "coverage",
+    "mypy",
+    "pytest",
+    "pytest-benchmark",
+    "pytest-cov",
+    "ruff",
+    "vulture",
+]
+
+[tool.setuptools]
+packages = ["network_wrangler"]
+
+[tool.ruff]
+line-length = 99
+
+[tool.ruff.lint]
+select = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D103", "D106", "D101", "D104", "D100"]
+"**/__init__.py" = ["F401", "F403"]
+"test_dependencies.py" = ["F401"]
+"bin/*.py" = ["E501"]

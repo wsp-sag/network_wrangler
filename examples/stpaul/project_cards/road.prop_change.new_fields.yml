@@ -1,0 +1,19 @@
+project: 6th Street Ad Hoc Fields
+roadway_property_change:
+  facility:
+    links:
+      name:
+          - '6th'
+          - 'Sixth'
+          - 'sixth'
+    from:
+      osm_node_id: '187899923'       # Jackson St
+    to:
+      osm_node_id: '187865924'       # Robert St N
+  property_changes:
+    my_ad_hoc_field_float:
+      set: 1.1
+    my_ad_hoc_field_integer:
+      set: 2
+    my_ad_hoc_field_string:
+      set: 'three'

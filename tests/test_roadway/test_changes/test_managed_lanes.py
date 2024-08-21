@@ -1,70 +1,44 @@
 import copy
 import os
 
-from network_wrangler import ProjectCard
-from network_wrangler import RoadwayNetwork
+import pandas as pd
+
+from projectcard import read_card
+
 from network_wrangler import WranglerLogger
-from network_wrangler.utils import parse_time_spans_to_secs
-
-from network_wrangler.roadway.model_roadway import (
-    MANAGED_LANES_LINK_ID_SCALAR,
-)
+from network_wrangler.models.roadway.types import ScopedLinkValueItem
 
 """
-Run just the tests labeled basic using `pytest tests/test_roadway/test_changes/test_managed_lanes.py`
+Usage:  `pytest tests/test_roadway/test_changes/test_managed_lanes.py`
 """
-
-_am_period = parse_time_spans_to_secs(["6:00", "9:00"])
-_pm_period = parse_time_spans_to_secs(["16:00", "19:00"])
-
-SIMPLE_MANAGED_LANE_PROPERTIES = [
-    {
-        "property": "lanes",
+pd.set_option("display.max_colwidth", None)
+SIMPLE_MANAGED_LANE_PROPERTIES = {
+    "lanes": {
         "set": 3,
-        "timeofday": [
-            {"time": ["6:00", "9:00"], "set": 2},
-            {"time": ["16:00", "19:00"], "set": 2},
+        "scoped": [
+            {"timespan": ["6:00", "9:00"], "set": 2},
+            {"timespan": ["16:00", "19:00"], "set": 2},
         ],
     },
-    {
-        "property": "ML_lanes",
+    "ML_lanes": {
         "set": 0,
-        "timeofday": [
-            {"time": ["6:00", "9:00"], "set": 1},
-            {"time": ["16:00", "19:00"], "set": 1},
+        "scoped": [
+            {"timespan": ["6:00", "9:00"], "set": 1},
+            {"timespan": ["16:00", "19:00"], "set": 1},
         ],
     },
-    {
-        "property": "ML_lanes",
+    "ML_access_point": {"set": "all"},
+    "ML_egress_point": {"set": "all"},
+    "ML_price": {
         "set": 0,
-        "timeofday": [
-            {"time": ["6:00", "9:00"], "set": 1},
-            {"time": ["16:00", "19:00"], "set": 1},
+        "scoped": [
+            {"category": "sov", "timespan": ["6:00", "9:00"], "set": 1.5},
+            {"category": "sov", "timespan": ["16:00", "19:00"], "set": 2.5},
+            {"category": "hov2", "timespan": ["6:00", "9:00"], "set": 1},
+            {"category": "hov2", "timespan": ["16:00", "19:00"], "set": 2},
         ],
     },
-    {"property": "ML_access", "set": "all"},
-    {"property": "ML_egress", "set": "all"},
-    {
-        "property": "ML_price",
-        "set": 0,
-        "group": [
-            {
-                "category": "sov",
-                "timeofday": [
-                    {"time": ["6:00", "9:00"], "set": 1.5},
-                    {"time": ["16:00", "19:00"], "set": 2.5},
-                ],
-            },
-            {
-                "category": "hov2",
-                "timeofday": [
-                    {"time": ["6:00", "9:00"], "set": 1},
-                    {"time": ["16:00", "19:00"], "set": 2},
-                ],
-            },
-        ],
-    },
-]
+}
 
 
 def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
@@ -72,121 +46,84 @@ def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
 
     # Set facility selection
     _facility = {
-        "links": [{"name": ["I 35E"]}],
-        "A": {"osm_node_id": "961117623"},
-        "B": {"osm_node_id": "2564047368"},
+        "links": {"name": ["I 35E"]},
+        "from": {"osm_node_id": "961117623"},
+        "to": {"osm_node_id": "2564047368"},
     }
 
     _properties = SIMPLE_MANAGED_LANE_PROPERTIES
+    _project_card_dict = {
+        "project": "test simple managed lanes",
+        "roadway_property_change": {
+            "facility": _facility,
+            "property_changes": _properties,
+        },
+    }
+    _am_period = ["6:00", "9:00"]
+    _pm_period = ["16:00", "19:00"]
     _expected_property_values = {
         "managed": 1,
-        "lanes": {
-            "default": 3,
-            "timeofday": [
-                {"time": _am_period, "value": 2},
-                {"time": _pm_period, "value": 2},
-            ],
-        },
-        "ML_lanes": {
-            "default": 0,
-            "timeofday": [
-                {"time": _am_period, "value": 1},
-                {"time": _pm_period, "value": 1},
-            ],
-        },
-        "ML_access": "all",
-        "ML_egress": "all",
-        "ML_price": {
-            "default": 0,
-            "timeofday": [
-                {"category": "sov", "time": _am_period, "value": 1.5},
-                {"category": "sov", "time": _pm_period, "value": 2.5},
-                {"category": "hov2", "time": _am_period, "value": 1},
-                {"category": "hov2", "time": _pm_period, "value": 2},
-            ],
-        },
+        "lanes": 3,
+        "sc_lanes": [
+            ScopedLinkValueItem(timespan=_am_period, value=2),
+            ScopedLinkValueItem(timespan=_pm_period, value=2),
+        ],
+        "ML_lanes": 0,
+        "sc_ML_lanes": [
+            ScopedLinkValueItem(timespan=_am_period, value=1),
+            ScopedLinkValueItem(timespan=_pm_period, value=1),
+        ],
+        "ML_access_point": True,
+        "ML_egress_point": True,
+        "ML_price": 0,
+        "sc_ML_price": [
+            ScopedLinkValueItem(category="sov", timespan=_am_period, value=1.5),
+            ScopedLinkValueItem(category="sov", timespan=_pm_period, value=2.5),
+            ScopedLinkValueItem(category="hov2", timespan=_am_period, value=1),
+            ScopedLinkValueItem(category="hov2", timespan=_pm_period, value=2),
+        ],
     }
 
     net = copy.deepcopy(stpaul_net)
 
-    WranglerLogger.info(f"      start: select_roadway_features")
-    _selected_link_idx = net.select_roadway_features(_facility)
-
-    _p_to_track = [p["property"] for p in _properties]
-    WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
+    _selected_link_idx = net.get_selection(_facility).selected_links
+    _p_to_track = list(_properties.keys())
 
     _orig_links = copy.deepcopy(
-        net.links_df.loc[
-            _selected_link_idx, net.links_df.columns.intersection(_p_to_track)
-        ]
+        net.links_df.loc[_selected_link_idx, net.links_df.columns.intersection(_p_to_track)]
     )
-    WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
+    WranglerLogger.debug(f"_orig_links: \n{_orig_links}")
 
     # apply change
-    WranglerLogger.info(f"      start: apply_managed_lane_feature_change")
-    net = net.apply_managed_lane_feature_change(
-        net.select_roadway_features(_facility), _properties
-    )
+    net = net.apply(_project_card_dict)
 
-    _rev_links = net.links_df.loc[
-        _selected_link_idx, list(_expected_property_values.keys())
-    ]
-    WranglerLogger.debug(f"_rev_links:\n{_rev_links.iloc[0]}")
-
-    for p, _expected_value in _expected_property_values.items():
-        WranglerLogger.debug(f"Expected_value of {p}:\n{_expected_value}")
-        WranglerLogger.debug(f"Actual Values of {p}:\n{_rev_links[p].iloc[0]}")
-        assert _rev_links[p].eq(_expected_value).all()
-
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-def test_add_managed_lane_complex(request, stpaul_net, stpaul_ex_dir):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-
-    _expected_property_values = {
-        "managed": 1,
-        "segment_id": 5,
-        "ML_segment_id": 5,
-        "ML_lanes": {
-            "default": 0,
-            "timeofday": [
-                {"time": _am_period, "value": 1},
-            ],
-        },
+    _rev_links = net.links_df.loc[_selected_link_idx, list(_expected_property_values.keys())]
+    WranglerLogger.debug(f"_rev_links: \n{_rev_links.iloc[0]}")
+    pass_test = True
+    _non_scoped_expected_property_values = {
+        k: v for k, v in _expected_property_values.items() if not k.startswith("sc_")
     }
+    _scoped_expected_property_values = {
+        k: v for k, v in _expected_property_values.items() if k.startswith("sc_")
+    }
+    for p, _expected_value in _non_scoped_expected_property_values.items():
+        not_equal_elements = _rev_links[p][_rev_links[p].ne(_expected_value)]
+        if not_equal_elements.size > 0:
+            WranglerLogger.debug(f"Expected_value of {p}: \n{_expected_value}")
+            WranglerLogger.error(f"Elements not equal for {p}: \n{not_equal_elements}")
+            pass_test = False
+    # this is dumb, but pandas wont consider lists equal when comparing with vector op
+    for idx in _selected_link_idx:
+        for p, _expected_value in _scoped_expected_property_values.items():
+            if net.links_df.loc[idx, p] != _expected_value:
+                WranglerLogger.debug(f"Expected_value of {p}: \n{_expected_value}")
+                WranglerLogger.error(
+                    f"Elements not equal for {p}, idx: {idx}: \n\
+                                     {net.links_df.loc[idx, p]}"
+                )
+                pass_test = False
 
-    net = copy.deepcopy(stpaul_net)
-    project_card_name = "broken_parallel_managed_lane.yml"
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path)
-
-    WranglerLogger.info(f"      start: select_roadway_features")
-    _selected_link_idx = net.select_roadway_features(project_card.facility)
-
-    _p_to_track = [p["property"] for p in project_card.properties]
-
-    _orig_links = copy.deepcopy(
-        net.links_df.loc[
-            _selected_link_idx, net.links_df.columns.intersection(_p_to_track)
-        ]
-    )
-    WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
-
-    WranglerLogger.info(f"      start: apply_managed_lane_feature_change")
-    net = net.apply_managed_lane_feature_change(
-        net.select_roadway_features(project_card.facility), project_card.properties
-    )
-
-    _rev_links = net.links_df.loc[
-        _selected_link_idx, list(_expected_property_values.keys())
-    ]
-    WranglerLogger.debug(f"_rev_links:\n{_rev_links.iloc[0]}")
-
-    for p, _expected_value in _expected_property_values.items():
-        WranglerLogger.debug(f"Expected_value of {p}:\n{_expected_value}")
-        WranglerLogger.debug(f"Actual Values of {p}:\n{_rev_links[p].iloc[0]}")
-        assert _rev_links[p].eq(_expected_value).all()
+    assert pass_test
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
@@ -201,34 +138,30 @@ def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir):
         "ML_HOV": 5,
     }
 
-    project_card_name = "test_managed_lanes_change_keyword.yml"
+    project_card_name = "road.prop_change.managed_lanes.yml"
     project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
-    project_card = ProjectCard.read(project_card_path, validate=False)
+    project_card = read_card(project_card_path)
 
-    WranglerLogger.info(f"      start: select_roadway_features")
-    _selected_link_idx = net.select_roadway_features(project_card.facility)
+    WranglerLogger.info("      start: select_roadway_features")
+    _selected_link_idx = net.get_selection(project_card.facility).selected_links
 
-    attributes_to_update = [p["property"] for p in project_card.properties]
+    attributes_to_update = list(project_card.roadway_property_change["property_changes"].keys())
 
     _orig_links = copy.deepcopy(
         net.links_df.loc[
             _selected_link_idx, net.links_df.columns.intersection(attributes_to_update)
         ]
     )
-    WranglerLogger.debug(f"_orig_links:\n{_orig_links}")
-    WranglerLogger.info(f"      start: apply_managed_lane_feature_change")
-    net = net.apply_managed_lane_feature_change(
-        net.select_roadway_features(project_card.facility), project_card.properties
-    )
 
-    _rev_links = net.links_df.loc[
-        _selected_link_idx, list(_expected_property_values.keys())
-    ]
-    WranglerLogger.debug(f"_rev_links:\n{_rev_links.iloc[0]}")
-    WranglerLogger.info(f"      start: eval expected")
+    WranglerLogger.debug(f"_orig_links: \n{_orig_links}")
+    net = net.apply(project_card)
+
+    _rev_links = net.links_df.loc[_selected_link_idx, list(_expected_property_values.keys())]
+    WranglerLogger.debug(f"_rev_links: \n{_rev_links.iloc[0]}")
+
     for p, _expected_value in _expected_property_values.items():
-        WranglerLogger.debug(f"Expected_value of {p}:\n{_expected_value}")
-        WranglerLogger.debug(f"Actual Values of {p}:\n{_rev_links[p].iloc[0]}")
+        WranglerLogger.debug(f"Expected_value of {p}: \n{_expected_value}")
+        WranglerLogger.debug(f"Actual Values of {p}: \n{_rev_links[p].iloc[0]}")
         assert _rev_links[p].eq(_expected_value).all()
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -240,49 +173,52 @@ def test_existing_managed_lane_apply(request, stpaul_net):
     net = copy.deepcopy(stpaul_net)
 
     _facility_1 = {
-        "links": [
-            {
-                "model_link_id": [
-                    390975,
-                    391203,
-                    394205,
-                ],
-            }
-        ],
+        "links": {
+            "model_link_id": [
+                390975,
+                391203,
+                394205,
+            ],
+        }
     }
 
     _facility_2 = {
-        "links": [
-            {
-                "model_link_id": [
-                    394208,
-                    394214,
-                ],
-            }
-        ],
+        "links": {
+            "model_link_id": [
+                394208,
+                394214,
+            ],
+        }
     }
 
     _properties = SIMPLE_MANAGED_LANE_PROPERTIES
+    _1_project_card_dict = {
+        "project": "test simple managed lanes",
+        "roadway_property_change": {
+            "facility": _facility_1,
+            "property_changes": _properties,
+        },
+    }
+    _2_project_card_dict = {
+        "project": "test simple managed lanes",
+        "roadway_property_change": {
+            "facility": _facility_2,
+            "property_changes": _properties,
+        },
+    }
+    _1_selected_link_idx = net.get_selection(_facility_1).selected_links
+    _2_selected_link_idx = net.get_selection(_facility_2).selected_links
 
-    _1_selected_link_idx = net.select_roadway_features(_facility_1)
-    _2_selected_link_idx = net.select_roadway_features(_facility_2)
-
-    _base_ML_links = copy.deepcopy(net.num_managed_lane_links)
+    _base_ML_links = copy.deepcopy(len(net.links_df.of_type.managed))
     WranglerLogger.info(f"Initial # of managed lane links: {_base_ML_links}")
 
-    WranglerLogger.info(f"      start: apply_managed_lane_feature_change")
-    net = net.apply_managed_lane_feature_change(
-        net.select_roadway_features(_facility_1), _properties
-    )
-    _change_1_ML_links = copy.deepcopy(net.num_managed_lane_links)
+    net = net.apply(_1_project_card_dict)
+    _change_1_ML_links = copy.deepcopy(len(net.links_df.of_type.managed))
     WranglerLogger.info(f"Interim # of managed lane links: {_change_1_ML_links}")
 
-    WranglerLogger.info(f"      start: apply_managed_lane_feature_change")
-    net = net.apply_managed_lane_feature_change(
-        net.select_roadway_features(_facility_2), _properties
-    )
+    net = net.apply(_2_project_card_dict)
 
-    _change_2_ML_links = copy.deepcopy(net.num_managed_lane_links)
+    _change_2_ML_links = copy.deepcopy(len(net.links_df.of_type.managed))
     WranglerLogger.info(f"Final # of managed lane links: {_change_2_ML_links}")
 
     assert _change_1_ML_links == _base_ML_links + len(_1_selected_link_idx)

@@ -1,0 +1,24 @@
+project: I394E Parallel Lanes
+roadway_property_change:
+  facility:
+    links:
+      model_link_id:
+        - 390975
+        - 391203
+        - 394205
+        - 394208
+        - 394214
+  property_changes:
+    ML_lanes:
+      set: 0
+      scoped:
+        - timespan: ['6:00', '9:00']
+          set: 1
+    ML_access_point:
+      set: 'all'
+    ML_egress_point:
+      set: 'all'
+    ML_HOV:
+      set: 5
+    HOV:
+      set: 5

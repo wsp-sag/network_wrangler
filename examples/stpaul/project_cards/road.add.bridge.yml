@@ -1,0 +1,51 @@
+project: Add bridge to lake
+roadway_addition:
+  links:
+    - A: 36622
+      AADT: 1800
+      count_AM: 450
+      B: 125892
+      name: new bridge
+      roadway: residential
+      bike_facility: 0
+      distance: 0.8016
+      count_daily: 1800
+      access: 0
+      lanes: 1
+      model_link_id: 404982
+      count_md: 450
+      count_nt: 450
+      count_pm: 450
+      roadway_class: 30
+      ttime_assert: 0.0
+      trn_priority: 0
+      bus_only: 0
+      rail_only: 0
+      bike_access: 1
+      drive_access: 1
+      transit_access: 0
+      walk_access: 0
+    - A: 125892
+      AADT: 0
+      count_am: 0
+      B: 36622
+      name: new bridge
+      roadway: residential
+      bike_facility: 0
+      distance: 0.8016
+      count_daily: 0
+      access: 0
+      lanes: 1
+      model_link_id: 407042
+      count_MD: 0
+      count_NT: 0
+      count_PN: 0
+      roadway_class: 50
+      ttime_assert: 0.0
+      trn_priority: 0
+      bus_only: 0
+      rail_only: 0
+      bike_access: 1
+      drive_access: 1
+      transit_access: 0
+      walk_access: 0

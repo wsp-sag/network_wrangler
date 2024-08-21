@@ -1,13 +1,9 @@
-import os
 import pytest
 
 
 @pytest.mark.dependencies
 def test_dependencies_api(request):
     print("\n--Starting:", request.node.name)
-    from jsonschema import validate
-    from jsonschema.exceptions import ValidationError
-    from jsonschema.exceptions import SchemaError
     from folium import Icon, Circle, Marker
     from networkx import (
         shortest_path,
@@ -23,5 +19,5 @@ def test_dependencies_api(request):
     from geopandas.geodataframe import GeoDataFrame
     from pandas.core.frame import DataFrame
     from shapely.geometry import Point, LineString
-    from partridge import load_feed
-    from partridge.config import default_config
+    import pandera
+    import pydantic

@@ -1,10 +1,13 @@
-folium
 geographiclib
 geojson
 geopandas >= 0.8.0
-jsonschema
-# gdfs_to_graph() is used in roadwaynetwork.py and it was deprecated after 0.13.0
-osmnx >= 0.12, <= 0.13.0
-pandas >= 1.0
-partridge >= 1.1
+ijson
+osmnx >= 0.12
+pandas >= 1.6
+pandera[geopandas]
+projectcard
+psutil
+pyarrow
+pydantic >= 2
+pyogrio
 pyyaml
