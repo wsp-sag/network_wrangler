@@ -469,13 +469,14 @@ class Scenario(object):
         if change.change_type in ROADWAY_CARD_TYPES:
             if not self.road_net:
                 raise ValueError("Missing Roadway Network")
-            self.road_net.apply(change)
+            if change.change_type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
+                self.road_net.apply(change, transit_net = self.transit_net)
+            else:
+                self.road_net.apply(change)
         if change.change_type in TRANSIT_CARD_TYPES:
             if not self.transit_net:
                 raise ValueError("Missing Transit Network")
             self.transit_net.apply(change)
-        if change.change_type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
-            self.transit_net.apply(change, reference_road_net=self.road_net)
 
         if change.change_type not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES:
             raise ProjectCardError(

@@ -321,7 +321,7 @@ class RoadwayNetwork(BaseModel):
 
         return self._modal_graphs[mode]["graph"]
 
-    def apply(self, project_card: Union[ProjectCard, dict]) -> RoadwayNetwork:
+    def apply(self, project_card: Union[ProjectCard, dict], **kwargs) -> RoadwayNetwork:
         """Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.
 
         Args:
@@ -338,12 +338,16 @@ class RoadwayNetwork(BaseModel):
         if project_card._sub_projects:
             for sp in project_card._sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
-                self._apply_change(sp)
+                self._apply_change(sp, **kwargs)
             return self
         else:
-            return self._apply_change(project_card)
+            return self._apply_change(project_card, **kwargs)
 
-    def _apply_change(self, change: Union[ProjectCard, SubProject]) -> RoadwayNetwork:
+    def _apply_change(
+        self, 
+        change: Union[ProjectCard, SubProject],
+        transit_net = None,
+    ) -> RoadwayNetwork:
         """Apply a single change: a single-project project or a sub-project."""
         if not isinstance(change, SubProject):
             WranglerLogger.info(f"Applying Project to Roadway Network: {change.project}")
@@ -362,6 +366,37 @@ class RoadwayNetwork(BaseModel):
             )
 
         elif change.change_type == "roadway_deletion":
+            deleted_link_id_list = change.roadway_deletion["links"]["model_link_id"]
+            deleted_links_df = self.links_df[self.links_df["model_link_id"].isin(deleted_link_id_list)]
+            shapes_df = transit_net.feed.shapes.copy()
+            
+            # sort the shapes_df by agency_raw_name, shape_id and shape_pt_sequence
+            if "agency_raw_name" in shapes_df.columns:
+                shapes_df = shapes_df.sort_values(["agency_raw_name", "shape_id", "shape_pt_sequence"])
+            else:
+                shapes_df = shapes_df.sort_values(["shape_id", "shape_pt_sequence"])
+            # create shape_model_node_id_next column by using the value of the next row's shape_model_node_id
+            shapes_df["shape_model_node_id_next"] = shapes_df["shape_model_node_id"].shift(-1)
+            # create shape_id_next column by using the value of the next row's shape_id
+            shapes_df["shape_id_next"] = shapes_df["shape_id"].shift(-1)
+            # keep rows with the same shape_id_next and the shape_id
+            shapes_df = shapes_df[shapes_df["shape_id_next"] == shapes_df["shape_id"]]
+            # make sure shape_model_node_id_next and shape_model_node_id_next are numeric
+            shapes_df["shape_model_node_id_next"] = pd.to_numeric(shapes_df["shape_model_node_id_next"])
+            shapes_df["shape_model_node_id"] = pd.to_numeric(shapes_df["shape_model_node_id"])
+
+            shapes_df = shapes_df.merge(
+                deleted_links_df[["model_link_id", "A", "B"]], 
+                how="left",
+                left_on=["shape_model_node_id", "shape_model_node_id_next"], 
+                right_on=["A", "B"]
+            )
+            shapes_df = shapes_df[shapes_df["model_link_id"].notna()]
+            if len(shapes_df) > 0:
+                msg = f"Roadway deletion results in broken transit shape_ids: {shapes_df.shape_id.unique()}"
+                # raise NotImplementedError(msg)
+                WranglerLogger.warning(msg)
+
             return apply_roadway_deletion(
                 self,
                 change.roadway_deletion,
