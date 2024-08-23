@@ -4880,7 +4880,8 @@ recognized in this collecton once they are moved to applied.</p>
 <span class="normal">555</span>
 <span class="normal">556</span>
 <span class="normal">557</span>
-<span class="normal">558</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Scenario</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="normal">558</span>
+<span class="normal">559</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Scenario</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Holds information about a scenario.</span>
 
 <span class="sd">    Typical usage example:</span>
@@ -5254,13 +5255,14 @@ recognized in this collecton once they are moved to applied.</p>
         <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="ow">in</span> <span class="n">ROADWAY_CARD_TYPES</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing Roadway Network&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">change</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="ow">in</span> <span class="n">SECONDARY_TRANSIT_CARD_TYPES</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">transit_net</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">change</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="ow">in</span> <span class="n">TRANSIT_CARD_TYPES</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing Transit Network&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">change</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="ow">in</span> <span class="n">SECONDARY_TRANSIT_CARD_TYPES</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">transit_net</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">reference_road_net</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">road_net</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TRANSIT_CARD_TYPES</span> <span class="o">+</span> <span class="n">ROADWAY_CARD_TYPES</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ProjectCardError</span><span class="p">(</span>
@@ -5758,8 +5760,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">511</span>
-<span class="normal">512</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">512</span>
 <span class="normal">513</span>
 <span class="normal">514</span>
 <span class="normal">515</span>
@@ -5778,7 +5779,8 @@ queue.</p>
 <span class="normal">528</span>
 <span class="normal">529</span>
 <span class="normal">530</span>
-<span class="normal">531</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="normal">531</span>
+<span class="normal">532</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Applies a specific list of projects from the planned project queue.</span>
 
 <span class="sd">    Will order the list of projects based on pre-requisites.</span>
@@ -6028,8 +6030,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">546</span>
-<span class="normal">547</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">547</span>
 <span class="normal">548</span>
 <span class="normal">549</span>
 <span class="normal">550</span>
@@ -6040,7 +6041,8 @@ queue.</p>
 <span class="normal">555</span>
 <span class="normal">556</span>
 <span class="normal">557</span>
-<span class="normal">558</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">558</span>
+<span class="normal">559</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A high level summary of the created scenario.</span>
 
 <span class="sd">    Args:</span>
@@ -6117,8 +6119,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">533</span>
-<span class="normal">534</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">534</span>
 <span class="normal">535</span>
 <span class="normal">536</span>
 <span class="normal">537</span>
@@ -6128,7 +6129,8 @@ queue.</p>
 <span class="normal">541</span>
 <span class="normal">542</span>
 <span class="normal">543</span>
-<span class="normal">544</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">544</span>
+<span class="normal">545</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;_summary_.</span>
 
 <span class="sd">    Args:</span>
@@ -6357,8 +6359,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">656</span>
-<span class="normal">657</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">657</span>
 <span class="normal">658</span>
 <span class="normal">659</span>
 <span class="normal">660</span>
@@ -6399,7 +6400,8 @@ queue.</p>
 <span class="normal">695</span>
 <span class="normal">696</span>
 <span class="normal">697</span>
-<span class="normal">698</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_base_scenario</span><span class="p">(</span>
+<span class="normal">698</span>
+<span class="normal">699</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_base_scenario</span><span class="p">(</span>
     <span class="n">base_shape_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">base_link_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">base_node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -6558,8 +6560,7 @@ being adding it to the scenario. Defaults to True.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">561</span>
-<span class="normal">562</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">562</span>
 <span class="normal">563</span>
 <span class="normal">564</span>
 <span class="normal">565</span>
@@ -6601,7 +6602,8 @@ being adding it to the scenario. Defaults to True.</p>
 <span class="normal">601</span>
 <span class="normal">602</span>
 <span class="normal">603</span>
-<span class="normal">604</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_scenario</span><span class="p">(</span>
+<span class="normal">604</span>
+<span class="normal">605</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_scenario</span><span class="p">(</span>
     <span class="n">base_scenario</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Scenario</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
     <span class="n">project_card_list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">project_card_filepath</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -6760,8 +6762,7 @@ being adding it to the scenario. Defaults to True.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">607</span>
-<span class="normal">608</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">608</span>
 <span class="normal">609</span>
 <span class="normal">610</span>
 <span class="normal">611</span>
@@ -6806,7 +6807,8 @@ being adding it to the scenario. Defaults to True.</p>
 <span class="normal">650</span>
 <span class="normal">651</span>
 <span class="normal">652</span>
-<span class="normal">653</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">scenario_summary</span><span class="p">(</span>
+<span class="normal">653</span>
+<span class="normal">654</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">scenario_summary</span><span class="p">(</span>
     <span class="n">scenario</span><span class="p">:</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">project_detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A high level summary of the created scenario.</span>
@@ -7595,7 +7597,42 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
 <span class="normal">617</span>
 <span class="normal">618</span>
 <span class="normal">619</span>
-<span class="normal">620</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwayNetwork</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwayNetwork</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Representation of a Roadway Network.</span>
 
 <span class="sd">    Typical usage example:</span>
@@ -7839,7 +7876,7 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modal_graphs</span><span class="p">[</span><span class="n">mode</span><span class="p">][</span><span class="s2">&quot;graph&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_card</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RoadwayNetwork</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_card</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoadwayNetwork</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.</span>
 
 <span class="sd">        Args:</span>
@@ -7856,12 +7893,16 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
         <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
                 <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- applying subproject: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">change_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">project_card</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">project_card</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_apply_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">,</span> <span class="n">SubProject</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RoadwayNetwork</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_apply_change</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> 
+        <span class="n">change</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">,</span> <span class="n">SubProject</span><span class="p">],</span>
+        <span class="n">transit_net</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoadwayNetwork</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply a single change: a single-project project or a sub-project.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">change</span><span class="p">,</span> <span class="n">SubProject</span><span class="p">):</span>
             <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Applying Project to Roadway Network: </span><span class="si">{</span><span class="n">change</span><span class="o">.</span><span class="n">project</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -7880,6 +7921,37 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
             <span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;roadway_deletion&quot;</span><span class="p">:</span>
+            <span class="n">deleted_link_id_list</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">roadway_deletion</span><span class="p">[</span><span class="s2">&quot;links&quot;</span><span class="p">][</span><span class="s2">&quot;model_link_id&quot;</span><span class="p">]</span>
+            <span class="n">deleted_links_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">[</span><span class="s2">&quot;model_link_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">deleted_link_id_list</span><span class="p">)]</span>
+            <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">transit_net</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+            <span class="c1"># sort the shapes_df by agency_raw_name, shape_id and shape_pt_sequence</span>
+            <span class="k">if</span> <span class="s2">&quot;agency_raw_name&quot;</span> <span class="ow">in</span> <span class="n">shapes_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;agency_raw_name&quot;</span><span class="p">,</span> <span class="s2">&quot;shape_id&quot;</span><span class="p">,</span> <span class="s2">&quot;shape_pt_sequence&quot;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;shape_id&quot;</span><span class="p">,</span> <span class="s2">&quot;shape_pt_sequence&quot;</span><span class="p">])</span>
+            <span class="c1"># create shape_model_node_id_next column by using the value of the next row&#39;s shape_model_node_id</span>
+            <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id_next&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># create shape_id_next column by using the value of the next row&#39;s shape_id</span>
+            <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_id_next&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># keep rows with the same shape_id_next and the shape_id</span>
+            <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="p">[</span><span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_id_next&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]]</span>
+            <span class="c1"># make sure shape_model_node_id_next and shape_model_node_id_next are numeric</span>
+            <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id_next&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id_next&quot;</span><span class="p">])</span>
+            <span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">])</span>
+
+            <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                <span class="n">deleted_links_df</span><span class="p">[[</span><span class="s2">&quot;model_link_id&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]],</span> 
+                <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+                <span class="n">left_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">,</span> <span class="s2">&quot;shape_model_node_id_next&quot;</span><span class="p">],</span> 
+                <span class="n">right_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">shapes_df</span> <span class="o">=</span> <span class="n">shapes_df</span><span class="p">[</span><span class="n">shapes_df</span><span class="p">[</span><span class="s2">&quot;model_link_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapes_df</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Roadway deletion results in broken transit shape_ids: </span><span class="si">{</span><span class="n">shapes_df</span><span class="o">.</span><span class="n">shape_id</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="c1"># raise NotImplementedError(msg)</span>
+                <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
             <span class="k">return</span> <span class="n">apply_roadway_deletion</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span>
                 <span class="n">change</span><span class="o">.</span><span class="n">roadway_deletion</span><span class="p">,</span>
@@ -8362,49 +8434,49 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">578</span>
-<span class="normal">579</span>
-<span class="normal">580</span>
-<span class="normal">581</span>
-<span class="normal">582</span>
-<span class="normal">583</span>
-<span class="normal">584</span>
-<span class="normal">585</span>
-<span class="normal">586</span>
-<span class="normal">587</span>
-<span class="normal">588</span>
-<span class="normal">589</span>
-<span class="normal">590</span>
-<span class="normal">591</span>
-<span class="normal">592</span>
-<span class="normal">593</span>
-<span class="normal">594</span>
-<span class="normal">595</span>
-<span class="normal">596</span>
-<span class="normal">597</span>
-<span class="normal">598</span>
-<span class="normal">599</span>
-<span class="normal">600</span>
-<span class="normal">601</span>
-<span class="normal">602</span>
-<span class="normal">603</span>
-<span class="normal">604</span>
-<span class="normal">605</span>
-<span class="normal">606</span>
-<span class="normal">607</span>
-<span class="normal">608</span>
-<span class="normal">609</span>
-<span class="normal">610</span>
-<span class="normal">611</span>
-<span class="normal">612</span>
-<span class="normal">613</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">613</span>
 <span class="normal">614</span>
 <span class="normal">615</span>
 <span class="normal">616</span>
 <span class="normal">617</span>
 <span class="normal">618</span>
 <span class="normal">619</span>
-<span class="normal">620</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">add_incident_link_data_to_nodes</span><span class="p">(</span>
     <span class="n">links_df</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">nodes_df</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -8497,15 +8569,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_links_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]):</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_links_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined links_df with LinksSchema before adding to self.links_df.</span>
 
 <span class="sd">    Args:</span>
@@ -8564,15 +8636,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">398</span>
-<span class="normal">399</span>
-<span class="normal">400</span>
-<span class="normal">401</span>
-<span class="normal">402</span>
-<span class="normal">403</span>
-<span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_nodes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]):</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_nodes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined nodes_df with NodesSchema before adding to self.nodes_df.</span>
 
 <span class="sd">    Args:</span>
@@ -8631,19 +8703,19 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">408</span>
-<span class="normal">409</span>
-<span class="normal">410</span>
-<span class="normal">411</span>
-<span class="normal">412</span>
-<span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span>
-<span class="normal">418</span>
-<span class="normal">419</span>
-<span class="normal">420</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_shapes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadShapesTable</span><span class="p">]]):</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_shapes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadShapesTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined shapes_df with RoadShapesTable efore adding to self.shapes_df.</span>
 
 <span class="sd">    Args:</span>
@@ -8666,7 +8738,7 @@ nodes list rather than self.nodes_df</p>
 
 
 <h3 id="network_wrangler.roadway.network.RoadwayNetwork.apply" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">apply</span><span class="p">(</span><span class="n">project_card</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">apply</span><span class="p">(</span><span class="n">project_card</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 <a href="#network_wrangler.roadway.network.RoadwayNetwork.apply" class="headerlink" title="Permanent link"> ¶</a></h3>
 
@@ -8726,7 +8798,7 @@ nodes list rather than self.nodes_df</p>
 <span class="normal">341</span>
 <span class="normal">342</span>
 <span class="normal">343</span>
-<span class="normal">344</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_card</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RoadwayNetwork</span><span class="p">:</span>
+<span class="normal">344</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_card</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ProjectCard</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RoadwayNetwork</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.</span>
 
 <span class="sd">    Args:</span>
@@ -8743,10 +8815,10 @@ nodes list rather than self.nodes_df</p>
     <span class="k">if</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">project_card</span><span class="o">.</span><span class="n">_sub_projects</span><span class="p">:</span>
             <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- applying subproject: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">change_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">project_card</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_change</span><span class="p">(</span><span class="n">project_card</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -8769,15 +8841,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">518</span>
-<span class="normal">519</span>
-<span class="normal">520</span>
-<span class="normal">521</span>
-<span class="normal">522</span>
-<span class="normal">523</span>
-<span class="normal">524</span>
-<span class="normal">525</span>
-<span class="normal">526</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">553</span>
+<span class="normal">554</span>
+<span class="normal">555</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes any unused nodes from network that aren&#39;t referenced by links_df.</span>
 
 <span class="sd">    NOTE: does not check if these nodes are used by transit, so use with caution.</span>
@@ -8807,12 +8879,12 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">511</span>
-<span class="normal">512</span>
-<span class="normal">513</span>
-<span class="normal">514</span>
-<span class="normal">515</span>
-<span class="normal">516</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">546</span>
+<span class="normal">547</span>
+<span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes any unused shapes from network that aren&#39;t referenced by links_df.&quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.shapes.shapes</span> <span class="kn">import</span> <span class="n">shape_ids_without_links</span>
 
@@ -8948,42 +9020,7 @@ deleted links. Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
-<span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
-<span class="normal">449</span>
-<span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
-<span class="normal">457</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">457</span>
 <span class="normal">458</span>
 <span class="normal">459</span>
 <span class="normal">460</span>
@@ -9000,7 +9037,42 @@ deleted links. Defaults to False.</p>
 <span class="normal">471</span>
 <span class="normal">472</span>
 <span class="normal">473</span>
-<span class="normal">474</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_links</span><span class="p">(</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_links</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">selection_dict</span><span class="p">:</span> <span class="n">SelectLinksDict</span><span class="p">,</span>
     <span class="n">clean_nodes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -9142,40 +9214,40 @@ Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">476</span>
-<span class="normal">477</span>
-<span class="normal">478</span>
-<span class="normal">479</span>
-<span class="normal">480</span>
-<span class="normal">481</span>
-<span class="normal">482</span>
-<span class="normal">483</span>
-<span class="normal">484</span>
-<span class="normal">485</span>
-<span class="normal">486</span>
-<span class="normal">487</span>
-<span class="normal">488</span>
-<span class="normal">489</span>
-<span class="normal">490</span>
-<span class="normal">491</span>
-<span class="normal">492</span>
-<span class="normal">493</span>
-<span class="normal">494</span>
-<span class="normal">495</span>
-<span class="normal">496</span>
-<span class="normal">497</span>
-<span class="normal">498</span>
-<span class="normal">499</span>
-<span class="normal">500</span>
-<span class="normal">501</span>
-<span class="normal">502</span>
-<span class="normal">503</span>
-<span class="normal">504</span>
-<span class="normal">505</span>
-<span class="normal">506</span>
-<span class="normal">507</span>
-<span class="normal">508</span>
-<span class="normal">509</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_nodes</span><span class="p">(</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_nodes</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">selection_dict</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">SelectNodesDict</span><span class="p">],</span>
     <span class="n">remove_links</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -9641,15 +9713,15 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">556</span>
-<span class="normal">557</span>
-<span class="normal">558</span>
-<span class="normal">559</span>
-<span class="normal">560</span>
-<span class="normal">561</span>
-<span class="normal">562</span>
-<span class="normal">563</span>
-<span class="normal">564</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns true if network has links with AB values.</span>
 
 <span class="sd">    Args:</span>
@@ -9708,15 +9780,15 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">546</span>
-<span class="normal">547</span>
-<span class="normal">548</span>
-<span class="normal">549</span>
-<span class="normal">550</span>
-<span class="normal">551</span>
-<span class="normal">552</span>
-<span class="normal">553</span>
-<span class="normal">554</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_node_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_node_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Queries if network has node based on model_node_id.</span>
 
 <span class="sd">    Args:</span>
@@ -9776,17 +9848,17 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">566</span>
-<span class="normal">567</span>
-<span class="normal">568</span>
-<span class="normal">569</span>
-<span class="normal">570</span>
-<span class="normal">571</span>
-<span class="normal">572</span>
-<span class="normal">573</span>
-<span class="normal">574</span>
-<span class="normal">575</span>
-<span class="normal">576</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span>
+<span class="normal">610</span>
+<span class="normal">611</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines if the network graph is &quot;strongly&quot; connected.</span>
 
 <span class="sd">    A graph is strongly connected if each vertex is reachable from every other vertex.</span>
@@ -9818,9 +9890,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_link_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_link_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return subset of links_df based on link_ids list.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_links_to_ids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -9844,9 +9916,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">380</span>
-<span class="normal">381</span>
-<span class="normal">382</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return subset of links_df based on node_ids list.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_links_to_node_ids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -9931,23 +10003,23 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">528</span>
-<span class="normal">529</span>
-<span class="normal">530</span>
-<span class="normal">531</span>
-<span class="normal">532</span>
-<span class="normal">533</span>
-<span class="normal">534</span>
-<span class="normal">535</span>
-<span class="normal">536</span>
-<span class="normal">537</span>
-<span class="normal">538</span>
-<span class="normal">539</span>
-<span class="normal">540</span>
-<span class="normal">541</span>
-<span class="normal">542</span>
-<span class="normal">543</span>
-<span class="normal">544</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">move_nodes</span><span class="p">(</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">move_nodes</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">node_geometry_change_table</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">NodeGeometryChangeTable</span><span class="p">],</span>
 <span class="p">):</span>
@@ -9985,9 +10057,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nodes_in_links</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nodes_in_links</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns subset of self.nodes_df that are in self.links_df.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_nodes_to_links</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_df</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -10447,36 +10519,7 @@ the road network.</p>
 <span class="normal">349</span>
 <span class="normal">350</span>
 <span class="normal">351</span>
-<span class="normal">352</span>
-<span class="normal">353</span>
-<span class="normal">354</span>
-<span class="normal">355</span>
-<span class="normal">356</span>
-<span class="normal">357</span>
-<span class="normal">358</span>
-<span class="normal">359</span>
-<span class="normal">360</span>
-<span class="normal">361</span>
-<span class="normal">362</span>
-<span class="normal">363</span>
-<span class="normal">364</span>
-<span class="normal">365</span>
-<span class="normal">366</span>
-<span class="normal">367</span>
-<span class="normal">368</span>
-<span class="normal">369</span>
-<span class="normal">370</span>
-<span class="normal">371</span>
-<span class="normal">372</span>
-<span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span>
-<span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span>
-<span class="normal">380</span>
-<span class="normal">381</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TransitNetwork</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="normal">352</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TransitNetwork</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Representation of a Transit Network.</span>
 
 <span class="sd">    Typical usage example:</span>
@@ -10759,38 +10802,9 @@ the road network.</p>
                 <span class="bp">self</span><span class="o">.</span><span class="n">get_selection</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">service</span><span class="p">),</span>
             <span class="p">)</span>
 
-        <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;roadway_deletion&quot;</span><span class="p">:</span>
-            <span class="c1"># FIXME</span>
-            <span class="c1"># road_net = self.road_net if reference_road_net is None else reference_road_net</span>
-            <span class="c1"># shapes_df = self.feed.shapes.copy()</span>
-            <span class="c1"># # sort the shapes_df by agency_raw_name, shape_id and shape_pt_sequence</span>
-            <span class="c1"># if &quot;agency_raw_name&quot; in shapes_df.columns:</span>
-            <span class="c1">#     shapes_df = shapes_df.sort_values([&quot;agency_raw_name&quot;, &quot;shape_id&quot;, &quot;shape_pt_sequence&quot;])</span>
-            <span class="c1"># else:</span>
-            <span class="c1">#     shapes_df = shapes_df.sort_values([&quot;shape_id&quot;, &quot;shape_pt_sequence&quot;])</span>
-            <span class="c1"># # create shape_model_node_id_next column by using the value of the next row&#39;s shape_model_node_id</span>
-            <span class="c1"># shapes_df[&quot;shape_model_node_id_next&quot;] = shapes_df[&quot;shape_model_node_id&quot;].shift(-1)</span>
-            <span class="c1"># # create shape_id_next column by using the value of the next row&#39;s shape_id</span>
-            <span class="c1"># shapes_df[&quot;shape_id_next&quot;] = shapes_df[&quot;shape_id&quot;].shift(-1)</span>
-            <span class="c1"># # keep rows with the same shape_id_next and the shape_id</span>
-            <span class="c1"># shapes_df = shapes_df[shapes_df[&quot;shape_id_next&quot;] == shapes_df[&quot;shape_id&quot;]]</span>
-            <span class="c1"># # make sure shape_model_node_id_next and shape_model_node_id_next are numeric</span>
-            <span class="c1"># shapes_df[&quot;shape_model_node_id_next&quot;] = pd.to_numeric(shapes_df[&quot;shape_model_node_id_next&quot;])</span>
-            <span class="c1"># shapes_df[&quot;shape_model_node_id&quot;] = pd.to_numeric(shapes_df[&quot;shape_model_node_id&quot;])</span>
-
-            <span class="c1"># shapes_df = shapes_df.merge(</span>
-            <span class="c1">#     road_net.links_df[[&quot;model_link_id&quot;, &quot;A&quot;, &quot;B&quot;]], </span>
-            <span class="c1">#     how=&quot;left&quot;, </span>
-            <span class="c1">#     left_on=[&quot;shape_model_node_id&quot;, &quot;shape_model_node_id_next&quot;], </span>
-            <span class="c1">#     right_on=[&quot;A&quot;, &quot;B&quot;]</span>
-            <span class="c1"># )</span>
-
-            <span class="c1"># shapes_df = shapes_df[shapes_df[&quot;model_link_id&quot;].isnull()]</span>
-            <span class="c1"># if len(shapes_df) &gt; 0:</span>
-            <span class="c1">#     msg = f&quot;Roadway deletion results in broken transit shape_ids: {shapes_df.shape_id.unique()}&quot;</span>
-            <span class="c1">#     # raise NotImplementedError(msg)</span>
-            <span class="c1">#     WranglerLogger.warning(msg)</span>
-            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Roadway deletion might result in broken transit shapes&quot;</span><span class="p">)</span>
+        <span class="c1"># elif change.change_type == &quot;roadway_deletion&quot;:</span>
+        <span class="c1">#     # FIXME</span>
+        <span class="c1">#     raise NotImplementedError(&quot;Roadway deletion check not yet implemented.&quot;)</span>
 
         <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;pycode&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">apply_calculated_transit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="o">.</span><span class="n">pycode</span><span class="p">)</span>
