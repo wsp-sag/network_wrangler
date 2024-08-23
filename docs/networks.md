@@ -95,7 +95,7 @@ The "plain" property without the prefix becomes the default when no scoped prope
 !!! note "previous format for scoped properties"
 
     Some previous tooling was developed around a previous method for serializing scoped properties.  In order to retain compatability with this format:
-    
+
     - `load_roadway_from_dir()`, `read_links()`, and associated functions will "sniff" the network for the old format and apply the converter function `translate_links_df_v0_to_v1()`
     - `write_links()` has an boolean attribute to `convert_complex_properties_to_single_field` which can also be invoked from `write_roadway()` as `convert_complex_link_properties_to_single_field`.
 
@@ -112,7 +112,7 @@ The "plain" property without the prefix becomes the default when no scoped prope
     ```python
     # default price
     'price' = 0
-    'sc_price': 
+    'sc_price':
     [
         {
             'time':['06:00':'09:00'],
@@ -137,7 +137,7 @@ The "plain" property without the prefix becomes the default when no scoped prope
     # default price
     "price": 0
     # price scoped by time of day
-    "sc_price": 
+    "sc_price":
     [
         {
             'timespan':['06:00':'09:00'],

@@ -48,6 +48,7 @@ def default_from_datamodel(data_model: pa.DataFrameModel, field: str):
 
 class TableValidationError(Exception):
     """Raised when a table validation fails."""
+
     pass
 
 
@@ -87,9 +88,7 @@ def validate_df_to_model(df: DataFrame, model: DataFrameModel) -> DataFrame:
             WranglerLogger.error("Detailed failure cases:\n%s", e.failure_cases)
         raise TableValidationError(f"Validation to {model.__name__} failed.")
     except SchemaError as e:
-        WranglerLogger.error(
-            f"Validation to {model.__name__} failed with error: {e}"
-        )
+        WranglerLogger.error(f"Validation to {model.__name__} failed with error: {e}")
         WranglerLogger.error(f"Failure Cases:\n{e.failure_cases}")
         raise TableValidationError(f"Validation to {model.__name__} failed.")
 

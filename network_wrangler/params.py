@@ -169,7 +169,7 @@ TRANSIT_CARD_TYPES = [
     "transit_property_change",
     "transit_routing_change",
     "transit_route_addition",
-    "transit_service_deletion"
+    "transit_service_deletion",
 ]
 ROADWAY_CARD_TYPES = [
     "roadway_deletion",
@@ -181,8 +181,16 @@ SECONDARY_TRANSIT_CARD_TYPES = ["roadway_deletion"]
 # ---------------------------------------------------------------------
 # ------ SEARCH PARAMS ------
 # ---------------------------------------------------------------------
-
+"""
+(list(str)): default for search modes when searching for paths between A and B node
+    when no modes are specified.
+"""
 DEFAULT_SEARCH_MODES = ["drive"]
+
+"""
+(list(str)): default for searching for links to delete when no modes are specified.
+"""
+DEFAULT_DELETE_MODES = ["any"]
 
 """
 (int): default for initial number of links from name-based

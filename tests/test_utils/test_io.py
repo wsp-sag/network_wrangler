@@ -6,6 +6,7 @@ from network_wrangler.utils.data import diff_dfs
 from network_wrangler.utils.time import str_to_seconds_from_midnight
 from network_wrangler import WranglerLogger
 
+
 @pytest.mark.skip(reason="Not implemented")
 def test_convert_in_chunks(example_dir, tmpdir):
     convert_file_serialization(
@@ -51,22 +52,22 @@ v0_links_json = [
             "timeofday": [
                 {
                     "time": (
-                        str_to_seconds_from_midnight("06:00"), 
-                        str_to_seconds_from_midnight("10:00")
+                        str_to_seconds_from_midnight("06:00"),
+                        str_to_seconds_from_midnight("10:00"),
                     ),
-                    "value": 2
+                    "value": 2,
                 },
                 {
                     "time": (
-                        str_to_seconds_from_midnight("12:00"), 
-                        str_to_seconds_from_midnight("14:00")
+                        str_to_seconds_from_midnight("12:00"),
+                        str_to_seconds_from_midnight("14:00"),
                     ),
                     "category": ["hov2"],
-                    "value": 2
-                }
-            ]
+                    "value": 2,
+                },
+            ],
         },
-    }
+    },
 ]
 
 v1_links_json = [
@@ -84,17 +85,10 @@ v1_links_json = [
         "name": "Main St",
         "lanes": 4,
         "sc_lanes": [
-            {
-                "timespan": ["06:00", "10:00"],
-                "value": 2
-            },
-            {
-                "timespan": ["12:00", "14:00"],
-                "category": "hov2",
-                "value": 2
-            }
+            {"timespan": ["06:00", "10:00"], "value": 2},
+            {"timespan": ["12:00", "14:00"], "category": "hov2", "value": 2},
         ],
-    }
+    },
 ]
 
 nodes_json = [

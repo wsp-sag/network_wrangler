@@ -1,4 +1,5 @@
 """Converters for roadway networks between data models."""
+
 from __future__ import annotations
 
 from typing import Optional
@@ -19,14 +20,16 @@ def translate_links_df_v0_to_v1(
     Args:
         links_df (DataFrame): _description_
         complex_properties (Optional[list[str]], optional): List of complex properties to
-            convert from v0 to v1 link data model. Defaults to None. If None, will detect 
+            convert from v0 to v1 link data model. Defaults to None. If None, will detect
             complex properties.
     """
     if complex_properties is None:
         complex_properties = detect_v0_scoped_link_properties(links_df)
     if not complex_properties:
-        WranglerLogger.warning("No complex properties detected to convert in links_df.\
-                               Returning links_df as-is.")
+        WranglerLogger.warning(
+            "No complex properties detected to convert in links_df.\
+                               Returning links_df as-is."
+        )
         return links_df
 
     for prop in complex_properties:
@@ -48,8 +51,10 @@ def translate_links_df_v1_to_v0(
     if complex_properties is None:
         complex_properties = [p for p in links_df.columns if p.startswith("sc_")]
     if not complex_properties:
-        WranglerLogger.warning("No complex properties detected to convert in links_df.\
-                               Returning links_df as-is.")
+        WranglerLogger.warning(
+            "No complex properties detected to convert in links_df.\
+                               Returning links_df as-is."
+        )
         return links_df
 
     for prop in complex_properties:
@@ -80,6 +85,7 @@ def _v0_to_v1_scoped_link_property_list(v0_item_list: list[dict]) -> list[dict]:
         list[dict]: in v1 format
     """
     import pprint
+
     v1_item_list = []
 
     for v0_item in v0_item_list.get("timeofday", []):
@@ -181,9 +187,7 @@ def _translate_scoped_link_property_v1_to_v0(links_df: DataFrame, prop: str) -> 
     default_prop = prop[3:]
     complex_idx = links_df[prop].apply(lambda x: isinstance(x, list))
 
-    v0_prop_s = links_df.loc[complex_idx].apply(
-        _v1_to_v0_scoped_link_property, prop=prop, axis=1
-    )
+    v0_prop_s = links_df.loc[complex_idx].apply(_v1_to_v0_scoped_link_property, prop=prop, axis=1)
 
     links_df.loc[complex_idx, default_prop] = v0_prop_s
     links_df = links_df.drop(columns=[prop])
