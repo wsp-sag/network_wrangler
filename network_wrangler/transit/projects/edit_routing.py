@@ -22,6 +22,7 @@ from ..feed.shapes import (
     find_nearest_stops,
 )
 
+from ...utils.models import validate_df_to_model
 from ...models.gtfs.tables import (
     WranglerShapesTable,
     WranglerStopTimesTable,
@@ -70,7 +71,7 @@ def _create_stop_times(
             "stop_sequence": np.arange(len(set_stops_node_ids)),
         }
     )
-    new_stoptime_rows = WranglerStopTimesTable.validate(new_stoptime_rows)
+    new_stoptime_rows = validate_df_to_model(new_stoptime_rows, WranglerStopTimesTable)
     return new_stoptime_rows
 
 

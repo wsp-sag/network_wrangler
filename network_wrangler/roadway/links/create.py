@@ -14,12 +14,13 @@ from pandera.typing import DataFrame
 from ..utils import set_df_index_to_pk
 
 from ...logger import WranglerLogger
-from ...models._base.validate import validate_df_to_model
+from ...utils.models import validate_df_to_model
 from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
 from ...models.roadway.converters import (
     detect_v0_scoped_link_properties,
     translate_links_df_v0_to_v1,
 )
+from ...utils.models import validate_df_to_model
 from ...params import LinksParams, LAT_LON_CRS
 from ..utils import create_unique_shape_id
 from ...utils.data import coerce_gdf, attach_parameters_to_df
@@ -59,7 +60,6 @@ def _fill_missing_link_geometries_from_nodes(
         geo_start_t = time.time()
         if nodes_df is None:
             raise LinkCreationError("Must give nodes_df argument if don't have Geometry")
-        # TODO FIX
         updated_links_df = linestring_from_nodes(links_df.loc[links_df.geometry.isna()], nodes_df)
         links_df.update(updated_links_df)
         # WranglerLogger.debug(f"links with updated geometries:\n{links_df}")
@@ -259,7 +259,7 @@ def copy_links(
     offset_links = offset_links.set_index("model_link_id_idx")
 
     if validate:
-        offset_links = RoadLinksTable.validate(offset_links, lazy=True)
+        offset_links = validate_df_to_model(offset_links, RoadLinksTable)
     else:
         WranglerLogger.warning(
             "Skipping validation of offset links. Validate to RoadLinksTable before using."

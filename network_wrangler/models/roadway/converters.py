@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from typing import Optional
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
-from ...utils.time import str_to_seconds_from_midnight
+from ...utils.time import str_to_seconds_from_midnight, seconds_from_midnight_to_str
 from ...logger import WranglerLogger
 
 
@@ -58,7 +58,7 @@ def translate_links_df_v1_to_v0(
 
 
 # TRANSLATION 0 to 1 ###
-def _v0_to_v1_scoped_link_property_item(v0_item: dict) -> dict:
+def _v0_to_v1_scoped_link_property_list(v0_item_list: list[dict]) -> list[dict]:
     """Translates a scoped link property item from v0 to v1 format.
 
     v0 format:
@@ -74,18 +74,36 @@ def _v0_to_v1_scoped_link_property_item(v0_item: dict) -> dict:
         where `timespan` is represented as a list(str) in 'HH:MM'
 
     Args:
-        v0_item (dict):in v0 format
+        v0_item_list (dict):in v0 format
 
     Returns:
-        dict: in v1 format
+        list[dict]: in v1 format
     """
-    v1_item = {}
-    if "time" in v0_item:
-        v1_item["timespan"] = [f"{str(t[0]).zfill(2)}:{str(t[1]).zfill(2)}" for t in v0_item["time"]]
-    if "category" in v0_item:
-        v1_item["category"] = v0_item["category"]
-    v1_item["value"] = v0_item["value"]
-    return v1_item
+    import pprint
+    v1_item_list = []
+
+    for v0_item in v0_item_list.get("timeofday", []):
+        WranglerLogger.debug(f"v0_item: {pprint.pformat(v0_item)}")
+        v1_item = {"value": v0_item["value"]}
+        if "time" in v0_item:
+            v1_item["timespan"] = [seconds_from_midnight_to_str(t) for t in v0_item["time"]]
+
+        if "category" in v0_item:
+            if not isinstance(v0_item["category"], list):
+                v1_item["category"] = v0_item["category"]
+                v1_item_list.append(v1_item)
+                WranglerLogger.debug(f"v1_item: {pprint.pformat(v1_item)}")
+            else:
+                for cat in v0_item["category"]:
+                    v1_item_c = v1_item.copy()
+                    v1_item_c["category"] = cat
+                    v1_item_list.append(v1_item_c)
+                    WranglerLogger.debug(f"v1_item: {pprint.pformat(v1_item_c)}")
+        else:
+            WranglerLogger.debug(f"v1_item: {pprint.pformat(v1_item)}")
+            v1_item_list.append(v1_item)
+
+    return v1_item_list
 
 
 def _translate_scoped_link_property_v0_to_v1(links_df: DataFrame, prop: str) -> DataFrame:
@@ -101,16 +119,19 @@ def _translate_scoped_link_property_v0_to_v1(links_df: DataFrame, prop: str) -> 
     if prop not in links_df.columns:
         return links_df
     complex_idx = links_df[prop].apply(lambda x: isinstance(x, dict))
+    WranglerLogger.debug(f"Translating {sum(complex_idx)} records in {prop} from v0 to v1 format.")
+    WranglerLogger.debug(f"links_df.loc[complex_idx, prop]:\n\
+                         {links_df.loc[complex_idx, prop].head()}")
 
-    links_df.loc[complex_idx, prop] = links_df.loc[complex_idx, prop].apply(lambda x: x["default"])
     links_df.loc[complex_idx, f"sc_{prop}"] = links_df.loc[complex_idx, prop].apply(
-        lambda x: [_v0_to_v1_scoped_link_property_item(i) for i in x.get("timeofday",[])]
+        lambda x: _v0_to_v1_scoped_link_property_list(x)
     )
+    links_df.loc[complex_idx, prop] = links_df.loc[complex_idx, prop].apply(lambda x: x["default"])
     return links_df
 
 
 # TRANSLATION 1 to 0 ###
-def _v1_to_v0_scoped_link_property_item(v1_item: dict) -> dict:
+def _v1_to_v0_scoped_link_property(v1_row: Series, prop: str) -> dict:
     """Translates a scoped link property item from v1 to v0 format.
 
     v0 format:
@@ -126,23 +147,26 @@ def _v1_to_v0_scoped_link_property_item(v1_item: dict) -> dict:
         where `timespan` is represented as a list(str) in 'HH:MM'
 
     Args:
-        v1_item (dict):in v1 format
-
-    Returns:
-        dict: in v0 format
+        v1_row: links_df in v1 format
+        prop: str, the property to translate
     """
-    v0_item = {}
-    if "time" in v1_item:
-        # time is a tuple of seconds from midnight from a tuple of "HH:MM"
-        v0_item["time"] = (str_to_seconds_from_midnight(t) for t in v1_item["timespan"])
-    if "category" in v1_item:
-        v0_item["category"] = v1_item["category"]
-    v0_item["value"] = v1_item["value"]
-    return v0_item
+    v0_item_list = []
+    for v1_item in v1_row[prop]:
+        v0_item = {"value": v1_item["value"]}
+        if "timespan" in v1_item:
+            # time is a tuple of seconds from midnight from a tuple of "HH:MM"
+            v0_item["time"] = tuple([str_to_seconds_from_midnight(t) for t in v1_item["timespan"]])
+        if "category" in v1_item:
+            v0_item["category"] = [v1_item["category"]]
+        v0_item_list.append(v0_item)
+
+    default_prop = prop[3:]
+    v0_prop = {"default": v1_row[default_prop], "timeofday": v0_item_list}
+    return v0_prop
 
 
 def _translate_scoped_link_property_v1_to_v0(links_df: DataFrame, prop: str) -> DataFrame:
-    """Translates a scoped link property from v0 to v1 format.
+    """Translates a scoped link property from v1 to v0 format.
 
     Args:
         links_df: DataFrame
@@ -154,17 +178,11 @@ def _translate_scoped_link_property_v1_to_v0(links_df: DataFrame, prop: str) -> 
     if prop not in links_df.columns:
         return links_df
 
-    default_prop = prop[:3]
+    default_prop = prop[3:]
     complex_idx = links_df[prop].apply(lambda x: isinstance(x, list))
 
     v0_prop_s = links_df.loc[complex_idx].apply(
-        lambda x: {
-            "default": x[default_prop],
-            "timeofday": [
-                _v0_to_v1_scoped_link_property_item(i)
-                for i in x[prop].get("scoped", [])
-            ],
-        },
+        _v1_to_v0_scoped_link_property, prop=prop, axis=1
     )
 
     links_df.loc[complex_idx, default_prop] = v0_prop_s

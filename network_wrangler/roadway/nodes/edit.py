@@ -15,7 +15,7 @@ from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...utils.data import validate_existing_value_in_df, update_df_by_col_value
-from ...models._base.validate import validate_df_to_model
+from ...utils.models import validate_df_to_model
 from ...models.roadway.tables import RoadNodesTable
 from ...models.projects.roadway_property_change import NodeGeometryChangeTable, RoadPropertyChange
 from ...params import LAT_LON_CRS

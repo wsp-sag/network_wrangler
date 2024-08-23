@@ -5,12 +5,13 @@ from typing import Union, get_type_hints, Optional
 
 import pandas as pd
 import geopandas as gpd
+from pandas import DataFrame
 import pandera as pa
 
 from pandera import DataFrameModel
-from pydantic import ValidationError, BaseModel
+from pydantic import ValidationError, BaseModel, validate_call
 from pydantic._internal._model_construction import ModelMetaclass
-from pandera.errors import SchemaError
+from pandera.errors import SchemaErrors, SchemaError
 
 from .data import coerce_val_to_df_types
 from ..params import LAT_LON_CRS
@@ -45,6 +46,54 @@ def default_from_datamodel(data_model: pa.DataFrameModel, field: str):
     return None
 
 
+class TableValidationError(Exception):
+    """Raised when a table validation fails."""
+    pass
+
+
+@validate_call(config=dict(arbitrary_types_allowed=True))
+def validate_df_to_model(df: DataFrame, model: DataFrameModel) -> DataFrame:
+    """Wrapper to validate a DataFrame against a Pandera DataFrameModel with better logging.
+
+    Args:
+        df: DataFrame to validate.
+        model: Pandera DataFrameModel to validate against.
+    """
+    try:
+        model_df = model.validate(df, lazy=True)
+        for c in model_df.columns:
+            default_value = default_from_datamodel(model, c)
+            if default_value is None:
+                model_df[c] = model_df[c].where(pd.notna(model_df[c]), None)
+            else:
+                model_df[c] = model_df[c].fillna(default_value)
+
+        return model_df
+
+    except SchemaErrors as e:
+        # Log the summary of errors
+        WranglerLogger.error(
+            f"Validation to {model.__name__} failed with {len(e.failure_cases)} \
+            errors: \n{e.failure_cases}"
+        )
+
+        # If there are many errors, save them to a file
+        if len(e.failure_cases) > 5:
+            error_file = "validation_failure_cases.csv"
+            e.failure_cases.to_csv(error_file)
+            WranglerLogger.info(f"Detailed error cases written to {error_file}")
+        else:
+            # Otherwise log the errors directly
+            WranglerLogger.error("Detailed failure cases:\n%s", e.failure_cases)
+        raise TableValidationError(f"Validation to {model.__name__} failed.")
+    except SchemaError as e:
+        WranglerLogger.error(
+            f"Validation to {model.__name__} failed with error: {e}"
+        )
+        WranglerLogger.error(f"Failure Cases:\n{e.failure_cases}")
+        raise TableValidationError(f"Validation to {model.__name__} failed.")
+
+
 def identify_model(
     data: Union[pd.DataFrame, dict], models: list[DataFrameModel, BaseModel]
 ) -> Union[DataFrameModel, BaseModel]:
@@ -58,7 +107,7 @@ def identify_model(
     for m in models:
         try:
             if isinstance(data, pd.DataFrame):
-                m.validate(data)
+                validate_df_to_model(data, m)
             else:
                 m(**data)
             return m

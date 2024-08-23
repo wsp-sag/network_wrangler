@@ -280,7 +280,7 @@ def compare_df_values(df1, df2, join_col: str = None, ignore: list[str] = [], at
 
 
 def diff_dfs(df1, df2, ignore: list[str] = []) -> bool:
-    """Compare two dataframes and log differences."""
+    """Returns True if two dataframes are different and log differences."""
     diff = False
     if set(df1.columns) != set(df2.columns):
         WranglerLogger.warning(

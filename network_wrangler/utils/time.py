@@ -79,6 +79,11 @@ def str_to_seconds_from_midnight(time_str: TimeString) -> int:
     return dt_to_seconds_from_midnight(dt)
 
 
+def seconds_from_midnight_to_str(seconds: int) -> TimeString:
+    """Convert the number of seconds since midnight to a TimeString (HH:MM)."""
+    return str(timedelta(seconds=seconds))
+
+
 def filter_df_to_overlapping_timespans(
     orig_df: pd.DataFrame,
     query_timespan: list[TimeString],

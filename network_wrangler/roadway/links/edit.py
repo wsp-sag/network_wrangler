@@ -33,7 +33,7 @@ from pandera.typing import DataFrame
 from ...params import LINK_ML_OFFSET_METERS
 from ...logger import WranglerLogger
 from ...utils.data import validate_existing_value_in_df
-from ...models._base.validate import validate_df_to_model
+from ...utils.models import validate_df_to_model
 from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
 from ...models.roadway.types import ScopedLinkValueItem
 from ...models.projects.roadway_property_change import (

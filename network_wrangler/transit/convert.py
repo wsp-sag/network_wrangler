@@ -7,6 +7,7 @@ from pandera.typing import DataFrame
 
 from ..logger import WranglerLogger
 
+from ..utils.models import validate_df_to_model
 from ..models.gtfs.tables import (
     StopTimesTable,
     WranglerStopTimesTable,
@@ -28,7 +29,7 @@ def gtfs_to_wrangler_stop_times(
     """
     WranglerLogger.debug("Converting GTFS stop_times to Wrangler stop_times")
     try:
-        out_stop_times = StopTimesTable.validate(in_stop_times)
+        out_stop_times = validate_df_to_model(in_stop_times, StopTimesTable)
     except SchemaErrors as e:
         WranglerLogger.error("Failed validating StopTimes to generic gtfs StopTimes table.")
         raise e

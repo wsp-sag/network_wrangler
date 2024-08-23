@@ -11,7 +11,7 @@ import geopandas as gpd
 from pandera.typing import DataFrame
 
 from ...models.roadway.tables import RoadShapesTable
-from ...models._base.validate import validate_df_to_model
+from ...utils.models import validate_df_to_model
 from ...params import ShapesParams, LAT_LON_CRS, ROAD_SHAPE_ID_SCALAR
 from ...utils.data import attach_parameters_to_df, coerce_gdf
 from ...utils.utils import generate_list_of_new_ids
@@ -106,7 +106,7 @@ def create_offset_shapes(
 
     offset_shapes_gdf = gpd.GeoDataFrame(offset_shapes_df, geometry="geometry", crs=shapes_df.crs)
 
-    offset_shapes_gdf = RoadShapesTable.validate(offset_shapes_gdf, lazy=True)
+    offset_shapes_gdf = validate_df_to_model(offset_shapes_gdf, RoadShapesTable)
 
     return offset_shapes_gdf
 
@@ -131,5 +131,5 @@ def add_offset_shapes(
     """
     offset_shapes_df = create_offset_shapes(shapes_df, shape_ids, offset_dist_meters, id_scalar)
     shapes_df = pd.concat([shapes_df, offset_shapes_df])
-    shapes_df = RoadShapesTable.validate(shapes_df, lazy=True)
+    shapes_df = validate_df_to_model(shapes_df, RoadShapesTable)
     return shapes_df

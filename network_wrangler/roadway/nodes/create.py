@@ -13,6 +13,7 @@ from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadNodesTable, RoadLinksTable
+from ...utils.models import validate_df_to_model
 from ...params import NodesParams, LAT_LON_CRS
 from ...utils.geo import point_from_xy, get_point_geometry_from_linestring
 
@@ -24,7 +25,7 @@ class NodeAddError(Exception):
 
 
 def _create_node_geometries_from_xy(
-    nodes_df: pd.DataFrame, in_crs: int = LAT_LON_CRS
+    nodes_df: Union[pd.DataFrame, list[dict]], in_crs: int = LAT_LON_CRS
 ) -> gpd.GeoDataFrame:
     """Fixes geometries in nodes_df if necessary using X and Y columns.
 
@@ -57,13 +58,13 @@ def _create_node_geometries_from_xy(
     WranglerLogger.debug(
         f"Created node geometries from X and Y in {round(time.time() - geo_start_time, 2)}."
     )
-    nodes_gdf = gpd.GeoDataFrame(nodes_df, geometry=node_geometries)
+    nodes_gdf = gpd.GeoDataFrame(nodes_df, geometry=node_geometries, crs=in_crs)
     return nodes_gdf
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def data_to_nodes_df(
-    nodes_df: Union[pd.DataFrame, gpd.GeoDataFrame],
+    nodes_df: Union[pd.DataFrame, gpd.GeoDataFrame, list[dict]],
     nodes_params: Union[None, NodesParams] = None,
     in_crs: int = LAT_LON_CRS,
 ) -> DataFrame[RoadNodesTable]:
@@ -77,7 +78,7 @@ def data_to_nodes_df(
     Validates output to NodesSchema.
 
     Args:
-        nodes_df : Nodes dataframe
+        nodes_df : Nodes dataframe or list of dictionaries that can be converted to a dataframe.
         nodes_params (NodesParams, optional): NodesParams instance. Defaults to Default NodeParams
             properties.
         in_crs: Coordinate references system id incoming data xy is in, if it isn't already
@@ -107,7 +108,7 @@ def data_to_nodes_df(
     nodes_df.gdf_name = "network_nodes"
 
     # Validate and coerce to schema
-    nodes_df = RoadNodesTable.validate(nodes_df, lazy=True)
+    nodes_df = validate_df_to_model(nodes_df, RoadNodesTable)
 
     # Add parameters so that they can be accessed as dataframe variables
     if nodes_params is None:
@@ -149,7 +150,7 @@ def _create_nodes_from_link(
     nodes_df["Y"] = nodes_df.geometry.y
     nodes_df["model_node_id_idx"] = nodes_df["model_node_id"]
     nodes_df.set_index("model_node_id_idx", inplace=True)
-    nodes_df = RoadNodesTable.validate(nodes_df, lazy=True)
+    nodes_df = validate_df_to_model(nodes_df, RoadNodesTable)
     # WranglerLogger.debug(f"ct3: nodes_df:\n{nodes_df}")
     return nodes_df
 

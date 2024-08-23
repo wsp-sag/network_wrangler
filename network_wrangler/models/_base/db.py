@@ -9,6 +9,7 @@ from pandera import DataFrameModel
 from pandera.errors import SchemaErrors
 
 from ...utils.data import fk_in_pk
+from ...utils.models import validate_df_to_model
 
 from ...logger import WranglerLogger
 
@@ -91,7 +92,7 @@ class DBModelMixin:
         table_model = self._table_models[table_name]
         converter = self._converters.get(table_name)
         try:
-            validated_df = table_model.validate(table, lazy=True)
+            validated_df = validate_df_to_model(table, table_model)
         except SchemaErrors as e:
             if not converter:
                 raise e
@@ -101,7 +102,7 @@ class DBModelMixin:
             )
             # Note that some converters may have dependency on other attributes being set first
             converted_df = converter(table, **self.__dict__)
-            validated_df = table_model.validate(converted_df, lazy=True)
+            validated_df = validate_df_to_model(converted_df, table_model)
 
         # Do this in both directions so that ordering of tables being added doesn't matter.
         self.check_table_fks(table_name, table=validated_df)
