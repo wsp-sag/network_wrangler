@@ -39,9 +39,9 @@ def transit_nodes_without_road_nodes(
         boolean indicating if relationships are all valid
     """
     feed_nodes_series = [
-        feed.stops["model_node_id"],
+        feed.stops["stop_id"],
         feed.shapes["shape_model_node_id"],
-        feed.stop_times["model_node_id"],
+        feed.stop_times["stop_id"],
     ]
     tr_nodes = set(pd.concat(feed_nodes_series).unique())
     rd_nodes = set(nodes_df[rd_field].unique().tolist())

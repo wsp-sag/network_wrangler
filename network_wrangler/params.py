@@ -152,8 +152,6 @@ MODES_TO_NETWORK_LINK_VARIABLES = {
 # Default initial scalar value to add to duplicated shape_ids to create a new shape_id
 TRANSIT_SHAPE_ID_SCALAR = 1000000
 
-# Default initial scalar value to add to node id to create a new stop_id
-TRANSIT_STOP_ID_SCALAR = 1000000
 
 # ---------------------------------------------------------------------
 # ------ SCENARIO PARAMS ------

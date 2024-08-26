@@ -62,22 +62,6 @@ def stops_for_trip_id(
     return stops.loc[stops.stop_id.isin(stop_ids)]
 
 
-def node_ids_for_stop_id(
-    stops: DataFrame[WranglerStopsTable], stop_id: Union[list[str], str]
-) -> Union[list[int], int]:
-    """Returns node_ids from one or more stop_ids.
-
-    stops: stops table
-    stop_id: a stop_id string or a list of stop_id strings
-    """
-    if isinstance(stop_id, list):
-        return [node_ids_for_stop_id(stops, s) for s in stop_id]
-    elif isinstance(stop_id, str):
-        return stops.at[stops["stop_id"] == stop_id, "model_node_id"]
-    else:
-        raise ValueError(f"Expecting list of strings or string for stop_id. Got {type(stop_id)}")
-
-
 def node_is_stop(
     stops: DataFrame[WranglerStopsTable],
     stop_times: DataFrame[WranglerStopTimesTable],
@@ -100,7 +84,7 @@ def node_is_stop(
             "dropoff_only": only dropoff > 0
     """
     trip_stop_nodes = stops_for_trip_id(stops, stop_times, trip_id, pickup_dropoff=pickup_dropoff)[
-        "model_node_id"
+        "stop_id"
     ]
     if isinstance(node_id, list):
         return [n in trip_stop_nodes.values for n in node_id]

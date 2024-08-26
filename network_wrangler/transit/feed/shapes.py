@@ -86,17 +86,15 @@ def shapes_with_stop_id_for_trip_id(
         "trip_id",
         "pickup_type",
         "drop_off_type",
-        "model_node_id",
     ]
 
     shape_with_trip_stops = shapes.merge(
         trip_stop_times[stop_times_cols],
         how="left",
-        right_on="model_node_id",
+        right_on="stop_id",
         left_on="shape_model_node_id",
     )
     shape_with_trip_stops = shape_with_trip_stops.sort_values(by=["shape_pt_sequence"])
-    shape_with_trip_stops = shape_with_trip_stops.drop(columns=["model_node_id"])
     return shape_with_trip_stops
 
 

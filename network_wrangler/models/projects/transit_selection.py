@@ -80,12 +80,12 @@ class SelectTransitNodes(RecordModel):
 
     require_any_of: ClassVar[AnyOf] = [
         [
-            # "stop_id", TODO Not implemented
-            "model_node_id",
+            "model_node_id", 
+            # "gtfs_stop_id", TODO Not implemented
         ]
     ]
 
-    # stop_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)] TODO Not implemented
+    # gtfs_stop_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)] TODO Not implemented
     model_node_id: Annotated[List[int], Field(min_length=1)]
     require: Optional[SelectionRequire] = "any"
 
@@ -97,7 +97,7 @@ class SelectTransitNodes(RecordModel):
     )
 
     _examples = [
-        # {"stop_id": ["stop1", "stop2"], "require": "any"},  TODO Not implemented
+        # {"gtfstop_id": ["stop1", "stop2"], "require": "any"},  TODO Not implemented
         {"model_node_id": [1, 2], "require": "all"},
     ]
 

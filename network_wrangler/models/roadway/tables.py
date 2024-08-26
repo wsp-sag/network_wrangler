@@ -119,8 +119,8 @@ class RoadLinksTable(DataFrameModel):
             col for col in df.columns if col.startswith("sc_") or col.startswith("sc_ML")
         ]
         results = []
-        WranglerLogger.debug(f"Checking scoped fields: {scoped_fields}")
-        WranglerLogger.debug(f"{df[scoped_fields]}")
+        # WranglerLogger.debug(f"Checking scoped fields: {scoped_fields}")
+        # WranglerLogger.debug(f"{df[scoped_fields]}")
         for field in scoped_fields:
             if df[field].notna().any():
                 results.append(

@@ -125,7 +125,7 @@ def linestring_from_nodes(
     assert "geometry" in nodes_df.columns, "nodes_df must have a 'geometry' column"
 
     idx_name = "index" if links_df.index.name is None else links_df.index.name
-    WranglerLogger.debug(f"Index name: {idx_name}")
+    # WranglerLogger.debug(f"Index name: {idx_name}")
     required_link_cols = [from_node, to_node]
 
     if not all([col in links_df.columns for col in required_link_cols]):
@@ -480,7 +480,7 @@ def to_points_gdf(
     table to a GeoDataFrame using the following methods:
     1. If the table has a 'geometry' column, return a GeoDataFrame using that column.
     2. If the table has 'lat' and 'lon' columns, return a GeoDataFrame using those columns.
-    3. If the table has a '*model_node_id' column, return a GeoDataFrame using that column and the
+    3. If the table has a '*model_node_id' or 'stop_id' column, return a GeoDataFrame using that column and the
          nodes_df provided.
     If none of the above, raise a ValueError.
 
@@ -501,9 +501,17 @@ def to_points_gdf(
 
     lat_cols = list(filter(lambda col: "lat" in col, table.columns))
     lon_cols = list(filter(lambda col: "lon" in col, table.columns))
-    model_node_id_cols = list(filter(lambda col: "model_node_id" in col, table.columns))
+    model_node_id_cols = [
+        c for c in ["model_node_id", "stop_id", "shape_model_node_id"] if c in table.columns
+    ]
 
     if not (lat_cols and lon_cols) or not model_node_id_cols:
+        WranglerLogger.error("Needed either lat/long or *model_node_id columns to convert \
+            to GeoDataFrame. Columns found: {table.columns}")
+        if not (lat_cols and lon_cols):
+            WranglerLogger.error("No lat/long cols found.")
+        if not model_node_id_cols:
+            WranglerLogger.error("No *model_node_id cols found.")
         raise ValueError(
             "Could not find lat/long, geometry columns or *model_node_id column in \
                          table necessary to convert to GeoDataFrame"

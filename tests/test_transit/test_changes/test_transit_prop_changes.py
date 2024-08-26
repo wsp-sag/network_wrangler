@@ -12,6 +12,7 @@ from network_wrangler import WranglerLogger
 
 def test_invalid_field_value_set(request, small_transit_net):
     """Checks that changing data to an invalid field value will fail."""
+    from network_wrangler.utils.models import TableValidationError
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_transit_net)
     feed = net.feed
@@ -22,13 +23,13 @@ def test_invalid_field_value_set(request, small_transit_net):
     # Should fail to be coerced
     _new_stop_times = copy.deepcopy(feed.stop_times)
     _new_stop_times.loc[3, "shape_dist_traveled"] = "abc"
-    with pytest.raises(SchemaError):
+    with pytest.raises(TableValidationError):
         feed.stop_times = _new_stop_times
 
     # Should fail to be coerced
     _new_stop_times = copy.deepcopy(feed.stop_times)
     _new_stop_times.loc[4, "arrival_time"] = "123"
-    with pytest.raises(SchemaError):
+    with pytest.raises(TableValidationError):
         feed.stop_times = _new_stop_times
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
