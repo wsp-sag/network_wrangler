@@ -55,15 +55,16 @@ def convert_stops_to_wrangler_stops(stops_df: pd.DataFrame) -> pd.DataFrame:
     # if stop_id is an int, convert to string
     if stops_df["stop_id"].dtype == "int64":
         stops_df["stop_id"] = stops_df["stop_id"].astype(str)
-    gtfs_stop_id = stops_df.groupby("model_node_id").stop_id.apply(lambda x: ",".join(x)).reset_index()
+    gtfs_stop_id = (
+        stops_df.groupby("model_node_id").stop_id.apply(lambda x: ",".join(x)).reset_index()
+    )
     wr_stops_df["gtfs_stop_id"] = gtfs_stop_id["stop_id"]
     wr_stops_df = wr_stops_df.rename(columns={"model_node_id": "stop_id"})
     return wr_stops_df
 
 
 def convert_stop_times_to_wrangler_stop_times(
-    gtfs_stop_times_df: pd.DataFrame,
-    gtfs_stops_df: pd.DataFrame
+    gtfs_stop_times_df: pd.DataFrame, gtfs_stops_df: pd.DataFrame
 ) -> pd.DataFrame:
     """Converts a stop_times.txt file to a Wrangler stop_times.txt file.
 
@@ -78,9 +79,7 @@ def convert_stop_times_to_wrangler_stop_times(
         Wrangler stop_times.txt file as a pandas DataFrame.
     """
     wr_stop_times_df = gtfs_stop_times_df.merge(
-        gtfs_stops_df[["stop_id", "model_node_id"]],
-        on="stop_id",
-        how="left"
+        gtfs_stops_df[["stop_id", "model_node_id"]], on="stop_id", how="left"
     )
     wr_stop_times_df = wr_stop_times_df.drop(columns=["stop_id"])
     wr_stop_times_df = wr_stop_times_df.rename(columns={"model_node_id": "stop_id"})

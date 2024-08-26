@@ -136,16 +136,15 @@ class StopsTable(pa.DataFrameModel):
 
 class WranglerStopsTable(StopsTable):
     """Wrangler flavor of GTFS StopsTable."""
+
     stop_id: Series[int] = pa.Field(
-        coerce=True,
-        nullable=False,
-        unique=True,
-        description="The model_node_id."
+        coerce=True, nullable=False, unique=True, description="The model_node_id."
     )
     stop_id_GTFS: Series[str] = pa.Field(
         coerce=True,
         nullable=True,
-        description="The stop_id from the GTFS data",)
+        description="The stop_id from the GTFS data",
+    )
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=True, ge=-90, le=90)
     stop_lon: Series[float] = pa.Field(coerce=True, nullable=True, ge=-180, le=180)
 
@@ -322,11 +321,8 @@ class StopTimesTable(pa.DataFrameModel):
 
 class WranglerStopTimesTable(StopTimesTable):
     """Wrangler flavor of GTFS StopTimesTable."""
-    stop_id: Series[int] = pa.Field(
-        nullable=False,
-        coerce=True,
-        description="The model_node_id."
-    )
+
+    stop_id: Series[int] = pa.Field(nullable=False, coerce=True, description="The model_node_id.")
     arrival_time: Optional[Series[Timestamp]] = pa.Field(
         coerce=True, nullable=True, default=Timestamp("00:00:00")
     )

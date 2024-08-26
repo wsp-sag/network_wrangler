@@ -506,8 +506,10 @@ def to_points_gdf(
     ]
 
     if not (lat_cols and lon_cols) or not model_node_id_cols:
-        WranglerLogger.error("Needed either lat/long or *model_node_id columns to convert \
-            to GeoDataFrame. Columns found: {table.columns}")
+        WranglerLogger.error(
+            "Needed either lat/long or *model_node_id columns to convert \
+            to GeoDataFrame. Columns found: {table.columns}"
+        )
         if not (lat_cols and lon_cols):
             WranglerLogger.error("No lat/long cols found.")
         if not model_node_id_cols:

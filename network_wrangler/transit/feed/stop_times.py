@@ -209,14 +209,14 @@ def stop_times_for_shapes(
     * should be retained
     > stop_times
 
-    trip_id   stop_sequence   stop_id   
-    *t1          1                  1      
-    *t1          2                  2      
-    *t1          3                  3      
-    t1           4                  5     
-    *t2          1                  1      
-    *t2          2                  3      
-    t2           3                  7      
+    trip_id   stop_sequence   stop_id
+    *t1          1                  1
+    *t1          2                  2
+    *t1          3                  3
+    t1           4                  5
+    *t2          1                  1
+    *t2          2                  3
+    t2           3                  7
 
     > shapes
 

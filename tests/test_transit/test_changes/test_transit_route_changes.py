@@ -220,9 +220,7 @@ def test_route_changes(request, small_transit_net, small_net, test_routing):
 
     missing_in_stops = list(set(expected_stops_nodes) - set(net.feed.stops.stop_id))
     if missing_in_stops:
-        WranglerLogger.debug(
-            f"stops.stop_id: \n{net.feed.stops[['stop_id']]}"
-        )
+        WranglerLogger.debug(f"stops.stop_id: \n{net.feed.stops[['stop_id']]}")
         WranglerLogger.error(f"Stops missing in stops.txt: {missing_in_stops}")
     assert not missing_in_stops
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -322,7 +320,7 @@ def test_wo_existing(request, stpaul_net: RoadwayNetwork, stpaul_transit_net: Tr
         transit_net.feed.stop_times["trip_id"] == "14986385-JUN19-MVS-BUS-Weekday-01"
     ]["stop_id"].tolist()
 
-    answer = [75318] 
+    answer = [75318]
     assert set(result).issubset(answer)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

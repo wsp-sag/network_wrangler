@@ -13,6 +13,7 @@ from network_wrangler import WranglerLogger
 def test_invalid_field_value_set(request, small_transit_net):
     """Checks that changing data to an invalid field value will fail."""
     from network_wrangler.utils.models import TableValidationError
+
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_transit_net)
     feed = net.feed

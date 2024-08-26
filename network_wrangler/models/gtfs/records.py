@@ -132,6 +132,7 @@ class StopRecord(BaseModel):
 
 class WranglerStopRecord(StopRecord):
     """Wrangler-flavored StopRecord."""
+
     stop_id: int
     stop_id_GTFS: Optional[StopID]
 

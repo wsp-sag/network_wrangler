@@ -80,7 +80,7 @@ class SelectTransitNodes(RecordModel):
 
     require_any_of: ClassVar[AnyOf] = [
         [
-            "model_node_id", 
+            "model_node_id",
             # "gtfs_stop_id", TODO Not implemented
         ]
     ]
