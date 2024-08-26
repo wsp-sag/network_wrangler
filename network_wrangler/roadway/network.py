@@ -326,6 +326,7 @@ class RoadwayNetwork(BaseModel):
 
         Args:
             project_card: either a dictionary of the project card object or ProjectCard instance
+            **kwargs: keyword arguments to pass to project application
         """
         if not (isinstance(project_card, ProjectCard) or isinstance(project_card, SubProject)):
             project_card = ProjectCard(project_card)
