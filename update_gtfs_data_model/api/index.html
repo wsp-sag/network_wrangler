@@ -21024,7 +21024,9 @@ If none of the above, raise a ValueError.</p>
 <span class="normal">548</span>
 <span class="normal">549</span>
 <span class="normal">550</span>
-<span class="normal">551</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">to_points_gdf</span><span class="p">(</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">to_points_gdf</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">ref_nodes_df</span><span class="p">:</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">ref_road_net</span><span class="p">:</span> <span class="s2">&quot;RoadwayNetwork&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -21061,8 +21063,10 @@ If none of the above, raise a ValueError.</p>
     <span class="p">]</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">lat_cols</span> <span class="ow">and</span> <span class="n">lon_cols</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">model_node_id_cols</span><span class="p">:</span>
-        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Needed either lat/long or *model_node_id columns to convert </span><span class="se">\</span>
-<span class="s2">            to GeoDataFrame. Columns found: </span><span class="si">{table.columns}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">&quot;Needed either lat/long or *model_node_id columns to convert </span><span class="se">\</span>
+<span class="s2">            to GeoDataFrame. Columns found: </span><span class="si">{table.columns}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">lat_cols</span> <span class="ow">and</span> <span class="n">lon_cols</span><span class="p">):</span>
             <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No lat/long cols found.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">model_node_id_cols</span><span class="p">:</span>
@@ -21269,9 +21273,7 @@ If none of the above, raise a ValueError.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/geo.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">554</span>
-<span class="normal">555</span>
-<span class="normal">556</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">556</span>
 <span class="normal">557</span>
 <span class="normal">558</span>
 <span class="normal">559</span>
@@ -21300,7 +21302,9 @@ If none of the above, raise a ValueError.</p>
 <span class="normal">582</span>
 <span class="normal">583</span>
 <span class="normal">584</span>
-<span class="normal">585</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_point_geometry</span><span class="p">(</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_point_geometry</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">ref_point_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">lon_field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;X&quot;</span><span class="p">,</span>

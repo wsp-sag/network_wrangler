@@ -5302,8 +5302,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">139</span>
-<span class="normal">140</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">140</span>
 <span class="normal">141</span>
 <span class="normal">142</span>
 <span class="normal">143</span>
@@ -5315,7 +5314,8 @@ all properties.</p>
 <span class="normal">149</span>
 <span class="normal">150</span>
 <span class="normal">151</span>
-<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RouteRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">152</span>
+<span class="normal">153</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RouteRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a transit route.&quot;&quot;&quot;</span>
 
     <span class="n">route_id</span><span class="p">:</span> <span class="n">RouteID</span>
@@ -5447,8 +5447,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">155</span>
-<span class="normal">156</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
 <span class="normal">159</span>
@@ -5456,7 +5455,8 @@ all properties.</p>
 <span class="normal">161</span>
 <span class="normal">162</span>
 <span class="normal">163</span>
-<span class="normal">164</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ShapeRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">164</span>
+<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ShapeRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a point on a path (shape) that a transit vehicle takes.&quot;&quot;&quot;</span>
 
     <span class="n">shape_id</span><span class="p">:</span> <span class="n">ShapeID</span>
@@ -5587,8 +5587,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">173</span>
-<span class="normal">174</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">174</span>
 <span class="normal">175</span>
 <span class="normal">176</span>
 <span class="normal">177</span>
@@ -5601,7 +5600,8 @@ all properties.</p>
 <span class="normal">184</span>
 <span class="normal">185</span>
 <span class="normal">186</span>
-<span class="normal">187</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">StopTimeRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">187</span>
+<span class="normal">188</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">StopTimeRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Times that a vehicle arrives at and departs from stops for each trip.&quot;&quot;&quot;</span>
 
     <span class="n">trip_id</span><span class="p">:</span> <span class="n">TripID</span>
@@ -5718,8 +5718,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">199</span>
-<span class="normal">200</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">200</span>
 <span class="normal">201</span>
 <span class="normal">202</span>
 <span class="normal">203</span>
@@ -5730,7 +5729,8 @@ all properties.</p>
 <span class="normal">208</span>
 <span class="normal">209</span>
 <span class="normal">210</span>
-<span class="normal">211</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TripRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">211</span>
+<span class="normal">212</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TripRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Describes trips which are sequences of two or more stops that occur at specific time.&quot;&quot;&quot;</span>
 
     <span class="n">route_id</span><span class="p">:</span> <span class="n">RouteID</span>
@@ -5847,10 +5847,10 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">167</span>
-<span class="normal">168</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">168</span>
 <span class="normal">169</span>
-<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerShapeRecord</span><span class="p">(</span><span class="n">ShapeRecord</span><span class="p">):</span>
+<span class="normal">170</span>
+<span class="normal">171</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerShapeRecord</span><span class="p">(</span><span class="n">ShapeRecord</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrangler-flavored ShapeRecord.&quot;&quot;&quot;</span>
 
     <span class="n">shape_model_node_id</span><span class="p">:</span> <span class="nb">int</span>
@@ -5900,8 +5900,10 @@ all properties.</p>
                 <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">133</span>
 <span class="normal">134</span>
 <span class="normal">135</span>
-<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerStopRecord</span><span class="p">(</span><span class="n">StopRecord</span><span class="p">):</span>
+<span class="normal">136</span>
+<span class="normal">137</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerStopRecord</span><span class="p">(</span><span class="n">StopRecord</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrangler-flavored StopRecord.&quot;&quot;&quot;</span>
+
     <span class="n">stop_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">stop_id_GTFS</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StopID</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
@@ -5947,13 +5949,13 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">190</span>
-<span class="normal">191</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">191</span>
 <span class="normal">192</span>
 <span class="normal">193</span>
 <span class="normal">194</span>
 <span class="normal">195</span>
-<span class="normal">196</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerStopTimeRecord</span><span class="p">(</span><span class="n">StopTimeRecord</span><span class="p">):</span>
+<span class="normal">196</span>
+<span class="normal">197</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerStopTimeRecord</span><span class="p">(</span><span class="n">StopTimeRecord</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrangler-flavored StopTimeRecord.&quot;&quot;&quot;</span>
 
     <span class="n">stop_id</span><span class="p">:</span> <span class="nb">int</span>
@@ -8725,7 +8727,7 @@ all properties.</p>
 
     <span class="n">require_any_of</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">AnyOf</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">[</span>
-            <span class="s2">&quot;model_node_id&quot;</span><span class="p">,</span> 
+            <span class="s2">&quot;model_node_id&quot;</span><span class="p">,</span>
             <span class="c1"># &quot;gtfs_stop_id&quot;, TODO Not implemented</span>
         <span class="p">]</span>
     <span class="p">]</span>
