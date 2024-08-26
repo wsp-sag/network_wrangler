@@ -10,7 +10,7 @@ Create a TransitSelection object by providing a TransitNetwork object and a sele
         "nodes": {...},
         "route_properties": {...},
         "trip_properties": {...},
-        "timespan": {...}
+        "timespans": {...}
     }
     transit_selection = TransitSelection(transit_network, selection_dict)
     ```
@@ -43,6 +43,7 @@ from ..models.projects.transit_selection import (
 )
 
 from ..utils.utils import dict_to_hexkey
+from ..utils.time import filter_df_to_overlapping_timespans
 from ..logger import WranglerLogger
 
 from ..models.projects.transit_selection import (
@@ -174,6 +175,22 @@ class TransitSelection:
         self._stored_feed_hash = copy.deepcopy(self.net.feed_hash)
         return self._selected_trips_df
 
+    @property
+    def selected_shapes_df(self) -> DataFrame[WranglerShapesTable]:
+        """DataFrame of selected shapes.
+
+        Can visualize the selected shapes quickly using the following code:
+
+        ```python
+        all_routes = net.feed.shapes.plot(color='gray')
+        selection.selected_shapes_df.plot(ax=all_routes, color="red")
+        ```
+
+        """
+        return self.net.feed.shapes.loc[
+            self.net.feed.shapes.shape_id.isin(self.selected_trips_df.shape_id)
+        ]
+
     def _select_trips(self) -> DataFrame[TripsTable]:
         """Selects transit trips based on selection dictionary.
 
@@ -214,8 +231,8 @@ def _filter_trips_by_selection_dict(
         trips_df = _filter_trips_by_trip(trips_df, sel["trip_properties"])
         WranglerLogger.debug(f"# Trips after trip property filter: {len(trips_df)}")
     if sel.get("timespans"):
-        trips_df = _filter_trips_by_timespan(trips_df, _freq_df, sel["timespans"])
-        WranglerLogger.debug(f"# Trips after timespan filter: {len(trips_df)}")
+        trips_df = _filter_trips_by_timespans(trips_df, _freq_df, sel["timespans"])
+        WranglerLogger.debug(f"# Trips after timespans filter: {len(trips_df)}")
 
     _num_sel_trips = len(trips_df)
     WranglerLogger.debug(f"Selected {_num_sel_trips}/{_tot_trips} trips.")
@@ -274,7 +291,7 @@ def _filter_trips_by_nodes(
     else:
         raise ValueError("Require must be 'any' or 'all'")
 
-    trips_df = trips_df.loc[trips_df.shape_id.isin(shape_ids)].copy()
+    trips_df = copy.deepcopy(trips_df.loc[trips_df.shape_id.isin(shape_ids)])
 
     _sel_trips = len(trips_df)
     WranglerLogger.debug(f"Selected {_sel_trips}/{_tot_trips} trips.")
@@ -355,39 +372,37 @@ def _filter_trips_by_route(
     return trips_df
 
 
-def _filter_trips_by_timespan(
+def _filter_trips_by_timespans(
     trips_df: DataFrame[TripsTable],
     freq_df: DataFrame[FrequenciesTable],
     timespans: List[Timespan],
 ) -> DataFrame[TripsTable]:
+    """Returns trips that have frequencies that overlap with at least one of the timespans."""
     _unfiltered_trips = len(trips_df)
-    # WranglerLogger.debug(f"Filtering {_unfiltered_trips} trips by timespan.")
+    # WranglerLogger.debug(f"Filtering {_unfiltered_trips} trips by timespans.")
     # Filter freq to trips in selection
     freq_df = freq_df.loc[freq_df.trip_id.isin(trips_df["trip_id"])]
 
     # Filter freq to time that overlaps selection
-    selected_freq_df = pd.DataFrame()
+    filtered_trip_ids = []
     for timespan in timespans:
-        selected_freq_df = pd.concat(
-            [
-                selected_freq_df,
-                freq_df[
-                    (freq_df["start_time"] >= timespan[0])
-                    & (freq_df["end_time"] <= timespan[1])
-                ],
-            ]
-        )
+        filtered_trip_ids += filter_df_to_overlapping_timespans(freq_df, timespan).trip_id.tolist()
+        WranglerLogger.debug(f"Trip_ids for timespan {timespan}: {filtered_trip_ids}")
+    filtered_trip_ids = list(set(filtered_trip_ids))
 
-    # Filter trips table to those still in freq table
-    trips_df = trips_df.loc[trips_df.trip_id.isin(selected_freq_df["trip_id"])]
-    _filtered_trips = len(trips_df)
+    _filtered_trips = len(filtered_trip_ids)
+    if _filtered_trips == 0:
+        WranglerLogger.warning(f"No trips found for timespans: {timespans}")
+        WranglerLogger.debug(f"Freq to filter:\n{freq_df[['trip_id', 'start_time', 'end_time']]}")
 
     WranglerLogger.debug(
         f"{_filtered_trips}/{_unfiltered_trips} trips remain after \
         filtering to timeframe {timespan}"
     )
 
-    if _filtered_trips < 10:
-        WranglerLogger.debug(f"{trips_df.trip_id}")
+    # Filter trips table to those still in freq table
+    filtered_trips_df = trips_df.loc[trips_df.trip_id.isin(filtered_trip_ids)]
 
-    return trips_df
+    if _filtered_trips < 10:
+        WranglerLogger.debug(f"{filtered_trips_df.trip_id}")
+    return filtered_trips_df

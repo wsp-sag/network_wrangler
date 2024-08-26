@@ -1,6 +1,7 @@
 """Functions for editing transit properties in a TransitNetwork."""
 
 from __future__ import annotations
+import copy
 
 from typing import TYPE_CHECKING
 
@@ -71,7 +72,7 @@ def _apply_transit_property_change_to_table(
 ) -> TransitNetwork:
     table_df = net.feed.get_table(table_name)
     # Grab only those records matching trip_ids (aka selection)
-    set_df = table_df[table_df.trip_id.isin(selection.selected_trips)].copy()
+    set_df = copy.deepcopy(table_df[table_df.trip_id.isin(selection.selected_trips)])
 
     # Check all `existing` properties if given
     if "existing" in property_change:

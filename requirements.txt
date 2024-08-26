@@ -1,10 +1,12 @@
 geographiclib
 geojson
 geopandas >= 0.8.0
+ijson
 osmnx >= 0.12
 pandas >= 1.6
 pandera[geopandas]
 projectcard
+psutil
 pyarrow
 pydantic >= 2
 pyogrio

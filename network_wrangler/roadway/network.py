@@ -70,7 +70,6 @@ from .shapes.create import df_to_shapes_df
 
 if TYPE_CHECKING:
     from networkx import MultiDiGraph
-    from ..models.projects.roadway_selection import SelectFacility
     from ..models._base.types import TimespanString
 
 
@@ -179,6 +178,7 @@ class RoadwayNetwork(BaseModel):
                 self._shapes_file,
                 in_crs=self.crs,
                 shapes_params=self._shapes_params,
+                filter_to_shape_ids=self.links_df.shape_id.to_list(),
             )
         # if there is NONE, then at least create an empty dataframe with right schema
         elif self._shapes_df is None:
@@ -288,8 +288,8 @@ class RoadwayNetwork(BaseModel):
         elif isinstance(selection_dict, dict):
             selection_data = SelectFacility(**selection_dict)
         else:
-            WranglerLogger.error(f"`selection_dict` arg must be a dictionary or SelectFacility model.\
-                             Received: {selection_dict} of type {type(selection_dict)}")
+            WranglerLogger.error(f"`selection_dict` arg must be a dictionary or SelectFacility\
+                              model. Received: {selection_dict} of type {type(selection_dict)}")
             raise SelectionError("selection_dict arg must be a dictionary or SelectFacility model")
 
         WranglerLogger.debug(f"Getting selection from key: {key}")
@@ -428,7 +428,7 @@ class RoadwayNetwork(BaseModel):
         """
         if not isinstance(add_links_df, RoadLinksTable):
             add_links_df = data_to_links_df(add_links_df, nodes_df=self.nodes_df)
-        self.links_df = RoadLinksTable(pd.concat([self.links_df, add_links_df]))
+        self.links_df = RoadLinksTable(pd.concat([self.links_df, add_links_df], axis=0))
 
     def add_nodes(self, add_nodes_df: Union[pd.DataFrame, DataFrame[RoadNodesTable]]):
         """Validate combined nodes_df with NodesSchema before adding to self.nodes_df.
@@ -438,7 +438,7 @@ class RoadwayNetwork(BaseModel):
         """
         if not isinstance(add_nodes_df, RoadNodesTable):
             add_nodes_df = data_to_nodes_df(add_nodes_df)
-        self.nodes_df = RoadNodesTable(pd.concat([self.nodes_df, add_nodes_df]))
+        self.nodes_df = RoadNodesTable(pd.concat([self.nodes_df, add_nodes_df], axis=0))
 
     def add_shapes(self, add_shapes_df: Union[pd.DataFrame, DataFrame[RoadShapesTable]]):
         """Validate combined shapes_df with RoadShapesTable efore adding to self.shapes_df.
@@ -452,7 +452,7 @@ class RoadwayNetwork(BaseModel):
         WranglerLogger.debug(f"self.shapes_df: \n{self.shapes_df}")
         together_df = pd.concat([self.shapes_df, add_shapes_df])
         WranglerLogger.debug(f"together_df: \n{together_df}")
-        self.shapes_df = RoadShapesTable(pd.concat([self.shapes_df, add_shapes_df]))
+        self.shapes_df = RoadShapesTable(pd.concat([self.shapes_df, add_shapes_df], axis=0))
 
     def delete_links(
         self,

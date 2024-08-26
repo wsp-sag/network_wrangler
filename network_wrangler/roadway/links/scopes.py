@@ -48,7 +48,7 @@ from ...models.roadway.tables import RoadLinksTable, ExplodedScopedLinkPropertyT
 from ...models.roadway.types import ScopedLinkValueItem
 from ...params import DEFAULT_CATEGORY, DEFAULT_TIMESPAN
 from ...utils.time import (
-    filter_df_to_overlapping_timespans,
+    filter_df_to_max_overlapping_timespans,
     dt_list_overlaps,
     convert_timespan_to_start_end_dt,
     str_to_time,
@@ -284,7 +284,7 @@ def _filter_exploded_df_to_scope(
         ]
 
     if timespan != DEFAULT_TIMESPAN:
-        match_df = filter_df_to_overlapping_timespans(
+        match_df = filter_df_to_max_overlapping_timespans(
             match_df,
             timespan,
             strict_match=strict_timespan_match,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+
 from typing import TYPE_CHECKING
 
 import networkx as nx
@@ -42,7 +44,7 @@ def _nodes_to_graph_nodes(nodes_df: GeoDataFrame) -> GeoDataFrame:
     Args:
         nodes_df (GeoDataFrame): nodes geodataframe from RoadwayNetwork instance
     """
-    graph_nodes_df = nodes_df.copy()
+    graph_nodes_df = copy.deepcopy(nodes_df)
     graph_nodes_df.gdf_name = "network_nodes"
 
     # drop column types which could have complex types (i.e. lists, dicts, etc)
@@ -69,7 +71,7 @@ def _links_to_graph_links(
         sp_weight_col: column to use for weights. Defaults to `distance`.
         sp_weight_factor: multiple to apply to the weights. Defaults to 1.
     """
-    graph_links_df = links_df.copy()
+    graph_links_df = copy.deepcopy(links_df)
 
     # drop column types which could have complex types (i.e. lists, dicts, etc)
     graph_links_df = _drop_complex_df_columns(graph_links_df)

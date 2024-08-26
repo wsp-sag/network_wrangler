@@ -22,6 +22,7 @@ segment.segment_nodes
 
 from __future__ import annotations
 
+import copy
 from typing import Union, TYPE_CHECKING
 
 import numpy as np
@@ -315,11 +316,13 @@ def identify_segment_endpoints(
     REF_PER_NODE = 2
 
     # make a copy so it is a full dataframe rather than a slice.
-    _links_df = net.links_df.mode_query(mode).copy()
+    _links_df = copy.deepcopy(net.links_df.mode_query(mode))
 
-    _nodes_df = net.nodes_in_links(
-        _links_df,
-    ).copy()
+    _nodes_df = copy.deepcopy(
+        net.nodes_in_links(
+            _links_df,
+        )
+    )
 
     _nodes_df = net.add_incident_link_data_to_nodes(
         links_df=_links_df,

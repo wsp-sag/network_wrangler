@@ -21,6 +21,8 @@ write_roadway(clipped_network, out_dir, prefix="ecolab", format="geojson", true_
 """
 
 from __future__ import annotations
+import copy
+
 from typing import Union, Optional, TYPE_CHECKING
 from pathlib import Path
 
@@ -85,9 +87,9 @@ def clip_roadway_to_dfs(
     filtered_shapes_df = network.shapes_df[
         network.shapes_df.index.isin(filtered_links_df["shape_id"])
     ]
-    trimmed_links_df = filtered_links_df.copy()
-    trimmed_nodes_df = filtered_nodes_df.copy()
-    trimmed_shapes_df = filtered_shapes_df.copy()
+    trimmed_links_df = copy.deepcopy(filtered_links_df)
+    trimmed_nodes_df = copy.deepcopy(filtered_nodes_df)
+    trimmed_shapes_df = copy.deepcopy(filtered_shapes_df)
     return trimmed_links_df, trimmed_nodes_df, trimmed_shapes_df
 
 

@@ -138,7 +138,7 @@ def linestring_from_nodes(
             f"links_df must have columns {required_link_cols} to create linestring from nodes"
         )
 
-    links_geo_df = links_df[required_link_cols].copy()
+    links_geo_df = copy.deepcopy(links_df[required_link_cols])
     # need to continuously reset the index to make sure the index is the same as the link index
     links_geo_df = (
         links_geo_df.reset_index()
@@ -388,8 +388,10 @@ def get_bounding_polygon(
     boundary_file: Optional[Union[str, Path]] = None,
     boundary_gdf: Optional[gpd.GeoDataFrame] = None,
     crs: int = LAT_LON_CRS,  # WGS84
-) -> gpd.GeoSeries:
-    """Get the bounding polygon for a given boundary first prioritizing the.
+) -> Union[None, gpd.GeoSeries]:
+    """Get the bounding polygon for a given boundary.
+
+    Will return None if no arguments given. Will raise a ValueError if more than one given.
 
     This function retrieves the bounding polygon for a given boundary. The boundary can be provided
     as a GeoDataFrame, a geocode string or dictionary, or a boundary file. The resulting polygon
@@ -409,7 +411,10 @@ def get_bounding_polygon(
     """
     import osmnx as ox
 
-    if sum(x is not None for x in [boundary_gdf, boundary_geocode, boundary_file]) != 1:
+    nargs = sum(x is not None for x in [boundary_gdf, boundary_geocode, boundary_file])
+    if nargs == 0:
+        return None
+    if nargs != 1:
         raise ValueError(
             "Exacly one of boundary_gdf, boundary_geocode, or boundary_shp must \
                          be provided"
@@ -451,7 +456,13 @@ def _harmonize_crs(df: pd.DataFrame, crs: int = LAT_LON_CRS) -> pd.DataFrame:
     return df
 
 
-def _offset_geometry_meters(geo_s: gpd.GeoSeries, offset_distance_meters: float) -> gpd.GeoSeries:
+def offset_geometry_meters(geo_s: gpd.GeoSeries, offset_distance_meters: float) -> gpd.GeoSeries:
+    """Offset a GeoSeries of LineStrings by a given distance in meters.
+
+    Args:
+        geo_s: GeoSeries of LineStrings to offset.
+        offset_distance_meters: distance in meters to offset the LineStrings.
+    """
     og_crs = geo_s.crs
     geo_s.to_crs(METERS_CRS)
     offset_geo = geo_s.apply(lambda x: x.offset_curve(offset_distance_meters))

@@ -1,8 +1,12 @@
 """Functions to read and write RoadShapesTable."""
 
+from __future__ import annotations
+
 import time
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional
+
+from geopandas import GeoDataFrame
 
 from pydantic import validate_call
 from pandera.typing import DataFrame
@@ -20,6 +24,10 @@ def read_shapes(
     filename: Union[str, Path],
     in_crs: int = LAT_LON_CRS,
     shapes_params: Union[dict, ShapesParams, None] = None,
+    boundary_gdf: Optional[GeoDataFrame] = None,
+    boundary_geocode: Optional[str] = None,
+    boundary_file: Optional[Path] = None,
+    filter_to_shape_ids: Optional[list] = None,
 ) -> DataFrame[RoadShapesTable]:
     """Reads shapes and returns a geodataframe of shapes if filename is found.
 
@@ -32,6 +40,13 @@ def read_shapes(
         filename (str): file to read shapes in from.
         in_crs: coordinate reference system number file is in. Defaults to LAT_LON_CRS.
         shapes_params: a ShapesParams instance. Defaults to a default ShapesParams instance.
+        boundary_gdf: GeoDataFrame to filter the input data to. Only used for geographic data.
+            Defaults to None.
+        boundary_geocode: Geocode to filter the input data to. Only used for geographic data.
+            Defaults to None.
+        boundary_file: File to load as a boundary to filter the input data to. Only used for
+            geographic data. Defaults to None.
+        filter_to_shape_ids: List of shape_ids to filter the input data to. Defaults to None.
     """
     if not Path(filename).exists():
         WranglerLogger.warning(
@@ -43,7 +58,14 @@ def read_shapes(
     start_time = time.time()
     WranglerLogger.debug(f"Reading shapes from {filename}.")
 
-    shapes_df = read_table(filename)
+    shapes_df = read_table(
+        filename,
+        boundary_gdf=boundary_gdf,
+        boundary_geocode=boundary_geocode,
+        boundary_file=boundary_file,
+    )
+    if filter_to_shape_ids:
+        shapes_df = shapes_df[shapes_df["shape_id"].isin(filter_to_shape_ids)]
     WranglerLogger.debug(
         f"Read {len(shapes_df)} shapes from file in {round(time.time() - start_time, 2)}."
     )

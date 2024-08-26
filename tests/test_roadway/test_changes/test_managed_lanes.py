@@ -89,9 +89,9 @@ def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
     _selected_link_idx = net.get_selection(_facility).selected_links
     _p_to_track = list(_properties.keys())
 
-    _orig_links = net.links_df.loc[
-        _selected_link_idx, net.links_df.columns.intersection(_p_to_track)
-    ].copy()
+    _orig_links = copy.deepcopy(
+        net.links_df.loc[_selected_link_idx, net.links_df.columns.intersection(_p_to_track)]
+    )
     WranglerLogger.debug(f"_orig_links: \n{_orig_links}")
 
     # apply change
@@ -147,9 +147,11 @@ def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir):
 
     attributes_to_update = list(project_card.roadway_property_change["property_changes"].keys())
 
-    _orig_links = net.links_df.loc[
-        _selected_link_idx, net.links_df.columns.intersection(attributes_to_update)
-    ].copy()
+    _orig_links = copy.deepcopy(
+        net.links_df.loc[
+            _selected_link_idx, net.links_df.columns.intersection(attributes_to_update)
+        ]
+    )
 
     WranglerLogger.debug(f"_orig_links: \n{_orig_links}")
     net = net.apply(project_card)

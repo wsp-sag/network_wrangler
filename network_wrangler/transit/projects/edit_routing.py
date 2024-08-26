@@ -22,6 +22,7 @@ from ..feed.shapes import (
     find_nearest_stops,
 )
 
+from ...utils.models import validate_df_to_model
 from ...models.gtfs.tables import (
     WranglerShapesTable,
     WranglerStopTimesTable,
@@ -70,7 +71,7 @@ def _create_stop_times(
             "stop_sequence": np.arange(len(set_stops_node_ids)),
         }
     )
-    new_stoptime_rows = WranglerStopTimesTable.validate(new_stoptime_rows)
+    new_stoptime_rows = validate_df_to_model(new_stoptime_rows, WranglerStopTimesTable)
     return new_stoptime_rows
 
 
@@ -141,9 +142,9 @@ def _add_new_shape_copy(
     WranglerLogger.debug(
         f"Adding a new shape for shape_id: {old_shape_id} using scalar: {id_scalar}"
     )
-    shapes = feed.shapes.copy()
-    trips = feed.trips.copy()
-    new_shape = shapes[shapes.shape_id == old_shape_id].copy()
+    shapes = copy.deepcopy(feed.shapes)
+    trips = copy.deepcopy(feed.trips)
+    new_shape = copy.deepcopy(shapes[shapes.shape_id == old_shape_id])
     new_shape_id = generate_new_id(old_shape_id, shapes["shape_id"], id_scalar)
     new_shape["shape_id"] = new_shape_id
     shapes = pd.concat([shapes, new_shape], ignore_index=True)

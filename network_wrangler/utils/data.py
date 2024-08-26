@@ -249,7 +249,7 @@ def compare_df_values(df1, df2, join_col: str = None, ignore: list[str] = [], at
 
     # Filter columns by data type
     numeric_cols = [col for col in comp_c if np.issubdtype(df1[col].dtype, np.number)]
-    ll_cols = list_like_columns(df1)
+    ll_cols = list(set(list_like_columns(df1) + list_like_columns(df2)))
     other_cols = [col for col in comp_c if col not in numeric_cols and col not in ll_cols]
 
     # For numeric columns, use np.isclose
@@ -280,7 +280,7 @@ def compare_df_values(df1, df2, join_col: str = None, ignore: list[str] = [], at
 
 
 def diff_dfs(df1, df2, ignore: list[str] = []) -> bool:
-    """Compare two dataframes and log differences."""
+    """Returns True if two dataframes are different and log differences."""
     diff = False
     if set(df1.columns) != set(df2.columns):
         WranglerLogger.warning(
@@ -312,11 +312,29 @@ def diff_dfs(df1, df2, ignore: list[str] = []) -> bool:
     return diff
 
 
+def convert_numpy_to_list(item):
+    """Function to recursively convert numpy arrays to lists."""
+    if isinstance(item, np.ndarray):
+        return item.tolist()
+    elif isinstance(item, list):
+        return [convert_numpy_to_list(sub_item) for sub_item in item]
+    elif isinstance(item, dict):
+        return {key: convert_numpy_to_list(value) for key, value in item.items()}
+    return item
+
+
+def compare_lists(list1, list2) -> bool:
+    """Compare two lists."""
+    list1 = convert_numpy_to_list(list1)
+    list2 = convert_numpy_to_list(list1)
+    return list1 != list2
+
+
 def diff_list_like_series(s1, s2) -> bool:
     """Compare two series that contain list-like items as strings."""
     diff_df = pd.concat([s1, s2], axis=1, keys=["s1", "s2"])
-    diff_df["diff"] = diff_df.apply(lambda x: str(x["s1"]) != str(x["s2"]), axis=1)
-
+    # diff_df["diff"] = diff_df.apply(lambda x: str(x["s1"]) != str(x["s2"]), axis=1)
+    diff_df["diff"] = diff_df.apply(lambda x: compare_lists(x["s1"], x["s2"]), axis=1)
     if diff_df["diff"].any():
         WranglerLogger.info("List-Like differences:")
         WranglerLogger.info(diff_df)

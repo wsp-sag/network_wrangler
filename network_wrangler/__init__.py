@@ -16,5 +16,14 @@ __all__ = [
     "load_roadway",
     "load_roadway_from_dir",
     "write_roadway",
+    "create_scenario",
     "Scenario",
 ]
+
+TARGET_ROADWAY_NETWORK_SCHEMA_VERSION = "1"
+TARGET_TRANSIT_NETWORK_SCHEMA_VERSION = "1"
+TARGET_PROJECT_CARD_SCHEMA_VERSION = "1"
+
+MIN_ROADWAY_NETWORK_SCHEMA_VERSION = "0"
+MIN_TRANSIT_NETWORK_SCHEMA_VERSION = "0"
+MIN_PROJECT_CARD_SCHEMA_VERSION = "1"

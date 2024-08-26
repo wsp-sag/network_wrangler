@@ -42,7 +42,7 @@ Usage examples:
 2. Validating the StopsTable instance:
 
     ```python
-    is_valid = stops_df.validate()
+    is_valid = validate_df_to_model(stops_df, StopsTable)
     ```
 
 3. Checking uniqueness of values in a DataFrame:
@@ -102,8 +102,7 @@ class StopsTable(pa.DataFrameModel):
     - uniqueness: ["stop_id"]
     """
 
-    stop_id: Series[str] = pa.Field(coerce=True, nullable=False, unique=False)
-    # TODO why is that here?
+    stop_id: Series[str] = pa.Field(coerce=True, nullable=False, unique=True)
     model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=False, ge=-90, le=90)
     stop_lon: Series[float] = pa.Field(coerce=True, nullable=False, ge=-180, le=180)
@@ -140,7 +139,6 @@ class WranglerStopsTable(StopsTable):
     """Wrangler flavor of GTFS StopsTable."""
 
     model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
-    # TODO should this be in base
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=True, ge=-90, le=90)
     stop_lon: Series[float] = pa.Field(coerce=True, nullable=True, ge=-180, le=180)
 

@@ -25,6 +25,7 @@ from pandera.typing.geopandas import GeoSeries
 
 from .._base.tables import validate_pyd
 from .types import ScopedLinkValueList
+from ...logger import WranglerLogger
 
 
 class RoadLinksTable(DataFrameModel):
@@ -35,7 +36,7 @@ class RoadLinksTable(DataFrameModel):
     A: Series[int] = pa.Field(nullable=False, coerce=True)
     B: Series[int] = pa.Field(nullable=False, coerce=True)
     geometry: GeoSeries = pa.Field(nullable=False)
-    name: Series[str] = pa.Field(nullable=True)
+    name: Series[str] = pa.Field(nullable=False, default="unknown")
     rail_only: Series[bool] = pa.Field(coerce=True, nullable=False, default=False)
     bus_only: Series[bool] = pa.Field(coerce=True, nullable=False, default=False)
     drive_access: Series[bool] = pa.Field(coerce=True, nullable=False, default=True)
@@ -51,6 +52,7 @@ class RoadLinksTable(DataFrameModel):
     price: Series[float] = pa.Field(coerce=True, nullable=False, default=0)
 
     # Optional Fields
+
     access: Optional[Series[Any]] = pa.Field(coerce=True, nullable=True, default=None)
 
     sc_lanes: Optional[Series[object]] = pa.Field(coerce=True, nullable=True, default=None)
@@ -104,13 +106,7 @@ class RoadLinksTable(DataFrameModel):
         name = "RoadLinksTable"
         add_missing_columns = True
         coerce = True
-
-    @pa.dataframe_check
-    def unique_ab(cls, df: pd.DataFrame) -> bool:
-        """Check that combination of A and B are unique."""
-        return ~df[["A", "B"]].duplicated()
-
-    # TODO add check that if there is managed>1 anywhere, that ML_ columns are present.
+        unique = ["A", "B"]
 
     @pa.dataframe_check
     def check_scoped_fields(cls, df: pd.DataFrame) -> Series[bool]:
@@ -123,7 +119,8 @@ class RoadLinksTable(DataFrameModel):
             col for col in df.columns if col.startswith("sc_") or col.startswith("sc_ML")
         ]
         results = []
-
+        WranglerLogger.debug(f"Checking scoped fields: {scoped_fields}")
+        WranglerLogger.debug(f"{df[scoped_fields]}")
         for field in scoped_fields:
             if df[field].notna().any():
                 results.append(

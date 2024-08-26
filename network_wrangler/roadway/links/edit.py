@@ -25,13 +25,15 @@ import copy
 
 from typing import Union, Any
 
+import numpy as np
+
 from pydantic import validate_call
 from pandera.typing import DataFrame
 
 from ...params import LINK_ML_OFFSET_METERS
 from ...logger import WranglerLogger
 from ...utils.data import validate_existing_value_in_df
-from ...models._base.validate import validate_df_to_model
+from ...utils.models import validate_df_to_model
 from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
 from ...models.roadway.types import ScopedLinkValueItem
 from ...models.projects.roadway_property_change import (
@@ -39,7 +41,7 @@ from ...models.projects.roadway_property_change import (
     IndivScopedPropertySetItem,
     ScopedPropertySetList,
 )
-from ...utils.geo import update_nodes_in_linestring_geometry, _offset_geometry_meters
+from ...utils.geo import update_nodes_in_linestring_geometry, offset_geometry_meters
 from ...utils.models import default_from_datamodel
 from .scopes import (
     _filter_to_matching_scope,
@@ -64,7 +66,7 @@ def _initialize_links_as_managed_lanes(
         if f not in links_df:
             links_df[f] = default_from_datamodel(RoadLinksTable, f)
     _ml_wo_geometry = links_df.loc[links_df["ML_geometry"].isna() & links_df["managed"] == 1].index
-    links_df.loc[_ml_wo_geometry, "ML_geometry"] = _offset_geometry_meters(
+    links_df.loc[_ml_wo_geometry, "ML_geometry"] = offset_geometry_meters(
         links_df.loc[_ml_wo_geometry, "geometry"], LINK_ML_OFFSET_METERS
     )
 
@@ -96,9 +98,9 @@ def _resolve_conflicting_scopes(
 
 
 def _valid_default_value_for_change(value: Any) -> bool:
-    if isinstance(value, int):
+    if isinstance(value, (int, np.integer)):
         return True
-    if isinstance(value, float):
+    if isinstance(value, (float, np.float)):
         return True
     return False
 
@@ -154,9 +156,20 @@ def _edit_scoped_link_property(
         overwrite_conflicting: If True will overwrite any conflicting scopes.  Otherwise, will
             raise an Exception on conflicting, but not matching, scopes.
     """
+    msg = f"Setting scoped link property.\n\
+            - Current value:{scoped_prop_value_list}\n\
+            - Set value: {scoped_prop_set}\n\
+            - Default value: {default_value}\n\
+            - Overwrite all? {overwrite_all}\n\
+            - Overwrite conflicting? {overwrite_conflicting}"
+    # WranglerLogger.debug(msg)
     # If None, or asked to overwrite all scopes, and return all set items
     if overwrite_all or not scoped_prop_value_list:
-        return [_update_property_for_scope(i, default_value) for i in scoped_prop_set]
+        scoped_prop_value_list = [
+            _update_property_for_scope(i, default_value) for i in scoped_prop_set
+        ]
+        # WranglerLogger.debug(f"Scoped link property:\n{scoped_prop_value_list}")
+        return scoped_prop_value_list
 
     # Copy so not iterating over something that is changing
     updated_scoped_prop_value_list = copy.deepcopy(scoped_prop_value_list)
@@ -189,7 +202,7 @@ def _edit_scoped_link_property(
             updated_scoped_prop_value_list.append(
                 _update_property_for_scope(set_item, match_i.value)
             )
-
+    # WranglerLogger.debug(f"Updated scoped link property:\n{updated_scoped_prop_value_list}")
     return updated_scoped_prop_value_list
 
 
@@ -297,22 +310,25 @@ def _edit_link_property(
     if prop_change.scoped is not None:
         # initialize scoped property to default value in RoadLinksTable model or None.
         sc_prop_name = f"sc_{prop_name}"
-        WranglerLogger.debug(f"setting {sc_prop_name} to {prop_change.scoped}")
+        WranglerLogger.debug(f"Setting {sc_prop_name} to {prop_change.scoped}")
         if sc_prop_name not in links_df:
             links_df[sc_prop_name] = default_from_datamodel(RoadLinksTable, sc_prop_name)
-        links_df.loc[link_idx, sc_prop_name] = links_df.loc[link_idx].apply(
-            lambda x: _edit_scoped_link_property(
-                x[sc_prop_name],
+        for idx in link_idx:
+            links_df.at[idx, sc_prop_name] = _edit_scoped_link_property(
+                links_df.at[idx, sc_prop_name],
                 prop_change.scoped,
-                x[prop_name],
+                links_df.at[idx, prop_name],
                 overwrite_all=overwrite_all_scoped,
                 overwrite_conflicting=overwrite_conflicting_scoped,
-            ),
-            axis=1,
-        )
+            )
+            msg = f"idx:\n   {idx}\n\
+                    type: \n   {type(links_df.at[idx, sc_prop_name])}\n\
+                    value:\n   {links_df.at[idx, sc_prop_name]}"
+            # WranglerLogger.debug(msg)
 
-    # WranglerLogger.debug(f"links_df.loc[link_idx,prop_name] \
-    #   After:\n {links_df.loc[link_idx, prop_name]}")
+    msg = f"links_df.loc[link_idx,prop_name] \
+          After:\n {links_df.loc[link_idx, prop_name]}"
+    # WranglerLogger.debug(msg)
 
     return links_df
 
@@ -372,12 +388,31 @@ def edit_link_properties(
 
     """
     links_df = copy.deepcopy(links_df)
+    ml_property_changes = bool([k for k in property_changes.keys() if k.startswith("ML_")])
+    existing_managed_lanes = len(links_df.loc[link_idx].of_type.managed) == 0
+    flag_create_managed_lane = existing_managed_lanes & ml_property_changes
+
     # WranglerLogger.debug(f"property_changes: \n{property_changes}")
     for property, prop_change in property_changes.items():
         WranglerLogger.debug(f"prop_dict: \n{prop_change}")
         links_df = _edit_link_property(
             links_df, link_idx, property, prop_change, existing_value_conflict_error
         )
+
+    # if a managed lane created without access or egress, set it to True for all selected links
+    if flag_create_managed_lane:
+        if links_df.loc[link_idx].ML_access_point.sum() == 0:
+            WranglerLogger.warning(
+                "Access point not set in project card for a new managed lane.\
+                                   \nSetting ML_access_point to True for selected links."
+            )
+            links_df.loc[link_idx, "ML_access_point"] = True
+        if links_df.loc[link_idx].ML_egress_point.sum() == 0:
+            WranglerLogger.warning(
+                "Egress point not set in project card for a new managed lane.\
+                                   \nSetting ML_egress_point to True for selected links."
+            )
+            links_df.loc[link_idx, "ML_egress_point"] = True
 
     return links_df
 

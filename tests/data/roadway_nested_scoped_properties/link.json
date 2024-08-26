@@ -16,13 +16,15 @@
     "walk": 1,
     "roadway": "residential",
     "name": "9th St East",
-    "lanes": 2,
-    "sc_lanes": [
-      {
-        "timespan": ["8:00","10:00"],
-        "value": 2
-      }
-    ]
+    "lanes": {
+      "default": 1,
+      "timeofday": [
+        {
+          "time": ["8:00","10:00"],
+          "value": 2
+        }
+      ]
+    }
   },
   {
     "model_link_id": 112,
@@ -47,14 +49,16 @@
     "roadway": "residential",
     "name": "9th St East",
     "lanes": 2,
-    "price": 0,
-    "sc_price": [
-      {
-          "timespan": ["12:00","3:00"],
-          "category": "HOV2",
+    "price": {
+      "default": 0,
+      "timeofday": [
+        {
+          "time": ["12:00","3:00"],
+          "group": "HOV2",
           "value": 1.0
-      }
-    ]
+        }
+      ]
+    }
   },
   {
     "model_link_id": 115,
