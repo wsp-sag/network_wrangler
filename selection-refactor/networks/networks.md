@@ -6,40 +6,6 @@ RoadwayNetworks must be defined in the following format, which leverages [Open S
 
 A network is defined by a set of nodes and links which connect them.  Shapes may be optionally specified for each link in a separate file.
 
-### Roadway Validation
-
-RoadwayNetworks can be validated using the following tools:
-
-=== "CLI"
-
-    ```bash
-    python validate_roadway.py <network_directory> <network_suffix> [-s] [--output_dir <output_dir>]
-    ```
-    Where:
-
-    - `network_directory`: The roadway network file directory.
-    - `network_suffix`: The suffices of roadway network file name.
-    - `-s`, `--strict`: Validate the roadway network strictly without parsing and filling in data.
-    -  `--output_dir`: The output directory for the validation report.
-
-=== "Python API"
-
-    ```python
-    from network_wrangler.roadway.validate import validate_roadway_in_dir
-    validate_roadway_in_dir(
-        directory=<network_directory>,
-        suffix=<network_suffix>,
-        strict=<strict_bool>>,
-        output_dir=<output_dir>
-    )
-    ```
-    Where:
-
-    - `network_directory`: The roadway network file directory.
-    - `network_suffix`: The suffices of roadway network file name.
-    - `strict`: Validate the roadway network strictly without parsing and filling in data.
-    -  `output_dir`: The output directory for the validation report.
-
 ### Examples
 
 Network Wrangler is packaged with two examples located in the `/examples` directory:
@@ -230,41 +196,6 @@ Transit Networks must use the the [GTFS](https://www.gtfs.org) Schedule format w
 1. At this time, only frequency-based schedules are supported.
 2. Each `stop_id` must be a node in the RoadwayNetwork.
 3. `shapes.txt` is *required* (it is optional in GTFS) and must have the added field `model_node_id` associating a specific location with a node on the `RoadwayNetwork`.
-
-### Transit Validation
-
-TransitNetworks can be validated using the following tools:
-
-=== "CLI"
-
-    ```bash
-    python validate_transit.py <network_directory> <network_suffix> [-s] [--output_dir <output_dir>] [--road_dir <road_dir>] [--road_suffix <road_suffix>]
-    ```
-    Where:
-
-    - `network_directory`: The roadway network file directory.
-    - `network_suffix`: The suffices of roadway network file name.
-    - `--output_dir`: The output directory for the validation report.
-    - `--road_dir`: The directory roadway network. if want to validate the transit network to it.
-    - `--road_suffix`: The suffix for roadway network. Defaults to 'geojson'.
-
-=== "Python API"
-
-    ```python
-    from network_wrangler.transit.validate import validate_transit_in_dir
-    validate_transit_in_dir(
-        directory=<network_directory>,
-        suffix=<network_suffix>,
-        road_dir=<road_dir>,
-        road_suffix=<road_suffix>,
-    )
-    ```
-    Where:
-
-    - `network_directory`: The roadway network file directory.
-    - `network_suffix`: The suffices of roadway network file name.
-    - `road_dir`: The directory roadway network. if want to validate the transit network to it.
-    - `road_suffix`: The suffix for roadway network. Defaults to 'geojson'.
 
 ## Project Cards
 
