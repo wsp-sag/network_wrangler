@@ -20408,7 +20408,7 @@ to a GeoDataFrame.</p>
     <span class="k">assert</span> <span class="s2">&quot;geometry&quot;</span> <span class="ow">in</span> <span class="n">nodes_df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="s2">&quot;nodes_df must have a &#39;geometry&#39; column&quot;</span>
 
     <span class="n">idx_name</span> <span class="o">=</span> <span class="s2">&quot;index&quot;</span> <span class="k">if</span> <span class="n">links_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">links_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span>
-    <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Index name: </span><span class="si">{</span><span class="n">idx_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># WranglerLogger.debug(f&quot;Index name: {idx_name}&quot;)</span>
     <span class="n">required_link_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">from_node</span><span class="p">,</span> <span class="n">to_node</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">col</span> <span class="ow">in</span> <span class="n">links_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">required_link_cols</span><span class="p">]):</span>
@@ -21160,7 +21160,7 @@ Defaults to 4326 (WGS84)</p>
 table to a GeoDataFrame using the following methods:
 1. If the table has a &lsquo;geometry&rsquo; column, return a GeoDataFrame using that column.
 2. If the table has &lsquo;lat&rsquo; and &lsquo;lon&rsquo; columns, return a GeoDataFrame using those columns.
-3. If the table has a &lsquo;*model_node_id&rsquo; column, return a GeoDataFrame using that column and the
+3. If the table has a &lsquo;*model_node_id&rsquo; or &lsquo;stop_id&rsquo; column, return a GeoDataFrame using that column and the
      nodes_df provided.
 If none of the above, raise a ValueError.</p>
 
@@ -21317,7 +21317,17 @@ If none of the above, raise a ValueError.</p>
 <span class="normal">540</span>
 <span class="normal">541</span>
 <span class="normal">542</span>
-<span class="normal">543</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">to_points_gdf</span><span class="p">(</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span>
+<span class="normal">547</span>
+<span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">to_points_gdf</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">ref_nodes_df</span><span class="p">:</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">ref_road_net</span><span class="p">:</span> <span class="s2">&quot;RoadwayNetwork&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -21328,7 +21338,7 @@ If none of the above, raise a ValueError.</p>
 <span class="sd">    table to a GeoDataFrame using the following methods:</span>
 <span class="sd">    1. If the table has a &#39;geometry&#39; column, return a GeoDataFrame using that column.</span>
 <span class="sd">    2. If the table has &#39;lat&#39; and &#39;lon&#39; columns, return a GeoDataFrame using those columns.</span>
-<span class="sd">    3. If the table has a &#39;*model_node_id&#39; column, return a GeoDataFrame using that column and the</span>
+<span class="sd">    3. If the table has a &#39;*model_node_id&#39; or &#39;stop_id&#39; column, return a GeoDataFrame using that column and the</span>
 <span class="sd">         nodes_df provided.</span>
 <span class="sd">    If none of the above, raise a ValueError.</span>
 
@@ -21349,9 +21359,19 @@ If none of the above, raise a ValueError.</p>
 
     <span class="n">lat_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="s2">&quot;lat&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
     <span class="n">lon_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="s2">&quot;lon&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
-    <span class="n">model_node_id_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="s2">&quot;model_node_id&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+    <span class="n">model_node_id_cols</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;model_node_id&quot;</span><span class="p">,</span> <span class="s2">&quot;stop_id&quot;</span><span class="p">,</span> <span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span>
+    <span class="p">]</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">lat_cols</span> <span class="ow">and</span> <span class="n">lon_cols</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">model_node_id_cols</span><span class="p">:</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">&quot;Needed either lat/long or *model_node_id columns to convert </span><span class="se">\</span>
+<span class="s2">            to GeoDataFrame. Columns found: </span><span class="si">{table.columns}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">lat_cols</span> <span class="ow">and</span> <span class="n">lon_cols</span><span class="p">):</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No lat/long cols found.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model_node_id_cols</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No *model_node_id cols found.&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">&quot;Could not find lat/long, geometry columns or *model_node_id column in </span><span class="se">\</span>
 <span class="s2">                         table necessary to convert to GeoDataFrame&quot;</span>
@@ -21554,17 +21574,7 @@ If none of the above, raise a ValueError.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/geo.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">546</span>
-<span class="normal">547</span>
-<span class="normal">548</span>
-<span class="normal">549</span>
-<span class="normal">550</span>
-<span class="normal">551</span>
-<span class="normal">552</span>
-<span class="normal">553</span>
-<span class="normal">554</span>
-<span class="normal">555</span>
-<span class="normal">556</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">556</span>
 <span class="normal">557</span>
 <span class="normal">558</span>
 <span class="normal">559</span>
@@ -21585,7 +21595,17 @@ If none of the above, raise a ValueError.</p>
 <span class="normal">574</span>
 <span class="normal">575</span>
 <span class="normal">576</span>
-<span class="normal">577</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_point_geometry</span><span class="p">(</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_point_geometry</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">ref_point_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">lon_field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;X&quot;</span><span class="p">,</span>
