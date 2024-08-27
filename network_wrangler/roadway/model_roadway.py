@@ -269,7 +269,9 @@ def _create_separate_managed_lane_links(
 ) -> Tuple[gpd.GeoDataFrame]:
     """Creates df with separate links for managed lanes."""
     # make sure there are correct fields even if managed = 1 was set outside of wrangler
-    links_df = _initialize_links_as_managed_lanes(links_df, links_df.of_type.managed.index.values)
+    links_df = _initialize_links_as_managed_lanes(
+        links_df, links_df.of_type.managed.index.values, geometry_offset_meters=offset_meters
+    )
 
     # columns to keep in order to use to create ML versions of them
     ML_MUST_KEEP_COLS = [

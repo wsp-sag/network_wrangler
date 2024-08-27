@@ -57,7 +57,9 @@ class LinkChangeError(Exception):
 
 
 def _initialize_links_as_managed_lanes(
-    links_df: DataFrame[RoadLinksTable], link_idx: list[int]
+    links_df: DataFrame[RoadLinksTable],
+    link_idx: list[int],
+    geometry_offset_meters: float = LINK_ML_OFFSET_METERS,
 ) -> DataFrame[RoadLinksTable]:
     """Initialize links as managed lanes if they are not already."""
     links_df.loc[link_idx, "managed"] = 1
@@ -67,7 +69,7 @@ def _initialize_links_as_managed_lanes(
             links_df[f] = default_from_datamodel(RoadLinksTable, f)
     _ml_wo_geometry = links_df.loc[links_df["ML_geometry"].isna() & links_df["managed"] == 1].index
     links_df.loc[_ml_wo_geometry, "ML_geometry"] = offset_geometry_meters(
-        links_df.loc[_ml_wo_geometry, "geometry"], LINK_ML_OFFSET_METERS
+        links_df.loc[_ml_wo_geometry, "geometry"], geometry_offset_meters
     )
 
     return links_df
@@ -245,6 +247,7 @@ def _edit_link_property(
     existing_value_conflict_error: bool = False,
     overwrite_all_scoped: bool = False,
     overwrite_conflicting_scoped: bool = True,
+    ml_link_offset_meters: float = LINK_ML_OFFSET_METERS,
 ) -> DataFrame[RoadLinksTable]:
     """Return edited (in place) RoadLinksTable with property changes for a list of links.
 
@@ -266,6 +269,8 @@ def _edit_link_property(
             scoped_prop_value_set. Defaults to False.
         overwrite_conflicting_scoped: If True will overwrite any conflicting scopes.
             Otherwise, will raise an Exception on conflicting, but not matching, scopes.
+        ml_link_offset_meters: Offset in meters for managed lane geometry. If not set, will use
+            LINK_ML_OFFSET_METERS from params.py.
 
     """
     WranglerLogger.debug(f"Editing {prop_name} on links {link_idx}")
@@ -279,7 +284,9 @@ def _edit_link_property(
 
     # if it is a managed lane field, initialize managed lane attributes if haven't already
     if prop_name.startswith("ML_"):
-        links_df = _initialize_links_as_managed_lanes(links_df, link_idx)
+        links_df = _initialize_links_as_managed_lanes(
+            links_df, link_idx, offset_geometry_meters=ml_link_offset_meters
+        )
 
     # Initialize new props to None
     if prop_name not in links_df:
