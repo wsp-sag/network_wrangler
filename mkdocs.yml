@@ -67,6 +67,7 @@ markdown_extensions:
       linenums: true
   - meta
   - pymdownx.inlinehilite
+  - pymdownx.details
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tabbed:

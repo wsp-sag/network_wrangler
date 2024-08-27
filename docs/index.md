@@ -15,11 +15,15 @@ Network Wrangler does require Python 3.7+.  If you have a different version of P
 
     In order to assist in installation, its helpful to have [miniconda](https://docs.conda.io/en/latest/miniconda.html) or another virtual environment manager installed to make sure the network wrangler dependencies don't interfer with any other package requirements you have. If you don't have any of these already, we recommend starting with Miniconda as it has the smallest footprint. `conda` is the environment manager that is contained within both the Anaconda and mini-conda applications.
 
+??? warning "installing conda or Anaconda (the GUI version) for the first time on computer with Cube or ArcGIS?"
+
+    For ArcGIS / Cube users - Recommend Install conda by leaving boxes unchecked for advanced options – system path and register anaconda. On some systems, checking these boxes will break Cube and ArcGis systems.
+
 ## Installation
 
 Requirements for basic network_wranglerare functionality as well as enhanced *development/testing*, *visualization* and *documentation* functionalities are stored in `requirements*.txt` and `pyproject.toml` but are automatically installed when using `pip`.
 
-!!! tip "create a new conda environment for wrangler"
+!!! example "create a new conda environment for wrangler"
 
     ```bash
     conda config --add channels conda-forge
@@ -27,9 +31,9 @@ Requirements for basic network_wranglerare functionality as well as enhanced *de
     conda activate wrangler
     ```
 
-!!! tip "tricky dependencies"
+!!! warning "tricky dependencies"
 
-    `rtree`, `geopandas` and `osmnx` can have some tricky co-dependencies.  If don't already have an up-to-date installation of them, we've had the best success installing them using conda (as opposed to pip).
+    `rtree`, `geopandas` and `osmnx` can have some tricky co-dependencies.  If don't already have an up-to-date installation of them, we've had the best success installing them using [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) (as opposed to pip).
 
     ```bash
     conda install rtree geopandas osmnx
@@ -49,7 +53,7 @@ Ready to install network wrangler?
     pip install git+https://github.com/wsp-sag/network_wrangler.git@master#egg=network_wrangler
     ```
 
-    !!! note
+    !!! tip
 
         If you wanted to install from a specific tag/version number or branch, replace `@master` with `@<branchname>`  or `@tag`
 
@@ -89,32 +93,38 @@ Ready to install network wrangler?
 
 ### Common Installation Issues
 
-**Issue: `clang: warning: libstdc++ is deprecated; move to libc++ with a minimum deployment target of OS X 10.9 [-Wdeprecated]`**
-If you are using MacOS, you might need to update your [xcode command line tools and headers](https://developer.apple.com/downloads/)
+??? question "libstdc++ is deprecated"
 
-**Issue: `OSError: Could not find libspatialindex_c library file`***
-Try installing rtree on its own from the Anaconda cloud
+    > clang: warning: libstdc++ is deprecated; move to libc++ with a minimum deployment target of OS X 10.9 [-Wdeprecated]`
 
-```bash
-conda install rtree
-```
+    If you are using MacOS, you might need to update your [xcode command line tools and headers](https://developer.apple.com/downloads/)
 
-**Issue: Shapely, a pre-requisite, doesn't install propertly because it is missing GEOS module**
-Try installing shapely on its own from the Anaconda cloud
+??? question "libspatialindex_c or Missing GEOS module"
 
-```bash
-conda install shapely
-```
+    > "OSError: Could not find libspatialindex_c library file
 
-**Issue: Conda is unable to install a library or to update to a specific library version**
-Try installing libraries from conda-forge
+    or
 
-```bash
-conda install -c conda-forge *library*
-```
+    > Shapely, a pre-requisite, doesn't install propertly because it is missing GEOS module
 
-**Issue: User does not have permission to install in directories**
-Try running Anaconda Prompt as an administrator.
+    Try installing them using conda. 
+
+    ```bash
+    conda uninstall geopandas rtree shapely
+    conda install rtree shapely geopandas
+    ```
+
+??? question "Conda is unable to install a library or to update to a specific library version"
+
+    Add libraries from conda-forge
+
+    ```bash
+    conda install -c conda-forge *library*
+    ```
+
+??? question "User does not have permission to install in directories"
+
+    Try [running Anaconda as an administrator](https://techcommunity.microsoft.com/t5/windows-11/how-to-run-app-as-administrator-by-default-in-windows-11/td-p/3033704), even if you are an admin on your machine.
 
 ## Quickstart
 
