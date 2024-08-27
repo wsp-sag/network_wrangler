@@ -48,7 +48,7 @@ class RoadLinksTable(DataFrameModel):
     managed: Series[int] = pa.Field(coerce=True, nullable=False, default=0)
 
     shape_id: Series[str] = pa.Field(coerce=True, nullable=True)
-    lanes: Series[Any] = pa.Field(coerce=True, nullable=True, default=0)
+    lanes: Series[int] = pa.Field(coerce=True, nullable=False)
     price: Series[float] = pa.Field(coerce=True, nullable=False, default=0)
 
     # Optional Fields
