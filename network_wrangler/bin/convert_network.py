@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Convert a network from one serialization format to another.
 
 Usage: python convert_network.py <input_path> <network_type> <output_format> <out_dir>\

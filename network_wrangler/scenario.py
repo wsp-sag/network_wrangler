@@ -46,6 +46,7 @@ from __future__ import annotations
 import os
 import copy
 import pprint
+import yaml
 
 from collections import deque, defaultdict
 from datetime import datetime
@@ -694,3 +695,71 @@ def create_base_scenario(
     base_scenario = {"road_net": road_net, "transit_net": transit_net}
 
     return base_scenario
+
+
+def build_scenario_from_config_file(config_file: Path) -> None:
+    """Builds a scenario from a yaml configuration file.
+
+    Args:
+        config_file: Path to the yaml configuration file.
+    """
+    config_path = Path(config_file)
+    if not config_path.exists():
+        raise FileNotFoundError(f"Specified config file does not exist - {config_path}")
+
+    with open(config_file, "r") as config:
+        config_dict = yaml.safe_load(config)
+    WranglerLogger.info(f"Building Scenario from {config_file}")
+    build_scenario_from_config(config_dict)
+
+
+def build_scenario_from_config(config_dict: dict):
+    """Builds a scenario from a dictionary configuration.
+
+    Args:
+        config_dict: dictionary configuration of scenario.
+    """
+    WranglerLogger.info("Building Scenario from Configuration")
+    WranglerLogger.debug("{pprint.pformat(config_dict)}")
+
+    base_network_dir = config_dict.get("base_network").get("input_dir")
+    base_shape_name = config_dict.get("base_network").get("shape_file_name")
+    base_link_name = config_dict.get("base_network").get("link_file_name")
+    base_node_name = config_dict.get("base_network").get("node_file_name")
+
+    project_card_filepath = config_dict.get("scenario").get("project_card_filepath")
+    project_tags = config_dict.get("scenario").get("tags")
+
+    write_out = config_dict.get("scenario").get("write_out")
+    out_dir = config_dict.get("scenario").get("output_dir")
+    out_prefix = config_dict.get("scenario").get("out_prefix")
+
+    if project_tags is None:
+        project_tags = []
+
+    if project_card_filepath is None:
+        project_card_filepath = []
+
+    # Create Base Network
+    base_scenario = create_base_scenario(
+        roadway_dir=base_network_dir,
+        base_shape_name=base_shape_name,
+        base_link_name=base_link_name,
+        base_node_name=base_node_name,
+        transit_dir=base_network_dir,
+    )
+
+    my_scenario = Scenario.create_scenario(
+        base_scenario=base_scenario,
+        project_card_filepath=project_card_filepath,
+        filter_tags=project_tags,
+    )
+
+    WranglerLogger.info("Applying these projects to the base scenario ...")
+    WranglerLogger.info("\n".join(my_scenario.projects.keys()))
+
+    my_scenario.apply_all_projects()
+
+    if write_out:
+        write_roadway(my_scenario.road_net, prefix=out_prefix, out_dir=out_dir)
+        my_scenario.transit_net.write(filename=out_prefix, path=out_dir)

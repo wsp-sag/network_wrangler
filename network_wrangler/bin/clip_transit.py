@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Trims a transit network based on a given boundary and outputs the trimmed network.
 
 Usage: python clip_transit.py <network_path> <boundary> <out_dir> [--out_prefix <prefix>]
