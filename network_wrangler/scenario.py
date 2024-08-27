@@ -157,7 +157,7 @@ class Scenario(object):
     def __init__(
         self,
         base_scenario: Union[Scenario, dict],
-        project_card_list: list[ProjectCard] = [],
+        project_card_list: Optional[list[ProjectCard]] = None,
         name="",
     ):
         """Constructor.
@@ -167,9 +167,13 @@ class Scenario(object):
             describes the scenario attributes including applied projects and respective conflicts.
             `{"applied_projects": [],"conflicts":{...}}`
         project_card_list: Optional list of ProjectCard instances to add to planned projects.
+            Defaults to None.
         name: Optional name for the scenario.
         """
         WranglerLogger.info("Creating Scenario")
+
+        if project_card_list is None:
+            project_card_list = []
 
         if isinstance(base_scenario, Scenario):
             base_scenario = base_scenario.__dict__
