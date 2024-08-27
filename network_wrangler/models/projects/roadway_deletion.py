@@ -28,6 +28,6 @@ class RoadwayDeletion(RecordModel):
     def set_to_all_modes(cls, links: Optional[SelectLinksDict] = None):
         """Set the search mode to 'any' if not specified explicitly."""
         if links is not None:
-            if links.mode == DEFAULT_SEARCH_MODES:
-                links.mode = DEFAULT_DELETE_MODES
+            if links.modes == DEFAULT_SEARCH_MODES:
+                links.modes = DEFAULT_DELETE_MODES
         return links
