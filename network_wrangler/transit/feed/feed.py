@@ -22,8 +22,6 @@ from ...models.gtfs.tables import (
 from ...utils.data import update_df_by_col_value
 from ...logger import WranglerLogger
 
-from ..convert import gtfs_to_wrangler_stop_times
-
 
 # Raised when there is an issue with the validation of the GTFS data.
 class FeedValidationError(Exception):
@@ -66,7 +64,9 @@ class Feed(DBModelMixin):
         "stop_times": WranglerStopTimesTable,
     }
 
-    _converters = {"stop_times": gtfs_to_wrangler_stop_times}
+    # Define the converters if the table needs to be converted to a Wrangler table.
+    # Format: "table_name": converter_function
+    _converters = {}
 
     table_names = [
         "frequencies",
@@ -157,7 +157,7 @@ def merge_shapes_to_stop_times(
     stop_times_w_shapes = stop_times_w_shape_id.merge(
         shapes,
         how="left",
-        left_on=["shape_id", "model_node_id"],
+        left_on=["shape_id", "stop_id"],
         right_on=["shape_id", "shape_model_node_id"],
     )
     stop_times_w_shapes = stop_times_w_shapes.drop(columns=["shape_model_node_id"])

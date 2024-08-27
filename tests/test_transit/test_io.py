@@ -13,6 +13,7 @@ from network_wrangler import load_transit, write_transit
 from network_wrangler.transit.network import TransitNetwork
 from network_wrangler import WranglerLogger
 from network_wrangler.models._base.db import RequiredTableError, ForeignKeyValueError
+from network_wrangler.utils.models import TableValidationError
 
 """
 Run just the tests using `pytest tests/test_transit/test_io.py`
@@ -66,13 +67,13 @@ def test_bad_fk(request, test_dir):
 
 def test_bad_prop_vals(request, test_dir):
     bad_prop_vals_dir = test_dir / "data" / "transit_input_fail" / "bad_prop_values"
-    with pytest.raises(SchemaErrors):
+    with pytest.raises(TableValidationError):
         load_transit(bad_prop_vals_dir)
 
 
 def test_missing_props(request, test_dir):
     missing_props_dir = test_dir / "data" / "transit_input_fail" / "missing_props"
-    with pytest.raises(SchemaErrors):
+    with pytest.raises(TableValidationError):
         load_transit(missing_props_dir)
 
 

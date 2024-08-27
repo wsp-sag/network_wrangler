@@ -109,7 +109,7 @@ def _remove_links_from_feed(
     clipped_feed_dfs["stop_times"] = stop_times_for_min_stops(_valid_stop_times, min_stops)
     WranglerLogger.debug(
         f"clipped_feed_dfs['stop_times']: \n\
-        {clipped_feed_dfs['stop_times'][['trip_id', 'stop_id', 'stop_sequence', 'model_node_id']]}"
+        {clipped_feed_dfs['stop_times'][['trip_id', 'stop_id', 'stop_sequence']]}"
     )
     WranglerLogger.debug(
         f"Keeping {len(clipped_feed_dfs['stop_times'])}/{len(feed.stop_times)} stop_times."
@@ -211,7 +211,7 @@ def _clip_feed_to_nodes(
 
     clipped_feed_dfs = {}
 
-    clipped_feed_dfs["stops"] = feed.stops[feed.stops.model_node_id.isin(node_ids)]
+    clipped_feed_dfs["stops"] = feed.stops[feed.stops.stop_id.isin(node_ids)]
     WranglerLogger.debug(f"Keeping {len(clipped_feed_dfs['stops'])}/{len(feed.stops)} stops.")
 
     # don't retain stop_times unless they are more than min stops

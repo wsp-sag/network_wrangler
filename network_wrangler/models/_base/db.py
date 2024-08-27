@@ -169,9 +169,8 @@ class DBModelMixin:
         For example. If routes.route_id is referenced in trips table, we need to check that
         if a route_id is deleted, it isn't referenced in trips.route_id.
         """
-        WranglerLogger.debug(
-            f"Checking tables which referenced {pk_table_name}.{pk_field} as an FK"
-        )
+        msg = f"Checking tables which referenced {pk_table_name}.{pk_field} as an FK"
+        # WranglerLogger.debug(msg)
         if pk_table is None:
             pk_table = self.get_table(pk_table_name)
 
@@ -230,7 +229,7 @@ class DBModelMixin:
         For example. If routes.route_id is referenced in trips table, we need to check that
         if a route_id is deleted, it isn't referenced in trips.route_id.
         """
-        WranglerLogger.debug(f"Checking referenced foreign keys for {table_name}")
+        # WranglerLogger.debug(f"Checking referenced foreign keys for {table_name}")
         all_valid = True
         if table is None:
             table = self.get_table(table_name)
@@ -247,7 +246,7 @@ class DBModelMixin:
 
         Note: will return true and give a warning if the specified foreign key table doesn't exist.
         """
-        WranglerLogger.debug(f"Checking foreign keys for {table_name}")
+        # WranglerLogger.debug(f"Checking foreign keys for {table_name}")
         fks = self.fks()
         if table_name not in fks:
             return True
@@ -255,9 +254,9 @@ class DBModelMixin:
             table = self.get_table(table_name)
         all_valid = True
         for field, fk in fks[table_name].items():
-            WranglerLogger.debug(f"Checking {table_name}.{field} foreign key")
+            # WranglerLogger.debug(f"Checking {table_name}.{field} foreign key")
             pkref_table_name, pkref_field = fk
-            WranglerLogger.debug(f"Looking for PK in {pkref_table_name}.{pkref_field}.")
+            # WranglerLogger.debug(f"Looking for PK in {pkref_table_name}.{pkref_field}.")
             if field not in table:
                 WranglerLogger.warning(
                     f"Foreign key value {field} not in {table_name} -\
@@ -288,8 +287,9 @@ class DBModelMixin:
                 all_valid = False
                 continue
             if len(pkref_table) < 10:
-                WranglerLogger.debug(f"PK values:\n{pkref_table[pkref_field]}.")
-            WranglerLogger.debug(f"Checking {table_name}.{field} foreign key")
+                pass
+                # WranglerLogger.debug(f"PK values:\n{pkref_table[pkref_field]}.")
+            # WranglerLogger.debug(f"Checking {table_name}.{field} foreign key")
             valid, missing = fk_in_pk(pkref_table[pkref_field], table[field])
             if missing:
                 WranglerLogger.error(

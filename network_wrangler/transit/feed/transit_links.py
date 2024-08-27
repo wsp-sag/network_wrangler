@@ -80,7 +80,7 @@ def stop_times_to_stop_times_links(
         stop_times,
         id_field="trip_id",
         seq_field="stop_sequence",
-        node_id_field="model_node_id",
+        node_id_field="stop_id",
         from_field=from_field,
         to_field=to_field,
     )

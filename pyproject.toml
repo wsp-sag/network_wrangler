@@ -81,6 +81,7 @@ script-files = [
 
 [tool.ruff]
 line-length = 99
+exclude = ["notebook/*.ipynb"]
 
 [tool.ruff.lint]
 select = ["D"]
