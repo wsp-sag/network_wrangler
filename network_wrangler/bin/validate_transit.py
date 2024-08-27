@@ -11,6 +11,7 @@ Usage:
     --road_dir: The directory roadway network if want to validate the transit network to it.
     --road_suffix: The suffix for roadway network. Defaults to 'geojson'.
 """
+
 import argparse
 import datetime
 
@@ -22,23 +23,21 @@ from network_wrangler.transit.validate import validate_transit_in_dir
 
 if __name__ == "__main__":
     # ----- Setup Arguments ------
-    parser = argparse.ArgumentParser("Validate a transit network to the wrangler data \
-                                     model specifications.")
-    parser.add_argument(
-        "network_directory",
-        help="The transit network file directory.",
-        default="."
+    parser = argparse.ArgumentParser(
+        "Validate a transit network to the wrangler data \
+                                     model specifications."
     )
     parser.add_argument(
-        "network_suffix",
-        help="The suffices of transit network file name.",
-        default="geojson"
+        "network_directory", help="The transit network file directory.", default="."
+    )
+    parser.add_argument(
+        "network_suffix", help="The suffices of transit network file name.", default="geojson"
     )
     parser.add_argument(
         "-s",
         "--strict",
         action="store_true",
-        help="Validate the transit network strictly without parsing and filling in data."
+        help="Validate the transit network strictly without parsing and filling in data.",
     )
     parser.add_argument(
         "--road_dir",
@@ -51,14 +50,10 @@ if __name__ == "__main__":
         default="geojson",
     )
     parser.add_argument(
-        "--output_dir",
-        help="The output directory for the validation report.",
-        default="."
+        "--output_dir", help="The output directory for the validation report.", default="."
     )
     parser.add_argument(
-        "--output_dir",
-        help="The output directory for the validation report.",
-        default="."
+        "--output_dir", help="The output directory for the validation report.", default="."
     )
 
     args = parser.parse_args()

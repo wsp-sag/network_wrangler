@@ -1,4 +1,5 @@
 """Validation for roadway nodes dataframes and files."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,33 +12,25 @@ from ...utils.models import validate_df_to_model, TableValidationError
 
 
 def validate_shapes_file(
-    shapes_filename: Path,
-    strict: bool = False,
-    errors_filename: Path = "shape_errors.csv"
+    shapes_filename: Path, strict: bool = False, errors_filename: Path = "shape_errors.csv"
 ) -> bool:
     """Validates a shapes file to RoadShapesTable.
 
     Args:
         shapes_filename (Path): The shapes file.
         strict (bool): If True, will validate to shapes_df without trying to parse it first.
-        errors_filename (Path): The output file for the validation errors. Defaults 
+        errors_filename (Path): The output file for the validation errors. Defaults
             to "shape_errors.csv".
 
     Returns:
         bool: True if the nodes file is valid.
     """
     shapes_df = pd.read_csv(shapes_filename)
-    return validate_shapes_df(
-        shapes_df,
-        strict=strict,
-        errors_filename=errors_filename
-    )
+    return validate_shapes_df(shapes_df, strict=strict, errors_filename=errors_filename)
 
 
 def validate_shapes_df(
-    shapes_df: pd.DataFrame,
-    strict: bool = False,
-    errors_filename: Path = "shape_errors.csv"
+    shapes_df: pd.DataFrame, strict: bool = False, errors_filename: Path = "shape_errors.csv"
 ) -> bool:
     """Validates a Shapes df to RoadShapesTables.
 
@@ -54,6 +47,7 @@ def validate_shapes_df(
 
     if not strict:
         from .create import data_to_shapes_df
+
         try:
             shapes_df = data_to_shapes_df(shapes_df)
         except Exception as e:

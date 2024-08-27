@@ -9,6 +9,7 @@ Usage:
     -s, --strict: Validate the roadway network strictly without parsing and filling in data.
     --output_dir: The output directory for the validation report.
 """
+
 import argparse
 import datetime
 
@@ -19,27 +20,23 @@ from network_wrangler.roadway.validate import validate_roadway_in_dir
 
 if __name__ == "__main__":
     # ----- Setup Arguments ------
-    parser = argparse.ArgumentParser("Validate a roadway network to the wrangler data model specifications.")
-    parser.add_argument(
-        "network_directory",
-        help="The roadway network file directory.",
-        default="."
+    parser = argparse.ArgumentParser(
+        "Validate a roadway network to the wrangler data model specifications."
     )
     parser.add_argument(
-        "network_suffix",
-        help="The suffices of roadway network file name.",
-        default="geojson"
+        "network_directory", help="The roadway network file directory.", default="."
+    )
+    parser.add_argument(
+        "network_suffix", help="The suffices of roadway network file name.", default="geojson"
     )
     parser.add_argument(
         "-s",
         "--strict",
         action="store_true",
-        help="Validate the roadway network strictly without parsing and filling in data."
+        help="Validate the roadway network strictly without parsing and filling in data.",
     )
     parser.add_argument(
-        "--output_dir",
-        help="The output directory for the validation report.",
-        default="."
+        "--output_dir", help="The output directory for the validation report.", default="."
     )
 
     args = parser.parse_args()
@@ -62,5 +59,5 @@ if __name__ == "__main__":
         directory=args.network_directory,
         suffix=args.network_suffix,
         strict=argparse.strict,
-        output_dir=args.output_dir
+        output_dir=args.output_dir,
     )

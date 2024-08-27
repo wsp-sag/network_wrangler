@@ -25,6 +25,7 @@ The script reads the configuration file, creates a base scenario using the base 
 information, and then creates a scenario by applying projects from the project card file to
 the base scenario. The modified network can be written out to files if specified.
 """
+
 import argparse
 
 from pathlib import Path
@@ -33,9 +34,7 @@ from network_wrangler.scenario import build_scenario_from_config_file
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Build a scenario from a configuration file."
-    )
+    parser = argparse.ArgumentParser(description="Build a scenario from a configuration file.")
     parser.add_argument(
         "config_file",
         type=Path,
