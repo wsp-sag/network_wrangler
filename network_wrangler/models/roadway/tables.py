@@ -45,6 +45,7 @@ class RoadLinksTable(DataFrameModel):
     distance: Series[float] = pa.Field(coerce=True, nullable=False)
 
     roadway: Series[str] = pa.Field(nullable=False, default="road")
+    projects: Series[str] = pa.Field(coerce=True, default="")
     managed: Series[int] = pa.Field(coerce=True, nullable=False, default=0)
 
     shape_id: Series[str] = pa.Field(coerce=True, nullable=True)
@@ -58,6 +59,7 @@ class RoadLinksTable(DataFrameModel):
     sc_lanes: Optional[Series[object]] = pa.Field(coerce=True, nullable=True, default=None)
     sc_price: Optional[Series[object]] = pa.Field(coerce=True, nullable=True, default=None)
 
+    ML_projects: Series[str] = pa.Field(coerce=True, default="")
     ML_lanes: Optional[Series[Int64]] = pa.Field(coerce=True, nullable=True, default=None)
     ML_price: Optional[Series[float]] = pa.Field(coerce=True, nullable=True, default=0)
     ML_access: Optional[Series[Any]] = pa.Field(coerce=True, nullable=True, default=True)
@@ -149,7 +151,7 @@ class RoadNodesTable(DataFrameModel):
         nullable=True,
         default="",
     )
-
+    projects: Series[str] = pa.Field(coerce=True, default="")
     inboundReferenceIds: Optional[Series[list[str]]] = pa.Field(coerce=True, nullable=True)
     outboundReferenceIds: Optional[Series[list[str]]] = pa.Field(coerce=True, nullable=True)
 

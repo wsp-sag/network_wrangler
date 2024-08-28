@@ -3,7 +3,7 @@
 from __future__ import annotations
 import copy
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from ...logger import WranglerLogger
 
@@ -26,7 +26,10 @@ class TransitPropertyChangeError(Exception):
 
 
 def apply_transit_property_change(
-    net: TransitNetwork, selection: TransitSelection, property_changes: dict
+    net: TransitNetwork,
+    selection: TransitSelection,
+    property_changes: dict,
+    project_name: Optional[str] = None,
 ) -> TransitNetwork:
     """Apply changes to transit properties.
 
@@ -34,6 +37,7 @@ def apply_transit_property_change(
         net (TransitNetwork): Network to modify.
         selection (TransitSelection): Selection of trips to modify.
         property_changes (dict): Dictionary of properties to change.
+        project_name (str, optional): Name of the project. Defaults to None.
 
     Returns:
         TransitNetwork: Modified network.
@@ -57,7 +61,7 @@ def apply_transit_property_change(
 
         WranglerLogger.debug(f"...modifying {property} in {table}.")
         net = _apply_transit_property_change_to_table(
-            net, selection, table, property, property_change
+            net, selection, table, property, property_change, project_name=project_name
         )
 
     return net
@@ -69,10 +73,21 @@ def _apply_transit_property_change_to_table(
     table_name: str,
     property: str,
     property_change: dict,
+    project_name: Optional[str] = None,
 ) -> TransitNetwork:
+    UPDATE_BY_TRIP_ID = ["trips", "routes"]
+
     table_df = net.feed.get_table(table_name)
     # Grab only those records matching trip_ids (aka selection)
-    set_df = copy.deepcopy(table_df[table_df.trip_id.isin(selection.selected_trips)])
+    if table_name in UPDATE_BY_TRIP_ID:
+        set_df = copy.deepcopy(table_df[table_df.trip_id.isin(selection.selected_trips)])
+    elif table_name == "frequencies":
+        set_df = copy.deepcopy(selection.selected_frequencies_df)
+    else:
+        raise NotImplementedError(f"{table_name} table changes not currently implemented.")
+
+    if project_name is not None:
+        set_df["projects"] += f"{project_name},"
 
     # Check all `existing` properties if given
     if "existing" in property_change:

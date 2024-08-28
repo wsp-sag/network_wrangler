@@ -32,7 +32,7 @@ def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
     }
 
     _selected_link_idx = net.get_selection(_facility).selected_links
-    _p_to_track = ["name"] + list(_properties.keys())
+    _p_to_track = ["name", "projects"] + list(_properties.keys())
 
     WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
 
@@ -53,7 +53,7 @@ def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
         _expected_value = p["existing"] + p["change"]
         WranglerLogger.debug(f"Expected_value of {p_name}: {_expected_value}")
         assert _rev_links[p_name].eq(_expected_value).all()
-
+    assert _rev_links["projects"].eq([f"{_project_card_dict['project']},"]).all()
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
@@ -71,10 +71,10 @@ def test_change_multiple_properties_multiple_links(request, stpaul_net):
             "set": 2,
         },
         "bus_only": {
-            "set": 1,
+            "set": True,
         },
         "drive_access": {
-            "set": 0,
+            "set": False,
         },
     }
     _project_card_dict = {
@@ -85,7 +85,7 @@ def test_change_multiple_properties_multiple_links(request, stpaul_net):
         },
     }
     _selected_link_idx = net.get_selection(_facility).selected_links
-    _p_to_track = ["name"] + list(_properties.keys())
+    _p_to_track = ["name", "projects"] + list(_properties.keys())
 
     WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
 
@@ -101,11 +101,15 @@ def test_change_multiple_properties_multiple_links(request, stpaul_net):
     WranglerLogger.debug(f"_rev_links: \n{_rev_links}")
 
     WranglerLogger.debug(f"ORIGINAL to REVISED Comparison\n {_orig_links.compare(_rev_links)}")
-
+    _rev_links = _rev_links.reset_index(drop=True)
     for p_name, p in _properties.items():
         _expected_value = p["set"]
         WranglerLogger.debug(f"Expected_value of {p_name}: {_expected_value}")
         assert _rev_links[p_name].eq(_expected_value).all()
+
+    # make sure it doen't add project multiple times.
+    WranglerLogger.debug(f"_rev_links['projects']:\n{_rev_links['projects']}")
+    assert _rev_links.at[0, "projects"] == f"{_project_card_dict['project']},"
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 

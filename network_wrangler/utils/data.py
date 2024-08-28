@@ -123,7 +123,7 @@ def update_df_by_col_value(
         if _source_miss:
             raise MissingPropertiesError(f"Properties missing from source_df: {_source_miss}")
 
-    # 2. Identify if there are IDs missing from destintation_df that exist in source_df
+    # 2. Identify if there are IDs missing from destination_df that exist in source_df
     if fail_if_missing:
         missing_ids = set(source_df[join_col]) - set(destination_df[join_col])
         if missing_ids:
@@ -132,7 +132,9 @@ def update_df_by_col_value(
     WranglerLogger.debug(f"Updating properties for {len(source_df)} records: {properties}.")
 
     if not source_df[join_col].is_unique:
-        InvalidJoinFieldError("Can't join from source_df when join_col: {join_col} is not unique.")
+        raise InvalidJoinFieldError(
+            "Can't join from source_df when join_col: {join_col} is not unique."
+        )
 
     if not destination_df[join_col].is_unique:
         return _update_props_from_one_to_many(destination_df, source_df, join_col, properties)

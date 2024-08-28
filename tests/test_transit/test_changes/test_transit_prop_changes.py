@@ -65,7 +65,6 @@ def test_valid_field_value_set(request, small_transit_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.xfail
 def test_coerce_over24hr_times(request, small_transit_net):
     """Checks that setting a valid field value will pass."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -78,3 +77,33 @@ def test_coerce_over24hr_times(request, small_transit_net):
 
     WranglerLogger.debug(f"feed.stop_times: \n{feed.stop_times}")
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+def test_transit_property_change(request, small_transit_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    net = copy.deepcopy(small_transit_net)
+    trip_ids = ["blue-1"]
+    timespan = ["04:00", "06:00:00"]
+    new_headway = 1600
+    project_card = {
+        "project": "Bus Frequency Blue1",
+        "transit_property_change": {
+            "service": {"trip_properties": {"trip_id": trip_ids}, "timespans": [timespan]},
+            "property_changes": {"headway_secs": {"set": new_headway}},
+        },
+    }
+    net.apply(project_card)
+    assert (
+        net.feed.frequencies.at[
+            (net.feed.frequencies.trip_id.isin(trip_ids) & net.feed.start_time == timespan[0]),
+            "headway_secs",
+        ]
+        == new_headway
+    )
+
+    assert (
+        net.feed.trips.at[net.feed.trips.trip_id.isin(trip_ids), "projects"]
+        == f"{project_card['project']},"
+    )
+
+    WranglerLogger.debug(f"net.feed.trips: \n{net.feed.trips}")

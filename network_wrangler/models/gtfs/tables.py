@@ -147,6 +147,7 @@ class WranglerStopsTable(StopsTable):
     )
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=True, ge=-90, le=90)
     stop_lon: Series[float] = pa.Field(coerce=True, nullable=True, ge=-180, le=180)
+    projects: Series[str] = pa.Field(coerce=True, default="")
 
 
 class RoutesTable(pa.DataFrameModel):
@@ -210,6 +211,7 @@ class WranglerShapesTable(ShapesTable):
     """Wrangler flavor of GTFS ShapesTable."""
 
     shape_model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
+    projects: Series[str] = pa.Field(coerce=True, default="")
 
 
 class TripsTable(pa.DataFrameModel):
@@ -242,6 +244,20 @@ class TripsTable(pa.DataFrameModel):
 
     class Config:
         """Config for the TripsTable data model."""
+
+        coerce = True
+        add_missing_columns = True
+        _pk = ["trip_id"]
+        _fk = {"route_id": ["routes", "route_id"]}
+
+
+class WranglerTripsTable(TripsTable):
+    """Represents the Trips table in the Wrangler feed, adding projects list."""
+
+    projects: Series[str] = pa.Field(coerce=True, default="")
+
+    class Config:
+        """Config for the WranglerTripsTable data model."""
 
         coerce = True
         add_missing_columns = True
@@ -329,3 +345,4 @@ class WranglerStopTimesTable(StopTimesTable):
     departure_time: Optional[Series[Timestamp]] = pa.Field(
         coerce=True, nullable=True, default=Timestamp("00:00:00")
     )
+    projects: Series[str] = pa.Field(coerce=True, default="")

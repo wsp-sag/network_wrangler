@@ -86,28 +86,20 @@ def seconds_from_midnight_to_str(seconds: int) -> TimeString:
 
 def filter_df_to_overlapping_timespans(
     orig_df: pd.DataFrame,
-    query_timespan: list[TimeString],
+    query_timespans: list[list[TimeString]],
 ) -> pd.DataFrame:
-    """Filters dataframe for entries that have any overlap with the given query timespan.
+    """Filters dataframe for entries that have any overlap with any of the given query timespans.
 
     Args:
         orig_df: dataframe to query timespans for with `start_time` and `end_time` fields.
-        query_timespan: TimespanString of format ['HH:MM','HH:MM'] to query orig_df for overlapping
-            records.
+        query_timespans: List of TimespanString of format ['HH:MM','HH:MM'] to query orig_df
+            for overlapping records.
     """
-    q_start, q_end = str_to_time_list(query_timespan)
-    # WranglerLogger.debug(f"q_start_time: {q_start}")
-    # WranglerLogger.debug(f"q_end_time:{q_end}")
-    # make sure start_time and end_time are datetime objects
-    df_start_time = pd.to_datetime(orig_df["start_time"])
-    df_end_time = pd.to_datetime(orig_df["end_time"])
-
-    # WranglerLogger.debug(f"df_start_time: \n{df_start_time}")
-    # WranglerLogger.debug(f"df_end_time: \n{df_end_time}")
-    overlap_df = orig_df.loc[(df_start_time < q_end) & (df_end_time > q_start)]
-
-    # WranglerLogger.debug(f"time overlap_df: \n{overlap_df}")
-    return overlap_df
+    mask = pd.Series([False] * len(orig_df))
+    for query_timespan in query_timespans:
+        start_time, end_time = query_timespan
+        mask |= (orig_df["start_time"] <= end_time) & (orig_df["end_time"] >= start_time)
+    return orig_df.loc[mask]
 
 
 def filter_df_to_max_overlapping_timespans(

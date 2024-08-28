@@ -13,7 +13,7 @@ from ...models.gtfs.tables import (
     AgenciesTable,
     WranglerStopsTable,
     RoutesTable,
-    TripsTable,
+    WranglerTripsTable,
     WranglerStopTimesTable,
     WranglerShapesTable,
     FrequenciesTable,
@@ -60,7 +60,7 @@ class Feed(DBModelMixin):
         "routes": RoutesTable,
         "shapes": WranglerShapesTable,
         "stops": WranglerStopsTable,
-        "trips": TripsTable,
+        "trips": WranglerTripsTable,
         "stop_times": WranglerStopTimesTable,
     }
 
@@ -138,7 +138,7 @@ def stop_count_by_trip(
 def merge_shapes_to_stop_times(
     stop_times: DataFrame[WranglerStopTimesTable],
     shapes: DataFrame[WranglerShapesTable],
-    trips: DataFrame[TripsTable],
+    trips: DataFrame[WranglerTripsTable],
 ) -> DataFrame[WranglerStopTimesTable]:
     """Add shape_id and shape_pt_sequence to stop_times dataframe.
 

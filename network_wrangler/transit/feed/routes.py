@@ -4,16 +4,16 @@ from __future__ import annotations
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...models.gtfs.tables import RoutesTable, TripsTable
+from ...models.gtfs.tables import RoutesTable, WranglerTripsTable
 
 
-def route_ids_for_trip_ids(trips: DataFrame[TripsTable], trip_ids: list[str]) -> list[str]:
+def route_ids_for_trip_ids(trips: DataFrame[WranglerTripsTable], trip_ids: list[str]) -> list[str]:
     """Returns route ids for given list of trip_ids."""
     return trips[trips["trip_id"].isin(trip_ids)].route_id.unique().tolist()
 
 
 def routes_for_trips(
-    routes: DataFrame[RoutesTable], trips: DataFrame[TripsTable]
+    routes: DataFrame[RoutesTable], trips: DataFrame[WranglerTripsTable]
 ) -> DataFrame[RoutesTable]:
     """Filter routes dataframe to records associated with trip records."""
     _sel_routes = trips.route_id.unique().tolist()
@@ -26,7 +26,7 @@ def routes_for_trips(
 
 
 def routes_for_trip_ids(
-    routes: DataFrame[RoutesTable], trips: DataFrame[TripsTable], trip_ids: list[str]
+    routes: DataFrame[RoutesTable], trips: DataFrame[WranglerTripsTable], trip_ids: list[str]
 ) -> DataFrame[RoutesTable]:
     """Returns route records for given list of trip_ids."""
     route_ids = route_ids_for_trip_ids(trips, trip_ids)

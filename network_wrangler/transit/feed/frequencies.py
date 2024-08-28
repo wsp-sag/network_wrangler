@@ -4,11 +4,11 @@ from __future__ import annotations
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...models.gtfs.tables import FrequenciesTable, TripsTable
+from ...models.gtfs.tables import FrequenciesTable, WranglerTripsTable
 
 
 def frequencies_for_trips(
-    frequencies: DataFrame[FrequenciesTable], trips: DataFrame[TripsTable]
+    frequencies: DataFrame[FrequenciesTable], trips: DataFrame[WranglerTripsTable]
 ) -> DataFrame[FrequenciesTable]:
     """Filter frequenceis dataframe to records associated with trips table."""
     _sel_trips = trips.trip_id.unique().tolist()
