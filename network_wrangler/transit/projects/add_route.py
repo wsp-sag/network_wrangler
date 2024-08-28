@@ -8,7 +8,7 @@ from ...logger import WranglerLogger
 
 import pandas as pd
 
-from ...params import TRANSIT_SHAPE_ID_SCALAR, TRANSIT_STOP_ID_SCALAR
+from ...params import TRANSIT_SHAPE_ID_SCALAR
 from ...utils.time import str_to_time
 from ...utils.utils import generate_new_id
 
@@ -69,7 +69,6 @@ def _add_route_to_feed(
     add_routes: list,
     road_net: RoadwayNetwork,
     shape_id_scalar: int = TRANSIT_SHAPE_ID_SCALAR,
-    stop_id_scalar: int = TRANSIT_STOP_ID_SCALAR,
 ) -> Feed:
     """Adds routes to a transit feed, updating routes, shapes, trips, stops, stop times, and frequencies.
 
@@ -78,7 +77,6 @@ def _add_route_to_feed(
         add_routes: List of route dictionaries to add to the feed.
         road_net: Reference roadway network to use for adding shapes and stops. Defaults to None.
         shape_id_scalar: Scalar used to generate unique shape IDs.
-        stop_id_scalar: Scalar used to generate unique stop IDs.
 
     Returns:
         Feed: transit feed.
@@ -94,12 +92,7 @@ def _add_route_to_feed(
 
     nodes = road_net.nodes_df.copy()
 
-    stop_id_xref_dict = (
-        stops_df
-        .set_index("model_node_id")["stop_id"]
-        .to_dict()
-    )
-    stop_id_xref_dict = {int(float(key)): int(float(value)) for key, value in stop_id_xref_dict.items()}
+    existing_stop_id_list = stops_df['stop_id'].astype(int).to_list()
     model_node_coord_dict = (
         nodes
         .set_index("model_node_id")[['X', 'Y']]
@@ -107,8 +100,7 @@ def _add_route_to_feed(
         .to_dict()
     )
     model_node_coord_dict = {int(float(key)): value for key, value in model_node_coord_dict.items()}
-    
-    stop_id_max = max(stop_id_xref_dict.values())
+
     shape_id_max = pd.to_numeric(shapes_df['shape_id'].str.extract(r'(\d+)')[0], errors='coerce').max()
 
     for route in add_routes:
@@ -167,7 +159,7 @@ def _add_route_to_feed(
                 frequencies_df = pd.concat([frequencies_df, add_freqs_df], ignore_index=True, sort=False)
 
                 # add stop and stop_times
-                stop_model_node_id_list = []
+                stop_id_list = []
                 pickup_type = []
                 drop_off_type = []
 
@@ -176,70 +168,23 @@ def _add_route_to_feed(
                         list(i.values())[0] is not None and 
                         list(i.values())[0].get('stop')
                     ):
-                        stop_model_node_id_list.append(int(list(i.keys())[0]))
+                        stop_id_list.append(int(list(i.keys())[0]))
                         drop_off_type.append(0 if list(i.values())[0].get('alight', True) else 1)
                         pickup_type.append(0 if list(i.values())[0].get('board', True) else 1) 
 
-                # used to build stop_time
-                stop_id_list = [] 
-
-                for s in stop_model_node_id_list:
-                    s = int(float(s))
-                    if s in stop_id_xref_dict.keys():
-                        existing_agency_raw_name = (
-                            stops_df[
-                                stops_df["model_node_id"]
-                                .astype(float)
-                                .astype(int) == s
-                            ]['agency_raw_name'].to_list()
-                        )
-                        existing_trip_ids = (
-                            stops_df[
-                                stops_df["model_node_id"]
-                                .astype(float)
-                                .astype(int) == s
-                            ]['trip_id'].to_list()
-                        )
-                        existing_stop_id = (
-                            stops_df[
-                                stops_df["model_node_id"]
-                                .astype(float)
-                                .astype(int) == s
-                            ]['stop_id'].iloc[0]
-                        )
-                        if ((route["agency_raw_name"] not in existing_agency_raw_name)
-                            | (trip_id not in existing_trip_ids)
-                        ):
-                            new_stop_id = existing_stop_id
-                            stop_id_list.append(new_stop_id)
-                            stop_id_xref_dict.update({s: new_stop_id})
-                            # add new stop to stops_df
-                            add_stops_df = pd.DataFrame([{
-                                "stop_id" : new_stop_id,
-                                "stop_lat" : model_node_coord_dict[s][1],
-                                "stop_lon" : model_node_coord_dict[s][0],
-                                "model_node_id" : s,
-                                'trip_id': trip_id,
-                                "agency_raw_name": route["agency_raw_name"]
-                            }])
-                            stops_df = pd.concat([stops_df, add_stops_df], ignore_index=True, sort=False)
-                        else:
-                            stop_id_list.append(stop_id_xref_dict[s])
-                    else:
-                        new_stop_id = generate_new_id(stop_id_max, stops_df["stop_id"], stop_id_scalar)
-                        stop_id_list.append(new_stop_id)
-                        stop_id_xref_dict.update({s: new_stop_id})
+                for s in stop_id_list:
+                    if s not in existing_stop_id_list:
                         # add new stop to stops_df
                         add_stops_df = pd.DataFrame([{
-                            "stop_id" : new_stop_id,
+                            "stop_id" : int(s),
                             "stop_lat" : model_node_coord_dict[s][1],
                             "stop_lon" : model_node_coord_dict[s][0],
-                            "model_node_id" : s,
                             'trip_id': trip_id,
                             "agency_raw_name": route["agency_raw_name"]
                         }])
                         stops_df = pd.concat([stops_df, add_stops_df], ignore_index=True, sort=False)
-
+                        existing_stop_id_list.append(int(s))
+                        
                 # add stop_times
                 # TODO: time_to_next_node_sec
                 stop_sequence = list(range(1, len(stop_id_list) + 1))
@@ -251,7 +196,6 @@ def _add_route_to_feed(
                     "pickup_type": pickup_type,
                     "drop_off_type": drop_off_type,
                     "stop_id": stop_id_list,
-                    "model_node_id": stop_model_node_id_list,
                     "agency_raw_name": route["agency_raw_name"]
                 })
                 stop_times_df = pd.concat([stop_times_df, add_stop_times_df], ignore_index=True, sort=False)

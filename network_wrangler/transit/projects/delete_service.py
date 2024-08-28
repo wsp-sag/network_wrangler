@@ -50,17 +50,14 @@ def _delete_service_from_feed(
     WranglerLogger.debug("Deleting service from feed.")
 
     stop_times_df = feed.stop_times.copy()
-    stops_df = feed.stops.copy()
     frequencies_df = feed.frequencies.copy()
     trips_df = feed.trips.copy()
 
     stop_times_df = stop_times_df[~stop_times_df.trip_id.isin(trip_ids)]
-    stops_df = stops_df[~stops_df.trip_id.isin(trip_ids)]
     frequencies_df = frequencies_df[~frequencies_df.trip_id.isin(trip_ids)]
     trips_df = trips_df[~trips_df.trip_id.isin(trip_ids)]
 
     feed.stop_times = stop_times_df
-    feed.stops = stops_df
     feed.frequencies = frequencies_df
     feed.trips = trips_df
 
