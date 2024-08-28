@@ -9,7 +9,6 @@ from ...params import DEFAULT_CATEGORY
 from ...utils.time import str_to_seconds_from_midnight, seconds_from_midnight_to_str
 from ...logger import WranglerLogger
 
-
 POTENTIAL_COMPLEX_PROPERTIES = ["lanes", "price", "ML_lanes", "ML_price"]
 
 

@@ -281,7 +281,8 @@ def _edit_link_property(
         )
         if not exist_ok and existing_value_conflict_error:
             raise LinkChangeError(
-                f"Existing value doesn't match specified value in project card for {prop_name}")
+                f"Existing value doesn't match specified value in project card for {prop_name}"
+            )
 
     # if it is a managed lane field, initialize managed lane attributes if haven't already
     if prop_name.startswith("ML_"):
