@@ -530,6 +530,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#roadway-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Roadway Validation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       Examples
@@ -687,6 +696,21 @@
       Transit Network Format
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Transit Network Format">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transit-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transit Validation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -894,6 +918,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#roadway-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Roadway Validation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       Examples
@@ -1051,6 +1084,21 @@
       Transit Network Format
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Transit Network Format">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transit-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transit Validation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1235,6 +1283,40 @@
 <h2 id="roadway-network-format">Roadway Network Format<a class="headerlink" href="#roadway-network-format" title="Permanent link"> ¶</a></h2>
 <p>RoadwayNetworks must be defined in the following format, which leverages <a href="http://openstreetmap.org">Open Street Map</a> which uses a tag-based format (e.g. json, xml).  This may be changed in the future to align with the tabular-based <a href="https://github.com/zephyr-data-specs/GMNS">General Modeling Network Specification</a>.</p>
 <p>A network is defined by a set of nodes and links which connect them.  Shapes may be optionally specified for each link in a separate file.</p>
+<h3 id="roadway-validation">Roadway Validation<a class="headerlink" href="#roadway-validation" title="Permanent link"> ¶</a></h3>
+<p>RoadwayNetworks can be validated using the following tools:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">CLI</label><label for="__tabbed_1_2">Python API</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><div class="language-bash highlight"><pre><span></span><code>python<span class="w"> </span>validate_roadway.py<span class="w"> </span>&lt;network_directory&gt;<span class="w"> </span>&lt;network_suffix&gt;<span class="w"> </span><span class="o">[</span>-s<span class="o">]</span><span class="w"> </span><span class="o">[</span>--output_dir<span class="w"> </span>&lt;output_dir&gt;<span class="o">]</span>
+</code></pre></div>
+Where:</p>
+<ul>
+<li><code>network_directory</code>: The roadway network file directory.</li>
+<li><code>network_suffix</code>: The suffices of roadway network file name.</li>
+<li><code>-s</code>, <code>--strict</code>: Validate the roadway network strictly without parsing and filling in data.</li>
+<li><code>--output_dir</code>: The output directory for the validation report.</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<p><div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">network_wrangler.roadway.validate</span> <span class="kn">import</span> <span class="n">validate_roadway_in_dir</span>
+<span class="n">validate_roadway_in_dir</span><span class="p">(</span>
+    <span class="n">directory</span><span class="o">=&lt;</span><span class="n">network_directory</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">suffix</span><span class="o">=&lt;</span><span class="n">network_suffix</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">strict</span><span class="o">=&lt;</span><span class="n">strict_bool</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="o">=&lt;</span><span class="n">output_dir</span><span class="o">&gt;</span>
+<span class="p">)</span>
+</code></pre></div>
+Where:</p>
+<ul>
+<li><code>network_directory</code>: The roadway network file directory.</li>
+<li><code>network_suffix</code>: The suffices of roadway network file name.</li>
+<li><code>strict</code>: Validate the roadway network strictly without parsing and filling in data.</li>
+<li><code>output_dir</code>: The output directory for the validation report.</li>
+</ul>
+</div>
+</div>
+</div>
 <h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link"> ¶</a></h3>
 <p>Network Wrangler is packaged with two examples located in the <code>/examples</code> directory:</p>
 <ul>
@@ -1761,8 +1843,8 @@ by pandas or geopandas.</p>
             <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_ML&quot;</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking scoped fields: </span><span class="si">{</span><span class="n">scoped_fields</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">df</span><span class="p">[</span><span class="n">scoped_fields</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># WranglerLogger.debug(f&quot;Checking scoped fields: {scoped_fields}&quot;)</span>
+        <span class="c1"># WranglerLogger.debug(f&quot;{df[scoped_fields]}&quot;)</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">scoped_fields</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
                 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -1894,8 +1976,8 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
         <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_ML&quot;</span><span class="p">)</span>
     <span class="p">]</span>
     <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking scoped fields: </span><span class="si">{</span><span class="n">scoped_fields</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">df</span><span class="p">[</span><span class="n">scoped_fields</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># WranglerLogger.debug(f&quot;Checking scoped fields: {scoped_fields}&quot;)</span>
+    <span class="c1"># WranglerLogger.debug(f&quot;{df[scoped_fields]}&quot;)</span>
     <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">scoped_fields</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -2163,6 +2245,41 @@ The &ldquo;plain&rdquo; property without the prefix becomes the default when no 
 <li>Each <code>stop_id</code> must be a node in the RoadwayNetwork.</li>
 <li><code>shapes.txt</code> is <em>required</em> (it is optional in GTFS) and must have the added field <code>model_node_id</code> associating a specific location with a node on the <code>RoadwayNetwork</code>.</li>
 </ol>
+<h3 id="transit-validation">Transit Validation<a class="headerlink" href="#transit-validation" title="Permanent link"> ¶</a></h3>
+<p>TransitNetworks can be validated using the following tools:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">CLI</label><label for="__tabbed_2_2">Python API</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><div class="language-bash highlight"><pre><span></span><code>python<span class="w"> </span>validate_transit.py<span class="w"> </span>&lt;network_directory&gt;<span class="w"> </span>&lt;network_suffix&gt;<span class="w"> </span><span class="o">[</span>-s<span class="o">]</span><span class="w"> </span><span class="o">[</span>--output_dir<span class="w"> </span>&lt;output_dir&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--road_dir<span class="w"> </span>&lt;road_dir&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--road_suffix<span class="w"> </span>&lt;road_suffix&gt;<span class="o">]</span>
+</code></pre></div>
+Where:</p>
+<ul>
+<li><code>network_directory</code>: The roadway network file directory.</li>
+<li><code>network_suffix</code>: The suffices of roadway network file name.</li>
+<li><code>--output_dir</code>: The output directory for the validation report.</li>
+<li><code>--road_dir</code>: The directory roadway network. if want to validate the transit network to it.</li>
+<li><code>--road_suffix</code>: The suffix for roadway network. Defaults to &lsquo;geojson&rsquo;.</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<p><div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">network_wrangler.transit.validate</span> <span class="kn">import</span> <span class="n">validate_transit_in_dir</span>
+<span class="n">validate_transit_in_dir</span><span class="p">(</span>
+    <span class="n">directory</span><span class="o">=&lt;</span><span class="n">network_directory</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">suffix</span><span class="o">=&lt;</span><span class="n">network_suffix</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">road_dir</span><span class="o">=&lt;</span><span class="n">road_dir</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">road_suffix</span><span class="o">=&lt;</span><span class="n">road_suffix</span><span class="o">&gt;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+Where:</p>
+<ul>
+<li><code>network_directory</code>: The roadway network file directory.</li>
+<li><code>network_suffix</code>: The suffices of roadway network file name.</li>
+<li><code>road_dir</code>: The directory roadway network. if want to validate the transit network to it.</li>
+<li><code>road_suffix</code>: The suffix for roadway network. Defaults to &lsquo;geojson&rsquo;.</li>
+</ul>
+</div>
+</div>
+</div>
 <h2 id="project-cards">Project Cards<a class="headerlink" href="#project-cards" title="Permanent link"> ¶</a></h2>
 <p>Project Cards, which define changes to the roadway and transit networks must use the <a href="https://github.com/networkwrangler/projectcard">ProjectCard</a> standard.</p>
 <h2 id="model-roadway-network-export-format">Model Roadway Network Export Format<a class="headerlink" href="#model-roadway-network-export-format" title="Permanent link"> ¶</a></h2>

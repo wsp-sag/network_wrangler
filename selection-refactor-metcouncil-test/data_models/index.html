@@ -3191,8 +3191,8 @@ Roadway Network tables.</p>
             <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_ML&quot;</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking scoped fields: </span><span class="si">{</span><span class="n">scoped_fields</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">df</span><span class="p">[</span><span class="n">scoped_fields</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># WranglerLogger.debug(f&quot;Checking scoped fields: {scoped_fields}&quot;)</span>
+        <span class="c1"># WranglerLogger.debug(f&quot;{df[scoped_fields]}&quot;)</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">scoped_fields</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
                 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -3324,8 +3324,8 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
         <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_ML&quot;</span><span class="p">)</span>
     <span class="p">]</span>
     <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking scoped fields: </span><span class="si">{</span><span class="n">scoped_fields</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">df</span><span class="p">[</span><span class="n">scoped_fields</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># WranglerLogger.debug(f&quot;Checking scoped fields: {scoped_fields}&quot;)</span>
+    <span class="c1"># WranglerLogger.debug(f&quot;{df[scoped_fields]}&quot;)</span>
     <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">scoped_fields</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -4189,7 +4189,9 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/transit/feed/feed.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 35</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
 <span class="normal"> 36</span>
 <span class="normal"> 37</span>
 <span class="normal"> 38</span>
@@ -4306,7 +4308,9 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
         <span class="s2">&quot;stop_times&quot;</span><span class="p">:</span> <span class="n">WranglerStopTimesTable</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="n">_converters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;stop_times&quot;</span><span class="p">:</span> <span class="n">gtfs_to_wrangler_stop_times</span><span class="p">}</span>
+    <span class="c1"># Define the converters if the table needs to be converted to a Wrangler table.</span>
+    <span class="c1"># Format: &quot;table_name&quot;: converter_function</span>
+    <span class="n">_converters</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="n">table_names</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;frequencies&quot;</span><span class="p">,</span>
@@ -4612,10 +4616,10 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/transit/feed/feed.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">FeedValidationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">FeedValidationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when there is an issue with the validation of the GTFS data.&quot;&quot;&quot;</span>
 
     <span class="k">pass</span>
@@ -4770,7 +4774,7 @@ all properties.</p>
     <span class="n">stop_times_w_shapes</span> <span class="o">=</span> <span class="n">stop_times_w_shape_id</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
         <span class="n">shapes</span><span class="p">,</span>
         <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
-        <span class="n">left_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">,</span> <span class="s2">&quot;model_node_id&quot;</span><span class="p">],</span>
+        <span class="n">left_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">,</span> <span class="s2">&quot;stop_id&quot;</span><span class="p">],</span>
         <span class="n">right_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">,</span> <span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">],</span>
     <span class="p">)</span>
     <span class="n">stop_times_w_shapes</span> <span class="o">=</span> <span class="n">stop_times_w_shapes</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;shape_model_node_id&quot;</span><span class="p">])</span>
@@ -5298,8 +5302,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">139</span>
-<span class="normal">140</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">140</span>
 <span class="normal">141</span>
 <span class="normal">142</span>
 <span class="normal">143</span>
@@ -5311,7 +5314,8 @@ all properties.</p>
 <span class="normal">149</span>
 <span class="normal">150</span>
 <span class="normal">151</span>
-<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RouteRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">152</span>
+<span class="normal">153</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RouteRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a transit route.&quot;&quot;&quot;</span>
 
     <span class="n">route_id</span><span class="p">:</span> <span class="n">RouteID</span>
@@ -5443,8 +5447,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">155</span>
-<span class="normal">156</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
 <span class="normal">159</span>
@@ -5452,7 +5455,8 @@ all properties.</p>
 <span class="normal">161</span>
 <span class="normal">162</span>
 <span class="normal">163</span>
-<span class="normal">164</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ShapeRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">164</span>
+<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ShapeRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a point on a path (shape) that a transit vehicle takes.&quot;&quot;&quot;</span>
 
     <span class="n">shape_id</span><span class="p">:</span> <span class="n">ShapeID</span>
@@ -5583,8 +5587,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">173</span>
-<span class="normal">174</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">174</span>
 <span class="normal">175</span>
 <span class="normal">176</span>
 <span class="normal">177</span>
@@ -5597,7 +5600,8 @@ all properties.</p>
 <span class="normal">184</span>
 <span class="normal">185</span>
 <span class="normal">186</span>
-<span class="normal">187</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">StopTimeRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">187</span>
+<span class="normal">188</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">StopTimeRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Times that a vehicle arrives at and departs from stops for each trip.&quot;&quot;&quot;</span>
 
     <span class="n">trip_id</span><span class="p">:</span> <span class="n">TripID</span>
@@ -5843,10 +5847,10 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">167</span>
-<span class="normal">168</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">168</span>
 <span class="normal">169</span>
-<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerShapeRecord</span><span class="p">(</span><span class="n">ShapeRecord</span><span class="p">):</span>
+<span class="normal">170</span>
+<span class="normal">171</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerShapeRecord</span><span class="p">(</span><span class="n">ShapeRecord</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrangler-flavored ShapeRecord.&quot;&quot;&quot;</span>
 
     <span class="n">shape_model_node_id</span><span class="p">:</span> <span class="nb">int</span>
@@ -5896,10 +5900,12 @@ all properties.</p>
                 <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">133</span>
 <span class="normal">134</span>
 <span class="normal">135</span>
-<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerStopRecord</span><span class="p">(</span><span class="n">StopRecord</span><span class="p">):</span>
+<span class="normal">136</span>
+<span class="normal">137</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerStopRecord</span><span class="p">(</span><span class="n">StopRecord</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrangler-flavored StopRecord.&quot;&quot;&quot;</span>
 
-    <span class="n">trip_id</span><span class="p">:</span> <span class="n">TripID</span>
+    <span class="n">stop_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">stop_id_GTFS</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StopID</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -5943,8 +5949,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/gtfs/records.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">190</span>
-<span class="normal">191</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">191</span>
 <span class="normal">192</span>
 <span class="normal">193</span>
 <span class="normal">194</span>
@@ -5953,8 +5958,7 @@ all properties.</p>
 <span class="normal">197</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">WranglerStopTimeRecord</span><span class="p">(</span><span class="n">StopTimeRecord</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrangler-flavored StopTimeRecord.&quot;&quot;&quot;</span>
 
-    <span class="n">model_node_id</span><span class="p">:</span> <span class="nb">int</span>
-
+    <span class="n">stop_id</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span>
         <span class="n">protected_namespaces</span><span class="o">=</span><span class="p">(),</span>
     <span class="p">)</span>
@@ -8723,12 +8727,12 @@ all properties.</p>
 
     <span class="n">require_any_of</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">AnyOf</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">[</span>
-            <span class="c1"># &quot;stop_id&quot;, TODO Not implemented</span>
             <span class="s2">&quot;model_node_id&quot;</span><span class="p">,</span>
+            <span class="c1"># &quot;gtfs_stop_id&quot;, TODO Not implemented</span>
         <span class="p">]</span>
     <span class="p">]</span>
 
-    <span class="c1"># stop_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)] TODO Not implemented</span>
+    <span class="c1"># gtfs_stop_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)] TODO Not implemented</span>
     <span class="n">model_node_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
     <span class="n">require</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectionRequire</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;any&quot;</span>
 
@@ -8740,7 +8744,7 @@ all properties.</p>
     <span class="p">)</span>
 
     <span class="n">_examples</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="c1"># {&quot;stop_id&quot;: [&quot;stop1&quot;, &quot;stop2&quot;], &quot;require&quot;: &quot;any&quot;},  TODO Not implemented</span>
+        <span class="c1"># {&quot;gtfstop_id&quot;: [&quot;stop1&quot;, &quot;stop2&quot;], &quot;require&quot;: &quot;any&quot;},  TODO Not implemented</span>
         <span class="p">{</span><span class="s2">&quot;model_node_id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;require&quot;</span><span class="p">:</span> <span class="s2">&quot;all&quot;</span><span class="p">},</span>
     <span class="p">]</span>
 </code></pre></div></td></tr></table></div>

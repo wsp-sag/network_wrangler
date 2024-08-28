@@ -753,18 +753,20 @@
 <p class="admonition-title">installing conda</p>
 <p>In order to assist in installation, its helpful to have <a href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a> or another virtual environment manager installed to make sure the network wrangler dependencies don&rsquo;t interfer with any other package requirements you have. If you don&rsquo;t have any of these already, we recommend starting with Miniconda as it has the smallest footprint. <code>conda</code> is the environment manager that is contained within both the Anaconda and mini-conda applications.</p>
 </div>
+<details class="warning"><summary>installing conda or Anaconda (the GUI version) for the first time on computer with Cube or ArcGIS?</summary><p>For ArcGIS / Cube users - Recommend Install conda by leaving boxes unchecked for advanced options – system path and register anaconda. On some systems, checking these boxes will break Cube and ArcGis systems.</p>
+</details>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link"> ¶</a></h2>
 <p>Requirements for basic network_wranglerare functionality as well as enhanced <em>development/testing</em>, <em>visualization</em> and <em>documentation</em> functionalities are stored in <code>requirements*.txt</code> and <code>pyproject.toml</code> but are automatically installed when using <code>pip</code>.</p>
-<div class="admonition tip">
+<div class="admonition example">
 <p class="admonition-title">create a new conda environment for wrangler</p>
 <div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
 conda<span class="w"> </span>create<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7<span class="w"> </span>-n<span class="w"> </span>wrangler
 conda<span class="w"> </span>activate<span class="w"> </span>wrangler
 </code></pre></div>
 </div>
-<div class="admonition tip">
+<div class="admonition warning">
 <p class="admonition-title">tricky dependencies</p>
-<p><code>rtree</code>, <code>geopandas</code> and <code>osmnx</code> can have some tricky co-dependencies.  If don&rsquo;t already have an up-to-date installation of them, we&rsquo;ve had the best success installing them using conda (as opposed to pip).</p>
+<p><code>rtree</code>, <code>geopandas</code> and <code>osmnx</code> can have some tricky co-dependencies.  If don&rsquo;t already have an up-to-date installation of them, we&rsquo;ve had the best success installing them using <a href="https://conda.io/projects/conda/en/latest/user-guide/install/index.html">conda</a> (as opposed to pip).</p>
 <div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>rtree<span class="w"> </span>geopandas<span class="w"> </span>osmnx
 </code></pre></div>
 </div>
@@ -778,8 +780,8 @@ conda<span class="w"> </span>activate<span class="w"> </span>wrangler
 <div class="tabbed-block">
 <div class="language-bash highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/wsp-sag/network_wrangler.git@master#egg<span class="o">=</span>network_wrangler
 </code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
 <p>If you wanted to install from a specific tag/version number or branch, replace <code>@master</code> with <code>@&lt;branchname&gt;</code>  or <code>@tag</code></p>
 </div>
 </div>
@@ -808,22 +810,29 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </div>
 </div>
 <h3 id="common-installation-issues">Common Installation Issues<a class="headerlink" href="#common-installation-issues" title="Permanent link"> ¶</a></h3>
-<p><strong>Issue: <code>clang: warning: libstdc++ is deprecated; move to libc++ with a minimum deployment target of OS X 10.9 [-Wdeprecated]</code></strong>
-If you are using MacOS, you might need to update your <a href="https://developer.apple.com/downloads/">xcode command line tools and headers</a></p>
-<p><strong>Issue: <code>OSError: Could not find libspatialindex_c library file</code></strong>*
-Try installing rtree on its own from the Anaconda cloud</p>
-<div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>rtree
+<details class="question"><summary>libstdc++ is deprecated</summary><blockquote>
+<p>clang: warning: libstdc++ is deprecated; move to libc++ with a minimum deployment target of OS X 10.9 [-Wdeprecated]`</p>
+</blockquote>
+<p>If you are using MacOS, you might need to update your <a href="https://developer.apple.com/downloads/">xcode command line tools and headers</a></p>
+</details>
+<details class="question"><summary>libspatialindex_c or Missing GEOS module</summary><blockquote>
+<p>&ldquo;OSError: Could not find libspatialindex_c library file</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p>Shapely, a pre-requisite, doesn&rsquo;t install propertly because it is missing GEOS module</p>
+</blockquote>
+<p>Try installing them using conda.</p>
+<div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>uninstall<span class="w"> </span>geopandas<span class="w"> </span>rtree<span class="w"> </span>shapely
+conda<span class="w"> </span>install<span class="w"> </span>rtree<span class="w"> </span>shapely<span class="w"> </span>geopandas
 </code></pre></div>
-<p><strong>Issue: Shapely, a pre-requisite, doesn&rsquo;t install propertly because it is missing GEOS module</strong>
-Try installing shapely on its own from the Anaconda cloud</p>
-<div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>shapely
-</code></pre></div>
-<p><strong>Issue: Conda is unable to install a library or to update to a specific library version</strong>
-Try installing libraries from conda-forge</p>
+</details>
+<details class="question"><summary>Conda is unable to install a library or to update to a specific library version</summary><p>Add libraries from conda-forge</p>
 <div class="language-bash highlight"><pre><span></span><code>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>*library*
 </code></pre></div>
-<p><strong>Issue: User does not have permission to install in directories</strong>
-Try running Anaconda Prompt as an administrator.</p>
+</details>
+<details class="question"><summary>User does not have permission to install in directories</summary><p>Try <a href="https://techcommunity.microsoft.com/t5/windows-11/how-to-run-app-as-administrator-by-default-in-windows-11/td-p/3033704">running Anaconda as an administrator</a>, even if you are an admin on your machine.</p>
+</details>
 <h2 id="quickstart">Quickstart<a class="headerlink" href="#quickstart" title="Permanent link"> ¶</a></h2>
 <p>To get a feel for the API and using project cards, please refer to the &ldquo;Wrangler Quickstart&rdquo; jupyter notebook.</p>
 <p>To start the notebook, open a command line in the network_wrangler top-level directory and type:</p>
