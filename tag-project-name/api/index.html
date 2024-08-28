@@ -8156,7 +8156,9 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
 <span class="normal">614</span>
 <span class="normal">615</span>
 <span class="normal">616</span>
-<span class="normal">617</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwayNetwork</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwayNetwork</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Representation of a Roadway Network.</span>
 
 <span class="sd">    Typical usage example:</span>
@@ -8430,12 +8432,14 @@ lazily created if None or if the <code>network_hash</code> has changed.</p>
                 <span class="bp">self</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">get_selection</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">facility</span><span class="p">),</span>
                 <span class="n">change</span><span class="o">.</span><span class="n">roadway_property_change</span><span class="p">[</span><span class="s2">&quot;property_changes&quot;</span><span class="p">],</span>
+                <span class="n">project_name</span><span class="o">=</span><span class="n">change</span><span class="o">.</span><span class="n">project</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;roadway_addition&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">apply_new_roadway</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span>
                 <span class="n">change</span><span class="o">.</span><span class="n">roadway_addition</span><span class="p">,</span>
+                <span class="n">project_name</span><span class="o">=</span><span class="n">change</span><span class="o">.</span><span class="n">project</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;roadway_deletion&quot;</span><span class="p">:</span>
@@ -8921,9 +8925,7 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">575</span>
-<span class="normal">576</span>
-<span class="normal">577</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">577</span>
 <span class="normal">578</span>
 <span class="normal">579</span>
 <span class="normal">580</span>
@@ -8963,7 +8965,9 @@ nodes list rather than self.nodes_df</p>
 <span class="normal">614</span>
 <span class="normal">615</span>
 <span class="normal">616</span>
-<span class="normal">617</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">add_incident_link_data_to_nodes</span><span class="p">(</span>
     <span class="n">links_df</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">nodes_df</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -9056,15 +9060,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">387</span>
 <span class="normal">388</span>
 <span class="normal">389</span>
 <span class="normal">390</span>
 <span class="normal">391</span>
 <span class="normal">392</span>
-<span class="normal">393</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_links_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]):</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_links_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined links_df with LinksSchema before adding to self.links_df.</span>
 
 <span class="sd">    Args:</span>
@@ -9123,15 +9127,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">397</span>
 <span class="normal">398</span>
 <span class="normal">399</span>
 <span class="normal">400</span>
 <span class="normal">401</span>
 <span class="normal">402</span>
-<span class="normal">403</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_nodes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]):</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_nodes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined nodes_df with NodesSchema before adding to self.nodes_df.</span>
 
 <span class="sd">    Args:</span>
@@ -9190,9 +9194,7 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">407</span>
 <span class="normal">408</span>
 <span class="normal">409</span>
 <span class="normal">410</span>
@@ -9202,7 +9204,9 @@ nodes list rather than self.nodes_df</p>
 <span class="normal">414</span>
 <span class="normal">415</span>
 <span class="normal">416</span>
-<span class="normal">417</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_shapes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadShapesTable</span><span class="p">]]):</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_shapes_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadShapesTable</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate combined shapes_df with RoadShapesTable efore adding to self.shapes_df.</span>
 
 <span class="sd">    Args:</span>
@@ -9322,15 +9326,15 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">515</span>
-<span class="normal">516</span>
-<span class="normal">517</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">517</span>
 <span class="normal">518</span>
 <span class="normal">519</span>
 <span class="normal">520</span>
 <span class="normal">521</span>
 <span class="normal">522</span>
-<span class="normal">523</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes any unused nodes from network that aren&#39;t referenced by links_df.</span>
 
 <span class="sd">    NOTE: does not check if these nodes are used by transit, so use with caution.</span>
@@ -9360,12 +9364,12 @@ nodes list rather than self.nodes_df</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">508</span>
-<span class="normal">509</span>
-<span class="normal">510</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">510</span>
 <span class="normal">511</span>
 <span class="normal">512</span>
-<span class="normal">513</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">clean_unused_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes any unused shapes from network that aren&#39;t referenced by links_df.&quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.shapes.shapes</span> <span class="kn">import</span> <span class="n">shape_ids_without_links</span>
 
@@ -9501,9 +9505,7 @@ deleted links. Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">421</span>
 <span class="normal">422</span>
 <span class="normal">423</span>
 <span class="normal">424</span>
@@ -9553,7 +9555,9 @@ deleted links. Defaults to False.</p>
 <span class="normal">468</span>
 <span class="normal">469</span>
 <span class="normal">470</span>
-<span class="normal">471</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_links</span><span class="p">(</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_links</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">selection_dict</span><span class="p">:</span> <span class="n">SelectLinksDict</span><span class="p">,</span>
     <span class="n">clean_nodes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -9695,9 +9699,7 @@ Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">473</span>
-<span class="normal">474</span>
-<span class="normal">475</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">475</span>
 <span class="normal">476</span>
 <span class="normal">477</span>
 <span class="normal">478</span>
@@ -9728,7 +9730,9 @@ Defaults to False.</p>
 <span class="normal">503</span>
 <span class="normal">504</span>
 <span class="normal">505</span>
-<span class="normal">506</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_nodes</span><span class="p">(</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">delete_nodes</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">selection_dict</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">SelectNodesDict</span><span class="p">],</span>
     <span class="n">remove_links</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -10194,15 +10198,15 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">553</span>
-<span class="normal">554</span>
-<span class="normal">555</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">555</span>
 <span class="normal">556</span>
 <span class="normal">557</span>
 <span class="normal">558</span>
 <span class="normal">559</span>
 <span class="normal">560</span>
-<span class="normal">561</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns true if network has links with AB values.</span>
 
 <span class="sd">    Args:</span>
@@ -10261,15 +10265,15 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">543</span>
-<span class="normal">544</span>
-<span class="normal">545</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">545</span>
 <span class="normal">546</span>
 <span class="normal">547</span>
 <span class="normal">548</span>
 <span class="normal">549</span>
 <span class="normal">550</span>
-<span class="normal">551</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_node_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_node_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Queries if network has node based on model_node_id.</span>
 
 <span class="sd">    Args:</span>
@@ -10329,9 +10333,7 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">563</span>
-<span class="normal">564</span>
-<span class="normal">565</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">565</span>
 <span class="normal">566</span>
 <span class="normal">567</span>
 <span class="normal">568</span>
@@ -10339,7 +10341,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 <span class="normal">570</span>
 <span class="normal">571</span>
 <span class="normal">572</span>
-<span class="normal">573</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines if the network graph is &quot;strongly&quot; connected.</span>
 
 <span class="sd">    A graph is strongly connected if each vertex is reachable from every other vertex.</span>
@@ -10371,9 +10375,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_link_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_link_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return subset of links_df based on link_ids list.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_links_to_ids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="n">link_ids</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -10397,9 +10401,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">links_with_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadLinksTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return subset of links_df based on node_ids list.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_links_to_node_ids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -10484,9 +10488,7 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">525</span>
-<span class="normal">526</span>
-<span class="normal">527</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">527</span>
 <span class="normal">528</span>
 <span class="normal">529</span>
 <span class="normal">530</span>
@@ -10500,7 +10502,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 <span class="normal">538</span>
 <span class="normal">539</span>
 <span class="normal">540</span>
-<span class="normal">541</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">move_nodes</span><span class="p">(</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">move_nodes</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">node_geometry_change_table</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">NodeGeometryChangeTable</span><span class="p">],</span>
 <span class="p">):</span>
@@ -10538,9 +10542,9 @@ with the timespan by at least this many minutes. Defaults to 60.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/roadway/network.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nodes_in_links</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nodes_in_links</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">RoadNodesTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns subset of self.nodes_df that are in self.links_df.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">filter_nodes_to_links</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_df</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -16212,11 +16216,11 @@ validation_failure_cases.csv.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">convert_timespan_to_start_end_dt</span><span class="p">(</span><span class="n">timespan_s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">convert_timespan_to_start_end_dt</span><span class="p">(</span><span class="n">timespan_s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Covert a timespan string [&#39;12:00&#39;,&#39;14:00] to start_time and end_time datetime cols in df.&quot;&quot;&quot;</span>
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">timespan_s</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">str_to_time</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
     <span class="n">end_time</span> <span class="o">=</span> <span class="n">timespan_s</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">str_to_time</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
@@ -16310,22 +16314,22 @@ time and end time.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">168</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
 <span class="normal">169</span>
 <span class="normal">170</span>
 <span class="normal">171</span>
 <span class="normal">172</span>
 <span class="normal">173</span>
 <span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+<span class="normal">175</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">dt_contains</span><span class="p">(</span><span class="n">timespan1</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">],</span> <span class="n">timespan2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if one timespan inclusively contains another.</span>
 
@@ -16364,16 +16368,16 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">dt_list_overlaps</span><span class="p">(</span><span class="n">timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if any of the timespans overlap.</span>
 
@@ -16404,13 +16408,13 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">dt_overlap_duration</span><span class="p">(</span><span class="n">timedelta1</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timedelta2</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two timespans overlap and return the amount of overlap.&quot;&quot;&quot;</span>
     <span class="n">overlap_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">timedelta1</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="n">timedelta2</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
@@ -16440,16 +16444,16 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">dt_overlaps</span><span class="p">(</span><span class="n">timespan1</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">],</span> <span class="n">timespan2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two timespans overlap.</span>
 
@@ -16508,20 +16512,20 @@ midnight.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">239</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
 <span class="normal">240</span>
 <span class="normal">241</span>
 <span class="normal">242</span>
 <span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">duration_dt</span><span class="p">(</span><span class="n">start_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">end_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
+<span class="normal">244</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">duration_dt</span><span class="p">(</span><span class="n">start_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">end_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a datetime.timedelta object representing the duration of the timespan.</span>
 
 <span class="sd">    If end_time is less than start_time, the duration will assume that it crosses over</span>
@@ -16646,7 +16650,15 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">113</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
 <span class="normal">114</span>
 <span class="normal">115</span>
 <span class="normal">116</span>
@@ -16674,15 +16686,7 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
 <span class="normal">138</span>
 <span class="normal">139</span>
 <span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">filter_df_to_max_overlapping_timespans</span><span class="p">(</span>
+<span class="normal">141</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">filter_df_to_max_overlapping_timespans</span><span class="p">(</span>
     <span class="n">orig_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">query_timespan</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimeString</span><span class="p">],</span>
     <span class="n">strict_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -16729,14 +16733,14 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
 
 
 <h2 id="network_wrangler.utils.time.filter_df_to_overlapping_timespans" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">filter_df_to_overlapping_timespans</span><span class="p">(</span><span class="n">orig_df</span><span class="p">,</span> <span class="n">query_timespan</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">filter_df_to_overlapping_timespans</span><span class="p">(</span><span class="n">orig_df</span><span class="p">,</span> <span class="n">query_timespans</span><span class="p">)</span></code>
 
 <a href="#network_wrangler.utils.time.filter_df_to_overlapping_timespans" class="headerlink" title="Permanent link"> ¶</a></h2>
 
 
     <div class="doc doc-contents ">
 
-      <p>Filters dataframe for entries that have any overlap with the given query timespan.</p>
+      <p>Filters dataframe for entries that have any overlap with any of the given query timespans.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -16765,14 +16769,14 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>query_timespan</code></td>
+            <td><code>query_timespans</code></td>
             <td>
-                  <code>list[<span title="network_wrangler.models._base.types.TimeString">TimeString</span>]</code>
+                  <code>list[list[<span title="network_wrangler.models._base.types.TimeString">TimeString</span>]]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>TimespanString of format [&lsquo;HH:MM&rsquo;,&rsquo;HH:MM&rsquo;] to query orig_df for overlapping
-records.</p>
+                <p>List of TimespanString of format [&lsquo;HH:MM&rsquo;,&rsquo;HH:MM&rsquo;] to query orig_df
+for overlapping records.</p>
               </div>
             </td>
             <td>
@@ -16799,38 +16803,22 @@ records.</p>
 <span class="normal"> 99</span>
 <span class="normal">100</span>
 <span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">filter_df_to_overlapping_timespans</span><span class="p">(</span>
+<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">filter_df_to_overlapping_timespans</span><span class="p">(</span>
     <span class="n">orig_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">query_timespan</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimeString</span><span class="p">],</span>
+    <span class="n">query_timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">TimeString</span><span class="p">]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filters dataframe for entries that have any overlap with the given query timespan.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filters dataframe for entries that have any overlap with any of the given query timespans.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        orig_df: dataframe to query timespans for with `start_time` and `end_time` fields.</span>
-<span class="sd">        query_timespan: TimespanString of format [&#39;HH:MM&#39;,&#39;HH:MM&#39;] to query orig_df for overlapping</span>
-<span class="sd">            records.</span>
+<span class="sd">        query_timespans: List of TimespanString of format [&#39;HH:MM&#39;,&#39;HH:MM&#39;] to query orig_df</span>
+<span class="sd">            for overlapping records.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">q_start</span><span class="p">,</span> <span class="n">q_end</span> <span class="o">=</span> <span class="n">str_to_time_list</span><span class="p">(</span><span class="n">query_timespan</span><span class="p">)</span>
-    <span class="c1"># WranglerLogger.debug(f&quot;q_start_time: {q_start}&quot;)</span>
-    <span class="c1"># WranglerLogger.debug(f&quot;q_end_time:{q_end}&quot;)</span>
-    <span class="c1"># make sure start_time and end_time are datetime objects</span>
-    <span class="n">df_start_time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">])</span>
-    <span class="n">df_end_time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;end_time&quot;</span><span class="p">])</span>
-
-    <span class="c1"># WranglerLogger.debug(f&quot;df_start_time: \n{df_start_time}&quot;)</span>
-    <span class="c1"># WranglerLogger.debug(f&quot;df_end_time: \n{df_end_time}&quot;)</span>
-    <span class="n">overlap_df</span> <span class="o">=</span> <span class="n">orig_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df_start_time</span> <span class="o">&lt;</span> <span class="n">q_end</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df_end_time</span> <span class="o">&gt;</span> <span class="n">q_start</span><span class="p">)]</span>
-
-    <span class="c1"># WranglerLogger.debug(f&quot;time overlap_df: \n{overlap_df}&quot;)</span>
-    <span class="k">return</span> <span class="n">overlap_df</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">orig_df</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">query_timespan</span> <span class="ow">in</span> <span class="n">query_timespans</span><span class="p">:</span>
+        <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span> <span class="o">=</span> <span class="n">query_timespan</span>
+        <span class="n">mask</span> <span class="o">|=</span> <span class="p">(</span><span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">end_time</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;end_time&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">start_time</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">orig_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -16854,22 +16842,22 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">209</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
 <span class="normal">210</span>
 <span class="normal">211</span>
 <span class="normal">212</span>
 <span class="normal">213</span>
 <span class="normal">214</span>
 <span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+<span class="normal">216</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">filter_dt_list_to_overlaps</span><span class="p">(</span><span class="n">timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Filter a list of timespans to only include those that overlap.</span>
 
@@ -16906,16 +16894,16 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">format_time</span><span class="p">(</span><span class="n">seconds</span><span class="p">):</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">format_time</span><span class="p">(</span><span class="n">seconds</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Formats seconds into a human-friendly string for log files.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">seconds</span> <span class="o">&lt;</span> <span class="mi">60</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
@@ -17181,15 +17169,15 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">timespans_overlap</span><span class="p">(</span><span class="n">timespan1</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">],</span> <span class="n">timespan2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">timespans_overlap</span><span class="p">(</span><span class="n">timespan1</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">],</span> <span class="n">timespan2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two timespan strings overlap.</span>
 
 <span class="sd">    `overlapping`: a timespan that fully or partially overlaps a given timespan.</span>
@@ -17316,15 +17304,15 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">518</span>
-<span class="normal">519</span>
-<span class="normal">520</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">520</span>
 <span class="normal">521</span>
 <span class="normal">522</span>
 <span class="normal">523</span>
 <span class="normal">524</span>
 <span class="normal">525</span>
-<span class="normal">526</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">attach_parameters_to_df</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">attach_parameters_to_df</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Attatch params as a dataframe attribute which will be copied with dataframe.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;params&quot;</span><span class="p">):</span>
         <span class="n">df</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span>
@@ -17450,9 +17438,7 @@ Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">579</span>
-<span class="normal">580</span>
-<span class="normal">581</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">581</span>
 <span class="normal">582</span>
 <span class="normal">583</span>
 <span class="normal">584</span>
@@ -17496,7 +17482,9 @@ Defaults to False.</p>
 <span class="normal">622</span>
 <span class="normal">623</span>
 <span class="normal">624</span>
-<span class="normal">625</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">coerce_dict_to_df_types</span><span class="p">(</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">coerce_dict_to_df_types</span><span class="p">(</span>
     <span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">skip_keys</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">return_skipped</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Coerce dictionary values to match the type of a dataframe columns matching dict keys.</span>
@@ -17564,9 +17552,7 @@ Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">489</span>
-<span class="normal">490</span>
-<span class="normal">491</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">491</span>
 <span class="normal">492</span>
 <span class="normal">493</span>
 <span class="normal">494</span>
@@ -17590,7 +17576,9 @@ Defaults to False.</p>
 <span class="normal">512</span>
 <span class="normal">513</span>
 <span class="normal">514</span>
-<span class="normal">515</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">coerce_gdf</span><span class="p">(</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">coerce_gdf</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">geometry</span><span class="p">:</span> <span class="n">GeoSeries</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">in_crs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">LAT_LON_CRS</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoDataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Coerce a DataFrame to a GeoDataFrame, optionally with a new geometry.&quot;&quot;&quot;</span>
@@ -17696,9 +17684,7 @@ Defaults to False.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">545</span>
-<span class="normal">546</span>
-<span class="normal">547</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">547</span>
 <span class="normal">548</span>
 <span class="normal">549</span>
 <span class="normal">550</span>
@@ -17727,7 +17713,9 @@ Defaults to False.</p>
 <span class="normal">573</span>
 <span class="normal">574</span>
 <span class="normal">575</span>
-<span class="normal">576</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">coerce_val_to_df_types</span><span class="p">(</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">coerce_val_to_df_types</span><span class="p">(</span>
     <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">val</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]],</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
@@ -17824,9 +17812,7 @@ return a string.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">628</span>
-<span class="normal">629</span>
-<span class="normal">630</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">630</span>
 <span class="normal">631</span>
 <span class="normal">632</span>
 <span class="normal">633</span>
@@ -17846,7 +17832,9 @@ return a string.</p>
 <span class="normal">647</span>
 <span class="normal">648</span>
 <span class="normal">649</span>
-<span class="normal">650</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">coerce_val_to_series_type</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">coerce_val_to_series_type</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Coerces a value to match type of pandas series.</span>
 
 <span class="sd">    Will try not to fail so if you give it a value that can&#39;t convert to a number, it will</span>
@@ -17890,9 +17878,7 @@ return a string.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">234</span>
 <span class="normal">235</span>
 <span class="normal">236</span>
 <span class="normal">237</span>
@@ -17937,7 +17923,9 @@ return a string.</p>
 <span class="normal">276</span>
 <span class="normal">277</span>
 <span class="normal">278</span>
-<span class="normal">279</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">compare_df_values</span><span class="p">(</span><span class="n">df1</span><span class="p">,</span> <span class="n">df2</span><span class="p">,</span> <span class="n">join_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ignore</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">compare_df_values</span><span class="p">(</span><span class="n">df1</span><span class="p">,</span> <span class="n">df2</span><span class="p">,</span> <span class="n">join_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ignore</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare overlapping part of dataframes and returns where there are differences.&quot;&quot;&quot;</span>
     <span class="n">comp_c</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">c</span>
@@ -18006,11 +17994,11 @@ return a string.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">326</span>
-<span class="normal">327</span>
-<span class="normal">328</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">328</span>
 <span class="normal">329</span>
-<span class="normal">330</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">compare_lists</span><span class="p">(</span><span class="n">list1</span><span class="p">,</span> <span class="n">list2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">compare_lists</span><span class="p">(</span><span class="n">list1</span><span class="p">,</span> <span class="n">list2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare two lists.&quot;&quot;&quot;</span>
     <span class="n">list1</span> <span class="o">=</span> <span class="n">convert_numpy_to_list</span><span class="p">(</span><span class="n">list1</span><span class="p">)</span>
     <span class="n">list2</span> <span class="o">=</span> <span class="n">convert_numpy_to_list</span><span class="p">(</span><span class="n">list1</span><span class="p">)</span>
@@ -18036,15 +18024,15 @@ return a string.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">317</span>
 <span class="normal">318</span>
 <span class="normal">319</span>
 <span class="normal">320</span>
 <span class="normal">321</span>
 <span class="normal">322</span>
-<span class="normal">323</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">convert_numpy_to_list</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">convert_numpy_to_list</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to recursively convert numpy arrays to lists.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">item</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
@@ -18074,13 +18062,13 @@ return a string.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">675</span>
-<span class="normal">676</span>
-<span class="normal">677</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">677</span>
 <span class="normal">678</span>
 <span class="normal">679</span>
 <span class="normal">680</span>
-<span class="normal">681</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">dict_fields_in_df</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">681</span>
+<span class="normal">682</span>
+<span class="normal">683</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">dict_fields_in_df</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if all fields in dict are in dataframe.&quot;&quot;&quot;</span>
     <span class="n">missing_fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">f</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">missing_fields</span><span class="p">:</span>
@@ -18230,9 +18218,7 @@ return a string.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">284</span>
 <span class="normal">285</span>
 <span class="normal">286</span>
 <span class="normal">287</span>
@@ -18260,7 +18246,9 @@ return a string.</p>
 <span class="normal">309</span>
 <span class="normal">310</span>
 <span class="normal">311</span>
-<span class="normal">312</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">diff_dfs</span><span class="p">(</span><span class="n">df1</span><span class="p">,</span> <span class="n">df2</span><span class="p">,</span> <span class="n">ignore</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">diff_dfs</span><span class="p">(</span><span class="n">df1</span><span class="p">,</span> <span class="n">df2</span><span class="p">,</span> <span class="n">ignore</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if two dataframes are different and log differences.&quot;&quot;&quot;</span>
     <span class="n">diff</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">df1</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">df2</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
@@ -18312,16 +18300,16 @@ return a string.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">333</span>
-<span class="normal">334</span>
-<span class="normal">335</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">335</span>
 <span class="normal">336</span>
 <span class="normal">337</span>
 <span class="normal">338</span>
 <span class="normal">339</span>
 <span class="normal">340</span>
 <span class="normal">341</span>
-<span class="normal">342</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">diff_list_like_series</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">diff_list_like_series</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare two series that contain list-like items as strings.&quot;&quot;&quot;</span>
     <span class="n">diff_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;s1&quot;</span><span class="p">,</span> <span class="s2">&quot;s2&quot;</span><span class="p">])</span>
     <span class="c1"># diff_df[&quot;diff&quot;] = diff_df.apply(lambda x: str(x[&quot;s1&quot;]) != str(x[&quot;s2&quot;]), axis=1)</span>
@@ -18352,9 +18340,7 @@ return a string.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">653</span>
-<span class="normal">654</span>
-<span class="normal">655</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">655</span>
 <span class="normal">656</span>
 <span class="normal">657</span>
 <span class="normal">658</span>
@@ -18371,7 +18357,9 @@ return a string.</p>
 <span class="normal">669</span>
 <span class="normal">670</span>
 <span class="normal">671</span>
-<span class="normal">672</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">fk_in_pk</span><span class="p">(</span>
+<span class="normal">672</span>
+<span class="normal">673</span>
+<span class="normal">674</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">fk_in_pk</span><span class="p">(</span>
     <span class="n">pk</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span> <span class="n">fk</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span> <span class="n">ignore_nan</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if all foreign keys are in the primary keys, optionally ignoring NaN.&quot;&quot;&quot;</span>
@@ -18455,9 +18443,7 @@ checking <strong>only</strong> the first item in the column.  Defaults to None.<
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">215</span>
 <span class="normal">216</span>
 <span class="normal">217</span>
 <span class="normal">218</span>
@@ -18471,7 +18457,9 @@ checking <strong>only</strong> the first item in the column.  Defaults to None.<
 <span class="normal">226</span>
 <span class="normal">227</span>
 <span class="normal">228</span>
-<span class="normal">229</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">list_like_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">item_type</span><span class="p">:</span> <span class="nb">type</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">list_like_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">item_type</span><span class="p">:</span> <span class="nb">type</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Find columns in a dataframe that contain list-like items that can&#39;t be json-serialized.</span>
 
 <span class="sd">    Args:</span>
@@ -18632,9 +18620,7 @@ Defaults to None.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">347</span>
 <span class="normal">348</span>
 <span class="normal">349</span>
 <span class="normal">350</span>
@@ -18715,7 +18701,9 @@ Defaults to None.</p>
 <span class="normal">425</span>
 <span class="normal">426</span>
 <span class="normal">427</span>
-<span class="normal">428</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">segment_data_by_selection</span><span class="p">(</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">segment_data_by_selection</span><span class="p">(</span>
     <span class="n">item_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span>
     <span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -18985,9 +18973,7 @@ use the first and last items.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">433</span>
 <span class="normal">434</span>
 <span class="normal">435</span>
 <span class="normal">436</span>
@@ -19040,7 +19026,9 @@ use the first and last items.</p>
 <span class="normal">483</span>
 <span class="normal">484</span>
 <span class="normal">485</span>
-<span class="normal">486</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">segment_data_by_selection_min_overlap</span><span class="p">(</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">segment_data_by_selection_min_overlap</span><span class="p">(</span>
     <span class="n">selection_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -19296,7 +19284,9 @@ destination_df that exist in source_df.</p>
 <span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
-<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_df_by_col_value</span><span class="p">(</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">update_df_by_col_value</span><span class="p">(</span>
     <span class="n">destination_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">source_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">join_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -19352,7 +19342,7 @@ destination_df that exist in source_df.</p>
         <span class="k">if</span> <span class="n">_source_miss</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">MissingPropertiesError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Properties missing from source_df: </span><span class="si">{</span><span class="n">_source_miss</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="c1"># 2. Identify if there are IDs missing from destintation_df that exist in source_df</span>
+    <span class="c1"># 2. Identify if there are IDs missing from destination_df that exist in source_df</span>
     <span class="k">if</span> <span class="n">fail_if_missing</span><span class="p">:</span>
         <span class="n">missing_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">source_df</span><span class="p">[</span><span class="n">join_col</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">destination_df</span><span class="p">[</span><span class="n">join_col</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">missing_ids</span><span class="p">:</span>
@@ -19361,7 +19351,9 @@ destination_df that exist in source_df.</p>
     <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Updating properties for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">source_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> records: </span><span class="si">{</span><span class="n">properties</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">source_df</span><span class="p">[</span><span class="n">join_col</span><span class="p">]</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
-        <span class="n">InvalidJoinFieldError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t join from source_df when join_col: </span><span class="si">{join_col}</span><span class="s2"> is not unique.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidJoinFieldError</span><span class="p">(</span>
+            <span class="s2">&quot;Can&#39;t join from source_df when join_col: </span><span class="si">{join_col}</span><span class="s2"> is not unique.&quot;</span>
+        <span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">destination_df</span><span class="p">[</span><span class="n">join_col</span><span class="p">]</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_update_props_from_one_to_many</span><span class="p">(</span><span class="n">destination_df</span><span class="p">,</span> <span class="n">source_df</span><span class="p">,</span> <span class="n">join_col</span><span class="p">,</span> <span class="n">properties</span><span class="p">)</span>
@@ -19388,9 +19380,7 @@ destination_df that exist in source_df.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/data.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">529</span>
-<span class="normal">530</span>
-<span class="normal">531</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">531</span>
 <span class="normal">532</span>
 <span class="normal">533</span>
 <span class="normal">534</span>
@@ -19401,7 +19391,9 @@ destination_df that exist in source_df.</p>
 <span class="normal">539</span>
 <span class="normal">540</span>
 <span class="normal">541</span>
-<span class="normal">542</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">validate_existing_value_in_df</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">expected_value</span><span class="p">):</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">validate_existing_value_in_df</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">expected_value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate if df[field]==expected_value for all indices in idx.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;!! </span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2"> Not an existing field.&quot;</span><span class="p">)</span>
