@@ -44,7 +44,7 @@ def test_trip_stop_times(request, small_transit_net):
     stop_times = stop_times_for_trip_id(small_transit_net.feed.stop_times, trip_id)
 
     result = stop_times.stop_id.to_list()
-    expected = ["111", "333", "444"]
+    expected = [1, 3, 4]
 
     assert result == expected
 
@@ -88,71 +88,71 @@ TEST_TRIP_PATTERNS = [
         "trip_id": "14944019-JUN19-MVS-BUS-Weekday-01",
         "pickup_type": "either",
         "answer": [
-            "56100",
-            "3256",
-            "53892",
-            "11858",
-            "11859",
-            "11861",
-            "11862",
-            "11863",
-            "3264",
-            "52760",
-            "11883",
-            "11888",
-            "17039",
-            "17036",
-            "17035",
-            "17031",
-            "17028",
-            "17027",
-            "17024",
-            "17023",
-            "80004",
-            "17017",
-            "17013",
-            "17010",
-            "17009",
-            "17006",
-            "17005",
+            45983,
+            150855,
+            46666,
+            68609,
+            62146,
+            70841,
+            69793,
+            7688,
+            100784,
+            91685,
+            71086,
+            133183,
+            44298,
+            68417,
+            72311,
+            46083,
+            75783,
+            71964,
+            71456,
+            44190,
+            44190,
+            74898,
+            51814,
+            75787,
+            75122,
+            75788,
+            123002,
         ],
     },
     {
         "trip_id": "14944019-JUN19-MVS-BUS-Weekday-01",
         "pickup_type": "both",
         "answer": [
-            "3256",
-            "53892",
-            "11858",
-            "11859",
-            "11861",
-            "11862",
-            "11863",
-            "3264",
-            "52760",
-            "11883",
-            "11888",
-            "17039",
-            "17036",
-            "17035",
-            "17031",
-            "17028",
-            "17027",
-            "17024",
-            "17023",
-            "80004",
-            "17017",
-            "17013",
-            "17010",
-            "17009",
-            "17006",
-            "17005",
+            150855,
+            46666,
+            68609,
+            62146,
+            70841,
+            69793,
+            7688,
+            100784,
+            91685,
+            71086,
+            133183,
+            44298,
+            68417,
+            72311,
+            46083,
+            75783,
+            71964,
+            71456,
+            44190,
+            44190,
+            74898,
+            51814,
+            75787,
+            75122,
+            75788,
+            123002,
         ],
     },
     {
         "trip_id": "14944019-JUN19-MVS-BUS-Weekday-01",
         "pickup_type": "pickup_only",
-        "answer": ["56100"],
+        "answer": [45983],
     },
     {
         "trip_id": "14944019-JUN19-MVS-BUS-Weekday-01",
@@ -186,7 +186,7 @@ def test_stop_times_for_trip_id(request, small_transit_net):
     expected = pd.DataFrame(
         {
             "trip_id": ["blue-2", "blue-2", "blue-2"],
-            "stop_id": ["111", "333", "444"],
+            "stop_id": [1, 3, 4],
         }
     )
     pd.testing.assert_frame_equal(result, expected)
@@ -228,14 +228,13 @@ def test_stop_times_for_pickup_dropoff_trip_id(request, small_transit_net):
     stop_times = stop_times_for_pickup_dropoff_trip_id(
         small_transit_net.feed.stop_times, trip_id, pickup_dropoff
     )
-    _cols = ["trip_id", "stop_id", "model_node_id"]
+    _cols = ["trip_id", "stop_id"]
     result = stop_times[_cols].reset_index(drop=True)
 
     expected = pd.DataFrame(
         {
             "trip_id": ["blue-2", "blue-2", "blue-2"],
-            "stop_id": ["111", "333", "444"],
-            "model_node_id": [1, 3, 4],
+            "stop_id": [1, 3, 4],
         }
     )
     pd.testing.assert_frame_equal(result, expected)
@@ -249,7 +248,7 @@ def test_stop_id_pattern_for_trip(request, small_transit_net):
     result = stop_id_pattern_for_trip(
         small_transit_net.feed.stop_times, trip_id, pickup_dropoff=pickup_dropoff
     )
-    expected = ["111", "333", "444"]
+    expected = [1, 3, 4]
     assert result == expected
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
@@ -271,7 +270,7 @@ def test_feed_equality(request, small_transit_net):
     import copy
 
     new_stops = copy.deepcopy(feed2.stops)
-    new_stops.loc[new_stops.stop_id == "111", "stop_name"] = "different stop name"
+    new_stops.loc[new_stops.stop_id == 1, "stop_name"] = 999
     feed2.stops = new_stops
     assert feed1 != feed2
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -322,8 +321,7 @@ def test_filter_stop_times_to_links(request):
         {
             "trip_id": ["t1", "t1", "t1", "t1", "t2", "t2", "t2"],
             "stop_sequence": [1, 2, 3, 4, 1, 2, 3],
-            "stop_id": ["t1", "t2", "t3", "t5", "t1", "t3", "t7"],
-            "model_node_id": [1, 2, 3, 5, 1, 3, 7],
+            "stop_id": [1, 2, 3, 5, 1, 3, 7],
         }
     )
 
@@ -342,8 +340,7 @@ def test_filter_stop_times_to_links(request):
         {
             "trip_id": ["t1", "t1", "t1", "t2", "t2"],
             "stop_sequence": [1, 2, 3, 1, 2],
-            "stop_id": ["t1", "t2", "t3", "t1", "t3"],
-            "model_node_id": [1, 2, 3, 1, 3],
+            "stop_id": [1, 2, 3, 1, 3],
         }
     )
 

@@ -194,7 +194,7 @@ def test_route_changes(request, small_transit_net, small_net, test_routing):
     ].to_list()
     trip_stop_times_nodes = stop_times_for_trip_id(
         net.feed.stop_times, repr_trip_id
-    ).model_node_id.to_list()
+    ).stop_id.to_list()
 
     if "expected_routing" in test_routing:
         expected_shape = [abs(int(x)) for x in test_routing["expected_routing"]]
@@ -218,11 +218,9 @@ def test_route_changes(request, small_transit_net, small_net, test_routing):
         WranglerLogger.error(f"Extra unexpected stop_times: {extra_stop_times_nodes}")
     assert expected_stops_nodes == trip_stop_times_nodes
 
-    missing_in_stops = list(set(expected_stops_nodes) - set(net.feed.stops.model_node_id))
+    missing_in_stops = list(set(expected_stops_nodes) - set(net.feed.stops.stop_id))
     if missing_in_stops:
-        WranglerLogger.debug(
-            f"stops.model_node_id: \n{net.feed.stops[['model_node_id', 'stop_id']]}"
-        )
+        WranglerLogger.debug(f"stops.stop_id: \n{net.feed.stops[['stop_id']]}")
         WranglerLogger.error(f"Stops missing in stops.txt: {missing_in_stops}")
     assert not missing_in_stops
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -295,7 +293,7 @@ def test_route_changes_project_card(
         transit_net.feed.stop_times["trip_id"] == "14944022-JUN19-MVS-BUS-Weekday-01"
     ]["stop_id"].tolist()
     result_tail = result[-5:]
-    answer_tail = ["17013", "17010", "17009", "17006", "17005"]
+    answer_tail = [51814, 75787, 75122, 75788, 123002]
     assert result_tail == answer_tail
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -322,10 +320,7 @@ def test_wo_existing(request, stpaul_net: RoadwayNetwork, stpaul_transit_net: Tr
         transit_net.feed.stop_times["trip_id"] == "14986385-JUN19-MVS-BUS-Weekday-01"
     ]["stop_id"].tolist()
 
-    answer = [
-        "2609",
-        "40126",
-    ]  # there are two stop_ids matching the model_node_id 75318 stops.txt
+    answer = [75318]
     assert set(result).issubset(answer)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

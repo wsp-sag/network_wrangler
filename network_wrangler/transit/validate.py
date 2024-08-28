@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from pathlib import Path
 
 import pandas as pd
 
 from pandera.typing import DataFrame
+from pandera.errors import SchemaErrors
 
 from ..logger import WranglerLogger
 
@@ -39,9 +41,9 @@ def transit_nodes_without_road_nodes(
         boolean indicating if relationships are all valid
     """
     feed_nodes_series = [
-        feed.stops["model_node_id"],
+        feed.stops["stop_id"],
         feed.shapes["shape_model_node_id"],
-        # feed.stop_times["model_node_id"],
+        feed.stop_times["stop_id"],
     ]
     tr_nodes = set(pd.concat(feed_nodes_series).unique())
     rd_nodes = set(nodes_df[rd_field].unique().tolist())
@@ -137,3 +139,47 @@ def transit_road_net_consistency(feed: Feed, road_net: RoadwayNetwork) -> bool:
     _missing_nodes = transit_nodes_without_road_nodes(feed, road_net.nodes_df)
     _consistency = _missing_links.empty and not _missing_nodes
     return _consistency
+
+
+def validate_transit_in_dir(
+    directory: Path,
+    suffix: str = "txt",
+    road_dir: Path = None,
+    road_suffix: str = "geojson",
+) -> bool:
+    """Validates a roadway network in a directory to the wrangler data model specifications.
+
+    Args:
+        directory (Path): The transit network file directory.
+        suffix (str): The suffices of roadway network file name. Defaults to "txt".
+        road_dir (Path): The roadway network file directory. Defaults to None.
+        road_suffix (str): The suffices of roadway network file name. Defaults to "geojson".
+        output_dir (str): The output directory for the validation report. Defaults to ".".
+    """
+    from network_wrangler.transit import load_transit
+
+    try:
+        t = load_transit(directory, suffix=suffix)
+    except SchemaErrors as e:
+        WranglerLogger.error(f"!!! [Transit Network invalid] - Failed Loading to Feed object\n{e}")
+        return False
+    if road_dir is not None:
+        from network_wrangler.roadway import load_roadway
+        from network_wrangler.transit.network import TransitRoadwayConsistencyError
+
+        try:
+            r = load_roadway(road_dir, suffix=road_suffix)
+        except FileNotFoundError:
+            WranglerLogger.error(f"! Roadway network not found in {road_dir}")
+            return False
+        except Exception as e:
+            WranglerLogger.error(f"! Error loading roadway network. \
+                                 Skipping validation of road to transit network.\n{e}")
+        try:
+            t.road_net = r
+        except TransitRoadwayConsistencyError as e:
+            WranglerLogger.error(f"!!! [Tranit Network inconsistent] Error in road to transit \
+                                 network consistency.\n{e}")
+            return False
+
+        return valid

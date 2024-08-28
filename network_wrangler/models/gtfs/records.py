@@ -133,7 +133,8 @@ class StopRecord(BaseModel):
 class WranglerStopRecord(StopRecord):
     """Wrangler-flavored StopRecord."""
 
-    trip_id: TripID
+    stop_id: int
+    stop_id_GTFS: Optional[StopID]
 
 
 class RouteRecord(BaseModel):
@@ -190,8 +191,7 @@ class StopTimeRecord(BaseModel):
 class WranglerStopTimeRecord(StopTimeRecord):
     """Wrangler-flavored StopTimeRecord."""
 
-    model_node_id: int
-
+    stop_id: int
     model_config = ConfigDict(
         protected_namespaces=(),
     )

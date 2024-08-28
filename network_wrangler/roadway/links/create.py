@@ -63,9 +63,8 @@ def _fill_missing_link_geometries_from_nodes(
         updated_links_df = linestring_from_nodes(links_df.loc[links_df.geometry.isna()], nodes_df)
         links_df.update(updated_links_df)
         # WranglerLogger.debug(f"links with updated geometries:\n{links_df}")
-        WranglerLogger.debug(
-            f"Created link geo from nodes in {round(time.time() - geo_start_t, 2)}."
-        )
+        msg = f"Created link geo from nodes in {round(time.time() - geo_start_t, 2)}."
+        # WranglerLogger.debug(msg)
     return links_df
 
 

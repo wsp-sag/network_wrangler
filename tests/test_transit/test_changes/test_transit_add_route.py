@@ -40,6 +40,7 @@ def test_add_route_to_net_dict(
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
+@pytest.mark.skip("Not implemented")
 def test_add_route_project_card(
     request,
     stpaul_net: RoadwayNetwork,

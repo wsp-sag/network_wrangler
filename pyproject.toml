@@ -70,9 +70,18 @@ tests = [
 
 [tool.setuptools]
 packages = ["network_wrangler"]
+script-files = [
+    "network_wrangler/bin/clip_roadway.py",
+    "network_wrangler/bin/clip_transit.py",
+    "network_wrangler/bin/convert_network.py",
+    "network_wrangler/bin/validate_roadway.py",
+    "network_wrangler/bin/validate_transit.py",
+    "network_wrangler/bin/build_scenario_from_config.py",
+]
 
 [tool.ruff]
 line-length = 99
+exclude = ["notebook/*.ipynb"]
 
 [tool.ruff.lint]
 select = ["D"]

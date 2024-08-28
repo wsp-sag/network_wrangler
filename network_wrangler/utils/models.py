@@ -2,6 +2,7 @@
 
 import copy
 from typing import Union, get_type_hints, Optional
+from pathlib import Path
 
 import pandas as pd
 import geopandas as gpd
@@ -53,12 +54,16 @@ class TableValidationError(Exception):
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
-def validate_df_to_model(df: DataFrame, model: DataFrameModel) -> DataFrame:
+def validate_df_to_model(
+    df: DataFrame, model: DataFrameModel, output_file: Path = "validation_failure_cases.csv"
+) -> DataFrame:
     """Wrapper to validate a DataFrame against a Pandera DataFrameModel with better logging.
 
     Args:
         df: DataFrame to validate.
         model: Pandera DataFrameModel to validate against.
+        output_file: Optional file to write validation errors to. Defaults to
+            validation_failure_cases.csv.
     """
     try:
         model_df = model.validate(df, lazy=True)
@@ -80,7 +85,7 @@ def validate_df_to_model(df: DataFrame, model: DataFrameModel) -> DataFrame:
 
         # If there are many errors, save them to a file
         if len(e.failure_cases) > 5:
-            error_file = "validation_failure_cases.csv"
+            error_file = output_file
             e.failure_cases.to_csv(error_file)
             WranglerLogger.info(f"Detailed error cases written to {error_file}")
         else:

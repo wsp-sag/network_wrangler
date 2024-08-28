@@ -11,7 +11,7 @@ import pandas as pd
 
 from pandera.typing import DataFrame
 
-from ...params import TRANSIT_SHAPE_ID_SCALAR, TRANSIT_STOP_ID_SCALAR
+from ...params import TRANSIT_SHAPE_ID_SCALAR
 from ..feed.trips import trip_ids_for_shape_id
 from ..feed.stops import node_is_stop
 from ..feed.stop_times import stop_times_for_trip_id
@@ -61,13 +61,11 @@ def _create_stop_times(
 
     """
     WranglerLogger.debug(f"Creating new stop times for trip: {trip_id}")
-    node_to_stop = feed.stops.set_index("model_node_id")["stop_id"].to_dict()
 
     new_stoptime_rows = pd.DataFrame(
         {
             "trip_id": trip_id,
-            "stop_id": [node_to_stop[n] for n in set_stops_node_ids],
-            "model_node_id": set_stops_node_ids,
+            "stop_id": set_stops_node_ids,
             "stop_sequence": np.arange(len(set_stops_node_ids)),
         }
     )
@@ -239,7 +237,7 @@ def _replace_stop_times_segment_for_trip(
     WranglerLogger.debug(f"Replacing existing nodes pattern: {existing_stop_nodes}")
     this_trip_stoptimes = stop_times_for_trip_id(feed.stop_times, trip_id)
 
-    _disp_col = ["stop_id", "model_node_id", "stop_sequence"]
+    _disp_col = ["stop_id", "stop_sequence"]
 
     # if start or end nodes are not in stops, get closest ones from shapes
     start_n, end_n = abs(int(existing_stop_nodes[0])), abs(int(existing_stop_nodes[-1]))
@@ -265,7 +263,7 @@ def _replace_stop_times_segment_for_trip(
     ) = segment_data_by_selection_min_overlap(
         [start_n, end_n],
         this_trip_stoptimes,
-        "model_node_id",
+        "stop_id",
         set_stops_nodes,
     )
 
@@ -386,7 +384,6 @@ def _update_stops(
     feed: Feed,
     routing_set: list[int],
     road_net: RoadwayNetwork,
-    stop_id_scalar: int,
 ) -> DataFrame[WranglerStopsTable]:
     """Update stops for transit routing change.
 
@@ -394,13 +391,12 @@ def _update_stops(
         feed: Feed object
         routing_set: List of model_node_ids to be stops
         road_net: Reference roadway network
-        stop_id_scalar: scalar value to use when creating new stop_ids
 
     Returns:
         pd.DataFrame: Updated stops.txt
     """
     set_stops_node_ids = [int(i) for i in routing_set if int(i) > 0]
-    trn_net_stop_nodes = feed.stops["model_node_id"].tolist()
+    trn_net_stop_nodes = feed.stops["stop_id"].tolist()
 
     # Check if all stops are already in stops.txt and return as-is if so.
     missing_stops_node_ids = list(set(set_stops_node_ids) - set(trn_net_stop_nodes))
@@ -410,23 +406,21 @@ def _update_stops(
 
     WranglerLogger.debug("Updating stops for transit routing change.")
 
-    new_stop_ids = generate_list_of_new_ids(
-        missing_stops_node_ids, feed.stops["stop_id"], stop_id_scalar
-    )
     # Create new stop records
     new_stops = pd.DataFrame(
         {
-            "stop_id": new_stop_ids,
-            "model_node_id": missing_stops_node_ids,
+            "stop_id": missing_stops_node_ids,
         },
-        index=range(len(new_stop_ids)),
+        index=range(len(missing_stops_node_ids)),
     )
 
     new_stops = new_stops.merge(
         road_net.nodes_df[["model_node_id", "X", "Y"]],
         how="left",
-        on="model_node_id",
+        left_on="stop_id",
+        right_on="model_node_id",
     )
+    new_stops = new_stops.drop(columns=["model_node_id"])
     new_stops = new_stops.rename(columns={"Y": "stop_lat", "X": "stop_lon"})
     stops = pd.concat([feed.stops, new_stops], ignore_index=True)
     return stops
@@ -445,7 +439,7 @@ def _delete_stop_times_for_nodes(
         WranglerStopTimesTable: Updated stop_times for the trip
     """
     WranglerLogger.debug(f"Deleting stop times for nodes: {del_stops_nodes}")
-    trip_stoptimes = trip_stoptimes[~trip_stoptimes.model_node_id.isin(del_stops_nodes)]
+    trip_stoptimes = trip_stoptimes[~trip_stoptimes.stop_id.isin(del_stops_nodes)]
     trip_stoptimes["stop_sequence"] = np.arange(len(trip_stoptimes)) + 1
     return trip_stoptimes
 
@@ -518,7 +512,6 @@ def _update_stop_times_for_trip(
     _show_col = [
         "trip_id",
         "stop_id",
-        "model_node_id",
         "stop_sequence",
         "departure_time",
         "arrival_time",
@@ -535,7 +528,6 @@ def apply_transit_routing_change(
     selection: TransitSelection,
     routing_change: dict,
     shape_id_scalar: int = TRANSIT_SHAPE_ID_SCALAR,
-    stop_id_scalar: int = TRANSIT_STOP_ID_SCALAR,
     reference_road_net: Optional[RoadwayNetwork] = None,
 ) -> TransitNetwork:
     """Apply a routing change to the transit network, including stop updates.
@@ -552,8 +544,6 @@ def apply_transit_routing_change(
             ```
         shape_id_scalar (int, optional): Initial scalar value to add to duplicated shape_ids to
             create a new shape_id. Defaults to SHAPE_ID_SCALAR.
-        stop_id_scalar (int, optional): Initial scalar value to add to duplicated stop_ids to
-            create a new stop_id. Defaults to STOP_ID_SCALAR.
         reference_road_net (RoadwayNetwork, optional): Reference roadway network to use for
             updating shapes and stops. Defaults to None.
     """
@@ -593,9 +583,7 @@ def apply_transit_routing_change(
     WranglerLogger.debug(f"updated_feed.shapes: \n{updated_feed.shapes}")
     WranglerLogger.debug(f"updated_feed.trips: \n{updated_feed.trips}")
     # ---- Check if any stops need adding to stops.txt and add if they do ----------
-    updated_feed.stops = _update_stops(
-        updated_feed, routing_change["set"], road_net, stop_id_scalar
-    )
+    updated_feed.stops = _update_stops(updated_feed, routing_change["set"], road_net)
     WranglerLogger.debug(f"updated_feed.stops: \n{updated_feed.stops}")
     # ---- Update stop_times --------------------------------------------------------
     for trip_id in trip_ids:
@@ -610,7 +598,6 @@ def apply_transit_routing_change(
     _show_col = [
         "trip_id",
         "stop_id",
-        "model_node_id",
         "stop_sequence",
         "departure_time",
         "arrival_time",

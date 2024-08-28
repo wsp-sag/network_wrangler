@@ -179,8 +179,8 @@ def stop_times_for_trip_node_segment(
             Defaults to True.
     """
     stop_times = stop_times_for_trip_id(stop_times, trip_id)
-    start_idx = stop_times[stop_times["model_node_id"] == node_id_start].index[0]
-    end_idx = stop_times[stop_times["model_node_id"] == node_id_end].index[0]
+    start_idx = stop_times[stop_times["stop_id"] == node_id_start].index[0]
+    end_idx = stop_times[stop_times["stop_id"] == node_id_end].index[0]
     if not include_start:
         start_idx += 1
     if include_end:
@@ -209,14 +209,14 @@ def stop_times_for_shapes(
     * should be retained
     > stop_times
 
-    trip_id   stop_sequence   stop_id   model_node_id
-    *t1          1                  t1       1
-    *t1          2                  t2       2
-    *t1          3                  t3       3
-    t1           4                  t5       5
-    *t2          1                  t1       1
-    *t2          2                  t3       3
-    t2           3                  t7       7
+    trip_id   stop_sequence   stop_id
+    *t1          1                  1
+    *t1          2                  2
+    *t1          3                  3
+    t1           4                  5
+    *t2          1                  1
+    *t2          2                  3
+    t2           3                  7
 
     > shapes
 
@@ -238,14 +238,14 @@ def stop_times_for_shapes(
     """
     > stop_times_w_shapes
 
-    trip_id   stop_sequence   stop_id   model_node_id   shape_id   shape_pt_sequence
-    *t1          1                  t1       1               s1          1
-    *t1          2                  t2       2               s1          2
-    *t1          3                  t3       3               s1          3
-    t1           4                  t5       5               NA          NA
-    *t2          1                  t1       1               s2          1
-    *t2          2                  t3       3               s2          2
-    t2           3                  t7       7               NA          NA
+    trip_id   stop_sequence   stop_id    shape_id   shape_pt_sequence
+    *t1          1                  1        s1          1
+    *t1          2                  2        s1          2
+    *t1          3                  3        s1          3
+    t1           4                  5        NA          NA
+    *t2          1                  1        s2          1
+    *t2          2                  3        s2          2
+    t2           3                  7        NA          NA
 
     """
     stop_times_w_shapes = merge_shapes_to_stop_times(stop_times, shapes, trips)
@@ -253,12 +253,12 @@ def stop_times_for_shapes(
     """
     > stop_times_w_shapes
 
-    trip_id   stop_sequence   stop_id   model_node_id   shape_id   shape_pt_sequence
-    *t1          1                  t1       1               s1          1
-    *t1          2                  t2       2               s1          2
-    *t1          3                  t3       3               s1          3
-    *t2          1                  t1       1               s2          1
-    *t2          2                  t3       3               s2          2
+    trip_id   stop_sequence   stop_id   shape_id   shape_pt_sequence
+    *t1          1               1        s1          1
+    *t1          2               2        s1          2
+    *t1          3               3        s1          3
+    *t2          1               1        s2          1
+    *t2          2               3        s2          2
 
     """
     filtered_stop_times = stop_times_w_shapes[stop_times_w_shapes["shape_pt_sequence"].notna()]
