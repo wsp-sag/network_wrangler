@@ -107,7 +107,7 @@ Ready to install network wrangler?
 
     > Shapely, a pre-requisite, doesn't install propertly because it is missing GEOS module
 
-    Try installing them using conda. 
+    Try installing them using conda.
 
     ```bash
     conda uninstall geopandas rtree shapely
