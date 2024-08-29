@@ -110,13 +110,15 @@ class RoadLinksTable(DataFrameModel):
         coerce = True
         unique = ["A", "B"]
 
-    @pa.check("sc_*", regex=True)
+    @pa.check("sc_*", regex=True, element_wise=True)
     def check_scoped_fields(cls, scoped_value: Series) -> Series[bool]:
         """Checks that all fields starting with 'sc_' or 'sc_ML_' are valid ScopedLinkValueList.
 
         Custom check to validate fields starting with 'sc_' or 'sc_ML_'
         against a ScopedLinkValueItem model, handling both mandatory and optional fields.
         """
+        if not scoped_value or pd.isna(scoped_value):
+            return True
         return validate_pyd(scoped_value, ScopedLinkValueList)
 
 

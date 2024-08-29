@@ -3,7 +3,8 @@
 import pandas as pd
 import pytest
 from pandera import DataFrameModel
-from pandera.errors import SchemaErrors
+
+from network_wrangler.utils.models import TableValidationError
 from network_wrangler.models._base.db import DBModelMixin, ForeignKeyValueError
 
 
@@ -41,5 +42,5 @@ def test_validate_db_table():
     with pytest.raises(ForeignKeyValueError):
         db.table_b = pd.DataFrame({"B_ID": [4, 5, 6], "a_value": [3, 4, 5]})
 
-    with pytest.raises(SchemaErrors):
+    with pytest.raises(TableValidationError):
         db.table_a = pd.DataFrame({"B_ID": ["hi", "there", "buddy"], "a_value": [3, 4, 5]})
