@@ -110,30 +110,14 @@ class RoadLinksTable(DataFrameModel):
         coerce = True
         unique = ["A", "B"]
 
-    @pa.dataframe_check
-    def check_scoped_fields(cls, df: pd.DataFrame) -> Series[bool]:
+    @pa.check("sc_*", regex=True)
+    def check_scoped_fields(cls, scoped_value: Series) -> Series[bool]:
         """Checks that all fields starting with 'sc_' or 'sc_ML_' are valid ScopedLinkValueList.
 
         Custom check to validate fields starting with 'sc_' or 'sc_ML_'
         against a ScopedLinkValueItem model, handling both mandatory and optional fields.
         """
-        scoped_fields = [
-            col for col in df.columns if col.startswith("sc_") or col.startswith("sc_ML")
-        ]
-        results = []
-        # WranglerLogger.debug(f"Checking scoped fields: {scoped_fields}")
-        # WranglerLogger.debug(f"{df[scoped_fields]}")
-        for field in scoped_fields:
-            if df[field].notna().any():
-                results.append(
-                    df[field].dropna().apply(validate_pyd, args=(ScopedLinkValueList,)).all()
-                )
-            else:
-                # Handling optional fields: Assume validation is true if the field is entirely NA
-                results.append(True)
-
-        # Combine all results: True if all fields pass validation
-        return pd.Series(all(results), index=df.index)
+        return validate_pyd(scoped_value, ScopedLinkValueList)
 
 
 class RoadNodesTable(DataFrameModel):

@@ -314,6 +314,7 @@ class TransitNetwork(object):
                 self,
                 self.get_selection(change.service),
                 change.transit_property_change,
+                project_name=change.project,
             )
 
         elif change.change_type == "transit_routing_change":
@@ -322,6 +323,7 @@ class TransitNetwork(object):
                 self.get_selection(change.service),
                 change.transit_routing_change,
                 reference_road_net=reference_road_net,
+                project_name=change.project,
             )
 
         elif change.change_type == "add_new_route":

@@ -49,7 +49,7 @@ from ..logger import WranglerLogger
 from ..models.projects.transit_selection import (
     SelectRouteProperties,
 )
-from ..time import Timespan
+from ..models._base.types import TimeString
 
 if TYPE_CHECKING:
     from .feed.feed import Feed
@@ -57,8 +57,8 @@ if TYPE_CHECKING:
     from ..models.gtfs.tables import (
         WranglerTripsTable,
         WranglerShapesTable,
-        FrequenciesTable,
-        WranglerRoutesTable,
+        WranglerFrequenciesTable,
+        RoutesTable,
     )
 
 
@@ -185,7 +185,7 @@ class TransitSelection:
         return self._selected_trips_df
 
     @property
-    def selected_frequencies_df(self) -> DataFrame[FrequenciesTable]:
+    def selected_frequencies_df(self) -> DataFrame[WranglerWranglerFrequenciesTable]:
         """DataFrame of selected frequencies."""
         sel_freq_df = self.net.feed.frequencies.loc[
             self.net.feed.frequencies.trip_id.isin(self.selected_trips_df.trip_id)
@@ -360,7 +360,7 @@ def _filter_trips_by_trip(
 
 def _filter_trips_by_route(
     trips_df: DataFrame[WranglerTripsTable],
-    routes_df: DataFrame[WranglerRoutesTable],
+    routes_df: DataFrame[RoutesTable],
     select_route_properties: SelectRouteProperties,
 ) -> DataFrame[WranglerTripsTable]:
     """Filter trips by route properties.
@@ -399,8 +399,8 @@ def _filter_trips_by_route(
 
 def _filter_trips_by_timespans(
     trips_df: DataFrame[WranglerTripsTable],
-    freq_df: DataFrame[FrequenciesTable],
-    timespans: List[Timespan],
+    freq_df: DataFrame[WranglerFrequenciesTable],
+    timespans: list[list[TimeString]],
 ) -> DataFrame[WranglerTripsTable]:
     """Returns trips that have frequencies that overlap with at least one of the timespans."""
     _unfiltered_trips = len(trips_df)
@@ -410,9 +410,6 @@ def _filter_trips_by_timespans(
 
     # Filter freq to time that overlaps selection
     filtered_trip_ids = filter_df_to_overlapping_timespans(freq_df, timespans).trip_id.tolist()
-    WranglerLogger.debug(
-        f"Trip_ids for timespans {_filter_trips_by_timespans}: {filtered_trip_ids}"
-    )
 
     _filtered_trips = len(filtered_trip_ids)
     if _filtered_trips == 0:
@@ -421,7 +418,7 @@ def _filter_trips_by_timespans(
 
     WranglerLogger.debug(
         f"{_filtered_trips}/{_unfiltered_trips} trips remain after \
-        filtering to timeframe {timespan}"
+        filtering to timespans {timespans}"
     )
 
     # Filter trips table to those still in freq table

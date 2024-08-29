@@ -72,8 +72,9 @@ def test_coerce_over24hr_times(request, small_transit_net):
     # Should be ok b/c GTFS can last "several days"
     _new_stop_times = copy.deepcopy(feed.stop_times)
     _new_stop_times.loc[2, "arrival_time"] = "42:00:00"
+    _new_stop_times.loc[1, "departure_time"] = "12:00:00"
     feed.stop_times = _new_stop_times
-    assert feed.stop_times.loc[2, "arrival_time"] == pd.Timestamp("42:00:00")
+    assert isinstance(feed.stop_times.loc[2, "arrival_time"], pd.Timestamp)
 
     WranglerLogger.debug(f"feed.stop_times: \n{feed.stop_times}")
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -92,18 +93,34 @@ def test_transit_property_change(request, small_transit_net):
             "property_changes": {"headway_secs": {"set": new_headway}},
         },
     }
+    og_df = copy.deepcopy(net.feed.frequencies)
+    WranglerLogger.debug(f"Initial Frequencies: \n{net.feed.frequencies}")
     net.apply(project_card)
-    assert (
-        net.feed.frequencies.at[
-            (net.feed.frequencies.trip_id.isin(trip_ids) & net.feed.start_time == timespan[0]),
-            "headway_secs",
-        ]
-        == new_headway
-    )
 
-    assert (
-        net.feed.trips.at[net.feed.trips.trip_id.isin(trip_ids), "projects"]
-        == f"{project_card['project']},"
-    )
+    # Filter the DataFrame correctly
+    WranglerLogger.debug(f"Result Frequencies: \n{net.feed.frequencies}")
+    target_df = net.feed.frequencies.loc[
+        (net.feed.frequencies.trip_id.isin(trip_ids)) &
+        (net.feed.frequencies.start_time.dt.strftime('%H:%M') == timespan[0])
+    ]
 
-    WranglerLogger.debug(f"net.feed.trips: \n{net.feed.trips}")
+    if not (target_df["headway_secs"] == new_headway).all():
+        WranglerLogger.error("Headway not changed as expected:")
+        WranglerLogger.debug(f"Targeted Frequencies: \n{target_df}")
+        assert False
+
+    unchanged_result_df = net.feed.frequencies.loc[~net.feed.frequencies.index.isin(target_df.index)]
+    unchanged_og_df_df = og_df.loc[~og_df.index.isin(target_df.index)]
+
+    try:
+        pd.testing.assert_frame_equal(unchanged_result_df, unchanged_og_df_df)
+    except AssertionError as e:
+        WranglerLogger.error("Frequencies changed that shouldn't have:")
+        WranglerLogger.debug(f"(Supposed to be) Unchanged Frequencies: \n{unchanged_result_df}")
+        WranglerLogger.debug(f"Original Frequencies: \n{unchanged_og_df_df}")
+        raise e
+
+    if not (target_df["projects"] == f"{project_card['project']},").all():
+        WranglerLogger.error(f"Projects not updated as expected with {project_card['project']}:")
+        WranglerLogger.debug(f"Targeted Frequencies: \n{target_df}")
+        assert False

@@ -260,3 +260,16 @@ class Timespan:
     def __hash__(self) -> int:
         """Hash value of the Timespan object."""
         return hash(str(self))
+
+    def overlaps(self, other: Timespan) -> bool:
+        """Check if two timespans overlap.
+
+        Args:
+            other (Timespan): The other timespan to compare.
+
+        Returns:
+            bool: True if the two timespans overlap, False otherwise.
+        """
+        return (
+            self.start_time <= other.end_time and self.end_time >= other.start_time
+        )
