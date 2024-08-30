@@ -287,7 +287,7 @@ def _edit_link_property(
     # if it is a managed lane field, initialize managed lane attributes if haven't already
     if prop_name.startswith("ML_"):
         links_df = _initialize_links_as_managed_lanes(
-            links_df, link_idx, offset_geometry_meters=ml_link_offset_meters
+            links_df, link_idx, geometry_offset_meters=ml_link_offset_meters
         )
 
     # Initialize new props to None
