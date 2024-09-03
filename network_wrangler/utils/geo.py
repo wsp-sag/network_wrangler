@@ -466,6 +466,7 @@ def offset_geometry_meters(geo_s: gpd.GeoSeries, offset_distance_meters: float) 
     og_crs = geo_s.crs
     geo_s.to_crs(METERS_CRS)
     offset_geo = geo_s.apply(lambda x: x.offset_curve(offset_distance_meters))
+    offset_geo = gpd.GeoSeries(offset_geo)
     return offset_geo.to_crs(og_crs)
 
 
