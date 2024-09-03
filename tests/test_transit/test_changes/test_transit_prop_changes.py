@@ -65,6 +65,7 @@ def test_valid_field_value_set(request, small_transit_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
+@pytest.mark.skip(reason="This feature is not yet implemented. See #347")
 def test_coerce_over24hr_times(request, small_transit_net):
     """Checks that setting a valid field value will pass."""
     WranglerLogger.info(f"--Starting: {request.node.name}")

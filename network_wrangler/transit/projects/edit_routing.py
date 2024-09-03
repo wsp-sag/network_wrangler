@@ -123,7 +123,8 @@ def _create_shapes(
         new_shape_rows_df["projects"] = f"{project_name},"
     new_shape_rows_df = new_shape_rows_df.drop(columns=["model_node_id"])
     if len(new_shape_rows_df) < 10:
-        WranglerLogger.debug(f"New Shape Rows: \n{new_shape_rows_df}")
+        # WranglerLogger.debug(f"New Shape Rows: \n{new_shape_rows_df}")
+        pass
 
     return new_shape_rows_df
 
@@ -607,7 +608,7 @@ def apply_transit_routing_change(
 
     # ---- update each shape that is used by selected trips to use new routing -------
     shape_ids = shape_ids_for_trip_ids(updated_feed.trips, trip_ids)
-    WranglerLogger.debug(f"shape_ids: {shape_ids}")
+    # WranglerLogger.debug(f"shape_ids: {shape_ids}")
     for shape_id in shape_ids:
         updated_feed.shapes, updated_feed.trips = _update_shapes_and_trips(
             updated_feed,
@@ -619,13 +620,13 @@ def apply_transit_routing_change(
             routing_existing=routing_change.get("existing", []),
             project_name=project_name,
         )
-    WranglerLogger.debug(f"updated_feed.shapes: \n{updated_feed.shapes}")
-    WranglerLogger.debug(f"updated_feed.trips: \n{updated_feed.trips}")
+    # WranglerLogger.debug(f"updated_feed.shapes: \n{updated_feed.shapes}")
+    # WranglerLogger.debug(f"updated_feed.trips: \n{updated_feed.trips}")
     # ---- Check if any stops need adding to stops.txt and add if they do ----------
     updated_feed.stops = _update_stops(
         updated_feed, routing_change["set"], road_net, project_name=project_name
     )
-    WranglerLogger.debug(f"updated_feed.stops: \n{updated_feed.stops}")
+    # WranglerLogger.debug(f"updated_feed.stops: \n{updated_feed.stops}")
     # ---- Update stop_times --------------------------------------------------------
     for trip_id in trip_ids:
         updated_feed.stop_times = _update_stop_times_for_trip(
@@ -646,9 +647,9 @@ def apply_transit_routing_change(
     _ex_stoptimes = updated_feed.stop_times.loc[
         updated_feed.stop_times.trip_id == trip_ids[0], _show_col
     ]
-    WranglerLogger.debug(f"stop_times for first updated trip: \n {_ex_stoptimes}")
+    # WranglerLogger.debug(f"stop_times for first updated trip: \n {_ex_stoptimes}")
 
     # ---- Update transit network with updated feed.
     net.feed = updated_feed
-    WranglerLogger.debug(f"net.feed.stops: \n {net.feed.stops}")
+    # WranglerLogger.debug(f"net.feed.stops: \n {net.feed.stops}")
     return net

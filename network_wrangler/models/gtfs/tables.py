@@ -392,8 +392,8 @@ class WranglerStopTimesTable(StopTimesTable):
     """Wrangler flavor of GTFS StopTimesTable."""
 
     stop_id: Series[int] = pa.Field(nullable=False, coerce=True, description="The model_node_id.")
-    arrival_time: Series = pa.Field(coerce=True, default=pd.NaT) # don't put Timestamp here b/c it gets parsed as
-    departure_time: Series = pa.Field(coerce=True, default=pd.NaT) # ditto
+    arrival_time: Series[Timestamp] = pa.Field(nullable=True)
+    departure_time: Series[Timestamp] = pa.Field(nullable=True)
     projects: Series[str] = pa.Field(coerce=True, default="")
 
     @pa.parser("arrival_time")
@@ -409,4 +409,17 @@ class WranglerStopTimesTable(StopTimesTable):
         """Check that departure time is timestamp."""
         if series.dtype == "datetime64[ns]":
             return series
-        return str_to_time_series(series)
+        series = str_to_time_series(series)
+        return series.astype("datetime64[ns]")
+
+    class Config:
+        """Config for the StopTimesTable data model."""
+
+        coerce = True
+        add_missing_columns = True
+        _pk = ["trip_id", "stop_sequence"]
+        _fk = {
+            "trip_id": ["trips", "trip_id"],
+            "stop_id": ["stops", "stop_id"],
+        }
+        unique = ["trip_id", "stop_sequence"]

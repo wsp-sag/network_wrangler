@@ -22,8 +22,10 @@ from pydantic import validate_call
 from ..logger import WranglerLogger
 
 from ..models._base.types import TimespanString, TimeString
+from ..models._base.series import TimeStrSeriesSchema
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def str_to_time(time_str: TimeString, base_date: Optional[datetime.date] = None) -> datetime:
     """Convert TimeString (HH:MM<:SS>) to datetime object.
 
@@ -57,10 +59,11 @@ def str_to_time(time_str: TimeString, base_date: Optional[datetime.date] = None)
     return combined_datetime
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def str_to_time_series(
-    time_str_s: pd.Series[TimeString],
+    time_str_s: pd.Series,
     base_date: Optional[Union[pd.Series, datetime.date]] = None
-) -> datetime:
+) -> pd.Series:
     """Convert panda series of TimeString (HH:MM<:SS>) to datetime object.
 
     If HH > 24, will add a day to the base_date.
@@ -71,6 +74,8 @@ def str_to_time_series(
             If not provided, will use today. Can be either a single instance or a series of 
             same length as time_str_s
     """
+    TimeStrSeriesSchema.validate(time_str_s)
+
     # Set the base date to today if not provided
     if base_date is None:
         base_date = pd.Series([date.today()] * len(time_str_s))
@@ -108,6 +113,7 @@ def str_to_time_series(
     return result
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def str_to_time_list(timespan: list[TimeString]) -> list[list[datetime]]:
     """Convert list of TimeStrings (HH:MM<:SS>) to list of datetime.time objects."""
     timespan = list(map(str_to_time, timespan))
@@ -117,22 +123,26 @@ def str_to_time_list(timespan: list[TimeString]) -> list[list[datetime]]:
     return timespan
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def timespan_str_list_to_dt(timespans: list[TimespanString]) -> list[list[datetime]]:
     """Convert list of TimespanStrings to list of datetime.time objects."""
     [str_to_time_list(ts) for ts in timespans]
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def dt_to_seconds_from_midnight(dt: datetime) -> int:
     """Convert a datetime object to the number of seconds since midnight."""
     return (dt - dt.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def str_to_seconds_from_midnight(time_str: TimeString) -> int:
     """Convert a TimeString (HH:MM<:SS>) to the number of seconds since midnight."""
     dt = str_to_time(time_str)
     return dt_to_seconds_from_midnight(dt)
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def seconds_from_midnight_to_str(seconds: int) -> TimeString:
     """Convert the number of seconds since midnight to a TimeString (HH:MM)."""
     return str(timedelta(seconds=seconds))
@@ -150,13 +160,17 @@ def filter_df_to_overlapping_timespans(
         query_timespans: List of a list of TimespanStr of format ['HH:MM','HH:MM'] to query orig_df
             for overlapping records.
     """
-    mask = pd.Series([False] * len(orig_df))
+    if "start_time" not in orig_df.columns or "end_time" not in orig_df.columns:
+        raise ValueError("DataFrame must have 'start_time' and 'end_time' columns")
+    mask = pd.Series([False] * len(orig_df), index=orig_df.index)
     for query_timespan in query_timespans:
         q_start_time, q_end_time = str_to_time_list(query_timespan)
-        mask |= (orig_df["start_time"] < q_end_time) & (q_start_time < orig_df["end_time"])
+        this_ts_mask = (orig_df["start_time"] < q_end_time) & (q_start_time < orig_df["end_time"])
+        mask |= this_ts_mask
     return orig_df.loc[mask]
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def filter_df_to_max_overlapping_timespans(
     orig_df: pd.DataFrame,
     query_timespan: list[TimeString],
@@ -178,6 +192,8 @@ def filter_df_to_max_overlapping_timespans(
         keep_max_of_cols: list of fields to return the maximum value of overlap for.  If None,
             will return all overlapping time periods. Defaults to `['model_link_id']`
     """
+    if "start_time" not in orig_df.columns or "end_time" not in orig_df.columns:
+        raise ValueError("DataFrame must have 'start_time' and 'end_time' columns")
     q_start, q_end = str_to_time_list(query_timespan)
 
     overlap_start = orig_df["start_time"].combine(q_start, max)
@@ -196,7 +212,7 @@ def filter_df_to_max_overlapping_timespans(
     return overlap_df
 
 
-def convert_timespan_to_start_end_dt(timespan_s: pd.Series) -> pd.DataFrame:
+def convert_timespan_to_start_end_dt(timespan_s: pd.Serie[str]) -> pd.DataFrame:
     """Covert a timespan string ['12:00','14:00] to start_time and end_time datetime cols in df."""
     start_time = timespan_s.apply(lambda x: str_to_time(x[0]))
     end_time = timespan_s.apply(lambda x: str_to_time(x[1]))
@@ -230,7 +246,7 @@ def dt_contains(timespan1: list[datetime], timespan2: list[datetime]) -> bool:
     return (start_time_dt <= start_time_dt2) and (end_time_dt >= end_time_dt2)
 
 
-@validate_call
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def dt_overlaps(timespan1: list[datetime], timespan2: list[datetime]) -> bool:
     """Check if two timespans overlap.
 
@@ -242,6 +258,7 @@ def dt_overlaps(timespan1: list[datetime], timespan2: list[datetime]) -> bool:
     return (time1_start < time2_end) and (time2_start < time1_end)
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def timespans_overlap(timespan1: list[TimespanString], timespan2: list[TimespanString]) -> bool:
     """Check if two timespan strings overlap.
 
@@ -271,7 +288,6 @@ def filter_dt_list_to_overlaps(timespans: list[list[datetime]]) -> list[list[dat
     return overlaps
 
 
-@validate_call
 def dt_list_overlaps(timespans: list[list[datetime]]) -> bool:
     """Check if any of the timespans overlap.
 
@@ -299,7 +315,7 @@ def duration_dt(start_time_dt: datetime, end_time_dt: datetime) -> timedelta:
         return end_time_dt - start_time_dt
 
 
-def format_time(seconds):
+def format_seconds_to_legible_str(seconds: int) -> str:
     """Formats seconds into a human-friendly string for log files."""
     if seconds < 60:
         return f"{int(seconds)} seconds"
