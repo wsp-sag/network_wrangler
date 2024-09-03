@@ -2875,21 +2875,21 @@ Roadway Network tables.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">180</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
 <span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ExplodedScopedLinkPropertyTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
+<span class="normal">182</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ExplodedScopedLinkPropertyTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Datamodel used to validate an exploded links_df by scope.&quot;&quot;&quot;</span>
 
     <span class="n">model_link_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
@@ -2936,11 +2936,11 @@ Roadway Network tables.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for ExplodedScopedLinkPropertySchema.&quot;&quot;&quot;</span>
 
     <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;ExplodedScopedLinkPropertySchema&quot;</span>
@@ -3088,19 +3088,7 @@ Roadway Network tables.</p>
 <span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadLinksTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
+<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadLinksTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Datamodel used to validate if links_df is of correct format and types.&quot;&quot;&quot;</span>
 
     <span class="n">model_link_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -3117,6 +3105,7 @@ Roadway Network tables.</p>
     <span class="n">distance</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="n">roadway</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;road&quot;</span><span class="p">)</span>
+    <span class="n">projects</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="n">managed</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="n">shape_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -3130,6 +3119,7 @@ Roadway Network tables.</p>
     <span class="n">sc_lanes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Series</span><span class="p">[</span><span class="nb">object</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">sc_price</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Series</span><span class="p">[</span><span class="nb">object</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
+    <span class="n">ML_projects</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="n">ML_lanes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Series</span><span class="p">[</span><span class="n">Int64</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">ML_price</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Series</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">ML_access</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Series</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -3180,30 +3170,16 @@ Roadway Network tables.</p>
         <span class="n">coerce</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">unique</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]</span>
 
-    <span class="nd">@pa</span><span class="o">.</span><span class="n">dataframe_check</span>
-    <span class="k">def</span> <span class="nf">check_scoped_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Series</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+    <span class="nd">@pa</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">&quot;sc_*&quot;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">check_scoped_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">scoped_value</span><span class="p">:</span> <span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Series</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks that all fields starting with &#39;sc_&#39; or &#39;sc_ML_&#39; are valid ScopedLinkValueList.</span>
 
 <span class="sd">        Custom check to validate fields starting with &#39;sc_&#39; or &#39;sc_ML_&#39;</span>
 <span class="sd">        against a ScopedLinkValueItem model, handling both mandatory and optional fields.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">scoped_fields</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_ML&quot;</span><span class="p">)</span>
-        <span class="p">]</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1"># WranglerLogger.debug(f&quot;Checking scoped fields: {scoped_fields}&quot;)</span>
-        <span class="c1"># WranglerLogger.debug(f&quot;{df[scoped_fields]}&quot;)</span>
-        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">scoped_fields</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">df</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">validate_pyd</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">ScopedLinkValueList</span><span class="p">,))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Handling optional fields: Assume validation is true if the field is entirely NA</span>
-                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="c1"># Combine all results: True if all fields pass validation</span>
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">results</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">scoped_value</span> <span class="ow">or</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">scoped_value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">validate_pyd</span><span class="p">(</span><span class="n">scoped_value</span><span class="p">,</span> <span class="n">ScopedLinkValueList</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -3236,13 +3212,13 @@ Roadway Network tables.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">105</span>
 <span class="normal">106</span>
 <span class="normal">107</span>
 <span class="normal">108</span>
-<span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for RoadLinksTable.&quot;&quot;&quot;</span>
 
     <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;RoadLinksTable&quot;</span>
@@ -3277,7 +3253,7 @@ Roadway Network tables.</p>
 
 
 <h3 id="network_wrangler.models.roadway.tables.RoadLinksTable.check_scoped_fields" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">check_scoped_fields</span><span class="p">(</span><span class="n">df</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">check_scoped_fields</span><span class="p">(</span><span class="n">scoped_value</span><span class="p">)</span></code>
 
 <a href="#network_wrangler.models.roadway.tables.RoadLinksTable.check_scoped_fields" class="headerlink" title="Permanent link"> ¶</a></h3>
 
@@ -3290,9 +3266,7 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">113</span>
 <span class="normal">114</span>
 <span class="normal">115</span>
 <span class="normal">116</span>
@@ -3301,42 +3275,16 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 <span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pa</span><span class="o">.</span><span class="n">dataframe_check</span>
-<span class="k">def</span> <span class="nf">check_scoped_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Series</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pa</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">&quot;sc_*&quot;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">check_scoped_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">scoped_value</span><span class="p">:</span> <span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Series</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks that all fields starting with &#39;sc_&#39; or &#39;sc_ML_&#39; are valid ScopedLinkValueList.</span>
 
 <span class="sd">    Custom check to validate fields starting with &#39;sc_&#39; or &#39;sc_ML_&#39;</span>
 <span class="sd">    against a ScopedLinkValueItem model, handling both mandatory and optional fields.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">scoped_fields</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;sc_ML&quot;</span><span class="p">)</span>
-    <span class="p">]</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="c1"># WranglerLogger.debug(f&quot;Checking scoped fields: {scoped_fields}&quot;)</span>
-    <span class="c1"># WranglerLogger.debug(f&quot;{df[scoped_fields]}&quot;)</span>
-    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">scoped_fields</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">df</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">validate_pyd</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">ScopedLinkValueList</span><span class="p">,))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Handling optional fields: Assume validation is true if the field is entirely NA</span>
-            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="c1"># Combine all results: True if all fields pass validation</span>
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">results</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">scoped_value</span> <span class="ow">or</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">scoped_value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">validate_pyd</span><span class="p">(</span><span class="n">scoped_value</span><span class="p">,</span> <span class="n">ScopedLinkValueList</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3371,7 +3319,19 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">137</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
 <span class="normal">140</span>
@@ -3383,19 +3343,7 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 <span class="normal">146</span>
 <span class="normal">147</span>
 <span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadNodesTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
+<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadNodesTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Datamodel used to validate if links_df is of correct format and types.&quot;&quot;&quot;</span>
 
     <span class="n">model_node_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -3410,7 +3358,7 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
         <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-
+    <span class="n">projects</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="n">inboundReferenceIds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Series</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">outboundReferenceIds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Series</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -3452,12 +3400,12 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for RoadNodesTable.&quot;&quot;&quot;</span>
 
     <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;RoadNodesTable&quot;</span>
@@ -3515,20 +3463,20 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadShapesTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadShapesTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Datamodel used to validate if links_df is of correct format and types.&quot;&quot;&quot;</span>
 
     <span class="n">shape_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -3574,11 +3522,11 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for RoadShapesTable.&quot;&quot;&quot;</span>
 
     <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;ShapesSchema&quot;</span>
@@ -4274,7 +4222,11 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 <span class="normal">115</span>
 <span class="normal">116</span>
 <span class="normal">117</span>
-<span class="normal">118</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Feed</span><span class="p">(</span><span class="n">DBModelMixin</span><span class="p">):</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Feed</span><span class="p">(</span><span class="n">DBModelMixin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper class around Wrangler flavored GTFS feed.</span>
 
 <span class="sd">    Most functionality derives from mixin class DBModelMixin which provides:</span>
@@ -4300,11 +4252,11 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
     <span class="c1"># stop times needs to be converted</span>
     <span class="n">_table_models</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;agencies&quot;</span><span class="p">:</span> <span class="n">AgenciesTable</span><span class="p">,</span>
-        <span class="s2">&quot;frequencies&quot;</span><span class="p">:</span> <span class="n">FrequenciesTable</span><span class="p">,</span>
+        <span class="s2">&quot;frequencies&quot;</span><span class="p">:</span> <span class="n">WranglerFrequenciesTable</span><span class="p">,</span>
         <span class="s2">&quot;routes&quot;</span><span class="p">:</span> <span class="n">RoutesTable</span><span class="p">,</span>
         <span class="s2">&quot;shapes&quot;</span><span class="p">:</span> <span class="n">WranglerShapesTable</span><span class="p">,</span>
         <span class="s2">&quot;stops&quot;</span><span class="p">:</span> <span class="n">WranglerStopsTable</span><span class="p">,</span>
-        <span class="s2">&quot;trips&quot;</span><span class="p">:</span> <span class="n">TripsTable</span><span class="p">,</span>
+        <span class="s2">&quot;trips&quot;</span><span class="p">:</span> <span class="n">WranglerTripsTable</span><span class="p">,</span>
         <span class="s2">&quot;stop_times&quot;</span><span class="p">:</span> <span class="n">WranglerStopTimesTable</span><span class="p">,</span>
     <span class="p">}</span>
 
@@ -4344,19 +4296,23 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">set_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-        <span class="n">id_property</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trip_id&quot;</span><span class="p">,</span>
+        <span class="n">id_property</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;index&quot;</span><span class="p">,</span>
         <span class="n">properties</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set property values in a specific table for a list of IDs.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set one or more property values based on an ID property for a given table.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            table_name (str): Name of the table to modify.</span>
-<span class="sd">            set_df (pd.DataFrame): DataFrame with columns &#39;trip_id&#39; and &#39;value&#39; containing</span>
-<span class="sd">                trip IDs and values to set for the specified property.</span>
-<span class="sd">            id_property: Property to use as ID to set by. Defaults to &quot;trip_id.</span>
+<span class="sd">            set_df (pd.DataFrame): DataFrame with columns `&lt;id_property&gt;` and `value` containing</span>
+<span class="sd">                values to set for the specified property where `&lt;id_property&gt;` is unique.</span>
+<span class="sd">            id_property: Property to use as ID to set by. Defaults to &quot;index&quot;.</span>
 <span class="sd">            properties: List of properties to set which are in set_df. If not specified, will set</span>
 <span class="sd">                all properties.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">]</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_property</span><span class="si">}</span><span class="s2"> must be unique in set_df. </span><span class="se">\</span>
+<span class="s2">                                 Found duplicates: </span><span class="si">{</span><span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">]</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_property</span><span class="si">}</span><span class="s2"> must be unique in set_df.&quot;</span><span class="p">)</span>
         <span class="n">table_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
         <span class="n">updated_df</span> <span class="o">=</span> <span class="n">update_df_by_col_value</span><span class="p">(</span><span class="n">table_df</span><span class="p">,</span> <span class="n">set_df</span><span class="p">,</span> <span class="n">id_property</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated_df</span>
@@ -4459,14 +4415,14 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
 
 <h3 id="network_wrangler.transit.feed.feed.Feed.set_by_id" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">set_by_id</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">set_df</span><span class="p">,</span> <span class="n">id_property</span><span class="o">=</span><span class="s1">&#39;trip_id&#39;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">set_by_id</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">set_df</span><span class="p">,</span> <span class="n">id_property</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 <a href="#network_wrangler.transit.feed.feed.Feed.set_by_id" class="headerlink" title="Permanent link"> ¶</a></h3>
 
 
     <div class="doc doc-contents ">
 
-      <p>Set property values in a specific table for a list of IDs.</p>
+      <p>Set one or more property values based on an ID property for a given table.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4501,8 +4457,8 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
             </td>
             <td>
               <div class="doc-md-description">
-                <p>DataFrame with columns &lsquo;trip_id&rsquo; and &lsquo;value&rsquo; containing
-trip IDs and values to set for the specified property.</p>
+                <p>DataFrame with columns <code>&lt;id_property&gt;</code> and <code>value</code> containing
+values to set for the specified property where <code>&lt;id_property&gt;</code> is unique.</p>
               </div>
             </td>
             <td>
@@ -4516,11 +4472,11 @@ trip IDs and values to set for the specified property.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Property to use as ID to set by. Defaults to &ldquo;trip_id.</p>
+                <p>Property to use as ID to set by. Defaults to &ldquo;index&rdquo;.</p>
               </div>
             </td>
             <td>
-                  <code>&#39;trip_id&#39;</code>
+                  <code>&#39;index&#39;</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -4562,23 +4518,31 @@ all properties.</p>
 <span class="normal">115</span>
 <span class="normal">116</span>
 <span class="normal">117</span>
-<span class="normal">118</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">set_by_id</span><span class="p">(</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">set_by_id</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">set_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">id_property</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trip_id&quot;</span><span class="p">,</span>
+    <span class="n">id_property</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;index&quot;</span><span class="p">,</span>
     <span class="n">properties</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set property values in a specific table for a list of IDs.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set one or more property values based on an ID property for a given table.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        table_name (str): Name of the table to modify.</span>
-<span class="sd">        set_df (pd.DataFrame): DataFrame with columns &#39;trip_id&#39; and &#39;value&#39; containing</span>
-<span class="sd">            trip IDs and values to set for the specified property.</span>
-<span class="sd">        id_property: Property to use as ID to set by. Defaults to &quot;trip_id.</span>
+<span class="sd">        set_df (pd.DataFrame): DataFrame with columns `&lt;id_property&gt;` and `value` containing</span>
+<span class="sd">            values to set for the specified property where `&lt;id_property&gt;` is unique.</span>
+<span class="sd">        id_property: Property to use as ID to set by. Defaults to &quot;index&quot;.</span>
 <span class="sd">        properties: List of properties to set which are in set_df. If not specified, will set</span>
 <span class="sd">            all properties.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">]</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_property</span><span class="si">}</span><span class="s2"> must be unique in set_df. </span><span class="se">\</span>
+<span class="s2">                             Found duplicates: </span><span class="si">{</span><span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">]</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_property</span><span class="si">}</span><span class="s2"> must be unique in set_df.&quot;</span><span class="p">)</span>
     <span class="n">table_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
     <span class="n">updated_df</span> <span class="o">=</span> <span class="n">update_df_by_col_value</span><span class="p">(</span><span class="n">table_df</span><span class="p">,</span> <span class="n">set_df</span><span class="p">,</span> <span class="n">id_property</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated_df</span>
@@ -4687,7 +4651,7 @@ all properties.</p>
           <tr class="doc-section-item">
             <td><code>trips</code></td>
             <td>
-                  <code><span title="pandera.typing.DataFrame">DataFrame</span>[<span title="network_wrangler.models.gtfs.tables.TripsTable">TripsTable</span>]</code>
+                  <code><span title="pandera.typing.DataFrame">DataFrame</span>[<span title="network_wrangler.models.gtfs.tables.WranglerTripsTable">WranglerTripsTable</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4726,11 +4690,7 @@ all properties.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/transit/feed/feed.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
 <span class="normal">145</span>
@@ -4752,10 +4712,14 @@ all properties.</p>
 <span class="normal">161</span>
 <span class="normal">162</span>
 <span class="normal">163</span>
-<span class="normal">164</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">merge_shapes_to_stop_times</span><span class="p">(</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">merge_shapes_to_stop_times</span><span class="p">(</span>
     <span class="n">stop_times</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">WranglerStopTimesTable</span><span class="p">],</span>
     <span class="n">shapes</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">WranglerShapesTable</span><span class="p">],</span>
-    <span class="n">trips</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">TripsTable</span><span class="p">],</span>
+    <span class="n">trips</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">WranglerTripsTable</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">WranglerStopTimesTable</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add shape_id and shape_pt_sequence to stop_times dataframe.</span>
 
@@ -4800,12 +4764,12 @@ all properties.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/transit/feed/feed.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">stop_count_by_trip</span><span class="p">(</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">stop_count_by_trip</span><span class="p">(</span>
     <span class="n">stop_times</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">WranglerStopTimesTable</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns dataframe with trip_id and stop_count from stop_times.&quot;&quot;&quot;</span>
@@ -6070,8 +6034,8 @@ all properties.</p>
     <span class="k">def</span> <span class="nf">set_to_all_modes</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">links</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectLinksDict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the search mode to &#39;any&#39; if not specified explicitly.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">links</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="n">DEFAULT_SEARCH_MODES</span><span class="p">:</span>
-                <span class="n">links</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">DEFAULT_DELETE_MODES</span>
+            <span class="k">if</span> <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">==</span> <span class="n">DEFAULT_SEARCH_MODES</span><span class="p">:</span>
+                <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">=</span> <span class="n">DEFAULT_DELETE_MODES</span>
         <span class="k">return</span> <span class="n">links</span>
 </code></pre></div></td></tr></table></div>
               </details>
@@ -6119,8 +6083,8 @@ all properties.</p>
 <span class="k">def</span> <span class="nf">set_to_all_modes</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">links</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectLinksDict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the search mode to &#39;any&#39; if not specified explicitly.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">links</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="n">DEFAULT_SEARCH_MODES</span><span class="p">:</span>
-            <span class="n">links</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">DEFAULT_DELETE_MODES</span>
+        <span class="k">if</span> <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">==</span> <span class="n">DEFAULT_SEARCH_MODES</span><span class="p">:</span>
+            <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">=</span> <span class="n">DEFAULT_DELETE_MODES</span>
     <span class="k">return</span> <span class="n">links</span>
 </code></pre></div></td></tr></table></div>
             </details>
