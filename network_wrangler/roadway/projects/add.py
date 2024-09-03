@@ -1,7 +1,7 @@
 """Functions for applying roadway link or node addition project cards to the roadway network."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
 
@@ -22,6 +22,7 @@ class NewRoadwayError(Exception):
 def apply_new_roadway(
     roadway_net: RoadwayNetwork,
     roadway_addition: dict,
+    project_name: Optional[str] = None,
 ) -> RoadwayNetwork:
     """Add the new roadway features defined in the project card.
 
@@ -56,6 +57,7 @@ def apply_new_roadway(
                 ],
             }
         ```
+        project_name: optional name of the project to be applied
 
     returns: updated network with new links and nodes and associated geometries
     """
@@ -70,6 +72,8 @@ def apply_new_roadway(
         _new_nodes_df = data_to_nodes_df(
             pd.DataFrame(add_nodes), nodes_params=roadway_net.nodes_df.params
         )
+        if project_name:
+            _new_nodes_df["projects"] = f"{project_name},"
         roadway_net.add_nodes(_new_nodes_df)
 
     if add_links:
@@ -78,6 +82,8 @@ def apply_new_roadway(
             links_params=roadway_net.links_df.params,
             nodes_df=roadway_net.nodes_df,
         )
+        if project_name:
+            _new_links_df["projects"] = f"{project_name},"
 
         roadway_net.add_links(_new_links_df)
 
