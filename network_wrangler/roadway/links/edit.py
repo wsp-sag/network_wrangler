@@ -179,7 +179,7 @@ def _edit_scoped_link_property(
     updated_scoped_prop_value_list = copy.deepcopy(scoped_prop_value_list)
 
     for set_item in scoped_prop_set:
-        WranglerLogger(f"Editing link for scoped item: {set_item}")
+        WranglerLogger.debug(f"Editing link for scoped item: {set_item}")
 
         # delete or error on conflicting scopes
         updated_scoped_prop_value_list = _resolve_conflicting_scopes(
