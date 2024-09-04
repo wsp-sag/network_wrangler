@@ -17,7 +17,7 @@ try:
     from .tables import (
         StopsTable,
         RoutesTable,
-        TripsTable,
+        WranglerTripsTable,
         StopTimesTable,
         ShapesTable,
         FrequenciesTable,

@@ -13,10 +13,10 @@ from ...models.gtfs.tables import (
     AgenciesTable,
     WranglerStopsTable,
     RoutesTable,
-    TripsTable,
+    WranglerTripsTable,
     WranglerStopTimesTable,
     WranglerShapesTable,
-    FrequenciesTable,
+    WranglerFrequenciesTable,
 )
 
 from ...utils.data import update_df_by_col_value
@@ -56,11 +56,11 @@ class Feed(DBModelMixin):
     # stop times needs to be converted
     _table_models = {
         "agencies": AgenciesTable,
-        "frequencies": FrequenciesTable,
+        "frequencies": WranglerFrequenciesTable,
         "routes": RoutesTable,
         "shapes": WranglerShapesTable,
         "stops": WranglerStopsTable,
-        "trips": TripsTable,
+        "trips": WranglerTripsTable,
         "stop_times": WranglerStopTimesTable,
     }
 
@@ -100,19 +100,23 @@ class Feed(DBModelMixin):
         self,
         table_name: str,
         set_df: pd.DataFrame,
-        id_property: str = "trip_id",
+        id_property: str = "index",
         properties: list[str] = None,
     ):
-        """Set property values in a specific table for a list of IDs.
+        """Set one or more property values based on an ID property for a given table.
 
         Args:
             table_name (str): Name of the table to modify.
-            set_df (pd.DataFrame): DataFrame with columns 'trip_id' and 'value' containing
-                trip IDs and values to set for the specified property.
-            id_property: Property to use as ID to set by. Defaults to "trip_id.
+            set_df (pd.DataFrame): DataFrame with columns `<id_property>` and `value` containing
+                values to set for the specified property where `<id_property>` is unique.
+            id_property: Property to use as ID to set by. Defaults to "index".
             properties: List of properties to set which are in set_df. If not specified, will set
                 all properties.
         """
+        if not set_df[id_property].is_unique:
+            WranglerLogger.error(f"{id_property} must be unique in set_df. \
+                                 Found duplicates: {set_df[id_property].duplicated().sum()}")
+            raise ValueError(f"{id_property} must be unique in set_df.")
         table_df = self.get_table(table_name)
         updated_df = update_df_by_col_value(table_df, set_df, id_property, properties=properties)
         self.__dict__[table_name] = updated_df
@@ -138,7 +142,7 @@ def stop_count_by_trip(
 def merge_shapes_to_stop_times(
     stop_times: DataFrame[WranglerStopTimesTable],
     shapes: DataFrame[WranglerShapesTable],
-    trips: DataFrame[TripsTable],
+    trips: DataFrame[WranglerTripsTable],
 ) -> DataFrame[WranglerStopTimesTable]:
     """Add shape_id and shape_pt_sequence to stop_times dataframe.
 

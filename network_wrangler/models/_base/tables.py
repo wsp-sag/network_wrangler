@@ -2,7 +2,7 @@ from enum import Enum
 
 import pandas as pd
 from pandera.extensions import register_check_method
-from pydantic import ValidationError
+from pydantic import ValidationError, RootModel
 
 from ...logger import WranglerLogger
 
@@ -18,6 +18,8 @@ def validate_list_of_pyd(item_list, pyd_model):
 
 def validate_pyd(item, pyd_model):
     try:
+        # if issubclass(pyd_model, RootModel):
+        #    pyd_model(__root__=item)
         pyd_model(item)
         return True
     except ValidationError:

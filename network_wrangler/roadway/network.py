@@ -358,12 +358,14 @@ class RoadwayNetwork(BaseModel):
                 self,
                 self.get_selection(change.facility),
                 change.roadway_property_change["property_changes"],
+                project_name=change.project,
             )
 
         elif change.change_type == "roadway_addition":
             return apply_new_roadway(
                 self,
                 change.roadway_addition,
+                project_name=change.project,
             )
 
         elif change.change_type == "roadway_deletion":

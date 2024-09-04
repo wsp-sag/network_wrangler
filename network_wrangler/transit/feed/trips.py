@@ -3,22 +3,24 @@
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...models.gtfs.tables import TripsTable, WranglerStopTimesTable
+from ...models.gtfs.tables import WranglerTripsTable, WranglerStopTimesTable
 
 
-def trips_for_shape_id(trips: DataFrame[TripsTable], shape_id: str) -> DataFrame[TripsTable]:
+def trips_for_shape_id(
+    trips: DataFrame[WranglerTripsTable], shape_id: str
+) -> DataFrame[WranglerTripsTable]:
     """Returns a trips records for a given shape_id."""
     return trips.loc[trips.shape_id == shape_id]
 
 
-def trip_ids_for_shape_id(trips: DataFrame[TripsTable], shape_id: str) -> list[str]:
+def trip_ids_for_shape_id(trips: DataFrame[WranglerTripsTable], shape_id: str) -> list[str]:
     """Returns a list of trip_ids for a given shape_id."""
     return trips_for_shape_id(trips, shape_id)["trip_id"].unique().tolist()
 
 
 def trips_for_stop_times(
-    trips: DataFrame[TripsTable], stop_times: DataFrame[WranglerStopTimesTable]
-) -> DataFrame[TripsTable]:
+    trips: DataFrame[WranglerTripsTable], stop_times: DataFrame[WranglerStopTimesTable]
+) -> DataFrame[WranglerTripsTable]:
     """Filter trips dataframe to records associated with stop_time records."""
     _sel_trips = stop_times.trip_id.unique().tolist()
     filtered_trips = trips[trips.trip_id.isin(_sel_trips)]

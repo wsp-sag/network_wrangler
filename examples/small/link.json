@@ -50,7 +50,7 @@
     "price": 0,
     "sc_price": [
       {
-          "timespan": ["12:00","3:00"],
+          "timespan": ["12:00","15:00"],
           "category": "HOV2",
           "value": 1.0
       }

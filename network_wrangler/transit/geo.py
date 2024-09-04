@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 def shapes_to_trip_shapes_gdf(
     shapes: DataFrame[WranglerShapesTable],
-    # trips: TripsTable,
+    # trips: WranglerTripsTable,
     ref_nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
     crs: int = LAT_LON_CRS,
 ) -> gpd.GeoDataFrame:
@@ -36,7 +36,7 @@ def shapes_to_trip_shapes_gdf(
 
     Args:
         shapes: WranglerShapesTable
-        trips: TripsTable
+        trips: WranglerTripsTable
         ref_nodes_df: If specified, will use geometry from these nodes.  Otherwise, will use
             geometry in shapes file. Defaults to None.
         crs: int, optional, default 4326

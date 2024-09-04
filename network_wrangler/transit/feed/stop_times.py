@@ -9,7 +9,7 @@ from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...models.gtfs.tables import (
-    TripsTable,
+    WranglerTripsTable,
     WranglerShapesTable,
     WranglerStopTimesTable,
     WranglerStopsTable,
@@ -191,7 +191,7 @@ def stop_times_for_trip_node_segment(
 def stop_times_for_shapes(
     stop_times: DataFrame[WranglerStopTimesTable],
     shapes: DataFrame[WranglerShapesTable],
-    trips: DataFrame[TripsTable],
+    trips: DataFrame[WranglerTripsTable],
 ) -> DataFrame[WranglerStopTimesTable]:
     """Filter stop_times dataframe to records associated with shapes dataframe.
 

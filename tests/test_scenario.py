@@ -196,8 +196,7 @@ def test_scenario_building_from_script(request):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     config_file = os.path.join(os.getcwd(), "examples", "config_1.yml")
-    # config_file = os.path.join(os.getcwd(),"example","config_2.yml")
-    script_to_run = os.path.join(os.getcwd(), "scripts", "build_scenario.py")
+    script_to_run = os.path.join(os.getcwd(), "bin", "build_scenario_from_config.py")
 
     # replace backward slash with forward slash
     config_file = config_file.replace(os.sep, "/")

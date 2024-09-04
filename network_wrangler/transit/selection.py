@@ -49,16 +49,16 @@ from ..logger import WranglerLogger
 from ..models.projects.transit_selection import (
     SelectRouteProperties,
 )
-from ..time import Timespan
+from ..models._base.types import TimeString
 
 if TYPE_CHECKING:
     from .feed.feed import Feed
     from .network import TransitNetwork
     from ..models.gtfs.tables import (
-        TripsTable,
+        WranglerTripsTable,
         WranglerShapesTable,
-        FrequenciesTable,
-        WranglerRoutesTable,
+        WranglerFrequenciesTable,
+        RoutesTable,
     )
 
 
@@ -168,14 +168,14 @@ class TransitSelection:
         return self.selected_trips_df.trip_id.tolist()
 
     @property
-    def selected_trips_df(self) -> DataFrame[TripsTable]:
+    def selected_trips_df(self) -> DataFrame[WranglerTripsTable]:
         """Lazily evaluates selection for trips or returns stored value in self._selected_trips_df.
 
         Will re-evaluate if the current network hash is different than the stored one from the
         last selection.
 
         Returns:
-            DataFrame[TripsTable] of selected trips
+            DataFrame[WranglerTripsTable] of selected trips
         """
         if (self._selected_trips_df is not None) and self._stored_feed_hash == self.net.feed_hash:
             return self._selected_trips_df
@@ -183,6 +183,19 @@ class TransitSelection:
         self._selected_trips_df = self._select_trips()
         self._stored_feed_hash = copy.deepcopy(self.net.feed_hash)
         return self._selected_trips_df
+
+    @property
+    def selected_frequencies_df(self) -> DataFrame[WranglerWranglerFrequenciesTable]:
+        """DataFrame of selected frequencies."""
+        sel_freq_df = self.net.feed.frequencies.loc[
+            self.net.feed.frequencies.trip_id.isin(self.selected_trips_df.trip_id)
+        ]
+        # if timespans are selected, filter to those that overlap
+        if self.selection_dict.get("timespans"):
+            sel_freq_df = filter_df_to_overlapping_timespans(
+                sel_freq_df, self.selection_dict.get("timespans")
+            )
+        return sel_freq_df
 
     @property
     def selected_shapes_df(self) -> DataFrame[WranglerShapesTable]:
@@ -200,11 +213,11 @@ class TransitSelection:
             self.net.feed.shapes.shape_id.isin(self.selected_trips_df.shape_id)
         ]
 
-    def _select_trips(self) -> DataFrame[TripsTable]:
+    def _select_trips(self) -> DataFrame[WranglerTripsTable]:
         """Selects transit trips based on selection dictionary.
 
         Returns:
-            DataFrame[TripsTable]: trips_df DataFrame of selected trips
+            DataFrame[WranglerTripsTable]: trips_df DataFrame of selected trips
         """
         return _filter_trips_by_selection_dict(
             self.net.feed,
@@ -215,7 +228,7 @@ class TransitSelection:
 def _filter_trips_by_selection_dict(
     feed: Feed,
     sel: SelectTransitTrips,
-) -> DataFrame[TripsTable]:
+) -> DataFrame[WranglerTripsTable]:
     trips_df = feed.trips
     _routes_df = feed.routes
     _shapes_df = feed.shapes
@@ -253,20 +266,20 @@ def _filter_trips_by_selection_dict(
 
 
 def _filter_trips_by_links(
-    trips_df: DataFrame[TripsTable],
+    trips_df: DataFrame[WranglerTripsTable],
     shapes_df: DataFrame[WranglerShapesTable],
     select_links: Union[SelectTransitLinks, None],
-) -> DataFrame[TripsTable]:
+) -> DataFrame[WranglerTripsTable]:
     if select_links is None:
         return trips_df
     raise NotImplementedError("Filtering transit by links not implemented yet.")
 
 
 def _filter_trips_by_nodes(
-    trips_df: DataFrame[TripsTable],
+    trips_df: DataFrame[WranglerTripsTable],
     shapes_df: DataFrame[WranglerShapesTable],
     select_nodes: SelectTransitNodes,
-) -> DataFrame[TripsTable]:
+) -> DataFrame[WranglerTripsTable]:
     """Selects transit trips that use any one of a list of nodes in shapes.txt.
 
     If require = all, the returned trip_ids must traverse all of the nodes
@@ -311,8 +324,8 @@ def _filter_trips_by_nodes(
 
 
 def _filter_trips_by_trip(
-    trips_df: DataFrame[TripsTable], select_trip_properties: SelectTripProperties
-) -> DataFrame[TripsTable]:
+    trips_df: DataFrame[WranglerTripsTable], select_trip_properties: SelectTripProperties
+) -> DataFrame[WranglerTripsTable]:
     """Filter trips by trip properties.
 
     Args:
@@ -346,10 +359,10 @@ def _filter_trips_by_trip(
 
 
 def _filter_trips_by_route(
-    trips_df: DataFrame[TripsTable],
-    routes_df: DataFrame[WranglerRoutesTable],
+    trips_df: DataFrame[WranglerTripsTable],
+    routes_df: DataFrame[RoutesTable],
     select_route_properties: SelectRouteProperties,
-) -> DataFrame[TripsTable]:
+) -> DataFrame[WranglerTripsTable]:
     """Filter trips by route properties.
 
     Args:
@@ -385,10 +398,10 @@ def _filter_trips_by_route(
 
 
 def _filter_trips_by_timespans(
-    trips_df: DataFrame[TripsTable],
-    freq_df: DataFrame[FrequenciesTable],
-    timespans: List[Timespan],
-) -> DataFrame[TripsTable]:
+    trips_df: DataFrame[WranglerTripsTable],
+    freq_df: DataFrame[WranglerFrequenciesTable],
+    timespans: list[list[TimeString]],
+) -> DataFrame[WranglerTripsTable]:
     """Returns trips that have frequencies that overlap with at least one of the timespans."""
     _unfiltered_trips = len(trips_df)
     # WranglerLogger.debug(f"Filtering {_unfiltered_trips} trips by timespans.")
@@ -396,11 +409,7 @@ def _filter_trips_by_timespans(
     freq_df = freq_df.loc[freq_df.trip_id.isin(trips_df["trip_id"])]
 
     # Filter freq to time that overlaps selection
-    filtered_trip_ids = []
-    for timespan in timespans:
-        filtered_trip_ids += filter_df_to_overlapping_timespans(freq_df, timespan).trip_id.tolist()
-        WranglerLogger.debug(f"Trip_ids for timespan {timespan}: {filtered_trip_ids}")
-    filtered_trip_ids = list(set(filtered_trip_ids))
+    filtered_trip_ids = filter_df_to_overlapping_timespans(freq_df, timespans).trip_id.tolist()
 
     _filtered_trips = len(filtered_trip_ids)
     if _filtered_trips == 0:
@@ -409,7 +418,7 @@ def _filter_trips_by_timespans(
 
     WranglerLogger.debug(
         f"{_filtered_trips}/{_unfiltered_trips} trips remain after \
-        filtering to timeframe {timespan}"
+        filtering to timespans {timespans}"
     )
 
     # Filter trips table to those still in freq table

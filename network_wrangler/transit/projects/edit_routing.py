@@ -27,13 +27,13 @@ from ...models.gtfs.tables import (
     WranglerShapesTable,
     WranglerStopTimesTable,
     WranglerStopsTable,
-    TripsTable,
+    WranglerTripsTable,
 )
 from ..validate import (
     shape_links_without_road_links,
 )
 from ...logger import WranglerLogger
-from ...utils.utils import generate_list_of_new_ids, generate_new_id
+from ...utils.utils import generate_new_id
 from ...utils.data import segment_data_by_selection_min_overlap
 
 if TYPE_CHECKING:
@@ -50,7 +50,7 @@ class TransitRoutingChangeError(Exception):
 
 
 def _create_stop_times(
-    set_stops_node_ids: list[int], trip_id: str, feed: Feed
+    set_stops_node_ids: list[int], trip_id: str, feed: Feed, project_name: Optional[str] = None
 ) -> DataFrame[WranglerStopTimesTable]:
     """Modifies a list of nodes from project card routing key to a shape dataframe.
 
@@ -58,6 +58,7 @@ def _create_stop_times(
         set_stops_node_ids: List of roadway node ids from project card to stop at.
         trip_id: trip_id to associate with the new shape
         feed: transit feed
+        project_name: Name of the project. Defaults to None.
 
     """
     WranglerLogger.debug(f"Creating new stop times for trip: {trip_id}")
@@ -69,12 +70,17 @@ def _create_stop_times(
             "stop_sequence": np.arange(len(set_stops_node_ids)),
         }
     )
+    if project_name is not None:
+        new_stoptime_rows["projects"] = f"{project_name},"
     new_stoptime_rows = validate_df_to_model(new_stoptime_rows, WranglerStopTimesTable)
     return new_stoptime_rows
 
 
 def _create_shapes(
-    nodes_list: list[Union[str, int]], shape_id: str, road_net: RoadwayNetwork
+    nodes_list: list[Union[str, int]],
+    shape_id: str,
+    road_net: RoadwayNetwork,
+    project_name: Optional[str] = None,
 ) -> DataFrame[WranglerShapesTable]:
     """Modifies a list of nodes from project card routing key to rows in a shapes.txt dataframe.
 
@@ -84,6 +90,7 @@ def _create_shapes(
             or strings. e.g. ["-123","321",...] or [-123,321]
         shape_id: shape_id to associate with the new shape
         road_net: reference roadway network
+        project_name: Name of the project. Defaults to None.
 
     Returns:
         pd.DataFrame: shapes.txt rows
@@ -112,9 +119,12 @@ def _create_shapes(
             "X": "shape_pt_lon",
         }
     )
+    if project_name is not None:
+        new_shape_rows_df["projects"] = f"{project_name},"
     new_shape_rows_df = new_shape_rows_df.drop(columns=["model_node_id"])
     if len(new_shape_rows_df) < 10:
-        WranglerLogger.debug(f"New Shape Rows: \n{new_shape_rows_df}")
+        # WranglerLogger.debug(f"New Shape Rows: \n{new_shape_rows_df}")
+        pass
 
     return new_shape_rows_df
 
@@ -124,7 +134,8 @@ def _add_new_shape_copy(
     trip_ids: list[str],
     feed: Feed,
     id_scalar: int = TRANSIT_SHAPE_ID_SCALAR,
-) -> tuple[DataFrame[WranglerShapesTable], DataFrame[TripsTable], str]:
+    project_name: Optional[str] = None,
+) -> tuple[DataFrame[WranglerShapesTable], DataFrame[WranglerTripsTable], str]:
     """Create an identical new shape_id from shape matching old_shape_id for the trip_ids.
 
     Args:
@@ -133,6 +144,7 @@ def _add_new_shape_copy(
         feed: Input transit feed
         id_scalar (int): scalar value to add to old_shape_id to create new_shape_id. Defaults to
             SHAPE_ID_SCALAR.
+        project_name (str, optional): Name of the project. Defaults to None.
 
     Returns:
         tuple[pd.DataFrame]: updated (shapes_df, trips_df, new_shape_id)
@@ -145,6 +157,9 @@ def _add_new_shape_copy(
     new_shape = copy.deepcopy(shapes[shapes.shape_id == old_shape_id])
     new_shape_id = generate_new_id(old_shape_id, shapes["shape_id"], id_scalar)
     new_shape["shape_id"] = new_shape_id
+
+    if project_name is not None:
+        new_shape["projects"] = f"{project_name},"
     shapes = pd.concat([shapes, new_shape], ignore_index=True)
 
     trips.loc[trips.trip_id.isin(trip_ids), "shape_id"] = new_shape_id
@@ -157,6 +172,7 @@ def _replace_shapes_segment(
     set_routing: list[int],
     feed: Feed,
     road_net: RoadwayNetwork,
+    project_name: Optional[str] = None,
 ) -> DataFrame[WranglerShapesTable]:
     """Returns shapes with a replaced segment for a given shape_id.
 
@@ -171,6 +187,7 @@ def _replace_shapes_segment(
         set_routing (list): list of node ids to replace existing routing with
         feed: Feed object
         road_net: Reference roadway network
+        project_name: Name of the project. Defaults to None.
 
     Returns:
         pd.DataFrame: Updated shape records
@@ -196,7 +213,9 @@ def _replace_shapes_segment(
         set_routing,
     )
     # Create new segment
-    updated_segment_shapes_df = _create_shapes(set_routing, shape_id, road_net)
+    updated_segment_shapes_df = _create_shapes(
+        set_routing, shape_id, road_net, project_name=project_name
+    )
 
     WranglerLogger.debug(
         f"\nShapes Segments: \nBefore: \n{before_segment[_disp_col]}\
@@ -222,6 +241,7 @@ def _replace_stop_times_segment_for_trip(
     trip_id: str,
     set_stops_nodes: list[str],
     feed: Feed,
+    project_name: Optional[str] = None,
 ) -> DataFrame[WranglerStopTimesTable]:
     """Replaces a segment of a specific set of stop_time records with the same shape_id.
 
@@ -230,6 +250,7 @@ def _replace_stop_times_segment_for_trip(
         trip_id: selected trip_id to update
         set_stops_nodes: list of roadway node ids to make stops
         feed: transit feed
+        project_name: Name of the project. Defaults to None.
 
     Returns:
         WranglerStopTimesTable: stop_time records for a trip_id with updated segment
@@ -268,8 +289,9 @@ def _replace_stop_times_segment_for_trip(
     )
 
     # Create new segment
-    segment_stoptime_rows = _create_stop_times(set_stops_nodes, trip_id, feed)
-
+    segment_stoptime_rows = _create_stop_times(
+        set_stops_nodes, trip_id, feed, project_name=project_name
+    )
     WranglerLogger.debug(f"Before Segment: \n{before_segment[_disp_col]}")
     WranglerLogger.debug(f"Segment: \n{segment_stoptime_rows[_disp_col]}")
     WranglerLogger.debug(f"After Segment: \n{after_segment[_disp_col]}")
@@ -325,7 +347,8 @@ def _update_shapes_and_trips(
     shape_id_scalar: int,
     road_net: RoadwayNetwork,
     routing_existing: list[int] = [],
-) -> tuple[DataFrame[WranglerShapesTable], DataFrame[TripsTable]]:
+    project_name: Optional[str] = None,
+) -> tuple[DataFrame[WranglerShapesTable], DataFrame[WranglerTripsTable]]:
     """Update shapes and trips for transit routing change.
 
     Args:
@@ -336,6 +359,7 @@ def _update_shapes_and_trips(
         routing_existing: existing routing extents to replace as a list of model_node_ids
         shape_id_scalar: scalar value to use when creating new shape_ids
         road_net: Reference roadway network to make sure shapes follow real links
+        project_name: Name of the project. Defaults to None.
 
     Returns:
         Updated shapes and trips dataframes
@@ -359,15 +383,16 @@ def _update_shapes_and_trips(
             sel_trips_using_shape_id,
             feed,
             id_scalar=shape_id_scalar,
+            project_name=project_name,
         )
 
     # If "existing" is specified, replace only that segment else, replace the whole thing
     if existing_routing:
         this_shape = _replace_shapes_segment(
-            existing_routing, shape_id, set_routing, feed, road_net
+            existing_routing, shape_id, set_routing, feed, road_net, project_name=project_name
         )
     else:
-        this_shape = _create_shapes(set_routing, shape_id, road_net)
+        this_shape = _create_shapes(set_routing, shape_id, road_net, project_name=project_name)
 
     # Add rows back into shapes
     unselected_shapes = feed.shapes[feed.shapes.shape_id != shape_id]
@@ -384,6 +409,7 @@ def _update_stops(
     feed: Feed,
     routing_set: list[int],
     road_net: RoadwayNetwork,
+    project_name: Optional[str] = None,
 ) -> DataFrame[WranglerStopsTable]:
     """Update stops for transit routing change.
 
@@ -391,6 +417,7 @@ def _update_stops(
         feed: Feed object
         routing_set: List of model_node_ids to be stops
         road_net: Reference roadway network
+        project_name: Name of the project. Defaults to None.
 
     Returns:
         pd.DataFrame: Updated stops.txt
@@ -413,7 +440,8 @@ def _update_stops(
         },
         index=range(len(missing_stops_node_ids)),
     )
-
+    if project_name is not None:
+        new_stops["projects"] = f"{project_name},"
     new_stops = new_stops.merge(
         road_net.nodes_df[["model_node_id", "X", "Y"]],
         how="left",
@@ -461,6 +489,7 @@ def _update_stop_times_for_trip(
     trip_id: str,
     routing_set: list[int],
     routing_existing: list[int],
+    project_name: Optional[str] = None,
 ) -> DataFrame[WranglerStopTimesTable]:
     """Update stop_times for a specific trip with new stop_times.
 
@@ -469,6 +498,7 @@ def _update_stop_times_for_trip(
         trip_id: trip_id to update
         routing_set: List of model_node_ids to be stops
         routing_existing: List of model_node_ids to replace
+        project_name: Name of the project. Defaults to None.
 
     Returns:
         WranglerStopTimesTable: Updated stop_times.txt
@@ -491,6 +521,7 @@ def _update_stop_times_for_trip(
             trip_id,
             set_stops_nodes,
             feed,
+            project_name=project_name,
         )
 
     if del_stops_nodes:
@@ -500,7 +531,9 @@ def _update_stop_times_for_trip(
         )
 
     if not existing_stops_nodes:
-        this_trip_stop_times = _create_stop_times(set_stops_nodes, trip_id, feed)
+        this_trip_stop_times = _create_stop_times(
+            set_stops_nodes, trip_id, feed, project_name=project_name
+        )
 
     # --------------- Replace stop_times for this trip with updated stop times ---------------
     stop_times_not_this_trip = feed.stop_times[feed.stop_times.trip_id != trip_id]
@@ -529,6 +562,7 @@ def apply_transit_routing_change(
     routing_change: dict,
     shape_id_scalar: int = TRANSIT_SHAPE_ID_SCALAR,
     reference_road_net: Optional[RoadwayNetwork] = None,
+    project_name: Optional[str] = None,
 ) -> TransitNetwork:
     """Apply a routing change to the transit network, including stop updates.
 
@@ -546,6 +580,7 @@ def apply_transit_routing_change(
             create a new shape_id. Defaults to SHAPE_ID_SCALAR.
         reference_road_net (RoadwayNetwork, optional): Reference roadway network to use for
             updating shapes and stops. Defaults to None.
+        project_name (str, optional): Name of the project. Defaults to None.
     """
     WranglerLogger.debug("Applying transit routing change project.")
     WranglerLogger.debug(f"...selection: {selection.selection_dict}")
@@ -554,6 +589,10 @@ def apply_transit_routing_change(
     # ---- Secure all inputs needed --------------
     updated_feed = copy.deepcopy(net.feed)
     trip_ids = selection.selected_trips
+    if project_name:
+        updated_feed.trips.loc[updated_feed.trips.trip_id.isin(trip_ids), "projects"] += (
+            f"{project_name},"
+        )
 
     road_net = net.road_net if reference_road_net is None else reference_road_net
     if road_net is None:
@@ -569,7 +608,7 @@ def apply_transit_routing_change(
 
     # ---- update each shape that is used by selected trips to use new routing -------
     shape_ids = shape_ids_for_trip_ids(updated_feed.trips, trip_ids)
-    WranglerLogger.debug(f"shape_ids: {shape_ids}")
+    # WranglerLogger.debug(f"shape_ids: {shape_ids}")
     for shape_id in shape_ids:
         updated_feed.shapes, updated_feed.trips = _update_shapes_and_trips(
             updated_feed,
@@ -579,12 +618,15 @@ def apply_transit_routing_change(
             shape_id_scalar,
             road_net,
             routing_existing=routing_change.get("existing", []),
+            project_name=project_name,
         )
-    WranglerLogger.debug(f"updated_feed.shapes: \n{updated_feed.shapes}")
-    WranglerLogger.debug(f"updated_feed.trips: \n{updated_feed.trips}")
+    # WranglerLogger.debug(f"updated_feed.shapes: \n{updated_feed.shapes}")
+    # WranglerLogger.debug(f"updated_feed.trips: \n{updated_feed.trips}")
     # ---- Check if any stops need adding to stops.txt and add if they do ----------
-    updated_feed.stops = _update_stops(updated_feed, routing_change["set"], road_net)
-    WranglerLogger.debug(f"updated_feed.stops: \n{updated_feed.stops}")
+    updated_feed.stops = _update_stops(
+        updated_feed, routing_change["set"], road_net, project_name=project_name
+    )
+    # WranglerLogger.debug(f"updated_feed.stops: \n{updated_feed.stops}")
     # ---- Update stop_times --------------------------------------------------------
     for trip_id in trip_ids:
         updated_feed.stop_times = _update_stop_times_for_trip(
@@ -605,9 +647,9 @@ def apply_transit_routing_change(
     _ex_stoptimes = updated_feed.stop_times.loc[
         updated_feed.stop_times.trip_id == trip_ids[0], _show_col
     ]
-    WranglerLogger.debug(f"stop_times for first updated trip: \n {_ex_stoptimes}")
+    # WranglerLogger.debug(f"stop_times for first updated trip: \n {_ex_stoptimes}")
 
     # ---- Update transit network with updated feed.
     net.feed = updated_feed
-    WranglerLogger.debug(f"net.feed.stops: \n {net.feed.stops}")
+    # WranglerLogger.debug(f"net.feed.stops: \n {net.feed.stops}")
     return net

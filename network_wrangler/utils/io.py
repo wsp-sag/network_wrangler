@@ -18,7 +18,7 @@ from ..params import EST_PD_READ_SPEED
 from ..utils.geo import get_bounding_polygon
 from ..utils.data import convert_numpy_to_list
 from ..logger import WranglerLogger
-from .time import format_time
+from .time import format_seconds_to_legible_str
 
 try:
     gpd.options.io_engine = "pyogrio"
@@ -107,7 +107,7 @@ def _estimate_read_time_of_file(filepath: Union[str, Path]):
     file_size_mb = filepath.stat().st_size / (1024 * 1024)  # Convert bytes to MB
     filetype = filepath.suffix[1:]
     if filetype in EST_PD_READ_SPEED:
-        return format_time(file_size_mb * EST_PD_READ_SPEED[filetype])
+        return format_seconds_to_legible_str(file_size_mb * EST_PD_READ_SPEED[filetype])
     else:
         return "unknown"
 

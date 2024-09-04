@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import copy
 
-from typing import Union, Any
+from typing import Union, Any, Optional
 
 import numpy as np
 import geopandas as gpd
@@ -57,6 +57,7 @@ class LinkChangeError(Exception):
     pass
 
 
+@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
 def _initialize_links_as_managed_lanes(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list[int],
@@ -64,7 +65,7 @@ def _initialize_links_as_managed_lanes(
 ) -> DataFrame[RoadLinksTable]:
     """Initialize links as managed lanes if they are not already."""
     links_df.loc[link_idx, "managed"] = 1
-    initialize_if_missing = ["ML_geometry", "ML_access_point", "ML_egress_point"]
+    initialize_if_missing = ["ML_geometry", "ML_access_point", "ML_egress_point", "ML_projects"]
     for f in initialize_if_missing:
         if f not in links_df:
             links_df[f] = default_from_datamodel(RoadLinksTable, f)
@@ -250,6 +251,7 @@ def _edit_link_property(
     overwrite_all_scoped: bool = False,
     overwrite_conflicting_scoped: bool = True,
     ml_link_offset_meters: float = LINK_ML_OFFSET_METERS,
+    project_name: Optional[str] = None,
 ) -> DataFrame[RoadLinksTable]:
     """Return edited (in place) RoadLinksTable with property changes for a list of links.
 
@@ -273,6 +275,7 @@ def _edit_link_property(
             Otherwise, will raise an Exception on conflicting, but not matching, scopes.
         ml_link_offset_meters: Offset in meters for managed lane geometry. If not set, will use
             LINK_ML_OFFSET_METERS from params.py.
+        project_name: optional name of the project to be applied
 
     """
     WranglerLogger.debug(f"Editing {prop_name} on links {link_idx}")
@@ -291,6 +294,11 @@ def _edit_link_property(
         links_df = _initialize_links_as_managed_lanes(
             links_df, link_idx, geometry_offset_meters=ml_link_offset_meters
         )
+        if project_name is not None:
+            links_df.loc[link_idx, "ML_projects"] += f"{project_name},"
+    else:
+        if project_name is not None:
+            links_df.loc[link_idx, "projects"] += f"{project_name},"
 
     # Initialize new props to None
     if prop_name not in links_df:
@@ -362,6 +370,11 @@ def edit_link_property(
         existing_value_conflict_error: If True, will trigger an error if the existing
             specified value in the project card doesn't match the value in links_df.
             Otherwise, will only trigger a warning. Defaults to False.
+        overwrite_all_scoped: If True, will overwrite all scoped values for link property with
+            scoped_prop_value_set. Defaults to False.
+        overwrite_conflicting_scoped: If True will overwrite any conflicting scopes.
+            Otherwise, will raise an Exception on conflicting, but not matching, scopes
+            Defaults to True.
 
     """
     WranglerLogger.info(f"Editing Link Property {prop_name} for {len(link_idx)} links.")
@@ -370,7 +383,13 @@ def edit_link_property(
 
     links_df = copy.deepcopy(links_df)
     links_df = _edit_link_property(
-        links_df, link_idx, prop_name, prop_change, existing_value_conflict_error
+        links_df,
+        link_idx,
+        prop_name,
+        prop_change,
+        existing_value_conflict_error,
+        overwrite_all_scoped=prop_change.overwrite_all_scoped,
+        overwrite_conflicting_scoped=prop_change.overwrite_conflicting_scoped,
     )
     links_df = validate_df_to_model(links_df, RoadLinksTable)
     WranglerLogger.debug(
@@ -386,6 +405,7 @@ def edit_link_properties(
     link_idx: list,
     property_changes: dict[str, RoadPropertyChange],
     existing_value_conflict_error: bool = False,
+    project_name: Optional[str] = None,
 ) -> DataFrame[RoadLinksTable]:
     """Return copy of RoadLinksTable with edited link properties for a list of links.
 
@@ -396,6 +416,7 @@ def edit_link_properties(
         existing_value_conflict_error: If True, will trigger an error if the existing
             specified value in the project card doesn't match the value in links_df.
             Otherwise, will only trigger a warning. Defaults to False.
+        project_name: optional name of the project to be applied
 
     """
     links_df = copy.deepcopy(links_df)
@@ -409,6 +430,10 @@ def edit_link_properties(
         links_df = _edit_link_property(
             links_df, link_idx, property, prop_change, existing_value_conflict_error
         )
+
+    # Only want to set this once per project.
+    if project_name is not None:
+        links_df.loc[link_idx, "projects"] += f"{project_name},"
 
     # if a managed lane created without access or egress, set it to True for all selected links
     if flag_create_managed_lane:
