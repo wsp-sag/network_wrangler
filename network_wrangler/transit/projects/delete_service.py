@@ -19,8 +19,8 @@ if TYPE_CHECKING:
 def apply_transit_service_deletion(
     net: TransitNetwork,
     selection: TransitSelection,
-    clean_shapes: Optional[bool] = True,
-    clean_routes: Optional[bool] = True,
+    clean_shapes: Optional[bool] = False,
+    clean_routes: Optional[bool] = False,
 ) -> TransitNetwork:
     """Delete transit service to TransitNetwork.
 
@@ -28,9 +28,9 @@ def apply_transit_service_deletion(
         net (TransitNetwork): Network to modify.
         selection: TransitSelection object, created from a selection dictionary.
         clean_shapes (bool, optional): If True, remove shapes not used by any trips.
-            Defaults to True.
+            Defaults to False.
         clean_routes (bool, optional): If True, remove routes not used by any trips.
-            Defaults to True.
+            Defaults to False.
 
     Returns:
         TransitNetwork: Modified network.
@@ -47,8 +47,8 @@ def apply_transit_service_deletion(
 def _delete_trips_from_feed(
     feed: Feed,
     trip_ids: list,
-    clean_shapes: Optional[bool] = True,
-    clean_routes: Optional[bool] = True,
+    clean_shapes: Optional[bool] = False,
+    clean_routes: Optional[bool] = False,
 ) -> Feed:
     """Delete transit service from feed based on trip_ids.
 
@@ -56,9 +56,9 @@ def _delete_trips_from_feed(
         feed (Feed): Feed to modify.
         trip_ids (list): List of trip_ids to delete.
         clean_shapes (bool, optional): If True, remove shapes not used by any trips.
-            Defaults to True.
+            Defaults to False.
         clean_routes (bool, optional): If True, remove routes not used by any trips.
-            Defaults to True.
+            Defaults to False.
 
     Returns:
         Feed: Modified feed.
