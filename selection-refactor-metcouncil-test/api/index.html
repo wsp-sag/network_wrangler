@@ -17347,7 +17347,7 @@ If not provided, will use today.</p>
     <span class="n">timespan</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">str_to_time</span><span class="p">,</span> <span class="n">timespan</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">is_increasing</span><span class="p">(</span><span class="n">timespan</span><span class="p">):</span>
         <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timespan is not in increasing order: </span><span class="si">{</span><span class="n">timespan</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Timespan is not in increasing order.&quot;</span><span class="p">)</span>
+        <span class="c1"># raise ValueError(&quot;Timespan is not in increasing order.&quot;)</span>
     <span class="k">return</span> <span class="n">timespan</span>
 </code></pre></div></td></tr></table></div>
             </details>
