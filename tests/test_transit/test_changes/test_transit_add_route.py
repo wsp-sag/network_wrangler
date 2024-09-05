@@ -10,14 +10,13 @@ from network_wrangler.roadway.network import RoadwayNetwork
 from network_wrangler.transit.network import TransitNetwork
 from network_wrangler.transit.projects.add_route import (
     apply_transit_route_addition,
-    _add_route_to_feed,
 )
 from network_wrangler.utils.time import str_to_time
 
 
 add_route_change = {
     "project": "New Green Transit",
-    "transit_add_new_route": {
+    "transit_route_addition": {
         "routes": [
             {
                 "route_id": "abc",
@@ -28,7 +27,10 @@ add_route_change = {
                 "trips": [
                     {
                         "direction_id": 0,
-                        "headway_secs": {("6:00", "12:00"): 600, ("12:00", "13:00"): 900},
+                        "headway_secs": [
+                            {("6:00", "12:00"): 600},
+                            {("12:00", "13:00"): 900},
+                        ],
                         "routing": [
                             {"1": {"stop": True}},
                             2,
@@ -48,10 +50,13 @@ add_route_change = {
 def test_add_route_to_feed_dict(
     request,
     small_transit_net: TransitNetwork,
+    small_net: RoadwayNetwork,
 ):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    feed = copy.deepcopy(small_transit_net.feed)
-    updated_feed = _add_route_to_feed(feed, add_route_change)
+    small_transit_net = copy.deepcopy(small_transit_net)
+    updated_feed = apply_transit_route_addition(
+        small_transit_net, add_route_change["transit_route_addition"], small_net
+    )
 
     # check trips
     new_trips = updated_feed.trips.trip_id.loc[updated_feed.trips.route_id.isin("abc")]

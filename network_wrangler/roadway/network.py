@@ -382,6 +382,11 @@ class RoadwayNetwork(BaseModel):
         """Returns subset of self.nodes_df that are in self.links_df."""
         return filter_nodes_to_links(self.links_df, self.nodes_df)
 
+    def node_coords(self, model_node_id: int) -> tuple:
+        """Return coordinates (x, y) of a node based on model_node_id."""
+        node = self.nodes_df[self.nodes_df.model_node_id == model_node_id]
+        return node.geometry.x[0], node.geometry.y[0]
+
     def add_links(self, add_links_df: Union[pd.DataFrame, DataFrame[RoadLinksTable]]):
         """Validate combined links_df with LinksSchema before adding to self.links_df.
 

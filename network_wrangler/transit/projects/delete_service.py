@@ -39,7 +39,8 @@ def apply_transit_service_deletion(
 
     trip_ids = selection.selected_trips
     net.feed = _delete_trips_from_feed(
-        net.feed, trip_ids, clean_shapes=clean_shapes, clean_routes=clean_routes)
+        net.feed, trip_ids, clean_shapes=clean_shapes, clean_routes=clean_routes
+    )
 
     return net
 

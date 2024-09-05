@@ -12,13 +12,7 @@ from network_wrangler.transit.network import TransitNetwork
 
 delete_service_change_small_net = {
     "project": "Delete Transit",
-    "transit_service_deletion": {
-        "service": {
-            "trip_properties": {
-                "trip_id": ["blue-1"]
-            }
-        }
-    }
+    "transit_service_deletion": {"service": {"trip_properties": {"trip_id": ["blue-1"]}}},
 }
 
 
@@ -32,20 +26,20 @@ def test_delete_service_not_shape(
     updated_net = net.apply(card)
 
     # check trips have been deleted
-    assert updated_net.feed.trips.trip_id.loc[updated_net.feed.trips.trip_id.isin(["blue-1"])].empty
+    assert updated_net.feed.trips.trip_id.loc[
+        updated_net.feed.trips.trip_id.isin(["blue-1"])
+    ].empty
 
     # check shapes, shouldn't have changed
-    assert_frame_equal(small_transit_net.feed.shapes, updated_net.feed.shapes)  
+    assert_frame_equal(small_transit_net.feed.shapes, updated_net.feed.shapes)
 
 
 delete_service_change_small_net_clean_shapes = {
     "project": "Delete Transit",
     "transit_service_deletion": {
-        "service": {
-            "trip_properties": {"trip_id": ["blue-1"]}
-        },
+        "service": {"trip_properties": {"trip_id": ["blue-1"]}},
         "clean_shapes": True,
-    }
+    },
 }
 
 
@@ -59,7 +53,9 @@ def test_delete_service_and_shape(
     updated_net = net.apply(card)
 
     # check trips
-    assert updated_net.feed.trips.trip_id.loc[updated_net.feed.trips.trip_id.isin(["blue-1"])].empty
+    assert updated_net.feed.trips.trip_id.loc[
+        updated_net.feed.trips.trip_id.isin(["blue-1"])
+    ].empty
 
     # check shapes, should have been removed
     shape_ids = small_transit_net.feed.trips.shape_id.unique()
