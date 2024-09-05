@@ -205,8 +205,8 @@ def _add_route_to_feed(
     feed.routes = routes_df
     feed.shapes = shapes_df
     feed.trips = trips_df
-    feed.stop_times = stop_times_df
     feed.stops = stops_df
+    feed.stop_times = stop_times_df
     feed.frequencies = frequencies_df
 
     return feed
