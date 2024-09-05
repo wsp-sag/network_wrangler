@@ -189,6 +189,7 @@ def _translate_scoped_link_property_v1_to_v0(links_df: DataFrame, prop: str) -> 
 
     v0_prop_s = links_df.loc[complex_idx].apply(_v1_to_v0_scoped_link_property, prop=prop, axis=1)
 
+    links_df[default_prop] = links_df[default_prop].astype(object)
     links_df.loc[complex_idx, default_prop] = v0_prop_s
     links_df = links_df.drop(columns=[prop])
 

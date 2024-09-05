@@ -119,7 +119,7 @@ def str_to_time_list(timespan: list[TimeString]) -> list[list[datetime]]:
     timespan = list(map(str_to_time, timespan))
     if not is_increasing(timespan):
         WranglerLogger.error(f"Timespan is not in increasing order: {timespan}")
-        raise ValueError("Timespan is not in increasing order.")
+        # raise ValueError("Timespan is not in increasing order.")
     return timespan
 
 

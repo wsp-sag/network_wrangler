@@ -26,6 +26,7 @@ import copy
 from typing import Union, Any, Optional
 
 import numpy as np
+import geopandas as gpd
 
 from pydantic import validate_call
 from pandera.typing import DataFrame
@@ -72,6 +73,7 @@ def _initialize_links_as_managed_lanes(
     links_df.loc[_ml_wo_geometry, "ML_geometry"] = offset_geometry_meters(
         links_df.loc[_ml_wo_geometry, "geometry"], geometry_offset_meters
     )
+    links_df["ML_geometry"] = gpd.GeoSeries(links_df["ML_geometry"])
 
     return links_df
 
@@ -178,7 +180,7 @@ def _edit_scoped_link_property(
     updated_scoped_prop_value_list = copy.deepcopy(scoped_prop_value_list)
 
     for set_item in scoped_prop_set:
-        WranglerLogger(f"Editing link for scoped item: {set_item}")
+        WranglerLogger.debug(f"Editing link for scoped item: {set_item}")
 
         # delete or error on conflicting scopes
         updated_scoped_prop_value_list = _resolve_conflicting_scopes(
