@@ -8,7 +8,7 @@ from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...models.gtfs.tables import (
-    TripsTable,
+    WranglerTripsTable,
     WranglerShapesTable,
     WranglerStopTimesTable,
 )
@@ -20,7 +20,7 @@ from ..feed.transit_segments import (
 from .feed import PickupDropoffAvailability
 
 
-def shape_ids_for_trip_ids(trips: DataFrame[TripsTable], trip_ids: list[str]) -> list[str]:
+def shape_ids_for_trip_ids(trips: DataFrame[WranglerTripsTable], trip_ids: list[str]) -> list[str]:
     """Returns a list of shape_ids for a given list of trip_ids."""
     return trips[trips["trip_id"].isin(trip_ids)].shape_id.unique().tolist()
 
@@ -34,7 +34,7 @@ def shapes_for_shape_id(
 
 
 def shapes_for_trip_id(
-    shapes: DataFrame[WranglerShapesTable], trips: DataFrame[TripsTable], trip_id: str
+    shapes: DataFrame[WranglerShapesTable], trips: DataFrame[WranglerTripsTable], trip_id: str
 ) -> DataFrame[WranglerShapesTable]:
     """Returns shape records for a single given trip_id."""
     from .shapes import shape_id_for_trip_id
@@ -45,7 +45,7 @@ def shapes_for_trip_id(
 
 def shapes_for_trip_ids(
     shapes: DataFrame[WranglerShapesTable],
-    trips: DataFrame[TripsTable],
+    trips: DataFrame[WranglerTripsTable],
     trip_ids: list[str],
 ) -> DataFrame[WranglerShapesTable]:
     """Returns shape records for list of trip_ids."""
@@ -55,7 +55,7 @@ def shapes_for_trip_ids(
 
 def shapes_with_stop_id_for_trip_id(
     shapes: DataFrame[WranglerShapesTable],
-    trips: DataFrame[TripsTable],
+    trips: DataFrame[WranglerTripsTable],
     stop_times: DataFrame[WranglerStopTimesTable],
     trip_id: str,
     pickup_dropoff: PickupDropoffAvailability = "either",
@@ -64,7 +64,7 @@ def shapes_with_stop_id_for_trip_id(
 
     Args:
         shapes: WranglerShapesTable
-        trips: TripsTable
+        trips: WranglerTripsTable
         stop_times: WranglerStopTimesTable
         trip_id: trip id to select
         pickup_dropoff: str indicating logic for selecting stops based on piackup and dropoff
@@ -107,7 +107,7 @@ def node_pattern_for_shape_id(shapes: DataFrame[WranglerShapesTable], shape_id: 
 
 def shapes_with_stops_for_shape_id(
     shapes: DataFrame[WranglerShapesTable],
-    trips: DataFrame[TripsTable],
+    trips: DataFrame[WranglerTripsTable],
     stop_times: DataFrame[WranglerStopTimesTable],
     shape_id: str,
 ) -> DataFrame[WranglerShapesTable]:
@@ -115,7 +115,7 @@ def shapes_with_stops_for_shape_id(
 
     Parameters:
         shapes (DataFrame[WranglerShapesTable]): DataFrame containing shape data.
-        trips (DataFrame[TripsTable]): DataFrame containing trip data.
+        trips (DataFrame[WranglerTripsTable]): DataFrame containing trip data.
         stop_times (DataFrame[WranglerStopTimesTable]): DataFrame containing stop times data.
         shape_id (str): The shape_id for which to retrieve shapes with stops.
 
@@ -134,7 +134,7 @@ def shapes_with_stops_for_shape_id(
 
 
 def shapes_for_trips(
-    shapes: DataFrame[WranglerShapesTable], trips: DataFrame[TripsTable]
+    shapes: DataFrame[WranglerShapesTable], trips: DataFrame[WranglerTripsTable]
 ) -> DataFrame[WranglerShapesTable]:
     """Filter shapes dataframe to records associated with trips table."""
     _sel_shapes = trips.shape_id.unique().tolist()
@@ -261,14 +261,14 @@ def shapes_for_road_links(
     return filtered_shapes
 
 
-def shape_id_for_trip_id(trips: TripsTable, trip_id: str) -> str:
+def shape_id_for_trip_id(trips: WranglerTripsTable, trip_id: str) -> str:
     """Returns a shape_id for a given trip_id."""
     return trips.loc[trips.trip_id == trip_id, "shape_id"].values[0]
 
 
 def find_nearest_stops(
     shapes: WranglerShapesTable,
-    trips: TripsTable,
+    trips: WranglerTripsTable,
     stop_times: WranglerStopTimesTable,
     trip_id: str,
     node_id: int,
@@ -278,7 +278,7 @@ def find_nearest_stops(
 
     Args:
         shapes: WranglerShapesTable
-        trips: TripsTable
+        trips: WranglerTripsTable
         stop_times: WranglerStopTimesTable
         trip_id: trip id to find nearest stops for
         node_id: node_id to find nearest stops for

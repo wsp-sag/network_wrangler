@@ -1,7 +1,7 @@
 """Functions for applying roadway property change project cards to the roadway network."""
 
 from __future__ import annotations
-from typing import Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING, Optional
 
 import pandas as pd
 
@@ -60,6 +60,7 @@ def apply_roadway_property_change(
     roadway_net: RoadwayNetwork,
     selection: Union[RoadwayNodeSelection, RoadwayLinkSelection],
     property_changes: dict[str, RoadPropertyChange],
+    project_name: Optional[str] = None,
 ) -> RoadwayNetwork:
     """Changes roadway properties for the selected features based on the project card.
 
@@ -77,12 +78,16 @@ def apply_roadway_property_change(
             bicycle_facility:
                 set: 2
             ```
+        project_name: optional name of the project to be applied
     """
     WranglerLogger.debug("Applying roadway property change project.")
 
     if "links" in selection.feature_types:
         roadway_net.links_df = edit_link_properties(
-            roadway_net.links_df, selection.selected_links, property_changes
+            roadway_net.links_df,
+            selection.selected_links,
+            property_changes,
+            project_name=project_name,
         )
 
     elif "nodes" in selection.feature_types:
@@ -92,7 +97,11 @@ def apply_roadway_property_change(
         for property, property_dict in non_geo_changes.items():
             prop_change = RoadPropertyChange(**property_dict)
             roadway_net.nodes_df = edit_node_property(
-                roadway_net.nodes_df, selection.selected_nodes, property, prop_change
+                roadway_net.nodes_df,
+                selection.selected_nodes,
+                property,
+                prop_change,
+                project_name=project_name,
             )
 
         geo_changes_df = _node_geo_change_from_property_changes(

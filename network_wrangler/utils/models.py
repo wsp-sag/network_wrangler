@@ -87,7 +87,7 @@ def validate_df_to_model(
 
         return model_df
 
-    except SchemaErrors as e:
+    except SchemaErrors or TypeError or ValueError as e:
         # Log the summary of errors
         WranglerLogger.error(
             f"Validation to {model.__name__} failed with {len(e.failure_cases)} \

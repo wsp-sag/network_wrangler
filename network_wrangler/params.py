@@ -216,7 +216,7 @@ DEFAULT_SP_WEIGHT_FACTOR = 100
 """
 DEFAULT_SP_WEIGHT_COL = "i"
 
-"""Default timespan for scoped values."""
+"""Default timespan for scoped values and GTFS."""
 DEFAULT_TIMESPAN = ["00:00", "24:00"]
 
 """Default category for scoped values."""

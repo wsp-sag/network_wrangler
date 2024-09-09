@@ -3,6 +3,7 @@
 import pandas as pd
 import pytest
 from pandera import DataFrameModel
+
 from network_wrangler.utils.models import TableValidationError
 from network_wrangler.models._base.db import DBModelMixin, ForeignKeyValueError
 

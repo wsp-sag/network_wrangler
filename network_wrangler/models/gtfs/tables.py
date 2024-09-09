@@ -53,6 +53,7 @@ Usage examples:
 from typing import Optional
 
 import pandera as pa
+import pandas as pd
 
 from pandas import Timestamp
 from pandera.typing import Series, Category
@@ -67,6 +68,9 @@ from .types import (
     TimepointType,
 )
 from .table_types import HttpURL
+from .._base.types import TimeString
+from ...utils.time import str_to_time_series, str_to_time
+from ...params import DEFAULT_TIMESPAN
 
 
 class AgenciesTable(pa.DataFrameModel):
@@ -147,6 +151,7 @@ class WranglerStopsTable(StopsTable):
     )
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=True, ge=-90, le=90)
     stop_lon: Series[float] = pa.Field(coerce=True, nullable=True, ge=-180, le=180)
+    projects: Series[str] = pa.Field(coerce=True, default="")
 
 
 class RoutesTable(pa.DataFrameModel):
@@ -210,6 +215,7 @@ class WranglerShapesTable(ShapesTable):
     """Wrangler flavor of GTFS ShapesTable."""
 
     shape_model_node_id: Series[int] = pa.Field(coerce=True, nullable=False)
+    projects: Series[str] = pa.Field(coerce=True, default="")
 
 
 class TripsTable(pa.DataFrameModel):
@@ -249,6 +255,20 @@ class TripsTable(pa.DataFrameModel):
         _fk = {"route_id": ["routes", "route_id"]}
 
 
+class WranglerTripsTable(TripsTable):
+    """Represents the Trips table in the Wrangler feed, adding projects list."""
+
+    projects: Series[str] = pa.Field(coerce=True, default="")
+
+    class Config:
+        """Config for the WranglerTripsTable data model."""
+
+        coerce = True
+        add_missing_columns = True
+        _pk = ["trip_id"]
+        _fk = {"route_id": ["routes", "route_id"]}
+
+
 class FrequenciesTable(pa.DataFrameModel):
     """Represents the Frequency table in the GTFS dataset.
 
@@ -258,8 +278,16 @@ class FrequenciesTable(pa.DataFrameModel):
     """
 
     trip_id: Series[str] = pa.Field(nullable=False, coerce=True)
-    start_time: Series[Timestamp] = pa.Field(nullable=False, coerce=True)
-    end_time: Series[Timestamp] = pa.Field(nullable=False, coerce=True)
+    start_time: Series[TimeString] = pa.Field(
+        nullable=False,
+        coerce=True,
+        default=DEFAULT_TIMESPAN[0]
+    )
+    end_time: Series[TimeString] = pa.Field(
+        nullable=False,
+        coerce=True,
+        default=DEFAULT_TIMESPAN[1]
+    )
     headway_secs: Series[int] = pa.Field(
         coerce=True,
         ge=1,
@@ -274,6 +302,47 @@ class FrequenciesTable(pa.DataFrameModel):
         unique = ["trip_id", "start_time"]
         _pk = ["trip_id", "start_time"]
         _fk = {"trip_id": ["trips", "trip_id"]}
+
+
+class WranglerFrequenciesTable(FrequenciesTable):
+    """Wrangler flavor of GTFS FrequenciesTable."""
+    projects: Series[str] = pa.Field(coerce=True, default="")
+    start_time: Series = pa.Field(
+        nullable=False,
+        coerce=True,
+        default=str_to_time(DEFAULT_TIMESPAN[0])
+    )
+    end_time: Series = pa.Field(
+        nullable=False,
+        coerce=True,
+        default=str_to_time(DEFAULT_TIMESPAN[1])
+    )
+
+    class Config:
+        """Config for the FrequenciesTable data model."""
+
+        coerce = True
+        add_missing_columns = True
+        unique = ["trip_id", "start_time"]
+        _pk = ["trip_id", "start_time"]
+        _fk = {"trip_id": ["trips", "trip_id"]}
+
+    @pa.parser("start_time")
+    def st_to_timestamp(cls, series: Series) -> Series[Timestamp]:
+        """Check that start time is timestamp."""
+        series = series.fillna(str_to_time(DEFAULT_TIMESPAN[0]))
+        if series.dtype == "datetime64[ns]":
+            return series
+        series = str_to_time_series(series)
+        return series.astype("datetime64[ns]")
+
+    @pa.parser("end_time")
+    def et_to_timestamp(cls, series: Series) -> Series[Timestamp]:
+        """Check that start time is timestamp."""
+        series = series.fillna(str_to_time(DEFAULT_TIMESPAN[1]))
+        if series.dtype == "datetime64[ns]":
+            return series
+        return str_to_time_series(series)
 
 
 class StopTimesTable(pa.DataFrameModel):
@@ -297,8 +366,8 @@ class StopTimesTable(pa.DataFrameModel):
         nullable=True,
         coerce=True,
     )
-    arrival_time: Series[Timestamp] = pa.Field(nullable=False, coerce=True)
-    departure_time: Series[Timestamp] = pa.Field(nullable=False, coerce=True)
+    arrival_time: Series[TimeString] = pa.Field(nullable=True, coerce=True)
+    departure_time: Series[TimeString] = pa.Field(nullable=True, coerce=True)
 
     # Optional
     shape_dist_traveled: Optional[Series[float]] = pa.Field(coerce=True, nullable=True, ge=0)
@@ -323,9 +392,34 @@ class WranglerStopTimesTable(StopTimesTable):
     """Wrangler flavor of GTFS StopTimesTable."""
 
     stop_id: Series[int] = pa.Field(nullable=False, coerce=True, description="The model_node_id.")
-    arrival_time: Optional[Series[Timestamp]] = pa.Field(
-        coerce=True, nullable=True, default=Timestamp("00:00:00")
-    )
-    departure_time: Optional[Series[Timestamp]] = pa.Field(
-        coerce=True, nullable=True, default=Timestamp("00:00:00")
-    )
+    arrival_time: Series[Timestamp] = pa.Field(nullable=True)
+    departure_time: Series[Timestamp] = pa.Field(nullable=True)
+    projects: Series[str] = pa.Field(coerce=True, default="")
+
+    @pa.parser("arrival_time")
+    def at_to_timestamp(cls, series: Series) -> Series[Timestamp]:
+        """Check that arrival time timestamp."""
+        if series.dtype == "datetime64[ns]":
+            return series
+        series = str_to_time_series(series)
+        return series.astype("datetime64[ns]")
+
+    @pa.parser("departure_time")
+    def dt_to_timestamp(cls, series: Series) -> Series[Timestamp]:
+        """Check that departure time is timestamp."""
+        if series.dtype == "datetime64[ns]":
+            return series
+        series = str_to_time_series(series)
+        return series.astype("datetime64[ns]")
+
+    class Config:
+        """Config for the StopTimesTable data model."""
+
+        coerce = True
+        add_missing_columns = True
+        _pk = ["trip_id", "stop_sequence"]
+        _fk = {
+            "trip_id": ["trips", "trip_id"],
+            "stop_id": ["stops", "stop_id"],
+        }
+        unique = ["trip_id", "stop_sequence"]
