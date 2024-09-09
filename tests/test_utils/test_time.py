@@ -4,7 +4,9 @@ import pytest
 import pandas as pd
 
 from network_wrangler.utils.time import (
-    str_to_time, timespans_overlap, filter_df_to_overlapping_timespans
+    str_to_time,
+    timespans_overlap,
+    filter_df_to_overlapping_timespans,
 )
 from network_wrangler.logger import WranglerLogger
 
@@ -62,18 +64,19 @@ df_overlap_cases = [
     ([["1:30:15", "19:30:15"]], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
 ]
 
-overlap_df = pd.DataFrame([
-    [1, "14:30:15", "15:30:15"],
-    [2, "14:30:17", "16:30:15"],
-    [3, "14:00:15", "14:30:15"],
-    [4, "12:00:00", "13:00:00"],
-    [5, "12:00:00", "14:00:00"],
-    [6, "8:00:00", "10:00:00"],
-    [7, "7:00:00", "8:00:00"],
-    [8, "9:45:00", "11:00:00"],
-    [9, "4:00:00", "7:11:00"],
-    [10, "13:00:00", "14:00:00"],
-],
+overlap_df = pd.DataFrame(
+    [
+        [1, "14:30:15", "15:30:15"],
+        [2, "14:30:17", "16:30:15"],
+        [3, "14:00:15", "14:30:15"],
+        [4, "12:00:00", "13:00:00"],
+        [5, "12:00:00", "14:00:00"],
+        [6, "8:00:00", "10:00:00"],
+        [7, "7:00:00", "8:00:00"],
+        [8, "9:45:00", "11:00:00"],
+        [9, "4:00:00", "7:11:00"],
+        [10, "13:00:00", "14:00:00"],
+    ],
     columns=["id", "start_time", "end_time"],
 ).astype({"start_time": "datetime64[s]", "end_time": "datetime64[s]"})
 

@@ -61,8 +61,7 @@ def str_to_time(time_str: TimeString, base_date: Optional[datetime.date] = None)
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def str_to_time_series(
-    time_str_s: pd.Series,
-    base_date: Optional[Union[pd.Series, datetime.date]] = None
+    time_str_s: pd.Series, base_date: Optional[Union[pd.Series, datetime.date]] = None
 ) -> pd.Series:
     """Convert panda series of TimeString (HH:MM<:SS>) to datetime object.
 
@@ -71,7 +70,7 @@ def str_to_time_series(
     Args:
         time_str_s: Pandas Series of TimeStrings in HH:MM:SS or HH:MM format.
         base_date: optional date to base the datetime on. Defaults to None.
-            If not provided, will use today. Can be either a single instance or a series of 
+            If not provided, will use today. Can be either a single instance or a series of
             same length as time_str_s
     """
     TimeStrSeriesSchema.validate(time_str_s)
@@ -100,16 +99,18 @@ def str_to_time_series(
     hours = hours % 24
 
     # Combine the base date with the adjusted time and add the extra days if needed
-    combined_datetimes = pd.to_datetime(base_dates)\
-        + pd.to_timedelta(days_to_add, unit='d')\
-        + pd.to_timedelta(hours, unit='h')\
-        + pd.to_timedelta(minutes, unit='m')\
-        + pd.to_timedelta(seconds, unit='s')
+    combined_datetimes = (
+        pd.to_datetime(base_dates)
+        + pd.to_timedelta(days_to_add, unit="d")
+        + pd.to_timedelta(hours, unit="h")
+        + pd.to_timedelta(minutes, unit="m")
+        + pd.to_timedelta(seconds, unit="s")
+    )
 
     # Combine the results back into the original series
     result = time_str_s.copy()
     result[is_string] = combined_datetimes
-    result = result.astype('datetime64[ns]')
+    result = result.astype("datetime64[ns]")
     return result
 
 

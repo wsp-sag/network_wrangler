@@ -270,6 +270,4 @@ class Timespan:
         Returns:
             bool: True if the two timespans overlap, False otherwise.
         """
-        return (
-            self.start_time <= other.end_time and self.end_time >= other.start_time
-        )
+        return self.start_time <= other.end_time and self.end_time >= other.start_time

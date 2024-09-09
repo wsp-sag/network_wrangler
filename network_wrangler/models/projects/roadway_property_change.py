@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import itertools
 
-from typing import Optional, ClassVar, Any, Union
+from typing import Optional, ClassVar, Any, Union, Literal
 from datetime import datetime
 
 from pandera import DataFrameModel, Field
@@ -44,6 +44,7 @@ class IndivScopedPropertySetItem(BaseModel):
     timespan: Optional[TimespanString] = DEFAULT_TIMESPAN
     set: Optional[Any] = None
     existing: Optional[Any] = None
+    overwrite_conflicts: Optional[bool] = False
     change: Optional[Union[int, float]] = None
     _examples = [
         {"category": "hov3", "timespan": ["6:00", "9:00"], "set": 2.0},
@@ -97,6 +98,7 @@ class GroupedScopedPropertySetItem(BaseModel):
     categories: Optional[list[Any]] = []
     timespans: Optional[list[TimespanString]] = []
     set: Optional[Any] = None
+    overwrite_conflicts: Optional[bool] = False
     existing: Optional[Any] = None
     change: Optional[Union[int, float]] = None
     _examples = [
@@ -227,6 +229,7 @@ class RoadPropertyChange(RecordModel):
     change: Optional[Union[int, float]] = None
     set: Optional[Any] = None
     scoped: Optional[Union[None, ScopedPropertySetList]] = None
+    overwrite_scoped: Optional[Literal["conflicting", "all", False]] = False
 
     require_one_of: ClassVar[OneOf] = [["change", "set"]]
 

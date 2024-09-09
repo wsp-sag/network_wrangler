@@ -48,8 +48,12 @@ def apply_transit_property_change(
     WranglerLogger.debug("Applying transit property change project.")
     for property, property_change in property_changes.items():
         net = _apply_transit_property_change_to_table(
-            net, selection, property, property_change, project_name=project_name,
-            existing_value_conflict_error=existing_value_conflict_error
+            net,
+            selection,
+            property,
+            property_change,
+            project_name=project_name,
+            existing_value_conflict_error=existing_value_conflict_error,
         )
     return net
 
@@ -76,7 +80,8 @@ def _check_existing_value(existing_s: Series, expected_existing_val) -> bool:
             f"Existing do not all match expected value of {expected_existing_val}."
         )
         WranglerLogger.debug(
-            f"Conflicting values values: {existing_s[existing_s != expected_existing_val]}")
+            f"Conflicting values values: {existing_s[existing_s != expected_existing_val]}"
+        )
         return False
     return True
 
@@ -104,7 +109,8 @@ def _apply_transit_property_change_to_table(
 
     if "existing" in property_change:
         existing_ok = _check_existing_value(
-            table_df.loc[update_idx, property], property_change["existing"])
+            table_df.loc[update_idx, property], property_change["existing"]
+        )
         if not existing_ok:
             WranglerLogger.warning(f"Existing {property} != {property_change['existing']}.")
             if existing_value_conflict_error:
@@ -116,9 +122,9 @@ def _apply_transit_property_change_to_table(
     if "set" in property_change:
         set_df.loc[update_idx, property] = property_change["set"]
     elif "change" in property_change:
-        set_df.loc[update_idx, property] = \
-            set_df.loc[update_idx, property] \
-            + property_change["change"]
+        set_df.loc[update_idx, property] = (
+            set_df.loc[update_idx, property] + property_change["change"]
+        )
     else:
         raise ValueError("Property change must include 'set' or 'change'.")
 

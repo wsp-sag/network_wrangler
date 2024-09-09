@@ -279,14 +279,10 @@ class FrequenciesTable(pa.DataFrameModel):
 
     trip_id: Series[str] = pa.Field(nullable=False, coerce=True)
     start_time: Series[TimeString] = pa.Field(
-        nullable=False,
-        coerce=True,
-        default=DEFAULT_TIMESPAN[0]
+        nullable=False, coerce=True, default=DEFAULT_TIMESPAN[0]
     )
     end_time: Series[TimeString] = pa.Field(
-        nullable=False,
-        coerce=True,
-        default=DEFAULT_TIMESPAN[1]
+        nullable=False, coerce=True, default=DEFAULT_TIMESPAN[1]
     )
     headway_secs: Series[int] = pa.Field(
         coerce=True,
@@ -306,16 +302,13 @@ class FrequenciesTable(pa.DataFrameModel):
 
 class WranglerFrequenciesTable(FrequenciesTable):
     """Wrangler flavor of GTFS FrequenciesTable."""
+
     projects: Series[str] = pa.Field(coerce=True, default="")
     start_time: Series = pa.Field(
-        nullable=False,
-        coerce=True,
-        default=str_to_time(DEFAULT_TIMESPAN[0])
+        nullable=False, coerce=True, default=str_to_time(DEFAULT_TIMESPAN[0])
     )
     end_time: Series = pa.Field(
-        nullable=False,
-        coerce=True,
-        default=str_to_time(DEFAULT_TIMESPAN[1])
+        nullable=False, coerce=True, default=str_to_time(DEFAULT_TIMESPAN[1])
     )
 
     class Config:
