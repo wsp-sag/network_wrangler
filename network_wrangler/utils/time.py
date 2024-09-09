@@ -58,38 +58,24 @@ def str_to_time(time_str: TimeString, base_date: Optional[datetime.date] = None)
     return combined_datetime
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
-def str_to_time_series(
+def _all_str_to_time_series(
     time_str_s: pd.Series,
     base_date: Optional[Union[pd.Series, datetime.date]] = None
 ) -> pd.Series:
-    """Convert panda series of TimeString (HH:MM<:SS>) to datetime object.
-
-    If HH > 24, will subtract 24 to be within 24 hours. Timespans will be treated as the next day.
-
-    Args:
-        time_str_s: Pandas Series of TimeStrings in HH:MM:SS or HH:MM format.
-        base_date: optional date to base the datetime on. Defaults to None.
-            If not provided, will use today. Can be either a single instance or a series of 
-            same length as time_str_s
-    """
+    """Assume all are strings and convert to datetime objects."""
+    # check strings are in the correct format, leave existing date times alone
     TimeStrSeriesSchema.validate(time_str_s)
 
     # Set the base date to today if not provided
     if base_date is None:
-        base_date = pd.Series([date.today()] * len(time_str_s))
+        base_date = pd.Series([date.today()] * len(time_str_s), index=time_str_s.index)
     elif isinstance(base_date, date):
-        base_date = pd.Series([base_date] * len(time_str_s))
+        base_date = pd.Series([base_date] * len(time_str_s), index=time_str_s.index)
     elif len(base_date) != len(time_str_s):
         raise ValueError("base_date must be the same length as time_str_s")
 
-    # Filter out the string elements
-    is_string = time_str_s.apply(lambda x: isinstance(x, str))
-    time_strings = time_str_s[is_string]
-    base_dates = base_date[is_string]
-
     # Split the time string to extract hours, minutes, and seconds
-    time_parts = time_strings.str.split(":", expand=True).astype(int)
+    time_parts = time_str_s.str.split(":", expand=True).astype(int)
     hours = time_parts[0]
     minutes = time_parts[1]
     seconds = time_parts[2] if time_parts.shape[1] == 3 else 0
@@ -98,14 +84,33 @@ def str_to_time_series(
         hours[hours >= 24] -= 24
 
     # Combine the base date with the adjusted time and add the extra days if needed
-    combined_datetimes = pd.to_datetime(base_dates)\
+    combined_datetimes = pd.to_datetime(base_date)\
         + pd.to_timedelta(hours, unit='h')\
         + pd.to_timedelta(minutes, unit='m')\
         + pd.to_timedelta(seconds, unit='s')
+    return combined_datetimes
 
-    # Combine the results back into the original series
+
+def str_to_time_series(
+    time_str_s: pd.Series,
+    base_date: Optional[Union[pd.Series, datetime.date]] = None
+) -> pd.Series:
+    """Convert mixed panda series datetime and TimeString (HH:MM<:SS>) to datetime object.
+
+    If HH > 24, will subtract 24 to be within 24 hours. Timespans will be treated as the next day.
+
+    Args:
+        time_str_s: Pandas Series of TimeStrings in HH:MM:SS or HH:MM format.
+        base_date: optional date to base the datetime on. Defaults to None.
+            If not provided, will use today. Can be either a single instance or a series of
+            same length as time_str_s
+    """
+    # check strings are in the correct format, leave existing date times alone
+    is_string = time_str_s.apply(lambda x: isinstance(x, str))
+    time_strings = time_str_s[is_string]
     result = time_str_s.copy()
-    result[is_string] = combined_datetimes
+    if is_string.any():
+        result[is_string] = _all_str_to_time_series(time_strings, base_date)
     result = result.astype('datetime64[ns]')
     return result
 

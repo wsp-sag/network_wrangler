@@ -65,7 +65,21 @@ def test_valid_field_value_set(request, small_transit_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.skip(reason="This feature is not yet implemented. See #347")
+def test_coerce_times(request, small_transit_net):
+    """Checks that setting a valid field value will pass."""
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    feed = small_transit_net.feed
+    # Should be ok b/c GTFS can last "several days"
+    _new_stop_times = copy.deepcopy(feed.stop_times)
+    _new_stop_times.loc[1, "departure_time"] = "12:00:00"
+    feed.stop_times = _new_stop_times
+    assert isinstance(feed.stop_times.loc[1, "departure_time"], pd.Timestamp)
+    assert feed.stop_times.loc[1, "departure_time"] == pd.Timestamp("12:00:00")
+    WranglerLogger.debug(f"feed.stop_times: \n{feed.stop_times}")
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+@pytest.mark.skip(reason="This test is not working as expected")
 def test_coerce_over24hr_times(request, small_transit_net):
     """Checks that setting a valid field value will pass."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
@@ -76,7 +90,7 @@ def test_coerce_over24hr_times(request, small_transit_net):
     _new_stop_times.loc[1, "departure_time"] = "12:00:00"
     feed.stop_times = _new_stop_times
     assert isinstance(feed.stop_times.loc[2, "arrival_time"], pd.Timestamp)
-
+    assert feed.stop_times.loc[2, "arrival_time"] == pd.Timestamp("18:00:00")
     WranglerLogger.debug(f"feed.stop_times: \n{feed.stop_times}")
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
