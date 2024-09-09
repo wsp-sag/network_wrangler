@@ -6,7 +6,7 @@ Private methods may return mutated originals.
 
 import copy
 
-from typing import Union
+from typing import Union, Optional
 
 import geopandas as gpd
 
@@ -76,6 +76,7 @@ def edit_node_property(
     prop_name: str,
     prop_change: Union[dict, RoadPropertyChange],
     existing_value_conflict_error: bool = False,
+    project_name: Optional[str] = None,
     _geometry_ok: bool = False,
 ) -> DataFrame[RoadNodesTable]:
     """Return copied nodes table with node property edited.
@@ -88,6 +89,7 @@ def edit_node_property(
         existing_value_conflict_error: If True, will trigger an error if the existing
             specified value in the project card doesn't match the value in nodes_df.
             Otherwise, will only trigger a warning. Defaults to False.
+        project_name: optional name of the project to be applied
         _geometry_ok: if False, will not let you change geometry-related fields. Should
             only be changed to True by internal processes that know that geometry is changing
             and will update it in appropriate places in network. Defaults to False.
@@ -126,5 +128,9 @@ def edit_node_property(
         )
     else:
         raise NodeChangeError("Couldn't find correct node change spec in: {prop_dict}")
+
+    if project_name is not None:
+        sel_nodes_df["projects"] += f"{project_name},"
+
     nodes_df = validate_df_to_model(nodes_df, RoadNodesTable)
     return nodes_df
