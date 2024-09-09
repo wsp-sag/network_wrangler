@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://wsp-sag.github.io/network_wrangler/fix-greaterthan24hrtimes/</loc>
+         <lastmod>2024-09-09</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://wsp-sag.github.io/network_wrangler/fix-greaterthan24hrtimes/api/</loc>
+         <lastmod>2024-09-09</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://wsp-sag.github.io/network_wrangler/fix-greaterthan24hrtimes/data_models/</loc>
+         <lastmod>2024-09-09</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://wsp-sag.github.io/network_wrangler/fix-greaterthan24hrtimes/design/</loc>
+         <lastmod>2024-09-09</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://wsp-sag.github.io/network_wrangler/fix-greaterthan24hrtimes/development/</loc>
+         <lastmod>2024-09-09</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://wsp-sag.github.io/network_wrangler/fix-greaterthan24hrtimes/networks/</loc>
+         <lastmod>2024-09-09</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+</urlset>
