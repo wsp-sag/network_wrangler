@@ -137,6 +137,7 @@ def _create_new_trips(
 
     Args:
         trips: List of trip dictionaries with trip_id, shape_id, and other trip information.
+        route_id: Route ID for the trips.
         shapes_df: Shapes dataframe to get shape_id from.
     """
     FILTER_OUT = ["routing", "headway_secs"]
