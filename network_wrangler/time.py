@@ -168,6 +168,9 @@ class Timespan:
 
     This class provides methods to initialize and manipulate time objects.
 
+    If the end_time is less than the start_time, the duration will assume that it crosses
+        over midnight.
+
     Attributes:
         start_time (datetime.time): The start time of the timespan.
         end_time (datetime.time): The end time of the timespan.
@@ -182,7 +185,10 @@ class Timespan:
     """
 
     def __init__(self, value: list[TimeType]):
-        """_summary_.
+        """Constructor for the Timespan object.
+
+        If the value is a list of two time strings, datetime objects, Time, or seconds from
+        midnight, the start_time and end_time attributes will be set accordingly.
 
         Args:
             value (time): a list of two time strings, datetime objects, Time, or seconds from
@@ -264,12 +270,22 @@ class Timespan:
     def overlaps(self, other: Timespan) -> bool:
         """Check if two timespans overlap.
 
+        If the start time is greater than the end time, the timespan is assumed to cross over
+        midnight.
+
         Args:
             other (Timespan): The other timespan to compare.
 
         Returns:
             bool: True if the two timespans overlap, False otherwise.
         """
+        real_end_time = self.end_time
+        if self.end_time > self.start_time:
+            real_end_time = self.end_time.datetime + datetime.timedelta(days=1)
+
+        real_other_end_time = other.end_time
+        if other.end_time > other.start_time:
+            real_other_end_time = other.end_time.datetime + datetime.timedelta(days=1)
         return (
-            self.start_time <= other.end_time and self.end_time >= other.start_time
+            self.start_time <= real_other_end_time and real_end_time >= other.start_time
         )
