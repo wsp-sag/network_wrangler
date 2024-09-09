@@ -54,17 +54,18 @@ def test_add_route_to_feed_dict(
 ):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     small_transit_net = copy.deepcopy(small_transit_net)
-    updated_feed = apply_transit_route_addition(
+    updated_transit_net = apply_transit_route_addition(
         small_transit_net, add_route_change["transit_route_addition"], small_net
     )
+    updated_feed = updated_transit_net.feed
 
     # check trips
-    new_trips = updated_feed.trips.trip_id.loc[updated_feed.trips.route_id.isin("abc")]
+    new_trips = updated_feed.trips.loc[updated_feed.trips.route_id.isin(["abc"])]
     new_trip_ids = new_trips.trip_id.to_list()
     assert len(new_trip_ids) == 1
 
     # check routes
-    new_routes = updated_feed.routes.loc[updated_feed.routes.route_id.isin("abc")]
+    new_routes = updated_feed.routes.loc[updated_feed.routes.route_id.isin(["abc"])]
     assert len(new_routes) == 1
 
     assert new_routes.route_long_name.loc[new_routes.route_long_name == "green_line"].all()
@@ -82,27 +83,27 @@ def test_add_route_to_feed_dict(
         updated_feed.stop_times.trip_id.isin(new_trip_ids)
     ]
     assert new_stop_times.stop_id.isin(new_stops).all()
-    assert new_stop_times.at[new_stop_times.stop_id == 4, "drop_off_type"] == 1
-    assert new_stop_times.at[new_stop_times.stop_id == 4, "pickup_type"] == 0
-    assert new_stop_times.at[new_stop_times.stop_id == 6, "drop_off_type"] == 0
-    assert new_stop_times.at[new_stop_times.stop_id == 6, "pickup_type"] == 0
-    assert new_stop_times.at[new_stop_times.stop_id == 1, "drop_off_type"] == 0
-    assert new_stop_times.at[new_stop_times.stop_id == 1, "pickup_type"] == 0
+    assert new_stop_times.loc[new_stop_times.stop_id == 4, "drop_off_type"].iloc[0] == 1
+    assert new_stop_times.loc[new_stop_times.stop_id == 4, "pickup_type"].iloc[0] == 0
+    assert new_stop_times.loc[new_stop_times.stop_id == 6, "drop_off_type"].iloc[0] == 0
+    assert new_stop_times.loc[new_stop_times.stop_id == 6, "pickup_type"].iloc[0] == 0
+    assert new_stop_times.loc[new_stop_times.stop_id == 1, "drop_off_type"].iloc[0] == 0
+    assert new_stop_times.loc[new_stop_times.stop_id == 1, "pickup_type"].iloc[0] == 0
 
     # check shapes
     new_shape_ids = new_trips.shape_id.unique()
     new_shapes = updated_feed.shapes.loc[updated_feed.shapes.shape_id.isin(new_shape_ids)]
     assert len(new_shapes) == 6
     expected_shape_modeL_node_ids = [1, 2, 3, 4, 5, 6]
-    new_shapes.shape_modeL_node_id.isin(expected_shape_modeL_node_ids).all()
+    assert new_shapes.shape_model_node_id.isin(expected_shape_modeL_node_ids).all()
 
     # check frequencies
     new_frequencies = updated_feed.frequencies.loc[
         updated_feed.frequencies.trip_id.isin(new_trip_ids)
     ]
     assert len(new_frequencies) == 2
-    assert new_frequencies.headway_secs.isin([600, 900])
-    assert new_frequencies.start_time.isin([str_to_time("6:00"), str_to_time("12:00")])
+    assert new_frequencies.headway_secs.isin([600, 900]).all()
+    assert new_frequencies.start_time.isin([str_to_time("6:00"), str_to_time("12:00")]).all()
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 

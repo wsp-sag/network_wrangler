@@ -253,12 +253,12 @@ def fill_str_ids(
         str_prefix (str, optional): Prefix to add to the new ID. Defaults to "".
         str_suffix (str, optional): Suffix to add to the new ID. Defaults to "".
     """
-    if taken_ids_s.iloc[0] != str:
+    if not isinstance(taken_ids_s.iloc[0], str):
         raise ValueError("taken_ids_s must be a series of strings.")
 
     n_ids = id_s.isna().sum()
     start_id = _get_max_int_id_within_string_ids(taken_ids_s, str_prefix, str_suffix) + 1
-    new_ids = [f"{str_prefix}i{str_suffix}" for i in range(start_id, start_id + n_ids)]
+    new_ids = [f"{str_prefix}{i}{str_suffix}" for i in range(start_id, start_id + n_ids)]
     id_s.loc[id_s.isna()] = new_ids
     return id_s
 
@@ -270,7 +270,7 @@ def fill_int_ids(id_s: pd.Series, taken_ids_s: pd.Series) -> pd.Series:
         id_s (pd.Series): Series of IDs to fill.
         taken_ids_s (pd.Series): Series of IDs that are already taken.
     """
-    if taken_ids_s.iloc[0] != int:
+    if not isinstance(taken_ids_s.iloc[0], int):
         raise ValueError("id_s must be a series of integers.")
     n_ids = id_s.isna().sum()
     start_id = max(set(taken_ids_s.dropna())) + 1

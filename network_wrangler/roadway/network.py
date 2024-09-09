@@ -59,7 +59,7 @@ from .links.links import shape_ids_unique_to_link_ids, node_ids_unique_to_link_i
 from .links.filters import filter_links_to_ids, filter_links_to_node_ids
 from .links.delete import delete_links_by_ids
 from .links.edit import edit_link_geometry_from_nodes
-from .nodes.nodes import node_ids_without_links
+from .nodes.nodes import node_ids_without_links, NodeNotFoundError
 from .nodes.filters import filter_nodes_to_links
 from .nodes.delete import delete_nodes_by_ids
 from .nodes.edit import edit_node_geometry
@@ -384,8 +384,12 @@ class RoadwayNetwork(BaseModel):
 
     def node_coords(self, model_node_id: int) -> tuple:
         """Return coordinates (x, y) of a node based on model_node_id."""
-        node = self.nodes_df[self.nodes_df.model_node_id == model_node_id]
-        return node.geometry.x[0], node.geometry.y[0]
+        try:
+            node = self.nodes_df[self.nodes_df.model_node_id == model_node_id]
+        except ValueError:
+            WranglerLogger.error(f"Node with model_node_id {model_node_id} not found.")
+            raise NodeNotFoundError(f"Node with model_node_id {model_node_id} not found.")
+        return node.geometry.x.values[0], node.geometry.y.values[0]
 
     def add_links(self, add_links_df: Union[pd.DataFrame, DataFrame[RoadLinksTable]]):
         """Validate combined links_df with LinksSchema before adding to self.links_df.

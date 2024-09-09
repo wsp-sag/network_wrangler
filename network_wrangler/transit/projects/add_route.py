@@ -10,9 +10,10 @@ from ...logger import WranglerLogger
 import pandas as pd
 from pandera.typing import DataFrame as paDataFrame
 
-from ...utils.time import str_to_time_list, TimeString
+from ...utils.time import str_to_time_list
 from ...utils.utils import fill_str_ids
 from ...utils.models import fill_df_with_defaults_from_model
+from ...models._base.types import TimeString
 from ...models.gtfs.tables import (
     TripsTable,
     WranglerShapesTable,
@@ -85,14 +86,16 @@ def _add_route_to_feed(
         Feed: transit feed.
     """
     WranglerLogger.debug(f"Adding route {len(add_routes)} to feed.")
-    add_routes_df = pd.DataFrame({k: v for r in add_routes for k, v in r.items() if k != "trips"})
+    add_routes_df = pd.DataFrame(
+        [{k: v for k, v in r.items() if k != "trips"} for r in add_routes]
+    )
     routes_df = pd.concat([feed.routes, add_routes_df], ignore_index=True, sort=False)
 
     for route in add_routes:
         WranglerLogger.debug(
             f"Adding {len(route['trips'])} trips for route {route['route_id']} to feed."
         )
-        add_trips_df = _create_new_trips(route, feed.shapes)
+        add_trips_df = _create_new_trips(route["trips"], route["route_id"], feed.shapes)
         trips_df = pd.concat([feed.trips, add_trips_df], ignore_index=True, sort=False)
 
         for i, trip in enumerate(route["trips"]):
@@ -117,18 +120,18 @@ def _add_route_to_feed(
                 [feed.stop_times, add_stop_times_df], ignore_index=True, sort=False
             )
 
+    feed.stops = stops_df
     feed.routes = routes_df
     feed.shapes = shapes_df
     feed.trips = trips_df
     feed.stop_times = stop_times_df
-    feed.stops = stops_df
     feed.frequencies = frequencies_df
 
     return feed
 
 
 def _create_new_trips(
-    trips: list[dict], shapes_df: paDataFrame[WranglerShapesTable]
+    trips: list[dict], route_id: str, shapes_df: paDataFrame[WranglerShapesTable]
 ) -> paDataFrame[TripsTable]:
     """Create new trips for a route.
 
@@ -137,8 +140,15 @@ def _create_new_trips(
         shapes_df: Shapes dataframe to get shape_id from.
     """
     FILTER_OUT = ["routing", "headway_secs"]
-    add_trips_df = pd.DataFrame({k: v for r in trips for k, v in r.items() if k not in FILTER_OUT})
-    add_trips_df = fill_df_with_defaults_from_model(add_trips_df, TripsTable)
+    add_trips_df = pd.DataFrame(
+        [{k: v for k, v in r.items() if k not in FILTER_OUT} for r in trips]
+    )
+    add_trips_df["route_id"] = route_id
+    if "shape_id" not in add_trips_df.columns:
+        add_trips_df["shape_id"] = None
+
+    if "trip_id" not in add_trips_df.columns:
+        add_trips_df["trip_id"] = None
     add_trips_df["shape_id"] = fill_str_ids(add_trips_df["shape_id"], shapes_df["shape_id"])
     add_trips_df["trip_id"] = add_trips_df["trip_id"].fillna(
         add_trips_df["shape_id"].apply(lambda x: f"tr_shp{x}")
@@ -201,14 +211,14 @@ def _get_stops_from_routing(routing: list[Union[dict, int]]) -> list[dict]:
         if isinstance(i, dict):
             stop_d = {}
             stop_info = list(i.values())[0]  # dict with stop, board, alight
-            if stop_info.get("stop", False):
+            if not stop_info.get("stop", False):
                 continue
             stop_d["stop_id"] = int(list(i.keys())[0])
             # Default for board and alight is True unless specified to be False
             stop_d["pickup_type"] = 0 if stop_info.get("board", True) else 1
             stop_d["drop_off_type"] = 0 if stop_info.get("alight", True) else 1
             stop_d.update({k: v for k, v in stop_info.items() if k not in FILTER_OUT})
-            stop_dicts.append(stop_info)
+            stop_dicts.append(stop_d)
     return stop_dicts
 
 
