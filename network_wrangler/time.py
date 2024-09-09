@@ -286,6 +286,4 @@ class Timespan:
         real_other_end_time = other.end_time
         if other.end_time > other.start_time:
             real_other_end_time = other.end_time.datetime + datetime.timedelta(days=1)
-        return (
-            self.start_time <= real_other_end_time and real_end_time >= other.start_time
-        )
+        return self.start_time <= real_other_end_time and real_end_time >= other.start_time

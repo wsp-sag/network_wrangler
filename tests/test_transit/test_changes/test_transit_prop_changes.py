@@ -115,8 +115,8 @@ def test_transit_property_change(request, small_transit_net):
     # Filter the DataFrame correctly
     WranglerLogger.debug(f"Result Frequencies: \n{net.feed.frequencies}")
     target_df = net.feed.frequencies.loc[
-        (net.feed.frequencies.trip_id.isin(trip_ids)) &
-        (net.feed.frequencies.start_time.dt.strftime('%H:%M') == timespan[0])
+        (net.feed.frequencies.trip_id.isin(trip_ids))
+        & (net.feed.frequencies.start_time.dt.strftime("%H:%M") == timespan[0])
     ]
 
     if not (target_df["headway_secs"] == new_headway).all():
@@ -124,7 +124,9 @@ def test_transit_property_change(request, small_transit_net):
         WranglerLogger.debug(f"Targeted Frequencies: \n{target_df}")
         assert False
 
-    unchanged_result_df = net.feed.frequencies.loc[~net.feed.frequencies.index.isin(target_df.index)]
+    unchanged_result_df = net.feed.frequencies.loc[
+        ~net.feed.frequencies.index.isin(target_df.index)
+    ]
     unchanged_og_df_df = og_df.loc[~og_df.index.isin(target_df.index)]
 
     try:

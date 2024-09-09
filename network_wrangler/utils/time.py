@@ -59,8 +59,7 @@ def str_to_time(time_str: TimeString, base_date: Optional[datetime.date] = None)
 
 
 def _all_str_to_time_series(
-    time_str_s: pd.Series,
-    base_date: Optional[Union[pd.Series, datetime.date]] = None
+    time_str_s: pd.Series, base_date: Optional[Union[pd.Series, datetime.date]] = None
 ) -> pd.Series:
     """Assume all are strings and convert to datetime objects."""
     # check strings are in the correct format, leave existing date times alone
@@ -84,16 +83,17 @@ def _all_str_to_time_series(
         hours[hours >= 24] -= 24
 
     # Combine the base date with the adjusted time and add the extra days if needed
-    combined_datetimes = pd.to_datetime(base_date)\
-        + pd.to_timedelta(hours, unit='h')\
-        + pd.to_timedelta(minutes, unit='m')\
-        + pd.to_timedelta(seconds, unit='s')
+    combined_datetimes = (
+        pd.to_datetime(base_date)
+        + pd.to_timedelta(hours, unit="h")
+        + pd.to_timedelta(minutes, unit="m")
+        + pd.to_timedelta(seconds, unit="s")
+    )
     return combined_datetimes
 
 
 def str_to_time_series(
-    time_str_s: pd.Series,
-    base_date: Optional[Union[pd.Series, datetime.date]] = None
+    time_str_s: pd.Series, base_date: Optional[Union[pd.Series, datetime.date]] = None
 ) -> pd.Series:
     """Convert mixed panda series datetime and TimeString (HH:MM<:SS>) to datetime object.
 
@@ -111,7 +111,7 @@ def str_to_time_series(
     result = time_str_s.copy()
     if is_string.any():
         result[is_string] = _all_str_to_time_series(time_strings, base_date)
-    result = result.astype('datetime64[ns]')
+    result = result.astype("datetime64[ns]")
     return result
 
 
@@ -167,7 +167,7 @@ def filter_df_to_overlapping_timespans(
     """
     if "start_time" not in orig_df.columns or "end_time" not in orig_df.columns:
         raise ValueError("DataFrame must have 'start_time' and 'end_time' columns")
-    
+
     mask = pd.Series([False] * len(orig_df), index=orig_df.index)
     for query_timespan in query_timespans:
         q_start_time, q_end_time = str_to_time_list(query_timespan)
@@ -210,7 +210,7 @@ def filter_df_to_max_overlapping_timespans(
 ) -> pd.DataFrame:
     """Filters dataframe for entries that have maximum overlap with the given query timespan.
 
-   If the end time is less than the start time, it is assumed to be the next day.
+    If the end time is less than the start time, it is assumed to be the next day.
 
     Args:
         orig_df: dataframe to query timespans for with `start_time` and `end_time` fields.

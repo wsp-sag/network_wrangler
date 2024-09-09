@@ -73,6 +73,7 @@ from ...utils.time import str_to_time_series, str_to_time
 from ...params import DEFAULT_TIMESPAN
 from ...logger import WranglerLogger
 
+
 class AgenciesTable(pa.DataFrameModel):
     """Represents the Agency table in the GTFS dataset.
 
@@ -279,14 +280,10 @@ class FrequenciesTable(pa.DataFrameModel):
 
     trip_id: Series[str] = pa.Field(nullable=False, coerce=True)
     start_time: Series[TimeString] = pa.Field(
-        nullable=False,
-        coerce=True,
-        default=DEFAULT_TIMESPAN[0]
+        nullable=False, coerce=True, default=DEFAULT_TIMESPAN[0]
     )
     end_time: Series[TimeString] = pa.Field(
-        nullable=False,
-        coerce=True,
-        default=DEFAULT_TIMESPAN[1]
+        nullable=False, coerce=True, default=DEFAULT_TIMESPAN[1]
     )
     headway_secs: Series[int] = pa.Field(
         coerce=True,
@@ -306,16 +303,13 @@ class FrequenciesTable(pa.DataFrameModel):
 
 class WranglerFrequenciesTable(FrequenciesTable):
     """Wrangler flavor of GTFS FrequenciesTable."""
+
     projects: Series[str] = pa.Field(coerce=True, default="")
     start_time: Series = pa.Field(
-        nullable=False,
-        coerce=True,
-        default=str_to_time(DEFAULT_TIMESPAN[0])
+        nullable=False, coerce=True, default=str_to_time(DEFAULT_TIMESPAN[0])
     )
     end_time: Series = pa.Field(
-        nullable=False,
-        coerce=True,
-        default=str_to_time(DEFAULT_TIMESPAN[1])
+        nullable=False, coerce=True, default=str_to_time(DEFAULT_TIMESPAN[1])
     )
 
     class Config:
@@ -412,7 +406,9 @@ class WranglerStopTimesTable(StopTimesTable):
             df["departure_time"] = pd.NaT
         WranglerLogger.debug(f"stop_times before parsing: \n\
                              {df[['arrival_time', 'departure_time']]}")
-        filler_timestrings = (df["arrival_time"] == Timestamp("00:00:00")) & (df["departure_time"] == Timestamp("00:00:00"))
+        filler_timestrings = (df["arrival_time"] == Timestamp("00:00:00")) & (
+            df["departure_time"] == Timestamp("00:00:00")
+        )
 
         df.loc[filler_timestrings, "arrival_time"] = pd.NaT
         df.loc[filler_timestrings, "departure_time"] = pd.NaT
@@ -420,7 +416,9 @@ class WranglerStopTimesTable(StopTimesTable):
                              {df[['arrival_time', 'departure_time']]}")
         df["arrival_time"] = str_to_time_series(df["arrival_time"])
         df["departure_time"] = str_to_time_series(df["departure_time"])
-        WranglerLogger.debug(f"stop_times after parsing: \n{df[['arrival_time', 'departure_time']]}")
+        WranglerLogger.debug(
+            f"stop_times after parsing: \n{df[['arrival_time', 'departure_time']]}"
+        )
         return df
 
     class Config:
