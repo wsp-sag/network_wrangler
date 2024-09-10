@@ -126,7 +126,7 @@ def test_roadway_model_coerce(small_net):
     WranglerLogger.debug(f"small_net.links_df.cols: \n{small_net.links_df.columns}")
     assert "osm_link_id" in small_net.links_df.columns
 
-
+@pytest.mark.profile
 @pytest.mark.parametrize("io_format", ["geojson", "parquet"])
 @pytest.mark.parametrize("ex", ["stpaul", "small"])
 def test_roadway_geojson_read_write_read(example_dir, test_out_dir, ex, io_format):
@@ -156,7 +156,7 @@ def test_load_roadway_no_shapes(tmpdir, example_dir):
     assert not roadway_network.nodes_df.empty
     assert roadway_network._shapes_df is None
 
-
+@pytest.mark.profile
 def test_load_roadway_within_boundary(tmpdir, example_dir):
     one_block = Polygon(
         [

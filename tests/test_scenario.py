@@ -191,7 +191,7 @@ def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_net, stpaul_tra
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
-
+@pytest.mark.profile
 def test_scenario_building_from_script(request):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 

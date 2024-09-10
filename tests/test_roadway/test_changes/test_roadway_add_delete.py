@@ -1,6 +1,8 @@
 import copy
 import os
 
+import pytest
+
 from pandera.errors import SchemaError
 
 from projectcard import read_card
@@ -10,7 +12,7 @@ from network_wrangler import WranglerLogger
 Usage:  `pytest tests/test_roadway/test_changes/test_roadway_add_delete.py`
 """
 
-
+@pytest.mark.profile
 def test_add_roadway_link_project_card(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -67,6 +69,7 @@ def test_add_roadway_link_project_card(request, small_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
+@pytest.mark.profile
 def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -89,6 +92,7 @@ def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
+@pytest.mark.profile
 def test_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -109,6 +113,7 @@ def test_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     assert net_links == expected_net_links
     assert net_nodes == expected_net_nodes
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
 
 
 def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
@@ -132,6 +137,7 @@ def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
     print("--Finished:", request.node.name)
 
 
+@pytest.mark.profile
 def test_add_nodes(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_net)
