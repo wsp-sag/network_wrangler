@@ -13,6 +13,7 @@ from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...utils.io import read_table, write_table
+from ...utils.models import validate_call_pyd
 from ...params import NodesParams, LAT_LON_CRS
 from ...models.roadway.tables import RoadNodesTable
 from ...models._base.types import GeoFileTypes
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
     from ..network import RoadwayNetwork
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def read_nodes(
     filename: Union[Path, str],
     in_crs: int = LAT_LON_CRS,
@@ -70,7 +71,7 @@ def read_nodes(
     return nodes_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def nodes_df_to_geojson(nodes_df: DataFrame[RoadNodesTable], properties: list[str]):
     """Converts a nodes dataframe to a geojson.
 
@@ -92,7 +93,7 @@ def nodes_df_to_geojson(nodes_df: DataFrame[RoadNodesTable], properties: list[st
     return geojson
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def write_nodes(
     nodes_df: DataFrame[RoadNodesTable],
     out_dir: Union[str, Path],
@@ -118,7 +119,7 @@ def get_nodes(
     transit_net: Optional[TransitNetwork] = None,
     roadway_net: Optional[RoadwayNetwork] = None,
     roadway_path: Optional[Union[str, Path]] = None,
-) -> gpd.GeoDataFrame:
+) -> GeoDataFrame:
     """Get nodes from a transit network, roadway network, or roadway file.
 
     Args:

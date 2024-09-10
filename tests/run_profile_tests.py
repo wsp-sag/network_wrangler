@@ -4,7 +4,7 @@
 Can visualize the results using snakeviz:
 
     ```shell
-    snakeviz tests/profile_results/profile.prof
+    snakeviz prof/combined.prof
     ```
 """
 

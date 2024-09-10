@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import Union
 
-from pydantic import validate_call
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...models.gtfs.tables import WranglerStopTimesTable, WranglerStopsTable
+from ...utils.models import validate_call_pyd
 from .feed import PickupDropoffAvailability
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def stop_id_pattern_for_trip(
     stop_times: DataFrame[WranglerStopTimesTable],
     trip_id: str,
