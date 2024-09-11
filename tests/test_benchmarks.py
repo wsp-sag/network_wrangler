@@ -46,7 +46,7 @@ def test_transit_io(stpaul_ex_dir, test_out_dir):
 
 def test_transit_property_change(stpaul_ex_dir):
     net = load_transit(stpaul_ex_dir)
-    c = stpaul_ex_dir / "project_cards" / "examples/stpaul/project_cards/transit.prop_change.route_time.yml"
+    c = stpaul_ex_dir / "project_cards" / "transit.prop_change.route_time.yml"
     p = read_cards(c)
     for p in p.values():
         net.apply(p)
@@ -68,7 +68,7 @@ def test_transit_routing_change(stpaul_ex_dir):
     road_net = load_roadway_from_dir(stpaul_ex_dir)
     net = load_transit(stpaul_ex_dir)
     net.road_net = road_net
-    c = stpaul_ex_dir / "project_cards" / "examples/stpaul/project_cards/transit.routing_change.yml"
+    c = stpaul_ex_dir / "project_cards" / "transit.routing_change.yml"
     p = read_cards(c)
     for p in p.values():
         net.apply(p)
