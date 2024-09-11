@@ -23,7 +23,6 @@ from ...params import LAT_LON_CRS
 
 class NodeChangeError(Exception):
     """Raised when there is an issue with applying a node change."""
-
     pass
 
 

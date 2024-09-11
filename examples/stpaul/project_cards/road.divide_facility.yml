@@ -20,7 +20,7 @@ changes:
         bike_facility: 3
         distance: 0.14744
         lanes: 1
-        model_link_id: 142533
+        model_link_id: 123456
         roadway_class: 10
         bike_access: 1
         drive_access: 1
@@ -34,7 +34,7 @@ changes:
         bike_facility: 3
         distance: 0.57787
         lanes: 1
-        model_link_id: 142533
+        model_link_id: 1234567
         roadway_class: 10
         bike_access: 1
         drive_access: 1
@@ -48,7 +48,7 @@ changes:
         bike_facility: 3
         distance: 0.14667
         lanes: 1
-        model_link_id: 142533
+        model_link_id: 12345678
         roadway_class: 10
         bike_access: 1
         drive_access: 1
@@ -62,7 +62,7 @@ changes:
         bike_facility: 3
         distance: 0.13203
         lanes: 1
-        model_link_id: 142533
+        model_link_id: 123456789
         roadway_class: 10
         bike_access: 1
         drive_access: 1
@@ -96,8 +96,6 @@ changes:
         model_link_id:
           - 166734
     property_changes:
-      model_link_id:
-        set: 142533
       AADT:
         set: 0
       count_AM:
@@ -126,8 +124,6 @@ changes:
         model_link_id:
           - 182586
     property_changes:
-      model_link_id:
-        set: 142533
       roadway_class:
         existing: 40
         set: 10
