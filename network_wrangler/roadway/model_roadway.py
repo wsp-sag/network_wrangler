@@ -150,6 +150,7 @@ class ModelRoadwayNetwork:
     def write(
         self,
         out_dir: Union[Path, str] = ".",
+        convert_complex_link_properties_to_single_field: bool = False,
         prefix: str = "",
         file_format: str = "geojson",
         overwrite: bool = True,
@@ -159,13 +160,24 @@ class ModelRoadwayNetwork:
 
         Args:
             out_dir: the path were the output will be saved.
+            convert_complex_link_properties_to_single_field: if True, will convert complex properties to a
+                single column consistent with v0 format.  This format is NOT valid
+                with parquet and many other softwares. Defaults to False.
             prefix: the name prefix of the roadway files that will be generated.
             file_format: the format of the output files. Defaults to "geojson".
             overwrite: if True, will overwrite the files if they already exist. Defaults to True.
             true_shape: if True, will write the true shape of the links as found from shapes.
                 Defaults to False.
         """
-        write_roadway(self, out_dir, prefix, file_format, overwrite, true_shape)
+        write_roadway(
+            self,
+            out_dir=out_dir,
+            convert_complex_link_properties_to_single_field=convert_complex_link_properties_to_single_field,
+            prefix=prefix,
+            file_format=file_format,
+            overwrite=overwrite,
+            true_shape=true_shape
+        )
 
 
 def _generate_ml_link_id_lookup(links_df, link_id_range):

@@ -71,8 +71,8 @@ def read_links(
 @validate_call_pyd
 def write_links(
     links_df: DataFrame[RoadLinksTable],
-    convert_complex_properties_to_single_field: bool = False,
     out_dir: Union[str, Path] = ".",
+    convert_complex_properties_to_single_field: bool = False,
     prefix: str = "",
     file_format: GeoFileTypes = "json",
     overwrite: bool = False,
