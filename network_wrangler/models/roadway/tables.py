@@ -117,8 +117,15 @@ class RoadLinksTable(DataFrameModel):
         Custom check to validate fields starting with 'sc_' or 'sc_ML_'
         against a ScopedLinkValueItem model, handling both mandatory and optional fields.
         """
-        if not scoped_value or pd.isna(scoped_value):
-            return True
+        if isinstance(scoped_value, list):
+            if not scoped_value:
+                return True
+        elif isinstance(scoped_value, pd.Series):
+            if scoped_value.empty:
+                return True
+        else:
+            if pd.isna(scoped_value):
+                return True
         return validate_pyd(scoped_value, ScopedLinkValueList)
 
 
