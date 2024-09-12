@@ -432,7 +432,10 @@ class Scenario(object):
                 # this will always be true, else would have been flagged in missing \
                 # prerequsite check, but just in case
                 if prereq.lower() in project_list:
-                    adjacency_list[prereq.lower()] = [project]
+                    if adjacency_list.get(prereq.lower()):
+                        adjacency_list[prereq.lower()].append(project)
+                    else:
+                        adjacency_list[prereq.lower()] = [project]
 
         # sorted_project_names is topological sorted project card names (based on prerequsiite)
         _ordered_projects = topological_sort(
