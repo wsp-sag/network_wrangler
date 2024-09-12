@@ -1795,6 +1795,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#network_wrangler.utils.time.calc_overlap_duration_with_query" class="md-nav__link">
+    <span class="md-ellipsis">
+      calc_overlap_duration_with_query
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#network_wrangler.utils.time.convert_timespan_to_start_end_dt" class="md-nav__link">
     <span class="md-ellipsis">
       convert_timespan_to_start_end_dt
@@ -3880,6 +3889,15 @@
   <a href="#network_wrangler.utils.time" class="md-nav__link">
     <span class="md-ellipsis">
       time
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network_wrangler.utils.time.calc_overlap_duration_with_query" class="md-nav__link">
+    <span class="md-ellipsis">
+      calc_overlap_duration_with_query
     </span>
   </a>
   
@@ -16500,6 +16518,135 @@ validation_failure_cases.csv.</p>
 <div class="doc doc-object doc-function">
 
 
+<h2 id="network_wrangler.utils.time.calc_overlap_duration_with_query" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">calc_overlap_duration_with_query</span><span class="p">(</span><span class="n">start_time_s</span><span class="p">,</span> <span class="n">end_time_s</span><span class="p">,</span> <span class="n">start_time_q</span><span class="p">,</span> <span class="n">end_time_q</span><span class="p">)</span></code>
+
+<a href="#network_wrangler.utils.time.calc_overlap_duration_with_query" class="headerlink" title="Permanent link"> ¶</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Calculate the overlap series of start and end times and a query start and end times.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>start_time_s</code></td>
+            <td>
+                  <code><span title="pandas.Series">Series</span>[<span title="datetime.datetime">datetime</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Series of start times to calculate overlap with.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>end_time_s</code></td>
+            <td>
+                  <code><span title="pandas.Series">Series</span>[<span title="datetime.datetime">datetime</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Series of end times to calculate overlap with.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>start_time_q</code></td>
+            <td>
+                  <code><span title="datetime.datetime">datetime</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Query start time to calculate overlap with.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>end_time_q</code></td>
+            <td>
+                  <code><span title="datetime.datetime">datetime</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Query end time to calculate overlap with.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+            <details class="quote">
+              <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">calc_overlap_duration_with_query</span><span class="p">(</span>
+    <span class="n">start_time_s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">[</span><span class="n">datetime</span><span class="p">],</span>
+    <span class="n">end_time_s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">[</span><span class="n">datetime</span><span class="p">],</span>
+    <span class="n">start_time_q</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+    <span class="n">end_time_q</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">[</span><span class="n">timedelta</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the overlap series of start and end times and a query start and end times.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        start_time_s: Series of start times to calculate overlap with.</span>
+<span class="sd">        end_time_s: Series of end times to calculate overlap with.</span>
+<span class="sd">        start_time_q: Query start time to calculate overlap with.</span>
+<span class="sd">        end_time_q: Query end time to calculate overlap with.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">overlap_start</span> <span class="o">=</span> <span class="n">start_time_s</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">start_time_q</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span>
+    <span class="n">overlap_end</span> <span class="o">=</span> <span class="n">end_time_s</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">end_time_q</span><span class="p">,</span> <span class="nb">min</span><span class="p">)</span>
+    <span class="n">overlap_duration_s</span> <span class="o">=</span> <span class="p">(</span><span class="n">overlap_end</span> <span class="o">-</span> <span class="n">overlap_start</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">60</span>
+
+    <span class="k">return</span> <span class="n">overlap_duration_s</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h2 id="network_wrangler.utils.time.convert_timespan_to_start_end_dt" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">convert_timespan_to_start_end_dt</span><span class="p">(</span><span class="n">timespan_s</span><span class="p">)</span></code>
 
@@ -16508,16 +16655,16 @@ validation_failure_cases.csv.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Covert a timespan string [&lsquo;12:00&rsquo;,&lsquo;14:00] to start_time and end_time datetime cols in df.</p>
+      <p>Convert a timespan string [&lsquo;12:00&rsquo;,&lsquo;14:00] to start_time &amp; end_time datetime cols in df.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">convert_timespan_to_start_end_dt</span><span class="p">(</span><span class="n">timespan_s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Serie</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Covert a timespan string [&#39;12:00&#39;,&#39;14:00] to start_time and end_time datetime cols in df.&quot;&quot;&quot;</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">convert_timespan_to_start_end_dt</span><span class="p">(</span><span class="n">timespan_s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Serie</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a timespan string [&#39;12:00&#39;,&#39;14:00] to start_time &amp; end_time datetime cols in df.&quot;&quot;&quot;</span>
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">timespan_s</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">str_to_time</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
     <span class="n">end_time</span> <span class="o">=</span> <span class="n">timespan_s</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">str_to_time</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;start_time&quot;</span><span class="p">:</span> <span class="n">start_time</span><span class="p">,</span> <span class="s2">&quot;end_time&quot;</span><span class="p">:</span> <span class="n">end_time</span><span class="p">})</span>
@@ -16539,6 +16686,7 @@ validation_failure_cases.csv.</p>
     <div class="doc doc-contents ">
 
       <p>Check timespan1 inclusively contains timespan2.</p>
+<p>If the end time is less than the start time, it is assumed to be the next day.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -16610,24 +16758,36 @@ time and end time.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">dt_contains</span><span class="p">(</span><span class="n">timespan1</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">],</span> <span class="n">timespan2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check timespan1 inclusively contains timespan2.</span>
+
+<span class="sd">    If the end time is less than the start time, it is assumed to be the next day.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        timespan1 (list[time]): The first timespan represented as a list containing the start</span>
@@ -16639,7 +16799,15 @@ time and end time.</p>
 <span class="sd">        bool: True if the first timespan contains the second timespan, False otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">start_time_dt</span><span class="p">,</span> <span class="n">end_time_dt</span> <span class="o">=</span> <span class="n">timespan1</span>
+
+    <span class="k">if</span> <span class="n">end_time_dt</span> <span class="o">&lt;</span> <span class="n">start_time_dt</span><span class="p">:</span>
+        <span class="n">end_time_dt</span> <span class="o">=</span> <span class="n">end_time_dt</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
     <span class="n">start_time_dt2</span><span class="p">,</span> <span class="n">end_time_dt2</span> <span class="o">=</span> <span class="n">timespan2</span>
+
+    <span class="k">if</span> <span class="n">end_time_dt2</span> <span class="o">&lt;</span> <span class="n">start_time_dt2</span><span class="p">:</span>
+        <span class="n">end_time_dt2</span> <span class="o">=</span> <span class="n">end_time_dt2</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="p">(</span><span class="n">start_time_dt</span> <span class="o">&lt;=</span> <span class="n">start_time_dt2</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">end_time_dt</span> <span class="o">&gt;=</span> <span class="n">end_time_dt2</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -16664,15 +16832,15 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">292</span>
-<span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">dt_list_overlaps</span><span class="p">(</span><span class="n">timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">dt_list_overlaps</span><span class="p">(</span><span class="n">timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if any of the timespans overlap.</span>
 
 <span class="sd">    `overlapping`: a timespan that fully or partially overlaps a given timespan.</span>
@@ -16699,18 +16867,45 @@ This includes and all timespans where at least one minute overlap.</p>
     <div class="doc doc-contents ">
 
       <p>Check if two timespans overlap and return the amount of overlap.</p>
+<p>If the end time is less than the start time, it is assumed to be the next day.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">dt_overlap_duration</span><span class="p">(</span><span class="n">timedelta1</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timedelta2</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two timespans overlap and return the amount of overlap.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two timespans overlap and return the amount of overlap.</span>
+
+<span class="sd">    If the end time is less than the start time, it is assumed to be the next day.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">timedelta1</span><span class="o">.</span><span class="n">end_time</span> <span class="o">&lt;</span> <span class="n">timedelta1</span><span class="o">.</span><span class="n">start_time</span><span class="p">:</span>
+        <span class="n">timedelta1</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span>
+            <span class="n">start_time</span><span class="o">=</span><span class="n">timedelta1</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+            <span class="n">end_time</span><span class="o">=</span><span class="n">timedelta1</span><span class="o">.</span><span class="n">end_time</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">timedelta2</span><span class="o">.</span><span class="n">end_time</span> <span class="o">&lt;</span> <span class="n">timedelta2</span><span class="o">.</span><span class="n">start_time</span><span class="p">:</span>
+        <span class="n">timedelta2</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span>
+            <span class="n">start_time</span><span class="o">=</span><span class="n">timedelta2</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+            <span class="n">end_time</span><span class="o">=</span><span class="n">timedelta2</span><span class="o">.</span><span class="n">end_time</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+        <span class="p">)</span>
     <span class="n">overlap_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">timedelta1</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="n">timedelta2</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
     <span class="n">overlap_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">timedelta1</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="n">timedelta2</span><span class="o">.</span><span class="n">end_time</span><span class="p">)</span>
     <span class="n">overlap_duration</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">overlap_end</span> <span class="o">-</span> <span class="n">overlap_start</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
@@ -16733,29 +16928,46 @@ This includes and all timespans where at least one minute overlap.</p>
     <div class="doc doc-contents ">
 
       <p>Check if two timespans overlap.</p>
+<p>If the end time is less than the start time, it is assumed to be the next day.</p>
 <p><code>overlapping</code>: a timespan that fully or partially overlaps a given timespan.
 This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">dt_overlaps</span><span class="p">(</span><span class="n">timespan1</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">],</span> <span class="n">timespan2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two timespans overlap.</span>
+
+<span class="sd">    If the end time is less than the start time, it is assumed to be the next day.</span>
 
 <span class="sd">    `overlapping`: a timespan that fully or partially overlaps a given timespan.</span>
 <span class="sd">    This includes and all timespans where at least one minute overlap.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">time1_start</span><span class="p">,</span> <span class="n">time1_end</span> <span class="o">=</span> <span class="n">timespan1</span>
     <span class="n">time2_start</span><span class="p">,</span> <span class="n">time2_end</span> <span class="o">=</span> <span class="n">timespan2</span>
+
+    <span class="k">if</span> <span class="n">time1_end</span> <span class="o">&lt;</span> <span class="n">time1_start</span><span class="p">:</span>
+        <span class="n">time1_end</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time2_end</span> <span class="o">&lt;</span> <span class="n">time2_start</span><span class="p">:</span>
+        <span class="n">time2_end</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="p">(</span><span class="n">time1_start</span> <span class="o">&lt;</span> <span class="n">time2_end</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">time2_start</span> <span class="o">&lt;</span> <span class="n">time1_end</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -16778,10 +16990,10 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">dt_to_seconds_from_midnight</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a datetime object to the number of seconds since midnight.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">dt</span> <span class="o">-</span> <span class="n">dt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
@@ -16808,20 +17020,20 @@ midnight.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">303</span>
-<span class="normal">304</span>
-<span class="normal">305</span>
-<span class="normal">306</span>
-<span class="normal">307</span>
-<span class="normal">308</span>
-<span class="normal">309</span>
-<span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">duration_dt</span><span class="p">(</span><span class="n">start_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">end_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">duration_dt</span><span class="p">(</span><span class="n">start_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">end_time_dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a datetime.timedelta object representing the duration of the timespan.</span>
 
 <span class="sd">    If end_time is less than start_time, the duration will assume that it crosses over</span>
@@ -16853,6 +17065,7 @@ midnight.</p>
     <div class="doc doc-contents ">
 
       <p>Filters dataframe for entries that have maximum overlap with the given query timespan.</p>
+<p>If the end time is less than the start time, it is assumed to be the next day.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -16946,37 +17159,7 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">204</span>
 <span class="normal">205</span>
 <span class="normal">206</span>
 <span class="normal">207</span>
@@ -16985,7 +17168,45 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
 <span class="normal">210</span>
 <span class="normal">211</span>
 <span class="normal">212</span>
-<span class="normal">213</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">filter_df_to_max_overlapping_timespans</span><span class="p">(</span>
     <span class="n">orig_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">query_timespan</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimeString</span><span class="p">],</span>
@@ -16994,6 +17215,8 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
     <span class="n">keep_max_of_cols</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;model_link_id&quot;</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Filters dataframe for entries that have maximum overlap with the given query timespan.</span>
+
+<span class="sd">    If the end time is less than the start time, it is assumed to be the next day.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        orig_df: dataframe to query timespans for with `start_time` and `end_time` fields.</span>
@@ -17011,12 +17234,18 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;DataFrame must have &#39;start_time&#39; and &#39;end_time&#39; columns&quot;</span><span class="p">)</span>
     <span class="n">q_start</span><span class="p">,</span> <span class="n">q_end</span> <span class="o">=</span> <span class="n">str_to_time_list</span><span class="p">(</span><span class="n">query_timespan</span><span class="p">)</span>
 
-    <span class="n">overlap_start</span> <span class="o">=</span> <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">q_start</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span>
-    <span class="n">overlap_end</span> <span class="o">=</span> <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;end_time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">q_end</span><span class="p">,</span> <span class="nb">min</span><span class="p">)</span>
-    <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;overlap_duration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">overlap_end</span> <span class="o">-</span> <span class="n">overlap_start</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">60</span>
+    <span class="n">real_end</span> <span class="o">=</span> <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;end_time&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;end_time&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]:</span>
+        <span class="n">real_end</span> <span class="o">+=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
+    <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;overlap_duration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">calc_overlap_duration_with_query</span><span class="p">(</span>
+        <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">],</span>
+        <span class="n">real_end</span><span class="p">,</span>
+        <span class="n">q_start</span><span class="p">,</span>
+        <span class="n">q_end</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="n">strict_match</span><span class="p">:</span>
-        <span class="n">overlap_df</span> <span class="o">=</span> <span class="n">orig_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">orig_df</span><span class="o">.</span><span class="n">start_time</span> <span class="o">&lt;=</span> <span class="n">q_start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">orig_df</span><span class="o">.</span><span class="n">end_time</span> <span class="o">&gt;=</span> <span class="n">q_end</span><span class="p">)]</span>
+        <span class="n">overlap_df</span> <span class="o">=</span> <span class="n">orig_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">orig_df</span><span class="o">.</span><span class="n">start_time</span> <span class="o">&lt;=</span> <span class="n">q_start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">real_end</span> <span class="o">&gt;=</span> <span class="n">q_end</span><span class="p">)]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">overlap_df</span> <span class="o">=</span> <span class="n">orig_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">orig_df</span><span class="o">.</span><span class="n">overlap_duration</span> <span class="o">&gt;</span> <span class="n">min_overlap_minutes</span><span class="p">]</span>
     <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;overlap_df: </span><span class="se">\n</span><span class="si">{</span><span class="n">overlap_df</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -17043,6 +17272,7 @@ will return all overlapping time periods. Defaults to <code>['model_link_id']</c
     <div class="doc doc-contents ">
 
       <p>Filters dataframe for entries that have any overlap with ANY of the given query timespans.</p>
+<p>If the end time is less than the start time, it is assumed to be the next day.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -17090,10 +17320,7 @@ for overlapping records.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
@@ -17109,12 +17336,23 @@ for overlapping records.</p>
 <span class="normal">168</span>
 <span class="normal">169</span>
 <span class="normal">170</span>
-<span class="normal">171</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">filter_df_to_overlapping_timespans</span><span class="p">(</span>
     <span class="n">orig_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">query_timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Filters dataframe for entries that have any overlap with ANY of the given query timespans.</span>
+
+<span class="sd">    If the end time is less than the start time, it is assumed to be the next day.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        orig_df: dataframe to query timespans for with `start_time` and `end_time` fields.</span>
@@ -17123,10 +17361,14 @@ for overlapping records.</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;start_time&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">orig_df</span><span class="o">.</span><span class="n">columns</span> <span class="ow">or</span> <span class="s2">&quot;end_time&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">orig_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;DataFrame must have &#39;start_time&#39; and &#39;end_time&#39; columns&quot;</span><span class="p">)</span>
+
     <span class="n">mask</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">orig_df</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">orig_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">query_timespan</span> <span class="ow">in</span> <span class="n">query_timespans</span><span class="p">:</span>
         <span class="n">q_start_time</span><span class="p">,</span> <span class="n">q_end_time</span> <span class="o">=</span> <span class="n">str_to_time_list</span><span class="p">(</span><span class="n">query_timespan</span><span class="p">)</span>
-        <span class="n">this_ts_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">q_end_time</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">q_start_time</span> <span class="o">&lt;</span> <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;end_time&quot;</span><span class="p">])</span>
+        <span class="n">end_time_s</span> <span class="o">=</span> <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;end_time&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;end_time&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]:</span>
+            <span class="n">end_time_s</span> <span class="o">+=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">this_ts_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">orig_df</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">q_end_time</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">q_start_time</span> <span class="o">&lt;</span> <span class="n">end_time_s</span><span class="p">)</span>
         <span class="n">mask</span> <span class="o">|=</span> <span class="n">this_ts_mask</span>
     <span class="k">return</span> <span class="n">orig_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
@@ -17152,22 +17394,22 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span>
 <span class="k">def</span> <span class="nf">filter_dt_list_to_overlaps</span><span class="p">(</span><span class="n">timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Filter a list of timespans to only include those that overlap.</span>
 
@@ -17204,16 +17446,16 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">319</span>
-<span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span>
-<span class="normal">325</span>
-<span class="normal">326</span>
-<span class="normal">327</span>
-<span class="normal">328</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">format_seconds_to_legible_str</span><span class="p">(</span><span class="n">seconds</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">format_seconds_to_legible_str</span><span class="p">(</span><span class="n">seconds</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Formats seconds into a human-friendly string for log files.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">seconds</span> <span class="o">&lt;</span> <span class="mi">60</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
@@ -17244,12 +17486,12 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">331</span>
-<span class="normal">332</span>
-<span class="normal">333</span>
-<span class="normal">334</span>
-<span class="normal">335</span>
-<span class="normal">336</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_increasing</span><span class="p">(</span><span class="n">datetimes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">is_increasing</span><span class="p">(</span><span class="n">datetimes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a list of datetime objects is increasing in time.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">datetimes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">datetimes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">datetimes</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]:</span>
@@ -17276,10 +17518,10 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">seconds_from_midnight_to_str</span><span class="p">(</span><span class="n">seconds</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeString</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert the number of seconds since midnight to a TimeString (HH:MM).&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">seconds</span><span class="p">))</span>
@@ -17304,11 +17546,11 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">str_to_seconds_from_midnight</span><span class="p">(</span><span class="n">time_str</span><span class="p">:</span> <span class="n">TimeString</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a TimeString (HH:MM&lt;:SS&gt;) to the number of seconds since midnight.&quot;&quot;&quot;</span>
     <span class="n">dt</span> <span class="o">=</span> <span class="n">str_to_time</span><span class="p">(</span><span class="n">time_str</span><span class="p">)</span>
@@ -17331,7 +17573,7 @@ This includes and all timespans where at least one minute overlap.</p>
     <div class="doc doc-contents ">
 
       <p>Convert TimeString (HH:MM&lt;:SS&gt;) to datetime object.</p>
-<p>If HH &gt; 24, will add a day to the base_date.</p>
+<p>If HH &gt; 24, will subtract 24 to be within 24 hours. Timespans will be treated as the next day.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -17409,12 +17651,11 @@ If not provided, will use today.</p>
 <span class="normal">55</span>
 <span class="normal">56</span>
 <span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">str_to_time</span><span class="p">(</span><span class="n">time_str</span><span class="p">:</span> <span class="n">TimeString</span><span class="p">,</span> <span class="n">base_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert TimeString (HH:MM&lt;:SS&gt;) to datetime object.</span>
 
-<span class="sd">    If HH &gt; 24, will add a day to the base_date.</span>
+<span class="sd">    If HH &gt; 24, will subtract 24 to be within 24 hours. Timespans will be treated as the next day.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        time_str: TimeString in HH:MM:SS or HH:MM format.</span>
@@ -17431,15 +17672,14 @@ If not provided, will use today.</p>
     <span class="n">minutes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="mi">0</span>
 
-    <span class="c1"># Calculate total number of days to add to base_date based on hours</span>
-    <span class="n">days_to_add</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">//</span> <span class="mi">24</span>
-    <span class="n">hours</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">%</span> <span class="mi">24</span>
+    <span class="k">if</span> <span class="n">hours</span> <span class="o">&gt;=</span> <span class="mi">24</span><span class="p">:</span>
+        <span class="n">hours</span> <span class="o">-=</span> <span class="mi">24</span>
 
     <span class="c1"># Create a time object with the adjusted hours, minutes, and seconds</span>
     <span class="n">adjusted_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hours</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">minutes</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">02</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;%H:%M:%S&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
     <span class="c1"># Combine the base date with the adjusted time and add the extra days if needed</span>
-    <span class="n">combined_datetime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">base_date</span><span class="p">,</span> <span class="n">adjusted_time</span><span class="p">)</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days_to_add</span><span class="p">)</span>
+    <span class="n">combined_datetime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">base_date</span><span class="p">,</span> <span class="n">adjusted_time</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">combined_datetime</span>
 </code></pre></div></td></tr></table></div>
@@ -17463,20 +17703,22 @@ If not provided, will use today.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
 <span class="normal">123</span>
-<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">str_to_time_list</span><span class="p">(</span><span class="n">timespan</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimeString</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert list of TimeStrings (HH:MM&lt;:SS&gt;) to list of datetime.time objects.&quot;&quot;&quot;</span>
     <span class="n">timespan</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">str_to_time</span><span class="p">,</span> <span class="n">timespan</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">is_increasing</span><span class="p">(</span><span class="n">timespan</span><span class="p">):</span>
-        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timespan is not in increasing order: </span><span class="si">{</span><span class="n">timespan</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Timespan is not in increasing order.&quot;</span><span class="p">)</span>
+        <span class="n">timespan</span> <span class="o">=</span> <span class="p">[</span><span class="n">timespan</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">timespan</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timespan is not in increasing order: </span><span class="si">{</span><span class="n">timespan</span><span class="si">}</span><span class="s2">.</span><span class="se">\</span>
+<span class="s2">            End time will be treated as next day.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">timespan</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -17495,8 +17737,8 @@ If not provided, will use today.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Convert panda series of TimeString (HH:MM&lt;:SS&gt;) to datetime object.</p>
-<p>If HH &gt; 24, will add a day to the base_date.</p>
+      <p>Convert mixed panda series datetime and TimeString (HH:MM&lt;:SS&gt;) to datetime object.</p>
+<p>If HH &gt; 24, will subtract 24 to be within 24 hours. Timespans will be treated as the next day.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -17545,41 +17787,7 @@ same length as time_str_s</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 62</span>
-<span class="normal"> 63</span>
-<span class="normal"> 64</span>
-<span class="normal"> 65</span>
-<span class="normal"> 66</span>
-<span class="normal"> 67</span>
-<span class="normal"> 68</span>
-<span class="normal"> 69</span>
-<span class="normal"> 70</span>
-<span class="normal"> 71</span>
-<span class="normal"> 72</span>
-<span class="normal"> 73</span>
-<span class="normal"> 74</span>
-<span class="normal"> 75</span>
-<span class="normal"> 76</span>
-<span class="normal"> 77</span>
-<span class="normal"> 78</span>
-<span class="normal"> 79</span>
-<span class="normal"> 80</span>
-<span class="normal"> 81</span>
-<span class="normal"> 82</span>
-<span class="normal"> 83</span>
-<span class="normal"> 84</span>
-<span class="normal"> 85</span>
-<span class="normal"> 86</span>
-<span class="normal"> 87</span>
-<span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 96</span>
 <span class="normal"> 97</span>
 <span class="normal"> 98</span>
 <span class="normal"> 99</span>
@@ -17597,13 +17805,14 @@ same length as time_str_s</p>
 <span class="normal">111</span>
 <span class="normal">112</span>
 <span class="normal">113</span>
-<span class="normal">114</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-<span class="k">def</span> <span class="nf">str_to_time_series</span><span class="p">(</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">str_to_time_series</span><span class="p">(</span>
     <span class="n">time_str_s</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">base_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert panda series of TimeString (HH:MM&lt;:SS&gt;) to datetime object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert mixed panda series datetime and TimeString (HH:MM&lt;:SS&gt;) to datetime object.</span>
 
-<span class="sd">    If HH &gt; 24, will add a day to the base_date.</span>
+<span class="sd">    If HH &gt; 24, will subtract 24 to be within 24 hours. Timespans will be treated as the next day.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        time_str_s: Pandas Series of TimeStrings in HH:MM:SS or HH:MM format.</span>
@@ -17611,43 +17820,12 @@ same length as time_str_s</p>
 <span class="sd">            If not provided, will use today. Can be either a single instance or a series of</span>
 <span class="sd">            same length as time_str_s</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">TimeStrSeriesSchema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">time_str_s</span><span class="p">)</span>
-
-    <span class="c1"># Set the base date to today if not provided</span>
-    <span class="k">if</span> <span class="n">base_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">base_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_str_s</span><span class="p">))</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_date</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
-        <span class="n">base_date</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">base_date</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_str_s</span><span class="p">))</span>
-    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">base_date</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_str_s</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;base_date must be the same length as time_str_s&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Filter out the string elements</span>
+    <span class="c1"># check strings are in the correct format, leave existing date times alone</span>
     <span class="n">is_string</span> <span class="o">=</span> <span class="n">time_str_s</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span>
     <span class="n">time_strings</span> <span class="o">=</span> <span class="n">time_str_s</span><span class="p">[</span><span class="n">is_string</span><span class="p">]</span>
-    <span class="n">base_dates</span> <span class="o">=</span> <span class="n">base_date</span><span class="p">[</span><span class="n">is_string</span><span class="p">]</span>
-
-    <span class="c1"># Split the time string to extract hours, minutes, and seconds</span>
-    <span class="n">time_parts</span> <span class="o">=</span> <span class="n">time_strings</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">hours</span> <span class="o">=</span> <span class="n">time_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">minutes</span> <span class="o">=</span> <span class="n">time_parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">seconds</span> <span class="o">=</span> <span class="n">time_parts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="n">time_parts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="mi">0</span>
-
-    <span class="c1"># Calculate total number of days to add to base_date based on hours</span>
-    <span class="n">days_to_add</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">//</span> <span class="mi">24</span>
-    <span class="n">hours</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">%</span> <span class="mi">24</span>
-
-    <span class="c1"># Combine the base date with the adjusted time and add the extra days if needed</span>
-    <span class="n">combined_datetimes</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">base_dates</span><span class="p">)</span>
-        <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">days_to_add</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;d&quot;</span><span class="p">)</span>
-        <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">)</span>
-        <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
-        <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
-    <span class="p">)</span>
-
-    <span class="c1"># Combine the results back into the original series</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">time_str_s</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">result</span><span class="p">[</span><span class="n">is_string</span><span class="p">]</span> <span class="o">=</span> <span class="n">combined_datetimes</span>
+    <span class="k">if</span> <span class="n">is_string</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">is_string</span><span class="p">]</span> <span class="o">=</span> <span class="n">_all_str_to_time_series</span><span class="p">(</span><span class="n">time_strings</span><span class="p">,</span> <span class="n">base_date</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></td></tr></table></div>
@@ -17671,10 +17849,10 @@ same length as time_str_s</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">timespan_str_list_to_dt</span><span class="p">(</span><span class="n">timespans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert list of TimespanStrings to list of datetime.time objects.&quot;&quot;&quot;</span>
     <span class="p">[</span><span class="n">str_to_time_list</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span> <span class="k">for</span> <span class="n">ts</span> <span class="ow">in</span> <span class="n">timespans</span><span class="p">]</span>
@@ -17701,16 +17879,16 @@ This includes and all timespans where at least one minute overlap.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/utils/time.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="k">def</span> <span class="nf">timespans_overlap</span><span class="p">(</span><span class="n">timespan1</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">],</span> <span class="n">timespan2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two timespan strings overlap.</span>
 
