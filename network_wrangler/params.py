@@ -216,11 +216,26 @@ DEFAULT_SP_WEIGHT_FACTOR = 100
 """
 DEFAULT_SP_WEIGHT_COL = "i"
 
+# ---------------------------------------------------------------------
+# ------ SCOPED PROPERTY VALUE PARAMETERS ------
+# ---------------------------------------------------------------------
+
 """Default timespan for scoped values and GTFS."""
 DEFAULT_TIMESPAN = ["00:00", "24:00"]
 
 """Default category for scoped values."""
 DEFAULT_CATEGORY = "any"
+
+"""Default bool for if conflicting scopes are overwritten without failure in roadway
+property changes.
+"""
+OVERWRITE_CONFLICTING_SCOPED = False
+
+
+# ---------------------------------------------------------------------
+# ------ I/O ------
+# ---------------------------------------------------------------------
+
 
 """Read sec / MB - WILL DEPEND ON SPECIFIC COMPUTER
 """

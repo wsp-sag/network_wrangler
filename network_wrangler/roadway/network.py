@@ -41,7 +41,13 @@ from .projects import (
 )
 
 from ..logger import WranglerLogger
-from ..params import ShapesParams, LAT_LON_CRS, DEFAULT_CATEGORY, DEFAULT_TIMESPAN
+from ..params import (
+    ShapesParams,
+    LAT_LON_CRS,
+    DEFAULT_CATEGORY,
+    DEFAULT_TIMESPAN,
+    OVERWRITE_CONFLICTING_SCOPED,
+)
 from ..models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
 from ..models.projects.roadway_selection import SelectLinksDict, SelectNodesDict, SelectFacility
 from ..models.projects.roadway_property_change import NodeGeometryChangeTable
@@ -321,11 +327,19 @@ class RoadwayNetwork(BaseModel):
 
         return self._modal_graphs[mode]["graph"]
 
-    def apply(self, project_card: Union[ProjectCard, dict]) -> RoadwayNetwork:
+    def apply(
+        self,
+        project_card: Union[ProjectCard, dict],
+        overwrite_conflicting_scoped: bool = OVERWRITE_CONFLICTING_SCOPED,
+    ) -> RoadwayNetwork:
         """Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.
 
         Args:
             project_card: either a dictionary of the project card object or ProjectCard instance
+            overwrite_conflicting_scoped: Tf True, then for roadway property changes, existing
+                values that conflict with scoped values will be overwritten – overriding
+                projectcard-level settings to error on conflicts. Defaults to
+                OVERWRITE_CONFLICTING_SCOPED.
         """
         if not (isinstance(project_card, ProjectCard) or isinstance(project_card, SubProject)):
             project_card = ProjectCard(project_card)
@@ -335,12 +349,14 @@ class RoadwayNetwork(BaseModel):
         if project_card._sub_projects:
             for sp in project_card._sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
-                self._apply_change(sp)
+                self._apply_change(sp, overwrite_conflicting_scoped=overwrite_conflicting_scoped)
             return self
         else:
             return self._apply_change(project_card)
 
-    def _apply_change(self, change: Union[ProjectCard, SubProject]) -> RoadwayNetwork:
+    def _apply_change(
+        self, change: Union[ProjectCard, SubProject], overwrite_conflicting_scoped: bool = False
+    ) -> RoadwayNetwork:
         """Apply a single change: a single-project project or a sub-project."""
         if not isinstance(change, SubProject):
             WranglerLogger.info(f"Applying Project to Roadway Network: {change.project}")
@@ -351,6 +367,7 @@ class RoadwayNetwork(BaseModel):
                 self.get_selection(change.facility),
                 change.roadway_property_change["property_changes"],
                 project_name=change.project,
+                overwrite_conflicting_scoped=overwrite_conflicting_scoped,
             )
 
         elif change.change_type == "roadway_addition":

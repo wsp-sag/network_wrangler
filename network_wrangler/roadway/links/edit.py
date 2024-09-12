@@ -245,6 +245,7 @@ def _edit_link_property(
     existing_value_conflict_error: bool = False,
     ml_link_offset_meters: float = LINK_ML_OFFSET_METERS,
     project_name: Optional[str] = None,
+    overwrite_conflicting_scoped: bool = False,
 ) -> DataFrame[RoadLinksTable]:
     """Return edited (in place) RoadLinksTable with property changes for a list of links.
 
@@ -265,7 +266,8 @@ def _edit_link_property(
         ml_link_offset_meters: Offset in meters for managed lane geometry. If not set, will use
             LINK_ML_OFFSET_METERS from params.py.
         project_name: optional name of the project to be applied
-
+        overwrite_conflicting_scoped: If True, will override whatever is in the project card to
+            overwrite any conflicting scoped properties. Defaults to False.
     """
     WranglerLogger.debug(f"Editing {prop_name} on links {link_idx}")
     # WranglerLogger.debug(f"links_df | link_idx:\n {links_df.loc[link_idx].head()}")
@@ -318,6 +320,9 @@ def _edit_link_property(
     if prop_change.scoped is not None:
         # initialize scoped property to default value in RoadLinksTable model or None.
         sc_prop_name = f"sc_{prop_name}"
+        overwrite_scoped = prop_change.overwrite_scoped
+        if overwrite_conflicting_scoped and overwrite_scoped != "all":
+            overwrite_scoped = "conflicting"
         WranglerLogger.debug(f"Setting {sc_prop_name} to {prop_change.scoped}")
         if sc_prop_name not in links_df:
             links_df[sc_prop_name] = default_from_datamodel(RoadLinksTable, sc_prop_name)
@@ -326,7 +331,7 @@ def _edit_link_property(
                 links_df.at[idx, sc_prop_name],
                 prop_change.scoped,
                 links_df.at[idx, prop_name],
-                overwrite_scoped=prop_change.overwrite_scoped,
+                overwrite_scoped=overwrite_scoped,
             )
             msg = f"idx:\n   {idx}\n\
                     type: \n   {type(links_df.at[idx, sc_prop_name])}\n\
@@ -386,6 +391,7 @@ def edit_link_properties(
     property_changes: dict[str, RoadPropertyChange],
     existing_value_conflict_error: bool = False,
     project_name: Optional[str] = None,
+    overwrite_conflicting_scoped: bool = False,
 ) -> DataFrame[RoadLinksTable]:
     """Return copy of RoadLinksTable with edited link properties for a list of links.
 
@@ -397,6 +403,8 @@ def edit_link_properties(
             specified value in the project card doesn't match the value in links_df.
             Otherwise, will only trigger a warning. Defaults to False.
         project_name: optional name of the project to be applied
+        overwrite_conflicting_scoped: If True, will override whatever is in the project card to
+            overwrite any conflicting scoped properties. Defaults to False.
 
     """
     links_df = copy.deepcopy(links_df)
@@ -408,7 +416,12 @@ def edit_link_properties(
     for property, prop_change in property_changes.items():
         WranglerLogger.debug(f"prop_dict: \n{prop_change}")
         links_df = _edit_link_property(
-            links_df, link_idx, property, prop_change, existing_value_conflict_error
+            links_df,
+            link_idx,
+            property,
+            prop_change,
+            existing_value_conflict_error=existing_value_conflict_error,
+            overwrite_conflicting_scoped=overwrite_conflicting_scoped,
         )
 
     # Only want to set this once per project.
