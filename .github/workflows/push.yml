@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
       run: ruff check --output-format=github .
     - name: Run tests with coverage and benchmarking
       run: |
-          pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=network_wrangler tests/ | tee pytest-coverage.txt --benchmark-save=pr_benchmark --benchmark-json=pr_benchmark.json
+          pytest --junitxml=pytest.xml --benchmark-save=pr_benchmark --benchmark-json=pr_benchmark.json --cov-report=term-missing:skip-covered --cov=network_wrangler tests/ | tee pytest-coverage.txt
     - name: Pytest coverage comment
       if: github.event_name == 'pull_request'
       uses: MishaKav/pytest-coverage-comment@main
