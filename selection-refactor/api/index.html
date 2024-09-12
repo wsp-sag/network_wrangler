@@ -5264,7 +5264,10 @@ recognized in this collecton once they are moved to applied.</p>
 <span class="normal">561</span>
 <span class="normal">562</span>
 <span class="normal">563</span>
-<span class="normal">564</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Scenario</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Scenario</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Holds information about a scenario.</span>
 
 <span class="sd">    Typical usage example:</span>
@@ -5600,7 +5603,10 @@ recognized in this collecton once they are moved to applied.</p>
                 <span class="c1"># this will always be true, else would have been flagged in missing \</span>
                 <span class="c1"># prerequsite check, but just in case</span>
                 <span class="k">if</span> <span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">project_list</span><span class="p">:</span>
-                    <span class="n">adjacency_list</span><span class="p">[</span><span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="p">[</span><span class="n">project</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">adjacency_list</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+                        <span class="n">adjacency_list</span><span class="p">[</span><span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">adjacency_list</span><span class="p">[</span><span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="p">[</span><span class="n">project</span><span class="p">]</span>
 
         <span class="c1"># sorted_project_names is topological sorted project card names (based on prerequsiite)</span>
         <span class="n">_ordered_projects</span> <span class="o">=</span> <span class="n">topological_sort</span><span class="p">(</span>
@@ -6081,17 +6087,17 @@ Defaults to [] - which means no tag-filtering will occur.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">455</span>
 <span class="normal">456</span>
 <span class="normal">457</span>
 <span class="normal">458</span>
 <span class="normal">459</span>
 <span class="normal">460</span>
 <span class="normal">461</span>
-<span class="normal">462</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply_all_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply_all_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Applies all planned projects in the queue.&quot;&quot;&quot;</span>
     <span class="c1"># Call this to make sure projects are appropriately queued in hidden variable.</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">queued_projects</span>
@@ -6155,10 +6161,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">517</span>
-<span class="normal">518</span>
-<span class="normal">519</span>
-<span class="normal">520</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">520</span>
 <span class="normal">521</span>
 <span class="normal">522</span>
 <span class="normal">523</span>
@@ -6175,7 +6178,10 @@ queue.</p>
 <span class="normal">534</span>
 <span class="normal">535</span>
 <span class="normal">536</span>
-<span class="normal">537</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">apply_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Applies a specific list of projects from the planned project queue.</span>
 
 <span class="sd">    Will order the list of projects based on pre-requisites.</span>
@@ -6285,7 +6291,10 @@ queue.</p>
 <span class="normal">447</span>
 <span class="normal">448</span>
 <span class="normal">449</span>
-<span class="normal">450</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">order_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">deque</span><span class="p">:</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">order_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_list</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">deque</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Orders a list of projects based on moving up pre-requisites into a deque.</span>
 
 <span class="sd">    Args:</span>
@@ -6308,7 +6317,10 @@ queue.</p>
             <span class="c1"># this will always be true, else would have been flagged in missing \</span>
             <span class="c1"># prerequsite check, but just in case</span>
             <span class="k">if</span> <span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">project_list</span><span class="p">:</span>
-                <span class="n">adjacency_list</span><span class="p">[</span><span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="p">[</span><span class="n">project</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">adjacency_list</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+                    <span class="n">adjacency_list</span><span class="p">[</span><span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">adjacency_list</span><span class="p">[</span><span class="n">prereq</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="p">[</span><span class="n">project</span><span class="p">]</span>
 
     <span class="c1"># sorted_project_names is topological sorted project card names (based on prerequsiite)</span>
     <span class="n">_ordered_projects</span> <span class="o">=</span> <span class="n">topological_sort</span><span class="p">(</span>
@@ -6425,10 +6437,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">552</span>
-<span class="normal">553</span>
-<span class="normal">554</span>
-<span class="normal">555</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">555</span>
 <span class="normal">556</span>
 <span class="normal">557</span>
 <span class="normal">558</span>
@@ -6437,7 +6446,10 @@ queue.</p>
 <span class="normal">561</span>
 <span class="normal">562</span>
 <span class="normal">563</span>
-<span class="normal">564</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A high level summary of the created scenario.</span>
 
 <span class="sd">    Args:</span>
@@ -6514,10 +6526,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">539</span>
-<span class="normal">540</span>
-<span class="normal">541</span>
-<span class="normal">542</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">542</span>
 <span class="normal">543</span>
 <span class="normal">544</span>
 <span class="normal">545</span>
@@ -6525,7 +6534,10 @@ queue.</p>
 <span class="normal">547</span>
 <span class="normal">548</span>
 <span class="normal">549</span>
-<span class="normal">550</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;_summary_.</span>
 
 <span class="sd">    Args:</span>
@@ -6698,10 +6710,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">720</span>
-<span class="normal">721</span>
-<span class="normal">722</span>
-<span class="normal">723</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">723</span>
 <span class="normal">724</span>
 <span class="normal">725</span>
 <span class="normal">726</span>
@@ -6747,7 +6756,10 @@ queue.</p>
 <span class="normal">766</span>
 <span class="normal">767</span>
 <span class="normal">768</span>
-<span class="normal">769</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_scenario_from_config</span><span class="p">(</span><span class="n">config_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="normal">769</span>
+<span class="normal">770</span>
+<span class="normal">771</span>
+<span class="normal">772</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_scenario_from_config</span><span class="p">(</span><span class="n">config_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds a scenario from a dictionary configuration.</span>
 
 <span class="sd">    Args:</span>
@@ -6847,10 +6859,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">704</span>
-<span class="normal">705</span>
-<span class="normal">706</span>
-<span class="normal">707</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">707</span>
 <span class="normal">708</span>
 <span class="normal">709</span>
 <span class="normal">710</span>
@@ -6860,7 +6869,10 @@ queue.</p>
 <span class="normal">714</span>
 <span class="normal">715</span>
 <span class="normal">716</span>
-<span class="normal">717</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_scenario_from_config_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">717</span>
+<span class="normal">718</span>
+<span class="normal">719</span>
+<span class="normal">720</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">build_scenario_from_config_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds a scenario from a yaml configuration file.</span>
 
 <span class="sd">    Args:</span>
@@ -6980,10 +6992,7 @@ queue.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">659</span>
-<span class="normal">660</span>
-<span class="normal">661</span>
-<span class="normal">662</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">662</span>
 <span class="normal">663</span>
 <span class="normal">664</span>
 <span class="normal">665</span>
@@ -7022,7 +7031,10 @@ queue.</p>
 <span class="normal">698</span>
 <span class="normal">699</span>
 <span class="normal">700</span>
-<span class="normal">701</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_base_scenario</span><span class="p">(</span>
+<span class="normal">701</span>
+<span class="normal">702</span>
+<span class="normal">703</span>
+<span class="normal">704</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_base_scenario</span><span class="p">(</span>
     <span class="n">base_shape_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">base_link_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">base_node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -7181,10 +7193,7 @@ being adding it to the scenario. Defaults to True.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">567</span>
-<span class="normal">568</span>
-<span class="normal">569</span>
-<span class="normal">570</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">570</span>
 <span class="normal">571</span>
 <span class="normal">572</span>
 <span class="normal">573</span>
@@ -7221,7 +7230,10 @@ being adding it to the scenario. Defaults to True.</p>
 <span class="normal">604</span>
 <span class="normal">605</span>
 <span class="normal">606</span>
-<span class="normal">607</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_scenario</span><span class="p">(</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span>
+<span class="normal">610</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_scenario</span><span class="p">(</span>
     <span class="n">base_scenario</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Scenario</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
     <span class="n">project_card_list</span><span class="o">=</span><span class="p">[],</span>
     <span class="n">project_card_filepath</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -7377,10 +7389,7 @@ being adding it to the scenario. Defaults to True.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/scenario.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">610</span>
-<span class="normal">611</span>
-<span class="normal">612</span>
-<span class="normal">613</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">613</span>
 <span class="normal">614</span>
 <span class="normal">615</span>
 <span class="normal">616</span>
@@ -7423,7 +7432,10 @@ being adding it to the scenario. Defaults to True.</p>
 <span class="normal">653</span>
 <span class="normal">654</span>
 <span class="normal">655</span>
-<span class="normal">656</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">scenario_summary</span><span class="p">(</span>
+<span class="normal">656</span>
+<span class="normal">657</span>
+<span class="normal">658</span>
+<span class="normal">659</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">scenario_summary</span><span class="p">(</span>
     <span class="n">scenario</span><span class="p">:</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">project_detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">outfile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;a&quot;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A high level summary of the created scenario.</span>
