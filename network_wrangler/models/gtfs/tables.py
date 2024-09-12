@@ -71,6 +71,7 @@ from .table_types import HttpURL
 from .._base.types import TimeString
 from ...utils.time import str_to_time_series, str_to_time
 from ...params import DEFAULT_TIMESPAN
+from ...logger import WranglerLogger
 
 
 class AgenciesTable(pa.DataFrameModel):
@@ -385,25 +386,40 @@ class WranglerStopTimesTable(StopTimesTable):
     """Wrangler flavor of GTFS StopTimesTable."""
 
     stop_id: Series[int] = pa.Field(nullable=False, coerce=True, description="The model_node_id.")
-    arrival_time: Series[Timestamp] = pa.Field(nullable=True)
-    departure_time: Series[Timestamp] = pa.Field(nullable=True)
+    arrival_time: Series[Timestamp] = pa.Field(nullable=True, default=pd.NaT, coerce=False)
+    departure_time: Series[Timestamp] = pa.Field(nullable=True, default=pd.NaT, coerce=False)
     projects: Series[str] = pa.Field(coerce=True, default="")
 
-    @pa.parser("arrival_time")
-    def at_to_timestamp(cls, series: Series) -> Series[Timestamp]:
-        """Check that arrival time timestamp."""
-        if series.dtype == "datetime64[ns]":
-            return series
-        series = str_to_time_series(series)
-        return series.astype("datetime64[ns]")
+    @pa.dataframe_parser
+    def parse_times(cls, df):
+        """Parse arrival and departure times.
 
-    @pa.parser("departure_time")
-    def dt_to_timestamp(cls, series: Series) -> Series[Timestamp]:
-        """Check that departure time is timestamp."""
-        if series.dtype == "datetime64[ns]":
-            return series
-        series = str_to_time_series(series)
-        return series.astype("datetime64[ns]")
+        - Check that all times are timestamps <24h.
+        - Check that arrival_time and departure_time are not both "00:00:00".  If so, set
+            them to NaT.
+
+        """
+        # if arrival_time and departure_time are not set or are both set to "00:00:00", set them to NaT
+        if "arrival_time" not in df.columns:
+            df["arrival_time"] = pd.NaT
+        if "departure_time" not in df.columns:
+            df["departure_time"] = pd.NaT
+        WranglerLogger.debug(f"stop_times before parsing: \n\
+                             {df[['arrival_time', 'departure_time']]}")
+        filler_timestrings = (df["arrival_time"] == Timestamp("00:00:00")) & (
+            df["departure_time"] == Timestamp("00:00:00")
+        )
+
+        df.loc[filler_timestrings, "arrival_time"] = pd.NaT
+        df.loc[filler_timestrings, "departure_time"] = pd.NaT
+        WranglerLogger.debug(f"stop_times after filling with NaT: \n\
+                             {df[['arrival_time', 'departure_time']]}")
+        df["arrival_time"] = str_to_time_series(df["arrival_time"])
+        df["departure_time"] = str_to_time_series(df["departure_time"])
+        WranglerLogger.debug(
+            f"stop_times after parsing: \n{df[['arrival_time', 'departure_time']]}"
+        )
+        return df
 
     class Config:
         """Config for the StopTimesTable data model."""
