@@ -42,7 +42,7 @@ SIMPLE_MANAGED_LANE_PROPERTIES = {
     },
 }
 
-@pytest.mark.profile
+
 def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -129,7 +129,7 @@ def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
-@pytest.mark.profile
+
 def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
@@ -168,7 +168,7 @@ def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir):
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
-@pytest.mark.profile
+
 def test_existing_managed_lane_apply(request, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 

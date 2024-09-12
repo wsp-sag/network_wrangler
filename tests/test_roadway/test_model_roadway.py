@@ -60,7 +60,6 @@ def test_add_adhoc_managed_lane_field(request, small_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-
 def test_create_ml_network_shape(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -149,7 +148,6 @@ def test_create_ml_network_shape(request, small_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.profile
 def test_managed_lane_restricted_access_egress(request, stpaul_net, stpaul_ex_dir):
     """Tests usage of ML_access/egress_point when they are set to a list of nodes instead of "all".
 

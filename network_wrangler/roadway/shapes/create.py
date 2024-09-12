@@ -22,6 +22,7 @@ from ..utils import set_df_index_to_pk
 
 class ShapeAddError(Exception):
     """Raised when there is an issue with adding shapes."""
+
     pass
 
 

@@ -212,6 +212,7 @@ def _is_type_from_type_hint(type_hint_value, type_to_check):
 
 def validate_call_pyd(func):
     """Decorator to validate the function i/o using Pydantic models without Pandera."""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         type_hints = get_type_hints(func)

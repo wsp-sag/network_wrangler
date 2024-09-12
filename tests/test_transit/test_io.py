@@ -19,7 +19,7 @@ from network_wrangler.utils.models import TableValidationError
 Run just the tests using `pytest tests/test_transit/test_io.py`
 """
 
-@pytest.mark.profile
+
 def test_transit_read_write_small(request, small_transit_net, scratch_dir):
     """Check read-write-read consistency for small transit network.
 
@@ -33,7 +33,7 @@ def test_transit_read_write_small(request, small_transit_net, scratch_dir):
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
-@pytest.mark.profile
+
 def test_transit_read_write(request, stpaul_transit_net, scratch_dir):
     """Check read-write-read consistency for larger transit network.
 

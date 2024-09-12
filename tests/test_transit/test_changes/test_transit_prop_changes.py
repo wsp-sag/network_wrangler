@@ -95,7 +95,6 @@ def test_coerce_over24hr_times(request, small_transit_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.profile
 def test_transit_property_change(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(small_transit_net)

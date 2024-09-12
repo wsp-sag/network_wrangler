@@ -424,9 +424,7 @@ class RoadwayNetwork(BaseModel):
         """
         dupe_ids = self.shapes_df.shape_id.isin(add_shapes_df.shape_id)
         if dupe_ids.any():
-            WranglerLogger.error(
-                f"Cannot add shapes with shape_id already in network: {dupe_ids}"
-            )
+            WranglerLogger.error(f"Cannot add shapes with shape_id already in network: {dupe_ids}")
             raise ShapeAddError("Cannot add shapes with shape_id already in network.")
         if not isinstance(add_shapes_df, RoadShapesTable):
             add_shapes_df = df_to_shapes_df(add_shapes_df)

@@ -8,7 +8,6 @@ from network_wrangler import WranglerLogger
 from projectcard import read_card
 
 
-@pytest.mark.profile
 def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
@@ -59,7 +58,6 @@ def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.profile
 def test_change_multiple_properties_multiple_links(request, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
@@ -116,7 +114,6 @@ def test_change_multiple_properties_multiple_links(request, stpaul_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.profile
 def test_change_multiple_properties_multiple_links_existing_set(request, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
@@ -250,7 +247,6 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.profile
 def test_change_node_xy(request, small_net):
     """Tests if X and Y property changes from a project card also update the node/link geometry."""
     WranglerLogger.info(f"--Starting: {request.node.name}")

@@ -38,7 +38,6 @@ class LinkAddError(Exception):
     pass
 
 
-
 class LinkCreationError(Exception):
     """Raised when there is an issue with creating links."""
 

@@ -171,7 +171,7 @@ TEST_STOP_CHANGES = [
     },
 ]
 
-@pytest.mark.profile
+
 @pytest.mark.parametrize("test_routing", TEST_ROUTING_CHANGES + TEST_STOP_CHANGES)
 def test_route_changes(request, small_transit_net, small_net, test_routing):
     WranglerLogger.info(f"--Starting: {request.node.name} - {test_routing['name']}")
@@ -226,7 +226,6 @@ def test_route_changes(request, small_transit_net, small_net, test_routing):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-@pytest.mark.profile
 def test_route_changes_project_card(
     request,
     stpaul_net: RoadwayNetwork,
