@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import copy
-from typing import Tuple, Union, Optional, TYPE_CHECKING
+from typing import Tuple, Union, Optional, TYPE_CHECKING, Literal
 
 import geopandas as gpd
 import pandas as pd
@@ -16,8 +16,12 @@ from ..params import (
     ML_OFFSET_METERS,
     COPY_FROM_GP_TO_ML,
     COPY_TO_ACCESS_EGRESS,
+    MANAGED_LANES_LINK_ID_METHOD,
     MANAGED_LANES_LINK_ID_RANGE,
+    MANAGED_LANES_LINK_ID_SCALAR,
+    MANAGED_LANES_NODE_ID_METHOD,
     MANAGED_LANES_NODE_ID_RANGE,
+    MANAGED_LANES_NODE_ID_SCALAR,
 )
 from ..models.roadway.tables import RoadNodesTable, RoadLinksTable, RoadShapesTable
 from .links.edit import _initialize_links_as_managed_lanes
@@ -64,8 +68,12 @@ class ModelRoadwayNetwork:
     def __init__(
         self,
         net,
+        ml_link_id_method: Literal["range", "scalar"] = MANAGED_LANES_LINK_ID_METHOD,
         ml_link_id_range: tuple[int] = MANAGED_LANES_LINK_ID_RANGE,
+        ml_link_id_scalar: int = MANAGED_LANES_LINK_ID_SCALAR,
+        ml_node_id_method: Literal["range", "scalar"] = MANAGED_LANES_NODE_ID_METHOD,
         ml_node_id_range: tuple[int] = MANAGED_LANES_NODE_ID_RANGE,
+        ml_node_id_scalar: int = MANAGED_LANES_NODE_ID_SCALAR,
         ml_link_id_lookup: Optional[dict[int, int]] = None,
         ml_node_id_lookup: Optional[dict[int, int]] = None,
     ):
@@ -75,31 +83,63 @@ class ModelRoadwayNetwork:
         RoadwayNetwork.model_net which will lazily construct it.
 
         Args:
-            net (_type_): Associated roadway network.
+            net: Associated roadway network.
+            ml_link_id_method (str): method to use for generating managed lane link ids if
+                ml_link_id_lookup is not provided. Defaults to MANAGED_LANES_LINK_ID_METHOD
+                which defaults to "range".
             ml_link_id_range (tuple[int]): range of link ids to use for additional links created
-                for managed lanes. Defaults to MANAGED_LANES_LINK_ID_RANGE which defaults
-                to 100,000.
+                for managed lanes if ml_link_id_lookup is not provided. Defaults to
+                MANAGED_LANES_LINK_ID_RANGE which defaults to 100,000.
+            ml_link_id_scalar (int): scalar to use for generating managed lane link ids if
+                ml_link_id_lookup is not provided. Defaults to MANAGED_LANES_LINK_ID_SCALAR
+                which defaults to 100,000.
+            ml_node_id_method (str): method to use for generating managed lane node ids if
+                ml_node_id_lookup is not provided. Defaults to MANAGED_LANES_NODE_ID_METHOD
+                which defaults to "range".
             ml_node_id_range (tuple[int]): range of node ids to use for additional nodes
-                created for managed lanes. Defaults to MANAGED_LANES_NODE_ID_RANGE which defaults
-                to (950,000, 999,999).
+                created for managed lanes if ml_node_id_lookup is not provided. Defaults to
+                MANAGED_LANES_NODE_ID_RANGE which defaults to (950,000, 999,999).
+            ml_node_id_scalar (int): scalar to use for generating managed lane node ids if
+                ml_node_id_lookup is not provided. Defaults to MANAGED_LANES_NODE_ID_SCALAR
+                which defaults to 100,000.
             ml_link_id_lookup (dict[int, int]): lookup from general purpose link ids to link ids
-                of their managed lane counterparts. Defaults to None which will generate a new one.
+                of their managed lane counterparts. Defaults to None which will generate a new one
+                using the provided method.
             ml_node_id_lookup (dict[int, int]): lookup from general purpose node ids to node ids
-                of their managed lane counterparts. Defaults to None which will generate a new one.
+                of their managed lane counterparts. Defaults to None which will generate a new one
+                using the provided method.
         """
         self.net = net
 
         if ml_link_id_lookup is None:
-            self.ml_link_id_lookup = _generate_ml_link_id_lookup(
-                self.net.links_df, ml_link_id_range
-            )
+            if ml_link_id_method == "range":
+                self.ml_link_id_lookup = _generate_ml_link_id_lookup_from_range(
+                    self.net.links_df, ml_link_id_range
+                )
+            elif ml_link_id_method == "scalar":
+                self.ml_link_id_lookup = _generate_ml_link_id_lookup_from_scalar(
+                    self.net.links_df, ml_link_id_scalar
+                )
+            else:
+                WranglerLogger.error(f"ml_link_id_method must be 'range' or 'scalar'.\
+                                      Got {ml_link_id_method}")
+                raise ValueError(f"ml_link_id_method must be 'range' or 'scalar'")
         else:
             self.ml_link_id_lookup = ml_link_id_lookup
 
         if ml_node_id_lookup is None:
-            self.ml_node_id_lookup = _generate_ml_node_id_lookup(
-                self.net.nodes_df, self.net.links_df, ml_node_id_range
-            )
+            if ml_node_id_method == "range":
+                self.ml_node_id_lookup = _generate_ml_node_id_from_range(
+                    self.net.nodes_df, self.net.links_df, ml_node_id_range
+                )
+            elif ml_node_id_method == "scalar":
+                self.ml_node_id_lookup = _generate_ml_node_id_lookup_from_scalar(
+                    self.net.nodes_df, self.net.links_df, ml_node_id_scalar
+                )
+            else:
+                WranglerLogger.error(f"ml_node_id_method must be 'range' or 'scalar'.\
+                                      Got {ml_node_id_method}")
+                raise ValueError(f"ml_node_id_method must be 'range' or 'scalar'")
         else:
             self.ml_node_id_lookup = ml_node_id_lookup
 
@@ -168,14 +208,14 @@ class ModelRoadwayNetwork:
         write_roadway(self, out_dir, prefix, file_format, overwrite, true_shape)
 
 
-def _generate_ml_link_id_lookup(links_df, link_id_range):
+def _generate_ml_link_id_lookup_from_range(links_df, link_id_range: tuple[int]):
     """Generate a lookup from general purpose link ids to link ids their managed lane counterparts.
 
-    Will be divisable by 10.
+    Will be divisable by LINK_IDS_DIVISIBLE_BY which defaults to 10.
     """
-    DIVISABLE_BY = 10
+    LINK_IDS_DIVISIBLE_BY = 10
     og_ml_link_ids = links_df.of_type.managed.model_link_id
-    link_id_list = [i for i in range(*link_id_range) if i % DIVISABLE_BY == 0]
+    link_id_list = [i for i in range(*link_id_range) if i % LINK_IDS_DIVISIBLE_BY == 0]
     avail_ml_link_ids = set(link_id_list) - set(links_df.model_link_id.unique().tolist())
     if len(avail_ml_link_ids) < len(og_ml_link_ids):
         raise ValueError(f"{len(avail_ml_link_ids)} of {len(og_ml_link_ids )} new link ids\
@@ -184,7 +224,7 @@ def _generate_ml_link_id_lookup(links_df, link_id_range):
     return dict(zip(og_ml_link_ids, new_link_ids))
 
 
-def _generate_ml_node_id_lookup(nodes_df, links_df, node_id_range):
+def _generate_ml_node_id_from_range(nodes_df, links_df, node_id_range: tuple[int]):
     """Generate a lookup for managed lane node ids to their general purpose lane counterparts."""
     og_ml_node_ids = node_ids_in_links(links_df.of_type.managed, nodes_df)
     avail_ml_node_ids = set(range(*node_id_range)) - set(nodes_df.model_node_id.unique().tolist())
@@ -193,6 +233,26 @@ def _generate_ml_node_id_lookup(nodes_df, links_df, node_id_range):
                          available for provided range: {node_id_range}.")
     new_ml_node_ids = list(avail_ml_node_ids)[: len(og_ml_node_ids)]
     return dict(zip(og_ml_node_ids, new_ml_node_ids))
+
+
+def _generate_ml_link_id_lookup_from_scalar(links_df: DataFrame[RoadLinksTable], scalar: int):
+    """Generate a lookup from general purpose link ids to their managed lane counterparts."""
+    og_ml_link_ids = links_df.of_type.managed.model_link_id
+    link_id_list = [i + scalar for i in og_ml_link_ids]
+    if links_df.model_link_id.isin(link_id_list).any():
+        raise ValueError(f"New link ids generated by scalar {scalar} already exist.\
+                         Try a different scalar.")
+    return dict(zip(og_ml_link_ids, link_id_list))
+
+
+def _generate_ml_node_id_lookup_from_scalar(nodes_df, links_df, scalar: int):
+    """Generate a lookup for managed lane node ids to their general purpose lane counterparts."""
+    og_ml_node_ids = node_ids_in_links(links_df.of_type.managed, nodes_df)
+    node_id_list = [i + scalar for i in og_ml_node_ids]
+    if nodes_df.model_node_id.isin(node_id_list).any():
+        raise ValueError(f"New node ids generated by scalar {scalar} already exist.\
+                         Try a different scalar.")
+    return dict(zip(og_ml_node_ids, node_id_list))
 
 
 def model_links_nodes_from_net(
