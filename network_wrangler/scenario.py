@@ -213,7 +213,7 @@ class Scenario(object):
         base_scenario: dict = {},
         card_directory: str = "",
         tags: [str] = None,
-        project_cards_list=[],
+        project_cards_list = None,
         glob_search="",
         validate_project_cards=True,
     ) -> Scenario:
@@ -237,6 +237,9 @@ class Scenario(object):
         """
         WranglerLogger.info("Creating Scenario")
 
+        if project_cards_list is None:
+            project_cards_list = []
+        
         if project_cards_list:
             WranglerLogger.debug(
                 "Adding project cards from List.\n{}".format(
@@ -556,6 +559,14 @@ class Scenario(object):
                 if not self.road_net:
                     raise ("Missing Roadway Network")
                 self.road_net.apply(p)
+                self.road_net.links_df = gpd.GeoDataFrame(
+                    self.road_net.links_df, 
+                    geometry=self.road_net.links_df.geometry
+                )
+                self.road_net.nodes_df = gpd.GeoDataFrame(
+                    self.road_net.nodes_df, 
+                    geometry=self.road_net.nodes_df.geometry
+                )
                 # check if there are links deleted
                 if p["category"] == "roadway deletion":
                     # compare the links_df before and after deletion, get the model_link_id not in the after deletion

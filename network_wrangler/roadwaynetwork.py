@@ -413,6 +413,8 @@ class RoadwayNetwork(object):
         nodes_df.crs = crs
         nodes_df["X"] = nodes_df["geometry"].apply(lambda g: g.x)
         nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.y)
+        if 'pnr' in nodes_df.columns:
+            nodes_df['pnr'] = nodes_df['pnr'].astype(str)
 
         WranglerLogger.info("Read %s links from %s" % (len(links_df), link_filename))
         WranglerLogger.info("Read %s nodes from %s" % (len(nodes_df), node_filename))
