@@ -951,6 +951,10 @@ class TransitNetwork(object):
                 dup_shape = shapes[shapes.shape_id == old_shape_id].copy()
                 dup_shape["shape_id"] = shape_id
                 shapes = pd.concat([shapes, dup_shape], ignore_index=True)
+                trips.loc[
+                    (trips['shape_id']==old_shape_id) & (trips['trip_id'].isin(trip_ids)), 
+                    'shape_id'
+                ] = shape_id
 
             # Pop the rows that match shape_id
             this_shape = shapes[shapes.shape_id == shape_id]
@@ -1118,11 +1122,13 @@ class TransitNetwork(object):
 
         # Replace self if in_place, else return
         if in_place:
+            self.feed.trips = trips
             self.feed.shapes = shapes
             self.feed.stops = stops
             self.feed.stop_times = stop_times
         else:
             updated_network = copy.deepcopy(self)
+            updated_network.feed.trips = trips
             updated_network.feed.shapes = shapes
             updated_network.feed.stops = stops
             updated_network.feed.stop_times = stop_times
