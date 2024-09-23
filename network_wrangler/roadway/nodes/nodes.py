@@ -12,6 +12,12 @@ class NotNodesError(Exception):
     pass
 
 
+class NodeNotFoundError(Exception):
+    """Raised when a node is not found in the nodes table."""
+
+    pass
+
+
 def node_ids_without_links(
     nodes_df: DataFrame[RoadNodesTable], links_df: DataFrame[RoadLinksTable]
 ) -> list[int]:
