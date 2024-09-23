@@ -3,4 +3,5 @@
 from .add import apply_new_roadway
 from .calculate import apply_calculated_roadway
 from .delete import apply_roadway_deletion
+from .delete import check_broken_transit_shapes
 from .edit_property import apply_roadway_property_change

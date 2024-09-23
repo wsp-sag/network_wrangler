@@ -33,7 +33,7 @@ from ..validate import (
     shape_links_without_road_links,
 )
 from ...logger import WranglerLogger
-from ...utils.utils import generate_new_id
+from ...utils.utils import generate_list_of_new_ids_from_existing, generate_new_id_from_existing
 from ...utils.data import segment_data_by_selection_min_overlap
 
 if TYPE_CHECKING:
@@ -155,7 +155,7 @@ def _add_new_shape_copy(
     shapes = copy.deepcopy(feed.shapes)
     trips = copy.deepcopy(feed.trips)
     new_shape = copy.deepcopy(shapes[shapes.shape_id == old_shape_id])
-    new_shape_id = generate_new_id(old_shape_id, shapes["shape_id"], id_scalar)
+    new_shape_id = generate_new_id_from_existing(old_shape_id, shapes["shape_id"], id_scalar)
     new_shape["shape_id"] = new_shape_id
 
     if project_name is not None:
