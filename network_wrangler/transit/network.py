@@ -35,9 +35,7 @@ from .projects import (
     apply_transit_routing_change,
     apply_transit_property_change,
     apply_calculated_transit,
-    apply_transit_routing_change,
-    apply_transit_service_deletion,
-    apply_transit_route_addition,
+    apply_add_transit_route_change,
 )
 from .selection import TransitSelection
 from .feed.feed import Feed
@@ -328,26 +326,16 @@ class TransitNetwork(object):
                 project_name=change.project,
             )
 
-        # elif change.change_type == "roadway_deletion":
-        #     # FIXME
-        #     raise NotImplementedError("Roadway deletion check not yet implemented.")
+        elif change.change_type == "add_new_route":
+            return apply_add_transit_route_change(self, change.transit_route_addition)
+
+        elif change.change_type == "roadway_deletion":
+            # FIXME
+            raise NotImplementedError("Roadway deletion check not yet implemented.")
 
         elif change.change_type == "pycode":
             return apply_calculated_transit(self, change.pycode)
 
-        elif change.change_type == "transit_route_addition":
-            return apply_transit_route_addition(
-                self,
-                change.transit_route_addition,
-                reference_road_net=reference_road_net,
-            )
-        elif change.change_type == "transit_service_deletion":
-            return apply_transit_service_deletion(
-                self,
-                self.get_selection(change.service),
-                clean_shapes=change.transit_service_deletion.get("clean_shapes", True),
-                clean_routes=change.transit_service_deletion.get("clean_routes", True),
-            )
         else:
             msg = f"Not a currently valid transit project: {change}."
             WranglerLogger.error(msg)

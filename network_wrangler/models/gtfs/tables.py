@@ -231,7 +231,7 @@ class TripsTable(pa.DataFrameModel):
     direction_id: Series[Category] = pa.Field(
         dtype_kwargs={"categories": DirectionID}, coerce=True, nullable=False, default=0
     )
-    service_id: Series[str] = pa.Field(nullable=False, coerce=True, default="1")
+    service_id: Series[str] = pa.Field(nullable=False, coerce=True)
     route_id: Series[str] = pa.Field(nullable=False, coerce=True)
 
     # Optional Fields

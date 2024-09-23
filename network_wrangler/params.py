@@ -173,7 +173,6 @@ ROADWAY_CARD_TYPES = [
     "roadway_deletion",
     "roadway_addition",
     "roadway_property_change",
-    "pycode"
 ]
 SECONDARY_TRANSIT_CARD_TYPES = ["roadway_deletion"]
 

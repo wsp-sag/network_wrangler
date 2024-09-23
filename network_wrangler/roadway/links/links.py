@@ -19,12 +19,6 @@ class NotLinksError(Exception):
     pass
 
 
-class LinkNotFoundError(Exception):
-    """Raised when a link is not found in the links table."""
-
-    pass
-
-
 def node_ids_in_links(
     links_df: DataFrame[RoadLinksTable], nodes_df: Optional[DataFrame[RoadNodesTable]] = None
 ) -> list[int]:

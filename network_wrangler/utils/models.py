@@ -55,22 +55,6 @@ class TableValidationError(Exception):
     pass
 
 
-def fill_df_with_defaults_from_model(df, model):
-    """Fill a DataFrame with default values from a Pandera DataFrameModel.
-
-    Args:
-        df: DataFrame to fill with default values.
-        model: Pandera DataFrameModel to get default values from.
-    """
-    for c in df.columns:
-        default_value = default_from_datamodel(model, c)
-        if default_value is None:
-            df[c] = df[c].where(pd.notna(df[c]), None)
-        else:
-            df[c] = df[c].fillna(default_value)
-    return df
-
-
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def validate_df_to_model(
     df: DataFrame, model: DataFrameModel, output_file: Path = "validation_failure_cases.csv"
@@ -85,7 +69,12 @@ def validate_df_to_model(
     """
     try:
         model_df = model.validate(df, lazy=True)
-        model_df = fill_df_with_defaults_from_model(model_df, model)
+        for c in model_df.columns:
+            default_value = default_from_datamodel(model, c)
+            if default_value is None:
+                model_df[c] = model_df[c].where(pd.notna(model_df[c]), None)
+            else:
+                model_df[c] = model_df[c].fillna(default_value)
 
         return model_df
 

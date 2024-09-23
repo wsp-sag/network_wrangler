@@ -38,7 +38,6 @@ from .projects import (
     apply_calculated_roadway,
     apply_roadway_deletion,
     apply_roadway_property_change,
-    check_broken_transit_shapes
 )
 
 from ..logger import WranglerLogger
@@ -322,34 +321,26 @@ class RoadwayNetwork(BaseModel):
 
         return self._modal_graphs[mode]["graph"]
 
-    def apply(self, project_card: Union[ProjectCard, dict], **kwargs) -> RoadwayNetwork:
+    def apply(self, project_card: Union[ProjectCard, dict]) -> RoadwayNetwork:
         """Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.
 
         Args:
             project_card: either a dictionary of the project card object or ProjectCard instance
-            **kwargs: keyword arguments to pass to project application
         """
         if not (isinstance(project_card, ProjectCard) or isinstance(project_card, SubProject)):
             project_card = ProjectCard(project_card)
 
-        # project_card.validate()
-        if not project_card.valid:
-            WranglerLogger.error("Invalid Project Card: {project_card}")
-            raise ValueError(f"Project card {project_card.project} not valid.")
-        
+        project_card.validate()
+
         if project_card._sub_projects:
             for sp in project_card._sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
-                self._apply_change(sp, **kwargs)
+                self._apply_change(sp)
             return self
         else:
-            return self._apply_change(project_card, **kwargs)
+            return self._apply_change(project_card)
 
-    def _apply_change(
-        self, 
-        change: Union[ProjectCard, SubProject],
-        transit_net = None,
-    ) -> RoadwayNetwork:
+    def _apply_change(self, change: Union[ProjectCard, SubProject]) -> RoadwayNetwork:
         """Apply a single change: a single-project project or a sub-project."""
         if not isinstance(change, SubProject):
             WranglerLogger.info(f"Applying Project to Roadway Network: {change.project}")
@@ -370,12 +361,6 @@ class RoadwayNetwork(BaseModel):
             )
 
         elif change.change_type == "roadway_deletion":
-            broken_shapes = check_broken_transit_shapes(self, change.roadway_deletion, transit_net)
-            if len(broken_shapes) > 0:
-                msg = f"Roadway deletion results in broken transit shape_ids: {broken_shapes.shape_id.unique()}"
-                #TODO: raise NotImplementedError(msg)
-                WranglerLogger.warning(msg)
-
             return apply_roadway_deletion(
                 self,
                 change.roadway_deletion,
@@ -398,15 +383,6 @@ class RoadwayNetwork(BaseModel):
     def nodes_in_links(self) -> DataFrame[RoadNodesTable]:
         """Returns subset of self.nodes_df that are in self.links_df."""
         return filter_nodes_to_links(self.links_df, self.nodes_df)
-
-    def node_coords(self, model_node_id: int) -> tuple:
-        """Return coordinates (x, y) of a node based on model_node_id."""
-        try:
-            node = self.nodes_df[self.nodes_df.model_node_id == model_node_id]
-        except ValueError:
-            WranglerLogger.error(f"Node with model_node_id {model_node_id} not found.")
-            raise NodeNotFoundError(f"Node with model_node_id {model_node_id} not found.")
-        return node.geometry.x.values[0], node.geometry.y.values[0]
 
     def add_links(self, add_links_df: Union[pd.DataFrame, DataFrame[RoadLinksTable]]):
         """Validate combined links_df with LinksSchema before adding to self.links_df.

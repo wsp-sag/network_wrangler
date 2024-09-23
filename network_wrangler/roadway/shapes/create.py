@@ -14,7 +14,7 @@ from ...models.roadway.tables import RoadShapesTable
 from ...utils.models import validate_df_to_model
 from ...params import ShapesParams, LAT_LON_CRS, ROAD_SHAPE_ID_SCALAR
 from ...utils.data import attach_parameters_to_df, coerce_gdf
-from ...utils.utils import generate_list_of_new_ids_from_existing
+from ...utils.utils import generate_list_of_new_ids
 from ...utils.geo import offset_geometry_meters
 from ...logger import WranglerLogger
 from ..utils import set_df_index_to_pk
@@ -88,7 +88,7 @@ def create_offset_shapes(
     """
     offset_shapes_df = pd.DataFrame(
         {
-            "shape_id": generate_list_of_new_ids_from_existing(
+            "shape_id": generate_list_of_new_ids(
                 shape_ids, shapes_df.shape_ids.to_list, id_scalar
             ),
             "ref_shape_id": shape_ids,
@@ -97,7 +97,7 @@ def create_offset_shapes(
 
     ref_shapes_df = copy.deepcopy(shapes_df[shapes_df["shape_id"].isin(shape_ids)])
 
-    ref_shapes_df["offset_shape_id"] = generate_list_of_new_ids_from_existing(
+    ref_shapes_df["offset_shape_id"] = generate_list_of_new_ids(
         ref_shapes_df.shape_id.to_list, shapes_df.shape_ids.to_list, id_scalar
     )
 
