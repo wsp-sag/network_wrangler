@@ -138,7 +138,7 @@ def _create_new_trips(
     """Create new trips for a route.
 
     Args:
-        trips: Trip dictionaries with trip_id, shape_id, and other trip information.
+        trip: Trip dictionaries with trip_id, shape_id, and other trip information.
         route_id: Route ID for the trips.
         trip_id: Trip ID for the trips.
         shape_id: Shape ID for the trips.
@@ -270,13 +270,10 @@ def _create_new_frequencies(
     """Create new frequencies entries for a trip.
 
     Args:
-        headways: List of headway dictionaries with time range as key and headway in seconds as
+        headway: Headway dictionaries with time range as key and headway in seconds as
             value. e.g.:
             ```python
-            [
-                {('6:00', '12:00'): 600},
-                {('12:00', '18:00'): 900}
-            ]
+            {('6:00', '12:00'): 600}
             ```
         trip_id: Trip ID for the frequencies.
     """
