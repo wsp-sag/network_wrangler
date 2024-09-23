@@ -328,9 +328,9 @@ class TransitNetwork(object):
                 project_name=change.project,
             )
 
-        elif change.change_type == "roadway_deletion":
-            # FIXME
-            raise NotImplementedError("Roadway deletion check not yet implemented.")
+        # elif change.change_type == "roadway_deletion":
+        #     # FIXME
+        #     raise NotImplementedError("Roadway deletion check not yet implemented.")
 
         elif change.change_type == "pycode":
             return apply_calculated_transit(self, change.pycode)

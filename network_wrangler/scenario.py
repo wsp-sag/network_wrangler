@@ -474,12 +474,13 @@ class Scenario(object):
         if change.change_type in ROADWAY_CARD_TYPES:
             if not self.road_net:
                 raise ValueError("Missing Roadway Network")
-            self.road_net.apply(change)
+            if change.change_type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
+                self.road_net.apply(change, transit_net = self.transit_net)
+            else:
+                self.road_net.apply(change)
         if change.change_type in TRANSIT_CARD_TYPES:
             if not self.transit_net:
                 raise ValueError("Missing Transit Network")
-            self.transit_net.apply(change)
-        if change.change_type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
             self.transit_net.apply(change)
 
         if change.change_type not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES:
@@ -566,7 +567,7 @@ class Scenario(object):
 
 def create_scenario(
     base_scenario: Union[Scenario, dict] = {},
-    project_card_list=[],
+    project_card_list = None,
     project_card_filepath: Optional[Union[Collection[str], str]] = None,
     filter_tags: Collection[str] = [],
     validate=True,
@@ -594,6 +595,9 @@ def create_scenario(
         validate (bool, optional): If True, will validate the projectcard before
             being adding it to the scenario. Defaults to True.
     """
+    if project_card_list is None:
+        project_card_list = []
+    
     scenario = Scenario(base_scenario)
 
     if project_card_filepath:
