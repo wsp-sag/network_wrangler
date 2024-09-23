@@ -89,71 +89,66 @@ def _add_route_to_feed(
     add_routes_df = pd.DataFrame(
         [{k: v for k, v in r.items() if k != "trips"} for r in add_routes]
     )
-    routes_df = pd.concat([feed.routes, add_routes_df], ignore_index=True, sort=False)
+    feed.routes = pd.concat([feed.routes, add_routes_df], ignore_index=True, sort=False)
 
     for route in add_routes:
         WranglerLogger.debug(
             f"Adding {len(route['trips'])} trips for route {route['route_id']} to feed."
         )
-        add_trips_df = _create_new_trips(route["trips"], route["route_id"], feed.shapes)
-        trips_df = pd.concat([feed.trips, add_trips_df], ignore_index=True, sort=False)
 
         for i, trip in enumerate(route["trips"]):
-            trip_id = add_trips_df.iloc[i]["trip_id"]
-            shape_id = add_trips_df.iloc[i]["shape_id"]
-            stop_dicts = _get_stops_from_routing(trip["routing"])
-
+            shape_id = fill_str_ids(pd.Series([None]), feed.shapes["shape_id"]).iloc[0]
             add_shape_df = _create_new_shape(trip["routing"], shape_id, road_net)
-            add_freqs_df = _create_new_frequencies(trip["headway_secs"], trip_id)
-            add_stop_times_df = _create_new_stop_times(stop_dicts, trip_id)
-            add_stops_df = _create_new_stops(
-                add_stop_times_df["stop_id"], feed.stops["stop_id"], road_net
-            )
+            if route['agency_raw_name']:
+                add_shape_df['agency_raw_name'] = route['agency_raw_name']
+            feed.shapes = pd.concat([feed.shapes, add_shape_df], ignore_index=True, sort=False)
+            
+            for j, headway in enumerate(trip["headway_secs"]):
+                trip_id = f"trip{j}_shp{shape_id}"
+                stop_dicts = _get_stops_from_routing(trip["routing"])
+                add_trips_df = _create_new_trips(trip, route["route_id"], trip_id, shape_id)
+                add_freqs_df = _create_new_frequencies(headway, trip_id)
+                add_stop_times_df = _create_new_stop_times(stop_dicts, trip_id)
+                add_stops_df = _create_new_stops(
+                    add_stop_times_df["stop_id"], feed.stops["stop_id"], road_net
+                )
 
-            # Add new data to existing dataframes
-            shapes_df = pd.concat([feed.shapes, add_shape_df], ignore_index=True, sort=False)
-            frequencies_df = pd.concat(
-                [feed.frequencies, add_freqs_df], ignore_index=True, sort=False
-            )
-            stops_df = pd.concat([feed.stops, add_stops_df], ignore_index=True, sort=False)
-            stop_times_df = pd.concat(
-                [feed.stop_times, add_stop_times_df], ignore_index=True, sort=False
-            )
-
-    feed.stops = stops_df
-    feed.routes = routes_df
-    feed.shapes = shapes_df
-    feed.trips = trips_df
-    feed.stop_times = stop_times_df
-    feed.frequencies = frequencies_df
+                if route['agency_raw_name']:
+                    add_trips_df['agency_raw_name'] = route['agency_raw_name']
+                    add_shape_df['agency_raw_name'] = route['agency_raw_name']
+                    add_freqs_df['agency_raw_name'] = route['agency_raw_name']
+                    add_stop_times_df['agency_raw_name'] = route['agency_raw_name']
+            
+                # Add new data to existing dataframes
+                feed.trips = pd.concat([feed.trips, add_trips_df], ignore_index=True, sort=False)
+                feed.frequencies = pd.concat(
+                    [feed.frequencies, add_freqs_df], ignore_index=True, sort=False
+                )
+                feed.stops = pd.concat([feed.stops, add_stops_df], ignore_index=True, sort=False)
+                feed.stop_times = pd.concat(
+                    [feed.stop_times, add_stop_times_df], ignore_index=True, sort=False
+                )
 
     return feed
 
 
 def _create_new_trips(
-    trips: list[dict], route_id: str, shapes_df: paDataFrame[WranglerShapesTable]
+    trip: dict, route_id: str, trip_id: str, shape_id: str
 ) -> paDataFrame[TripsTable]:
     """Create new trips for a route.
 
     Args:
-        trips: List of trip dictionaries with trip_id, shape_id, and other trip information.
+        trips: Trip dictionaries with trip_id, shape_id, and other trip information.
         route_id: Route ID for the trips.
-        shapes_df: Shapes dataframe to get shape_id from.
+        trip_id: Trip ID for the trips.
+        shape_id: Shape ID for the trips.
     """
-    FILTER_OUT = ["routing", "headway_secs"]
-    add_trips_df = pd.DataFrame(
-        [{k: v for k, v in r.items() if k not in FILTER_OUT} for r in trips]
-    )
-    add_trips_df["route_id"] = route_id
-    if "shape_id" not in add_trips_df.columns:
-        add_trips_df["shape_id"] = None
-
-    if "trip_id" not in add_trips_df.columns:
-        add_trips_df["trip_id"] = None
-    add_trips_df["shape_id"] = fill_str_ids(add_trips_df["shape_id"], shapes_df["shape_id"])
-    add_trips_df["trip_id"] = add_trips_df["trip_id"].fillna(
-        add_trips_df["shape_id"].apply(lambda x: f"tr_shp{x}")
-    )
+    add_trips_df = pd.DataFrame([{
+        "route_id": route_id,
+        "direction_id": trip["direction_id"],
+        "trip_id": trip_id,
+        "shape_id": shape_id
+    }])
     return add_trips_df
 
 
@@ -175,13 +170,13 @@ def _create_new_shape(
     lon, lat = zip(*coords)
     add_shapes_df = pd.DataFrame(
         {
-            "shape_id": shape_id,
             "shape_model_node_id": shape_model_node_id_list,
             "shape_pt_lat": lat,
             "shape_pt_lon": lon,
             "shape_pt_sequence": list(range(1, len(shape_model_node_id_list) + 1)),
         }
     )
+    add_shapes_df['shape_id'] = shape_id
     return add_shapes_df
 
 
@@ -261,14 +256,16 @@ def _create_new_stops(
         road_net: Roadway network to get node coordinates.
     """
     add_stop_ids = routing_node_ids[~routing_node_ids.isin(existing_stop_ids)].unique()
-    coords = [road_net.node_coords(n) for n in add_stop_ids]
-    lon, lat = zip(*coords)
-    add_stops_df = pd.DataFrame({"stop_id": add_stop_ids, "stop_lat": lat, "stop_lon": lon})
+    add_stops_df = pd.DataFrame(columns=["stop_id", "stop_lat", "stop_lon"])
+    if add_stop_ids.size:
+        coords = [road_net.node_coords(n) for n in add_stop_ids]
+        lon, lat = zip(*coords)
+        add_stops_df = pd.DataFrame({"stop_id": add_stop_ids, "stop_lat": lat, "stop_lon": lon})
     return add_stops_df
 
 
 def _create_new_frequencies(
-    headways: list[dict[tuple[TimeString], int]], trip_id: str
+    headway: dict[tuple[TimeString], int], trip_id: str
 ) -> paDataFrame[FrequenciesTable]:
     """Create new frequencies entries for a trip.
 
@@ -284,7 +281,7 @@ def _create_new_frequencies(
         trip_id: Trip ID for the frequencies.
     """
     add_freqs_df = pd.DataFrame(
-        [_parse_headway_record(headway) for headway in headways],
+        [_parse_headway_record(headway)],
         columns=["start_time", "end_time", "headway_secs"],
     )
     add_freqs_df["trip_id"] = trip_id
@@ -299,5 +296,6 @@ def _parse_headway_record(headway: dict[tuple[TimeString], int]) -> tuple[dateti
             e.g. {('6:00', '12:00'): 600}
     """
     ((timespan, headway_secs),) = headway.items()
+    timespan =  [time.strip().strip("'") for time in timespan.strip("()").split(',')]
     start_time, end_time = str_to_time_list(timespan)
     return start_time, end_time, headway_secs
