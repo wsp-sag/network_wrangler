@@ -59,7 +59,7 @@ def check_broken_transit_shapes(
 
     Args:
         roadway_net: input RoadwayNetwork to apply change to
-        roadway_addition: dictionary conforming to RoadwayAddition model
+        roadway_deletion: dictionary conforming to RoadwayDeletion model
         transit_net: input TransitNetwork
 
     returns: Broken shape dataframe. Empty if no broken shapes
