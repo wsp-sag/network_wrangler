@@ -15,7 +15,7 @@ from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...utils.data import validate_existing_value_in_df, update_df_by_col_value
-from ...utils.models import validate_df_to_model
+from ...utils.models import validate_df_to_model, validate_call_pyd
 from ...models.roadway.tables import RoadNodesTable
 from ...models.projects.roadway_property_change import NodeGeometryChangeTable, RoadPropertyChange
 from ...params import LAT_LON_CRS
@@ -27,7 +27,7 @@ class NodeChangeError(Exception):
     pass
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def edit_node_geometry(
     nodes_df: DataFrame[RoadNodesTable],
     node_geometry_change_table: DataFrame[NodeGeometryChangeTable],

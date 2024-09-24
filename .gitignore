@@ -18,6 +18,7 @@ tests/out/**
 wranglertest/
 .coverage
 coverage.xml
+prof/*
 
 # Logs
 *.log

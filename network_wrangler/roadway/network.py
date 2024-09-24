@@ -54,20 +54,20 @@ from .selection import (
     SelectionError,
 )
 from .model_roadway import ModelRoadwayNetwork
-from .nodes.create import data_to_nodes_df
-from .links.create import data_to_links_df
+from .links.create import data_to_links_df, LinkAddError
 from .links.links import shape_ids_unique_to_link_ids, node_ids_unique_to_link_ids
 from .links.filters import filter_links_to_ids, filter_links_to_node_ids
 from .links.delete import delete_links_by_ids
 from .links.edit import edit_link_geometry_from_nodes
-from .nodes.nodes import node_ids_without_links, NodeNotFoundError
+from .nodes.create import data_to_nodes_df, NodeAddError
+from .nodes.nodes import node_ids_without_links
 from .nodes.filters import filter_nodes_to_links
 from .nodes.delete import delete_nodes_by_ids
 from .nodes.edit import edit_node_geometry
 from .shapes.delete import delete_shapes_by_ids
 from .shapes.edit import edit_shape_geometry_from_nodes
 from .shapes.io import read_shapes
-from .shapes.create import df_to_shapes_df
+from .shapes.create import df_to_shapes_df, ShapeAddError
 
 if TYPE_CHECKING:
     from networkx import MultiDiGraph
@@ -414,6 +414,12 @@ class RoadwayNetwork(BaseModel):
         Args:
             add_links_df: Dataframe of additional links to add.
         """
+        dupe_ids = self.links_df.model_link_id.isin(add_links_df.model_link_id)
+        if dupe_ids.any():
+            WranglerLogger.error(
+                f"Cannot add links with model_link_id already in network: {dupe_ids}"
+            )
+            raise LinkAddError("Cannot add links with model_link_id already in network.")
         if not isinstance(add_links_df, RoadLinksTable):
             add_links_df = data_to_links_df(add_links_df, nodes_df=self.nodes_df)
         self.links_df = RoadLinksTable(pd.concat([self.links_df, add_links_df], axis=0))
@@ -424,6 +430,12 @@ class RoadwayNetwork(BaseModel):
         Args:
             add_nodes_df: Dataframe of additional nodes to add.
         """
+        dupe_ids = self.nodes_df.model_node_id.isin(add_nodes_df.model_node_id)
+        if dupe_ids.any():
+            WranglerLogger.error(
+                f"Cannot add nodes with model_node_id already in network: {dupe_ids}"
+            )
+            raise NodeAddError("Cannot add nodes with model_node_id already in network.")
         if not isinstance(add_nodes_df, RoadNodesTable):
             add_nodes_df = data_to_nodes_df(add_nodes_df)
         self.nodes_df = RoadNodesTable(pd.concat([self.nodes_df, add_nodes_df], axis=0))
@@ -434,12 +446,12 @@ class RoadwayNetwork(BaseModel):
         Args:
             add_shapes_df: Dataframe of additional shapes to add.
         """
+        dupe_ids = self.shapes_df.shape_id.isin(add_shapes_df.shape_id)
+        if dupe_ids.any():
+            WranglerLogger.error(f"Cannot add shapes with shape_id already in network: {dupe_ids}")
+            raise ShapeAddError("Cannot add shapes with shape_id already in network.")
         if not isinstance(add_shapes_df, RoadShapesTable):
             add_shapes_df = df_to_shapes_df(add_shapes_df)
-        WranglerLogger.debug(f"add_shapes_df: \n{add_shapes_df}")
-        WranglerLogger.debug(f"self.shapes_df: \n{self.shapes_df}")
-        together_df = pd.concat([self.shapes_df, add_shapes_df])
-        WranglerLogger.debug(f"together_df: \n{together_df}")
         self.shapes_df = RoadShapesTable(pd.concat([self.shapes_df, add_shapes_df], axis=0))
 
     def delete_links(

@@ -32,6 +32,12 @@ from ...utils.geo import (
 )
 
 
+class LinkAddError(Exception):
+    """Raised when there is an issue with adding links."""
+
+    pass
+
+
 class LinkCreationError(Exception):
     """Raised when there is an issue with creating links."""
 

@@ -15,26 +15,12 @@ changes:
       - 142533
 - roadway_addition:
     links:
-      - A: 65718
-        B: 354386
-        bike_facility: 3
-        distance: 0.09831
-        lanes: 1
-        model_link_id: 142533
-        roadway_class: 10
-        bike_access: 1
-        drive_access: 1
-        name: newlink
-        roadway: residential
-        rail_only: 0
-        bus_only: 0
-        walk_access: 1
       - A: 354386
         B: 354387
         bike_facility: 3
         distance: 0.14744
         lanes: 1
-        model_link_id: 142533
+        model_link_id: 123456
         roadway_class: 10
         bike_access: 1
         drive_access: 1
@@ -48,7 +34,7 @@ changes:
         bike_facility: 3
         distance: 0.57787
         lanes: 1
-        model_link_id: 142533
+        model_link_id: 1234567
         roadway_class: 10
         bike_access: 1
         drive_access: 1
@@ -62,35 +48,7 @@ changes:
         bike_facility: 3
         distance: 0.14667
         lanes: 1
-        model_link_id: 142533
-        roadway_class: 10
-        bike_access: 1
-        drive_access: 1
-        name: newlink
-        roadway: residential
-        rail_only: 0
-        bus_only: 0
-        walk_access: 1
-      - A: 354389
-        B: 55960
-        bike_facility: 3
-        distance: 0.08827
-        lanes: 1
-        model_link_id: 142533
-        roadway_class: 10
-        bike_access: 1
-        drive_access: 1
-        name: newlink
-        roadway: residential
-        rail_only: 0
-        bus_only: 0
-        walk_access: 1
-      - A: 55960
-        B: 354390
-        bike_facility: 3
-        distance: 0.0829
-        lanes: 1
-        model_link_id: 142533
+        model_link_id: 12345678
         roadway_class: 10
         bike_access: 1
         drive_access: 1
@@ -104,35 +62,7 @@ changes:
         bike_facility: 3
         distance: 0.13203
         lanes: 1
-        model_link_id: 142533
-        roadway_class: 10
-        bike_access: 1
-        drive_access: 1
-        name: newlink
-        roadway: residential
-        rail_only: 0
-        bus_only: 0
-        walk_access: 1
-      - A: 354391
-        B: 55968
-        bike_facility: 3
-        distance: 0.09322
-        lanes: 1
-        model_link_id: 142533
-        roadway_class: 10
-        bike_access: 1
-        drive_access: 1
-        name: newlink
-        roadway: residential
-        rail_only: 0
-        bus_only: 0
-        walk_access: 1
-      - A: 55968
-        B: 76606
-        bike_facility: 3
-        distance: 0.30391
-        lanes: 1
-        model_link_id: 142533
+        model_link_id: 123456789
         roadway_class: 10
         bike_access: 1
         drive_access: 1
@@ -166,8 +96,6 @@ changes:
         model_link_id:
           - 166734
     property_changes:
-      model_link_id:
-        set: 142533
       AADT:
         set: 0
       count_AM:
@@ -196,8 +124,6 @@ changes:
         model_link_id:
           - 182586
     property_changes:
-      model_link_id:
-        set: 142533
       roadway_class:
         existing: 40
         set: 10

@@ -171,9 +171,10 @@ def filter_df_to_overlapping_timespans(
     mask = pd.Series([False] * len(orig_df), index=orig_df.index)
     for query_timespan in query_timespans:
         q_start_time, q_end_time = str_to_time_list(query_timespan)
-        end_time_s = orig_df["end_time"]
-        if orig_df["end_time"] < orig_df["start_time"]:
-            end_time_s += pd.Timedelta(days=1)
+
+        end_time_s = orig_df["end_time"].copy()
+        end_time_s[orig_df["end_time"] < orig_df["start_time"]] += pd.Timedelta(days=1)
+
         this_ts_mask = (orig_df["start_time"] < q_end_time) & (q_start_time < end_time_s)
         mask |= this_ts_mask
     return orig_df.loc[mask]

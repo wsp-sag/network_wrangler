@@ -1,6 +1,8 @@
 import copy
 import os
 
+import pytest
+
 from pandera.errors import SchemaError
 
 from projectcard import read_card

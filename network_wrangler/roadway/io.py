@@ -190,9 +190,9 @@ def load_roadway_from_dir(
 def write_roadway(
     net: Union[RoadwayNetwork, ModelRoadwayNetwork],
     out_dir: Union[Path, str] = ".",
+    convert_complex_link_properties_to_single_field: bool = False,
     prefix: str = "",
     file_format: GeoFileTypes = "geojson",
-    convert_complex_link_properties_to_single_field: bool = False,
     overwrite: bool = True,
     true_shape: bool = False,
 ) -> None:

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pandas as pd
 
-from pydantic import validate_call
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
@@ -14,7 +13,7 @@ from ...models.gtfs.tables import (
     WranglerStopTimesTable,
     WranglerStopsTable,
 )
-
+from ...utils.models import validate_call_pyd
 from .feed import (
     PickupDropoffAvailability,
     merge_shapes_to_stop_times,
@@ -74,7 +73,7 @@ def stop_times_for_stops(
     return filtered_stop_times
 
 
-@validate_call
+@validate_call_pyd
 def stop_times_for_pickup_dropoff_trip_id(
     stop_times: DataFrame[WranglerStopTimesTable],
     trip_id: str,

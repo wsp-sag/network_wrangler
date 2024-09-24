@@ -5,6 +5,8 @@ Run just the tests in this file `pytest tests/test_roadway/test_model_roadway.py
 
 import copy
 
+import pytest
+
 from projectcard import read_card
 from network_wrangler import WranglerLogger
 

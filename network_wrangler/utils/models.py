@@ -1,12 +1,14 @@
 """Helper functions for data models."""
 
 import copy
-from typing import Union, get_type_hints, Optional
+from typing import Union, get_type_hints, Optional, _GenericAlias, get_origin, get_args
+from functools import wraps
 from pathlib import Path
 
 import pandas as pd
 import geopandas as gpd
 from pandas import DataFrame
+from pandera.typing import DataFrame as PanderaDataFrame
 import pandera as pa
 
 from pandera import DataFrameModel
@@ -191,3 +193,51 @@ def coerce_extra_fields_to_type_in_df(
             raise DatamodelDataframeIncompatableError(e)
         out_data.model_extra[field] = v
     return out_data
+
+
+def _is_type_from_type_hint(type_hint_value, type_to_check):
+    def check_type_hint(value):
+        if isinstance(value, _GenericAlias):
+            try:
+                if issubclass(value, type_to_check):
+                    return True
+            except TypeError:
+                try:
+                    if issubclass(value.__origin__, type_to_check):
+                        return True
+                except:
+                    pass
+        return False
+
+    if get_origin(type_hint_value) is Union:
+        args = get_args(type_hint_value)
+        for arg in args:
+            if check_type_hint(arg):
+                return True
+    else:
+        if check_type_hint(type_hint_value):
+            return True
+
+    return False
+
+
+def validate_call_pyd(func):
+    """Decorator to validate the function i/o using Pydantic models without Pandera."""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        type_hints = get_type_hints(func)
+        # Modify the type hints to replace pandera DataFrame models with pandas DataFrames
+        modified_type_hints = {
+            key: value
+            for key, value in type_hints.items()
+            if not _is_type_from_type_hint(value, PanderaDataFrame)
+        }
+
+        new_func = func
+        new_func.__annotations__ = modified_type_hints
+        validated_func = validate_call(new_func, config={"arbitrary_types_allowed": True})
+
+        return validated_func(*args, **kwargs)
+
+    return wrapper

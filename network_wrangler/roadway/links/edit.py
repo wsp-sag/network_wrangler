@@ -33,7 +33,7 @@ from pandera.typing import DataFrame
 from ...params import LINK_ML_OFFSET_METERS
 from ...logger import WranglerLogger
 from ...utils.data import validate_existing_value_in_df
-from ...utils.models import validate_df_to_model
+from ...utils.models import validate_df_to_model, validate_call_pyd
 from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
 from ...models.roadway.types import ScopedLinkValueItem
 from ...models.projects.roadway_property_change import (
@@ -56,7 +56,6 @@ class LinkChangeError(Exception):
     pass
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
 def _initialize_links_as_managed_lanes(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list[int],
@@ -239,7 +238,7 @@ def _edit_ml_access_egress_points(
     return links_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call_pyd
 def _edit_link_property(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
@@ -350,7 +349,7 @@ def _edit_link_property(
     return links_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call_pyd
 def edit_link_property(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
@@ -397,7 +396,7 @@ def edit_link_property(
     return links_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call_pyd
 def edit_link_properties(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
@@ -451,7 +450,7 @@ def edit_link_properties(
     return links_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call_pyd
 def edit_link_geometry_from_nodes(
     links_df: DataFrame[RoadLinksTable],
     nodes_df: DataFrame[RoadNodesTable],
