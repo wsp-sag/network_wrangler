@@ -193,7 +193,6 @@ def write_roadway(
     convert_complex_link_properties_to_single_field: bool = False,
     prefix: str = "",
     file_format: GeoFileTypes = "geojson",
-    convert_complex_link_properties_to_single_field: bool = False,
     overwrite: bool = True,
     true_shape: bool = False,
 ) -> None:
