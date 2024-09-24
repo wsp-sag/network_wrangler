@@ -20,6 +20,7 @@ def apply_calculated_roadway(
         pycode: python code which changes values in the roadway network object
     """
     WranglerLogger.debug("Applying calculated roadway project.")
+    self = roadway_net
     exec(pycode)
 
     return roadway_net
