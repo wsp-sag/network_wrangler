@@ -280,18 +280,12 @@ To acheive this, RoadwayNetwork objects have the option to be exported in the Mo
 
 All properties preceded by `ML_` will be copied, without that prefix, to the managed lane links.
 
-Geometry of these managed lanes will be defined as a shape offset by the parameter ML_OFFSET_METERS
+The following are controlled by parameters which can be set using WranglerConfig:
 
-::: network_wrangler.params.ML_OFFSET_METERS
+Geometry of managed lanes will be defined as a shape offset by the parameter `ML_OFFSET_METERS`.
+Properties defined in the parameter `ADDITIONAL_COPY_FROM_GP_TO_ML` are also copied from the parent link.
 
-Properties defined in the parameter `COPY_FROM_GP_TO_ML` are also copied from the parent link.
-
-::: network_wrangler.params.COPY_FROM_GP_TO_ML
-
-New `model_node_id` s and `model_link_ids` are generated based on the following ranges
-
-::: network_wrangler.params.MANAGED_LANES_LINK_ID_RANGE
-::: network_wrangler.params.MANAGED_LANES_NODE_ID_RANGE
+New `model_node_id` s and `model_link_ids` are generated based either on ranges or using a scalar from the GP link based on: `ML_LINK_ID_METHOD`, `ML_NODE_ID_METHOD`, `ML_LINK_ID_RANGE`, `ML_NODE_ID_RANGE`, `ML_LINK_ID_SCALAR`, `ML_NODE_ID_SCALAR`
 
 `name` is created as "managed lane of `name of GP link`"
 
@@ -303,9 +297,7 @@ Managed-lane link-ids are generated as multiples of 10.
 
 Dummy connector links are generated between the general purpose lane links and managed lane links at points defined by the variable `ML_access_point` and `ML_egress_point`.  If a managed lane is created without explictly setting these values, network wrangler will assume that the managed lanes can be accessed at any node.
 
-The parameter  `COPY_TO_ACCESS_EGRESS` defines what additional attributes are copied from the general purpose lane to the access and egress links.
-
-::: network_wrangler.params.COPY_TO_ACCESS_EGRESS
+The parameter `ADDITIONAL_COPY_TO_ACCESS_EGRESS` defines what additional attributes are copied from the general purpose lane to the access and egress links.
 
 `name` is created as "<access/egress> dummy link"
 
@@ -313,6 +305,9 @@ The parameter  `COPY_TO_ACCESS_EGRESS` defines what additional attributes are co
 
 - 1 + managed lane's `model_link_id` for access links
 - 2 + managed lane's `model_link_id` for access links
+
+::: network_wrangler.configs.wrangler.ModelRoadwayConfig
+::: network_wrangler.configs.wrangler.IdGenerationConfig
 
 ## Network Management
 
