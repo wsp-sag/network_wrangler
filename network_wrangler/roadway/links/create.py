@@ -3,7 +3,7 @@
 import copy
 import time
 
-from typing import List, Union
+from typing import List, Union, Optional
 
 import geopandas as gpd
 import pandas as pd
@@ -15,21 +15,21 @@ from ..utils import set_df_index_to_pk
 
 from ...logger import WranglerLogger
 from ...utils.models import validate_df_to_model
-from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
+from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadLinksAttrs, RoadNodesAttrs
 from ...models.roadway.converters import (
     detect_v0_scoped_link_properties,
     translate_links_df_v0_to_v1,
 )
-from ...utils.models import validate_df_to_model
-from ...params import LinksParams, LAT_LON_CRS
+from ...params import LAT_LON_CRS
 from ..utils import create_unique_shape_id
-from ...utils.data import coerce_gdf, attach_parameters_to_df
+from ...utils.data import coerce_gdf
 from ...utils.geo import (
     _harmonize_crs,
     length_of_linestring_miles,
     linestring_from_nodes,
     offset_geometry_meters,
 )
+from ...configs import DefaultConfig, WranglerConfig
 
 
 class LinkCreationError(Exception):
@@ -48,7 +48,7 @@ def shape_id_from_link_geometry(
 
 
 def _fill_missing_link_geometries_from_nodes(
-    links_df: pd.DataFrame, nodes_df: DataFrame[RoadNodesTable] = None
+    links_df: pd.DataFrame, nodes_df: Optional[DataFrame[RoadNodesTable]] = None
 ) -> gpd.GeoDataFrame:
     """Create location references and link geometries from nodes.
 
@@ -83,8 +83,8 @@ def _fill_missing_distance_from_geometry(df: gpd.GeoDataFrame) -> gpd.GeoDataFra
 def data_to_links_df(
     links_df: Union[pd.DataFrame, List[dict]],
     in_crs: int = LAT_LON_CRS,
-    links_params: Union[None, LinksParams] = None,
     nodes_df: Union[None, DataFrame[RoadNodesTable]] = None,
+    config: WranglerConfig = DefaultConfig,
 ) -> DataFrame[RoadLinksTable]:
     """Create a links dataframe from list of link properties + link geometries or associated nodes.
 
@@ -94,14 +94,18 @@ def data_to_links_df(
     Args:
         links_df (pd.DataFrame): df or list of dictionaries of link properties
         in_crs: coordinate reference system id for incoming links if geometry already exists.
-            Defaults to 4326. Will convert everything to 4326 if it doesn't match.
-        links_params: a LinkParams instance. Defaults to a default LinkParams instance..
+            Defaults to LAT_LON_CRS. Will convert everything to LAT_LON_CRSif it doesn't match.
+        config: WranglerConfig instance. Defaults to DefaultConfig. NOTE: not currently used.
         nodes_df: Associated notes geodataframe to use if geometries or location references not
             present. Defaults to None.
 
     Returns:
         pd.DataFrame: _description_
     """
+    # todo write wrapper so this doesn't have to be done.
+    if nodes_df is not None:
+        nodes_df.attrs.update(RoadNodesAttrs)
+
     WranglerLogger.debug(f"Creating {len(links_df)} links.")
     if not isinstance(links_df, pd.DataFrame):
         links_df = pd.DataFrame(links_df)
@@ -121,20 +125,14 @@ def data_to_links_df(
     links_df = _harmonize_crs(links_df, LAT_LON_CRS)
     nodes_df = _harmonize_crs(nodes_df, LAT_LON_CRS)
 
-    links_params = LinksParams() if links_params is None else links_params
-    links_df = attach_parameters_to_df(links_df, links_params)
+    links_df.attrs.update(RoadLinksAttrs)
     links_df = set_df_index_to_pk(links_df)
-
-    # set dataframe-level variables
-    links_df.gdf_name = "network_links"
-
-    # Validate and coerce to schema
+    links_df.gdf_name = links_df.attrs["name"]
     links_df = validate_df_to_model(links_df, RoadLinksTable)
-    assert "params" in links_df.__dict__
 
     if len(links_df) < 10:
         WranglerLogger.debug(
-            f"New Links: \n{links_df[links_df.params.display_cols + ['geometry']]}"
+            f"New Links: \n{links_df[links_df.attrs['display_cols'] + ['geometry']]}"
         )
     else:
         WranglerLogger.debug(f"{len(links_df)} new links.")
@@ -146,8 +144,8 @@ def copy_links(
     links_df: DataFrame[RoadLinksTable],
     link_id_lookup: dict[int, int],
     node_id_lookup: dict[int, int],
-    updated_geometry_col: str = None,
-    nodes_df: DataFrame[RoadNodesTable] = None,
+    updated_geometry_col: Optional[str] = None,
+    nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
     offset_meters: float = -5,
     copy_properties: list[str] = [],
     rename_properties: dict[str, str] = {},
@@ -235,7 +233,8 @@ def copy_links(
             f"Adding node-based geometry with for {sum(offset_links.geometry.isna())} links."
         )
         offset_links.loc[[offset_links.geometry.isna(), "geometry"]] = offset_geometry_meters(
-            offset_links["geometry"], offset_meters
+            offset_links["geometry"],
+            offset_meters,
         )
     if offset_links.geometry.isna().values.any():
         WranglerLogger.debug(
@@ -253,9 +252,9 @@ def copy_links(
     offset_links = offset_links[keep_properties]
 
     # create and set index for new model_link_ids
+    # offset_links.attrs.update(RoadLinksAttrs)
     offset_links = offset_links.reset_index(drop=True)
-    offset_links["model_link_id_idx"] = offset_links["model_link_id"]
-    offset_links = offset_links.set_index("model_link_id_idx")
+    offset_links = set_df_index_to_pk(offset_links)
 
     if validate:
         offset_links = validate_df_to_model(offset_links, RoadLinksTable)

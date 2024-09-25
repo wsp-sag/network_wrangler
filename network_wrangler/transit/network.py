@@ -46,6 +46,7 @@ from .geo import (
     stop_times_to_stop_time_points_gdf,
     shapes_to_trip_shapes_gdf,
 )
+from ..configs import WranglerConfig, DefaultConfig
 
 
 class TransitRoadwayConsistencyError(Exception):
@@ -67,6 +68,7 @@ class TransitNetwork(object):
         feed: gtfs feed object with interlinked tables.
         road_net (RoadwayNetwork): Associated roadway network object.
         graph (nx.MultiDiGraph): Graph for associated roadway network object.
+        config (WranglerConfig): Configuration object for the transit network.
         feed_path (str): Where the feed was read in from.
         validated_frequencies (bool): The frequencies have been validated.
         validated_road_network_consistency (): The network has been validated against
@@ -75,33 +77,29 @@ class TransitNetwork(object):
 
     TIME_COLS = ["arrival_time", "departure_time", "start_time", "end_time"]
 
-    def __init__(self, feed: Feed):
+    def __init__(self, feed: Feed, config: WranglerConfig = DefaultConfig) -> None:
         """Constructor for TransitNetwork.
 
         Args:
             feed: Feed object representing the transit network gtfs tables
+            config: WranglerConfig object. Defaults to DefaultConfig.
         """
         WranglerLogger.debug("Creating new TransitNetwork.")
 
         self._road_net: Optional[RoadwayNetwork] = None
         self.feed: Feed = feed
         self.graph: nx.MultiDiGraph = None
-
+        self.config: WranglerConfig = config
         # initialize
         self._consistent_with_road_net = False
 
         # cached selections
-        self._selections: dict[str, dict] = {}
+        self._selections: dict[str, TransitSelection] = {}
 
     @property
     def feed_path(self):
         """Pass through property from Feed."""
         return self.feed.feed_path
-
-    @property
-    def config(self):
-        """Pass through property from Feed."""
-        return self.feed.config
 
     @property
     def feed(self):
@@ -125,7 +123,7 @@ class TransitNetwork(object):
             )
 
     @property
-    def road_net(self) -> RoadwayNetwork:
+    def road_net(self) -> Union[None, RoadwayNetwork]:
         """Roadway network associated with the transit network."""
         return self._road_net
 
@@ -138,7 +136,7 @@ class TransitNetwork(object):
             raise ValueError(msg)
         if transit_road_net_consistency(self.feed, road_net):
             self._road_net = road_net
-            self._stored_road_net_hash = copy.deepcopy(self.road_net.network_hash)
+            self._stored_road_net_hash = copy.deepcopy(self.road_net.network_hash)  # type: ignore
             self._consistent_with_road_net = True
         else:
             WranglerLogger.error(
@@ -156,6 +154,8 @@ class TransitNetwork(object):
     def consistent_with_road_net(self) -> bool:
         """Indicate if road_net is consistent with transit network.
 
+        Will return True if road_net is None, but provide a warning.
+
         Checks the network hash of when consistency was last evaluated. If transit network or
         roadway network has changed, will re-evaluate consistency and return the updated value and
         update self._stored_road_net_hash.
@@ -163,6 +163,9 @@ class TransitNetwork(object):
         Returns:
             Boolean indicating if road_net is consistent with transit network.
         """
+        if self.road_net is None:
+            WranglerLogger.warning("Roadway Network not set, cannot accurately check consistency.")
+            return True
         updated_road = self.road_net.network_hash != self._stored_road_net_hash
         updated_feed = self.feed_hash != self._stored_feed_hash
 
@@ -204,7 +207,7 @@ class TransitNetwork(object):
             ref_nodes = self.road_net.nodes_df
         else:
             ref_nodes = None
-        return to_points_gdf(self.feed.stops, nodes_df=ref_nodes)
+        return to_points_gdf(self.feed.stops, ref_nodes_df=ref_nodes)
 
     @property
     def shapes_gdf(self) -> gpd.GeoDataFrame:

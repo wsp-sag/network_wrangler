@@ -1,14 +1,11 @@
-"""Pydantic data models for transit selection properties."""
+"""Data Models for selecting transit trips, nodes, links, and routes."""
 
 from __future__ import annotations
-
 from typing import Annotated, ClassVar, List, Literal, Optional, Union
 
 from pydantic import ConfigDict, Field
-
 from .._base.records import RecordModel
-from .._base.types import ForcedStr, AnyOf, OneOf
-from .._base.types import TimespanString
+from .._base.types import AnyOf, ForcedStr, OneOf, TimespanString
 
 
 SelectionRequire = Union[Literal["any"], Literal["all"]]
@@ -63,7 +60,7 @@ class SelectTransitLinks(RecordModel):
         exclude_none=True,
         protected_namespaces=(),
     )
-    _examples = [
+    _examples: ClassVar[list[dict]] = [
         {
             "ab_nodes": [{"A": "75520", "B": "66380"}, {"A": "66380", "B": "75520"}],
             "type": "any",
@@ -96,7 +93,7 @@ class SelectTransitNodes(RecordModel):
         protected_namespaces=(),
     )
 
-    _examples = [
+    _examples: ClassVar[list[dict]] = [
         # {"gtfstop_id": ["stop1", "stop2"], "require": "any"},  TODO Not implemented
         {"model_node_id": [1, 2], "require": "all"},
     ]

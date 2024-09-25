@@ -134,6 +134,8 @@ def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
 
 def test_add_nodes(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
+    from network_wrangler.utils.models import TableValidationError
+
     net = copy.deepcopy(small_net)
 
     node_properties = {
@@ -173,6 +175,6 @@ def test_add_nodes(request, small_net):
         )
         WranglerLogger.error("Should have failed due to overlapping node IDs")
         assert False
-    except SchemaError:
+    except TableValidationError:
         "expected ValueError when adding a node with a model_node_id that already exists"
     WranglerLogger.info(f"--Finished: {request.node.name}")

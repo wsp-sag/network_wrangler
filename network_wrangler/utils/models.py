@@ -1,7 +1,7 @@
 """Helper functions for data models."""
 
 import copy
-from typing import Union, get_type_hints, Optional
+from typing import Union, get_type_hints, Optional, Type
 from pathlib import Path
 
 import pandas as pd
@@ -31,7 +31,7 @@ def empty_df_from_datamodel(
         An empty [Geo]DataFrame that validates to the specified model.
     """
     schema = model.to_schema()
-    data = {col: [] for col in schema.columns.keys()}
+    data: dict[str, list] = {col: [] for col in schema.columns.keys()}
 
     if "geometry" in data:
         return model(gpd.GeoDataFrame(data, crs=crs))
@@ -55,9 +55,11 @@ class TableValidationError(Exception):
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def validate_df_to_model(
-    df: DataFrame, model: DataFrameModel, output_file: Path = "validation_failure_cases.csv"
+    df: DataFrame, model: Type, output_file: Path = Path("validation_failure_cases.csv")
 ) -> DataFrame:
     """Wrapper to validate a DataFrame against a Pandera DataFrameModel with better logging.
+
+    Also copies the attrs from the input DataFrame to the validated DataFrame.
 
     Args:
         df: DataFrame to validate.
@@ -65,6 +67,7 @@ def validate_df_to_model(
         output_file: Optional file to write validation errors to. Defaults to
             validation_failure_cases.csv.
     """
+    attrs = copy.deepcopy(df.attrs)
     try:
         model_df = model.validate(df, lazy=True)
         for c in model_df.columns:
@@ -73,10 +76,12 @@ def validate_df_to_model(
                 model_df[c] = model_df[c].where(pd.notna(model_df[c]), None)
             else:
                 model_df[c] = model_df[c].fillna(default_value)
-
+        model_df.attrs.update(attrs)
         return model_df
-
-    except SchemaErrors or TypeError or ValueError as e:
+    except (TypeError, ValueError) as e:
+        WranglerLogger.error(f"Validation to {model.__name__} failed.\n{e}")
+        raise TableValidationError(f"Validation to {model.__name__} failed.")
+    except SchemaErrors as e:
         # Log the summary of errors
         WranglerLogger.error(
             f"Validation to {model.__name__} failed with {len(e.failure_cases)} \
@@ -99,7 +104,7 @@ def validate_df_to_model(
 
 
 def identify_model(
-    data: Union[pd.DataFrame, dict], models: list[DataFrameModel, BaseModel]
+    data: Union[pd.DataFrame, dict], models: list
 ) -> Union[DataFrameModel, BaseModel]:
     """Identify the model that the input data conforms to.
 
@@ -142,11 +147,11 @@ def extra_attributes_undefined_in_model(instance: BaseModel, model: BaseModel) -
     return extra_attributes
 
 
-def submodel_fields_in_model(model: BaseModel, instance: Optional[BaseModel] = None) -> list:
+def submodel_fields_in_model(model: Type, instance: Optional[BaseModel] = None) -> list:
     """Find the fields in a pydantic model that are submodels."""
     types = get_type_hints(model)
     model_type = Union[ModelMetaclass, BaseModel]
-    submodels = [f for f in model.model_fields if isinstance(types.get(f), model_type)]
+    submodels = [f for f in model.model_fields if isinstance(types.get(f), model_type)]  # type: ignore
     if instance is not None:
         defined = list(instance.model_dump(exclude_none=True, by_alias=True).keys())
         return [f for f in submodels if f in defined]

@@ -30,16 +30,16 @@ import numpy as np
 from pydantic import validate_call
 from pandera.typing import DataFrame
 
-from ...params import LINK_ML_OFFSET_METERS
+from ...models.projects.roadway_changes import RoadPropertyChange, ScopedPropertySetList
+
+from ...configs import WranglerConfig, DefaultConfig
 from ...logger import WranglerLogger
 from ...utils.data import validate_existing_value_in_df
 from ...utils.models import validate_df_to_model
-from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
+from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadLinksAttrs, RoadNodesAttrs
 from ...models.roadway.types import ScopedLinkValueItem
-from ...models.projects.roadway_property_change import (
-    RoadPropertyChange,
+from ...models.projects.roadway_changes import (
     IndivScopedPropertySetItem,
-    ScopedPropertySetList,
 )
 from ...utils.geo import update_nodes_in_linestring_geometry, offset_geometry_meters
 from ...utils.models import default_from_datamodel
@@ -60,9 +60,11 @@ class LinkChangeError(Exception):
 def _initialize_links_as_managed_lanes(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list[int],
-    geometry_offset_meters: float = LINK_ML_OFFSET_METERS,
+    geometry_offset_meters: float = DefaultConfig.MODEL_ROADWAY.ML_OFFSET_METERS,
 ) -> DataFrame[RoadLinksTable]:
     """Initialize links as managed lanes if they are not already."""
+    # TODO write wrapper on validate call so don't have to do this
+    links_df.attrs.update(RoadLinksAttrs)
     links_df.loc[link_idx, "managed"] = 1
     initialize_if_missing = ["ML_geometry", "ML_access_point", "ML_egress_point", "ML_projects"]
     for f in initialize_if_missing:
@@ -87,17 +89,20 @@ def _resolve_conflicting_scopes(
         timespan=scoped_item.timespan,
         category=scoped_item.category,
     )
-    if conflicting_existing:
-        if delete_conflicting:
-            return [i for i in scoped_values not in conflicting_existing]
-        else:
-            WranglerLogger.error(
-                f"""Existing link value conflicts with change.  Either update to
-                set overwrite_conflicting = True to overwrite with set value
-                or update the scoped value to not conflict.\n
-                Conflicting existing value(s): {conflicting_existing}\n
-                Set value: {scoped_item} """
-            )
+    if not conflicting_existing:
+        return scoped_values
+
+    if delete_conflicting:
+        return [i for i in scoped_values not in conflicting_existing]
+    else:
+        WranglerLogger.error(
+            f"""Existing link value conflicts with change.  Either update to
+            set overwrite_conflicting = True to overwrite with set value
+            or update the scoped value to not conflict.\n
+            Conflicting existing value(s): {conflicting_existing}\n
+            Set value: {scoped_item} """
+        )
+        raise InvalidScopedLinkValue("Existing link value conflicts with change.")
 
 
 def _valid_default_value_for_change(value: Any) -> bool:
@@ -178,7 +183,7 @@ def _edit_scoped_link_property(
     updated_scoped_prop_value_list = copy.deepcopy(scoped_prop_value_list)
 
     for set_item in scoped_prop_set:
-        WranglerLogger(f"Editing link for scoped item: {set_item}")
+        WranglerLogger.debug(f"Editing link for scoped item: {set_item}")
 
         # delete or error on conflicting scopes
         updated_scoped_prop_value_list = _resolve_conflicting_scopes(
@@ -248,8 +253,8 @@ def _edit_link_property(
     existing_value_conflict_error: bool = False,
     overwrite_all_scoped: bool = False,
     overwrite_conflicting_scoped: bool = True,
-    ml_link_offset_meters: float = LINK_ML_OFFSET_METERS,
     project_name: Optional[str] = None,
+    config: WranglerConfig = DefaultConfig,
 ) -> DataFrame[RoadLinksTable]:
     """Return edited (in place) RoadLinksTable with property changes for a list of links.
 
@@ -271,12 +276,13 @@ def _edit_link_property(
             scoped_prop_value_set. Defaults to False.
         overwrite_conflicting_scoped: If True will overwrite any conflicting scopes.
             Otherwise, will raise an Exception on conflicting, but not matching, scopes.
-        ml_link_offset_meters: Offset in meters for managed lane geometry. If not set, will use
-            LINK_ML_OFFSET_METERS from params.py.
         project_name: optional name of the project to be applied
+        config: WranglerConfig instance. Defaults to DefaultConfig.
 
     """
     WranglerLogger.debug(f"Editing {prop_name} on links {link_idx}")
+    # TODO write wrapper on validate call so don't have to do this
+    links_df.attrs.update(RoadLinksAttrs)
     # WranglerLogger.debug(f"links_df | link_idx:\n {links_df.loc[link_idx].head()}")
     if prop_change.existing is not None:
         exist_ok = validate_existing_value_in_df(
@@ -290,7 +296,9 @@ def _edit_link_property(
     # if it is a managed lane field, initialize managed lane attributes if haven't already
     if prop_name.startswith("ML_"):
         links_df = _initialize_links_as_managed_lanes(
-            links_df, link_idx, geometry_offset_meters=ml_link_offset_meters
+            links_df,
+            link_idx,
+            geometry_offset_meters=config.MODEL_ROADWAY.ML_OFFSET_METERS,
         )
         if project_name is not None:
             links_df.loc[link_idx, "ML_projects"] += f"{project_name},"
@@ -309,10 +317,9 @@ def _edit_link_property(
     # Access and egress points are special cases.
     if prop_name in ["ML_access_point", "ML_egress_point"]:
         links_df = _edit_ml_access_egress_points(links_df, prop_name, prop_change, link_idx)
-        WranglerLogger.debug(
-            f"links_df.loc[link_idx, prop_name] \
+        msg = f"links_df.loc[link_idx, prop_name] \
             After: \n {links_df.loc[link_idx, prop_name].head()}"
-        )
+        # WranglerLogger.debug(msg)
         return links_df
 
     # `set` and `change` just affect the simple property
@@ -351,59 +358,13 @@ def _edit_link_property(
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
-def edit_link_property(
-    links_df: DataFrame[RoadLinksTable],
-    link_idx: list,
-    prop_name: str,
-    prop_dict: RoadPropertyChange,
-    existing_value_conflict_error: bool = False,
-) -> DataFrame[RoadLinksTable]:
-    """Return copy of RoadLinksTable with edited link property for a list of links IDS.
-
-    Args:
-        links_df: links to edit
-        link_idx: list of link indices to change
-        prop_name: property name to change
-        prop_dict: dictionary of value from project_card
-        existing_value_conflict_error: If True, will trigger an error if the existing
-            specified value in the project card doesn't match the value in links_df.
-            Otherwise, will only trigger a warning. Defaults to False.
-        overwrite_all_scoped: If True, will overwrite all scoped values for link property with
-            scoped_prop_value_set. Defaults to False.
-        overwrite_conflicting_scoped: If True will overwrite any conflicting scopes.
-            Otherwise, will raise an Exception on conflicting, but not matching, scopes
-            Defaults to True.
-
-    """
-    WranglerLogger.info(f"Editing Link Property {prop_name} for {len(link_idx)} links.")
-    WranglerLogger.debug(f"prop_dict: /n{prop_dict}")
-    prop_change = RoadPropertyChange(prop_dict)
-
-    links_df = copy.deepcopy(links_df)
-    links_df = _edit_link_property(
-        links_df,
-        link_idx,
-        prop_name,
-        prop_change,
-        existing_value_conflict_error,
-        overwrite_all_scoped=prop_change.overwrite_all_scoped,
-        overwrite_conflicting_scoped=prop_change.overwrite_conflicting_scoped,
-    )
-    links_df = validate_df_to_model(links_df, RoadLinksTable)
-    WranglerLogger.debug(
-        f"Edited links_df.loc[link_idx, property]: \
-                         \n {links_df.loc[link_idx, property]}"
-    )
-    return links_df
-
-
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
 def edit_link_properties(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
     property_changes: dict[str, RoadPropertyChange],
     existing_value_conflict_error: bool = False,
     project_name: Optional[str] = None,
+    config: WranglerConfig = DefaultConfig,
 ) -> DataFrame[RoadLinksTable]:
     """Return copy of RoadLinksTable with edited link properties for a list of links.
 
@@ -415,9 +376,11 @@ def edit_link_properties(
             specified value in the project card doesn't match the value in links_df.
             Otherwise, will only trigger a warning. Defaults to False.
         project_name: optional name of the project to be applied
-
+        config: WranglerConfig instance. Defaults to DefaultConfig.
     """
     links_df = copy.deepcopy(links_df)
+    # TODO write wrapper on validate call so don't have to do this
+    links_df.attrs.update(RoadLinksAttrs)
     ml_property_changes = bool([k for k in property_changes.keys() if k.startswith("ML_")])
     existing_managed_lanes = len(links_df.loc[link_idx].of_type.managed) == 0
     flag_create_managed_lane = existing_managed_lanes & ml_property_changes
@@ -426,7 +389,12 @@ def edit_link_properties(
     for property, prop_change in property_changes.items():
         WranglerLogger.debug(f"prop_dict: \n{prop_change}")
         links_df = _edit_link_property(
-            links_df, link_idx, property, prop_change, existing_value_conflict_error
+            links_df,
+            link_idx,
+            property,
+            prop_change,
+            existing_value_conflict_error=existing_value_conflict_error,
+            config=config,
         )
 
     # Only want to set this once per project.
@@ -467,7 +435,9 @@ def edit_link_geometry_from_nodes(
         node_ids: list of node PKs with updated geometry
     """
     # WranglerLogger.debug(f"nodes_df.loc[node_ids]:\n {nodes_df.loc[node_ids]}")
-
+    # TODO write wrapper on validate call so don't have to do this
+    links_df.attrs.update(RoadLinksAttrs)
+    nodes_df.attrs.update(RoadNodesAttrs)
     links_df = copy.deepcopy(links_df)
 
     updated_a_geometry = update_nodes_in_linestring_geometry(

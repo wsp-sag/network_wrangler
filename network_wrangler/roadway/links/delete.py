@@ -4,7 +4,7 @@ from pydantic import validate_call
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...models.roadway.tables import RoadLinksTable
+from ...models.roadway.tables import RoadLinksTable, RoadLinksAttrs
 
 
 class LinkDeletionError(Exception):
@@ -28,7 +28,8 @@ def delete_links_by_ids(
             the network. Defaults to False.
     """
     WranglerLogger.debug(f"Deleting links with ids: \n{del_link_ids}")
-
+    # TODO write wrapper on validate call so don't have to do this
+    links_df.attrs.update(RoadLinksAttrs)
     _missing = set(del_link_ids) - set(links_df.index)
     if _missing:
         WranglerLogger.warning(f"Links in network not there to delete: \n{_missing}")

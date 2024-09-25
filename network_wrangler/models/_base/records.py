@@ -1,4 +1,4 @@
-from typing import ClassVar, List, Union
+from typing import ClassVar, List, Union, Any
 
 from pydantic import BaseModel, ConfigDict, model_validator
 from .types import AnyOf, OneOf, ConflictsWith
@@ -40,7 +40,7 @@ class RecordModel(BaseModel):
     require_conflicts_with: ClassVar[ConflictsWith] = []
     require_any_of: ClassVar[AnyOf] = []
     require_one_of: ClassVar[OneOf] = []
-    _examples: ClassVar[list[str]] = []
+    _examples: ClassVar[list[Any]] = []
 
     @staticmethod
     def _check_field_exists(

@@ -3,7 +3,7 @@
 
 # Temp and test cache
 scratch/*
-tests/temp/
+tests/temp/*
 scratch/*
 *.mbtiles
 *.geojson
@@ -15,6 +15,7 @@ cache
 tests/t_*
 tests/*.txt
 tests/out/**
+tests/out/**/**
 wranglertest/
 .coverage
 coverage.xml

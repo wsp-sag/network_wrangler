@@ -1,32 +1,22 @@
-"""Pydantic models for roadway property changes which align with ProjectCard schemas."""
-
+"""Data models for roadway changes."""
 from __future__ import annotations
 
 import itertools
 
-from typing import Optional, ClassVar, Any, Union
 from datetime import datetime
+from typing import Any, ClassVar, Optional, Union
 
-from pandera import DataFrameModel, Field
-from pandera.typing import Series
-from pydantic import (
-    ConfigDict,
-    model_validator,
-    BaseModel,
-    ValidationError,
-    RootModel,
-    validate_call,
-)
+from pydantic import BaseModel, ConfigDict, RootModel, ValidationError, field_validator, model_validator, validate_call
 
-
-from ...params import LAT_LON_CRS, DEFAULT_CATEGORY, DEFAULT_TIMESPAN
-from .._base.records import RecordModel
-from .._base.root import RootListMixin
-from .._base.types import OneOf
-from .._base.types import TimespanString
-from ...utils.time import str_to_time_list, dt_overlaps
+from .roadway_selection import SelectLinksDict, SelectNodesDict
 
 from ...logger import WranglerLogger
+from .._base.records import RecordModel
+from .._base.root import RootListMixin
+from .._base.types import OneOf, TimespanString, AnyOf
+
+from ...params import DEFAULT_CATEGORY, DEFAULT_TIMESPAN, DEFAULT_DELETE_MODES, DEFAULT_SEARCH_MODES
+from ...utils.time import dt_overlaps, str_to_time_list
 
 
 class ScopeConflictError(Exception):
@@ -150,14 +140,14 @@ def _grouped_to_indiv_list_of_scopedpropsetitem(
 
         # Create full lists of all categories and timespans
         categories = item.categories
-        if item.category:
-            categories.append(item.category)
+        if item.category is not None:
+            categories.append(item.category)  # type: ignore
         if not categories:
             categories = [DEFAULT_CATEGORY]
 
         timespans = item.timespans
         if item.timespan:
-            timespans.append(item.timespan)
+            timespans.append(item.timespan)  # type: ignore
         if not timespans:
             timespans = [DEFAULT_TIMESPAN]
 
@@ -228,9 +218,11 @@ class RoadPropertyChange(RecordModel):
     set: Optional[Any] = None
     scoped: Optional[Union[None, ScopedPropertySetList]] = None
 
-    require_one_of: ClassVar[OneOf] = [["change", "set"]]
+    require_one_of: ClassVar[OneOf] = [
+        ["change", "set"],
+    ]
 
-    _examples = [
+    _examples: ClassVar[list] = [
         {"set": 1},
         {"existing": 2, "change": -1},
         {
@@ -261,24 +253,22 @@ class RoadPropertyChange(RecordModel):
     ]
 
 
-class NodeGeometryChangeTable(DataFrameModel):
-    """DataFrameModel for setting node geometry given a model_node_id."""
+class RoadwayDeletion(RecordModel):
+    """Requirements for describing roadway deletion project card (e.g. to delete)."""
 
-    model_node_id: Series[int]
-    X: Series[float] = Field(coerce=True)
-    Y: Series[float] = Field(coerce=True)
-    in_crs: Series[int] = Field(default=LAT_LON_CRS)
+    require_any_of: ClassVar[AnyOf] = [["links", "nodes"]]
+    model_config = ConfigDict(extra="forbid")
 
-    class Config:
-        """Config for NodeGeometryChangeTable."""
+    links: Optional[SelectLinksDict] = None
+    nodes: Optional[SelectNodesDict] = None
+    clean_shapes: bool = False
+    clean_nodes: bool = False
 
-        add_missing_columns = True
-
-
-class NodeGeometryChange(RecordModel):
-    """Value for setting node geometry given a model_node_id."""
-
-    model_config = ConfigDict(extra="ignore")
-    X: float
-    Y: float
-    in_crs: Optional[int] = LAT_LON_CRS
+    @field_validator("links")
+    @classmethod
+    def set_to_all_modes(cls, links: Optional[SelectLinksDict] = None):
+        """Set the search mode to 'any' if not specified explicitly."""
+        if links is not None:
+            if links.modes == DEFAULT_SEARCH_MODES:
+                links.modes = DEFAULT_DELETE_MODES
+        return links

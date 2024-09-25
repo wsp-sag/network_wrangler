@@ -69,9 +69,7 @@ def apply_new_roadway(
         f"Adding New Roadway Features: \n-Links: \n{add_links}\n-Nodes: \n{add_nodes}"
     )
     if add_nodes:
-        _new_nodes_df = data_to_nodes_df(
-            pd.DataFrame(add_nodes), nodes_params=roadway_net.nodes_df.params
-        )
+        _new_nodes_df = data_to_nodes_df(pd.DataFrame(add_nodes), config=roadway_net.config)
         if project_name:
             _new_nodes_df["projects"] = f"{project_name},"
         roadway_net.add_nodes(_new_nodes_df)
@@ -79,7 +77,7 @@ def apply_new_roadway(
     if add_links:
         _new_links_df = data_to_links_df(
             add_links,
-            links_params=roadway_net.links_df.params,
+            config=roadway_net.config,
             nodes_df=roadway_net.nodes_df,
         )
         if project_name:

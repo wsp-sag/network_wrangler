@@ -13,7 +13,7 @@ Usage:
 """
 
 import argparse
-import datetime
+from datetime import datetime
 
 from pathlib import Path
 

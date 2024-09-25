@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING, Optional
 from ...logger import WranglerLogger
 
 if TYPE_CHECKING:
-    from pandas import DataFrame, Series
+    from pandas import Series
     from ...transit.network import TransitNetwork
     from ...transit.selection import TransitSelection
 
-TABLE_TO_APPLY_BY_PROPERTY = {
+TABLE_TO_APPLY_BY_PROPERTY: dict[str, str] = {
     "headway_secs": "frequencies",
 }
 
@@ -61,12 +61,10 @@ def apply_transit_property_change(
 def _get_table_name_for_property(net: TransitNetwork, property: str) -> str:
     table_name = TABLE_TO_APPLY_BY_PROPERTY.get(property)
     if not table_name:
-        table_name = net.feed.tables_with_field(property)
-        if not len(table_name == 1):
-            raise TransitPropertyChangeError(
-                "Found property {property} in multiple tables: {table}"
-            )
-        table_name = table_name[0]
+        possible_table_names = net.feed.table_names_with_field(property)
+        if not len(possible_table_names == 1):
+            raise NotImplementedError("Found property {property} in multiple tables: {table}")
+        table_name = possible_table_names[0]
     if table_name not in IMPLEMENTED_TABLES:
         raise NotImplementedError(f"{table_name} table changes not currently implemented.")
     return table_name

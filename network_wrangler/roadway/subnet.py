@@ -1,27 +1,16 @@
 """Subnet class for RoadwayNetwork object."""
 
 from __future__ import annotations
-import copy
 import hashlib
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
 from pandera.typing import DataFrame
 
+from ..utils.data import concat_with_attr
 from .graph import links_nodes_to_ox_graph
 from .links.links import node_ids_in_links
-from ..params import (
-    DEFAULT_SP_WEIGHT_FACTOR,
-    DEFAULT_MAX_SEARCH_BREADTH,
-    DEFAULT_SP_WEIGHT_COL,
-)
-from ..models.projects.roadway_selection import (
-    SelectLinksDict,
-    SelectFacility,
-    SelectNodesDict,
-    SelectNodeDict,
-)
 from ..logger import WranglerLogger
 
 if TYPE_CHECKING:
@@ -40,6 +29,17 @@ class SubnetCreationError(Exception):
     """Raised when a subnet can't be created."""
 
     pass
+
+
+DEFAULT_SUBNET_MAX_SEARCH_BREADTH: int = 10
+
+"""Factor to multiply sp_weight_col by to use for weights in shortest path.
+"""
+DEFAULT_SUBNET_SP_WEIGHT_FACTOR: int = 100
+
+"""Column to use for weights in shortest path.
+"""
+SUBNET_SP_WEIGHT_COL: str = "i"
 
 
 class Subnet:
@@ -82,9 +82,9 @@ class Subnet:
         modes: list = ["drive"],
         subnet_links_df: pd.DataFrame = None,
         i: int = 0,
-        sp_weight_col: str = DEFAULT_SP_WEIGHT_COL,
-        sp_weight_factor=DEFAULT_SP_WEIGHT_FACTOR,
-        max_search_breadth=DEFAULT_MAX_SEARCH_BREADTH,
+        sp_weight_factor: float = DEFAULT_SUBNET_SP_WEIGHT_FACTOR,
+        sp_weight_col: str = SUBNET_SP_WEIGHT_COL,
+        max_search_breadth: int = DEFAULT_SUBNET_MAX_SEARCH_BREADTH,
     ):
         """Generates and returns a Subnet object.
 
@@ -97,7 +97,7 @@ class Subnet:
             i: Expansion iteration number. Shouldn't need to change this as it will be done
                 internally. Defaults to 0.
             sp_weight_col: Column to use for weights in shortest path.  Will not
-                likely need to be changed. Defaults to DEFAULT_SP_WEIGHT_COL.
+                likely need to be changed. Defaults to "i" which is the iteration #.
             sp_weight_factor: Factor to multiply sp_weight_col by to use for
                 weights in shortest path.  Will not likely need to be changed.
                 Defaults to DEFAULT_SP_WEIGHT_FACTOR.
@@ -173,7 +173,7 @@ class Subnet:
         """Nodes filtered to subnet."""
         return self.net.nodes_df.loc[self.subnet_nodes]
 
-    def expand_to_nodes(self, nodes_list: list):
+    def expand_to_nodes(self, nodes_list: list, max_search_breadth: int) -> None:
         """Expand network to include list of nodes.
 
         Will stop expanding and generate a SubnetExpansionError if meet max_search_breadth before
@@ -181,50 +181,45 @@ class Subnet:
 
         Args:
             nodes_list: a list of node primary keys to expand subnet to include.
+            max_search_breadth: maximum number of expansions to make before giving up.
         """
         WranglerLogger.debug(f"Expanding subnet to includes nodes: {nodes_list}")
 
         # expand network to find nodes in the list
-        while (
-            not set(nodes_list).issubset(self.subnet_nodes) and self._i <= self._max_search_breadth
-        ):
+        while not set(nodes_list).issubset(self.subnet_nodes) and self._i <= max_search_breadth:
             self._expand_subnet_breadth()
 
         if not set(nodes_list).issubset(self.subnet_nodes):
             raise SubnetExpansionError(
                 f"Can't find nodes {nodes_list} before achieving maximum\
-                network expansion iterations of {self._max_search_breadth}"
+                network expansion iterations of {max_search_breadth}"
             )
 
     def _expand_subnet_breadth(self) -> None:
         """Add one degree of breadth to self.subnet_links_df and add property."""
         self._i += 1
 
-        WranglerLogger.debug(
-            f"Adding Breadth to Subnet: \
-            i={self._i} out of {self._max_search_breadth}"
-        )
+        WranglerLogger.debug(f"Adding Breadth to Subnet: i={self._i}")
+
         _modal_links_df = self.net.links_df.mode_query(self.modes)
         # find links where A node is connected to subnet but not B node
         _outbound_links_df = _modal_links_df.loc[
-            _modal_links_df[self.net.links_df.params.from_node].isin(self.subnet_nodes)
-            & ~_modal_links_df[self.net.links_df.params.to_node].isin(self.subnet_nodes)
+            _modal_links_df.A.isin(self.subnet_nodes) & ~_modal_links_df.B.isin(self.subnet_nodes)
         ]
 
         WranglerLogger.debug(f"_outbound_links_df links: {len(_outbound_links_df)}")
 
         # find links where B node is connected to subnet but not A node
         _inbound_links_df = _modal_links_df.loc[
-            _modal_links_df[self.net.links_df.params.to_node].isin(self.subnet_nodes)
-            & ~_modal_links_df[self.net.links_df.params.from_node].isin(self.subnet_nodes)
+            _modal_links_df.B.isin(self.subnet_nodes) & ~_modal_links_df.A.isin(self.subnet_nodes)
         ]
 
         WranglerLogger.debug(f"_inbound_links_df links: {len(_inbound_links_df)}")
 
         # find links where A and B nodes are connected to subnet but not in subnet
         _both_AB_connected_links_df = _modal_links_df.loc[
-            _modal_links_df[self.net.links_df.params.to_node].isin(self.subnet_nodes)
-            & _modal_links_df[self.net.links_df.params.from_node].isin(self.subnet_nodes)
+            _modal_links_df.B.isin(self.subnet_nodes)
+            & _modal_links_df.A.isin(self.subnet_nodes)
             & ~_modal_links_df.index.isin(self.subnet_links_df.index.tolist())
         ]
 
@@ -233,7 +228,7 @@ class Subnet:
              but aren't in subnet."
         )
 
-        _add_links_df = pd.concat(
+        _add_links_df = concat_with_attr(
             [_both_AB_connected_links_df, _inbound_links_df, _outbound_links_df]
         )
 
@@ -242,85 +237,6 @@ class Subnet:
 
         WranglerLogger.debug(f"{self.num_links} initial subnet links")
 
-        self._subnet_links_df = pd.concat([self.subnet_links_df, _add_links_df])
+        self._subnet_links_df = concat_with_attr([self.subnet_links_df, _add_links_df])
 
         WranglerLogger.debug(f"{self.num_links} expanded subnet links")
-
-
-def _generate_subnet_link_selection_dict_options(
-    link_selection_dict: dict,
-) -> list[SelectLinksDict]:
-    """Generates a list of link selection dictionaries based on a link selection dictionary.
-
-    Args:
-        link_selection_dict (SelectLinksDict): Link selection dictionary.
-
-    Returns:
-        list[SelectLinksDict]: List of link selection dictionaries.
-    """
-    options = []
-    # Option 1: As-is selection
-    _sd = copy.deepcopy(link_selection_dict)
-    options.append(_sd)
-
-    # Option 2: Search for name or ref in name field
-    if "ref" in link_selection_dict:
-        _sd = copy.deepcopy(link_selection_dict)
-        _sd["name"] += _sd["ref"]
-        del _sd["ref"]
-        options.append(_sd)
-
-    # Option 3: Search for name in ref field
-    if "name" in link_selection_dict:
-        _sd = copy.deepcopy(link_selection_dict)
-        _sd["ref"] = link_selection_dict["name"]
-        del _sd["name"]
-        options.append(_sd)
-
-    return options
-
-
-def generate_subnet_from_link_selection_dict(
-    net,
-    link_selection_dict: Optional[SelectLinksDict],
-    **kwargs,
-) -> Subnet:
-    """Generates a Subnet object from a link selection dictionary.
-
-    First will search based on "name" in selection_dict but if not found, will search
-        using the "ref" field instead.
-
-    Args:
-        net (RoadwayNetwork): RoadwayNetwork object.
-        link_selection_dict (SelectLinksDict): Link selection dictionary.
-        kwargs: other kwarts to pass to Subnet initiation
-
-    Returns:
-        Subnet: Subnet object.
-    """
-    if isinstance(link_selection_dict, SelectLinksDict):
-        link_selection_data = link_selection_dict
-    else:
-        link_selection_data = SelectLinksDict(**link_selection_dict)
-
-    link_selection_dict = link_selection_data.segment_selection_dict
-    link_sd_options = _generate_subnet_link_selection_dict_options(link_selection_dict)
-    for sd in link_sd_options:
-        WranglerLogger.debug(f"Trying link selection:\n{sd}")
-        subnet_links_df = copy.deepcopy(net.links_df.mode_query(link_selection_data.modes))
-        subnet_links_df = subnet_links_df.dict_query(sd)
-        if len(subnet_links_df) > 0:
-            break
-    if len(subnet_links_df) == 0:
-        WranglerLogger.error(f"Selection didn't return subnet links: {link_selection_dict}")
-        raise SubnetCreationError("No links found with selection.")
-
-    subnet_links_df["i"] = 0
-    subnet = Subnet(
-        net=net, subnet_links_df=subnet_links_df, modes=link_selection_data.modes, **kwargs
-    )
-
-    WranglerLogger.info(
-        f"Found subnet from link selection with {len(subnet.subnet_links_df)} links."
-    )
-    return subnet

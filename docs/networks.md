@@ -282,16 +282,16 @@ All properties preceded by `ML_` will be copied, without that prefix, to the man
 
 Geometry of these managed lanes will be defined as a shape offset by the parameter ML_OFFSET_METERS
 
-::: network_wrangler.params.ML_OFFSET_METERS
+::: network_wrangler.config.ROAD.MANAGED_LANES.ML_OFFSET_METERS
 
 Properties defined in the parameter `COPY_FROM_GP_TO_ML` are also copied from the parent link.
 
-::: network_wrangler.params.COPY_FROM_GP_TO_ML
+:::  network_wrangler.config.ROAD.MANAGED_LANES.COPY_FROM_GP_TO_ML
 
 New `model_node_id` s and `model_link_ids` are generated based on the following ranges
 
-::: network_wrangler.params.MANAGED_LANES_LINK_ID_RANGE
-::: network_wrangler.params.MANAGED_LANES_NODE_ID_RANGE
+::: network_wrangler.config.ROAD.MANAGED_LANES.ML_LINK_ID_RANGE
+::: network_wrangler.config.ROAD.MANAGED_LANES.ML_NODE_ID_RANGE
 
 `name` is created as "managed lane of `name of GP link`"
 
@@ -305,7 +305,7 @@ Dummy connector links are generated between the general purpose lane links and m
 
 The parameter  `COPY_TO_ACCESS_EGRESS` defines what additional attributes are copied from the general purpose lane to the access and egress links.
 
-::: network_wrangler.params.COPY_TO_ACCESS_EGRESS
+::: network_wrangler.config.ROAD.MANAGED_LANES.COPY_TO_ACCESS_EGRESS
 
 `name` is created as "<access/egress> dummy link"
 

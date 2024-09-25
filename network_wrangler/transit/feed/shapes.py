@@ -7,6 +7,7 @@ import pandas as pd
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
+from ...utils.data import concat_with_attr
 from ...models.gtfs.tables import (
     WranglerTripsTable,
     WranglerShapesTable,
@@ -125,7 +126,7 @@ def shapes_with_stops_for_shape_id(
     from .trips import trip_ids_for_shape_id
 
     trip_ids = trip_ids_for_shape_id(trips, shape_id)
-    all_shape_stop_times = pd.concat(
+    all_shape_stop_times = concat_with_attr(
         [shapes_with_stop_id_for_trip_id(shapes, trips, stop_times, t) for t in trip_ids]
     )
     shapes_with_stops = all_shape_stop_times[all_shape_stop_times["stop_id"].notna()]
@@ -273,7 +274,7 @@ def find_nearest_stops(
     trip_id: str,
     node_id: int,
     pickup_dropoff: PickupDropoffAvailability = "either",
-) -> tuple[int]:
+) -> tuple[int, int]:
     """Returns node_ids (before and after) of nearest node_ids that are stops for a given trip_id.
 
     Args:

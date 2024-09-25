@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import time
 from typing import Annotated, Any, List, TypeVar, Union, Literal
-
+import pandas as pd
 from pydantic import (
     BeforeValidator,
     Field,
@@ -17,17 +17,26 @@ GeoFileTypes = Union[
     Literal["txt"],
 ]
 
-PandasDataFrame = TypeVar("pandas.core.frame.DataFrame")
+TransitFileTypes = Union[Literal["txt"], Literal["csv"], Literal["parquet"]]
 
 
-PandasSeries = TypeVar("pandas.core.series.Series")
+RoadwayFileTypes = Union[
+    Literal["geojson"],
+    Literal["shp"],
+    Literal["parquet"],
+    Literal["json"],
+]
+
+
+PandasDataFrame = TypeVar("PandasDataFrame", bound=pd.DataFrame)
+PandasSeries = TypeVar("PandasSeries", bound=pd.Series)
 
 
 ForcedStr = Annotated[Any, BeforeValidator(lambda x: str(x))]
 
 
 OneOf = Annotated[
-    List[List[List[str]]],
+    List[List[Union[str, List[str]]]],
     Field(
         description=["List fields where at least one is required for the data model to be valid."]
     ),
@@ -43,7 +52,7 @@ ConflictsWith = Annotated[
 ]
 
 AnyOf = Annotated[
-    List[List[List[str]]],
+    List[List[Union[str, List[str]]]],
     Field(description=["List fields where any are required for the data model to be valid."]),
 ]
 
@@ -56,7 +65,7 @@ TimeString = Annotated[
     str,
     Field(
         description="A time string in the format HH:MM or HH:MM:SS",
-        pattern=r"^(24:00|([0-1]?\d|2[0-3]):([0-5]\d)(:[0-5]\d)?)$",
+        pattern=r"^(\d+):([0-5]\d)(:[0-5]\d)?$",
     ),
 ]
 TimespanString = Annotated[

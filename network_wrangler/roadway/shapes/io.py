@@ -13,21 +13,22 @@ from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadShapesTable
-from ...params import ShapesParams, LAT_LON_CRS
-from ...utils.io import read_table, write_table
-from ...utils.models import empty_df_from_datamodel
+from ...utils.io_table import read_table, write_table
+from ...utils.models import empty_df_from_datamodel, validate_df_to_model
+from ...configs import DefaultConfig, WranglerConfig
+from ...params import LAT_LON_CRS
 from .create import df_to_shapes_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def read_shapes(
-    filename: Union[str, Path],
+    filename: Path,
     in_crs: int = LAT_LON_CRS,
-    shapes_params: Union[dict, ShapesParams, None] = None,
     boundary_gdf: Optional[GeoDataFrame] = None,
     boundary_geocode: Optional[str] = None,
     boundary_file: Optional[Path] = None,
     filter_to_shape_ids: Optional[list] = None,
+    config: WranglerConfig = DefaultConfig,
 ) -> DataFrame[RoadShapesTable]:
     """Reads shapes and returns a geodataframe of shapes if filename is found.
 
@@ -39,7 +40,6 @@ def read_shapes(
     Args:
         filename (str): file to read shapes in from.
         in_crs: coordinate reference system number file is in. Defaults to LAT_LON_CRS.
-        shapes_params: a ShapesParams instance. Defaults to a default ShapesParams instance.
         boundary_gdf: GeoDataFrame to filter the input data to. Only used for geographic data.
             Defaults to None.
         boundary_geocode: Geocode to filter the input data to. Only used for geographic data.
@@ -47,13 +47,16 @@ def read_shapes(
         boundary_file: File to load as a boundary to filter the input data to. Only used for
             geographic data. Defaults to None.
         filter_to_shape_ids: List of shape_ids to filter the input data to. Defaults to None.
+        config: WranglerConfig instance. Defaults to DefaultConfig.
     """
     if not Path(filename).exists():
         WranglerLogger.warning(
             f"Shapes file {filename} not found, but is optional. \
                                Returning empty shapes dataframe."
         )
-        return empty_df_from_datamodel(RoadShapesTable).set_index("shape_id_idx", inplace=True)
+        return empty_df_from_datamodel(RoadShapesTable, crs=LAT_LON_CRS).set_index(
+            "shape_id_idx", inplace=True
+        )
 
     start_time = time.time()
     WranglerLogger.debug(f"Reading shapes from {filename}.")
@@ -63,17 +66,19 @@ def read_shapes(
         boundary_gdf=boundary_gdf,
         boundary_geocode=boundary_geocode,
         boundary_file=boundary_file,
+        read_speed=config.CPU.EST_PD_READ_SPEED,
     )
     if filter_to_shape_ids:
         shapes_df = shapes_df[shapes_df["shape_id"].isin(filter_to_shape_ids)]
     WranglerLogger.debug(
         f"Read {len(shapes_df)} shapes from file in {round(time.time() - start_time, 2)}."
     )
-    shapes_df = df_to_shapes_df(shapes_df, in_crs=in_crs, shapes_params=shapes_params)
-    shapes_df.params.source_file = filename
+    shapes_df = df_to_shapes_df(shapes_df, in_crs=in_crs)
+    shapes_df.attrs["source_file"] = filename
     WranglerLogger.info(
         f"Read {len(shapes_df)} shapes from {filename} in {round(time.time() - start_time, 2)}."
     )
+    shapes_df = validate_df_to_model(shapes_df, RoadShapesTable)
     return shapes_df
 
 

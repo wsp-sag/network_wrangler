@@ -5,39 +5,34 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Union, TYPE_CHECKING, Optional
 
-import pandas as pd
-
 from geopandas import GeoDataFrame
 
 from ..logger import WranglerLogger
-
-from ..params import LAT_LON_CRS
-
-from ..utils.io import read_table
+from ..configs import load_wrangler_config, WranglerConfig, DefaultConfig, ConfigInputTypes
+from ..utils.io_table import read_table
 from .nodes.io import read_nodes, write_nodes
 from .links.io import read_links, write_links
 from .shapes.io import read_shapes, write_shapes
+from ..params import LAT_LON_CRS
 
 
 if TYPE_CHECKING:
     from .network import RoadwayNetwork
     from .model_roadway import ModelRoadwayNetwork
-    from ..params import LinksParams, NodesParams, ShapesParams
-    from ..models._base.types import GeoFileTypes
+    from ..models._base.types import RoadwayFileTypes
 
 
 def load_roadway(
-    links_file: Union[Path, str],
-    nodes_file: Union[Path, str],
-    shapes_file: Union[Path, str] = None,
-    links_params: Optional[LinksParams] = None,
-    nodes_params: Optional[NodesParams] = None,
-    shapes_params: Optional[ShapesParams] = None,
-    crs: int = LAT_LON_CRS,
+    links_file: Path,
+    nodes_file: Path,
+    shapes_file: Optional[Path] = None,
+    in_crs: int = LAT_LON_CRS,
     read_in_shapes: bool = False,
     boundary_gdf: Optional[GeoDataFrame] = None,
     boundary_geocode: Optional[str] = None,
     boundary_file: Optional[Path] = None,
+    filter_links_to_nodes: Optional[bool] = None,
+    config: ConfigInputTypes = DefaultConfig,
 ) -> RoadwayNetwork:
     """Reads a network from the roadway network standard.
 
@@ -48,14 +43,8 @@ def load_roadway(
         nodes_file: full path to the node file
         shapes_file: full path to the shape file. NOTE if not found, it will defaul to None and not
             raise an error.
-        links_params: LinkParams instance to use. Will default to default
-            values for LinkParams
-        nodes_params: NodeParames instance to use. Will default to default
-            values for NodeParams
-        shapes_params: ShapeParames instance to use. Will default to default
-            values for ShapeParams
-        crs: coordinate reference system. Defaults to LAT_LON_CRS which defaults to 4326
-            which is WGS84 lat/long.
+        in_crs: coordinate reference system that network is in. Defaults to LAT_LON_CRS which
+            defaults to 4326 which is WGS84 lat/long.
         read_in_shapes: if True, will read shapes into network instead of only lazily
             reading them when they are called. Defaults to False.
         boundary_gdf: GeoDataFrame to filter the input data to. Only used for geographic data.
@@ -64,10 +53,19 @@ def load_roadway(
             Defaults to None.
         boundary_file: File to load as a boundary to filter the input data to. Only used for
             geographic data. Defaults to None.
+        filter_links_to_nodes: if True, will filter the links to only those that have nodes.
+            Defaults to False unless boundary_gdf, boundary_geocode, or boundary_file are provided
+            which defaults it to True.
+        config: a Configuration object to update with the new configuration. Can be
+            a dictionary, a path to a file, or a list of paths to files or a
+            WranglerConfig instance. Defaults to None and will load defaults.
 
     Returns: a RoadwayNetwork instance
     """
     from .network import RoadwayNetwork
+
+    if not isinstance(config, WranglerConfig):
+        config = load_wrangler_config(config)
 
     nodes_file = Path(nodes_file)
     links_file = Path(links_file)
@@ -75,8 +73,8 @@ def load_roadway(
     if read_in_shapes and shapes_file is not None and shapes_file.exists():
         shapes_df = read_shapes(
             shapes_file,
-            in_crs=crs,
-            shapes_params=shapes_params,
+            in_crs=in_crs,
+            config=config,
             boundary_gdf=boundary_gdf,
             boundary_geocode=boundary_geocode,
             boundary_file=boundary_file,
@@ -85,19 +83,24 @@ def load_roadway(
         shapes_df = None
     nodes_df = read_nodes(
         nodes_file,
-        in_crs=crs,
-        nodes_params=nodes_params,
+        in_crs=in_crs,
+        config=config,
         boundary_gdf=boundary_gdf,
         boundary_geocode=boundary_geocode,
         boundary_file=boundary_file,
     )
-    filter_links_to_nodes = False
-    if any([boundary_file, boundary_geocode, boundary_gdf is not None]):
+
+    if filter_links_to_nodes is None and any(
+        [boundary_file, boundary_geocode, boundary_gdf is not None]
+    ):
         filter_links_to_nodes = True
+    elif filter_links_to_nodes is None:
+        filter_links_to_nodes = False
+
     links_df = read_links(
         links_file,
-        in_crs=crs,
-        links_params=links_params,
+        in_crs=in_crs,
+        config=config,
         nodes_df=nodes_df,
         filter_to_nodes=filter_links_to_nodes,
     )
@@ -106,6 +109,7 @@ def load_roadway(
         links_df=links_df,
         nodes_df=nodes_df,
         shapes_df=shapes_df,
+        config=config,
     )
     if shapes_file and shapes_file.exists():
         roadway_network._shapes_file = shapes_file
@@ -116,8 +120,8 @@ def load_roadway(
 
 
 def id_roadway_file_paths_in_dir(
-    dir: Union[Path, str], suffix: GeoFileTypes = "geojson"
-) -> tuple[Path, Path, Path]:
+    dir: Union[Path, str], suffix: RoadwayFileTypes = "geojson"
+) -> tuple[Path, Path, Union[None, Path]]:
     """Identifies the paths to the links, nodes, and shapes files in a directory."""
     network_path = Path(dir)
     if not network_path.is_dir():
@@ -150,11 +154,13 @@ def id_roadway_file_paths_in_dir(
 
 def load_roadway_from_dir(
     dir: Union[Path, str],
-    suffix: GeoFileTypes = "geojson",
+    suffix: RoadwayFileTypes = "geojson",
     read_in_shapes: bool = False,
     boundary_gdf: Optional[GeoDataFrame] = None,
     boundary_geocode: Optional[str] = None,
     boundary_file: Optional[Path] = None,
+    filter_links_to_nodes: Optional[bool] = None,
+    config: Optional[ConfigInputTypes] = DefaultConfig,
 ) -> RoadwayNetwork:
     """Reads a network from the roadway network standard.
 
@@ -171,6 +177,12 @@ def load_roadway_from_dir(
             Defaults to None.
         boundary_file: File to load as a boundary to filter the input data to. Only used for
             geographic data. Defaults to None.
+        filter_links_to_nodes: if True, will filter the links to only those that have nodes.
+            Defaults to False unless boundary_gdf, boundary_geocode, or boundary_file are provided
+            which defaults it to True.
+        config: a Configuration object to update with the new configuration. Can be
+            a dictionary, a path to a file, or a list of paths to files or a
+            WranglerConfig instance. Defaults to None and will load defaults.
 
     Returns: a RoadwayNetwork instance
     """
@@ -184,15 +196,17 @@ def load_roadway_from_dir(
         boundary_gdf=boundary_gdf,
         boundary_geocode=boundary_geocode,
         boundary_file=boundary_file,
+        filter_links_to_nodes=filter_links_to_nodes,
+        config=config,
     )
 
 
 def write_roadway(
     net: Union[RoadwayNetwork, ModelRoadwayNetwork],
-    convert_complex_link_properties_to_single_field: bool = False,
     out_dir: Union[Path, str] = ".",
+    convert_complex_link_properties_to_single_field: bool = False,
     prefix: str = "",
-    file_format: GeoFileTypes = "geojson",
+    file_format: RoadwayFileTypes = "geojson",
     overwrite: bool = True,
     true_shape: bool = False,
 ) -> None:
@@ -241,10 +255,10 @@ def write_roadway(
 
 
 def convert_roadway_file_serialization(
-    in_path: Union[str, Path],
-    in_format: GeoFileTypes = "geojson",
-    out_dir: Union[str, Path] = ".",
-    out_format: GeoFileTypes = "parquet",
+    in_path: Path,
+    in_format: RoadwayFileTypes = "geojson",
+    out_dir: Path = Path("."),
+    out_format: RoadwayFileTypes = "parquet",
     out_prefix: str = "",
     overwrite: bool = True,
     boundary_gdf: Optional[GeoDataFrame] = None,
@@ -273,7 +287,7 @@ def convert_roadway_file_serialization(
             Chunking will only apply to converting from json to parquet files.
     """
     links_in_file, nodes_in_file, shapes_in_file = id_roadway_file_paths_in_dir(in_path, in_format)
-    from ..utils.io import convert_file_serialization
+    from ..utils.io_table import convert_file_serialization
 
     nodes_out_file = Path(out_dir / f"{out_prefix}_nodes.{out_format}")
     convert_file_serialization(
@@ -318,9 +332,9 @@ def convert_roadway_file_serialization(
 
 def convert_roadway_network_serialization(
     input_path: Union[str, Path],
-    output_format: GeoFileTypes = "geojson",
+    output_format: RoadwayFileTypes = "geojson",
     out_dir: Union[str, Path] = ".",
-    input_suffix: GeoFileTypes = "geojson",
+    input_suffix: RoadwayFileTypes = "geojson",
     out_prefix: str = "",
     overwrite: bool = True,
     boundary_gdf: Optional[GeoDataFrame] = None,

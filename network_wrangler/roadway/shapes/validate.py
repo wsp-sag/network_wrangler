@@ -12,7 +12,7 @@ from ...utils.models import validate_df_to_model, TableValidationError
 
 
 def validate_shapes_file(
-    shapes_filename: Path, strict: bool = False, errors_filename: Path = "shape_errors.csv"
+    shapes_filename: Path, strict: bool = False, errors_filename: Path = Path("shape_errors.csv")
 ) -> bool:
     """Validates a shapes file to RoadShapesTable.
 
@@ -30,7 +30,7 @@ def validate_shapes_file(
 
 
 def validate_shapes_df(
-    shapes_df: pd.DataFrame, strict: bool = False, errors_filename: Path = "shape_errors.csv"
+    shapes_df: pd.DataFrame, strict: bool = False, errors_filename: Path = Path("shape_errors.csv")
 ) -> bool:
     """Validates a Shapes df to RoadShapesTables.
 
@@ -46,10 +46,10 @@ def validate_shapes_df(
     is_valid = True
 
     if not strict:
-        from .create import data_to_shapes_df
+        from .create import df_to_shapes_df
 
         try:
-            shapes_df = data_to_shapes_df(shapes_df)
+            shapes_df = df_to_shapes_df(shapes_df)
         except Exception as e:
             WranglerLogger.error(f"!!! [Shapes invalid] - Failed to parse shapes_df\n{e}")
             is_valid = False

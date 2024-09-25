@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import copy
-from typing import Mapping, Any, Union, Tuple
+from typing import Mapping, Any, Union, Tuple, Optional
 
 import pandas as pd
 
@@ -71,7 +70,7 @@ def update_df_by_col_value(
     destination_df: pd.DataFrame,
     source_df: pd.DataFrame,
     join_col: str,
-    properties: list[str] = None,
+    properties: Optional[list[str]] = None,
     fail_if_missing: bool = True,
 ) -> pd.DataFrame:
     """Updates destination_df with ALL values in source_df for specified props with same join_col.
@@ -146,11 +145,11 @@ def _update_props_from_one_to_many(
     destination_df: pd.DataFrame,
     source_df: pd.DataFrame,
     join_col: str,
-    properties: list[str] = None,
+    properties: list[str],
 ) -> pd.DataFrame:
     """Update value of destination_df[properties] with source_df[properties].
 
-    Allows 1:many between source and destination relationship via `join_col`.
+    Allows 1: many between source and destination relationship via `join_col`.
     """
     destination_df.set_index(join_col, inplace=True)
     source_df.set_index(join_col, inplace=True)
@@ -180,7 +179,7 @@ def _update_props_for_common_idx(
     destination_df: pd.DataFrame,
     source_df: pd.DataFrame,
     join_col: str,
-    properties: list[str] = None,
+    properties: list[str],
 ) -> pd.DataFrame:
     """Quicker update operation w/out merge but requires 1:1 indices."""
     # 1. Set the join_col as the index for both DataFrames
@@ -212,7 +211,7 @@ def _update_props_for_common_idx(
     return updated_df
 
 
-def list_like_columns(df, item_type: type = None) -> list[str]:
+def list_like_columns(df, item_type: Optional[type] = None) -> list[str]:
     """Find columns in a dataframe that contain list-like items that can't be json-serialized.
 
     Args:
@@ -231,7 +230,7 @@ def list_like_columns(df, item_type: type = None) -> list[str]:
     return list_like_columns
 
 
-def compare_df_values(df1, df2, join_col: str = None, ignore: list[str] = [], atol=1e-5):
+def compare_df_values(df1, df2, join_col: Optional[str] = None, ignore: list[str] = [], atol=1e-5):
     """Compare overlapping part of dataframes and returns where there are differences."""
     comp_c = [
         c
@@ -334,7 +333,7 @@ def compare_lists(list1, list2) -> bool:
 
 def diff_list_like_series(s1, s2) -> bool:
     """Compare two series that contain list-like items as strings."""
-    diff_df = pd.concat([s1, s2], axis=1, keys=["s1", "s2"])
+    diff_df = concat_with_attr([s1, s2], axis=1, keys=["s1", "s2"])
     # diff_df["diff"] = diff_df.apply(lambda x: str(x["s1"]) != str(x["s2"]), axis=1)
     diff_df["diff"] = diff_df.apply(lambda x: compare_lists(x["s1"], x["s2"]), axis=1)
     if diff_df["diff"].any():
@@ -347,9 +346,13 @@ def diff_list_like_series(s1, s2) -> bool:
 def segment_data_by_selection(
     item_list: list,
     data: Union[list, pd.DataFrame, pd.Series],
-    field: str = None,
+    field: Optional[str] = None,
     end_val=0,
-) -> tuple[Union[pd.Series, list, pd.DataFrame]]:
+) -> tuple[
+    Union[pd.Series, list, pd.DataFrame],
+    Union[pd.Series, list, pd.DataFrame],
+    Union[pd.Series, list, pd.DataFrame],
+]:
     """Segment a dataframe or series into before, middle, and end segments based on item_list.
 
     selected segment = everything from the first to last item in item_list inclusive of the first
@@ -436,7 +439,14 @@ def segment_data_by_selection_min_overlap(
     field: str,
     replacements_list: list,
     end_val=0,
-) -> tuple[list, tuple[Union[pd.Series, list, pd.DataFrame]]]:
+) -> tuple[
+    list,
+    tuple[
+        Union[pd.Series, pd.DataFrame],
+        Union[pd.Series, pd.DataFrame],
+        Union[pd.Series, pd.DataFrame],
+    ],
+]:
     """Segments data based on item_list reducing overlap with replacement list.
 
     *selected segment*: everything from the first to last item in item_list inclusive of the first
@@ -469,21 +479,25 @@ def segment_data_by_selection_min_overlap(
     before_segment, segment_df, after_segment = segment_data_by_selection(
         selection_list, data, field=field, end_val=end_val
     )
+    if not isinstance(segment_df, pd.DataFrame):
+        raise ValueError("segment_df should be a DataFrame - something is wrong.")
 
-    if replacements_list[0] == segment_df[field].iat[0]:
+    if replacements_list and replacements_list[0] == segment_df[field].iat[0]:
         # move first item from selected segment to the before_segment df
         replacements_list = replacements_list[1:]
-        before_segment = pd.concat(
+        before_segment = concat_with_attr(
             [before_segment, segment_df.iloc[:1]], ignore_index=True, sort=False
         )
         segment_df = segment_df.iloc[1:]
-        WranglerLogger.debug(f"item start overlaps with replacement. Repl: {replacements_list}")
+        # WranglerLogger.debug(f"item start overlaps with replacement. Repl: {replacements_list}")
     if replacements_list and replacements_list[-1] == data[field].iat[-1]:
         # move last item from selected segment to the after_segment df
         replacements_list = replacements_list[:-1]
-        after_segment = pd.concat([data.iloc[-1:], after_segment], ignore_index=True, sort=False)
+        after_segment = concat_with_attr(
+            [data.iloc[-1:], after_segment], ignore_index=True, sort=False
+        )
         segment_df = segment_df.iloc[:-1]
-        WranglerLogger.debug(f"item end overlaps with replacement. Repl: {replacements_list}")
+        # WranglerLogger.debug(f"item end overlaps with replacement. Repl: {replacements_list}")
 
     return replacements_list, (before_segment, segment_df, after_segment)
 
@@ -497,8 +511,6 @@ def coerce_gdf(
             df.crs = in_crs
         return df
     p = None
-    if "params" in df.__dict__:
-        p = copy.deepcopy(df.params)
 
     if "geometry" not in df and geometry is None:
         raise ValueError("Must give geometry argument if don't have Geometry in dataframe")
@@ -511,20 +523,6 @@ def coerce_gdf(
             geometry = geometry.apply(wkt.loads)
     df = GeoDataFrame(df, geometry=geometry, crs=in_crs)
 
-    if p is not None:
-        # GeoPandas seems to lose parameters if we don't re-attach them.
-        df.__dict__["params"] = p
-    return df
-
-
-def attach_parameters_to_df(df: pd.DataFrame, params) -> pd.DataFrame:
-    """Attatch params as a dataframe attribute which will be copied with dataframe."""
-    if not df.__dict__.get("params"):
-        df.__dict__["params"] = params
-        # need to add params to _metadata in order to make sure it is copied.
-        # see: https://stackoverflow.com/questions/50372509/
-        df._metadata += ["params"]
-    # WranglerLogger.debug(f"DFParams: {df.params}")
     return df
 
 
@@ -544,11 +542,14 @@ def validate_existing_value_in_df(df: pd.DataFrame, idx: list[int], field: str, 
     return True
 
 
+CoerceTypes = Union[str, int, float, bool, list[Union[str, int, float, bool]]]
+
+
 def coerce_val_to_df_types(
     field: str,
-    val: Union[str, int, float, bool, list[Union[str, int, float, bool]]],
+    val: CoerceTypes,
     df: pd.DataFrame,
-) -> dict:
+) -> CoerceTypes:
     """Coerce field value to match the type of a matching dataframe columns.
 
     Args:
@@ -579,8 +580,8 @@ def coerce_val_to_df_types(
 
 
 def coerce_dict_to_df_types(
-    d: dict, df: pd.DataFrame, skip_keys: list = [], return_skipped: bool = False
-) -> dict:
+    d: dict[str, CoerceTypes], df: pd.DataFrame, skip_keys: list = [], return_skipped: bool = False
+) -> dict[str, CoerceTypes]:
     """Coerce dictionary values to match the type of a dataframe columns matching dict keys.
 
     Will also coerce a list of values.
@@ -595,7 +596,7 @@ def coerce_dict_to_df_types(
     Returns:
         dict: dict with coerced types
     """
-    coerced_dict = {}
+    coerced_dict: dict[str, CoerceTypes] = {}
     for k, vals in d.items():
         if k in skip_keys:
             if return_skipped:
@@ -605,7 +606,7 @@ def coerce_dict_to_df_types(
             raise ValueError(f"Key {k} not in dataframe columns.")
         if pd.api.types.infer_dtype(df[k]) == "integer":
             if isinstance(vals, list):
-                coerced_v = [int(float(v)) for v in vals]
+                coerced_v: CoerceTypes = [int(float(v)) for v in vals]
             else:
                 coerced_v = int(float(vals))
         elif pd.api.types.infer_dtype(df[k]) == "floating":
@@ -627,7 +628,7 @@ def coerce_dict_to_df_types(
     return coerced_dict
 
 
-def coerce_val_to_series_type(val, s: pd.Series):
+def coerce_val_to_series_type(val, s: pd.Series) -> Union[float, str, bool]:
     """Coerces a value to match type of pandas series.
 
     Will try not to fail so if you give it a value that can't convert to a number, it will
@@ -641,7 +642,7 @@ def coerce_val_to_series_type(val, s: pd.Series):
     #    {pd.api.types.infer_dtype(s)}.")
     if pd.api.types.infer_dtype(s) in ["integer", "floating"]:
         try:
-            v = float(val)
+            v: Union[float, str, bool] = float(val)
         except:  # noqa: E722
             v = str(val)
     elif pd.api.types.infer_dtype(s) == "boolean":
@@ -681,3 +682,15 @@ def dict_fields_in_df(d: dict, df: pd.DataFrame) -> bool:
         WranglerLogger.error(f"Fields in dictionary missing from dataframe: {missing_fields}.")
         raise ValueError(f"Fields in dictionary missing from dataframe: {missing_fields}.")
     return True
+
+
+def concat_with_attr(dfs: list[pd.DataFrame], **kwargs) -> pd.DataFrame:
+    """Concatenate a list of dataframes and retain the attributes of the first dataframe."""
+    import copy
+
+    if not dfs:
+        raise ValueError("No dataframes to concatenate.")
+    attrs = copy.deepcopy(dfs[0].attrs)
+    df = pd.concat(dfs, **kwargs)
+    df.attrs = attrs
+    return df

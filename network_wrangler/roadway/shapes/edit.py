@@ -18,7 +18,7 @@ def edit_shape_geometry_from_nodes(
     links_df: DataFrame[RoadLinksTable],
     nodes_df: DataFrame[RoadNodesTable],
     node_ids: list[int],
-) -> None:
+) -> DataFrame[RoadShapesTable]:
     """Updates the geometry for shapes for a given list of nodes.
 
     Should be called by any function that changes a node location.

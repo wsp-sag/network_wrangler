@@ -30,7 +30,7 @@ import argparse
 
 from pathlib import Path
 
-from network_wrangler.scenario import build_scenario_from_config_file
+from network_wrangler.scenario import build_scenario_from_config
 
 
 if __name__ == "__main__":
@@ -42,4 +42,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    build_scenario_from_config_file(args.config_file)
+    build_scenario_from_config(args.config_file)

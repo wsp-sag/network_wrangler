@@ -3,7 +3,6 @@
 import json
 import tempfile
 import shutil
-import tempfile
 import weakref
 
 from datetime import datetime
@@ -13,12 +12,12 @@ from typing import Union, Optional
 import geopandas as gpd
 import pandas as pd
 
-from ..params import EST_PD_READ_SPEED
 
-from ..utils.geo import get_bounding_polygon
-from ..utils.data import convert_numpy_to_list
+from .geo import get_bounding_polygon
+from .data import convert_numpy_to_list
 from ..logger import WranglerLogger
 from .time import format_seconds_to_legible_str
+from ..configs import DefaultConfig
 
 try:
     gpd.options.io_engine = "pyogrio"
@@ -95,7 +94,7 @@ def write_table(
         raise NotImplementedError(f"Filetype {filename.suffix} not implemented.")
 
 
-def _estimate_read_time_of_file(filepath: Union[str, Path]):
+def _estimate_read_time_of_file(filepath: Union[str, Path], read_speed: dict = DefaultConfig.CPU.EST_PD_READ_SPEED) -> str:
     """Estimates read time in seconds based on a given file size and speed factor.
 
     The speed factor is MB per second which you can adjust based on empirical data.
@@ -106,18 +105,19 @@ def _estimate_read_time_of_file(filepath: Union[str, Path]):
     filepath = Path(filepath)
     file_size_mb = filepath.stat().st_size / (1024 * 1024)  # Convert bytes to MB
     filetype = filepath.suffix[1:]
-    if filetype in EST_PD_READ_SPEED:
-        return format_seconds_to_legible_str(file_size_mb * EST_PD_READ_SPEED[filetype])
+    if filetype in read_speed:
+        return format_seconds_to_legible_str(file_size_mb * read_speed[filetype])
     else:
         return "unknown"
 
 
 def read_table(
     filename: Path,
-    sub_filename: str = None,
+    sub_filename: Optional[str] = None,
     boundary_gdf: Optional[gpd.GeoDataFrame] = None,
     boundary_geocode: Optional[str] = None,
     boundary_file: Optional[Path] = None,
+    read_speed: dict = DefaultConfig.CPU.EST_PD_READ_SPEED,
 ) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
     """Read file and return a dataframe or geodataframe.
 
@@ -143,6 +143,8 @@ def read_table(
             Defaults to None.
         boundary_file: File to load as a boundary to filter the input data to. Only used for
             geographic data. Defaults to None.
+        read_speed: dictionary of read speeds for different file types. Defaults to
+            DefaultConfig.CPU.EST_PD_READ_SPEED.
     """
     filename = Path(filename)
     if not filename.exists():
@@ -150,8 +152,10 @@ def read_table(
     if filename.stat().st_size == 0:
         raise FileExistsError(f"File {filename} is empty.")
     if filename.suffix == ".zip":
+        if not sub_filename:
+            raise ValueError("sub_filename must be provided for zip files.")
         filename = unzip_file(filename) / sub_filename
-    WranglerLogger.debug(f"Estimated read time: {_estimate_read_time_of_file(filename)}.")
+    WranglerLogger.debug(f"Estimated read time: {_estimate_read_time_of_file(filename, read_speed)}.")
 
     # will result in None if no boundary is provided
     mask_gdf = get_bounding_polygon(
@@ -276,7 +280,7 @@ def _available_memory():
     return psutil.virtual_memory().available
 
 
-def _estimate_bytes_per_json_object(json_path: Path) -> int:
+def _estimate_bytes_per_json_object(json_path: Path) -> float:
     """Estimate the size of a JSON object in bytes based on sample."""
     SAMPLE_SIZE = 50
     with open(json_path, "r") as f:
@@ -315,7 +319,7 @@ def _suggest_json_chunk_size(json_path: Path, memory_fraction: float = 0.6) -> U
 def _append_parquet_table(
     new_data: pd.DataFrame,
     file_counter=1,
-    base_filename: Optional[Path] = None,
+    base_filename: Optional[str] = None,
     directory: Optional[Path] = None,
 ) -> Path:
     """Append new data to a Parquet dataset directory.
@@ -395,7 +399,7 @@ def _json_to_parquet_in_chunks(input_file: Path, output_file: Path, chunk_size: 
     pq.write_table(combined_table, output_file)
 
     # Clean up the temporary chunk files
-    shutil.rmtree(directory)
+    shutil.rmtree(str(directory))
 
     WranglerLogger.debug(f"Wrote combined data to {output_file} and cleaned up temporary files.")
 
@@ -411,4 +415,16 @@ def unzip_file(path: Path) -> Path:
     # Lazy cleanup
     weakref.finalize(tmpdir, finalize)
 
-    return tmpdir
+    return Path(tmpdir)
+
+
+def prep_dir(outdir: Path, overwrite: bool = True):
+    """Prepare a directory for writing files."""
+    if not overwrite and outdir.exists() and len(list(outdir.iterdir())) > 0:
+        raise FileExistsError(f"Directory {outdir} is not empty and overwrite is False.")
+    outdir.mkdir(parents=True, exist_ok=True)
+
+    # clean out existing files
+    for f in outdir.iterdir():
+        if f.is_file():
+            f.unlink()
