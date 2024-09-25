@@ -26,6 +26,7 @@ import copy
 from typing import Union, Any, Optional
 
 import numpy as np
+import geopandas as gpd
 
 from pydantic import validate_call
 from pandera.typing import DataFrame
@@ -73,7 +74,8 @@ def _initialize_links_as_managed_lanes(
     links_df.loc[_ml_wo_geometry, "ML_geometry"] = offset_geometry_meters(
         links_df.loc[_ml_wo_geometry, "geometry"], geometry_offset_meters
     )
-
+    links_df["ML_geometry"] = gpd.GeoSeries(links_df["ML_geometry"])
+    
     return links_df
 
 
