@@ -13,10 +13,11 @@ Longitude = confloat(ge=-180, le=180)
 
 
 class LatLongCoordinates(RootModel):
-    root: conlist(Union[Latitude, Longitude], min_length=2, max_length=2)
+    root: list[float]
 
     @field_validator("root")
     @classmethod
     def check_lat_long(cls, v):
+        assert len(v) == 2, f"Expected two values for latitude and longitude, got {len(v)}"
         latitude, longitude = v
         return [Latitude(latitude), Longitude(longitude)]

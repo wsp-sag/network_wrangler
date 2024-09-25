@@ -7,6 +7,8 @@ from typing import Union
 
 import pandas as pd
 
+from pydantic import validate_call
+
 from ..logger import WranglerLogger
 
 
@@ -62,7 +64,7 @@ def delete_keys_from_dict(dictionary: dict, keys: list) -> dict:
         keys: list of keys to remove
 
     """
-    keys_set = set(keys)  # Just an optimization for the "if key in keys" lookup.
+    keys_set = list(set(keys))  # Just an optimization for the "if key in keys" lookup.
 
     modified_dict = {}
     for key, value in dictionary.items():
@@ -76,7 +78,7 @@ def delete_keys_from_dict(dictionary: dict, keys: list) -> dict:
     return modified_dict
 
 
-def get_overlapping_range(ranges: list[Union[tuple[int], range]]) -> Union[None, range]:
+def get_overlapping_range(ranges: list[Union[tuple[int, int], range]]) -> Union[None, range]:
     """Returns the overlapping range for a list of ranges or tuples defining ranges.
 
     Args:
@@ -91,6 +93,10 @@ def get_overlapping_range(ranges: list[Union[tuple[int], range]]) -> Union[None,
         range(3, 5)
 
     """
+    # check that any tuples have two values
+    if any(isinstance(r, tuple) and len(r) != 2 for r in ranges):
+        raise ValueError("Tuple ranges must have two values.")
+
     _ranges = [r if isinstance(r, range) else range(r[0], r[1]) for r in ranges]
 
     _overlap_start = max(r.start for r in _ranges)
@@ -157,8 +163,7 @@ def split_string_prefix_suffix_from_num(input_string: str):
         # Convert the numeric part to an integer
         num_variable = int(numeric_part)
         return prefix, num_variable, suffix
-    else:
-        return input_string, 0, ""
+    return input_string, 0, ""
 
 
 def generate_new_id_from_existing(
@@ -187,9 +192,9 @@ def generate_new_id_from_existing(
         new_id = f"{str_prefix}{int(input_id) + id_scalar + (iter_val * i)}{str_suffix}"
         if new_id not in existing_ids.values:
             return new_id
-        elif i == max_iter:
-            WranglerLogger.error(f"Cannot generate new id within max iters of {max_iter}.")
-            raise ValueError("Cannot create unique new id.")
+
+    WranglerLogger.error(f"Cannot generate new id within max iters of {max_iter}.")
+    raise ValueError("Cannot create unique new id.")
 
 
 def generate_list_of_new_ids_from_existing(
@@ -234,7 +239,7 @@ def generate_list_of_new_ids_from_existing(
 def _get_max_int_id_within_string_ids(id_s: pd.Series, prefix: str, suffix: str) -> int:
     pattern = re.compile(rf"{re.escape(prefix)}(\d+){re.escape(suffix)}")
     extracted_ids = id_s.dropna().apply(
-        lambda x: int(pattern.search(x).group(1)) if pattern.search(x) else None
+        lambda x: int(match.group(1)) if (match := pattern.search(x)) else None
     )
     extracted_ids = extracted_ids.dropna()
     if extracted_ids.empty:
@@ -323,6 +328,7 @@ def normalize_to_lists(mixed_list: list[Union[str, list]]) -> list[list]:
     return normalized_list
 
 
+@validate_call
 def list_elements_subset_of_single_element(mixed_list: list[Union[str, list[str]]]) -> bool:
     """Find the first list in the mixed_list."""
     potential_supersets = []
@@ -356,3 +362,27 @@ def check_one_or_one_superset_present(
         return True
 
     return list_elements_subset_of_single_element(list_items_present)
+
+
+def merge_dicts(right, left, path=None):
+    """Merges the contents of nested dict left into nested dict right.
+
+    Raises errors in case of namespace conflicts.
+
+    Args:
+        right: dict, modified in place
+        left: dict to be merged into right
+        path: default None, sequence of keys to be reported in case of
+            error in merging nested dictionaries
+    """
+    if path is None:
+        path = []
+    for key in left:
+        if key in right:
+            if isinstance(right[key], dict) and isinstance(left[key], dict):
+                merge_dicts(right[key], left[key], path + [str(key)])
+            else:
+                path = ".".join(path + [str(key)])
+                raise Exception(f"duplicate keys in source dict files: {path}")
+        else:
+            right[key] = left[key]

@@ -8,9 +8,15 @@
 ::: network_wrangler.roadway.network
 ::: network_wrangler.transit.network
 
-## Parameters
+## Config
 
-::: network_wrangler.params
+### Wrangler
+
+::: network_wrangler.configs.wrangler
+
+### Scenario Config
+
+::: network_wrangler.configs.scenario
 
 ## Projects
 

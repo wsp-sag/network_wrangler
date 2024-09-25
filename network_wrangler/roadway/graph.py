@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 import networkx as nx
 import osmnx as ox
@@ -18,6 +18,15 @@ if TYPE_CHECKING:
     from .network import RoadwayNetwork
 
 ox_major_version = int(ox.__version__.split(".")[0])
+
+
+"""Column to use for weights in shortest path.
+"""
+DEFAULT_GRAPH_WEIGHT_COL = "distance"
+
+"""Factor to multiply sp_weight_col by to use for weights in shortest path.
+"""
+DEFAULT_GRAPH_WEIGHT_FACTOR = 1
 
 
 def _drop_complex_df_columns(df: DataFrame) -> DataFrame:
@@ -59,8 +68,8 @@ def _nodes_to_graph_nodes(nodes_df: GeoDataFrame) -> GeoDataFrame:
 
 def _links_to_graph_links(
     links_df: GeoDataFrame,
-    sp_weight_col: str = "distance",
-    sp_weight_factor: float = 1,
+    sp_weight_col: str = DEFAULT_GRAPH_WEIGHT_COL,
+    sp_weight_factor: float = DEFAULT_GRAPH_WEIGHT_FACTOR,
 ) -> GeoDataFrame:
     """Transformes RoadwayNetwork links_df into format osmnx is expecting.
 
@@ -87,15 +96,13 @@ def _links_to_graph_links(
 
     # osm-nx is expecting u and v instead of A B - but first have to drop existing u/v
 
-    if "u" in graph_links_df.columns and "u" != links_df.params.from_node:
+    if "u" in graph_links_df.columns and (links_df.u != links_df.A).any():
         graph_links_df = graph_links_df.drop("u", axis=1)
 
-    if "v" in graph_links_df.columns and "v" != links_df.params.to_node:
+    if "v" in graph_links_df.columns and (links_df.v != links_df.B).any():
         graph_links_df = graph_links_df.drop("v", axis=1)
 
-    graph_links_df = graph_links_df.rename(
-        columns={links_df.params.from_node: "u", links_df.params.to_node: "v"}
-    )
+    graph_links_df = graph_links_df.rename(columns={"A": "u", "B": "v"})
 
     graph_links_df["key"] = graph_links_df.index.copy()
     # Per osmnx u,v,key should be a multi-index;
@@ -161,7 +168,7 @@ def links_nodes_to_ox_graph(
     return G
 
 
-def net_to_graph(net: RoadwayNetwork, mode: str = None) -> nx.MultiDiGraph:
+def net_to_graph(net: RoadwayNetwork, mode: Optional[str] = None) -> nx.MultiDiGraph:
     """Converts a network to a MultiDiGraph.
 
     Args:
@@ -180,7 +187,9 @@ def net_to_graph(net: RoadwayNetwork, mode: str = None) -> nx.MultiDiGraph:
     return G
 
 
-def shortest_path(G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight") -> tuple:
+def shortest_path(
+    G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight"
+) -> Union[list, None]:
     """Calculates the shortest path between two nodes in a network.
 
     Args:
@@ -201,7 +210,7 @@ def shortest_path(G: nx.MultiDiGraph, O_id, D_id, sp_weight_property="weight") -
         WranglerLogger.debug("Shortest path successfully routed")
     except nx.NetworkXNoPath:
         WranglerLogger.debug("No SP from {} to {} Found.".format(O_id, D_id))
-        return False
+        return None
     except Exception as e:
         raise e
 
@@ -244,10 +253,7 @@ def assess_connectivity(
         ]
 
     WranglerLogger.info(
-        "{} for disconnected networks for mode = {}:\n{}".format(
-            net.nodes_df.params.primary_key,
-            mode,
-            "\n".join(list(map(str, disconnected_sub_graph_nodes))),
-        )
+        f"{net.nodes_df.model_node_id} for disconnected networks for mode = {mode}:\n"
+        + "\n".join(list(map(str, disconnected_sub_graph_nodes))),
     )
     return G, disconnected_sub_graph_nodes

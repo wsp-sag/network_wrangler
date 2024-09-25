@@ -14,13 +14,13 @@ from pydantic import (
 )
 from datetime import datetime
 
-from typing import Optional, Union
+from typing import Optional, Union, ClassVar
 
 from ...time import Timespan
 from .._base.records import RecordModel
 from .._base.root import RootListMixin
 from .._base.geo import LatLongCoordinates
-from .._base.types import TimeString
+from .._base.types import TimeString, AnyOf
 from ...utils.time import str_to_time_list, dt_overlaps
 from ...params import DEFAULT_CATEGORY, DEFAULT_TIMESPAN
 
@@ -36,7 +36,7 @@ class ScopeLinkValueError(Exception):
 class ScopedLinkValueItem(RecordModel):
     """Define a link property scoped by timespan or category."""
 
-    require_any_of = ["category", "timespan"]
+    require_any_of: ClassVar[AnyOf] = [["category", "timespan"]]
     model_config = ConfigDict(extra="forbid")
     category: Optional[Union[str, int]] = Field(default=DEFAULT_CATEGORY)
     timespan: Optional[list[TimeString]] = Field(default=DEFAULT_TIMESPAN)

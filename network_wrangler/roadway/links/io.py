@@ -10,20 +10,22 @@ import pandas as pd
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
+from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadNodesAttrs, RoadLinksAttrs
 from ...models.roadway.converters import translate_links_df_v1_to_v0
 from ...models._base.types import GeoFileTypes
-from ...params import LinksParams, LAT_LON_CRS
-from ...utils.io import read_table, write_table
+from ...utils.io_table import read_table, write_table
 from ...utils.models import validate_call_pyd
 from .create import data_to_links_df
+from ...params import LAT_LON_CRS
+
+from ...configs import DefaultConfig, WranglerConfig
 
 
 @validate_call_pyd
 def read_links(
-    filename: Union[Path, str],
+    filename: Path,
     in_crs: int = LAT_LON_CRS,
-    links_params: Union[dict, LinksParams, None] = None,
+    config: WranglerConfig = DefaultConfig,
     nodes_df: DataFrame[RoadNodesTable] = None,
     filter_to_nodes: bool = False,
 ) -> DataFrame[RoadLinksTable]:
@@ -36,7 +38,7 @@ def read_links(
         filename (str): file to read links in from.
         in_crs: coordinate reference system number any link geometries are stored in.
             Defaults to 4323.
-        links_params: a LinkParams instance. Defaults to a default LinkParams instance.
+        config: WranglerConfig instance. Defaults to DefaultConfig.
         nodes_df: a RoadNodesTable to gather geometry from. Necesary if geometry is not
             provided. Defaults to None.
         filter_to_nodes: if True, will filter links to only those that connect to nodes. Requires
@@ -44,11 +46,12 @@ def read_links(
     """
     WranglerLogger.info(f"Reading links from {filename}.")
     start_t = time.time()
-
+    # TODO write wrapper on validate call so don't have to do this
+    nodes_df.attrs.update(RoadNodesAttrs)
     if filter_to_nodes is True and nodes_df is None:
         raise ValueError("If filter_to_nodes is True, nodes_df must be provided.")
 
-    links_df = read_table(filename)
+    links_df = read_table(filename, read_speed=config.CPU.EST_PD_READ_SPEED)
 
     if filter_to_nodes:
         WranglerLogger.debug("Filtering links to only those that connect to nodes.")
@@ -57,10 +60,8 @@ def read_links(
         ]
 
     WranglerLogger.debug(f"Read {len(links_df)} links in {round(time.time() - start_t, 2)}.")
-    links_df = data_to_links_df(
-        links_df, in_crs=in_crs, links_params=links_params, nodes_df=nodes_df
-    )
-    links_df.params.source_file = filename
+    links_df = data_to_links_df(links_df, in_crs=in_crs, config=config, nodes_df=nodes_df)
+    links_df.attrs["source_file"] = filename
     WranglerLogger.info(
         f"Read + transformed {len(links_df)} links from \
             {filename} in {round(time.time() - start_t, 2)}."
@@ -91,6 +92,8 @@ def write_links(
         overwrite: if True, will overwrite existing files. Defaults to False.
         include_geometry: if True, will include geometry in the output. Defaults to False.
     """
+    # TODO write wrapper on validate call so don't have to do this
+    links_df.attrs.update(RoadLinksAttrs)
     if not include_geometry and file_format == "geojson":
         file_format = "json"
 

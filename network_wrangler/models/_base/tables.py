@@ -1,8 +1,9 @@
 from enum import Enum
+from typing import Any
 
 import pandas as pd
 from pandera.extensions import register_check_method
-from pydantic import ValidationError, RootModel
+from pydantic import ValidationError
 
 from ...logger import WranglerLogger
 

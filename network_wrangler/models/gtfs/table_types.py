@@ -20,7 +20,7 @@ class HttpURL(pandas_engine.NpString):
     def check(
         self,
         pandera_dtype: pa.dtypes.DataType,
-        data_container: Optional[pd.Series] = None,
+        data_container: pd.Series,
     ) -> Union[bool, Iterable[bool]]:
         """Check if the data is a valid HTTP URL."""
         correct_type = super().check(pandera_dtype)

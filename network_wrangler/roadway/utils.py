@@ -102,7 +102,7 @@ def set_df_index_to_pk(df: pd.DataFrame) -> pd.DataFrame:
     Args:
         df (pd.DataFrame): data frame to set the index of
     """
-    if df.index.name != df.params.idx_col:
-        df[df.params.idx_col] = df[df.params.primary_key]
-        df = df.set_index(df.params.idx_col)
+    if df.index.name != df.attrs["idx_col"]:
+        df[df.attrs["idx_col"]] = df[df.attrs["primary_key"]]
+        df = df.set_index(df.attrs["idx_col"])
     return df

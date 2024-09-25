@@ -11,7 +11,6 @@ import pandas as pd
 
 from pandera.typing import DataFrame
 
-from ...params import TRANSIT_SHAPE_ID_SCALAR
 from ..feed.trips import trip_ids_for_shape_id
 from ..feed.stops import node_is_stop
 from ..feed.stop_times import stop_times_for_trip_id
@@ -21,7 +20,7 @@ from ..feed.shapes import (
     shapes_for_shape_id,
     find_nearest_stops,
 )
-
+from ...utils.data import concat_with_attr
 from ...utils.models import validate_df_to_model
 from ...models.gtfs.tables import (
     WranglerShapesTable,
@@ -35,6 +34,7 @@ from ..validate import (
 from ...logger import WranglerLogger
 from ...utils.utils import generate_list_of_new_ids_from_existing, generate_new_id_from_existing
 from ...utils.data import segment_data_by_selection_min_overlap
+from ...configs import DefaultConfig
 
 if TYPE_CHECKING:
     from ...roadway.network import RoadwayNetwork
@@ -77,7 +77,7 @@ def _create_stop_times(
 
 
 def _create_shapes(
-    nodes_list: list[Union[str, int]],
+    nodes_list: list[int],
     shape_id: str,
     road_net: RoadwayNetwork,
     project_name: Optional[str] = None,
@@ -133,7 +133,7 @@ def _add_new_shape_copy(
     old_shape_id: str,
     trip_ids: list[str],
     feed: Feed,
-    id_scalar: int = TRANSIT_SHAPE_ID_SCALAR,
+    id_scalar: int = DefaultConfig.IDS.TRANSIT_SHAPE_ID_SCALAR,
     project_name: Optional[str] = None,
 ) -> tuple[DataFrame[WranglerShapesTable], DataFrame[WranglerTripsTable], str]:
     """Create an identical new shape_id from shape matching old_shape_id for the trip_ids.
@@ -160,7 +160,7 @@ def _add_new_shape_copy(
 
     if project_name is not None:
         new_shape["projects"] = f"{project_name},"
-    shapes = pd.concat([shapes, new_shape], ignore_index=True)
+    shapes = concat_with_attr([shapes, new_shape], ignore_index=True)
 
     trips.loc[trips.trip_id.isin(trip_ids), "shape_id"] = new_shape_id
     return shapes, trips, new_shape_id
@@ -197,7 +197,7 @@ def _replace_shapes_segment(
     existing_shape_df = shapes_for_shape_id(feed.shapes, shape_id)
 
     _disp_col = ["shape_id", "shape_pt_sequence", "shape_model_node_id"]
-    WranglerLogger.debug(f"\nExisting Shape\n{existing_shape_df[_disp_col]}")
+    # WranglerLogger.debug(f"\nExisting Shape\n{existing_shape_df[_disp_col]}")
 
     (
         set_routing,
@@ -217,29 +217,28 @@ def _replace_shapes_segment(
         set_routing, shape_id, road_net, project_name=project_name
     )
 
-    WranglerLogger.debug(
-        f"\nShapes Segments: \nBefore: \n{before_segment[_disp_col]}\
+    msg = f"\nShapes Segments: \nBefore: \n{before_segment[_disp_col]}\
                          \nReplacement: \n{updated_segment_shapes_df[_disp_col]}\
                          \nAfter: \n{after_segment[_disp_col]}"
-    )
+    # WranglerLogger.debug(msg)
 
     # Only concatenate those that aren't empty bc NaN values will transfer integers to floats.
     dfs = [before_segment, updated_segment_shapes_df, after_segment]
     concat_dfs = [df for df in dfs if not df.empty]
 
-    updated_shape = pd.concat(concat_dfs, ignore_index=True, sort=False)
+    updated_shape = concat_with_attr(concat_dfs, ignore_index=True, sort=False)
 
     # Update shape_pt_sequence based on combined shape_df
     updated_shape["shape_pt_sequence"] = np.arange(len(updated_shape)) + 1
 
-    WranglerLogger.debug(f"\nShape w/Segment Replaced: \n {updated_shape[_disp_col]}")
+    # WranglerLogger.debug(f"\nShape w/Segment Replaced: \n {updated_shape[_disp_col]}")
     return updated_shape
 
 
 def _replace_stop_times_segment_for_trip(
-    existing_stop_nodes: list[str],
+    existing_stop_nodes: list[int],
     trip_id: str,
-    set_stops_nodes: list[str],
+    set_stops_nodes: list[int],
     feed: Feed,
     project_name: Optional[str] = None,
 ) -> DataFrame[WranglerStopTimesTable]:
@@ -255,7 +254,7 @@ def _replace_stop_times_segment_for_trip(
     Returns:
         WranglerStopTimesTable: stop_time records for a trip_id with updated segment
     """
-    WranglerLogger.debug(f"Replacing existing nodes pattern: {existing_stop_nodes}")
+    # WranglerLogger.debug(f"Replacing existing nodes pattern: {existing_stop_nodes}")
     this_trip_stoptimes = stop_times_for_trip_id(feed.stop_times, trip_id)
 
     _disp_col = ["stop_id", "stop_sequence"]
@@ -292,9 +291,9 @@ def _replace_stop_times_segment_for_trip(
     segment_stoptime_rows = _create_stop_times(
         set_stops_nodes, trip_id, feed, project_name=project_name
     )
-    WranglerLogger.debug(f"Before Segment: \n{before_segment[_disp_col]}")
-    WranglerLogger.debug(f"Segment: \n{segment_stoptime_rows[_disp_col]}")
-    WranglerLogger.debug(f"After Segment: \n{after_segment[_disp_col]}")
+    # WranglerLogger.debug(f"Before Segment: \n{before_segment[_disp_col]}")
+    # WranglerLogger.debug(f"Segment: \n{segment_stoptime_rows[_disp_col]}")
+    # WranglerLogger.debug(f"After Segment: \n{after_segment[_disp_col]}")
 
     # Concatenate the dataframes
 
@@ -302,7 +301,7 @@ def _replace_stop_times_segment_for_trip(
     dfs = [before_segment, segment_stoptime_rows, after_segment]
     concat_dfs = [df for df in dfs if not df.empty]
 
-    updated_this_trip_stop_times = pd.concat(
+    updated_this_trip_stop_times = concat_with_attr(
         concat_dfs,
         ignore_index=True,
         sort=False,
@@ -311,7 +310,7 @@ def _replace_stop_times_segment_for_trip(
     updated_this_trip_stop_times["stop_sequence"] = (
         np.arange(len(updated_this_trip_stop_times)) + 1
     )
-    WranglerLogger.debug(f"Updated Stoptimes: \n{updated_this_trip_stop_times[_disp_col]}")
+    # WranglerLogger.debug(f"Updated Stoptimes: \n{updated_this_trip_stop_times[_disp_col]}")
     return updated_this_trip_stop_times
 
 
@@ -379,9 +378,9 @@ def _update_shapes_and_trips(
     if sel_trips_using_shape_id != all_trips_using_shape_id:
         # adds copied shape with new shape_id to feed.shapes + references it in feed.trips
         feed.shapes, feed.trips, shape_id = _add_new_shape_copy(
-            shape_id,
-            sel_trips_using_shape_id,
-            feed,
+            old_shape_id=shape_id,
+            trip_ids=list(sel_trips_using_shape_id),
+            feed=feed,
             id_scalar=shape_id_scalar,
             project_name=project_name,
         )
@@ -396,7 +395,7 @@ def _update_shapes_and_trips(
 
     # Add rows back into shapes
     unselected_shapes = feed.shapes[feed.shapes.shape_id != shape_id]
-    feed.shapes = pd.concat(
+    feed.shapes = concat_with_attr(
         [unselected_shapes, this_shape],
         ignore_index=True,
         sort=False,
@@ -450,7 +449,7 @@ def _update_stops(
     )
     new_stops = new_stops.drop(columns=["model_node_id"])
     new_stops = new_stops.rename(columns={"Y": "stop_lat", "X": "stop_lon"})
-    stops = pd.concat([feed.stops, new_stops], ignore_index=True)
+    stops = concat_with_attr([feed.stops, new_stops], ignore_index=True)
     return stops
 
 
@@ -508,9 +507,9 @@ def _update_stop_times_for_trip(
     existing_stops_nodes = [int(i) for i in routing_existing]
     set_stops_nodes = [int(i) for i in routing_set if int(i) > 0]
     del_stops_nodes = _deletion_candidates(routing_set)
-    WranglerLogger.debug(f"Existing stops: {existing_stops_nodes}")
-    WranglerLogger.debug(f"Set stops: {set_stops_nodes}")
-    WranglerLogger.debug(f"Delete stops: {del_stops_nodes}")
+    # WranglerLogger.debug(f"Existing stops: {existing_stops_nodes}")
+    # WranglerLogger.debug(f"Set stops: {set_stops_nodes}")
+    # WranglerLogger.debug(f"Delete stops: {del_stops_nodes}")
 
     # --------------- replace segment, delete stops, or replace whole thing ---------------
     this_trip_stop_times = stop_times_for_trip_id(feed.stop_times, trip_id)
@@ -537,7 +536,7 @@ def _update_stop_times_for_trip(
 
     # --------------- Replace stop_times for this trip with updated stop times ---------------
     stop_times_not_this_trip = feed.stop_times[feed.stop_times.trip_id != trip_id]
-    stop_times = pd.concat(
+    stop_times = concat_with_attr(
         [stop_times_not_this_trip, this_trip_stop_times],
         ignore_index=True,
         sort=False,
@@ -549,9 +548,8 @@ def _update_stop_times_for_trip(
         "departure_time",
         "arrival_time",
     ]
-    WranglerLogger.debug(
-        f"ST for trip: {stop_times.loc[stop_times.trip_id == trip_id, _show_col]}"
-    )
+    msg = f"ST for trip: {stop_times.loc[stop_times.trip_id == trip_id, _show_col]}"
+    # WranglerLogger.debug(msg)
 
     return stop_times
 
@@ -560,7 +558,6 @@ def apply_transit_routing_change(
     net: TransitNetwork,
     selection: TransitSelection,
     routing_change: dict,
-    shape_id_scalar: int = TRANSIT_SHAPE_ID_SCALAR,
     reference_road_net: Optional[RoadwayNetwork] = None,
     project_name: Optional[str] = None,
 ) -> TransitNetwork:
@@ -615,7 +612,7 @@ def apply_transit_routing_change(
             shape_id,
             trip_ids,
             routing_change["set"],
-            shape_id_scalar,
+            net.config.IDS.TRANSIT_SHAPE_ID_SCALAR,
             road_net,
             routing_existing=routing_change.get("existing", []),
             project_name=project_name,

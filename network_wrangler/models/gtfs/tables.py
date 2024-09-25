@@ -69,6 +69,7 @@ from .types import (
 )
 from .table_types import HttpURL
 from .._base.types import TimeString
+from .._base.db import TableForeignKeys, TablePrimaryKeys
 from ...utils.time import str_to_time_series, str_to_time
 from ...params import DEFAULT_TIMESPAN
 from ...logger import WranglerLogger
@@ -96,16 +97,11 @@ class AgenciesTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk = ["agency_id"]
+        _pk: TablePrimaryKeys = ["agency_id"]
 
 
 class StopsTable(pa.DataFrameModel):
-    """Represents the Stops table in the GTFS dataset.
-
-    Configurations:
-    - dtype: PydanticModel(StopRecord)
-    - uniqueness: ["stop_id"]
-    """
+    """Represents the Stops table in the GTFS dataset."""
 
     stop_id: Series[str] = pa.Field(coerce=True, nullable=False, unique=True)
     stop_lat: Series[float] = pa.Field(coerce=True, nullable=False, ge=-90, le=90)
@@ -135,8 +131,8 @@ class StopsTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk = ["stop_id"]
-        _fk = {"parent_station": ["stops", "stop_id"]}
+        _pk: TablePrimaryKeys = ["stop_id"]
+        _fk: TableForeignKeys = {"parent_station": ("stops", "stop_id")}
 
 
 class WranglerStopsTable(StopsTable):
@@ -182,8 +178,8 @@ class RoutesTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk = ["route_id"]
-        _fk = {"agency_id": ["agencies", "agency_id"]}
+        _pk: TablePrimaryKeys = ["route_id"]
+        _fk: TableForeignKeys = {"agency_id": ("agencies", "agency_id")}
 
 
 class ShapesTable(pa.DataFrameModel):
@@ -207,8 +203,8 @@ class ShapesTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk = ["shape_id", "shape_pt_sequence"]
-        _fk = {}
+        _pk: TablePrimaryKeys = ["shape_id", "shape_pt_sequence"]
+        _fk: TableForeignKeys = {}
         unique = ["shape_id", "shape_pt_sequence"]
 
 
@@ -252,8 +248,8 @@ class TripsTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk = ["trip_id"]
-        _fk = {"route_id": ["routes", "route_id"]}
+        _pk: TablePrimaryKeys = ["trip_id"]
+        _fk: TableForeignKeys = {"route_id": ("routes", "route_id")}
 
 
 class WranglerTripsTable(TripsTable):
@@ -266,8 +262,8 @@ class WranglerTripsTable(TripsTable):
 
         coerce = True
         add_missing_columns = True
-        _pk = ["trip_id"]
-        _fk = {"route_id": ["routes", "route_id"]}
+        _pk: TablePrimaryKeys = ["trip_id"]
+        _fk: TableForeignKeys = {"route_id": ("routes", "route_id")}
 
 
 class FrequenciesTable(pa.DataFrameModel):
@@ -297,8 +293,8 @@ class FrequenciesTable(pa.DataFrameModel):
         coerce = True
         add_missing_columns = True
         unique = ["trip_id", "start_time"]
-        _pk = ["trip_id", "start_time"]
-        _fk = {"trip_id": ["trips", "trip_id"]}
+        _pk: TablePrimaryKeys = ["trip_id", "start_time"]
+        _fk: TableForeignKeys = {"trip_id": ("trips", "trip_id")}
 
 
 class WranglerFrequenciesTable(FrequenciesTable):
@@ -318,8 +314,8 @@ class WranglerFrequenciesTable(FrequenciesTable):
         coerce = True
         add_missing_columns = True
         unique = ["trip_id", "start_time"]
-        _pk = ["trip_id", "start_time"]
-        _fk = {"trip_id": ["trips", "trip_id"]}
+        _pk: TablePrimaryKeys = ["trip_id", "start_time"]
+        _fk: TableForeignKeys = {"trip_id": ("trips", "trip_id")}
 
     @pa.parser("start_time")
     def st_to_timestamp(cls, series: Series) -> Series[Timestamp]:
@@ -374,10 +370,10 @@ class StopTimesTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk = ["trip_id", "stop_sequence"]
-        _fk = {
-            "trip_id": ["trips", "trip_id"],
-            "stop_id": ["stops", "stop_id"],
+        _pk: TablePrimaryKeys = ["trip_id", "stop_sequence"]
+        _fk: TableForeignKeys = {
+            "trip_id": ("trips", "trip_id"),
+            "stop_id": ("stops", "stop_id"),
         }
         unique = ["trip_id", "stop_sequence"]
 
@@ -404,21 +400,20 @@ class WranglerStopTimesTable(StopTimesTable):
             df["arrival_time"] = pd.NaT
         if "departure_time" not in df.columns:
             df["departure_time"] = pd.NaT
-        WranglerLogger.debug(f"stop_times before parsing: \n\
-                             {df[['arrival_time', 'departure_time']]}")
+        msg = f"stop_times before parsing: \n {df[['arrival_time', 'departure_time']]}"
+        # WranglerLogger.debug(msg)
         filler_timestrings = (df["arrival_time"] == Timestamp("00:00:00")) & (
             df["departure_time"] == Timestamp("00:00:00")
         )
 
         df.loc[filler_timestrings, "arrival_time"] = pd.NaT
         df.loc[filler_timestrings, "departure_time"] = pd.NaT
-        WranglerLogger.debug(f"stop_times after filling with NaT: \n\
-                             {df[['arrival_time', 'departure_time']]}")
+        msg = f"stop_times after filling with NaT: \n {df[['arrival_time', 'departure_time']]}"
+        # WranglerLogger.debug(msg)
         df["arrival_time"] = str_to_time_series(df["arrival_time"])
         df["departure_time"] = str_to_time_series(df["departure_time"])
-        WranglerLogger.debug(
-            f"stop_times after parsing: \n{df[['arrival_time', 'departure_time']]}"
-        )
+        msg = f"stop_times after parsing: \n{df[['arrival_time', 'departure_time']]}"
+        # WranglerLogger.debug(msg)
         return df
 
     class Config:
@@ -426,9 +421,9 @@ class WranglerStopTimesTable(StopTimesTable):
 
         coerce = True
         add_missing_columns = True
-        _pk = ["trip_id", "stop_sequence"]
-        _fk = {
-            "trip_id": ["trips", "trip_id"],
-            "stop_id": ["stops", "stop_id"],
+        _pk: TablePrimaryKeys = ["trip_id", "stop_sequence"]
+        _fk: TableForeignKeys = {
+            "trip_id": ("trips", "trip_id"),
+            "stop_id": ("stops", "stop_id"),
         }
         unique = ["trip_id", "stop_sequence"]

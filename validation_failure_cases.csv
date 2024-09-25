@@ -1,0 +1,7 @@
+,schema_context,column,check,check_number,failure_case,index
+0,Column,model_node_id,field_uniqueness,,999,999
+1,Column,model_node_id,field_uniqueness,,888,888
+2,Column,model_node_id,field_uniqueness,,777,777
+3,Column,model_node_id,field_uniqueness,,999,999
+4,Column,model_node_id,field_uniqueness,,888,888
+5,Column,model_node_id,field_uniqueness,,777,777

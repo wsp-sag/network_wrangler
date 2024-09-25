@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from pathlib import Path
 
 import pandas as pd
@@ -12,6 +12,7 @@ from pandera.errors import SchemaErrors
 
 from ..logger import WranglerLogger
 
+from ..utils.data import concat_with_attr
 from ..models.gtfs.tables import (
     WranglerShapesTable,
     WranglerStopTimesTable,
@@ -22,11 +23,12 @@ from ..transit.feed.transit_links import unique_stop_time_links, unique_shape_li
 if TYPE_CHECKING:
     from ..roadway.network import RoadwayNetwork
     from ..models.roadway.tables import RoadLinksTable, RoadNodesTable
+    from ..models._base.types import RoadwayFileTypes, TransitFileTypes
 
 
 def transit_nodes_without_road_nodes(
     feed: Feed,
-    nodes_df: DataFrame[RoadNodesTable] = None,
+    nodes_df: DataFrame[RoadNodesTable],
     rd_field: str = "model_node_id",
 ) -> list[int]:
     """Validate all of a transit feeds node foreign keys exist in referenced roadway nodes.
@@ -45,10 +47,10 @@ def transit_nodes_without_road_nodes(
         feed.shapes["shape_model_node_id"],
         feed.stop_times["stop_id"],
     ]
-    tr_nodes = set(pd.concat(feed_nodes_series).unique())
+    tr_nodes = set(concat_with_attr(feed_nodes_series).unique())
     rd_nodes = set(nodes_df[rd_field].unique().tolist())
     # nodes in tr_nodes but not rd_nodes
-    missing_tr_nodes = tr_nodes - rd_nodes
+    missing_tr_nodes = list(tr_nodes - rd_nodes)
 
     if missing_tr_nodes:
         WranglerLogger.error(
@@ -143,9 +145,9 @@ def transit_road_net_consistency(feed: Feed, road_net: RoadwayNetwork) -> bool:
 
 def validate_transit_in_dir(
     directory: Path,
-    suffix: str = "txt",
-    road_dir: Path = None,
-    road_suffix: str = "geojson",
+    suffix: TransitFileTypes = "txt",
+    road_dir: Optional[Path] = None,
+    road_suffix: RoadwayFileTypes = "geojson",
 ) -> bool:
     """Validates a roadway network in a directory to the wrangler data model specifications.
 
@@ -156,7 +158,7 @@ def validate_transit_in_dir(
         road_suffix (str): The suffices of roadway network file name. Defaults to "geojson".
         output_dir (str): The output directory for the validation report. Defaults to ".".
     """
-    from network_wrangler.transit import load_transit
+    from .io import load_transit
 
     try:
         t = load_transit(directory, suffix=suffix)
@@ -164,11 +166,11 @@ def validate_transit_in_dir(
         WranglerLogger.error(f"!!! [Transit Network invalid] - Failed Loading to Feed object\n{e}")
         return False
     if road_dir is not None:
-        from network_wrangler.roadway import load_roadway
-        from network_wrangler.transit.network import TransitRoadwayConsistencyError
+        from ..roadway import load_roadway_from_dir
+        from .network import TransitRoadwayConsistencyError
 
         try:
-            r = load_roadway(road_dir, suffix=road_suffix)
+            r = load_roadway_from_dir(road_dir, suffix=road_suffix)
         except FileNotFoundError:
             WranglerLogger.error(f"! Roadway network not found in {road_dir}")
             return False
@@ -182,4 +184,4 @@ def validate_transit_in_dir(
                                  network consistency.\n{e}")
             return False
 
-        return valid
+    return True

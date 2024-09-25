@@ -1,13 +1,14 @@
 """Wrapper function for applying roadway deletion project card to RoadwayNetwork."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, Optional
+
+
+from ...models.projects.roadway_changes import RoadwayDeletion
 
 import pandas as pd
 
 from ...logger import WranglerLogger
-
-from ...models.projects.roadway_deletion import RoadwayDeletion
 
 if TYPE_CHECKING:
     from ..network import RoadwayNetwork
@@ -22,7 +23,7 @@ class RoadwayDeletionError(Exception):
 
 def apply_roadway_deletion(
     roadway_net: RoadwayNetwork,
-    roadway_deletion: RoadwayDeletion,
+    roadway_deletion: Union[dict, RoadwayDeletion],
 ) -> RoadwayNetwork:
     """Delete the roadway links or nodes defined in the project card.
 
@@ -33,27 +34,27 @@ def apply_roadway_deletion(
         roadway_net: input RoadwayNetwork to apply change to
         roadway_deletion: dictionary conforming to RoadwayDeletion
     """
-    r_del = RoadwayDeletion(**roadway_deletion)
-    WranglerLogger.debug(f"Deleting Roadway Features: \n{r_del}")
+    if not isinstance(roadway_deletion, RoadwayDeletion):
+        roadway_deletion = RoadwayDeletion(**roadway_deletion)
+    WranglerLogger.debug(f"Deleting Roadway Features: \n{roadway_deletion}")
 
-    if r_del.links:
+    if roadway_deletion.links:
         roadway_net.delete_links(
-            r_del.links.model_dump(exclude_none=True, by_alias=True),
-            clean_shapes=r_del.clean_shapes,
-            clean_nodes=r_del.clean_nodes,
+            roadway_deletion.links.model_dump(exclude_none=True, by_alias=True),
+            clean_shapes=roadway_deletion.clean_shapes,
+            clean_nodes=roadway_deletion.clean_nodes,
         )
 
-    if r_del.nodes:
+    if roadway_deletion.nodes:
         roadway_net.delete_nodes(
-            r_del.nodes.model_dump(exclude_none=True, by_alias=True),
+            roadway_deletion.nodes.model_dump(exclude_none=True, by_alias=True),
         )
 
     return roadway_net
 
+
 def check_broken_transit_shapes(
-    roadway_net: RoadwayNetwork,
-    roadway_deletion: RoadwayDeletion,
-    transit_net: TransitNetwork
+    roadway_net: RoadwayNetwork, roadway_deletion: RoadwayDeletion, transit_net: TransitNetwork
 ):
     """Check if any transit shapes go on the deleted links.
 
@@ -65,7 +66,9 @@ def check_broken_transit_shapes(
     returns: Broken shape dataframe. Empty if no broken shapes
     """
     deleted_link_id_list = roadway_deletion["links"]["model_link_id"]
-    deleted_links_df = roadway_net.links_df[roadway_net.links_df["model_link_id"].isin(deleted_link_id_list)]
+    deleted_links_df = roadway_net.links_df[
+        roadway_net.links_df["model_link_id"].isin(deleted_link_id_list)
+    ]
     shapes_df = transit_net.feed.shapes.copy()
 
     # sort the shapes_df by agency_raw_name, shape_id and shape_pt_sequence
@@ -84,10 +87,10 @@ def check_broken_transit_shapes(
     shapes_df["shape_model_node_id"] = pd.to_numeric(shapes_df["shape_model_node_id"])
 
     shapes_df = shapes_df.merge(
-        deleted_links_df[["model_link_id", "A", "B"]], 
+        deleted_links_df[["model_link_id", "A", "B"]],
         how="left",
-        left_on=["shape_model_node_id", "shape_model_node_id_next"], 
-        right_on=["A", "B"]
+        left_on=["shape_model_node_id", "shape_model_node_id_next"],
+        right_on=["A", "B"],
     )
     shapes_df = shapes_df[shapes_df["model_link_id"].notna()]
 

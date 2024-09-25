@@ -1,7 +1,7 @@
 """Main functionality for GTFS tables including Feed object."""
 
 from __future__ import annotations
-from typing import Union, Literal
+from typing import Union, Literal, Optional
 from pathlib import Path
 
 import pandas as pd
@@ -101,7 +101,7 @@ class Feed(DBModelMixin):
         table_name: str,
         set_df: pd.DataFrame,
         id_property: str = "index",
-        properties: list[str] = None,
+        properties: Optional[list[str]] = None,
     ):
         """Set one or more property values based on an ID property for a given table.
 

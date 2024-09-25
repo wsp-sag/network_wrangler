@@ -29,27 +29,22 @@ the models.projects.transit_selection module.
 from __future__ import annotations
 import copy
 
-from typing import List, Union, TYPE_CHECKING
-
-import pandas as pd
+from typing import Union, TYPE_CHECKING
 
 from pandera.typing import DataFrame
 
-from ..models.projects.transit_selection import (
-    SelectTransitLinks,
-    SelectTransitNodes,
+from ..models.projects import (
     SelectTransitTrips,
     SelectTripProperties,
+    SelectRouteProperties,
+    SelectTransitNodes,
+    SelectTransitLinks,
 )
-
+from ..models._base.types import TimeString
 from ..utils.utils import dict_to_hexkey
 from ..utils.time import filter_df_to_overlapping_timespans
 from ..logger import WranglerLogger
 
-from ..models.projects.transit_selection import (
-    SelectRouteProperties,
-)
-from ..models._base.types import TimeString
 
 if TYPE_CHECKING:
     from .feed.feed import Feed
@@ -185,7 +180,7 @@ class TransitSelection:
         return self._selected_trips_df
 
     @property
-    def selected_frequencies_df(self) -> DataFrame[WranglerWranglerFrequenciesTable]:
+    def selected_frequencies_df(self) -> DataFrame[WranglerFrequenciesTable]:
         """DataFrame of selected frequencies."""
         sel_freq_df = self.net.feed.frequencies.loc[
             self.net.feed.frequencies.trip_id.isin(self.selected_trips_df.trip_id)

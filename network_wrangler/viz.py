@@ -20,9 +20,9 @@ from .logger import WranglerLogger
 def net_to_mapbox(
     roadway: Union[RoadwayNetwork, gpd.GeoDataFrame, str, Path] = gpd.GeoDataFrame(),
     transit: Union[TransitNetwork, gpd.GeoDataFrame] = gpd.GeoDataFrame(),
-    roadway_geojson_out: str = "roadway_shapes.geojson",
-    transit_geojson_out: str = "transit_shapes.geojson",
-    mbtiles_out: str = "network.mbtiles",
+    roadway_geojson_out: Path = Path("roadway_shapes.geojson"),
+    transit_geojson_out: Path = Path("transit_shapes.geojson"),
+    mbtiles_out: Path = Path("network.mbtiles"),
     overwrite: bool = True,
     port: str = "9000",
 ):
@@ -71,16 +71,16 @@ def net_to_mapbox(
         roadway = roadway.link_shapes_df
         roadway.to_file(roadway_geojson_out, driver="GeoJSON")
     elif Path(roadway).exists():
-        roadway_geojson_out = roadway
+        roadway_geojson_out = Path(roadway)
     else:
         raise ValueError(f"Don't understand roadway input: {roadway}")
 
-    tippe_options_list = ["-zg", "-o", mbtiles_out]
+    tippe_options_list: list[str] = ["-zg", "-o", str(mbtiles_out)]
     if overwrite:
         tippe_options_list.append("--force")
     # tippe_options_list.append("--drop-densest-as-needed")
-    tippe_options_list.append(roadway_geojson_out)
-    tippe_options_list.append(transit_geojson_out)
+    tippe_options_list.append(str(roadway_geojson_out))
+    tippe_options_list.append(str(transit_geojson_out))
 
     try:
         WranglerLogger.info(

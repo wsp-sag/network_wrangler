@@ -1,7 +1,7 @@
 """Module for testing the utils.io module."""
 
 import pytest
-from network_wrangler.utils.io import convert_file_serialization
+from network_wrangler.utils.io_table import convert_file_serialization
 from network_wrangler.utils.data import diff_dfs
 from network_wrangler.utils.time import str_to_seconds_from_midnight
 from network_wrangler import WranglerLogger

@@ -3,6 +3,8 @@
 import os
 import re
 
+from typing import Optional
+
 
 def define_env(env):
     """This is the hook for defining variables, macros and filters.
@@ -12,7 +14,9 @@ def define_env(env):
     """
 
     @env.macro
-    def include_file(filename: str, downshift_h1=True, start_line: int = 0, end_line: int = None):
+    def include_file(
+        filename: str, downshift_h1=True, start_line: int = 0, end_line: Optional[int] = None
+    ):
         """Include a file, optionally indicating start_line and end_line.
 
         Args:

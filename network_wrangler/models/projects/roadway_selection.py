@@ -1,20 +1,20 @@
-"""Pydantic Roadway Selection Models which should align with ProjectCard data models."""
+"""Data models for selecting roadway facilities in a project card."""
 
 from __future__ import annotations
 
-from typing import Annotated, Optional, ClassVar
+from typing import Annotated, ClassVar, Optional
 
-from pydantic import Field, ConfigDict
+from pydantic import ConfigDict, Field
 
-from .._base.types import AnyOf, OneOf, ConflictsWith
-from .._base.records import RecordModel
-
-from ...params import DEFAULT_SEARCH_MODES
 from ...logger import WranglerLogger
+from ...params import DEFAULT_SEARCH_MODES
+
+from .._base.records import RecordModel
+from .._base.types import AnyOf, ConflictsWith, OneOf
 
 
-class SelectionFormatError(Exception):
-    """Raised when there is an issue with the selection format."""
+class RoadwaySelectionFormatError(Exception):
+    """Raised when there is an issue with the format of a selection."""
 
     pass
 
@@ -30,7 +30,7 @@ class SelectNodeDict(RecordModel):
     osm_node_id: Optional[str] = None
     model_node_id: Optional[int] = None
 
-    _examples = [{"osm_node_id": "12345"}, {"model_node_id": 67890}]
+    _examples: ClassVar[list[dict]] = [{"osm_node_id": "12345"}, {"model_node_id": 67890}]
 
     @property
     def selection_type(self):
@@ -42,7 +42,9 @@ class SelectNodeDict(RecordModel):
             f"SelectNode should have an explicit id: {self.explicit_id_fields} \
                 Found none in selection dict: \n{self.model_dump(by_alias=True)}"
         )
-        raise SelectionFormatError("Select Node should have either `all` or an explicit id.")
+        raise RoadwaySelectionFormatError(
+            "Select Node should have either `all` or an explicit id."
+        )
 
     @property
     def explicit_id_selection_dict(self) -> dict:
@@ -83,7 +85,7 @@ class SelectNodesDict(RecordModel):
     model_node_id: Annotated[Optional[list[int]], Field(min_length=1)]
     ignore_missing: Optional[bool] = True
 
-    _examples = [
+    _examples: ClassVar[list[dict]] = [
         {"osm_node_id": ["12345", "67890"], "model_node_id": [12345, 67890]},
         {"osm_node_id": ["12345", "67890"]},
         {"model_node_id": [12345, 67890]},
@@ -110,7 +112,9 @@ class SelectNodesDict(RecordModel):
             f"SelectNodes should have either `all` or an explicit id: {self.explicit_id_fields}. \
                 Found neither in nodes selection: \n{self.model_dump(by_alias=True)}"
         )
-        raise SelectionFormatError("Select Node should have either `all` or an explicit id.")
+        raise RoadwaySelectionFormatError(
+            "Select Node should have either `all` or an explicit id."
+        )
 
     @property
     def explicit_id_fields(self) -> list[str]:
@@ -172,7 +176,7 @@ class SelectLinksDict(RecordModel):
     modes: list[str] = DEFAULT_SEARCH_MODES
     ignore_missing: Optional[bool] = True
 
-    _examples = [
+    _examples: ClassVar[list[dict]] = [
         {"name": ["Main St"], "modes": ["drive"]},
         {"osm_link_id": ["123456789"]},
         {"model_link_id": [123456789], "modes": ["walk"]},
@@ -230,7 +234,7 @@ class SelectLinksDict(RecordModel):
         if self.segment_id_fields:
             return "segment"
         else:
-            raise SelectionFormatError(
+            raise RoadwaySelectionFormatError(
                 "If not a segment, Select Links should have either `all` or an explicit id."
             )
 
@@ -253,7 +257,9 @@ class SelectLinksDict(RecordModel):
 class SelectFacility(RecordModel):
     """Roadway Facility Selection."""
 
-    require_one_of: ClassVar[OneOf] = [["links", "nodes", ["links", "from", "to"]]]
+    require_one_of: ClassVar[OneOf] = [
+        ["links", "nodes", ["links", "from", "to"]],
+    ]
     model_config = ConfigDict(extra="forbid")
 
     links: Optional[SelectLinksDict] = None
@@ -261,7 +267,7 @@ class SelectFacility(RecordModel):
     from_: Annotated[Optional[SelectNodeDict], Field(None, alias="from")]
     to: Optional[SelectNodeDict] = None
 
-    _examples = [
+    _examples: ClassVar[list[dict]] = [
         {
             "links": {"name": ["Main Street"]},
             "from": {"model_node_id": 1},
@@ -289,6 +295,11 @@ class SelectFacility(RecordModel):
         if self.feature_types == "segment":
             return "segment"
         if self.feature_types == "links":
+            if self.links is None:
+                raise ValueError("SelectFacility with feature_types 'links' must have links.")
             return self.links.selection_type
         if self.feature_types == "nodes":
+            if self.nodes is None:
+                raise ValueError("SelectFacility with feature_types 'nodes' must have nodes.")
             return self.nodes.selection_type
+        raise ValueError("SelectFacility must have either links or nodes defined.")

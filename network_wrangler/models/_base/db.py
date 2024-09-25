@@ -22,6 +22,50 @@ class ForeignKeyValueError(Exception):
     pass
 
 
+TablePrimaryKeys = list[str]
+
+
+"""TableForeignKeys is a dictionary of foreign keys for a single table.
+
+Uses the form:
+    {<field>:[<fk_table>,<fk_field>]}
+
+Example:
+    {"parent_station": ("stops", "stop_id")}
+"""
+TableForeignKeys = dict[str, tuple[str, str]]
+
+
+"""Mapping of tables that have fields that other tables use as fks.
+
+`{ <table>:{<field>:[(<table using FK>,<field using fk>)]} }`
+
+Example:
+    {"stops":
+        {"stop_id": [
+            ("stops", "parent_station"),
+            ("stop_times", "stop_id")
+            ]}
+    }
+"""
+DbForeignKeyUsage = dict[str, dict[str, list[tuple[str, str]]]]
+
+
+"""Dict of each table's foreign keys.
+
+`{ <table>:{<field>:[<fk_table>,<fk_field>]} }`
+
+Example:
+    {"stops":
+        {"parent_station": ("stops", "stop_id")}
+    "stop_times":
+        {"stop_id": ("stops", "stop_id")}
+        {"trip_id": ("trips", "trip_id")}
+    }
+"""
+DbForeignKeys = dict[str, TableForeignKeys]
+
+
 class DBModelMixin:
     """An mixin class for interrelated pandera DataFrameModel tables.
 
@@ -136,7 +180,7 @@ class DBModelMixin:
             self.__setattr__(table, kwargs[table])
 
     @classmethod
-    def fks(cls) -> list[dict]:
+    def fks(cls) -> DbForeignKeys:
         """Return the fk field constraints as `{ <table>:{<field>:[<fk_table>,<fk_field>]} }`."""
         fk_fields = {}
         for table_name, table_model in cls._table_models.items():
@@ -147,22 +191,22 @@ class DBModelMixin:
         return fk_fields
 
     @classmethod
-    def fields_as_fks(cls) -> list[str]:
+    def fields_as_fks(cls) -> DbForeignKeyUsage:
         """Returns mapping of tables that have fields that other tables use as fks.
 
-        `{ <table>:{<field>:[<table using FK>,<field using fk>]} }`
+        `{ <table>:{<field>:[(<table using FK>,<field using fk>)]} }`
 
         Useful for knowing if you should check FK validation when changing a field value.
         """
-        pks_as_fks = defaultdict(lambda: defaultdict(list))
+        pks_as_fks = defaultdict(lambda: defaultdict(list))  # type: ignore
         for t, field_fk in cls.fks().items():
             for f, fk in field_fk.items():
                 fk_table, fk_field = fk
-                pks_as_fks[fk_table][fk_field].append([t, f])
-        return pks_as_fks
+                pks_as_fks[fk_table][fk_field].append((t, f))
+        return {k: dict(v) for k, v in pks_as_fks.items()}
 
     def check_referenced_fk(
-        self, pk_table_name, pk_field: str, pk_table: Optional[pd.DataFrame] = None
+        self, pk_table_name: str, pk_field: str, pk_table: Optional[pd.DataFrame] = None
     ) -> bool:
         """True if table.field has the values referenced in any table referencing fields as fk.
 
@@ -181,7 +225,7 @@ class DBModelMixin:
             )
             return True
 
-        fields_as_fks = self.fields_as_fks()
+        fields_as_fks: DbForeignKeyUsage = self.fields_as_fks()
 
         if pk_table_name not in fields_as_fks:
             return True
@@ -234,7 +278,7 @@ class DBModelMixin:
         if table is None:
             table = self.get_table(table_name)
         all_valid = True
-        for field in self.fields_as_fks()[table_name].keys():
+        for field in self.fields_as_fks().get(table_name, {}).keys():
             valid = self.check_referenced_fk(table_name, field, pk_table=table)
             all_valid = valid and all_valid
         return all_valid

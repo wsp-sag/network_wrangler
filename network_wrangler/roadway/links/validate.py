@@ -1,7 +1,7 @@
 """Utilities for validating a RoadLinksTable beyond its data model."""
 
 from pathlib import Path
-
+from typing import Optional
 import pandas as pd
 
 from ...logger import WranglerLogger
@@ -30,9 +30,9 @@ def validate_links_have_nodes(links_df: pd.DataFrame, nodes_df: pd.DataFrame) ->
 
 def validate_links_file(
     links_filename: Path,
-    nodes_df: pd.DataFrame = None,
+    nodes_df: Optional[pd.DataFrame] = None,
     strict: bool = False,
-    errors_filename: Path = "link_errors.csv",
+    errors_filename: Path = Path("link_errors.csv"),
 ) -> bool:
     """Validates a links file to RoadLinksTable and optionally checks if nodes are in the links.
 
@@ -54,9 +54,9 @@ def validate_links_file(
 
 def validate_links_df(
     links_df: pd.DataFrame,
-    nodes_df: pd.DataFrame = None,
+    nodes_df: Optional[pd.DataFrame] = None,
     strict: bool = False,
-    errors_filename: Path = "link_errors.csv",
+    errors_filename: Path = Path("link_errors.csv"),
 ) -> bool:
     """Validates a links df to RoadLinksTable and optionally checks if nodes are in the links.
 

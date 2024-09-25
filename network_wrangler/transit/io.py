@@ -6,14 +6,15 @@ from typing import Union, Literal, Optional
 import pandas as pd
 import geopandas as gpd
 
-from ..utils.geo import to_points_gdf
-
 from .feed.feed import Feed
 from .network import TransitNetwork
 from ..models.gtfs.gtfs import GtfsModel
 from ..models._base.db import RequiredTableError
+from ..models._base.types import TransitFileTypes
 from ..logger import WranglerLogger
-from ..utils.io import unzip_file, write_table
+from ..utils.io_table import unzip_file, write_table
+from ..utils.geo import to_points_gdf
+from ..configs import WranglerConfig, DefaultConfig
 
 
 class FeedReadError(Exception):
@@ -31,7 +32,7 @@ def _feed_path_ref(path: Path) -> Path:
     return path
 
 
-def load_feed_from_path(feed_path: Union[Path, str], suffix: str = "txt") -> Feed:
+def load_feed_from_path(feed_path: Union[Path, str], suffix: TransitFileTypes = "txt") -> Feed:
     """Create a Feed object from the path to a GTFS transit feed.
 
     Args:
@@ -120,7 +121,8 @@ def load_feed_from_dfs(feed_dfs: dict) -> Feed:
 
 def load_transit(
     feed: Union[Feed, GtfsModel, dict[str, pd.DataFrame], str, Path],
-    suffix: str = "txt",
+    suffix: TransitFileTypes = "txt",
+    config: WranglerConfig = DefaultConfig,
 ) -> "TransitNetwork":
     """Create a TransitNetwork object.
 
@@ -132,6 +134,7 @@ def load_transit(
     Args:
         feed: Feed boject, dict of transit data frames, or path to transit feed data
         suffix: the suffix of the files to read. Defaults to "txt"
+        config: WranglerConfig object. Defaults to DefaultConfig.
 
     Returns:
     A TransitNetwork object representing the loaded transit network.
@@ -153,12 +156,13 @@ def load_transit(
 
     """
     if isinstance(feed, str) or isinstance(feed, Path):
+        feed = Path(feed)
         feed_obj = load_feed_from_path(feed, suffix=suffix)
         feed_obj.feed_path = feed
     elif isinstance(feed, dict):
         feed_obj = load_feed_from_dfs(feed)
     elif isinstance(feed, GtfsModel):
-        feed_obj = Feed(feed)
+        feed_obj = Feed(**feed.__dict__)
     else:
         if not isinstance(feed, Feed):
             raise ValueError(
@@ -167,7 +171,7 @@ def load_transit(
             )
         feed_obj = feed
 
-    return TransitNetwork(feed_obj)
+    return TransitNetwork(feed_obj, config=config)
 
 
 def write_transit(

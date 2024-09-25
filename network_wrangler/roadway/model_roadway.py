@@ -12,14 +12,10 @@ import pandas as pd
 from pandera.typing import DataFrame
 
 from ..logger import WranglerLogger
-from ..params import (
-    ML_OFFSET_METERS,
-    COPY_FROM_GP_TO_ML,
-    COPY_TO_ACCESS_EGRESS,
-    MANAGED_LANES_LINK_ID_RANGE,
-    MANAGED_LANES_NODE_ID_RANGE,
-)
+from ..configs import DefaultConfig
+
 from ..models.roadway.tables import RoadNodesTable, RoadLinksTable, RoadShapesTable
+from ..models._base.types import RoadwayFileTypes
 from .links.edit import _initialize_links_as_managed_lanes
 from .links.create import data_to_links_df, copy_links
 from .links.links import node_ids_in_links
@@ -31,9 +27,46 @@ from .links.filters import (
 from .nodes.create import _create_nodes_from_link
 from .io import write_roadway
 from .utils import compare_networks, compare_links
+from ..utils.data import concat_with_attr
 
 if TYPE_CHECKING:
     from .network import RoadwayNetwork
+
+"""
+list of attributes to copy from a general purpose lane to managed lane
+   so long as a ML_<prop_name> doesn't exist.
+"""
+COPY_FROM_GP_TO_ML: list[str] = [
+    "ref",
+    "roadway",
+    "access",
+    "distance",
+    "bike_access",
+    "drive_access",
+    "walk_access",
+    "bus_only",
+    "rail_only",
+]
+
+"""
+List of attributes to copy from a general purpose lane to access and egress dummy links.
+"""
+COPY_TO_ACCESS_EGRESS: list[str] = [
+    "ref",
+    "ML_access",
+    "ML_drive_access",
+    "ML_bus_only",
+    "ML_rail_only",
+]
+
+"""
+List of attributes that must be provided in managed lanes.
+"""
+MANAGED_LANES_REQUIRED_ATTRIBUTES: list[str] = [
+    "A",
+    "B",
+    "model_link_id",
+]
 
 
 class ManagedLaneAccessEgressError(Exception):
@@ -64,8 +97,6 @@ class ModelRoadwayNetwork:
     def __init__(
         self,
         net,
-        ml_link_id_range: tuple[int] = MANAGED_LANES_LINK_ID_RANGE,
-        ml_node_id_range: tuple[int] = MANAGED_LANES_NODE_ID_RANGE,
         ml_link_id_lookup: Optional[dict[int, int]] = None,
         ml_node_id_lookup: Optional[dict[int, int]] = None,
     ):
@@ -75,31 +106,45 @@ class ModelRoadwayNetwork:
         RoadwayNetwork.model_net which will lazily construct it.
 
         Args:
-            net (_type_): Associated roadway network.
-            ml_link_id_range (tuple[int]): range of link ids to use for additional links created
-                for managed lanes. Defaults to MANAGED_LANES_LINK_ID_RANGE which defaults
-                to 100,000.
-            ml_node_id_range (tuple[int]): range of node ids to use for additional nodes
-                created for managed lanes. Defaults to MANAGED_LANES_NODE_ID_RANGE which defaults
-                to (950,000, 999,999).
+            net: Associated roadway network.
             ml_link_id_lookup (dict[int, int]): lookup from general purpose link ids to link ids
-                of their managed lane counterparts. Defaults to None which will generate a new one.
+                of their managed lane counterparts. Defaults to None which will generate a new one
+                using the provided method.
             ml_node_id_lookup (dict[int, int]): lookup from general purpose node ids to node ids
-                of their managed lane counterparts. Defaults to None which will generate a new one.
+                of their managed lane counterparts. Defaults to None which will generate a new one
+                using the provided method.
         """
         self.net = net
 
         if ml_link_id_lookup is None:
-            self.ml_link_id_lookup = _generate_ml_link_id_lookup(
-                self.net.links_df, ml_link_id_range
-            )
+            if self.net.config.IDS.ML_LINK_ID_METHOD == "range":
+                self.ml_link_id_lookup = _generate_ml_link_id_lookup_from_range(
+                    self.net.links_df, self.net.config.IDS.ML_LINK_ID_RANGE
+                )
+            elif self.net.config.IDS.ML_LINK_ID_METHOD == "scalar":
+                self.ml_link_id_lookup = _generate_ml_link_id_lookup_from_scalar(
+                    self.net.links_df, self.net.config.IDS.ML_LINK_ID_SCALAR
+                )
+            else:
+                WranglerLogger.error(f"ml_link_id_method must be 'range' or 'scalar'.\
+                                      Got {self.net.config.IDS.ML_LINK_ID_METHOD}")
+                raise ValueError("ml_link_id_method must be 'range' or 'scalar'")
         else:
             self.ml_link_id_lookup = ml_link_id_lookup
 
         if ml_node_id_lookup is None:
-            self.ml_node_id_lookup = _generate_ml_node_id_lookup(
-                self.net.nodes_df, self.net.links_df, ml_node_id_range
-            )
+            if self.net.config.IDS.ML_NODE_ID_METHOD == "range":
+                self.ml_node_id_lookup = _generate_ml_node_id_from_range(
+                    self.net.nodes_df, self.net.links_df, self.net.config.IDS.ML_NODE_ID_RANGE
+                )
+            elif self.net.config.IDS.ML_NODE_ID_METHOD == "scalar":
+                self.ml_node_id_lookup = _generate_ml_node_id_lookup_from_scalar(
+                    self.net.nodes_df, self.net.links_df, self.net.config.IDS.ML_NODE_ID_SCALAR
+                )
+            else:
+                WranglerLogger.error(f"ml_node_id_method must be 'range' or 'scalar'.\
+                                      Got {self.net.config.IDS.ML_NODE_ID_METHOD}")
+                raise ValueError("ml_node_id_method must be 'range' or 'scalar'")
         else:
             self.ml_node_id_lookup = ml_node_id_lookup
 
@@ -110,6 +155,11 @@ class ModelRoadwayNetwork:
                 self.net, self.ml_link_id_lookup, self.ml_node_id_lookup
             )
         self._net_hash = copy.deepcopy(net.network_hash)
+
+    @property
+    def ml_config(self) -> dict:
+        """Convenience method for lanaged lane configuration."""
+        return self.net.config.MODEL_ROADWAY
 
     @property
     def shapes_df(self) -> DataFrame[RoadShapesTable]:
@@ -149,10 +199,10 @@ class ModelRoadwayNetwork:
 
     def write(
         self,
-        out_dir: Union[Path, str] = ".",
+        out_dir: Path = Path("."),
         convert_complex_link_properties_to_single_field: bool = False,
         prefix: str = "",
-        file_format: str = "geojson",
+        file_format: RoadwayFileTypes = "geojson",
         overwrite: bool = True,
         true_shape: bool = False,
     ) -> None:
@@ -180,14 +230,14 @@ class ModelRoadwayNetwork:
         )
 
 
-def _generate_ml_link_id_lookup(links_df, link_id_range):
+def _generate_ml_link_id_lookup_from_range(links_df, link_id_range: tuple[int]):
     """Generate a lookup from general purpose link ids to link ids their managed lane counterparts.
 
-    Will be divisable by 10.
+    Will be divisable by LINK_IDS_DIVISIBLE_BY which defaults to 10.
     """
-    DIVISABLE_BY = 10
+    LINK_IDS_DIVISIBLE_BY = 10
     og_ml_link_ids = links_df.of_type.managed.model_link_id
-    link_id_list = [i for i in range(*link_id_range) if i % DIVISABLE_BY == 0]
+    link_id_list = [i for i in range(*link_id_range) if i % LINK_IDS_DIVISIBLE_BY == 0]
     avail_ml_link_ids = set(link_id_list) - set(links_df.model_link_id.unique().tolist())
     if len(avail_ml_link_ids) < len(og_ml_link_ids):
         raise ValueError(f"{len(avail_ml_link_ids)} of {len(og_ml_link_ids )} new link ids\
@@ -196,7 +246,7 @@ def _generate_ml_link_id_lookup(links_df, link_id_range):
     return dict(zip(og_ml_link_ids, new_link_ids))
 
 
-def _generate_ml_node_id_lookup(nodes_df, links_df, node_id_range):
+def _generate_ml_node_id_from_range(nodes_df, links_df, node_id_range: tuple[int]):
     """Generate a lookup for managed lane node ids to their general purpose lane counterparts."""
     og_ml_node_ids = node_ids_in_links(links_df.of_type.managed, nodes_df)
     avail_ml_node_ids = set(range(*node_id_range)) - set(nodes_df.model_node_id.unique().tolist())
@@ -205,6 +255,26 @@ def _generate_ml_node_id_lookup(nodes_df, links_df, node_id_range):
                          available for provided range: {node_id_range}.")
     new_ml_node_ids = list(avail_ml_node_ids)[: len(og_ml_node_ids)]
     return dict(zip(og_ml_node_ids, new_ml_node_ids))
+
+
+def _generate_ml_link_id_lookup_from_scalar(links_df: DataFrame[RoadLinksTable], scalar: int):
+    """Generate a lookup from general purpose link ids to their managed lane counterparts."""
+    og_ml_link_ids = links_df.of_type.managed.model_link_id
+    link_id_list = [i + scalar for i in og_ml_link_ids]
+    if links_df.model_link_id.isin(link_id_list).any():
+        raise ValueError(f"New link ids generated by scalar {scalar} already exist.\
+                         Try a different scalar.")
+    return dict(zip(og_ml_link_ids, link_id_list))
+
+
+def _generate_ml_node_id_lookup_from_scalar(nodes_df, links_df, scalar: int):
+    """Generate a lookup for managed lane node ids to their general purpose lane counterparts."""
+    og_ml_node_ids = node_ids_in_links(links_df.of_type.managed, nodes_df)
+    node_id_list = [i + scalar for i in og_ml_node_ids]
+    if nodes_df.model_node_id.isin(node_id_list).any():
+        raise ValueError(f"New node ids generated by scalar {scalar} already exist.\
+                         Try a different scalar.")
+    return dict(zip(og_ml_node_ids, node_id_list))
 
 
 def model_links_nodes_from_net(
@@ -226,17 +296,30 @@ def model_links_nodes_from_net(
     """
     WranglerLogger.info("Separating managed lane links from general purpose links")
 
-    _m_links_df = _separate_ml_links(net.links_df, ml_link_id_lookup, ml_node_id_lookup)
+    copy_cols_gp_ml = list(
+        set(COPY_FROM_GP_TO_ML + net.config.MODEL_ROADWAY.ADDITIONAL_COPY_FROM_GP_TO_ML)
+    )
+    _m_links_df = _separate_ml_links(
+        net.links_df,
+        ml_link_id_lookup,
+        ml_node_id_lookup,
+        offset_meters=net.config.MODEL_ROADWAY.ML_OFFSET_METERS,
+        copy_from_gp_to_ml=copy_cols_gp_ml,
+    )
     _m_nodes_df = _create_ml_nodes_from_links(_m_links_df, ml_node_id_lookup)
-    m_nodes_df = pd.concat([net.nodes_df, _m_nodes_df])
+    m_nodes_df = concat_with_attr([net.nodes_df, _m_nodes_df])
 
+    copy_ae_fields = list(
+        set(COPY_TO_ACCESS_EGRESS + net.config.MODEL_ROADWAY.ADDITIONAL_COPY_TO_ACCESS_EGRESS)
+    )
     _access_egress_links_df = _create_dummy_connector_links(
         net.links_df,
         m_nodes_df,
         ml_link_id_lookup,
         ml_node_id_lookup,
+        copy_fields=copy_ae_fields,
     )
-    m_links_df = pd.concat([_m_links_df, _access_egress_links_df])
+    m_links_df = concat_with_attr([_m_links_df, _access_egress_links_df])
     return m_links_df, m_nodes_df
 
 
@@ -244,13 +327,18 @@ def _separate_ml_links(
     links_df: DataFrame[RoadLinksTable],
     link_id_lookup: dict[int, int],
     node_id_lookup: dict[int, int],
-    offset_meters: float = ML_OFFSET_METERS,
+    offset_meters: float = DefaultConfig.MODEL_ROADWAY.ML_OFFSET_METERS,
+    copy_from_gp_to_ml: list[str] = COPY_FROM_GP_TO_ML,
 ) -> gpd.GeoDataFrame:
     """Separate managed lane links from general purpose links."""
     no_ml_links_df = copy.deepcopy(links_df.of_type.general_purpose_no_parallel_managed)
     gp_links_df = _create_parallel_gp_lane_links(links_df)
     ml_links_df = _create_separate_managed_lane_links(
-        links_df, link_id_lookup, node_id_lookup, offset_meters=offset_meters
+        links_df,
+        link_id_lookup,
+        node_id_lookup,
+        offset_meters=offset_meters,
+        copy_from_gp_to_ml=copy_from_gp_to_ml,
     )
     WranglerLogger.debug(
         f"Separated ML links: \
@@ -259,7 +347,7 @@ def _separate_ml_links(
         \n  separate ML: {len(ml_links_df)}"
     )
 
-    m_links_df = pd.concat([ml_links_df, gp_links_df, no_ml_links_df], axis=0)
+    m_links_df = concat_with_attr([ml_links_df, gp_links_df, no_ml_links_df], axis=0)
 
     return m_links_df
 
@@ -277,7 +365,8 @@ def _create_separate_managed_lane_links(
     links_df: DataFrame[RoadLinksTable],
     link_id_lookup: dict[int, int],
     node_id_lookup: dict[int, int],
-    offset_meters: float = ML_OFFSET_METERS,
+    offset_meters: float = DefaultConfig.MODEL_ROADWAY.ML_OFFSET_METERS,
+    copy_from_gp_to_ml: list[str] = COPY_FROM_GP_TO_ML,
 ) -> Tuple[gpd.GeoDataFrame]:
     """Creates df with separate links for managed lanes."""
     # make sure there are correct fields even if managed = 1 was set outside of wrangler
@@ -306,7 +395,7 @@ def _create_separate_managed_lane_links(
         node_id_lookup=node_id_lookup,
         offset_meters=offset_meters,
         updated_geometry_col="ML_geometry",
-        copy_properties=list(set(COPY_FROM_GP_TO_ML + ML_MUST_KEEP_COLS)),
+        copy_properties=list(set(copy_from_gp_to_ml + ML_MUST_KEEP_COLS)),
         rename_properties=ml_rename_props,
         name_prefix="Managed Lane of",
     )
@@ -321,6 +410,7 @@ def _create_dummy_connector_links(
     m_nodes_df: DataFrame[RoadNodesTable],
     ml_link_id_lookup: dict[int, int],
     ml_node_id_lookup: dict[int, int],
+    copy_fields: list[str] = COPY_TO_ACCESS_EGRESS,
 ) -> DataFrame[RoadLinksTable]:
     """Create dummy connector links between the general purpose and managed lanes.
 
@@ -329,12 +419,14 @@ def _create_dummy_connector_links(
         m_nodes_df: GeoDataFrame of model nodes
         ml_link_id_lookup: lookup table for managed lane link ids to their general purpose lane
         ml_node_id_lookup: lookup table for managed lane node ids to their general purpose lane
+        copy_fields: list of fields to copy from the general purpose links to the dummy links.
+            Defaults to COPY_TO_ACCESS_EGRESS.
 
     returns: GeoDataFrame of access and egress dummy connector links to add to m_links_df
     """
     WranglerLogger.debug("Creating access and egress dummy connector links")
     # 1. Align the managed lane and associated general purpose lanes in the same records
-    copy_cols = [c for c in COPY_TO_ACCESS_EGRESS if c in links_df.columns]
+    copy_cols = [c for c in copy_fields if c in links_df.columns]
 
     keep_for_calcs_cols = [
         "A",
@@ -375,7 +467,7 @@ def _create_dummy_connector_links(
     egress_df.set_index("model_link_id_idx", inplace=True)
 
     # combine to one dataframe
-    access_egress_df = pd.concat([access_df, egress_df], axis=0)
+    access_egress_df = concat_with_attr([access_df, egress_df], axis=0)
 
     # 3 - Determine property values
     access_egress_df["lanes"] = 1

@@ -99,10 +99,10 @@ def _add_route_to_feed(
         for i, trip in enumerate(route["trips"]):
             shape_id = fill_str_ids(pd.Series([None]), feed.shapes["shape_id"]).iloc[0]
             add_shape_df = _create_new_shape(trip["routing"], shape_id, road_net)
-            if route['agency_raw_name']:
-                add_shape_df['agency_raw_name'] = route['agency_raw_name']
+            if route["agency_raw_name"]:
+                add_shape_df["agency_raw_name"] = route["agency_raw_name"]
             feed.shapes = pd.concat([feed.shapes, add_shape_df], ignore_index=True, sort=False)
-            
+
             for j, headway in enumerate(trip["headway_secs"]):
                 trip_id = f"trip{j}_shp{shape_id}"
                 stop_dicts = _get_stops_from_routing(trip["routing"])
@@ -113,12 +113,12 @@ def _add_route_to_feed(
                     add_stop_times_df["stop_id"], feed.stops["stop_id"], road_net
                 )
 
-                if route['agency_raw_name']:
-                    add_trips_df['agency_raw_name'] = route['agency_raw_name']
-                    add_shape_df['agency_raw_name'] = route['agency_raw_name']
-                    add_freqs_df['agency_raw_name'] = route['agency_raw_name']
-                    add_stop_times_df['agency_raw_name'] = route['agency_raw_name']
-            
+                if route["agency_raw_name"]:
+                    add_trips_df["agency_raw_name"] = route["agency_raw_name"]
+                    add_shape_df["agency_raw_name"] = route["agency_raw_name"]
+                    add_freqs_df["agency_raw_name"] = route["agency_raw_name"]
+                    add_stop_times_df["agency_raw_name"] = route["agency_raw_name"]
+
                 # Add new data to existing dataframes
                 feed.trips = pd.concat([feed.trips, add_trips_df], ignore_index=True, sort=False)
                 feed.frequencies = pd.concat(
@@ -143,12 +143,16 @@ def _create_new_trips(
         trip_id: Trip ID for the trips.
         shape_id: Shape ID for the trips.
     """
-    add_trips_df = pd.DataFrame([{
-        "route_id": route_id,
-        "direction_id": trip["direction_id"],
-        "trip_id": trip_id,
-        "shape_id": shape_id
-    }])
+    add_trips_df = pd.DataFrame(
+        [
+            {
+                "route_id": route_id,
+                "direction_id": trip["direction_id"],
+                "trip_id": trip_id,
+                "shape_id": shape_id,
+            }
+        ]
+    )
     return add_trips_df
 
 
@@ -176,7 +180,7 @@ def _create_new_shape(
             "shape_pt_sequence": list(range(1, len(shape_model_node_id_list) + 1)),
         }
     )
-    add_shapes_df['shape_id'] = shape_id
+    add_shapes_df["shape_id"] = shape_id
     return add_shapes_df
 
 
@@ -293,6 +297,6 @@ def _parse_headway_record(headway: dict[tuple[TimeString], int]) -> tuple[dateti
             e.g. {('6:00', '12:00'): 600}
     """
     ((timespan, headway_secs),) = headway.items()
-    timespan =  [time.strip().strip("'") for time in timespan.strip("()").split(',')]
-    start_time, end_time = str_to_time_list(timespan)
+    timespan_clean = [time.strip().strip("'") for time in timespan.strip("()").split(",")]
+    start_time, end_time = str_to_time_list(timespan_clean)
     return start_time, end_time, headway_secs
