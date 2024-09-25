@@ -378,9 +378,9 @@ def _update_shapes_and_trips(
     if sel_trips_using_shape_id != all_trips_using_shape_id:
         # adds copied shape with new shape_id to feed.shapes + references it in feed.trips
         feed.shapes, feed.trips, shape_id = _add_new_shape_copy(
-            shape_id,
-            sel_trips_using_shape_id,
-            feed,
+            old_shape_id=shape_id,
+            trip_ids=list(sel_trips_using_shape_id),
+            feed=feed,
             id_scalar=shape_id_scalar,
             project_name=project_name,
         )

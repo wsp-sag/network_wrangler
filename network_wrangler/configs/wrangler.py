@@ -65,6 +65,7 @@ CPU:
 
 
 """
+
 from typing import Literal, Optional
 
 from pydantic.dataclasses import dataclass
@@ -99,6 +100,7 @@ class IdGenerationConfig(ConfigItem):
         ML_NODE_ID_SCALAR: scalar value to add to general purpose lane node ides create
             a model_node_id when creating an associated nodes for parallel managed lane.
     """
+
     TRANSIT_SHAPE_ID_METHOD: Literal["scalar"] = "scalar"
     TRANSIT_SHAPE_ID_SCALAR: int = 1000000
     ROAD_SHAPE_ID_METHOD: Literal["scalar"] = "scalar"
@@ -121,6 +123,7 @@ class ModelRoadwayConfig(ConfigItem):
             lanes.
         ADDITIONAL_COPY_TO_ACCESS_EGRESS: Additional fields to copy to access and egress links.
     """
+
     ML_OFFSET_METERS: int = -10
     ADDITIONAL_COPY_FROM_GP_TO_ML: list[str] = Field(default_factory=list)
     ADDITIONAL_COPY_TO_ACCESS_EGRESS: list[str] = Field(default_factory=list)
@@ -133,13 +136,16 @@ class CpuConfig(ConfigItem):
     Properties:
         EST_PD_READ_SPEED: Read sec / MB - WILL DEPEND ON SPECIFIC COMPUTER
     """
-    EST_PD_READ_SPEED: dict[str, float] = Field(default_factory=lambda: {
-        "csv": 0.03,
-        "parquet": 0.005,
-        "geojson": 0.03,
-        "json": 0.15,
-        "txt": 0.04,
-    })
+
+    EST_PD_READ_SPEED: dict[str, float] = Field(
+        default_factory=lambda: {
+            "csv": 0.03,
+            "parquet": 0.005,
+            "geojson": 0.03,
+            "json": 0.15,
+            "txt": 0.04,
+        }
+    )
 
 
 @dataclass
@@ -152,6 +158,7 @@ class WranglerConfig(ConfigItem):
         CPU: Parameters for accessing CPU information. Will not change any outcomes.
 
     """
+
     IDS: IdGenerationConfig = IdGenerationConfig()
     MODEL_ROADWAY: ModelRoadwayConfig = ModelRoadwayConfig()
     CPU: CpuConfig = CpuConfig()

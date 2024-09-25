@@ -239,7 +239,7 @@ def generate_list_of_new_ids_from_existing(
 def _get_max_int_id_within_string_ids(id_s: pd.Series, prefix: str, suffix: str) -> int:
     pattern = re.compile(rf"{re.escape(prefix)}(\d+){re.escape(suffix)}")
     extracted_ids = id_s.dropna().apply(
-        lambda x: int(pattern.search(x).group(1)) if pattern.search(x) else None
+        lambda x: int(match.group(1)) if (match := pattern.search(x)) else None
     )
     extracted_ids = extracted_ids.dropna()
     if extracted_ids.empty:

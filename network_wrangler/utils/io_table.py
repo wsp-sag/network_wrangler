@@ -94,7 +94,9 @@ def write_table(
         raise NotImplementedError(f"Filetype {filename.suffix} not implemented.")
 
 
-def _estimate_read_time_of_file(filepath: Union[str, Path], read_speed: dict = DefaultConfig.CPU.EST_PD_READ_SPEED) -> str:
+def _estimate_read_time_of_file(
+    filepath: Union[str, Path], read_speed: dict = DefaultConfig.CPU.EST_PD_READ_SPEED
+) -> str:
     """Estimates read time in seconds based on a given file size and speed factor.
 
     The speed factor is MB per second which you can adjust based on empirical data.
@@ -155,7 +157,9 @@ def read_table(
         if not sub_filename:
             raise ValueError("sub_filename must be provided for zip files.")
         filename = unzip_file(filename) / sub_filename
-    WranglerLogger.debug(f"Estimated read time: {_estimate_read_time_of_file(filename, read_speed)}.")
+    WranglerLogger.debug(
+        f"Estimated read time: {_estimate_read_time_of_file(filename, read_speed)}."
+    )
 
     # will result in None if no boundary is provided
     mask_gdf = get_bounding_polygon(

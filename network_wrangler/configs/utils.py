@@ -1,4 +1,5 @@
 """Configuration utilities."""
+
 from abc import ABC
 
 from pathlib import Path
@@ -8,7 +9,7 @@ from pydantic import ValidationError
 from ..utils.io_dict import load_merge_dict, load_dict
 from ..logger import WranglerLogger
 
-SUPPORTED_CONFIG_EXTENSIONS = ['.yml', '.yaml', '.json', '.toml']
+SUPPORTED_CONFIG_EXTENSIONS = [".yml", ".yaml", ".json", ".toml"]
 
 
 class ConfigItem(ABC):
@@ -20,7 +21,8 @@ class ConfigItem(ABC):
     representing config schema.
     Do not use "get" "to_dict", or "items" for key names.
     """
-    base_path = None
+
+    base_path: Optional[Path] = None
 
     def __getitem__(self, key):
         """Return the value for key if key is in the dictionary, else default."""
@@ -69,12 +71,12 @@ def find_configs_in_dir(dir: Union[Path, list[Path]], config_type) -> list[Path]
     config_files: list[Path] = []
     if isinstance(dir, list):
         for d in dir:
-            config_files.extend(find_configs_in_dir(d))
+            config_files.extend(find_configs_in_dir(d, config_type))
     elif dir.is_dir():
         dir = Path(dir)
         for ext in SUPPORTED_CONFIG_EXTENSIONS:
-            config_like_files = dir.glob(f"*config{ext}")
-            config_files.extend(find_configs_in_dir(config_like_files))
+            config_like_files = list(dir.glob(f"*config{ext}"))
+            config_files.extend(find_configs_in_dir(config_like_files, config_type))
     elif dir.is_file():
         try:
             config_type(load_dict(dir))
@@ -116,18 +118,17 @@ def _config_data_from_files(path: Optional[Union[Path, List[Path]]] = None) -> U
     return data
 
 
-def _update_config_from_files(config, config_type, path: Optional[Union[Path, List[Path]]]):
+def _update_config_from_files(config, path: Optional[Union[Path, List[Path]]]):
     """Load configuration from files(s) which updates the default configuration.
 
     Args:
         config: a Configuration object to update with the new configuration.
-        config_type: a class representing the configuration schema.
         path: a valid system path to a config file or list of paths.
 
     Returns:
         A Configuration object
     """
-    config_files = _config_data_from_files(path, config_type)
+    config_files = _config_data_from_files(path)
     if config_files is None:
         return config
     return config.update(config_files)

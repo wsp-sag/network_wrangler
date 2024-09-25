@@ -400,7 +400,7 @@ class WranglerStopTimesTable(StopTimesTable):
             df["arrival_time"] = pd.NaT
         if "departure_time" not in df.columns:
             df["departure_time"] = pd.NaT
-        msg = f"stop_times before parsing: \n\ {df[['arrival_time', 'departure_time']]}"
+        msg = f"stop_times before parsing: \n {df[['arrival_time', 'departure_time']]}"
         # WranglerLogger.debug(msg)
         filler_timestrings = (df["arrival_time"] == Timestamp("00:00:00")) & (
             df["departure_time"] == Timestamp("00:00:00")
@@ -408,7 +408,7 @@ class WranglerStopTimesTable(StopTimesTable):
 
         df.loc[filler_timestrings, "arrival_time"] = pd.NaT
         df.loc[filler_timestrings, "departure_time"] = pd.NaT
-        msg = f"stop_times after filling with NaT: \n\ {df[['arrival_time', 'departure_time']]}"
+        msg = f"stop_times after filling with NaT: \n {df[['arrival_time', 'departure_time']]}"
         # WranglerLogger.debug(msg)
         df["arrival_time"] = str_to_time_series(df["arrival_time"])
         df["departure_time"] = str_to_time_series(df["departure_time"])

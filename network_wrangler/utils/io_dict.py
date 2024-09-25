@@ -18,6 +18,7 @@ def _load_yaml(path: Path) -> dict:
 def _load_json(path: Path) -> dict:
     """Load json file at path."""
     import json
+
     with open(path, "r") as json_file:
         data = json.load(json_file)
     return data

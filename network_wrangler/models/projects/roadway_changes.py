@@ -1,4 +1,5 @@
 """Data models for roadway changes."""
+
 from __future__ import annotations
 
 import itertools
@@ -6,7 +7,15 @@ import itertools
 from datetime import datetime
 from typing import Any, ClassVar, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, RootModel, ValidationError, field_validator, model_validator, validate_call
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    RootModel,
+    ValidationError,
+    field_validator,
+    model_validator,
+    validate_call,
+)
 
 from .roadway_selection import SelectLinksDict, SelectNodesDict
 
@@ -15,7 +24,12 @@ from .._base.records import RecordModel
 from .._base.root import RootListMixin
 from .._base.types import OneOf, TimespanString, AnyOf
 
-from ...params import DEFAULT_CATEGORY, DEFAULT_TIMESPAN, DEFAULT_DELETE_MODES, DEFAULT_SEARCH_MODES
+from ...params import (
+    DEFAULT_CATEGORY,
+    DEFAULT_TIMESPAN,
+    DEFAULT_DELETE_MODES,
+    DEFAULT_SEARCH_MODES,
+)
 from ...utils.time import dt_overlaps, str_to_time_list
 
 

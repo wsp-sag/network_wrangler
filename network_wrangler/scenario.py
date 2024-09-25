@@ -57,7 +57,13 @@ from .roadway.io import load_roadway_from_dir, write_roadway
 from .transit.io import load_transit, write_transit
 from .utils.io_table import prep_dir
 from .utils.utils import topological_sort
-from .configs import load_wrangler_config, WranglerConfig, load_scenario_config, ScenarioConfig
+from .configs import (
+    load_wrangler_config,
+    WranglerConfig,
+    load_scenario_config,
+    ScenarioConfig,
+    DefaultConfig,
+)
 from .configs.scenario import ScenarioOutputConfig, ScenarioInputConfig
 from .roadway.network import RoadwayNetwork
 from .transit.network import TransitNetwork
@@ -525,7 +531,7 @@ class Scenario(object):
             if not self.road_net:
                 raise ValueError("Missing Roadway Network")
             if change.change_type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
-                self.road_net.apply(change, transit_net = self.transit_net)
+                self.road_net.apply(change, transit_net=self.transit_net)
             else:
                 self.road_net.apply(change)
         if change.change_type in TRANSIT_CARD_TYPES:
@@ -721,7 +727,7 @@ def create_scenario(
     """
     if project_card_list is None:
         project_card_list = []
-    
+
     scenario = Scenario(base_scenario, config=config)
 
     if project_card_filepath:
@@ -758,7 +764,7 @@ def create_base_scenario(
     transit: Optional[dict] = None,
     applied_projects: Optional[list] = [],
     conflicts: Optional[list] = [],
-    config: WranglerConfig = None,
+    config: WranglerConfig = DefaultConfig,
 ) -> dict:
     """Creates a base scenario dictionary from roadway and transit network files.
 
@@ -851,11 +857,15 @@ def _scenario_output_config_to_scenario_write(
     scenario_write_args = {k: v for k, v in scenario_output_config.items() if k not in _exc}
     roadway_args = {f"roadway_{k}": v for k, v in scenario_output_config.roadway.items()}
     transit_args = {f"transit_{k}": v for k, v in scenario_output_config.transit.items()}
-    project_args = {f"projects_{k}": v for k, v in scenario_output_config.project_cards.items()}
 
     scenario_write_args.update(roadway_args)
     scenario_write_args.update(transit_args)
-    scenario_write_args.update(project_args)
+
+    if scenario_output_config.project_cards is not None:
+        project_args = {
+            f"projects_{k}": v for k, v in scenario_output_config.project_cards.items()
+        }
+        scenario_write_args.update(project_args)
 
     return scenario_write_args
 

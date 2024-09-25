@@ -31,7 +31,7 @@ import pandas as pd
 from pandera.typing import DataFrame
 from pydantic import BaseModel, field_validator
 
-from ..models.projects.roadway_selection import SelectLinksDict, SelectNodesDict
+
 from projectcard import ProjectCard, SubProject
 
 from .projects import (
@@ -39,13 +39,13 @@ from .projects import (
     apply_calculated_roadway,
     apply_roadway_deletion,
     apply_roadway_property_change,
-    check_broken_transit_shapes
+    check_broken_transit_shapes,
 )
 
 from ..logger import WranglerLogger
 from ..configs import load_wrangler_config, WranglerConfig
 from ..models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
-from ..models.projects.roadway_selection import SelectFacility
+from ..models.projects.roadway_selection import SelectFacility, SelectLinksDict, SelectNodesDict
 from ..utils.models import empty_df_from_datamodel, validate_df_to_model
 from ..utils.data import concat_with_attr
 from .selection import (
@@ -61,7 +61,7 @@ from .links.filters import filter_links_to_ids, filter_links_to_node_ids
 from .links.delete import delete_links_by_ids
 from .links.edit import edit_link_geometry_from_nodes
 from .nodes.create import data_to_nodes_df, NodeAddError
-from .nodes.nodes import node_ids_without_links
+from .nodes.nodes import node_ids_without_links, NodeNotFoundError
 from .nodes.filters import filter_nodes_to_links
 from .nodes.delete import delete_nodes_by_ids
 from .nodes.edit import edit_node_geometry, NodeGeometryChangeTable
@@ -342,7 +342,7 @@ class RoadwayNetwork(BaseModel):
         if not project_card.valid:
             WranglerLogger.error("Invalid Project Card: {project_card}")
             raise ValueError(f"Project card {project_card.project} not valid.")
-        
+
         if project_card._sub_projects:
             for sp in project_card._sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
@@ -352,9 +352,9 @@ class RoadwayNetwork(BaseModel):
             return self._apply_change(project_card, **kwargs)
 
     def _apply_change(
-        self, 
+        self,
         change: Union[ProjectCard, SubProject],
-        transit_net = None,
+        transit_net=None,
     ) -> RoadwayNetwork:
         """Apply a single change: a single-project project or a sub-project."""
         if not isinstance(change, SubProject):
@@ -379,7 +379,7 @@ class RoadwayNetwork(BaseModel):
             broken_shapes = check_broken_transit_shapes(self, change.roadway_deletion, transit_net)
             if len(broken_shapes) > 0:
                 msg = f"Roadway deletion results in broken transit shape_ids: {broken_shapes.shape_id.unique()}"
-                #TODO: raise NotImplementedError(msg)
+                # TODO: raise NotImplementedError(msg)
                 WranglerLogger.warning(msg)
 
             return apply_roadway_deletion(
@@ -413,7 +413,7 @@ class RoadwayNetwork(BaseModel):
             WranglerLogger.error(f"Node with model_node_id {model_node_id} not found.")
             raise NodeNotFoundError(f"Node with model_node_id {model_node_id} not found.")
         return node.geometry.x.values[0], node.geometry.y.values[0]
-      
+
     def add_links(
         self,
         add_links_df: Union[pd.DataFrame, DataFrame[RoadLinksTable]],
@@ -431,7 +431,7 @@ class RoadwayNetwork(BaseModel):
                 f"Cannot add links with model_link_id already in network: {dupe_ids}"
             )
             raise LinkAddError("Cannot add links with model_link_id already in network.")
-            
+
         if not add_links_df.attrs.get("name") == "road_links":
             add_links_df = data_to_links_df(
                 add_links_df, nodes_df=self.nodes_df, in_crs=in_crs, config=self.config
@@ -439,7 +439,6 @@ class RoadwayNetwork(BaseModel):
         self.links_df = validate_df_to_model(
             concat_with_attr([self.links_df, add_links_df], axis=0), RoadLinksTable
         )
-
 
     def add_nodes(
         self,
@@ -458,7 +457,7 @@ class RoadwayNetwork(BaseModel):
                 f"Cannot add nodes with model_node_id already in network: {dupe_ids}"
             )
             raise NodeAddError("Cannot add nodes with model_node_id already in network.")
-            
+
         if not add_nodes_df.attrs.get("name") == "road_nodes":
             add_nodes_df = data_to_nodes_df(add_nodes_df, in_crs=in_crs, config=self.config)
         self.nodes_df = validate_df_to_model(
@@ -467,6 +466,7 @@ class RoadwayNetwork(BaseModel):
         if not self.nodes_df.attrs.get("name") == "road_nodes":
             raise ValueError(
                 f"Expected nodes_df to have name 'road_nodes', got {self.nodes_df.attrs.get('name')}"
+            )
 
     def add_shapes(
         self,
@@ -493,7 +493,6 @@ class RoadwayNetwork(BaseModel):
         self.shapes_df = validate_df_to_model(
             concat_with_attr([self.shapes_df, add_shapes_df], axis=0), RoadShapesTable
         )
-
 
     def delete_links(
         self,

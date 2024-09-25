@@ -4,6 +4,7 @@ from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadLinksTable, RoadLinksAttrs
+from ...utils.models import validate_call_pyd
 
 
 class LinkDeletionError(Exception):

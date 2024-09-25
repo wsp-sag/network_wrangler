@@ -11,14 +11,14 @@ from typing import Union, Optional
 import geopandas as gpd
 
 from pandera import DataFrameModel, Field
-from pydantic import ConfigDict, validate_call
+from pydantic import ConfigDict
 from pandera.typing import DataFrame, Series
 
 from ...logger import WranglerLogger
 from ...models._base.records import RecordModel
 from ...models.roadway.tables import RoadNodesTable, RoadNodesAttrs
 from ...utils.models import validate_df_to_model, validate_call_pyd
-from ...models.projects.roadway_property_change import NodeGeometryChangeTable, RoadPropertyChange
+from ...utils.data import update_df_by_col_value, validate_existing_value_in_df
 from ...params import LAT_LON_CRS
 from ...models.projects.roadway_changes import RoadPropertyChange
 

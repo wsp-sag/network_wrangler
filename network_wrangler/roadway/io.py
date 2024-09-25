@@ -160,7 +160,7 @@ def load_roadway_from_dir(
     boundary_geocode: Optional[str] = None,
     boundary_file: Optional[Path] = None,
     filter_links_to_nodes: Optional[bool] = None,
-    config: Optional[ConfigInputTypes] = DefaultConfig,
+    config: ConfigInputTypes = DefaultConfig,
 ) -> RoadwayNetwork:
     """Reads a network from the roadway network standard.
 

@@ -122,7 +122,7 @@ def load_feed_from_dfs(feed_dfs: dict) -> Feed:
 def load_transit(
     feed: Union[Feed, GtfsModel, dict[str, pd.DataFrame], str, Path],
     suffix: TransitFileTypes = "txt",
-    config: Optional[WranglerConfig] = DefaultConfig,
+    config: WranglerConfig = DefaultConfig,
 ) -> "TransitNetwork":
     """Create a TransitNetwork object.
 

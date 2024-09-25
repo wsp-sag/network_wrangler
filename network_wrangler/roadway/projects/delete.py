@@ -52,10 +52,9 @@ def apply_roadway_deletion(
 
     return roadway_net
 
+
 def check_broken_transit_shapes(
-    roadway_net: RoadwayNetwork,
-    roadway_deletion: RoadwayDeletion,
-    transit_net: TransitNetwork
+    roadway_net: RoadwayNetwork, roadway_deletion: RoadwayDeletion, transit_net: TransitNetwork
 ):
     """Check if any transit shapes go on the deleted links.
 
@@ -67,7 +66,9 @@ def check_broken_transit_shapes(
     returns: Broken shape dataframe. Empty if no broken shapes
     """
     deleted_link_id_list = roadway_deletion["links"]["model_link_id"]
-    deleted_links_df = roadway_net.links_df[roadway_net.links_df["model_link_id"].isin(deleted_link_id_list)]
+    deleted_links_df = roadway_net.links_df[
+        roadway_net.links_df["model_link_id"].isin(deleted_link_id_list)
+    ]
     shapes_df = transit_net.feed.shapes.copy()
 
     # sort the shapes_df by agency_raw_name, shape_id and shape_pt_sequence
@@ -86,10 +87,10 @@ def check_broken_transit_shapes(
     shapes_df["shape_model_node_id"] = pd.to_numeric(shapes_df["shape_model_node_id"])
 
     shapes_df = shapes_df.merge(
-        deleted_links_df[["model_link_id", "A", "B"]], 
+        deleted_links_df[["model_link_id", "A", "B"]],
         how="left",
-        left_on=["shape_model_node_id", "shape_model_node_id_next"], 
-        right_on=["A", "B"]
+        left_on=["shape_model_node_id", "shape_model_node_id_next"],
+        right_on=["A", "B"],
     )
     shapes_df = shapes_df[shapes_df["model_link_id"].notna()]
 
