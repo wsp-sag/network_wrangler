@@ -56,6 +56,7 @@ from ...utils.time import (
     str_to_time,
     dt_contains,
 )
+from ...utils.models import validate_call_pyd, validate_df_to_model
 
 
 class InvalidScopedLinkValue(Exception):
@@ -311,7 +312,7 @@ def _filter_exploded_df_to_scope(
     return match_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def prop_for_scope(
     links_df: DataFrame[RoadLinksTable],
     prop_name: str,
@@ -340,8 +341,7 @@ def prop_for_scope(
     Returns:
         pd.DataFrame with `model_link_id` and `prop_name`
     """
-    # TODO write wrapper on validate call so don't have to do this
-    links_df.attrs.update(RoadLinksAttrs)
+    links_df = validate_df_to_model(links_df, RoadLinksTable)
     timespan = timespan if timespan is not None else DEFAULT_TIMESPAN
     category = category if category is not None else DEFAULT_CATEGORY
 

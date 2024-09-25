@@ -8,13 +8,12 @@ from typing import List, Union, Optional
 import geopandas as gpd
 import pandas as pd
 
-from pydantic import validate_call
 from pandera.typing import DataFrame
 
 from ..utils import set_df_index_to_pk
 
 from ...logger import WranglerLogger
-from ...utils.models import validate_df_to_model
+from ...utils.models import validate_df_to_model, validate_call_pyd
 from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadLinksAttrs, RoadNodesAttrs
 from ...models.roadway.converters import (
     detect_v0_scoped_link_properties,
@@ -44,7 +43,6 @@ class LinkCreationError(Exception):
     pass
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
 def shape_id_from_link_geometry(
     links_df: pd.DataFrame,
 ) -> gpd.GeoDataFrame:
@@ -85,7 +83,7 @@ def _fill_missing_distance_from_geometry(df: gpd.GeoDataFrame) -> gpd.GeoDataFra
     return df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def data_to_links_df(
     links_df: Union[pd.DataFrame, List[dict]],
     in_crs: int = LAT_LON_CRS,

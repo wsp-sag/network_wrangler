@@ -90,6 +90,7 @@ def validate_df_to_model(
     try:
         model_df = model.validate(df, lazy=True)
         model_df = fill_df_with_defaults_from_model(model_df, model)
+        model_df.attrs = attrs
         return model_df
     except (TypeError, ValueError) as e:
         WranglerLogger.error(f"Validation to {model.__name__} failed.\n{e}")
