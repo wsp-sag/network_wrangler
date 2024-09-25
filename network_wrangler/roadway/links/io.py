@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pandas as pd
 
-from pydantic import validate_call
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
@@ -15,13 +14,14 @@ from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadNodesAt
 from ...models.roadway.converters import translate_links_df_v1_to_v0
 from ...models._base.types import GeoFileTypes
 from ...utils.io_table import read_table, write_table
+from ...utils.models import validate_call_pyd
 from .create import data_to_links_df
 from ...params import LAT_LON_CRS
 
 from ...configs import DefaultConfig, WranglerConfig
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call_pyd
 def read_links(
     filename: Path,
     in_crs: int = LAT_LON_CRS,
@@ -69,11 +69,11 @@ def read_links(
     return links_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def write_links(
     links_df: DataFrame[RoadLinksTable],
-    convert_complex_properties_to_single_field: bool = False,
     out_dir: Union[str, Path] = ".",
+    convert_complex_properties_to_single_field: bool = False,
     prefix: str = "",
     file_format: GeoFileTypes = "json",
     overwrite: bool = False,

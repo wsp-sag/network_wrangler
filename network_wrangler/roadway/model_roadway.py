@@ -210,8 +210,9 @@ class ModelRoadwayNetwork:
 
         Args:
             out_dir: the path were the output will be saved.
-            convert_complex_link_properties_to_single_field: if True, will convert complex link
-                properties to a single field. Defaults to False.
+            convert_complex_link_properties_to_single_field: if True, will convert complex properties to a
+                single column consistent with v0 format.  This format is NOT valid
+                with parquet and many other softwares. Defaults to False.
             prefix: the name prefix of the roadway files that will be generated.
             file_format: the format of the output files. Defaults to "geojson".
             overwrite: if True, will overwrite the files if they already exist. Defaults to True.
@@ -220,8 +221,8 @@ class ModelRoadwayNetwork:
         """
         write_roadway(
             self,
-            convert_complex_link_properties_to_single_field=convert_complex_link_properties_to_single_field,
             out_dir=out_dir,
+            convert_complex_link_properties_to_single_field=convert_complex_link_properties_to_single_field,
             prefix=prefix,
             file_format=file_format,
             overwrite=overwrite,

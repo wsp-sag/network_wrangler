@@ -1,6 +1,5 @@
 """Deletes links from RoadLinksTable."""
 
-from pydantic import validate_call
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
@@ -13,7 +12,7 @@ class LinkDeletionError(Exception):
     pass
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def delete_links_by_ids(
     links_df: DataFrame[RoadLinksTable],
     del_link_ids: list[int],

@@ -12,13 +12,19 @@ from ...configs import DefaultConfig
 from ...models.roadway.tables import RoadShapesTable, RoadShapesAttrs
 from ...utils.models import validate_df_to_model
 from ...utils.data import coerce_gdf
-from ...utils.utils import generate_list_of_new_ids
+from ...utils.utils import generate_list_of_new_ids_from_existing
 from ...utils.geo import offset_geometry_meters
 from ...logger import WranglerLogger
 from ...params import LAT_LON_CRS
 from ..utils import set_df_index_to_pk
 from ...utils.data import concat_with_attr
 from ...configs import WranglerConfig, DefaultConfig
+
+
+class ShapeAddError(Exception):
+    """Raised when there is an issue with adding shapes."""
+
+    pass
 
 
 def df_to_shapes_df(
@@ -85,7 +91,7 @@ def create_offset_shapes(
     """
     offset_shapes_df = pd.DataFrame(
         {
-            "shape_id": generate_list_of_new_ids(
+            "shape_id": generate_list_of_new_ids_from_existing(
                 shape_ids, shapes_df.shape_ids.to_list, id_scalar
             ),
             "ref_shape_id": shape_ids,
@@ -94,7 +100,7 @@ def create_offset_shapes(
 
     ref_shapes_df = copy.deepcopy(shapes_df[shapes_df["shape_id"].isin(shape_ids)])
 
-    ref_shapes_df["offset_shape_id"] = generate_list_of_new_ids(
+    ref_shapes_df["offset_shape_id"] = generate_list_of_new_ids_from_existing(
         ref_shapes_df.shape_id.to_list, shapes_df.shape_ids.to_list, id_scalar
     )
 

@@ -213,16 +213,16 @@ def write_roadway(
     """Writes a network in the roadway network standard.
 
     Args:
-        net: RoadwayNetwork or ModelRoadwayNetwork instance to write out
+        net: RoadwayNetwork or ModelRoadwayNetwork instance to write out.
+        out_dir: the path were the output will be saved. Defaults to ".".
+        prefix: the name prefix of the roadway files that will be generated.
+        file_format: the format of the output files. Defaults to "geojson".
         convert_complex_link_properties_to_single_field: if True, will convert complex link
             properties to a single column consistent with v0 format.  This format is NOT valid
             with parquet and many other softwares. Defaults to False.
-        out_dir: the path were the output will be saved
-        prefix: the name prefix of the roadway files that will be generated
-        file_format: the format of the output files. Defaults to "geojson"
-        overwrite: if True, will overwrite the files if they already exist. Defaults to True
+        overwrite: if True, will overwrite the files if they already exist. Defaults to True.
         true_shape: if True, will write the true shape of the links as found from shapes.
-            Defaults to False
+            Defaults to False.
     """
     out_dir = Path(out_dir)
     if not out_dir.is_dir():

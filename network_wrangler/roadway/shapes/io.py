@@ -8,19 +8,18 @@ from typing import Union, Optional
 
 from geopandas import GeoDataFrame
 
-from pydantic import validate_call
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadShapesTable
 from ...utils.io_table import read_table, write_table
-from ...utils.models import empty_df_from_datamodel, validate_df_to_model
+from ...utils.models import empty_df_from_datamodel, validate_df_to_model, validate_call_pyd
 from ...configs import DefaultConfig, WranglerConfig
 from ...params import LAT_LON_CRS
 from .create import df_to_shapes_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def read_shapes(
     filename: Path,
     in_crs: int = LAT_LON_CRS,
@@ -82,6 +81,7 @@ def read_shapes(
     return shapes_df
 
 
+@validate_call_pyd
 def write_shapes(
     shapes_df: DataFrame[RoadShapesTable],
     out_dir: Union[str, Path],

@@ -32,6 +32,12 @@ from ...utils.geo import (
 from ...configs import DefaultConfig, WranglerConfig
 
 
+class LinkAddError(Exception):
+    """Raised when there is an issue with adding links."""
+
+    pass
+
+
 class LinkCreationError(Exception):
     """Raised when there is an issue with creating links."""
 

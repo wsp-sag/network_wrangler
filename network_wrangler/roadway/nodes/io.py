@@ -15,6 +15,7 @@ from ...logger import WranglerLogger
 from ...utils.io_table import read_table, write_table
 from ...params import LAT_LON_CRS
 from ...models.roadway.tables import RoadNodesTable, RoadNodesAttrs
+from ...utils.models import validate_call_pyd
 from ...models._base.types import GeoFileTypes
 from ...utils.models import validate_df_to_model
 from ...configs import DefaultConfig, WranglerConfig
@@ -74,7 +75,7 @@ def read_nodes(
     return nodes_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def nodes_df_to_geojson(nodes_df: DataFrame[RoadNodesTable], properties: list[str]):
     """Converts a nodes dataframe to a geojson.
 
@@ -98,7 +99,7 @@ def nodes_df_to_geojson(nodes_df: DataFrame[RoadNodesTable], properties: list[st
     return geojson
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call_pyd
 def write_nodes(
     nodes_df: DataFrame[RoadNodesTable],
     out_dir: Union[str, Path],

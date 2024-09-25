@@ -35,8 +35,8 @@ from ...models.projects.roadway_changes import RoadPropertyChange, ScopedPropert
 from ...configs import WranglerConfig, DefaultConfig
 from ...logger import WranglerLogger
 from ...utils.data import validate_existing_value_in_df
-from ...utils.models import validate_df_to_model
 from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadLinksAttrs, RoadNodesAttrs
+from ...utils.models import validate_df_to_model, validate_call_pyd
 from ...models.roadway.types import ScopedLinkValueItem
 from ...models.projects.roadway_changes import (
     IndivScopedPropertySetItem,
@@ -56,7 +56,6 @@ class LinkChangeError(Exception):
     pass
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
 def _initialize_links_as_managed_lanes(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list[int],
@@ -244,7 +243,7 @@ def _edit_ml_access_egress_points(
     return links_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call_pyd
 def _edit_link_property(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
@@ -357,7 +356,54 @@ def _edit_link_property(
     return links_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call_pyd
+def edit_link_property(
+    links_df: DataFrame[RoadLinksTable],
+    link_idx: list,
+    prop_name: str,
+    prop_dict: RoadPropertyChange,
+    existing_value_conflict_error: bool = False,
+) -> DataFrame[RoadLinksTable]:
+    """Return copy of RoadLinksTable with edited link property for a list of links IDS.
+
+    Args:
+        links_df: links to edit
+        link_idx: list of link indices to change
+        prop_name: property name to change
+        prop_dict: dictionary of value from project_card
+        existing_value_conflict_error: If True, will trigger an error if the existing
+            specified value in the project card doesn't match the value in links_df.
+            Otherwise, will only trigger a warning. Defaults to False.
+        overwrite_all_scoped: If True, will overwrite all scoped values for link property with
+            scoped_prop_value_set. Defaults to False.
+        overwrite_conflicting_scoped: If True will overwrite any conflicting scopes.
+            Otherwise, will raise an Exception on conflicting, but not matching, scopes
+            Defaults to True.
+
+    """
+    WranglerLogger.info(f"Editing Link Property {prop_name} for {len(link_idx)} links.")
+    WranglerLogger.debug(f"prop_dict: /n{prop_dict}")
+    prop_change = RoadPropertyChange(prop_dict)
+
+    links_df = copy.deepcopy(links_df)
+    links_df = _edit_link_property(
+        links_df,
+        link_idx,
+        prop_name,
+        prop_change,
+        existing_value_conflict_error,
+        overwrite_all_scoped=prop_change.overwrite_all_scoped,
+        overwrite_conflicting_scoped=prop_change.overwrite_conflicting_scoped,
+    )
+    links_df = validate_df_to_model(links_df, RoadLinksTable)
+    WranglerLogger.debug(
+        f"Edited links_df.loc[link_idx, property]: \
+                         \n {links_df.loc[link_idx, property]}"
+    )
+    return links_df
+
+
+@validate_call_pyd
 def edit_link_properties(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
@@ -419,7 +465,7 @@ def edit_link_properties(
     return links_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call_pyd
 def edit_link_geometry_from_nodes(
     links_df: DataFrame[RoadLinksTable],
     nodes_df: DataFrame[RoadNodesTable],
