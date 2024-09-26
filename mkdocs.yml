@@ -13,10 +13,10 @@ theme:
     - navigation.expand
     - toc.integrate
     - toc.follow
-  palette: 
+  palette:
     - scheme: default
       toggle:
-        icon: material/brightness-7 
+        icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
       toggle:

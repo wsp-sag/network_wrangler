@@ -13,7 +13,4 @@ from .transit_selection import (
     SelectTransitNodes,
     SelectTransitLinks,
 )
-from .roadway_changes import (
-    RoadPropertyChange,
-    RoadwayDeletion
-)
+from .roadway_changes import RoadPropertyChange, RoadwayDeletion

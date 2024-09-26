@@ -2,10 +2,10 @@ name: "my_scenario"
 base_scenario:
     roadway:
         dir: "."
-        suffix: "geojson"
+        file_format: "geojson"
     transit:
         dir: "."
-        suffix: "txt"
+        file_format: "txt"
 projects:
     project_card_filepath:
         - "project_cards/road.add.simple.yml"

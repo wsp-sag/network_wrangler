@@ -144,24 +144,24 @@ def transit_road_net_consistency(feed: Feed, road_net: RoadwayNetwork) -> bool:
 
 
 def validate_transit_in_dir(
-    directory: Path,
-    suffix: TransitFileTypes = "txt",
+    dir: Path,
+    file_format: TransitFileTypes = "txt",
     road_dir: Optional[Path] = None,
-    road_suffix: RoadwayFileTypes = "geojson",
+    road_file_format: RoadwayFileTypes = "geojson",
 ) -> bool:
     """Validates a roadway network in a directory to the wrangler data model specifications.
 
     Args:
-        directory (Path): The transit network file directory.
-        suffix (str): The suffices of roadway network file name. Defaults to "txt".
+        dir (Path): The transit network file directory.
+        file_format (str): The format of roadway network file name. Defaults to "txt".
         road_dir (Path): The roadway network file directory. Defaults to None.
-        road_suffix (str): The suffices of roadway network file name. Defaults to "geojson".
+        road_file_format (str): The format of roadway network file name. Defaults to "geojson".
         output_dir (str): The output directory for the validation report. Defaults to ".".
     """
     from .io import load_transit
 
     try:
-        t = load_transit(directory, suffix=suffix)
+        t = load_transit(dir, file_format=file_format)
     except SchemaErrors as e:
         WranglerLogger.error(f"!!! [Transit Network invalid] - Failed Loading to Feed object\n{e}")
         return False
@@ -170,7 +170,7 @@ def validate_transit_in_dir(
         from .network import TransitRoadwayConsistencyError
 
         try:
-            r = load_roadway_from_dir(road_dir, suffix=road_suffix)
+            r = load_roadway_from_dir(road_dir, file_format=road_file_format)
         except FileNotFoundError:
             WranglerLogger.error(f"! Roadway network not found in {road_dir}")
             return False

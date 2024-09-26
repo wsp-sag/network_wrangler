@@ -120,31 +120,33 @@ def load_roadway(
 
 
 def id_roadway_file_paths_in_dir(
-    dir: Union[Path, str], suffix: RoadwayFileTypes = "geojson"
+    dir: Union[Path, str], file_format: RoadwayFileTypes = "geojson"
 ) -> tuple[Path, Path, Union[None, Path]]:
     """Identifies the paths to the links, nodes, and shapes files in a directory."""
     network_path = Path(dir)
     if not network_path.is_dir():
         raise FileNotFoundError(f"Directory {network_path} does not exist")
 
-    _link_suffix = suffix
-    if suffix == "geojson":
-        _link_suffix = "json"
+    _link_file_format = file_format
+    if file_format == "geojson":
+        _link_file_format = "json"
 
     try:
-        links_file = next(network_path.glob(f"*link*.{_link_suffix}"))
+        links_file = next(network_path.glob(f"*link*.{_link_file_format}"))
     except StopIteration:
         raise FileNotFoundError(
-            f"No links file with {_link_suffix} suffix found in {network_path}"
+            f"No links file with {_link_file_format} file format found in {network_path}"
         )
 
     try:
-        nodes_file = next(network_path.glob(f"*node*.{suffix}"))
+        nodes_file = next(network_path.glob(f"*node*.{file_format}"))
     except StopIteration:
-        raise FileNotFoundError(f"No nodes file with {suffix} suffix found in {network_path}")
+        raise FileNotFoundError(
+            f"No nodes file with {file_format} file format found in {network_path}"
+        )
 
     try:
-        shapes_file = next(network_path.glob(f"*shape*.{suffix}"))
+        shapes_file = next(network_path.glob(f"*shape*.{file_format}"))
     except StopIteration:
         # Shape file is optional so if not found, its ok.
         shapes_file = None
@@ -154,7 +156,7 @@ def id_roadway_file_paths_in_dir(
 
 def load_roadway_from_dir(
     dir: Union[Path, str],
-    suffix: RoadwayFileTypes = "geojson",
+    file_format: RoadwayFileTypes = "geojson",
     read_in_shapes: bool = False,
     boundary_gdf: Optional[GeoDataFrame] = None,
     boundary_geocode: Optional[str] = None,
@@ -168,7 +170,7 @@ def load_roadway_from_dir(
 
     Args:
         dir: the directory where the network files are located
-        suffix: the suffix of the files. Defaults to "geojson"
+        file_format: the file format of the files. Defaults to "geojson"
         read_in_shapes: if True, will read shapes into network instead of only lazily
             reading them when they are called. Defaults to False.
         boundary_gdf: GeoDataFrame to filter the input data to. Only used for geographic data.
@@ -186,7 +188,7 @@ def load_roadway_from_dir(
 
     Returns: a RoadwayNetwork instance
     """
-    links_file, nodes_file, shapes_file = id_roadway_file_paths_in_dir(dir, suffix)
+    links_file, nodes_file, shapes_file = id_roadway_file_paths_in_dir(dir, file_format)
 
     return load_roadway(
         links_file=links_file,
@@ -225,13 +227,7 @@ def write_roadway(
             Defaults to False.
     """
     out_dir = Path(out_dir)
-    if not out_dir.is_dir():
-        if out_dir.parent.is_dir():
-            out_dir.mkdir()
-        else:
-            raise FileNotFoundError(
-                f"Output directory {out_dir} ands its parent path does not exist"
-            )
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     prefix = f"{prefix}_" if prefix else ""
 
@@ -272,7 +268,7 @@ def convert_roadway_file_serialization(
 
     Args:
         in_path: the path to the input directory.
-        in_format: the suffix of the input files. Defaults to "geojson".
+        in_format: the file formatof the input files. Defaults to "geojson".
         out_dir: the path were the output will be saved.
         out_format: the format of the output files. Defaults to "parquet".
         out_prefix: the name prefix of the roadway files that will be generated. Defaults to "".
@@ -334,7 +330,7 @@ def convert_roadway_network_serialization(
     input_path: Union[str, Path],
     output_format: RoadwayFileTypes = "geojson",
     out_dir: Union[str, Path] = ".",
-    input_suffix: RoadwayFileTypes = "geojson",
+    input_file_format: RoadwayFileTypes = "geojson",
     out_prefix: str = "",
     overwrite: bool = True,
     boundary_gdf: Optional[GeoDataFrame] = None,
@@ -350,7 +346,7 @@ def convert_roadway_network_serialization(
         input_path: the path to the input directory.
         output_format: the format of the output files. Defaults to "geojson".
         out_dir: the path were the output will be saved.
-        input_suffix: the suffix of the input files. Defaults to "geojson".
+        input_file_format: the format of the input files. Defaults to "geojson".
         out_prefix: the name prefix of the roadway files that will be generated. Defaults to "".
         overwrite: if True, will overwrite the files if they already exist. Defaults to True.
         boundary_gdf: GeoDataFrame to filter the input data to. Only used for geographic data.
@@ -362,12 +358,14 @@ def convert_roadway_network_serialization(
         filter_links_to_nodes: if True, will filter the links to only those that have nodes.
             Defaults to False unless boundary_gdf, boundary_geocode, or boundary_file are provided.
     """
-    if input_suffix is None:
-        input_suffix = "geojson"
-    WranglerLogger.info(f"Loading roadway network from {input_path} with suffix {input_suffix}")
+    if input_file_format is None:
+        input_file_format = "geojson"
+    WranglerLogger.info(
+        f"Loading roadway network from {input_path} with format {input_file_format}"
+    )
     net = load_roadway_from_dir(
         input_path,
-        suffix=input_suffix,
+        file_format=input_file_format,
         boundary_gdf=boundary_gdf,
         boundary_geocode=boundary_geocode,
         boundary_file=boundary_file,

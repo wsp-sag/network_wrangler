@@ -9,9 +9,10 @@ from .utils import merge_dicts
 def _load_yaml(path: Path) -> dict:
     """Load yaml file at path."""
     import yaml
+    # Add the custom constructor to the YAML loader
 
     with open(path, "r") as yaml_file:
-        data = yaml.safe_load(yaml_file)
+        data = yaml.load(yaml_file, Loader=yaml.FullLoader)
     return data
 
 

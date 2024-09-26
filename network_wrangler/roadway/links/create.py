@@ -106,10 +106,6 @@ def data_to_links_df(
     Returns:
         pd.DataFrame: _description_
     """
-    # todo write wrapper so this doesn't have to be done.
-    if nodes_df is not None:
-        nodes_df.attrs.update(RoadNodesAttrs)
-
     WranglerLogger.debug(f"Creating {len(links_df)} links.")
     if not isinstance(links_df, pd.DataFrame):
         links_df = pd.DataFrame(links_df)

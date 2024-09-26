@@ -46,8 +46,6 @@ def read_links(
     """
     WranglerLogger.info(f"Reading links from {filename}.")
     start_t = time.time()
-    # TODO write wrapper on validate call so don't have to do this
-    nodes_df.attrs.update(RoadNodesAttrs)
     if filter_to_nodes is True and nodes_df is None:
         raise ValueError("If filter_to_nodes is True, nodes_df must be provided.")
 

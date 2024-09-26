@@ -1,43 +1,140 @@
-"""Scenario class and related functions for managing a scenario.
+"""Scenario objects manage how a collection of projects is applied to the networks.
 
-Usage:
+Scenarios are built from a base scenario and a list of project cards.
+
+A project card is a YAML file (or similar) that describes a change to the network. The project
+card can contain multiple changes, each of which is applied to the network in sequence.
+
+Instantiate a scenario by seeding it with a base scenario and optionally some project cards.
 
 ```python
-my_base_year_scenario = {
-    "road_net": load_roadway(
-        links_file=STPAUL_LINK_FILE,
-        nodes_file=STPAUL_NODE_FILE,
-        shapes_file=STPAUL_SHAPE_FILE,
-    ),
-    "transit_net": load_transit(STPAUL_DIR),
-}
-
-# create a future baseline scenario from base by searching for all cards in dir w/ baseline tag
-project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
+from network_wrangler import create_scenario
 my_scenario = create_scenario(
     base_scenario=my_base_year_scenario,
     card_search_dir=project_card_directory,
     filter_tags = [ "baseline2050" ]
 )
+```
 
-# check project card queue and then apply the projects
+A `base_year_scenario` is a dictionary representation of key components of a scenario:
+- `road_net`: RoadwayNetwork instance
+- `transit_net`: TransitNetwork instance
+- `applied_projects`: list of projects that have been applied to the base scenario so that the
+    scenario knows if there will be conflicts with future projects or if a future project's
+    pre-requisite is satisfied.
+- `conflicts`: dictionary of conflicts for project that have been applied to the base scenario so
+    that the scenario knows if there will be conflicts with future projects.
+
+```python
+my_base_year_scenario = {
+    "road_net": load_from_roadway_dir(STPAUL_DIR),
+    "transit_net": load_transit(STPAUL_DIR),
+    "applied_projects": [],
+    "conflicts": {},
+}
+```
+
+In addition to adding projects when you create the scenario, project cards can be **added** to a
+scenario using the `add_project_cards` method.
+
+```python
+from projectcard import read_cards
+project_card_dict = read_cards(card_location, filter_tags=["Baseline2030"], recursive=True)
+my_scenario.add_project_cards(project_card_dict.values())
+```
+
+Where `card_location` can be a single path, list of paths, a directory, or a glob pattern.
+
+Projects can be **applied** to a scenario using the `apply_all_projects` method. Before applying
+projects, the scenario will check that all pre-requisites are satisfied, that there are no conflicts,
+and that the projects are in the planned projects list.
+
+If you want to check the order of projects before applying them, you can use the `queued_projects`
+prooperty.
+
+```python
 my_scenario.queued_projects
 my_scenario.apply_all_projects()
-
-# check applied projects, write it out, and create a summary report.
-my_scenario.applied_projects
-my_scenario.write("baseline")
-my_scenario.summarize(outfile = "baseline2050summary.txt")
-
-# Add some projects to create a build scenario based on a list of files.
-build_card_filenames = [
-    "3_multiple_roadway_attribute_change.yml",
-    "road.prop_changes.segment.yml",
-    "4_simple_managed_lane.yml",
-]
-my_scenario.add_projects_from_files(build_card_filenames)
-my_scenario.write("build2050")
 ```
+
+You can **review** the resulting scenario, roadway network, and transit networks.
+
+```python
+my_scenario.applied_projects
+my_scenario.road_net.links_gdf.explore()
+my_scenario.transit_net.feed.shapes_gdf.explore()
+```
+
+Scenarios (and their networks) can be **written** to disk using the `write` method which
+in addition to writing out roadway and transit networks, will serialize the scenario to
+a yaml-like file and can also write out the project cards that have been applied.
+
+```python
+my_scenario.write(
+    "output_dir",
+    "scenario_name_to_use",
+    overwrite=True,
+    projects_write=True,
+)
+```
+
+??? example "Example Serialized Scenario File"
+
+    ```yaml
+    applied_projects: &id001
+    - project a
+    - project b
+    base_scenario:
+    applied_projects: *id001
+    roadway:
+        dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/examples/small
+        file_format: .geojson
+    transit:
+        dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/examples/small
+    config:
+    CPU:
+        EST_PD_READ_SPEED:
+        csv: 0.03
+        geojson: 0.03
+        json: 0.15
+        parquet: 0.005
+        txt: 0.04
+    IDS:
+        ML_LINK_ID_METHOD: range
+        ML_LINK_ID_RANGE: &id002 !!python/tuple
+        - 950000
+        - 999999
+        ML_LINK_ID_SCALAR: 15000
+        ML_NODE_ID_METHOD: range
+        ML_NODE_ID_RANGE: *id002
+        ML_NODE_ID_SCALAR: 15000
+        ROAD_SHAPE_ID_METHOD: scalar
+        ROAD_SHAPE_ID_SCALAR: 1000
+        TRANSIT_SHAPE_ID_METHOD: scalar
+        TRANSIT_SHAPE_ID_SCALAR: 1000000
+    MODEL_ROADWAY:
+        ADDITIONAL_COPY_FROM_GP_TO_ML: []
+        ADDITIONAL_COPY_TO_ACCESS_EGRESS: []
+        ML_OFFSET_METERS: -10
+    conflicts: {}
+    corequisites: {}
+    name: first_scenario
+    prerequisites: {}
+    roadway:
+    dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/tests/out/first_scenario/roadway
+    file_format: parquet
+    transit:
+    dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/tests/out/first_scenario/transit
+    file_format: txt
+    ```
+
+And if you want to reload scenario that you "wrote", you can use the `load_scenario` function.
+
+```python
+from network_wrangler import load_scenario
+my_scenario = load_scenario("output_dir/scenario_name_to_use_scenario.yml")
+```
+
 """
 
 from __future__ import annotations
@@ -45,8 +142,8 @@ import copy
 import pprint
 import yaml
 
-from collections import deque, defaultdict
 from datetime import datetime
+from collections import deque, defaultdict
 from pathlib import Path
 from typing import Union, Optional, TYPE_CHECKING
 
@@ -56,6 +153,7 @@ from .logger import WranglerLogger
 from .roadway.io import load_roadway_from_dir, write_roadway
 from .transit.io import load_transit, write_transit
 from .utils.io_table import prep_dir
+from .utils.io_dict import load_dict
 from .utils.utils import topological_sort
 from .configs import (
     load_wrangler_config,
@@ -610,8 +708,8 @@ class Scenario(object):
         transit_prefix: Optional[str] = None,
         transit_file_format: TransitFileTypes = "txt",
         projects_out_dir: Optional[Path] = None,
-    ) -> None:
-        """_summary_.
+    ) -> Path:
+        """Writes scenario networks and summary to disk and returns path to scenario file.
 
         Args:
             path: Path to write scenario networks and scenario summary to.
@@ -638,6 +736,7 @@ class Scenario(object):
             if roadway_out_dir is None:
                 roadway_out_dir = path / "roadway"
             roadway_out_dir.mkdir(parents=True, exist_ok=True)
+
             write_roadway(
                 net=self.road_net,
                 out_dir=roadway_out_dir,
@@ -669,34 +768,36 @@ class Scenario(object):
 
         scenario_data = self.summary
         if transit_write:
-            scenario_data["transit_net"] = str(transit_out_dir)
+            scenario_data["transit"] = {
+                "dir": str(transit_out_dir),
+                "file_format": transit_file_format,
+            }
         if roadway_write:
-            scenario_data["road_net"] = str(roadway_out_dir)
+            scenario_data["roadway"] = {
+                "dir": str(roadway_out_dir),
+                "file_format": roadway_file_format,
+            }
         if projects_write:
-            scenario_data["project_cards"] = str(projects_out_dir)
-        with open(Path(path) / f"{name}_scenario.yml", "w") as f:
-            yaml.dump(scenario_data, f)
+            scenario_data["project_cards"] = ({"dir": str(projects_out_dir)},)
+        scenario_file_path = Path(path) / f"{name}_scenario.yml"
+        with open(scenario_file_path, "w") as f:
+            yaml.dump(scenario_data, f, default_flow_style=False, allow_unicode=True)
+        return scenario_file_path
 
     @property
-    def summary(
-        self,
-        skip: list[str] = [
-            "road_net",
-            "transit_net",
-            "project_cards",
-        ],
-    ) -> dict:
+    def summary(self) -> dict:
         """A high level summary of the created scenario and public attributes."""
+        skip = ["road_net", "transit_net", "project_cards", "config"]
         summary_dict = {
             k: v for k, v in self.__dict__.items() if not k.startswith("_") and k not in skip
         }
-        if isinstance(summary_dict.get("config"), WranglerConfig):
-            summary_dict["config"] = summary_dict["config"].to_dict()
+        summary_dict["config"] = self.config.to_dict()
         return summary_dict
 
 
 def create_scenario(
     base_scenario: Union[Scenario, dict] = {},
+    name: str = datetime.now().strftime("%Y%m%d%H%M%S"),
     project_card_list=None,
     project_card_filepath: Optional[Union[list[Path], Path]] = None,
     filter_tags: list[str] = [],
@@ -715,6 +816,7 @@ def create_scenario(
 
     Args:
         base_scenario: base Scenario scenario instances of dictionary of attributes.
+        name: Optional name for the scenario. Defaults to current datetime.
         project_card_list: List of ProjectCard instances to create Scenario from. Defaults
             to [].
         project_card_filepath: where the project card is.  A single path, list of paths,
@@ -728,7 +830,7 @@ def create_scenario(
     if project_card_list is None:
         project_card_list = []
 
-    scenario = Scenario(base_scenario, config=config)
+    scenario = Scenario(base_scenario, config=config, name=name)
 
     if project_card_filepath:
         project_card_list += list(
@@ -757,6 +859,29 @@ def write_applied_projects(scenario: Scenario, out_dir: Path, overwrite: bool = 
         filename = Path(card.__dict__.get("file", f"{p}.yml")).name
         outpath = outdir / filename
         write_card(card, outpath)
+
+
+def load_scenario(
+    scenario_data: Union[dict, Path],
+    name: str = datetime.now().strftime("%Y%m%d%H%M%S"),
+) -> Scenario:
+    """Loads a scenario from a file written by Scenario.write() as the base scenario.
+
+    Args:
+        scenario_data: Scenario data as a dict or path to scenario data file
+        name: Optional name for the scenario. Defaults to current datetime.
+    """
+    if not isinstance(scenario_data, dict):
+        WranglerLogger.debug(f"Loading Scenario from file: {scenario_data}")
+        scenario_data = load_dict(scenario_data)
+    else:
+        WranglerLogger.debug("Loading Scenario from dict.")
+
+    base_scenario = _load_base_scenario_from_config(scenario_data, config=scenario_data["config"])
+    my_scenario = create_scenario(
+        base_scenario=base_scenario, name=name, config=scenario_data["config"]
+    )
+    return my_scenario
 
 
 def create_base_scenario(
@@ -803,6 +928,24 @@ def create_base_scenario(
     return base_scenario
 
 
+def _load_base_scenario_from_config(
+    base_scenario_data: Union[dict, ScenarioInputConfig], config: WranglerConfig = DefaultConfig
+) -> dict:
+    """Loads a scenario from a file written by Scenario.write() as the base scenario.
+
+    Args:
+        base_scenario_data: Scenario data that conforms to ScenarioInputConfig or is
+            ScenarioInputConfig instance.
+        config: WranglerConfig instance. Defaults to DefaultConfig.
+    """
+    if not isinstance(base_scenario_data, ScenarioInputConfig):
+        base_scenario_data = ScenarioInputConfig(**base_scenario_data)
+
+    base_scenario = create_base_scenario(**base_scenario_data.to_dict(), config=config)
+
+    return base_scenario
+
+
 def extract_base_scenario_metadata(base_scenario: dict) -> dict:
     """Extract metadata from base scenario rather than keeping all of big files.
 
@@ -811,11 +954,16 @@ def extract_base_scenario_metadata(base_scenario: dict) -> dict:
     _skip_copy = ["road_net", "transit_net", "config"]
     out_dict = {k: v for k, v in base_scenario.items() if k not in _skip_copy}
     if isinstance(base_scenario.get("road_net"), RoadwayNetwork):
-        nodes_file = Path(base_scenario["road_net"].nodes_df.attrs["source_file"])
-        out_dict["roadway"] = {"dir": str(nodes_file.parent), "suffix": str(nodes_file.suffix)}
+        nodes_file_path = base_scenario["road_net"].nodes_df.attrs["source_file"]
+        if nodes_file_path is not None:
+            out_dict["roadway"] = {
+                "dir": str(Path(nodes_file_path).parent),
+                "file_format": str(nodes_file_path.suffix),
+            }
     if isinstance(base_scenario.get("transit_net"), TransitNetwork):
         feed_path = base_scenario["transit_net"].feed.feed_path
-        out_dict["transit"] = {"dir": str(feed_path)}
+        if feed_path is not None:
+            out_dict["transit"] = {"dir": str(feed_path)}
     return out_dict
 
 
@@ -868,13 +1016,3 @@ def _scenario_output_config_to_scenario_write(
         scenario_write_args.update(project_args)
 
     return scenario_write_args
-
-
-def _base_scenario_config_to_create_scenario(base_scenario_config: ScenarioInputConfig) -> dict:
-    """Converts a ScenarioInputConfig to a dictionary for use in create_base_scenario method."""
-    base_scenario_args = {}
-    base_scenario_args["roadway"] = base_scenario_config["roadway"]
-    base_scenario_args["transit"] = base_scenario_config["transit"]
-    other_args = {k: v for k, v in base_scenario_config.items() if k not in ["roadway", "transit"]}
-    base_scenario_args.update(other_args)
-    return base_scenario_args

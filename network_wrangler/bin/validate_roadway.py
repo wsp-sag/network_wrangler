@@ -2,10 +2,10 @@
 """Validates a roadway network to the wrangler data model specifications from command line.
 
 Usage:
-    python validate_roadway.py <network_directory> <network_suffix> [-s] [--output_dir <output_dir>]
+    python validate_roadway.py <network_directory> <network_file_format> [-s] [--output_dir <output_dir>]
 
     network_directory: The roadway network file directory.
-    network_suffix: The suffices of roadway network file name.
+    network_file_format: The suffices of roadway network file name.
     -s, --strict: Validate the roadway network strictly without parsing and filling in data.
     --output_dir: The output directory for the validation report.
 """
@@ -27,7 +27,9 @@ if __name__ == "__main__":
         "network_directory", help="The roadway network file directory.", default="."
     )
     parser.add_argument(
-        "network_suffix", help="The suffices of roadway network file name.", default="geojson"
+        "network_file_format",
+        help="The file format of roadway network file name.",
+        default="geojson",
     )
     parser.add_argument(
         "-s",
@@ -57,7 +59,7 @@ if __name__ == "__main__":
 
     validate_roadway_in_dir(
         directory=args.network_directory,
-        suffix=args.network_suffix,
+        file_format=args.network_file_format,
         strict=argparse.strict,
         output_dir=args.output_dir,
     )

@@ -13,12 +13,12 @@ RoadwayNetworks can be validated using the following tools:
 === "CLI"
 
     ```bash
-    python validate_roadway.py <network_directory> <network_suffix> [-s] [--output_dir <output_dir>]
+    python validate_roadway.py <network_directory> <file_format> [-s] [--output_dir <output_dir>]
     ```
     Where:
 
     - `network_directory`: The roadway network file directory.
-    - `network_suffix`: The suffices of roadway network file name.
+    - `file_format`: The suffices of roadway network file name.
     - `-s`, `--strict`: Validate the roadway network strictly without parsing and filling in data.
     -  `--output_dir`: The output directory for the validation report.
 
@@ -28,7 +28,7 @@ RoadwayNetworks can be validated using the following tools:
     from network_wrangler.roadway.validate import validate_roadway_in_dir
     validate_roadway_in_dir(
         directory=<network_directory>,
-        suffix=<network_suffix>,
+        file_format=<file_format>,
         strict=<strict_bool>>,
         output_dir=<output_dir>
     )
@@ -36,7 +36,7 @@ RoadwayNetworks can be validated using the following tools:
     Where:
 
     - `network_directory`: The roadway network file directory.
-    - `network_suffix`: The suffices of roadway network file name.
+    - `file_format`: The suffices of roadway network file name.
     - `strict`: Validate the roadway network strictly without parsing and filling in data.
     -  `output_dir`: The output directory for the validation report.
 
@@ -238,33 +238,33 @@ TransitNetworks can be validated using the following tools:
 === "CLI"
 
     ```bash
-    python validate_transit.py <network_directory> <network_suffix> [-s] [--output_dir <output_dir>] [--road_dir <road_dir>] [--road_suffix <road_suffix>]
+    python validate_transit.py <network_dir> <file_format> [-s] [--output_dir <output_dir>] [--road_dir <road_dir>] [--road_file_format <road_file_format]
     ```
     Where:
 
-    - `network_directory`: The roadway network file directory.
-    - `network_suffix`: The suffices of roadway network file name.
+    - `network_dir`: The transit network file directory.
+    - `file_format`: The suffices of transit network .
     - `--output_dir`: The output directory for the validation report.
     - `--road_dir`: The directory roadway network. if want to validate the transit network to it.
-    - `--road_suffix`: The suffix for roadway network. Defaults to 'geojson'.
+    - `--road_file_format`: The file format for roadway network. Defaults to 'geojson'.
 
 === "Python API"
 
     ```python
     from network_wrangler.transit.validate import validate_transit_in_dir
     validate_transit_in_dir(
-        directory=<network_directory>,
-        suffix=<network_suffix>,
+        dir=<network_dir>,
+        file_format=<network_file_format>,
         road_dir=<road_dir>,
-        road_suffix=<road_suffix>,
+        road_file_format=<road_file_format,
     )
     ```
     Where:
 
-    - `network_directory`: The roadway network file directory.
-    - `network_suffix`: The suffices of roadway network file name.
+    - `network_dir`: The roadway network file directory.
+    - `network_file_format`: The file format of the transit files.
     - `road_dir`: The directory roadway network. if want to validate the transit network to it.
-    - `road_suffix`: The suffix for roadway network. Defaults to 'geojson'.
+    - `road_file_format`: The file format for roadway network. Defaults to 'geojson'.
 
 ## Project Cards
 
@@ -388,7 +388,7 @@ from roadway.io import convert_roadway_file_serialization
 
 convert_roadway_file_serialization(
     my_dir, # the path to the input directory.
-    "geojson", # the suffix of the input files. Defaults to "geojson".
+    "geojson", # the file format of the input files. Defaults to "geojson".
     my_new_dir, # the path were the output will be saved.
     "parquet", # the format of the output files. Defaults to "parquet".
     "new", # the name prefix of the roadway files that will be generated. Defaults to "".

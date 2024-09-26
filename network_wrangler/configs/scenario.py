@@ -1,6 +1,66 @@
 """Scenario configuration for Network Wrangler.
 
+You can build a scenario and write out the output from a scenario configuration file using the code below.  This is very useful when you are running a specific scenario with minor variations over again because you can enter your config file into version control.  In addition to the completed roadway and transit files, the output will provide a record of how the scenario was run.
+
 Usage:
+    ```python
+        from scenario import build_scenario_from_config
+        my_scenario = build_scenario_from_config(my_scenario_config)
+    ```
+
+    Where `my_scenario_config` can be a:
+
+    - Path to a scenario config file in yaml/toml/json (recommended),
+    - Dictionary which is in the same structure of a scenario config file, or
+    - A `ScenarioConfig()`  instance.
+
+!!! tip "Notes on relative paths in scenario configs"
+
+    - Relative paths are recognized by a preceeding ".".
+    - Relative paths within `output_scenario` for `roadway`, `transit`, and `project_cards` are interpreted to be relative to `output_scenario.path`.
+    - All other relative paths are interpreted to be relative to directory of the scenario config file. (Or if scenario config is provided as a dictionary, relative paths will be interpreted as relative to the current working directory.)
+
+??? example "Example Scenario Config"
+    ```yaml
+    name: "my_scenario"
+    base_scenario:
+        roadway:
+            dir: "path/to/roadway_network"
+            file_format: "geojson"
+            read_in_shapes: True
+        transit:
+            dir: "path/to/transit_network"
+            file_format: "txt"
+        applied_projects:
+            - "project1"
+            - "project2"
+        conflicts:
+            - "project3"
+            - "project4"
+    projects:
+        project_card_filepath:
+            - "path/to/projectA.yaml"
+            - "path/to/projectB.yaml"
+        filter_tags:
+            - "tag1"
+    output_scenario:
+        overwrite: True
+        roadway:
+            out_dir: "path/to/output/roadway"
+            prefix: "my_scenario"
+            file_format: "geojson"
+            true_shape: False
+        transit:
+            out_dir: "path/to/output/transit"
+            prefix: "my_scenario"
+            file_format: "txt"
+        project_cards:
+            out_dir: "path/to/output/project_cards"
+
+    wrangler_config: "path/to/wrangler_config.yaml"
+    ```
+
+Extended Usage:
     Load a configuration from a file:
 
     ```python
@@ -14,55 +74,6 @@ Usage:
     my_scenario_config.base_transit_network.path
     >> path/to/transit_network
     ```
-
-    Build a network using scenario:
-
-    ```python
-    from scenario import build_scenario_from_config
-    my_scenario = build_scenario_from_config(my_scenario_config)
-    ```
-
-Example configuration file:
-
-```yaml
-name: "my_scenario"
-base_scenario:
-    roadway:
-        dir: "path/to/roadway_network"
-        suffix: "geojson"
-        read_in_shapes: True
-    transit:
-        dir: "path/to/transit_network"
-        suffix: "txt"
-    applied_projects:
-        - "project1"
-        - "project2"
-    conflicts:
-        - "project3"
-        - "project4"
-projects:
-    project_card_filepath:
-        - "path/to/projectA.yaml"
-        - "path/to/projectB.yaml"
-    filter_tags:
-        - "tag1"
-output_scenario:
-    overwrite: True
-    roadway:
-        out_dir: "path/to/output/roadway"
-        prefix: "my_scenario"
-        file_format: "geojson"
-        true_shape: False
-    transit:
-        out_dir: "path/to/output/transit"
-        prefix: "my_scenario"
-        file_format: "txt"
-    project_cards:
-        out_dir: "path/to/output/project_cards"
-
-wrangler_config: "path/to/wrangler_config.yaml"
-```
-
 """
 
 from datetime import datetime
@@ -111,7 +122,7 @@ class RoadwayNetworkInputConfig(ConfigItem):
 
     Attributes:
         dir: Path to directory with roadway network files.
-        suffix: File suffix for the roadway network files. Should be one of RoadwayFileTypes.
+        file_format: File format for the roadway network files. Should be one of RoadwayFileTypes.
             Defaults to "geojson".
         read_in_shapes: If True, will read in the shapes of the roadway network. Defaults to False.
         boundary_geocode: Geocode of the boundary. Will use this to filter the roadway network.
@@ -123,7 +134,7 @@ class RoadwayNetworkInputConfig(ConfigItem):
         self,
         base_path: Path = Path.cwd(),
         dir: Path = Path("."),
-        suffix: RoadwayFileTypes = "geojson",
+        file_format: RoadwayFileTypes = "geojson",
         read_in_shapes: bool = False,
         boundary_geocode: Optional[str] = None,
         boundary_file: Optional[Path] = None,
@@ -133,7 +144,7 @@ class RoadwayNetworkInputConfig(ConfigItem):
             self.dir = (base_path / Path(dir)).resolve()
         else:
             self.dir = Path(dir)
-        self.suffix = suffix
+        self.file_format = file_format
         self.read_in_shapes = read_in_shapes
         self.boundary_geocode = boundary_geocode
         self.boundary_file = boundary_file
@@ -181,7 +192,7 @@ class TransitNetworkInputConfig(ConfigItem):
 
     Attributes:
         dir: Path to the transit network files. Defaults to ".".
-        suffix: File suffix for the transit network files. Should be one of TransitFileTypes.
+        file_format: File format for the transit network files. Should be one of TransitFileTypes.
             Defaults to "txt".
     """
 
@@ -189,14 +200,14 @@ class TransitNetworkInputConfig(ConfigItem):
         self,
         base_path: Path = Path.cwd(),
         dir: Path = Path("."),
-        suffix: TransitFileTypes = "txt",
+        file_format: TransitFileTypes = "txt",
     ):
         """Constructor for TransitNetworkInputConfig."""
         if dir is not None and not Path(dir).is_absolute():
             self.feed = (base_path / Path(dir)).resolve()
         else:
             self.feed = Path(dir)
-        self.suffix = suffix
+        self.file_format = file_format
 
 
 class TransitNetworkOutputConfig(ConfigItem):
@@ -264,6 +275,7 @@ class ScenarioInputConfig(ConfigItem):
         transit: Optional[dict] = None,
         applied_projects: list[str] = [],
         conflicts: dict = {},
+        **kwargs,
     ):
         """Constructor for ScenarioInputConfig."""
         if roadway is not None:

@@ -237,6 +237,32 @@ def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_net, stpaul_tra
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
+def test_scenario_write_load(request, small_net, small_transit_net, test_out_dir):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+
+    from network_wrangler.scenario import load_scenario
+
+    base_scenario = {
+        "road_net": small_net,
+        "transit_net": small_transit_net,
+        "applied_projects": ["project a", "project b"],
+    }
+    first_scenario_name = "first_scenario"
+    second_scenario_name = "second_scenario"
+    first_scenario = create_scenario(base_scenario=base_scenario, name=first_scenario_name)
+    scenario_write_dir = test_out_dir / first_scenario_name
+    scenario_file_path = first_scenario.write(
+        scenario_write_dir, first_scenario_name, projects_write=False
+    )
+    second_scenario = load_scenario(scenario_file_path, name=second_scenario_name)
+
+    assert second_scenario.applied_projects == first_scenario.applied_projects
+    assert second_scenario.road_net.links_df.shape == first_scenario.road_net.links_df.shape
+    assert (
+        second_scenario.transit_net.feed.trips.shape == first_scenario.transit_net.feed.trips.shape
+    )
+
+
 def test_scenario_building_from_config(request, example_dir, test_out_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 

@@ -15,7 +15,7 @@ from .shapes.validate import validate_shapes_df
 
 def validate_roadway_in_dir(
     directory: Path,
-    suffix: RoadwayFileTypes = "geojson",
+    file_format: RoadwayFileTypes = "geojson",
     strict: bool = False,
     output_dir: Path = Path("."),
 ):
@@ -23,12 +23,12 @@ def validate_roadway_in_dir(
 
     Args:
         directory (str): The roadway network file directory.
-        suffix (str): The suffices of roadway network file name.
+        file_format(str): The formats of roadway network file name.
         strict (bool): If True, will validate the roadway network strictly without
             parsing and filling in data.
         output_dir (str): The output directory for the validation report. Defaults to ".".
     """
-    links_file, nodes_file, shapes_file = id_roadway_file_paths_in_dir(directory, suffix)
+    links_file, nodes_file, shapes_file = id_roadway_file_paths_in_dir(directory, file_format)
     validate_roadway_files(
         links_file, nodes_file, shapes_file, strict=strict, output_dir=output_dir
     )

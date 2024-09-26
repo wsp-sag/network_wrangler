@@ -5,7 +5,7 @@ from typing import Optional, Union, List
 
 from ..logger import WranglerLogger
 
-from .utils import _update_config_from_files, _config_data_from_files
+from .utils import _config_data_from_files
 from .wrangler import WranglerConfig
 from .scenario import ScenarioConfig
 
@@ -18,15 +18,14 @@ def load_wrangler_config(data: Optional[ConfigInputTypes] = None) -> WranglerCon
     """Load the WranglerConfiguration."""
     if isinstance(data, WranglerConfig):
         return data
-    config = WranglerConfig()
     if data is None:
-        return config
+        return WranglerConfig()
     if isinstance(data, dict):
-        return config.update(data)
+        return WranglerConfig(**data)
     elif isinstance(data, Path) or (
         isinstance(data, list) and all(isinstance(d, Path) for d in data)
     ):
-        return _update_config_from_files(config, path=data)
+        return load_wrangler_config(_config_data_from_files(data))
     else:
         WranglerLogger.error("No valid configuration data found. Found {data}.")
         raise ValueError("No valid configuration data found.")

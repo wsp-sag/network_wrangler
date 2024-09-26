@@ -116,19 +116,3 @@ def _config_data_from_files(path: Optional[Union[Path, List[Path]]] = None) -> U
 
     data = load_merge_dict(config_files)
     return data
-
-
-def _update_config_from_files(config, path: Optional[Union[Path, List[Path]]]):
-    """Load configuration from files(s) which updates the default configuration.
-
-    Args:
-        config: a Configuration object to update with the new configuration.
-        path: a valid system path to a config file or list of paths.
-
-    Returns:
-        A Configuration object
-    """
-    config_files = _config_data_from_files(path)
-    if config_files is None:
-        return config
-    return config.update(config_files)
