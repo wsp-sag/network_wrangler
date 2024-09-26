@@ -81,6 +81,12 @@ if TYPE_CHECKING:
 Selections = Union[RoadwayLinkSelection, RoadwayNodeSelection]
 
 
+class InvalidProjectCardError(Exception):
+    """Raised when there is an issue with a project card."""
+
+    pass
+
+
 class RoadwayNetwork(BaseModel):
     """Representation of a Roadway Network.
 
@@ -349,7 +355,7 @@ class RoadwayNetwork(BaseModel):
         # project_card.validate()
         if not project_card.valid:
             WranglerLogger.error("Invalid Project Card: {project_card}")
-            raise ValueError(f"Project card {project_card.project} not valid.")
+            raise InvalidProjectCardError(f"Project card {project_card.project} not valid.")
 
         if project_card._sub_projects:
             for sp in project_card._sub_projects:
@@ -432,8 +438,10 @@ class RoadwayNetwork(BaseModel):
             add_links_df: Dataframe of additional links to add.
             in_crs: crs of input data. Defaults to LAT_LON_CRS.
         """
-        dupe_ids = self.links_df.model_link_id.isin(add_links_df.model_link_id)
-        if dupe_ids.any():
+        dupe_recs = self.links_df.model_link_id.isin(add_links_df.model_link_id)
+
+        if dupe_recs.any():
+            dupe_ids = self.links_df.loc[dupe_recs, "model_link_id"]
             WranglerLogger.error(
                 f"Cannot add links with model_link_id already in network: {dupe_ids}"
             )

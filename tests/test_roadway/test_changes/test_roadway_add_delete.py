@@ -96,47 +96,40 @@ def test_add_delete_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
 
     net = copy.deepcopy(stpaul_net)
     card_name = "road.add_and_delete.yml"
-    expected_net_links = -2 + 2
-    expected_net_nodes = +1 - 1 + 1
-
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", card_name)
-    project_card = read_card(project_card_path, validate=False)
-
-    orig_links_count = len(net.links_df)
-    orig_nodes_count = len(net.nodes_df)
+    project_card_path = stpaul_ex_dir / "project_cards" / card_name
+    project_card = read_card(project_card_path)
     net = net.apply(project_card)
-    net_links = len(net.links_df) - orig_links_count
-    net_nodes = len(net.nodes_df) - orig_nodes_count
 
-    assert net_links == expected_net_links
-    assert net_nodes == expected_net_nodes
+    ADD_LINK_IDS = [999998, 999997]
+    NEW_NODE_IDS = [354388]
+    DEL_LINK_IDS = [281, 477533]
+    DEL_NODE_IDS = [314159]
+
+    assert set(ADD_LINK_IDS).issubset(net.links_df.model_link_id.tolist())
+    assert set(NEW_NODE_IDS).issubset(net.nodes_df.model_node_id.tolist())
+    assert not set(DEL_LINK_IDS).intersection(net.links_df.model_link_id.tolist())
+    assert not set(DEL_NODE_IDS).intersection(net.nodes_df.model_node_id.tolist())
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_delete_roadway_shape(request, stpaul_net, stpaul_ex_dir):
+def test_delete_roadway(request, stpaul_net, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     net = copy.deepcopy(stpaul_net)
 
     card_name = "road.delete.simple.yml"
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", card_name)
+    project_card_path = stpaul_ex_dir / "project_cards" / card_name
     project_card = read_card(project_card_path, validate=False)
-
-    expected_net_links = -1
-
-    orig_links_count = len(net.links_df)
-
     net = net.apply(project_card)
-    net_links = len(net.links_df) - orig_links_count
 
-    assert net_links == expected_net_links
+    assert 477533 not in net.links_df.model_link_id.tolist()
 
     print("--Finished:", request.node.name)
 
 
 def test_add_nodes(request, small_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-    from network_wrangler.utils.models import TableValidationError
+    from network_wrangler.roadway.nodes.create import NodeAddError
 
     net = copy.deepcopy(small_net)
 
@@ -168,15 +161,11 @@ def test_add_nodes(request, small_net):
     bad_node_properties = node_properties.copy()
     bad_node_properties["model_node_id"] = 1
     WranglerLogger.debug("Trying to add node 3494 into network but should fail b/c already there")
-    try:
+    with pytest.raises(NodeAddError):
         net = net.apply(
             {
                 "project": "test adding a node already in network",
                 "roadway_addition": {"nodes": [bad_node_properties]},
             },
         )
-        WranglerLogger.error("Should have failed due to overlapping node IDs")
-        assert False
-    except TableValidationError:
-        "expected ValueError when adding a node with a model_node_id that already exists"
     WranglerLogger.info(f"--Finished: {request.node.name}")

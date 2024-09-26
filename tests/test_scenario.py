@@ -232,7 +232,7 @@ def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_net, stpaul_tra
 
     my_scenario.apply_all_projects()
 
-    WranglerLogger.debug(my_scenario.summarize())
+    WranglerLogger.debug(my_scenario.summary)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
