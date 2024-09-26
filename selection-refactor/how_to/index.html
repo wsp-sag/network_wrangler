@@ -717,14 +717,16 @@ card can contain multiple changes, each of which is applied to the network in se
     <span class="n">filter_tags</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;baseline2050&quot;</span> <span class="p">]</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>A <code>base_year_scenario</code> is a dictionary representation of key components of a scenario:
-- <code>road_net</code>: RoadwayNetwork instance
-- <code>transit_net</code>: TransitNetwork instance
-- <code>applied_projects</code>: list of projects that have been applied to the base scenario so that the
+<p>A <code>base_year_scenario</code> is a dictionary representation of key components of a scenario:</p>
+<ul>
+<li><code>road_net</code>: RoadwayNetwork instance</li>
+<li><code>transit_net</code>: TransitNetwork instance</li>
+<li><code>applied_projects</code>: list of projects that have been applied to the base scenario so that the
     scenario knows if there will be conflicts with future projects or if a future project&rsquo;s
-    pre-requisite is satisfied.
-- <code>conflicts</code>: dictionary of conflicts for project that have been applied to the base scenario so
-    that the scenario knows if there will be conflicts with future projects.</p>
+    pre-requisite is satisfied.</li>
+<li><code>conflicts</code>: dictionary of conflicts for project that have been applied to the base scenario so
+    that the scenario knows if there will be conflicts with future projects.</li>
+</ul>
 <div class="language-python highlight"><pre><span></span><code><span class="n">my_base_year_scenario</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;road_net&quot;</span><span class="p">:</span> <span class="n">load_from_roadway_dir</span><span class="p">(</span><span class="n">STPAUL_DIR</span><span class="p">),</span>
     <span class="s2">&quot;transit_net&quot;</span><span class="p">:</span> <span class="n">load_transit</span><span class="p">(</span><span class="n">STPAUL_DIR</span><span class="p">),</span>
