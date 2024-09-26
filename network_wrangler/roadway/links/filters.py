@@ -210,11 +210,11 @@ def filter_links_to_ml_access_points(
     links_df: DataFrame[RoadLinksTable],
 ) -> DataFrame[RoadLinksTable]:
     """Filters links dataframe to only include all managed lane access points."""
-    return links_df.loc[links_df["ML_access_point"]]
+    return links_df.loc[links_df["ML_access_point"].fillna(False)]
 
 
 def filter_links_to_ml_egress_points(
     links_df: DataFrame[RoadLinksTable],
 ) -> DataFrame[RoadLinksTable]:
     """Filters links dataframe to only include all managed lane egress points."""
-    return links_df.loc[links_df["ML_egress_point"]]
+    return links_df.loc[links_df["ML_egress_point"].fillna(False)]
