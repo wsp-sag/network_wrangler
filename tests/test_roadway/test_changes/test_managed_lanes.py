@@ -225,3 +225,76 @@ def test_existing_managed_lane_apply(request, stpaul_net):
     assert _change_2_ML_links == _change_1_ML_links + len(_2_selected_link_idx)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+def test_conflicting_managed_lane_apply(request, small_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+
+    net = copy.deepcopy(small_net)
+    LINK_ID = 112
+    TIMESPAN = ["6:00", "10:00"]
+    project_1 = {
+        "project": "ml_1",
+        "roadway_property_change": {
+            "facility": {"links": {"model_link_id": [LINK_ID]}},
+            "property_changes": {
+                "lanes": {"change": 0, "scoped": [{"change": -1, "timespan": TIMESPAN}]},
+                "ML_lanes": {"set": 0, "scoped": [{"set": 1, "timespan": TIMESPAN}]},
+            },
+        }
+    }
+    project_2 = {
+        "project": "ml_2",
+        "roadway_property_change": {
+            "facility": {"links": {"model_link_id": [LINK_ID]}},
+            "property_changes": {
+                "lanes": {"change": 0, "scoped": [{"change": 1, "timespan": TIMESPAN}]},
+            }
+        }
+    }
+    initial_lanes = net.links_df.loc[LINK_ID, "lanes"]
+    WranglerLogger.debug(f"Initial lanes: {initial_lanes}")
+    net.apply(project_1)
+
+    int_lanes = net.links_df.loc[LINK_ID, "lanes"]
+    int_sc_lanes = net.links_df.loc[LINK_ID, "sc_lanes"]
+    int_ml_lanes = net.links_df.loc[LINK_ID, "ML_lanes"]
+    int_sc_ml_lanes = net.links_df.loc[LINK_ID, "sc_ML_lanes"]
+
+    WranglerLogger.debug(
+        f"Interim lanes: {int_lanes}\nInterim scoped lanes: {int_sc_lanes}\n\
+        Interim scoped ML lanes: {int_sc_ml_lanes}"
+    )
+
+    INT_EXP_LANES = initial_lanes
+    INT_EXP_SC_LANES = [
+        ScopedLinkValueItem(
+            category="any",
+            timespan=TIMESPAN,
+            value=initial_lanes - 1
+        )
+    ]
+    INT_EXP_ML_LANES = 0
+    INT_EXP_SC_ML_LANES = [
+        ScopedLinkValueItem(
+            category="any",
+            timespan=TIMESPAN,
+            value=1
+        )
+    ]
+    assert int_lanes == INT_EXP_LANES
+    assert int_sc_lanes == INT_EXP_SC_LANES
+    assert int_sc_ml_lanes == INT_EXP_SC_ML_LANES
+    assert int_ml_lanes == INT_EXP_ML_LANES
+
+    net.apply(project_2)
+
+    final_lanes = net.links_df.loc[LINK_ID, "lanes"]
+    final_sc_lanes = net.links_df.loc[LINK_ID, "sc_lanes"]
+    WranglerLogger.debug(f"Final lanes: {final_lanes}\nFinal scoped lanes: {final_sc_lanes}")
+
+    FINAL_EXP_LANES = initial_lanes
+    FINAL_EXP_SC_LANES = [ScopedLinkValueItem(category="any", timespan=TIMESPAN, value=initial_lanes)]
+    assert final_lanes == FINAL_EXP_LANES
+    assert final_sc_lanes == FINAL_EXP_SC_LANES
+    WranglerLogger.info(f"--Finished: {request.node.name}")
