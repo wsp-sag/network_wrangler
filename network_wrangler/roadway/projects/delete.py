@@ -1,8 +1,7 @@
 """Wrapper function for applying roadway deletion project card to RoadwayNetwork."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Union, Optional
-
+from typing import TYPE_CHECKING, Union
 
 from ...models.projects.roadway_changes import RoadwayDeletion
 
@@ -12,7 +11,7 @@ from ...logger import WranglerLogger
 
 if TYPE_CHECKING:
     from ..network import RoadwayNetwork
-    from ..network import TransitNetwork
+    from ...transit.network import TransitNetwork
 
 
 class RoadwayDeletionError(Exception):
@@ -53,9 +52,9 @@ def apply_roadway_deletion(
     return roadway_net
 
 
-def check_broken_transit_shapes(
+def deletion_breaks_transit_shapes(
     roadway_net: RoadwayNetwork, roadway_deletion: RoadwayDeletion, transit_net: TransitNetwork
-):
+) -> bool:
     """Check if any transit shapes go on the deleted links.
 
     Args:
@@ -63,7 +62,7 @@ def check_broken_transit_shapes(
         roadway_deletion: dictionary conforming to RoadwayDeletion model
         transit_net: input TransitNetwork
 
-    returns: Broken shape dataframe. Empty if no broken shapes
+    returns: true if there are broken shapes, false otherwise
     """
     deleted_link_id_list = roadway_deletion["links"]["model_link_id"]
     deleted_links_df = roadway_net.links_df[
@@ -93,5 +92,10 @@ def check_broken_transit_shapes(
         right_on=["A", "B"],
     )
     shapes_df = shapes_df[shapes_df["model_link_id"].notna()]
+    if not shapes_df.empty:
+        msg = f"Roadway deletion would result in broken transit shape_ids: \
+            {shapes_df.shape_id.unique()}"
+        WranglerLogger.error(msg)
 
-    return shapes_df
+        return True
+    return False

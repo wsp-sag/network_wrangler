@@ -75,7 +75,7 @@ def _initialize_links_as_managed_lanes(
         links_df.loc[_ml_wo_geometry, "geometry"], geometry_offset_meters
     )
     links_df["ML_geometry"] = gpd.GeoSeries(links_df["ML_geometry"])
-    
+
     return links_df
 
 

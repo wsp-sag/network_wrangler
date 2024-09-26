@@ -39,9 +39,8 @@ from .projects import (
     apply_calculated_roadway,
     apply_roadway_deletion,
     apply_roadway_property_change,
-    check_broken_transit_shapes,
 )
-
+from .projects.delete import RoadwayDeletionError, deletion_breaks_transit_shapes
 from ..logger import WranglerLogger
 from ..configs import load_wrangler_config, WranglerConfig
 from ..models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
@@ -76,6 +75,7 @@ from ..configs import DefaultConfig
 if TYPE_CHECKING:
     from networkx import MultiDiGraph
     from ..models._base.types import TimespanString
+    from ..transit.network import TransitNetwork
 
 
 Selections = Union[RoadwayLinkSelection, RoadwayNodeSelection]
@@ -328,11 +328,19 @@ class RoadwayNetwork(BaseModel):
 
         return self._modal_graphs[mode]["graph"]
 
-    def apply(self, project_card: Union[ProjectCard, dict], **kwargs) -> RoadwayNetwork:
+    def apply(
+        self,
+        project_card: Union[ProjectCard, dict],
+        transit_net: Optional[TransitNetwork] = None,
+        **kwargs,
+    ) -> RoadwayNetwork:
         """Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.
 
         Args:
             project_card: either a dictionary of the project card object or ProjectCard instance
+            transit_net: optional transit network which will be used to if project requires as
+                noted in `SECONDARY_TRANSIT_CARD_TYPES`.  If no transit network is provided, will
+                skip anything related to transit network.
             **kwargs: keyword arguments to pass to project application
         """
         if not (isinstance(project_card, ProjectCard) or isinstance(project_card, SubProject)):
@@ -376,12 +384,11 @@ class RoadwayNetwork(BaseModel):
             )
 
         elif change.change_type == "roadway_deletion":
-            broken_shapes = check_broken_transit_shapes(self, change.roadway_deletion, transit_net)
-            if len(broken_shapes) > 0:
-                msg = f"Roadway deletion results in broken transit shape_ids: {broken_shapes.shape_id.unique()}"
-                # TODO: raise NotImplementedError(msg)
-                WranglerLogger.warning(msg)
-
+            if transit_net is not None:
+                if deletion_breaks_transit_shapes(self, change.roadway_deletion, transit_net):
+                    raise RoadwayDeletionError(
+                        "Roadway deletion would break transit shapes. Aborting."
+                    )
             return apply_roadway_deletion(
                 self,
                 change.roadway_deletion,
