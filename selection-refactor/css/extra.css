@@ -1,7 +1,7 @@
 /* Define CSS variables based on theme colors */
 
 .md-header {
-    overflow: visible; /* Allow overflow */ 
+    overflow: visible; /* Allow overflow */
 }
 
 .md-tabs {

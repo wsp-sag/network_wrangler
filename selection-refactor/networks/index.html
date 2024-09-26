@@ -914,12 +914,12 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">CLI</label><label for="__tabbed_1_2">Python API</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p><div class="language-bash highlight"><pre><span></span><code>python<span class="w"> </span>validate_roadway.py<span class="w"> </span>&lt;network_directory&gt;<span class="w"> </span>&lt;network_suffix&gt;<span class="w"> </span><span class="o">[</span>-s<span class="o">]</span><span class="w"> </span><span class="o">[</span>--output_dir<span class="w"> </span>&lt;output_dir&gt;<span class="o">]</span>
+<p><div class="language-bash highlight"><pre><span></span><code>python<span class="w"> </span>validate_roadway.py<span class="w"> </span>&lt;network_directory&gt;<span class="w"> </span>&lt;file_format&gt;<span class="w"> </span><span class="o">[</span>-s<span class="o">]</span><span class="w"> </span><span class="o">[</span>--output_dir<span class="w"> </span>&lt;output_dir&gt;<span class="o">]</span>
 </code></pre></div>
 Where:</p>
 <ul>
 <li><code>network_directory</code>: The roadway network file directory.</li>
-<li><code>network_suffix</code>: The suffices of roadway network file name.</li>
+<li><code>file_format</code>: The suffices of roadway network file name.</li>
 <li><code>-s</code>, <code>--strict</code>: Validate the roadway network strictly without parsing and filling in data.</li>
 <li><code>--output_dir</code>: The output directory for the validation report.</li>
 </ul>
@@ -928,7 +928,7 @@ Where:</p>
 <p><div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">network_wrangler.roadway.validate</span> <span class="kn">import</span> <span class="n">validate_roadway_in_dir</span>
 <span class="n">validate_roadway_in_dir</span><span class="p">(</span>
     <span class="n">directory</span><span class="o">=&lt;</span><span class="n">network_directory</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="n">suffix</span><span class="o">=&lt;</span><span class="n">network_suffix</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">file_format</span><span class="o">=&lt;</span><span class="n">file_format</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="n">strict</span><span class="o">=&lt;</span><span class="n">strict_bool</span><span class="o">&gt;&gt;</span><span class="p">,</span>
     <span class="n">output_dir</span><span class="o">=&lt;</span><span class="n">output_dir</span><span class="o">&gt;</span>
 <span class="p">)</span>
@@ -936,7 +936,7 @@ Where:</p>
 Where:</p>
 <ul>
 <li><code>network_directory</code>: The roadway network file directory.</li>
-<li><code>network_suffix</code>: The suffices of roadway network file name.</li>
+<li><code>file_format</code>: The suffices of roadway network file name.</li>
 <li><code>strict</code>: Validate the roadway network strictly without parsing and filling in data.</li>
 <li><code>output_dir</code>: The output directory for the validation report.</li>
 </ul>
@@ -1820,32 +1820,32 @@ The &ldquo;plain&rdquo; property without the prefix becomes the default when no 
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">CLI</label><label for="__tabbed_2_2">Python API</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p><div class="language-bash highlight"><pre><span></span><code>python<span class="w"> </span>validate_transit.py<span class="w"> </span>&lt;network_directory&gt;<span class="w"> </span>&lt;network_suffix&gt;<span class="w"> </span><span class="o">[</span>-s<span class="o">]</span><span class="w"> </span><span class="o">[</span>--output_dir<span class="w"> </span>&lt;output_dir&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--road_dir<span class="w"> </span>&lt;road_dir&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--road_suffix<span class="w"> </span>&lt;road_suffix&gt;<span class="o">]</span>
+<p><div class="language-bash highlight"><pre><span></span><code>python<span class="w"> </span>validate_transit.py<span class="w"> </span>&lt;network_dir&gt;<span class="w"> </span>&lt;file_format&gt;<span class="w"> </span><span class="o">[</span>-s<span class="o">]</span><span class="w"> </span><span class="o">[</span>--output_dir<span class="w"> </span>&lt;output_dir&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--road_dir<span class="w"> </span>&lt;road_dir&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--road_file_format<span class="w"> </span>&lt;road_file_format<span class="o">]</span>
 </code></pre></div>
 Where:</p>
 <ul>
-<li><code>network_directory</code>: The roadway network file directory.</li>
-<li><code>network_suffix</code>: The suffices of roadway network file name.</li>
+<li><code>network_dir</code>: The transit network file directory.</li>
+<li><code>file_format</code>: The suffices of transit network .</li>
 <li><code>--output_dir</code>: The output directory for the validation report.</li>
 <li><code>--road_dir</code>: The directory roadway network. if want to validate the transit network to it.</li>
-<li><code>--road_suffix</code>: The suffix for roadway network. Defaults to &lsquo;geojson&rsquo;.</li>
+<li><code>--road_file_format</code>: The file format for roadway network. Defaults to &lsquo;geojson&rsquo;.</li>
 </ul>
 </div>
 <div class="tabbed-block">
 <p><div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">network_wrangler.transit.validate</span> <span class="kn">import</span> <span class="n">validate_transit_in_dir</span>
 <span class="n">validate_transit_in_dir</span><span class="p">(</span>
-    <span class="n">directory</span><span class="o">=&lt;</span><span class="n">network_directory</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="n">suffix</span><span class="o">=&lt;</span><span class="n">network_suffix</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nb">dir</span><span class="o">=&lt;</span><span class="n">network_dir</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">file_format</span><span class="o">=&lt;</span><span class="n">network_file_format</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="n">road_dir</span><span class="o">=&lt;</span><span class="n">road_dir</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="n">road_suffix</span><span class="o">=&lt;</span><span class="n">road_suffix</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">road_file_format</span><span class="o">=&lt;</span><span class="n">road_file_format</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
 Where:</p>
 <ul>
-<li><code>network_directory</code>: The roadway network file directory.</li>
-<li><code>network_suffix</code>: The suffices of roadway network file name.</li>
+<li><code>network_dir</code>: The roadway network file directory.</li>
+<li><code>network_file_format</code>: The file format of the transit files.</li>
 <li><code>road_dir</code>: The directory roadway network. if want to validate the transit network to it.</li>
-<li><code>road_suffix</code>: The suffix for roadway network. Defaults to &lsquo;geojson&rsquo;.</li>
+<li><code>road_file_format</code>: The file format for roadway network. Defaults to &lsquo;geojson&rsquo;.</li>
 </ul>
 </div>
 </div>
@@ -1888,30 +1888,73 @@ Properties defined in the parameter <code>ADDITIONAL_COPY_FROM_GP_TO_ML</code> a
       <p>Model Roadway Configuration.</p>
 
 
-<details class="properties" open>
-  <summary>Properties</summary>
-  
-</details>
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.ModelRoadwayConfig.ML_OFFSET_METERS">ML_OFFSET_METERS</span></code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Offset in meters for managed lanes.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.ModelRoadwayConfig.ADDITIONAL_COPY_FROM_GP_TO_ML">ADDITIONAL_COPY_FROM_GP_TO_ML</span></code></td>
+            <td>
+                  <code>list[str]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Additional fields to copy from general purpose to managed
+lanes.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.ModelRoadwayConfig.ADDITIONAL_COPY_TO_ACCESS_EGRESS">ADDITIONAL_COPY_TO_ACCESS_EGRESS</span></code></td>
+            <td>
+                  <code>list[str]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Additional fields to copy to access and egress links.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/configs/wrangler.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">ModelRoadwayConfig</span><span class="p">(</span><span class="n">ConfigItem</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Model Roadway Configuration.</span>
 
-<span class="sd">    Properties:</span>
+<span class="sd">    Attributes:</span>
 <span class="sd">        ML_OFFSET_METERS: Offset in meters for managed lanes.</span>
 <span class="sd">        ADDITIONAL_COPY_FROM_GP_TO_ML: Additional fields to copy from general purpose to managed</span>
 <span class="sd">            lanes.</span>
@@ -1957,53 +2000,182 @@ Properties defined in the parameter <code>ADDITIONAL_COPY_FROM_GP_TO_ML</code> a
       <p>Model Roadway Configuration.</p>
 
 
-<details class="properties" open>
-  <summary>Properties</summary>
-  
-</details>
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.IdGenerationConfig.TRANSIT_SHAPE_ID_METHOD">TRANSIT_SHAPE_ID_METHOD</span></code></td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;scalar&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>method for creating a shape_id for a transit shape.
+Should be &ldquo;scalar&rdquo;.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.IdGenerationConfig.TRANSIT_SHAPE_ID_SCALAR">TRANSIT_SHAPE_ID_SCALAR</span></code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>scalar value to add to general purpose lane to create a
+shape_id for a transit shape.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.IdGenerationConfig.ROAD_SHAPE_ID_METHOD">ROAD_SHAPE_ID_METHOD</span></code></td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;scalar&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>method for creating a shape_id for a roadway shape.
+Should be &ldquo;scalar&rdquo;.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.IdGenerationConfig.ROAD_SHAPE_ID_SCALAR">ROAD_SHAPE_ID_SCALAR</span></code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>scalar value to add to general purpose lane to create a
+shape_id for a roadway shape.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.IdGenerationConfig.ML_LINK_ID_METHOD">ML_LINK_ID_METHOD</span></code></td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;range&#39;, &#39;scalar&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>method for creating a model_link_id for an associated
+link for a parallel managed lane.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.IdGenerationConfig.ML_LINK_ID_RANGE">ML_LINK_ID_RANGE</span></code></td>
+            <td>
+                  <code>tuple[int, int]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>range of model_link_ids to use when creating an associated
+link for a parallel managed lane.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.IdGenerationConfig.ML_LINK_ID_SCALAR">ML_LINK_ID_SCALAR</span></code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>scalar value to add to general purpose lane to create a
+model_link_id when creating an associated link for a parallel managed lane.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.IdGenerationConfig.ML_NODE_ID_METHOD">ML_NODE_ID_METHOD</span></code></td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;range&#39;, &#39;scalar&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>method for creating a model_node_id for an associated node
+for a parallel managed lane.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.IdGenerationConfig.ML_NODE_ID_RANGE">ML_NODE_ID_RANGE</span></code></td>
+            <td>
+                  <code>tuple[int, int]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>range of model_node_ids to use when creating an associated
+node for a parallel managed lane.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.IdGenerationConfig.ML_NODE_ID_SCALAR">ML_NODE_ID_SCALAR</span></code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>scalar value to add to general purpose lane node ides create
+a model_node_id when creating an associated nodes for parallel managed lane.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/configs/wrangler.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 77</span>
-<span class="normal"> 78</span>
-<span class="normal"> 79</span>
-<span class="normal"> 80</span>
-<span class="normal"> 81</span>
-<span class="normal"> 82</span>
-<span class="normal"> 83</span>
-<span class="normal"> 84</span>
-<span class="normal"> 85</span>
-<span class="normal"> 86</span>
-<span class="normal"> 87</span>
-<span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
 <span class="normal">110</span>
 <span class="normal">111</span>
 <span class="normal">112</span>
-<span class="normal">113</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">IdGenerationConfig</span><span class="p">(</span><span class="n">ConfigItem</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Model Roadway Configuration.</span>
 
-<span class="sd">    Properties:</span>
+<span class="sd">    Attributes:</span>
 <span class="sd">        TRANSIT_SHAPE_ID_METHOD: method for creating a shape_id for a transit shape.</span>
 <span class="sd">            Should be &quot;scalar&quot;.</span>
 <span class="sd">        TRANSIT_SHAPE_ID_SCALAR: scalar value to add to general purpose lane to create a</span>
@@ -2108,7 +2280,7 @@ Properties defined in the parameter <code>ADDITIONAL_COPY_FROM_GP_TO_ML</code> a
 
 <span class="n">convert_roadway_file_serialization</span><span class="p">(</span>
     <span class="n">my_dir</span><span class="p">,</span> <span class="c1"># the path to the input directory.</span>
-    <span class="s2">&quot;geojson&quot;</span><span class="p">,</span> <span class="c1"># the suffix of the input files. Defaults to &quot;geojson&quot;.</span>
+    <span class="s2">&quot;geojson&quot;</span><span class="p">,</span> <span class="c1"># the file format of the input files. Defaults to &quot;geojson&quot;.</span>
     <span class="n">my_new_dir</span><span class="p">,</span> <span class="c1"># the path were the output will be saved.</span>
     <span class="s2">&quot;parquet&quot;</span><span class="p">,</span> <span class="c1"># the format of the output files. Defaults to &quot;parquet&quot;.</span>
     <span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="c1"># the name prefix of the roadway files that will be generated. Defaults to &quot;&quot;.</span>
