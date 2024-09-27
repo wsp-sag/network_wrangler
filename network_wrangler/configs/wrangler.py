@@ -47,7 +47,7 @@ If not provided, Wrangler will use reasonable defaults.
         ML_NODE_ID_RANGE: (950000, 999999)
         ML_NODE_ID_SCALAR: 15000
     EDITS:
-        EXISTING_VALUE_CONFLICT_ERROR: True
+        EXISTING_VALUE_CONFLIC: warn
         OVERWRITE_SCOPED: conflicting
     MODEL_ROADWAY:
         ML_OFFSET_METERS: int = -10
@@ -112,16 +112,23 @@ class EditsConfig(ConfigItem):
     """Configuration for Edits.
 
     Attributes:
-        EXISTING_VALUE_CONFLICT_ERROR: If True, raise an error if there is a conflict
-            with an existing value. Default is True. Can be overridden by setting
-            `existing_value_conflict_error` in a `roadway_property_change` project card.
+        EXISTING_VALUE_CONFLICT: Only used if 'existing' provided in project card and
+            `existing` doesn't match the existing network value. One of `error`, `warn`, or `skip`.
+            `error` will raise an error, `warn` will warn the user, and `skip` will skip the change
+            for that property (note it will still apply any remaining property changes).
+            Defaults to `warn`. Can be overridden by setting `existing_value_conflict` in
+            a `roadway_property_change` project card.
 
         OVERWRITE_SCOPED: How to handle conflicts with existing values.
-            Should be one of "conflicting", "all", or False. Default is "conflicting".
+            Should be one of "conflicting", "all", or False.
+            "conflicting" will only overwrite values where the scope only partially overlaps with
+            the existing value. "all" will overwrite all the scoped values. "error" will error if
+            there is any overlap. Default is "conflicting". Can be changed at the project-level
+            by setting `overwrite_scoped` in a `roadway_property_change` project card.
     """
 
-    EXISTING_VALUE_CONFLICT_ERROR: bool = True
-    OVERWRITE_SCOPED: Literal["conflicting", "all", False] = "conflicting"
+    EXISTING_VALUE_CONFLICT: Literal["warn", "error", "skip"] = "warn"
+    OVERWRITE_SCOPED: Literal["conflicting", "all", "error"] = "conflicting"
 
 
 @dataclass

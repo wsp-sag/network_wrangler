@@ -21,6 +21,7 @@ from ...utils.models import validate_df_to_model, validate_call_pyd
 from ...utils.data import update_df_by_col_value, validate_existing_value_in_df
 from ...params import LAT_LON_CRS
 from ...models.projects.roadway_changes import RoadPropertyChange
+from ...configs import WranglerConfig, DefaultConfig
 
 
 class NodeChangeError(Exception):
@@ -64,7 +65,6 @@ def edit_node_geometry(
     Args:
         nodes_df: RoadNodesTable to edit
         node_geometry_change_table: NodeGeometryChangeTable with geometry changes
-
     """
     # TODO write wrapper on validate call so don't have to do this
     nodes_df.attrs.update(RoadNodesAttrs)
@@ -102,8 +102,8 @@ def edit_node_property(
     node_idx: list[int],
     prop_name: str,
     prop_change: Union[dict, RoadPropertyChange],
-    existing_value_conflict_error: bool = False,
     project_name: Optional[str] = None,
+    config: WranglerConfig = DefaultConfig,
     _geometry_ok: bool = False,
 ) -> DataFrame[RoadNodesTable]:
     """Return copied nodes table with node property edited.
@@ -113,10 +113,8 @@ def edit_node_property(
         node_idx: list of node indices to change
         prop_name: property name to change
         prop_change: dictionary of value from project_card
-        existing_value_conflict_error: If True, will trigger an error if the existing
-            specified value in the project card doesn't match the value in nodes_df.
-            Otherwise, will only trigger a warning. Defaults to False.
         project_name: optional name of the project to be applied
+        config: WranglerConfig instance.
         _geometry_ok: if False, will not let you change geometry-related fields. Should
             only be changed to True by internal processes that know that geometry is changing
             and will update it in appropriate places in network. Defaults to False.
@@ -125,6 +123,12 @@ def edit_node_property(
     if not isinstance(prop_change, RoadPropertyChange):
         prop_change = RoadPropertyChange(**prop_change)
     prop_dict = prop_change.model_dump(exclude_none=True, by_alias=True)
+
+    # Allow the project card to override the default behavior of raising an error
+    if prop_change.existing_value_conflict is not None:
+        existing_value_conflict = prop_change.existing_value_conflict
+    else:
+        existing_value_conflict = config.EDITS.EXISTING_VALUE_CONFLICT
 
     # Should not be used to update node geometry fields unless explicity set to OK:
     if prop_name in nodes_df.attrs["geometry_props"] and not _geometry_ok:
@@ -135,8 +139,17 @@ def edit_node_property(
         exist_ok = validate_existing_value_in_df(
             nodes_df, node_idx, prop_name, prop_dict["existing"]
         )
-        if not exist_ok and existing_value_conflict_error:
-            raise NodeChangeError("Conflict between specified existing and actual existing values")
+        if not exist_ok:
+            if existing_value_conflict == "error":
+                raise NodeChangeError(
+                    "Conflict between specified existing and actual existing values"
+                )
+            if existing_value_conflict == "skip":
+                WranglerLogger.warning(
+                    f"Skipping change for {prop_name} because of conflict with existing value."
+                )
+                return nodes_df
+            WranglerLogger.warning(f"Changing {prop_name} despite conflict with existing value.")
 
     nodes_df = copy.deepcopy(nodes_df)
 

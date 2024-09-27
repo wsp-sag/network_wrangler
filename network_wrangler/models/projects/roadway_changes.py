@@ -233,8 +233,8 @@ class RoadPropertyChange(RecordModel):
     change: Optional[Union[int, float]] = None
     set: Optional[Any] = None
     scoped: Optional[Union[None, ScopedPropertySetList]] = None
-    overwrite_scoped: Optional[Literal["conflicting", "all", False]] = None
-    existing_value_conflict_error: Optional[bool] = None
+    overwrite_scoped: Optional[Literal["conflicting", "all", "error"]] = None
+    existing_value_conflict: Optional[Literal["error", "warn", "skip"]] = None
 
     require_one_of: ClassVar[OneOf] = [
         ["change", "set"],

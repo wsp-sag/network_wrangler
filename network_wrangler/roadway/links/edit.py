@@ -12,7 +12,6 @@ Usage:
     links_df = edit_link_properties(
         links_df, link_idx, "price",
         {"existing": 100,"change":-50},
-        "existing_value_conflict_error": True
     )
 
     # Returns copy of links_df with geometry of links with node_ids updated based on nodes_df
@@ -270,10 +269,10 @@ def _edit_link_property(
     WranglerLogger.debug(f"Editing {prop_name} on links {link_idx}")
 
     # Allow the project card to override the default behavior of raising an error
-    if prop_change.existing_value_conflict_error is not None:
-        existing_value_conflict_error = prop_change.existing_value_conflict_error
+    if prop_change.existing_value_conflict is not None:
+        existing_value_conflict = prop_change.existing_value_conflict
     else:
-        existing_value_conflict_error = config.EDITS.EXISTING_VALUE_CONFLICT_ERROR
+        existing_value_conflict = config.EDITS.EXISTING_VALUE_CONFLICT
 
     # Allow the project card to override the default behavior of overwriting conflicting scoped
     if prop_change.overwrite_scoped is not None:
@@ -286,10 +285,17 @@ def _edit_link_property(
         exist_ok = validate_existing_value_in_df(
             links_df, link_idx, prop_name, prop_change.existing
         )
-        if not exist_ok and existing_value_conflict_error:
-            raise LinkChangeError(
-                f"Existing value doesn't match specified value in project card for {prop_name}"
-            )
+        if not exist_ok:
+            if existing_value_conflict == "error":
+                raise LinkChangeError(
+                    f"Existing value doesn't match specified value in project card for {prop_name}"
+                )
+            if existing_value_conflict == "skip":
+                WranglerLogger.warning(
+                    f"Skipping change for {prop_name} because of conflict with existing value."
+                )
+                return links_df
+            WranglerLogger.warning(f"Changing {prop_name} despite conflict with existing value.")
 
     # if it is a managed lane field, initialize managed lane attributes if haven't already
     if prop_name.startswith("ML_"):
@@ -367,9 +373,6 @@ def edit_link_properties(
         links_df: links to edit
         link_idx: list of link indices to change
         property_changes: dictionary of property changes
-        existing_value_conflict_error: If True, will trigger an error if the existing
-            specified value in the project card doesn't match the value in links_df.
-            Otherwise, will only trigger a warning. Defaults to False.
         project_name: optional name of the project to be applied
         config: WranglerConfig instance. Defaults to DefaultConfig.
     """
