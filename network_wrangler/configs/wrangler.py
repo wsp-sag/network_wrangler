@@ -46,6 +46,9 @@ If not provided, Wrangler will use reasonable defaults.
         ML_NODE_ID_METHOD: range
         ML_NODE_ID_RANGE: (950000, 999999)
         ML_NODE_ID_SCALAR: 15000
+    EDITS:
+        EXISTING_VALUE_CONFLICT_ERROR: True
+        OVERWRITE_SCOPED: conflicting
     MODEL_ROADWAY:
         ML_OFFSET_METERS: int = -10
         ADDITIONAL_COPY_FROM_GP_TO_ML: []
@@ -102,6 +105,23 @@ from pydantic.dataclasses import dataclass
 from pydantic import Field
 
 from .utils import ConfigItem
+
+
+@dataclass
+class EditsConfig(ConfigItem):
+    """Configuration for Edits.
+
+    Attributes:
+        EXISTING_VALUE_CONFLICT_ERROR: If True, raise an error if there is a conflict
+            with an existing value. Default is True. Can be overridden by setting
+            `existing_value_conflict_error` in a `roadway_property_change` project card.
+
+        OVERWRITE_SCOPED: How to handle conflicts with existing values.
+            Should be one of "conflicting", "all", or False. Default is "conflicting".
+    """
+
+    EXISTING_VALUE_CONFLICT_ERROR: bool = True
+    OVERWRITE_SCOPED: Literal["conflicting", "all", False] = "conflicting"
 
 
 @dataclass
@@ -186,9 +206,10 @@ class WranglerConfig(ConfigItem):
         IDS: Parameteters governing how new ids are generated.
         MODEL_ROADWAY: Parameters governing how the model roadway is created.
         CPU: Parameters for accessing CPU information. Will not change any outcomes.
-
+        EDITS: Parameters governing how edits are handled.
     """
 
     IDS: IdGenerationConfig = IdGenerationConfig()
     MODEL_ROADWAY: ModelRoadwayConfig = ModelRoadwayConfig()
     CPU: CpuConfig = CpuConfig()
+    EDITS: EditsConfig = EditsConfig()

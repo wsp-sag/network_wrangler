@@ -604,33 +604,19 @@ class Scenario(object):
 
         return project_deque
 
-    def apply_all_projects(
-        self, overwrite_conflicting_scoped: bool = OVERWRITE_CONFLICTING_SCOPED
-    ):
-        """Applies all planned projects in the queue.
-
-        Args:
-            overwrite_conflicting_scoped: Tf True, then for roadway property changes, existing
-                values that conflict with scoped values will be overwritten – overriding
-                projectcard-level settings to error on conflicts. Defaults to
-                OVERWRITE_CONFLICTING_SCOPED parameter.
-        """
+    def apply_all_projects(self):
+        """Applies all planned projects in the queue."""
         # Call this to make sure projects are appropriately queued in hidden variable.
         self.queued_projects
 
         # Use hidden variable.
         while self._queued_projects:
-            self._apply_project(
-                self._queued_projects.popleft(),
-                overwrite_conflicting_scoped=overwrite_conflicting_scoped,
-            )
+            self._apply_project(self._queued_projects.popleft())
 
         # set this so it will trigger re-queuing any more projects.
         self._queued_projects = None
 
-    def _apply_change(
-        self, change: Union[ProjectCard, SubProject], overwrite_conflicting_scoped: bool = False
-    ) -> None:
+    def _apply_change(self, change: Union[ProjectCard, SubProject]) -> None:
         """Applies a specific change specified in a project card.
 
         Change type must be in at least one of:
@@ -639,9 +625,6 @@ class Scenario(object):
 
         Args:
             change: a project card or subproject card
-            overwrite_conflicting_scoped: Tf True, then for roadway property changes, existing
-                values that conflict with scoped values will be overwritten – overriding
-                projectcard-level settings to error on conflicts. Defaults to False.
         """
         if change.change_type in ROADWAY_CARD_TYPES:
             if not self.road_net:
@@ -660,18 +643,13 @@ class Scenario(object):
                 f"Project {change.project}: Don't understand project cat: {change.change_type}"
             )
 
-    def _apply_project(
-        self, project_name: str, overwrite_conflicting_scoped: bool = False
-    ) -> None:
+    def _apply_project(self, project_name: str) -> None:
         """Applies project card to scenario.
 
         If a list of changes is specified in referenced project card, iterates through each change.
 
         Args:
             project_name (str): name of project to be applied.
-            overwrite_conflicting_scoped: Tf True, then for roadway property changes, existing
-                values that conflict with scoped values will be overwritten – overriding
-                projectcard-level settings to error on conflicts. Defaults to False.
         """
         project_name = project_name.lower()
 
@@ -684,19 +662,15 @@ class Scenario(object):
         if p._sub_projects:
             for sp in p._sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
-                self._apply_change(sp, overwrite_conflicting_scoped=overwrite_conflicting_scoped)
+                self._apply_change(sp)
 
         else:
-            self._apply_change(p, overwrite_conflicting_scoped=overwrite_conflicting_scoped)
+            self._apply_change(p)
 
         self._planned_projects.remove(project_name)
         self.applied_projects.append(project_name)
 
-    def apply_projects(
-        self,
-        project_list: list[str],
-        overwrite_conflicting_scoped: bool = OVERWRITE_CONFLICTING_SCOPED,
-    ):
+    def apply_projects(self, project_list: list[str]):
         """Applies a specific list of projects from the planned project queue.
 
         Will order the list of projects based on pre-requisites.
@@ -706,10 +680,6 @@ class Scenario(object):
         Args:
             project_list: List of projects to be applied. All need to be in the planned project
                 queue.
-            overwrite_conflicting_scoped: Tf True, then for roadway property changes, existing
-                values that conflict with scoped values will be overwritten – overriding
-                projectcard-level settings to error on conflicts. Defaults
-                to OVERWRITE_CONFLICTING_SCOPED.
         """
         project_list = [p.lower() for p in project_list]
 
@@ -717,10 +687,7 @@ class Scenario(object):
         ordered_project_queue = self.order_projects(project_list)
 
         while ordered_project_queue:
-            self._apply_project(
-                ordered_project_queue.popleft(),
-                overwrite_conflicting_scoped=overwrite_conflicting_scoped,
-            )
+            self._apply_project(ordered_project_queue.popleft())
 
         # Set so that when called again it will retrigger queueing from planned projects.
         self._ordered_projects = None

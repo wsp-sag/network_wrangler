@@ -201,7 +201,7 @@ def _filter_to_conflicting_scopes(
     scoped_values: list[ScopedLinkValueItem],
     timespan: list[TimeString],
     category: Union[str, list[str]],
-) -> list[Union[ScopedLinkValueItem, None]]:
+) -> list[ScopedLinkValueItem]:
     """Filters scoped values to only include those that conflict with the timespan.
 
     Default timespan and categoies do not conflict.

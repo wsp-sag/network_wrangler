@@ -60,7 +60,6 @@ def apply_roadway_property_change(
     selection: Union[RoadwayNodeSelection, RoadwayLinkSelection],
     property_changes: dict[str, RoadPropertyChange],
     project_name: Optional[str] = None,
-    overwrite_conflicting_scoped: bool = False,
 ) -> RoadwayNetwork:
     """Changes roadway properties for the selected features based on the project card.
 
@@ -79,8 +78,6 @@ def apply_roadway_property_change(
                 set: 2
             ```
         project_name: optional name of the project to be applied
-        overwrite_conflicting_scoped: If True, will override whatever is in the project card to
-            overwrite any conflicting scoped properties. Defaults to False.
     """
     WranglerLogger.debug("Applying roadway property change project.")
 
@@ -90,7 +87,6 @@ def apply_roadway_property_change(
             selection.selected_links,
             property_changes,
             project_name=project_name,
-            overwrite_conflicting_scoped=overwrite_conflicting_scoped,
         )
 
     elif isinstance(selection, RoadwayNodeSelection):

@@ -243,7 +243,7 @@ def test_conflicting_managed_lane_apply(request, small_net):
                 "lanes": {"change": 0, "scoped": [{"change": -1, "timespan": TIMESPAN}]},
                 "ML_lanes": {"set": 0, "scoped": [{"set": 1, "timespan": TIMESPAN}]},
             },
-        }
+        },
     }
     project_2 = {
         "project": "ml_2",
@@ -251,8 +251,8 @@ def test_conflicting_managed_lane_apply(request, small_net):
             "facility": {"links": {"model_link_id": [LINK_ID]}},
             "property_changes": {
                 "lanes": {"change": 0, "scoped": [{"change": 1, "timespan": TIMESPAN}]},
-            }
-        }
+            },
+        },
     }
     initial_lanes = net.links_df.loc[LINK_ID, "lanes"]
     WranglerLogger.info(f"Initial lanes: {initial_lanes}")
@@ -271,20 +271,10 @@ def test_conflicting_managed_lane_apply(request, small_net):
 
     INT_EXP_LANES = initial_lanes
     INT_EXP_SC_LANES = [
-        ScopedLinkValueItem(
-            category="any",
-            timespan=TIMESPAN,
-            value=initial_lanes - 1
-        )
+        ScopedLinkValueItem(category="any", timespan=TIMESPAN, value=initial_lanes - 1)
     ]
     INT_EXP_ML_LANES = 0
-    INT_EXP_SC_ML_LANES = [
-        ScopedLinkValueItem(
-            category="any",
-            timespan=TIMESPAN,
-            value=1
-        )
-    ]
+    INT_EXP_SC_ML_LANES = [ScopedLinkValueItem(category="any", timespan=TIMESPAN, value=1)]
     assert int_lanes == INT_EXP_LANES
     assert int_sc_lanes == INT_EXP_SC_LANES
     assert int_sc_ml_lanes == INT_EXP_SC_ML_LANES
@@ -294,10 +284,14 @@ def test_conflicting_managed_lane_apply(request, small_net):
 
     final_lanes = net.links_df.loc[LINK_ID, "lanes"]
     final_sc_lanes = net.links_df.loc[LINK_ID, "sc_lanes"]
-    WranglerLogger.info(f"\n - Final lanes: {final_lanes}\n - Final scoped lanes: {final_sc_lanes}")
+    WranglerLogger.info(
+        f"\n - Final lanes: {final_lanes}\n - Final scoped lanes: {final_sc_lanes}"
+    )
 
     FINAL_EXP_LANES = initial_lanes
-    FINAL_EXP_SC_LANES = [ScopedLinkValueItem(category="any", timespan=TIMESPAN, value=initial_lanes)]
+    FINAL_EXP_SC_LANES = [
+        ScopedLinkValueItem(category="any", timespan=TIMESPAN, value=initial_lanes)
+    ]
     assert final_lanes == FINAL_EXP_LANES
     assert final_sc_lanes == FINAL_EXP_SC_LANES
     WranglerLogger.info(f"--Finished: {request.node.name}")
