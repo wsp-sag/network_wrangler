@@ -830,6 +830,9 @@ class RoadwayNetwork(object):
 
         WranglerLogger.debug("starting ox.gdfs_to_graph()")
         try:
+            if (int(ox.__version__.split('.')[0]) >= 1):
+                # index required in newer osmnx
+                graph_links = graph_links.set_index(["u", "v", "key"])
             G = ox.graph_from_gdfs(graph_nodes, graph_links)
         except AttributeError:
             WranglerLogger.debug(
