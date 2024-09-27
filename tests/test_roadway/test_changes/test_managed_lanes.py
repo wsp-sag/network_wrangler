@@ -253,7 +253,7 @@ def test_conflicting_managed_lane_apply(request, small_net):
         }
     }
     initial_lanes = net.links_df.loc[LINK_ID, "lanes"]
-    WranglerLogger.debug(f"Initial lanes: {initial_lanes}")
+    WranglerLogger.info(f"Initial lanes: {initial_lanes}")
     net.apply(project_1)
 
     int_lanes = net.links_df.loc[LINK_ID, "lanes"]
@@ -261,9 +261,10 @@ def test_conflicting_managed_lane_apply(request, small_net):
     int_ml_lanes = net.links_df.loc[LINK_ID, "ML_lanes"]
     int_sc_ml_lanes = net.links_df.loc[LINK_ID, "sc_ML_lanes"]
 
-    WranglerLogger.debug(
-        f"Interim lanes: {int_lanes}\nInterim scoped lanes: {int_sc_lanes}\n\
-        Interim scoped ML lanes: {int_sc_ml_lanes}"
+    WranglerLogger.info(
+        f"\n - Interim lanes: {int_lanes}\n\
+         - Interim scoped lanes: {int_sc_lanes}\n\
+         - Interim scoped ML lanes: {int_sc_ml_lanes}"
     )
 
     INT_EXP_LANES = initial_lanes
@@ -291,7 +292,7 @@ def test_conflicting_managed_lane_apply(request, small_net):
 
     final_lanes = net.links_df.loc[LINK_ID, "lanes"]
     final_sc_lanes = net.links_df.loc[LINK_ID, "sc_lanes"]
-    WranglerLogger.debug(f"Final lanes: {final_lanes}\nFinal scoped lanes: {final_sc_lanes}")
+    WranglerLogger.info(f"\n - Final lanes: {final_lanes}\n - Final scoped lanes: {final_sc_lanes}")
 
     FINAL_EXP_LANES = initial_lanes
     FINAL_EXP_SC_LANES = [ScopedLinkValueItem(category="any", timespan=TIMESPAN, value=initial_lanes)]

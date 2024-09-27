@@ -98,12 +98,13 @@ def _resolve_conflicting_scopes(
                 Conflicting existing value(s): {conflicting_existing}\n
                 Set value: {scoped_item} """
             )
+    return scoped_values
 
 
 def _valid_default_value_for_change(value: Any) -> bool:
     if isinstance(value, (int, np.integer)):
         return True
-    if isinstance(value, (float, np.float)):
+    if isinstance(value, float):
         return True
     return False
 
@@ -114,11 +115,12 @@ def _update_property_for_scope(
 ) -> ScopedLinkValueItem:
     """Update property for a single scope."""
     if scoped_prop_set.set is not None:
-        return ScopedLinkValueItem(
+        scoped_item = ScopedLinkValueItem(
             category=scoped_prop_set.category,
             timespan=scoped_prop_set.timespan,
             value=scoped_prop_set.set,
         )
+        return scoped_item
     elif scoped_prop_set.change is not None:
         if not _valid_default_value_for_change(existing_value):
             WranglerLogger.error(
@@ -128,11 +130,12 @@ def _update_property_for_scope(
             raise InvalidScopedLinkValue(
                 f"Cannot implement change from default_value of type {type(existing_value)}."
             )
-        return ScopedLinkValueItem(
+        scoped_item = ScopedLinkValueItem(
             category=scoped_prop_set.category,
             timespan=scoped_prop_set.timespan,
             value=existing_value + scoped_prop_set.change,
         )
+        return scoped_item
     else:
         WranglerLogger.error(
             f"Scoped property change must have set or change. Found: {scoped_prop_set}"
@@ -180,12 +183,12 @@ def _edit_scoped_link_property(
         # delete or error on conflicting scopes
         updated_scoped_prop_value_list = _resolve_conflicting_scopes(
             updated_scoped_prop_value_list,
-            scoped_prop_set,
+            set_item,
             overwrite_conflicting=overwrite_scoped == "conflicting",
         )
 
-        # find matching scopes
-        matching_existing = _filter_to_matching_scope(
+        # filter matching scopes from updated scopes
+        matching_existing, updated_scoped_prop_value_list = _filter_to_matching_scope(
             updated_scoped_prop_value_list,
             timespan=set_item.timespan,
             category=set_item.category,
@@ -236,7 +239,7 @@ def _edit_ml_access_egress_points(
     return links_df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def _edit_link_property(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
@@ -341,7 +344,7 @@ def _edit_link_property(
     msg = f"links_df.loc[link_idx,prop_name] \
           After:\n {links_df.loc[link_idx, prop_name]}"
     # WranglerLogger.debug(msg)
-
+    links_df = validate_df_to_model(links_df, RoadLinksTable)
     return links_df
 
 
