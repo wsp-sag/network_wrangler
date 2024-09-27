@@ -112,7 +112,7 @@ class ProjectCard(object):
             _yaml, _pycode = cardfile.read().split(delim)
             WranglerLogger.debug("_yaml: {}\n_pycode: {}".format(_yaml, _pycode))
 
-        attribute_dictionary = yaml.load(_yaml)
+        attribute_dictionary = yaml.safe_load(_yaml)
         attribute_dictionary["file"] = w_card_filename
         attribute_dictionary["pycode"] = _pycode.lstrip("\n")
 
