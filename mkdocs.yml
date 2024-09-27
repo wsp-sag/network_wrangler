@@ -5,24 +5,22 @@ repo_url: https://github.com/wsp-sag/network_wrangler
 theme:
   name: material
   features:
-    - navigation.tabs
     - content.code.annotate
+    - content.code.copy
     - content.tabs.link
     - navigation.indexes
+    - navigation.tabs
+    - navigation.expand
+    - toc.integrate
+    - toc.follow
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: blue
-      accent: grey
+    - scheme: default
       toggle:
-        icon: material/toggle-switch-off-outline
+        icon: material/brightness-7
         name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: blue
-      accent: grey
+    - scheme: slate
       toggle:
-        icon: material/toggle-switch
+        icon: material/brightness-4
         name: Switch to light mode
 
 plugins:

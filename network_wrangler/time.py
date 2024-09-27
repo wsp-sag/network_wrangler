@@ -22,7 +22,7 @@ class Time:
     This class provides methods to initialize and manipulate time objects.
 
     Attributes:
-        datetime (datetime.time): The underlying datetime.time object representing the time.
+        datetime (datetime): The underlying datetime object representing the time.
         time_str (str): The time string representation in HH:MM:SS format.
         time_sec (int): The time in seconds since midnight.
 
@@ -41,11 +41,13 @@ class Time:
             TimeFormatError: If the value is not a valid time format.
 
         """
-        if value is time:
-            self.datetime = value
-        elif value is str:
+        if isinstance(value, datetime):
+            self.datetime: datetime = value
+        elif isinstance(value, time):
+            self.datetime = datetime.combine(datetime.today(), value)
+        elif isinstance(value, str):
             self.datetime = str_to_time(value)
-        elif value is int:
+        elif isinstance(value, int):
             self.datetime = datetime.datetime.fromtimestamp(value).time()
         else:
             raise TimeFormatError("time must be a string, int, or time object")
@@ -80,65 +82,6 @@ class Time:
             int: The time in seconds since midnight.
         """
         return self.datetime.hour * 3600 + self.datetime.minute * 60 + self.datetime.second
-
-    def __eq__(self, other: Any) -> bool:
-        """Check if two Time objects are equal.
-
-        Args:
-            other (Any): The other object to compare.
-
-        Returns:
-            bool: True if the two Time objects are equal, False otherwise.
-        """
-        return Time(other).datetime == self.datetime
-
-    def __gt__(self, other: Any) -> bool:
-        """Check if the current Time object is greater than the other Time object.
-
-        Args:
-            other (Any): The other object to compare.
-
-        Returns:
-            bool: True if the current Time object is greater than the other Time object,
-                False otherwise.
-        """
-        return self.datetime > Time(other).datetime
-
-    def __ge__(self, other: Any) -> bool:
-        """Check if the current Time object is greater than or equal to the other Time object.
-
-        Args:
-            other (Any): The other object to compare.
-
-        Returns:
-            bool: True if the current Time object is greater than or equal to the other Time
-                object, False otherwise.
-        """
-        return self.datetime >= Time(other).datetime
-
-    def __lt__(self, other: Any) -> bool:
-        """Check if the current Time object is less than the other Time object.
-
-        Args:
-            other (Any): The other object to compare.
-
-        Returns:
-            bool: True if the current Time object is less than the other Time object,
-                False otherwise.
-        """
-        return self.datetime < Time(other).datetime
-
-    def __le__(self, other: Any) -> bool:
-        """Check if the current Time object is less than or equal to the other Time object.
-
-        Args:
-            other (Any): The other object to compare.
-
-        Returns:
-            bool: True if the current Time object is less than or equal to the other Time object,
-                False otherwise.
-        """
-        return self.datetime <= Time(other).datetime
 
     def __str__(self) -> str:
         """Get the string representation of the Time object.
@@ -239,26 +182,6 @@ class Timespan:
         else:
             return self.end_time_sec - self.start_time_sec
 
-    def __eq__(self, other: Any) -> bool:
-        """Equal comparison of two Timespan objects comparing duration."""
-        return self.duration == Timespan(other).duration
-
-    def __gt__(self, other: Any) -> bool:
-        """Greater than comparison of two Timespan objects comparing duration."""
-        return self.duration > Timespan(other).duration
-
-    def __ge__(self, other: Any) -> bool:
-        """Greater than or equal to comparison of two Timespan objects comparing duration."""
-        return self.duration >= Timespan(other).duration
-
-    def __lt__(self, other: Any) -> bool:
-        """Less than comparison of two Timespan objects comparing duration."""
-        return self.duration < Timespan(other).duration
-
-    def __le__(self, other: Any) -> bool:
-        """Less than or equal to comparison of two Timespan objects comparing duration."""
-        return self.duration <= Timespan(other).duration
-
     def __str__(self) -> str:
         """String representation of the Timespan object."""
         return str(self.timespan_str)
@@ -279,11 +202,14 @@ class Timespan:
         Returns:
             bool: True if the two timespans overlap, False otherwise.
         """
-        real_end_time = self.end_time
-        if self.end_time > self.start_time:
+        real_end_time = self.end_time.datetime
+        if self.end_time.datetime > self.start_time.datetime:
             real_end_time = self.end_time.datetime + datetime.timedelta(days=1)
 
-        real_other_end_time = other.end_time
-        if other.end_time > other.start_time:
+        real_other_end_time = other.end_time.datetime
+        if other.end_time.datetime > other.start_time.datetime:
             real_other_end_time = other.end_time.datetime + datetime.timedelta(days=1)
-        return self.start_time <= real_other_end_time and real_end_time >= other.start_time
+        return (
+            self.start_time.datetime <= real_other_end_time
+            and real_end_time >= other.start_time.datetime
+        )

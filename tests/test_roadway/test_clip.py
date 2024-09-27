@@ -12,7 +12,7 @@ def test_clip_roadway_geojson(stpaul_net, test_dir):
     # Assert that the clipped network is not empty
     assert len(clipped_network.nodes_df) > 0
     assert len(clipped_network.links_df) > 0
-    write_roadway(clipped_network, test_dir / "out", prefix="ecolab", true_shape=True)
+    write_roadway(clipped_network, out_dir=test_dir / "out", prefix="ecolab", true_shape=True)
 
 
 def test_clip_roadway_geocode(stpaul_net, test_dir):
@@ -21,7 +21,7 @@ def test_clip_roadway_geocode(stpaul_net, test_dir):
     # Assert that the clipped network is not empty
     assert len(clipped_network.nodes_df) > 0
     assert len(clipped_network.links_df) > 0
-    write_roadway(clipped_network, test_dir / "out", prefix="downtown", true_shape=True)
+    write_roadway(clipped_network, out_dir=test_dir / "out", prefix="downtown", true_shape=True)
 
 
 def test_clip_roadway_gdf(stpaul_net, test_dir):
@@ -32,4 +32,6 @@ def test_clip_roadway_gdf(stpaul_net, test_dir):
     # Assert that the clipped network is not empty
     assert len(clipped_network.nodes_df) > 0
     assert len(clipped_network.links_df) > 0
-    write_roadway(clipped_network, test_dir / "out", prefix="union_station", true_shape=True)
+    write_roadway(
+        clipped_network, out_dir=test_dir / "out", prefix="union_station", true_shape=True
+    )

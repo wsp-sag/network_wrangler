@@ -6,14 +6,15 @@ from typing import Union, Literal, Optional
 import pandas as pd
 import geopandas as gpd
 
-from ..utils.geo import to_points_gdf
-
 from .feed.feed import Feed
 from .network import TransitNetwork
 from ..models.gtfs.gtfs import GtfsModel
 from ..models._base.db import RequiredTableError
+from ..models._base.types import TransitFileTypes
 from ..logger import WranglerLogger
-from ..utils.io import unzip_file, write_table
+from ..utils.io_table import unzip_file, write_table
+from ..utils.geo import to_points_gdf
+from ..configs import WranglerConfig, DefaultConfig
 
 
 class FeedReadError(Exception):
@@ -31,12 +32,14 @@ def _feed_path_ref(path: Path) -> Path:
     return path
 
 
-def load_feed_from_path(feed_path: Union[Path, str], suffix: str = "txt") -> Feed:
+def load_feed_from_path(
+    feed_path: Union[Path, str], file_format: TransitFileTypes = "txt"
+) -> Feed:
     """Create a Feed object from the path to a GTFS transit feed.
 
     Args:
         feed_path (Union[Path, str]): The path to the GTFS transit feed.
-        suffix: the suffix of the files to read. Defaults to "txt"
+        file_format: the format of the files to read. Defaults to "txt"
 
     Returns:
         Feed: The TransitNetwork object created from the GTFS transit feed.
@@ -49,7 +52,7 @@ def load_feed_from_path(feed_path: Union[Path, str], suffix: str = "txt") -> Fee
     WranglerLogger.info(f"Reading GTFS feed tables from {feed_path}")
 
     feed_possible_files = {
-        table: list(feed_path.glob(f"*{table}.{suffix}")) for table in Feed.table_names
+        table: list(feed_path.glob(f"*{table}.{file_format}")) for table in Feed.table_names
     }
 
     # make sure we have all the tables we need
@@ -120,7 +123,8 @@ def load_feed_from_dfs(feed_dfs: dict) -> Feed:
 
 def load_transit(
     feed: Union[Feed, GtfsModel, dict[str, pd.DataFrame], str, Path],
-    suffix: str = "txt",
+    file_format: TransitFileTypes = "txt",
+    config: WranglerConfig = DefaultConfig,
 ) -> "TransitNetwork":
     """Create a TransitNetwork object.
 
@@ -131,7 +135,8 @@ def load_transit(
 
     Args:
         feed: Feed boject, dict of transit data frames, or path to transit feed data
-        suffix: the suffix of the files to read. Defaults to "txt"
+        file_format: the format of the files to read. Defaults to "txt"
+        config: WranglerConfig object. Defaults to DefaultConfig.
 
     Returns:
     A TransitNetwork object representing the loaded transit network.
@@ -145,7 +150,7 @@ def load_transit(
 
     transit_network_from_unzipped_dir = load_transit("path/to/files")
 
-    transit_network_from_parquet = load_transit("path/to/files", suffix="parquet")
+    transit_network_from_parquet = load_transit("path/to/files", file_format="parquet")
 
     dfs_of_transit_data = {"routes": routes_df, "stops": stops_df, "trips": trips_df...}
     transit_network_from_dfs = load_transit(dfs_of_transit_data)
@@ -153,12 +158,13 @@ def load_transit(
 
     """
     if isinstance(feed, str) or isinstance(feed, Path):
-        feed_obj = load_feed_from_path(feed, suffix=suffix)
+        feed = Path(feed)
+        feed_obj = load_feed_from_path(feed, file_format=file_format)
         feed_obj.feed_path = feed
     elif isinstance(feed, dict):
         feed_obj = load_feed_from_dfs(feed)
     elif isinstance(feed, GtfsModel):
-        feed_obj = Feed(feed)
+        feed_obj = Feed(**feed.__dict__)
     else:
         if not isinstance(feed, Feed):
             raise ValueError(
@@ -167,7 +173,7 @@ def load_transit(
             )
         feed_obj = feed
 
-    return TransitNetwork(feed_obj)
+    return TransitNetwork(feed_obj, config=config)
 
 
 def write_transit(
@@ -183,7 +189,7 @@ def write_transit(
         transit_net: a TransitNetwork instance
         out_dir: directory to write the network to
         file_format: the format of the output files. Defaults to "txt" which is csv with txt
-            suffix.
+            file format.
         prefix: prefix to add to the file name
         overwrite: if True, will overwrite the files if they already exist. Defaults to True
     """
@@ -198,9 +204,9 @@ def write_transit(
 
 def convert_transit_serialization(
     input_path: Union[str, Path],
-    output_format: Union[Literal["txt"], Literal["csv"], Literal["parquet"]],
+    output_format: TransitFileTypes,
     out_dir: Union[Path, str] = ".",
-    input_suffix: Union[Literal["txt"], Literal["csv"], Literal["parquet"]] = "txt",
+    input_file_format: TransitFileTypes = "csv",
     out_prefix: str = "",
     overwrite: bool = True,
 ):
@@ -210,15 +216,15 @@ def convert_transit_serialization(
         input_path: path to the input network
         output_format: the format of the output files. Should be txt, csv, or parquet.
         out_dir: directory to write the network to. Defaults to current directory.
-        input_suffix: the suffix of the files to read. Should be txt, csv, or parquet.
+        input_file_format: the file_format of the files to read. Should be txt, csv, or parquet.
             Defaults to "txt"
         out_prefix: prefix to add to the file name. Defaults to ""
         overwrite: if True, will overwrite the files if they already exist. Defaults to True
     """
-    if input_suffix is None:
-        input_suffix = "csv"
-    WranglerLogger.info(f"Loading transit net from {input_path} with input type {input_suffix}")
-    net = load_transit(input_path, suffix=input_suffix)
+    WranglerLogger.info(
+        f"Loading transit net from {input_path} with input type {input_file_format}"
+    )
+    net = load_transit(input_path, file_format=input_file_format)
     WranglerLogger.info(f"Writing transit network to {out_dir} in {output_format} format.")
     write_transit(
         net,

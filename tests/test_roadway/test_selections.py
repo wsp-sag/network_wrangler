@@ -206,6 +206,8 @@ def test_query_roadway_property_by_time_group(request, variable_query, stpaul_ne
 
 def test_get_modal_network(request, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
+    from network_wrangler.params import MODES_TO_NETWORK_LINK_VARIABLES
+
     net = stpaul_net
     mode = "transit"
     _links_df = net.links_df.mode_query(mode)
@@ -214,7 +216,7 @@ def test_get_modal_network(request, stpaul_net):
     WranglerLogger.debug(f"TEST - Number of selected links: {len(test_links_of_selection)}")
 
     control_links_of_selection = []
-    for m in net.links_df.params.modes_to_network_link_variables[mode]:
+    for m in MODES_TO_NETWORK_LINK_VARIABLES[mode]:
         control_links_of_selection.extend(net.links_df.loc[net.links_df[m], "model_link_id"])
     WranglerLogger.debug(f"CONTROL - Number of selected links: {len(control_links_of_selection)}")
 

@@ -6,8 +6,6 @@ To run with print statments, use `pytest -s tests/test_scenario.py`
 
 import os
 import copy
-import sys
-import subprocess
 
 import pytest
 
@@ -19,6 +17,18 @@ from network_wrangler.scenario import (
     ScenarioPrerequisiteError,
 )
 from network_wrangler.logger import WranglerLogger
+
+
+def test_default_config(request):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+
+    from network_wrangler.configs import DefaultConfig
+    from network_wrangler.configs.wrangler import IdGenerationConfig, ModelRoadwayConfig
+
+    assert isinstance(DefaultConfig.IDS, IdGenerationConfig)
+    assert isinstance(DefaultConfig.MODEL_ROADWAY, ModelRoadwayConfig)
+    assert DefaultConfig.MODEL_ROADWAY.ML_OFFSET_METERS == -10
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_project_card_read(request, stpaul_card_dir):
@@ -48,15 +58,20 @@ def test_project_card_write(request, stpaul_card_dir, scratch_dir):
 def test_scenario_conflicts(request, stpaul_card_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    project_a = ProjectCard({"project": "project a", "dependencies": {"conflicts": ["project b"]}})
-    project_b = ProjectCard(
+    project_a = ProjectCard(
         {
-            "project": "project b",
+            "project": "project a",
+            "self_obj_type": "RoadwayNetwork",
+            "pycode": "print('hello')",
+            "dependencies": {"conflicts": ["project b"]},
         }
+    )
+    project_b = ProjectCard(
+        {"project": "project b", "self_obj_type": "RoadwayNetwork", "pycode": "print('hello')"}
     )
 
     project_card_list = [project_a, project_b]
-    scen = create_scenario(base_scenario={}, project_card_list=project_card_list, validate=False)
+    scen = create_scenario(base_scenario={}, project_card_list=project_card_list)
 
     # should raise an error whenever calling queued projects or when applying them.
     with pytest.raises(ScenarioConflictError):
@@ -75,16 +90,16 @@ def test_scenario_corequisites(request):
         {
             "project": "project a",
             "dependencies": {"corequisites": ["project b", "project c"]},
+            "self_obj_type": "RoadwayNetwork",
+            "pycode": "print('hello')",
         }
     )
     project_b = ProjectCard(
-        {
-            "project": "project b",
-        }
+        {"project": "project b", "self_obj_type": "RoadwayNetwork", "pycode": "print('hello')"}
     )
 
     project_card_list = [project_a, project_b]
-    scen = create_scenario(base_scenario={}, project_card_list=project_card_list, validate=False)
+    scen = create_scenario(base_scenario={}, project_card_list=project_card_list)
 
     # should raise an error whenever calling queued projects or when applying them.
     with pytest.raises(ScenarioCorequisiteError):
@@ -100,19 +115,36 @@ def test_scenario_prerequisites(request):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     project_a = ProjectCard(
-        {"project": "project a", "dependencies": {"prerequisites": ["project b"]}}
+        {
+            "project": "project a",
+            "dependencies": {"prerequisites": ["project b"]},
+            "self_obj_type": "RoadwayNetwork",
+            "pycode": "print('hello')",
+        }
     )
 
     project_b = ProjectCard(
-        {"project": "project b", "dependencies": {"prerequisites": ["project c"]}}
+        {
+            "project": "project b",
+            "dependencies": {"prerequisites": ["project c"]},
+            "self_obj_type": "RoadwayNetwork",
+            "pycode": "print('hello')",
+        }
     )
 
-    project_c = ProjectCard({"project": "project c"})
+    project_c = ProjectCard(
+        {"project": "project c", "self_obj_type": "RoadwayNetwork", "pycode": "print('hello')"}
+    )
 
     project_d = ProjectCard(
-        {"project": "project d", "dependencies": {"prerequisites": ["project b"]}}
+        {
+            "project": "project d",
+            "dependencies": {"prerequisites": ["project b"]},
+            "self_obj_type": "RoadwayNetwork",
+            "pycode": "print('hello')",
+        }
     )
-    scen = create_scenario(base_scenario={}, project_card_list=[project_a], validate=False)
+    scen = create_scenario(base_scenario={}, project_card_list=[project_a])
 
     # should raise an error whenever calling queued projects or when applying them.
     with pytest.raises(ScenarioPrerequisiteError):
@@ -122,7 +154,7 @@ def test_scenario_prerequisites(request):
         scen.apply_all_projects()
 
     # add other projects...
-    scen.add_project_cards([project_b, project_c, project_d], validate=False)
+    scen.add_project_cards([project_b, project_c, project_d])
 
     # if apply a project singuarly, it should also fail if it doesn't have prereqs
     with pytest.raises(ScenarioPrerequisiteError):
@@ -135,19 +167,33 @@ def test_project_sort(request):
     """Make sure projects sort correctly before being applied."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
     project_a = ProjectCard(
-        {"project": "project a", "dependencies": {"prerequisites": ["project b"]}}
+        {
+            "project": "project a",
+            "dependencies": {"prerequisites": ["project b"]},
+            "self_obj_type": "RoadwayNetwork",
+            "pycode": "print('hello')",
+        }
     )
 
     project_b = ProjectCard(
-        {"project": "project b", "dependencies": {"prerequisites": ["project c"]}}
+        {
+            "project": "project b",
+            "dependencies": {"prerequisites": ["project c"]},
+            "self_obj_type": "RoadwayNetwork",
+            "pycode": "print('hello')",
+        }
     )
 
-    project_c = ProjectCard({"project": "project c"})
+    project_c = ProjectCard(
+        {"project": "project c", "self_obj_type": "RoadwayNetwork", "pycode": "print('hello')"}
+    )
 
     project_d = ProjectCard(
         {
             "project": "project d",
             "dependencies": {"prerequisites": ["project b", "project a"]},
+            "self_obj_type": "RoadwayNetwork",
+            "pycode": "print('hello')",
         }
     )
 
@@ -156,7 +202,6 @@ def test_project_sort(request):
     scen = create_scenario(
         base_scenario={},
         project_card_list=[project_a, project_b, project_c, project_d],
-        validate=False,
     )
 
     WranglerLogger.debug(f"scen.queued_projects: {scen.queued_projects}")
@@ -178,7 +223,7 @@ def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_net, stpaul_tra
         "road.managed_lane.simple.yml",
     ]
 
-    project_card_path_list = [os.path.join(stpaul_card_dir, filename) for filename in card_files]
+    project_card_path_list = [stpaul_card_dir / filename for filename in card_files]
 
     my_scenario = create_scenario(
         base_scenario=stpaul_base_scenario,
@@ -187,25 +232,48 @@ def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_net, stpaul_tra
 
     my_scenario.apply_all_projects()
 
-    WranglerLogger.debug(my_scenario.summarize())
+    WranglerLogger.debug(my_scenario.summary)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_scenario_building_from_script(request):
+def test_scenario_write_load(request, small_net, small_transit_net, test_out_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    config_file = os.path.join(os.getcwd(), "examples", "config_1.yml")
-    script_to_run = os.path.join(os.getcwd(), "bin", "build_scenario_from_config.py")
+    from network_wrangler.scenario import load_scenario
 
-    # replace backward slash with forward slash
-    config_file = config_file.replace(os.sep, "/")
-    script_to_run = script_to_run.replace(os.sep, "/")
+    base_scenario = {
+        "road_net": small_net,
+        "transit_net": small_transit_net,
+        "applied_projects": ["project a", "project b"],
+    }
+    first_scenario_name = "first_scenario"
+    second_scenario_name = "second_scenario"
+    first_scenario = create_scenario(base_scenario=base_scenario, name=first_scenario_name)
+    scenario_write_dir = test_out_dir / first_scenario_name
+    scenario_file_path = first_scenario.write(
+        scenario_write_dir, first_scenario_name, projects_write=False
+    )
+    second_scenario = load_scenario(scenario_file_path, name=second_scenario_name)
 
-    # print(config_file)
-    # print(script_to_run)
+    assert second_scenario.applied_projects == first_scenario.applied_projects
+    assert second_scenario.road_net.links_df.shape == first_scenario.road_net.links_df.shape
+    assert (
+        second_scenario.transit_net.feed.trips.shape == first_scenario.transit_net.feed.trips.shape
+    )
 
-    p = subprocess.Popen([sys.executable, script_to_run, config_file])
-    p.communicate()  # wait for the subprocess call to finish
+
+def test_scenario_building_from_config(request, example_dir, test_out_dir):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+
+    from network_wrangler.scenario import build_scenario_from_config
+
+    scenario_config_file = example_dir / "stpaul" / "myscenario.config.yml"
+    scenario = build_scenario_from_config(scenario_config=scenario_config_file)
+    assert "365 Bus Reroute".lower() in scenario.applied_projects
+    assert (test_out_dir / "myscenario" / "roadway").is_dir()
+    assert (test_out_dir / "myscenario" / "projects" / "road.add.simple.yml").is_file()
+    assert (test_out_dir / "myscenario" / "transit" / "my_scenario_shapes.txt").is_file()
+    assert (test_out_dir / "myscenario" / "my_scenario_scenario.yml").is_file()
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

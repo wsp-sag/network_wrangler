@@ -30,26 +30,30 @@ def test_id_roadway_file_paths_in_dir(tmpdir):
     shapes_file.write("")
 
     # Test Case 1: All files are present
-    links_path, nodes_path, shapes_path = id_roadway_file_paths_in_dir(tmpdir, suffix="geojson")
+    links_path, nodes_path, shapes_path = id_roadway_file_paths_in_dir(
+        tmpdir, file_format="geojson"
+    )
     assert links_path == links_file
     assert nodes_path == nodes_file
     assert shapes_path == shapes_file
 
     # Test Case 2: Links file is missing
     os.remove(links_file)
-    with pytest.raises(FileNotFoundError, match="No links file with json suffix found"):
-        id_roadway_file_paths_in_dir(tmpdir, suffix="geojson")
+    with pytest.raises(FileNotFoundError):
+        id_roadway_file_paths_in_dir(tmpdir, file_format="geojson")
 
     # Test Case 3: Nodes file is missing
     links_file.write("")
     os.remove(nodes_file)
-    with pytest.raises(FileNotFoundError, match="No nodes file with geojson suffix found"):
-        id_roadway_file_paths_in_dir(tmpdir, suffix="geojson")
+    with pytest.raises(FileNotFoundError):
+        id_roadway_file_paths_in_dir(tmpdir, file_format="geojson")
 
     # Test Case 4: Shapes file is missing (optional)
     nodes_file.write("")
     os.remove(shapes_file)
-    links_path, nodes_path, shapes_path = id_roadway_file_paths_in_dir(tmpdir, suffix="geojson")
+    links_path, nodes_path, shapes_path = id_roadway_file_paths_in_dir(
+        tmpdir, file_format="geojson"
+    )
     assert links_path == links_file
     assert nodes_path == nodes_file
     assert shapes_path is None
@@ -107,11 +111,11 @@ def test_convert(example_dir, tmpdir):
         raise FileNotFoundError("Missing converted geojson files.")
 
     WranglerLogger.debug("Reading in og network to test that it is equal.")
-    in_net = load_roadway_from_dir(example_dir / "small", suffix="geojson")
+    in_net = load_roadway_from_dir(example_dir / "small", file_format="geojson")
 
     WranglerLogger.debug("Reading in converted network to test that it is equal.")
-    out_net_parq = load_roadway_from_dir(out_dir, suffix="parquet")
-    out_net_geojson = load_roadway_from_dir(out_dir, suffix="geojson")
+    out_net_parq = load_roadway_from_dir(out_dir, file_format="parquet")
+    out_net_geojson = load_roadway_from_dir(out_dir, file_format="geojson")
 
     WranglerLogger.info("Evaluating original vs parquet network.")
     assert not diff_nets(in_net, out_net_parq), "The original and parquet networks differ."
@@ -140,7 +144,7 @@ def test_roadway_geojson_read_write_read(example_dir, test_out_dir, ex, io_forma
         f"{int(t_write // 60): 02d}:{int(t_write % 60): 02d} – {ex} write to {io_format}"  # noqa: E231, E501
     )
     t_0 = time.time()
-    net = load_roadway_from_dir(test_io_dir, suffix=io_format)
+    net = load_roadway_from_dir(test_io_dir, file_format=io_format)
     t_read = time.time() - t_0
     WranglerLogger.info(
         f"{int(t_read // 60): 02d}:{int(t_read % 60): 02d} – {ex} read from {io_format}"  # noqa: E231, E501

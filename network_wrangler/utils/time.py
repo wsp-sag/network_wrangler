@@ -14,7 +14,7 @@ Internal function terminology for timespan scopes:
 
 from __future__ import annotations
 from datetime import datetime, timedelta, date
-from typing import TYPE_CHECKING, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 from pydantic import validate_call
@@ -26,7 +26,7 @@ from ..models._base.series import TimeStrSeriesSchema
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
-def str_to_time(time_str: TimeString, base_date: Optional[datetime.date] = None) -> datetime:
+def str_to_time(time_str: TimeString, base_date: Optional[date] = None) -> datetime:
     """Convert TimeString (HH:MM<:SS>) to datetime object.
 
     If HH > 24, will subtract 24 to be within 24 hours. Timespans will be treated as the next day.
@@ -47,7 +47,9 @@ def str_to_time(time_str: TimeString, base_date: Optional[datetime.date] = None)
     seconds = int(parts[2]) if len(parts) == 3 else 0
 
     if hours >= 24:
-        hours -= 24
+        add_days = hours // 24
+        base_date += timedelta(days=add_days)
+        hours -= 24 * add_days
 
     # Create a time object with the adjusted hours, minutes, and seconds
     adjusted_time = datetime.strptime(f"{hours:02}:{minutes:02}:{seconds:02}", "%H:%M:%S").time()
@@ -59,7 +61,7 @@ def str_to_time(time_str: TimeString, base_date: Optional[datetime.date] = None)
 
 
 def _all_str_to_time_series(
-    time_str_s: pd.Series, base_date: Optional[Union[pd.Series, datetime.date]] = None
+    time_str_s: pd.Series, base_date: Optional[Union[pd.Series, date]] = None
 ) -> pd.Series:
     """Assume all are strings and convert to datetime objects."""
     # check strings are in the correct format, leave existing date times alone
@@ -94,7 +96,7 @@ def _all_str_to_time_series(
 
 
 def str_to_time_series(
-    time_str_s: pd.Series, base_date: Optional[Union[pd.Series, datetime.date]] = None
+    time_str_s: pd.Series, base_date: Optional[Union[pd.Series, date]] = None
 ) -> pd.Series:
     """Convert mixed panda series datetime and TimeString (HH:MM<:SS>) to datetime object.
 
@@ -117,26 +119,26 @@ def str_to_time_series(
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
-def str_to_time_list(timespan: list[TimeString]) -> list[list[datetime]]:
+def str_to_time_list(timespan: list[TimeString]) -> list[datetime]:
     """Convert list of TimeStrings (HH:MM<:SS>) to list of datetime.time objects."""
-    timespan = list(map(str_to_time, timespan))
-    if not is_increasing(timespan):
-        timespan = [timespan[0], timespan[1] + timedelta(days=1)]
+    timespan_dt: list[datetime] = list(map(str_to_time, timespan))
+    if not is_increasing(timespan_dt):
+        timespan_dt = [timespan_dt[0], timespan_dt[1] + timedelta(days=1)]
         WranglerLogger.warning(f"Timespan is not in increasing order: {timespan}.\
             End time will be treated as next day.")
-    return timespan
+    return timespan_dt
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def timespan_str_list_to_dt(timespans: list[TimespanString]) -> list[list[datetime]]:
     """Convert list of TimespanStrings to list of datetime.time objects."""
-    [str_to_time_list(ts) for ts in timespans]
+    return [str_to_time_list(ts) for ts in timespans]
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def dt_to_seconds_from_midnight(dt: datetime) -> int:
     """Convert a datetime object to the number of seconds since midnight."""
-    return (dt - dt.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+    return round((dt - dt.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds())
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
@@ -173,8 +175,7 @@ def filter_df_to_overlapping_timespans(
     for query_timespan in query_timespans:
         q_start_time, q_end_time = str_to_time_list(query_timespan)
         end_time_s = orig_df["end_time"]
-        if orig_df["end_time"] < orig_df["start_time"]:
-            end_time_s += pd.Timedelta(days=1)
+        end_time_s.loc[orig_df["end_time"] < orig_df["start_time"]] += pd.Timedelta(days=1)
         this_ts_mask = (orig_df["start_time"] < q_end_time) & (q_start_time < end_time_s)
         mask |= this_ts_mask
     return orig_df.loc[mask]
@@ -230,8 +231,7 @@ def filter_df_to_max_overlapping_timespans(
     q_start, q_end = str_to_time_list(query_timespan)
 
     real_end = orig_df["end_time"]
-    if orig_df["end_time"] < orig_df["start_time"]:
-        real_end += pd.Timedelta(days=1)
+    real_end.loc[orig_df["end_time"] < orig_df["start_time"]] += pd.Timedelta(days=1)
 
     orig_df["overlap_duration"] = calc_overlap_duration_with_query(
         orig_df["start_time"],
@@ -265,15 +265,9 @@ def dt_overlap_duration(timedelta1: timedelta, timedelta2: timedelta) -> timedel
     If the end time is less than the start time, it is assumed to be the next day.
     """
     if timedelta1.end_time < timedelta1.start_time:
-        timedelta1 = timedelta(
-            start_time=timedelta1.start_time,
-            end_time=timedelta1.end_time + timedelta(days=1),
-        )
+        timedelta1 = timedelta1 + timedelta(days=1)
     if timedelta2.end_time < timedelta2.start_time:
-        timedelta2 = timedelta(
-            start_time=timedelta2.start_time,
-            end_time=timedelta2.end_time + timedelta(days=1),
-        )
+        timedelta2 = timedelta2 + timedelta(days=1)
     overlap_start = max(timedelta1.start_time, timedelta2.start_time)
     overlap_end = min(timedelta1.end_time, timedelta2.end_time)
     overlap_duration = max(overlap_end - overlap_start, timedelta(0))
@@ -328,7 +322,6 @@ def dt_overlaps(timespan1: list[datetime], timespan2: list[datetime]) -> bool:
     return (time1_start < time2_end) and (time2_start < time1_end)
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
 def timespans_overlap(timespan1: list[TimespanString], timespan2: list[TimespanString]) -> bool:
     """Check if two timespan strings overlap.
 

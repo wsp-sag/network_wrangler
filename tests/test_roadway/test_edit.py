@@ -5,8 +5,10 @@ import pytest
 
 import pandas as pd
 
-from pandera.errors import SchemaError
 
+from network_wrangler.utils.models import TableValidationError
+from network_wrangler.roadway.links.create import LinkAddError
+from network_wrangler.roadway.nodes.create import NodeAddError
 from network_wrangler.logger import WranglerLogger
 
 
@@ -35,7 +37,7 @@ def test_add_nodes(request, small_net):
     assert len(new_nodes_in_nodes_df) == len(new_node_ids)
 
     # should raise an error if try to add again.
-    with pytest.raises(SchemaError):
+    with pytest.raises(NodeAddError):
         net.add_nodes(add_nodes_df)
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
@@ -67,7 +69,7 @@ def test_add_links(request, small_net):
     assert len(new_links_in_links_df) == len(new_link_ids)
 
     # should raise an error if try to add again.
-    with pytest.raises(ValueError):
+    with pytest.raises(LinkAddError):
         net.add_links(add_links_df)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -92,7 +94,7 @@ def test_add_shapes(request, small_net):
     assert len(net.shapes_df.loc[new_shape_ids]) == len(new_shape_ids)
 
     # should raise an error if try to add again.
-    with pytest.raises(SchemaError):
+    with pytest.raises(TableValidationError):
         net.add_shapes(add_shapes_df)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

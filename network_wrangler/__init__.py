@@ -7,6 +7,7 @@ from .roadway.io import load_roadway, load_roadway_from_dir, write_roadway
 from .transit.io import load_transit, write_transit
 from .scenario import Scenario, create_scenario
 from .utils.df_accessors import *
+from .configs import load_wrangler_config
 
 __all__ = [
     "WranglerLogger",
@@ -18,7 +19,9 @@ __all__ = [
     "write_roadway",
     "create_scenario",
     "Scenario",
+    "load_wrangler_config",
 ]
+
 
 TARGET_ROADWAY_NETWORK_SCHEMA_VERSION = "1"
 TARGET_TRANSIT_NETWORK_SCHEMA_VERSION = "1"

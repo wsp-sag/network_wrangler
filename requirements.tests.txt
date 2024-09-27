@@ -3,5 +3,6 @@ mypy
 pytest
 pytest-benchmark
 pytest-cov
+pytest-profiling
 ruff
 vulture

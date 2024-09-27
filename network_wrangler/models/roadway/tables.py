@@ -17,6 +17,7 @@ import datetime as dt
 
 import pandas as pd
 import pandera as pa
+import numpy as np
 
 from pandas import Int64Dtype as Int64
 from pandera import DataFrameModel
@@ -26,6 +27,17 @@ from pandera.typing.geopandas import GeoSeries
 from .._base.tables import validate_pyd
 from .types import ScopedLinkValueList
 from ...logger import WranglerLogger
+
+
+RoadLinksAttrs = {
+    "name": "road_links",
+    "primary_key": "model_link_id",
+    "source_file": None,
+    "display_cols": ["model_link_id", "osm_link_id", "name"],
+    "explicit_ids": ["model_link_id", "osm_link_id"],
+    "geometry_props": ["geometry"],
+    "idx_col": "model_link_id_idx",
+}
 
 
 class RoadLinksTable(DataFrameModel):
@@ -105,7 +117,6 @@ class RoadLinksTable(DataFrameModel):
     class Config:
         """Config for RoadLinksTable."""
 
-        name = "RoadLinksTable"
         add_missing_columns = True
         coerce = True
         unique = ["A", "B"]
@@ -117,9 +128,20 @@ class RoadLinksTable(DataFrameModel):
         Custom check to validate fields starting with 'sc_' or 'sc_ML_'
         against a ScopedLinkValueItem model, handling both mandatory and optional fields.
         """
-        if (isinstance(scoped_value, (list, Series)) and len(scoped_value) == 0) or pd.isna(scoped_value):
+        if scoped_value is None or (not isinstance(scoped_value, list) and pd.isna(scoped_value)):
             return True
         return validate_pyd(scoped_value, ScopedLinkValueList)
+
+
+RoadNodesAttrs = {
+    "name": "road_nodes",
+    "primary_key": "model_node_id",
+    "source_file": None,
+    "display_cols": ["model_node_id", "osm_node_id", "X", "Y"],
+    "explicit_ids": ["model_node_id", "osm_node_id"],
+    "geometry_props": ["X", "Y", "geometry"],
+    "idx_col": "model_node_id_idx",
+}
 
 
 class RoadNodesTable(DataFrameModel):
@@ -144,9 +166,20 @@ class RoadNodesTable(DataFrameModel):
     class Config:
         """Config for RoadNodesTable."""
 
-        name = "RoadNodesTable"
         add_missing_columns = True
         coerce = True
+        _pk = ["model_node_id"]
+
+
+RoadShapesAttrs = {
+    "name": "road_shapes",
+    "primary_key": "shape_id",
+    "source_file": None,
+    "display_cols": ["shape_id"],
+    "explicit_ids": ["shape_id"],
+    "geometry_props": ["geometry"],
+    "idx_col": "shape_id_idx",
+}
 
 
 class RoadShapesTable(DataFrameModel):
@@ -161,8 +194,8 @@ class RoadShapesTable(DataFrameModel):
     class Config:
         """Config for RoadShapesTable."""
 
-        name = "ShapesSchema"
         coerce = True
+        _pk = ["shape_id"]
 
 
 class ExplodedScopedLinkPropertyTable(DataFrameModel):

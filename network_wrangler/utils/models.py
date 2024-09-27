@@ -1,12 +1,15 @@
 """Helper functions for data models."""
 
 import copy
-from typing import Union, get_type_hints, Optional
+
+from typing import Union, get_type_hints, Optional, _GenericAlias, get_origin, get_args, Type
+from functools import wraps
 from pathlib import Path
 
 import pandas as pd
 import geopandas as gpd
 from pandas import DataFrame
+from pandera.typing import DataFrame as PanderaDataFrame
 import pandera as pa
 
 from pandera import DataFrameModel
@@ -31,7 +34,7 @@ def empty_df_from_datamodel(
         An empty [Geo]DataFrame that validates to the specified model.
     """
     schema = model.to_schema()
-    data = {col: [] for col in schema.columns.keys()}
+    data: dict[str, list] = {col: [] for col in schema.columns.keys()}
 
     if "geometry" in data:
         return model(gpd.GeoDataFrame(data, crs=crs))
@@ -53,11 +56,29 @@ class TableValidationError(Exception):
     pass
 
 
+def fill_df_with_defaults_from_model(df, model):
+    """Fill a DataFrame with default values from a Pandera DataFrameModel.
+
+    Args:
+        df: DataFrame to fill with default values.
+        model: Pandera DataFrameModel to get default values from.
+    """
+    for c in df.columns:
+        default_value = default_from_datamodel(model, c)
+        if default_value is None:
+            df[c] = df[c].where(pd.notna(df[c]), None)
+        else:
+            df[c] = df[c].fillna(default_value)
+    return df
+
+
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def validate_df_to_model(
-    df: DataFrame, model: DataFrameModel, output_file: Path = "validation_failure_cases.csv"
+    df: DataFrame, model: Type, output_file: Path = Path("validation_failure_cases.csv")
 ) -> DataFrame:
     """Wrapper to validate a DataFrame against a Pandera DataFrameModel with better logging.
+
+    Also copies the attrs from the input DataFrame to the validated DataFrame.
 
     Args:
         df: DataFrame to validate.
@@ -65,18 +86,16 @@ def validate_df_to_model(
         output_file: Optional file to write validation errors to. Defaults to
             validation_failure_cases.csv.
     """
+    attrs = copy.deepcopy(df.attrs)
     try:
         model_df = model.validate(df, lazy=True)
-        for c in model_df.columns:
-            default_value = default_from_datamodel(model, c)
-            if default_value is None:
-                model_df[c] = model_df[c].where(pd.notna(model_df[c]), None)
-            else:
-                model_df[c] = model_df[c].fillna(default_value)
-
+        model_df = fill_df_with_defaults_from_model(model_df, model)
+        model_df.attrs = attrs
         return model_df
-
-    except SchemaErrors or TypeError or ValueError as e:
+    except (TypeError, ValueError) as e:
+        WranglerLogger.error(f"Validation to {model.__name__} failed.\n{e}")
+        raise TableValidationError(f"Validation to {model.__name__} failed.")
+    except SchemaErrors as e:
         # Log the summary of errors
         WranglerLogger.error(
             f"Validation to {model.__name__} failed with {len(e.failure_cases)} \
@@ -99,7 +118,7 @@ def validate_df_to_model(
 
 
 def identify_model(
-    data: Union[pd.DataFrame, dict], models: list[DataFrameModel, BaseModel]
+    data: Union[pd.DataFrame, dict], models: list
 ) -> Union[DataFrameModel, BaseModel]:
     """Identify the model that the input data conforms to.
 
@@ -142,11 +161,11 @@ def extra_attributes_undefined_in_model(instance: BaseModel, model: BaseModel) -
     return extra_attributes
 
 
-def submodel_fields_in_model(model: BaseModel, instance: Optional[BaseModel] = None) -> list:
+def submodel_fields_in_model(model: Type, instance: Optional[BaseModel] = None) -> list:
     """Find the fields in a pydantic model that are submodels."""
     types = get_type_hints(model)
     model_type = Union[ModelMetaclass, BaseModel]
-    submodels = [f for f in model.model_fields if isinstance(types.get(f), model_type)]
+    submodels = [f for f in model.model_fields if isinstance(types.get(f), model_type)]  # type: ignore
     if instance is not None:
         defined = list(instance.model_dump(exclude_none=True, by_alias=True).keys())
         return [f for f in submodels if f in defined]
@@ -180,3 +199,51 @@ def coerce_extra_fields_to_type_in_df(
             raise DatamodelDataframeIncompatableError(e)
         out_data.model_extra[field] = v
     return out_data
+
+
+def _is_type_from_type_hint(type_hint_value, type_to_check):
+    def check_type_hint(value):
+        if isinstance(value, _GenericAlias):
+            try:
+                if issubclass(value, type_to_check):
+                    return True
+            except TypeError:
+                try:
+                    if issubclass(value.__origin__, type_to_check):
+                        return True
+                except:
+                    pass
+        return False
+
+    if get_origin(type_hint_value) is Union:
+        args = get_args(type_hint_value)
+        for arg in args:
+            if check_type_hint(arg):
+                return True
+    else:
+        if check_type_hint(type_hint_value):
+            return True
+
+    return False
+
+
+def validate_call_pyd(func):
+    """Decorator to validate the function i/o using Pydantic models without Pandera."""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        type_hints = get_type_hints(func)
+        # Modify the type hints to replace pandera DataFrame models with pandas DataFrames
+        modified_type_hints = {
+            key: value
+            for key, value in type_hints.items()
+            if not _is_type_from_type_hint(value, PanderaDataFrame)
+        }
+
+        new_func = func
+        new_func.__annotations__ = modified_type_hints
+        validated_func = validate_call(new_func, config={"arbitrary_types_allowed": True})
+
+        return validated_func(*args, **kwargs)
+
+    return wrapper

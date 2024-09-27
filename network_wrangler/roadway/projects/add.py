@@ -69,17 +69,20 @@ def apply_new_roadway(
         f"Adding New Roadway Features: \n-Links: \n{add_links}\n-Nodes: \n{add_nodes}"
     )
     if add_nodes:
-        _new_nodes_df = data_to_nodes_df(
-            pd.DataFrame(add_nodes), nodes_params=roadway_net.nodes_df.params
-        )
+        _new_nodes_df = data_to_nodes_df(pd.DataFrame(add_nodes), config=roadway_net.config)
         if project_name:
             _new_nodes_df["projects"] = f"{project_name},"
         roadway_net.add_nodes(_new_nodes_df)
 
     if add_links:
+        # make sure links refer to nodes in network
+        _missing_nodes = _node_ids_from_set_links(add_links) - set(roadway_net.nodes_df.index)
+        if _missing_nodes:
+            WranglerLogger.error(f"Missing nodes for new links: {_missing_nodes}")
+            raise NewRoadwayError("Link additions use nodes not found in network.")
         _new_links_df = data_to_links_df(
             add_links,
-            links_params=roadway_net.links_df.params,
+            config=roadway_net.config,
             nodes_df=roadway_net.nodes_df,
         )
         if project_name:
@@ -88,3 +91,8 @@ def apply_new_roadway(
         roadway_net.add_links(_new_links_df)
 
     return roadway_net
+
+
+def _node_ids_from_set_links(set_links: list[dict]) -> set[int]:
+    """Get the nodes from a set of links."""
+    return set([link["A"] for link in set_links] + [link["B"] for link in set_links])

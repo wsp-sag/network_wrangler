@@ -1,7 +1,6 @@
 """Models for when you want to use vanilla (non wrangler) GTFS."""
 
 from .types import *
-from .records import *
 
 
 class MockPaModel:

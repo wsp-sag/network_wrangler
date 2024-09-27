@@ -12,7 +12,7 @@ from ...utils.models import validate_df_to_model, TableValidationError
 
 
 def validate_nodes_file(
-    nodes_filename: Path, strict: bool = False, errors_filename: Path = "node_errors.csv"
+    nodes_filename: Path, strict: bool = False, errors_filename: Path = Path("node_errors.csv")
 ) -> bool:
     """Validates a nodes file to RoadNodesTable.
 
@@ -30,7 +30,7 @@ def validate_nodes_file(
 
 
 def validate_nodes_df(
-    nodes_df: pd.DataFrame, strict: bool = False, errors_filename: Path = "node_errors.csv"
+    nodes_df: pd.DataFrame, strict: bool = False, errors_filename: Path = Path("node_errors.csv")
 ) -> bool:
     """Validates a shapes df to RoadNodessTables.
 

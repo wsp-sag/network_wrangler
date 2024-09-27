@@ -1,6 +1,7 @@
 import copy
 import os
 
+import pytest
 import pandas as pd
 
 from network_wrangler import WranglerLogger
@@ -252,9 +253,9 @@ def test_change_node_xy(request, small_net):
     net = copy.deepcopy(small_net)
 
     _test_link = net.links_df.iloc[0]
-    _test_link_idx = int(_test_link[net.links_df.params.primary_key])
-    _test_node = net.nodes_df.loc[[_test_link[net.links_df.params.from_node]]].iloc[0]
-    _test_node_idx = int(_test_node[[net.nodes_df.params.primary_key]].iloc[0])
+    _test_link_idx = _test_link.model_link_id
+    _test_node = net.nodes_df.loc[[_test_link.A]].iloc[0]
+    _test_node_idx = _test_node.model_node_id
 
     WranglerLogger.debug(f"Node Index: {_test_node_idx}")
     WranglerLogger.debug(f"Link Index: {_test_link_idx}")
@@ -263,7 +264,7 @@ def test_change_node_xy(request, small_net):
     )
 
     facility = {
-        "nodes": {"model_node_id": [_test_node_idx]},
+        "nodes": {"model_node_id": [int(_test_node_idx)]},
     }
     WranglerLogger.debug(f"facility: {facility}")
     _expected_X = -1000
@@ -285,7 +286,7 @@ def test_change_node_xy(request, small_net):
     # Make sure geometry and XY were updated in node
     _updated_node = net.nodes_df.loc[_test_node_idx]
     WranglerLogger.info(
-        f"Updated Node: \n{_updated_node[[net.nodes_df.params.primary_key, 'X', 'Y', 'geometry']]}"
+        f"Updated Node: \n{_updated_node[['model_node_id', 'X', 'Y', 'geometry']]}"
     )
     assert _updated_node.geometry.x == _expected_X
     assert _updated_node.geometry.y == _expected_Y

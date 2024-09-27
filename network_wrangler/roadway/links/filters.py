@@ -6,6 +6,7 @@ from typing import List, TYPE_CHECKING, Union
 
 import pandas as pd
 
+from ...params import MODES_TO_NETWORK_LINK_VARIABLES
 from ...logger import WranglerLogger
 
 if TYPE_CHECKING:
@@ -128,9 +129,7 @@ def filter_links_to_modes(
         return links_df
     if isinstance(modes, str):
         modes = [modes]
-    _mode_link_props = list(
-        set([m for m in modes for m in links_df.params.modes_to_network_link_variables[m]])
-    )
+    _mode_link_props = list(set([m for m in modes for m in MODES_TO_NETWORK_LINK_VARIABLES[m]]))
     return links_df.loc[links_df[_mode_link_props].any(axis=1)]
 
 
@@ -211,11 +210,11 @@ def filter_links_to_ml_access_points(
     links_df: DataFrame[RoadLinksTable],
 ) -> DataFrame[RoadLinksTable]:
     """Filters links dataframe to only include all managed lane access points."""
-    return links_df.loc[links_df["ML_access_point"]]
+    return links_df.loc[links_df["ML_access_point"].fillna(False)]
 
 
 def filter_links_to_ml_egress_points(
     links_df: DataFrame[RoadLinksTable],
 ) -> DataFrame[RoadLinksTable]:
     """Filters links dataframe to only include all managed lane egress points."""
-    return links_df.loc[links_df["ML_egress_point"]]
+    return links_df.loc[links_df["ML_egress_point"].fillna(False)]

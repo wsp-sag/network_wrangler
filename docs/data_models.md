@@ -22,8 +22,8 @@
 
 ### Projects
 
-::: network_wrangler.models.projects.roadway_deletion
-::: network_wrangler.models.projects.roadway_property_change
+::: network_wrangler.models.projects.roadway_changes.RoadwayDeletion
+::: network_wrangler.models.projects.roadway_changes.RoadPropertyChange
 
 ### Roadway Selections
 

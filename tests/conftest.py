@@ -62,10 +62,15 @@ def test_out_dir(test_dir):
     return _test_out_dir
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def clear_out_dir(test_out_dir):
-    for f in test_out_dir.iterdir():
-        f.unlink()
+    import shutil
+
+    for item in test_out_dir.iterdir():
+        if item.is_dir():
+            shutil.rmtree(item)
+        else:
+            item.unlink()
 
 
 @pytest.fixture(scope="session")

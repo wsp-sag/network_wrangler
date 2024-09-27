@@ -2,18 +2,18 @@
 """Validates a transit network to the wrangler data model specifications from command line.
 
 Usage:
-    python validate_transit.py <network_directory> <network_suffix> [-s] [--output_dir <output_dir>] [--road_dir <road_dir>] [--road_suffix <road_suffix>]
+    python validate_transit.py <network_dir> <network_file_format> [-s] [--output_dir <output_dir>] [--road_dir <road_dir>] [--road_file_format <road_file_format>]
 
-    network_directory: The transit network file directory.
-    network_suffix: The suffices of transit network file name.
+    network_dir: The transit network file directory.
+    network_file_format: The suffices of transit network file name.
     -s, --strict: Validate the transit network strictly without parsing and filling in data.
     --output_dir: The output directory for the validation report.
     --road_dir: The directory roadway network if want to validate the transit network to it.
-    --road_suffix: The suffix for roadway network. Defaults to 'geojson'.
+    --road_file_format: The file format for roadway network. Defaults to 'geojson'.
 """
 
 import argparse
-import datetime
+from datetime import datetime
 
 from pathlib import Path
 
@@ -27,11 +27,9 @@ if __name__ == "__main__":
         "Validate a transit network to the wrangler data \
                                      model specifications."
     )
+    parser.add_argument("network_dir", help="The transit network file directory.", default=".")
     parser.add_argument(
-        "network_directory", help="The transit network file directory.", default="."
-    )
-    parser.add_argument(
-        "network_suffix", help="The suffices of transit network file name.", default="geojson"
+        "network_file_format", help="The suffices of transit network file name.", default="geojson"
     )
     parser.add_argument(
         "-s",
@@ -45,12 +43,9 @@ if __name__ == "__main__":
         default=None,
     )
     parser.add_argument(
-        "--road_suffix",
-        help="The suffix for roadway network. Defaults to 'geojson'.",
+        "--road_file_format",
+        help="The file format for roadway network. Defaults to 'geojson'.",
         default="geojson",
-    )
-    parser.add_argument(
-        "--output_dir", help="The output directory for the validation report.", default="."
     )
     parser.add_argument(
         "--output_dir", help="The output directory for the validation report.", default="."
@@ -66,15 +61,15 @@ if __name__ == "__main__":
 
     setup_logging(debug_log_filename=report_path, std_out_level="info")
 
-    WranglerLogger.info(f"Validation Report for Transit Network in {args.network_directory}\n")
+    WranglerLogger.info(f"Validation Report for Transit Network in {args.network_dir}\n")
     WranglerLogger.info(f"Validation Date: {datetime.now()}\n\n")
     WranglerLogger.info("Mode: Strict\n" if args.strict else "Mode: Non-Strict\n")
 
     # ----- Perform validation ------
 
     validate_transit_in_dir(
-        directory=args.network_directory,
-        suffix=args.network_suffix,
+        dir=args.network_dir,
+        file_format=args.network_file_format,
         road_dir=args.road_dir,
-        road_suffix=args.road_suffix,
+        road_file_format=args.road_file_format,
     )

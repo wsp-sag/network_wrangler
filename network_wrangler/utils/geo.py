@@ -15,9 +15,9 @@ from shapely.geometry import LineString, Point
 from shapely.ops import transform
 from geographiclib.geodesic import Geodesic
 
-from network_wrangler.utils.data import update_df_by_col_value
+from .data import update_df_by_col_value
 
-from ..params import METERS_CRS, LAT_LON_CRS
+from ..params import LAT_LON_CRS
 from ..logger import WranglerLogger
 from ..models._base.geo import LatLongCoordinates
 from ..models.roadway.types import LocationReference
@@ -337,8 +337,8 @@ def get_point_geometry_from_linestring(polyline_geometry, pos: int = 0):
 def location_ref_from_point(
     geometry: Point,
     sequence: int = 1,
-    bearing: float = None,
-    distance_to_next_ref: float = None,
+    bearing: Optional[float] = None,
+    distance_to_next_ref: Optional[float] = None,
 ) -> LocationReference:
     """Generates a shared street point location reference.
 
@@ -388,7 +388,7 @@ def get_bounding_polygon(
     boundary_file: Optional[Union[str, Path]] = None,
     boundary_gdf: Optional[gpd.GeoDataFrame] = None,
     crs: int = LAT_LON_CRS,  # WGS84
-) -> Union[None, gpd.GeoSeries]:
+) -> gpd.GeoSeries:
     """Get the bounding polygon for a given boundary.
 
     Will return None if no arguments given. Will raise a ValueError if more than one given.
@@ -424,7 +424,7 @@ def get_bounding_polygon(
 
     if boundary_geocode is not None:
         boundary_gdf = ox.geocode_to_gdf(boundary_geocode)
-    if boundary_file is not None:
+    elif boundary_file is not None:
         boundary_file = Path(boundary_file)
         if boundary_file.suffix not in OK_BOUNDARY_SUFF:
             raise ValueError(
@@ -439,13 +439,18 @@ def get_bounding_polygon(
             if boundary_file.suffix == ".geojson":  # geojson standard is WGS84
                 boundary_gdf.crs = crs
 
+    if boundary_gdf is None:
+        raise ValueError(
+            "One of boundary_gdf, boundary_geocode or boundary_file must be provided."
+        )
+
     if boundary_gdf.crs is not None:
         boundary_gdf = boundary_gdf.to_crs(crs)
     # make sure boundary_gdf is a polygon
     if len(boundary_gdf.geom_type[boundary_gdf.geom_type != "Polygon"]) > 0:
         raise ValueError("boundary_gdf must all be Polygons")
     # get the boundary as a single polygon
-    boundary_gs = gpd.GeoSeries([boundary_gdf.geometry.unary_union], crs=crs)
+    boundary_gs = gpd.GeoSeries([boundary_gdf.geometry.union_all()], crs=crs)
 
     return boundary_gs
 
@@ -456,6 +461,18 @@ def _harmonize_crs(df: pd.DataFrame, crs: int = LAT_LON_CRS) -> pd.DataFrame:
     return df
 
 
+def _id_utm_crs(gdf: Union[gpd.GeoSeries, gpd.GeoDataFrame]) -> int:
+    """Returns the UTM CRS ESPG for the given GeoDataFrame.
+
+    Args:
+        gdf: GeoDataFrame to get UTM CRS for.
+    """
+    if isinstance(gdf, gpd.GeoSeries):
+        gdf = gpd.GeoDataFrame(geometry=gdf)
+
+    return gdf.estimate_utm_crs().to_epsg()
+
+
 def offset_geometry_meters(geo_s: gpd.GeoSeries, offset_distance_meters: float) -> gpd.GeoSeries:
     """Offset a GeoSeries of LineStrings by a given distance in meters.
 
@@ -463,8 +480,11 @@ def offset_geometry_meters(geo_s: gpd.GeoSeries, offset_distance_meters: float) 
         geo_s: GeoSeries of LineStrings to offset.
         offset_distance_meters: distance in meters to offset the LineStrings.
     """
+    if geo_s.empty:
+        return geo_s
     og_crs = geo_s.crs
-    geo_s.to_crs(METERS_CRS)
+    meters_crs = _id_utm_crs(geo_s)
+    geo_s.to_crs(meters_crs)
     offset_geo = geo_s.apply(lambda x: x.offset_curve(offset_distance_meters))
     offset_geo = gpd.GeoSeries(offset_geo)
     return offset_geo.to_crs(og_crs)
@@ -472,8 +492,8 @@ def offset_geometry_meters(geo_s: gpd.GeoSeries, offset_distance_meters: float) 
 
 def to_points_gdf(
     table: pd.DataFrame,
-    ref_nodes_df: gpd.GeoDataFrame = None,
-    ref_road_net: "RoadwayNetwork" = None,
+    ref_nodes_df: Optional[gpd.GeoDataFrame] = None,
+    ref_road_net: Optional[RoadwayNetwork] = None,
 ) -> gpd.GeoDataFrame:
     """Convert a table to a GeoDataFrame.
 

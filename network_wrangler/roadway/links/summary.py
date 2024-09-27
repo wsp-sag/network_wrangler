@@ -1,7 +1,7 @@
 """Utilities for summarizing a RoadLinksTable."""
 
 import pandas as pd
-
+from pandera.typing import DataFrame
 from ...models.roadway.tables import RoadLinksTable
 from .filters import (
     filter_links_access_dummy,
@@ -28,22 +28,22 @@ link_summary_cats = {
 }
 
 
-def link_summary_cnt(links_df: RoadLinksTable) -> dict[str, int]:
+def link_summary_cnt(links_df: DataFrame[RoadLinksTable]) -> dict[str, int]:
     """Dictionary of number of links by `link_summary_cats`."""
     return {k: len(v(links_df)) for k, v in link_summary_cats.items()}
 
 
-def link_summary_miles(links_df: RoadLinksTable) -> dict[str, float]:
+def link_summary_miles(links_df: DataFrame[RoadLinksTable]) -> dict[str, float]:
     """Dictionary of miles by `link_summary_cats`."""
     return {k: v(links_df).distance.sum() for k, v in link_summary_cats.items()}
 
 
-def link_summary_lane_miles(links_df: RoadLinksTable) -> dict[str, float]:
+def link_summary_lane_miles(links_df: DataFrame[RoadLinksTable]) -> dict[str, float]:
     """Dictionary of lane miles by `link_summary_cats`."""
     return {k: calc_lane_miles(v(links_df)).sum() for k, v in link_summary_cats.items()}
 
 
-def link_summary(links_df: RoadLinksTable) -> pd.DataFrame:
+def link_summary(links_df: DataFrame[RoadLinksTable]) -> pd.DataFrame:
     """Summarizes links by `link_summary_cats`: count, distance, and lane miles."""
     data = {
         "count": link_summary_cnt(links_df),

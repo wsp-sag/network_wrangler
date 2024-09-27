@@ -2,7 +2,7 @@
 """Convert a network from one serialization format to another.
 
 Usage: python convert_network.py <input_path> <network_type> <output_format> <out_dir>\
-    [--input_suffix <input_suffix>] [--out_prefix <prefix>] [-o].
+    [--input_file_format <input_file_format>] [--out_prefix <prefix>] [-o].
 
 Arguments:
     input_path        Path to the input network directory.
@@ -12,7 +12,7 @@ Arguments:
     out_dir           Path to the output directory where the trimmed network will be saved.
 
 Options:
-    --input_suffix          Filetype to read in. Defaults to geojson for roadway and csv for
+    --input_file_format          Filetype to read in. Defaults to geojson for roadway and csv for
         transit.
     --out_prefix <prefix>   Prefix for the output file name. Defaults to ''.
     -o                      Overwrite the output file if it exists. Default to not overwrite.
@@ -31,9 +31,9 @@ from network_wrangler import WranglerLogger
 def convert(
     input_path,
     network_type,
-    output_format,
+    out_file_format,
     out_dir,
-    input_suffix,
+    input_file_format,
     out_prefix,
     overwrite,
 ):
@@ -41,18 +41,18 @@ def convert(
     if network_type == "transit":
         convert_transit_serialization(
             input_path,
-            output_format,
+            out_file_format,
             out_dir,
-            input_suffix,
+            input_file_format,
             out_prefix,
             overwrite,
         )
     elif network_type == "roadway":
         convert_roadway_file_serialization(
             input_path,
-            output_format,
+            out_file_format,
             out_dir,
-            input_suffix,
+            input_file_format,
             out_prefix,
             overwrite,
         )
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         help="Determine if transit or roadway network.",
     )
     parser.add_argument(
-        "output_format",
+        "out_file_format",
         type=str,
         choices=["parquet", "geojson", "csv"],
         help="Format to write to.",
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         help="Path to the output directory where the trimmed network will be saved.",
     )
     parser.add_argument(
-        "--input_suffix",
+        "--input_file_format",
         type=str,
         choices=["parquet", "geojson", "csv"],
         default=None,
@@ -99,9 +99,9 @@ if __name__ == "__main__":
         convert(
             args.input_path,
             args.network_type,
-            args.output_format,
+            args.out_file_format,
             args.out_dir,
-            args.input_suffix,
+            args.input_file_format,
             args.out_prefix,
             args.o,
         )

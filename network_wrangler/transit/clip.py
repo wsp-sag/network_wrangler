@@ -180,7 +180,7 @@ def clip_feed_to_boundary(
         boundary_gdf = boundary_gdf.to_crs(shape_links_gdf.crs)
 
     # get the boundary as a single polygon
-    boundary = boundary_gdf.geometry.unary_union
+    boundary = boundary_gdf.geometry.union_all()
     # get the shape_links that intersect the boundary
     clipped_shape_links = shape_links_gdf[shape_links_gdf.geometry.intersects(boundary)]
 

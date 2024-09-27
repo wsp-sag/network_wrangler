@@ -10,15 +10,17 @@ from typing import Union, Optional
 
 import geopandas as gpd
 
-from pydantic import validate_call
-from pandera.typing import DataFrame
+from pandera import DataFrameModel, Field
+from pydantic import ConfigDict
+from pandera.typing import DataFrame, Series
 
 from ...logger import WranglerLogger
-from ...utils.data import validate_existing_value_in_df, update_df_by_col_value
-from ...utils.models import validate_df_to_model
-from ...models.roadway.tables import RoadNodesTable
-from ...models.projects.roadway_property_change import NodeGeometryChangeTable, RoadPropertyChange
+from ...models._base.records import RecordModel
+from ...models.roadway.tables import RoadNodesTable, RoadNodesAttrs
+from ...utils.models import validate_df_to_model, validate_call_pyd
+from ...utils.data import update_df_by_col_value, validate_existing_value_in_df
 from ...params import LAT_LON_CRS
+from ...models.projects.roadway_changes import RoadPropertyChange
 
 
 class NodeChangeError(Exception):
@@ -27,7 +29,30 @@ class NodeChangeError(Exception):
     pass
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+class NodeGeometryChangeTable(DataFrameModel):
+    """DataFrameModel for setting node geometry given a model_node_id."""
+
+    model_node_id: Series[int]
+    X: Series[float] = Field(coerce=True)
+    Y: Series[float] = Field(coerce=True)
+    in_crs: Series[int] = Field(default=LAT_LON_CRS)
+
+    class Config:
+        """Config for NodeGeometryChangeTable."""
+
+        add_missing_columns = True
+
+
+class NodeGeometryChange(RecordModel):
+    """Value for setting node geometry given a model_node_id."""
+
+    model_config = ConfigDict(extra="ignore")
+    X: float
+    Y: float
+    in_crs: Optional[int] = LAT_LON_CRS
+
+
+@validate_call_pyd
 def edit_node_geometry(
     nodes_df: DataFrame[RoadNodesTable],
     node_geometry_change_table: DataFrame[NodeGeometryChangeTable],
@@ -41,6 +66,8 @@ def edit_node_geometry(
         node_geometry_change_table: NodeGeometryChangeTable with geometry changes
 
     """
+    # TODO write wrapper on validate call so don't have to do this
+    nodes_df.attrs.update(RoadNodesAttrs)
     WranglerLogger.debug(f"Updating node geometry for {len(node_geometry_change_table)} nodes.")
     WranglerLogger.debug(f"Original nodes_df: \n{nodes_df.head()}")
     # for now, require in_crs is the same for whole column
@@ -100,7 +127,7 @@ def edit_node_property(
     prop_dict = prop_change.model_dump(exclude_none=True, by_alias=True)
 
     # Should not be used to update node geometry fields unless explicity set to OK:
-    if prop_name in nodes_df.params.geometry_props and not _geometry_ok:
+    if prop_name in nodes_df.attrs["geometry_props"] and not _geometry_ok:
         raise NodeChangeError("Cannot unilaterally change geometry property.")
 
     # check existing if necessary

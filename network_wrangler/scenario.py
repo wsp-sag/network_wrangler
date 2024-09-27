@@ -1,76 +1,212 @@
-"""Scenario class and related functions for managing a scenario.
+"""Scenario objects manage how a collection of projects is applied to the networks.
 
-Usage:
+Scenarios are built from a base scenario and a list of project cards.
+
+A project card is a YAML file (or similar) that describes a change to the network. The project
+card can contain multiple changes, each of which is applied to the network in sequence.
+
+Instantiate a scenario by seeding it with a base scenario and optionally some project cards.
 
 ```python
-my_base_year_scenario = {
-    "road_net": load_roadway(
-        links_file=STPAUL_LINK_FILE,
-        nodes_file=STPAUL_NODE_FILE,
-        shapes_file=STPAUL_SHAPE_FILE,
-    ),
-    "transit_net": load_transit(STPAUL_DIR),
-}
-
-# create a future baseline scenario from base by searching for all cards in dir w/ baseline tag
-project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
+from network_wrangler import create_scenario
 my_scenario = create_scenario(
     base_scenario=my_base_year_scenario,
     card_search_dir=project_card_directory,
     filter_tags = [ "baseline2050" ]
 )
+```
 
-# check project card queue and then apply the projects
+A `base_year_scenario` is a dictionary representation of key components of a scenario:
+
+- `road_net`: RoadwayNetwork instance
+- `transit_net`: TransitNetwork instance
+- `applied_projects`: list of projects that have been applied to the base scenario so that the
+    scenario knows if there will be conflicts with future projects or if a future project's
+    pre-requisite is satisfied.
+- `conflicts`: dictionary of conflicts for project that have been applied to the base scenario so
+    that the scenario knows if there will be conflicts with future projects.
+
+```python
+my_base_year_scenario = {
+    "road_net": load_from_roadway_dir(STPAUL_DIR),
+    "transit_net": load_transit(STPAUL_DIR),
+    "applied_projects": [],
+    "conflicts": {},
+}
+```
+
+In addition to adding projects when you create the scenario, project cards can be **added** to a
+scenario using the `add_project_cards` method.
+
+```python
+from projectcard import read_cards
+project_card_dict = read_cards(card_location, filter_tags=["Baseline2030"], recursive=True)
+my_scenario.add_project_cards(project_card_dict.values())
+```
+
+Where `card_location` can be a single path, list of paths, a directory, or a glob pattern.
+
+Projects can be **applied** to a scenario using the `apply_all_projects` method. Before applying
+projects, the scenario will check that all pre-requisites are satisfied, that there are no conflicts,
+and that the projects are in the planned projects list.
+
+If you want to check the order of projects before applying them, you can use the `queued_projects`
+prooperty.
+
+```python
 my_scenario.queued_projects
 my_scenario.apply_all_projects()
+```
 
-# check applied projects, write it out, and create a summary report.
+You can **review** the resulting scenario, roadway network, and transit networks.
+
+```python
 my_scenario.applied_projects
-my_scenario.write("baseline")
-my_scenario.summarize(outfile = "baseline2050summary.txt")
+my_scenario.road_net.links_gdf.explore()
+my_scenario.transit_net.feed.shapes_gdf.explore()
+```
 
-# Add some projects to create a build scenario based on a list of files.
-build_card_filenames = [
-    "3_multiple_roadway_attribute_change.yml",
-    "road.prop_changes.segment.yml",
-    "4_simple_managed_lane.yml",
-]
-my_scenario.add_projects_from_files(build_card_filenames)
-my_scenario.write("build2050")
-my_scenario.summarize(outfile = "build2050summary.txt")
+Scenarios (and their networks) can be **written** to disk using the `write` method which
+in addition to writing out roadway and transit networks, will serialize the scenario to
+a yaml-like file and can also write out the project cards that have been applied.
+
+```python
+my_scenario.write(
+    "output_dir",
+    "scenario_name_to_use",
+    overwrite=True,
+    projects_write=True,
+)
+```
+
+??? example "Example Serialized Scenario File"
+
+    ```yaml
+    applied_projects: &id001
+    - project a
+    - project b
+    base_scenario:
+    applied_projects: *id001
+    roadway:
+        dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/examples/small
+        file_format: .geojson
+    transit:
+        dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/examples/small
+    config:
+    CPU:
+        EST_PD_READ_SPEED:
+        csv: 0.03
+        geojson: 0.03
+        json: 0.15
+        parquet: 0.005
+        txt: 0.04
+    IDS:
+        ML_LINK_ID_METHOD: range
+        ML_LINK_ID_RANGE: &id002 !!python/tuple
+        - 950000
+        - 999999
+        ML_LINK_ID_SCALAR: 15000
+        ML_NODE_ID_METHOD: range
+        ML_NODE_ID_RANGE: *id002
+        ML_NODE_ID_SCALAR: 15000
+        ROAD_SHAPE_ID_METHOD: scalar
+        ROAD_SHAPE_ID_SCALAR: 1000
+        TRANSIT_SHAPE_ID_METHOD: scalar
+        TRANSIT_SHAPE_ID_SCALAR: 1000000
+    MODEL_ROADWAY:
+        ADDITIONAL_COPY_FROM_GP_TO_ML: []
+        ADDITIONAL_COPY_TO_ACCESS_EGRESS: []
+        ML_OFFSET_METERS: -10
+    conflicts: {}
+    corequisites: {}
+    name: first_scenario
+    prerequisites: {}
+    roadway:
+    dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/tests/out/first_scenario/roadway
+    file_format: parquet
+    transit:
+    dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/tests/out/first_scenario/transit
+    file_format: txt
+    ```
+
+And if you want to reload scenario that you "wrote", you can use the `load_scenario` function.
+
+```python
+from network_wrangler import load_scenario
+my_scenario = load_scenario("output_dir/scenario_name_to_use_scenario.yml")
 ```
 
 """
 
 from __future__ import annotations
-import os
 import copy
 import pprint
 import yaml
 
-from collections import deque, defaultdict
 from datetime import datetime
+from collections import deque, defaultdict
 from pathlib import Path
-from typing import Union, Collection, Optional, TYPE_CHECKING
+from typing import Union, Optional, TYPE_CHECKING
 
-
-from projectcard import read_cards, ProjectCard, SubProject
+from projectcard import read_cards, ProjectCard, SubProject, write_card
 
 from .logger import WranglerLogger
-from .params import (
-    BASE_SCENARIO_SUGGESTED_PROPS,
-    ROADWAY_CARD_TYPES,
-    SECONDARY_TRANSIT_CARD_TYPES,
-    TRANSIT_CARD_TYPES,
-    OVERWRITE_CONFLICTING_SCOPED,
-)
-from .roadway.io import load_roadway, write_roadway
+from .roadway.io import load_roadway_from_dir, write_roadway
 from .transit.io import load_transit, write_transit
+from .utils.io_table import prep_dir
+from .utils.io_dict import load_dict
 from .utils.utils import topological_sort
+from .configs import (
+    load_wrangler_config,
+    WranglerConfig,
+    load_scenario_config,
+    ScenarioConfig,
+    DefaultConfig,
+)
+from .configs.scenario import ScenarioOutputConfig, ScenarioInputConfig
+from .roadway.network import RoadwayNetwork
+from .transit.network import TransitNetwork
 
 if TYPE_CHECKING:
-    from .roadway.network import RoadwayNetwork
-    from .transit.network import TransitNetwork
+    from .models._base.types import RoadwayFileTypes, TransitFileTypes
+
+"""
+List of attributes that are suggested to be in a base scenario dictionary.
+"""
+BASE_SCENARIO_SUGGESTED_PROPS: list[str] = [
+    "road_net",
+    "transit_net",
+    "applied_projects",
+    "conflicts",
+]
+
+"""
+List of card types that that will be applied to the transit network.
+"""
+TRANSIT_CARD_TYPES: list[str] = [
+    "transit_property_change",
+    "transit_routing_change",
+    "transit_route_addition",
+    "transit_service_deletion",
+]
+
+"""
+List of card types that that will be applied to the roadway network.
+"""
+ROADWAY_CARD_TYPES: list[str] = [
+    "roadway_property_change",
+    "roadway_deletion",
+    "roadway_addition",
+]
+
+
+"""
+List of card types that that will be applied to the transit network AFTER being applied to
+the roadway network.
+"""
+SECONDARY_TRANSIT_CARD_TYPES: list[str] = [
+    "roadway_deletion",
+]
 
 
 class ScenarioConflictError(Exception):
@@ -153,25 +289,32 @@ class Scenario(object):
         prerequisites:  dictionary storing prerequiste information
         corequisites:  dictionary storing corequisite information
         conflicts: dictionary storing conflict information
+        config: WranglerConfig instance.
     """
 
     def __init__(
         self,
         base_scenario: Union[Scenario, dict],
         project_card_list: Optional[list[ProjectCard]] = None,
-        name="",
+        config: Optional[Union[WranglerConfig, dict, Path, list[Path]]] = None,
+        name: str = "",
     ):
         """Constructor.
 
         Args:
-        base_scenario: A base scenario object to base this isntance off of, or a dict which
-            describes the scenario attributes including applied projects and respective conflicts.
-            `{"applied_projects": [],"conflicts":{...}}`
-        project_card_list: Optional list of ProjectCard instances to add to planned projects.
-            Defaults to None.
-        name: Optional name for the scenario.
+            base_scenario: A base scenario object to base this isntance off of, or a dict which
+                describes the scenario attributes including applied projects and respective
+                conflicts. `{"applied_projects": [],"conflicts":{...}}`
+            project_card_list: Optional list of ProjectCard instances to add to planned projects.
+                Defaults to None.
+            config: WranglerConfig instance or a dictionary of configuration settings or a path to
+                one or more configuration files. Configurations that are not explicity set will
+                default to the values in the default configuration in
+                `/configs/wrangler/default.yml`.
+            name: Optional name for the scenario.
         """
         WranglerLogger.info("Creating Scenario")
+        self.config = load_wrangler_config(config)
 
         if project_card_list is None:
             project_card_list = []
@@ -179,27 +322,35 @@ class Scenario(object):
         if isinstance(base_scenario, Scenario):
             base_scenario = base_scenario.__dict__
 
+        self.base_scenario: dict = extract_base_scenario_metadata(base_scenario)
+
         if not set(BASE_SCENARIO_SUGGESTED_PROPS) <= set(base_scenario.keys()):
             WranglerLogger.warning(
                 f"Base_scenario doesn't contain {BASE_SCENARIO_SUGGESTED_PROPS}"
             )
-
-        self.base_scenario = base_scenario
-        self.name = name
+        self.name: str = name
         # if the base scenario had roadway or transit networks, use them as the basis.
-        self.road_net: Optional[RoadwayNetwork] = copy.deepcopy(self.base_scenario.get("road_net"))
-        self.transit_net: Optional[TransitNetwork] = copy.deepcopy(
-            self.base_scenario.get("transit_net")
+        self.road_net: Optional[RoadwayNetwork] = copy.deepcopy(
+            base_scenario.pop("road_net", None)
         )
+
+        self.transit_net: Optional[TransitNetwork] = copy.deepcopy(
+            base_scenario.pop("transit_net", None)
+        )
+        # Set configs for networks to be the same as scenario.
+        if isinstance(self.road_net, RoadwayNetwork):
+            self.road_net.config = self.config
+        if isinstance(self.transit_net, TransitNetwork):
+            self.transit_net.config = self.config
 
         self.project_cards: dict[str, ProjectCard] = {}
         self._planned_projects: list[str] = []
         self._queued_projects = None
-        self.applied_projects = self.base_scenario.get("applied_projects", [])
+        self.applied_projects = base_scenario.pop("applied_projects", [])
 
-        self.prerequisites = self.base_scenario.get("prerequisites", {})
-        self.corequisites = self.base_scenario.get("corequisites", {})
-        self.conflicts = self.base_scenario.get("conflicts", {})
+        self.prerequisites = base_scenario.pop("prerequisites", {})
+        self.corequisites = base_scenario.pop("corequisites", {})
+        self.conflicts = base_scenario.pop("conflicts", {})
 
         for p in project_card_list:
             self._add_project(p)
@@ -251,7 +402,7 @@ class Scenario(object):
         self,
         project_card: ProjectCard,
         validate: bool = True,
-        filter_tags: Collection[str] = [],
+        filter_tags: list[str] = [],
     ) -> None:
         """Adds a single ProjectCard instances to the Scenario.
 
@@ -265,7 +416,7 @@ class Scenario(object):
             project_card (ProjectCard): ProjectCard instance to add to scenario.
             validate (bool, optional): If True, will validate the projectcard before
                 being adding it to the scenario. Defaults to True.
-            filter_tags (Collection[str], optional): If used, will only add the project card if
+            filter_tags: If used, will only add the project card if
                 its tags match one or more of these filter_tags. Defaults to []
                 which means no tag-filtering will occur.
 
@@ -295,9 +446,9 @@ class Scenario(object):
 
     def add_project_cards(
         self,
-        project_card_list: Collection[ProjectCard],
+        project_card_list: list[ProjectCard],
         validate: bool = True,
-        filter_tags: Collection[str] = [],
+        filter_tags: list[str] = [],
     ) -> None:
         """Adds a list of ProjectCard instances to the Scenario.
 
@@ -306,18 +457,18 @@ class Scenario(object):
         If provided, will only add ProjectCard if it matches at least one filter_tags.
 
         Args:
-            project_card_list (Collection[ProjectCard]): List of ProjectCard instances to add to
+            project_card_list: List of ProjectCard instances to add to
                 scenario.
             validate (bool, optional): If True, will require each ProjectCard is validated before
                 being added to scenario. Defaults to True.
-            filter_tags (Collection[str], optional): If used, will filter ProjectCard instances
+            filter_tags: If used, will filter ProjectCard instances
                 and only add those whose tags match one or more of these filter_tags.
                 Defaults to [] - which means no tag-filtering will occur.
         """
         for p in project_card_list:
             self._add_project(p, validate=validate, filter_tags=filter_tags)
 
-    def _check_projects_requirements_satisfied(self, project_list: Collection[str]):
+    def _check_projects_requirements_satisfied(self, project_list: list[str]):
         """Checks all requirements are satisified to apply this specific set of projects.
 
         Including:
@@ -336,7 +487,7 @@ class Scenario(object):
         self._check_projects_corequisites(project_list)
         self._check_projects_conflicts(project_list)
 
-    def _check_projects_planned(self, project_names: Collection[str]) -> None:
+    def _check_projects_planned(self, project_names: list[str]) -> None:
         """Checks that a list of projects are in the scenario's planned projects."""
         _missing_ps = [p for p in self._planned_projects if p not in self._planned_projects]
         if _missing_ps:
@@ -346,7 +497,7 @@ class Scenario(object):
                 add_projects_from_directory()."
             )
 
-    def _check_projects_have_project_cards(self, project_list: Collection[str]) -> bool:
+    def _check_projects_have_project_cards(self, project_list: list[str]) -> bool:
         """Checks that a list of projects has an associated project card in the scenario."""
         _missing = [p for p in project_list if p not in self.project_cards]
         if _missing:
@@ -410,7 +561,7 @@ class Scenario(object):
             WranglerLogger.debug(f"Problematic Conflicts: \n{_conf_dict}")
             raise ScenarioConflictError(f"Found {len(_conflicts)} conflicts: {_conflict_problems}")
 
-    def order_projects(self, project_list: Collection[str]) -> deque:
+    def order_projects(self, project_list: list[str]) -> deque:
         """Orders a list of projects based on moving up pre-requisites into a deque.
 
         Args:
@@ -422,8 +573,8 @@ class Scenario(object):
         assert self._check_projects_have_project_cards(project_list)
 
         # build prereq (adjacency) list for topological sort
-        adjacency_list = defaultdict(list)
-        visited_list = defaultdict(bool)
+        adjacency_list: dict[str, list] = defaultdict(list)
+        visited_list: dict[str, bool] = defaultdict(bool)
 
         for project in project_list:
             visited_list[project] = False
@@ -433,7 +584,10 @@ class Scenario(object):
                 # this will always be true, else would have been flagged in missing \
                 # prerequsite check, but just in case
                 if prereq.lower() in project_list:
-                    adjacency_list[prereq.lower()] = [project]
+                    if adjacency_list.get(prereq.lower()):
+                        adjacency_list[prereq.lower()].append(project)
+                    else:
+                        adjacency_list[prereq.lower()] = [project]
 
         # sorted_project_names is topological sorted project card names (based on prerequsiite)
         _ordered_projects = topological_sort(
@@ -480,8 +634,8 @@ class Scenario(object):
         """Applies a specific change specified in a project card.
 
         Change type must be in at least one of:
-        - ROADWAY_CATEGORIES
-        - TRANSIT_CATEGORIES
+        - ROADWAY_CARD_TYPES
+        - TRANSIT_CARD_TYPES
 
         Args:
             change: a project card or subproject card
@@ -492,15 +646,16 @@ class Scenario(object):
         if change.change_type in ROADWAY_CARD_TYPES:
             if not self.road_net:
                 raise ValueError("Missing Roadway Network")
-            self.road_net.apply(change, overwrite_conflicting_scoped=overwrite_conflicting_scoped)
+            if change.change_type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
+                self.road_net.apply(change, transit_net=self.transit_net)
+            else:
+                self.road_net.apply(change)
         if change.change_type in TRANSIT_CARD_TYPES:
             if not self.transit_net:
                 raise ValueError("Missing Transit Network")
             self.transit_net.apply(change)
-        if change.change_type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
-            self.transit_net.apply(change)
 
-        if change.change_type not in TRANSIT_CARD_TYPES + ROADWAY_CARD_TYPES:
+        if change.change_type not in ROADWAY_CARD_TYPES + TRANSIT_CARD_TYPES:
             raise ProjectCardError(
                 f"Project {change.project}: Don't understand project cat: {change.change_type}"
             )
@@ -539,7 +694,7 @@ class Scenario(object):
 
     def apply_projects(
         self,
-        project_list: Collection[str],
+        project_list: list[str],
         overwrite_conflicting_scoped: bool = OVERWRITE_CONFLICTING_SCOPED,
     ):
         """Applies a specific list of projects from the planned project queue.
@@ -570,40 +725,117 @@ class Scenario(object):
         # Set so that when called again it will retrigger queueing from planned projects.
         self._ordered_projects = None
 
-    def write(self, path: Union[Path, str], name: str) -> None:
-        """_summary_.
+    def write(
+        self,
+        path: Path,
+        name: str,
+        overwrite: bool = True,
+        roadway_write: bool = True,
+        transit_write: bool = True,
+        projects_write: bool = True,
+        roadway_convert_complex_link_properties_to_single_field: bool = False,
+        roadway_out_dir: Optional[Path] = None,
+        roadway_prefix: Optional[str] = None,
+        roadway_file_format: RoadwayFileTypes = "parquet",
+        roadway_true_shape: bool = False,
+        transit_out_dir: Optional[Path] = None,
+        transit_prefix: Optional[str] = None,
+        transit_file_format: TransitFileTypes = "txt",
+        projects_out_dir: Optional[Path] = None,
+    ) -> Path:
+        """Writes scenario networks and summary to disk and returns path to scenario file.
 
         Args:
             path: Path to write scenario networks and scenario summary to.
             name: Name to use.
+            overwrite: If True, will overwrite the files if they already exist.
+            roadway_write: If True, will write out the roadway network.
+            transit_write: If True, will write out the transit network.
+            projects_write: If True, will write out the project cards.
+            roadway_convert_complex_link_properties_to_single_field: If True, will convert complex
+                link properties to a single field.
+            roadway_out_dir: Path to write the roadway network files to.
+            roadway_prefix: Prefix to add to the file name.
+            roadway_file_format: File format to write the roadway network to
+            roadway_true_shape: If True, will write the true shape of the roadway network
+            transit_out_dir: Path to write the transit network files to.
+            transit_prefix: Prefix to add to the file name.
+            transit_file_format: File format to write the transit network to
+            projects_out_dir: Path to write the project cards to.
         """
-        if self.road_net:
-            write_roadway(self.road_net, prefix=name, out_dir=path)
-        if self.transit_net:
-            write_transit(self.transit_net, prefix=name, out_dir=path)
-        self.summarize(outfile=os.path.join(path, name))
+        path = Path(path)
+        path.mkdir(parents=True, exist_ok=True)
 
-    def summarize(self, project_detail: bool = True, outfile: str = "", mode: str = "a") -> str:
-        """A high level summary of the created scenario.
+        if self.road_net and roadway_write:
+            if roadway_out_dir is None:
+                roadway_out_dir = path / "roadway"
+            roadway_out_dir.mkdir(parents=True, exist_ok=True)
 
-        Args:
-            project_detail: If True (default), will write out project card summaries.
-            outfile: If specified, will write scenario summary to text file.
-            mode: Outfile open mode. 'a' to append 'w' to overwrite.
+            write_roadway(
+                net=self.road_net,
+                out_dir=roadway_out_dir,
+                prefix=roadway_prefix or name,
+                convert_complex_link_properties_to_single_field=roadway_convert_complex_link_properties_to_single_field,
+                file_format=roadway_file_format,
+                true_shape=roadway_true_shape,
+                overwrite=overwrite,
+            )
+        if self.transit_net and transit_write:
+            if transit_out_dir is None:
+                transit_out_dir = path / "transit"
+            transit_out_dir.mkdir(parents=True, exist_ok=True)
+            write_transit(
+                self.transit_net,
+                out_dir=transit_out_dir,
+                prefix=transit_prefix or name,
+                file_format=transit_file_format,
+                overwrite=overwrite,
+            )
+        if projects_write:
+            if projects_out_dir is None:
+                projects_out_dir = path / "projects"
+            write_applied_projects(
+                self,
+                out_dir=projects_out_dir,
+                overwrite=overwrite,
+            )
 
-        Returns:
-            string of summary
+        scenario_data = self.summary
+        if transit_write:
+            scenario_data["transit"] = {
+                "dir": str(transit_out_dir),
+                "file_format": transit_file_format,
+            }
+        if roadway_write:
+            scenario_data["roadway"] = {
+                "dir": str(roadway_out_dir),
+                "file_format": roadway_file_format,
+            }
+        if projects_write:
+            scenario_data["project_cards"] = ({"dir": str(projects_out_dir)},)
+        scenario_file_path = Path(path) / f"{name}_scenario.yml"
+        with open(scenario_file_path, "w") as f:
+            yaml.dump(scenario_data, f, default_flow_style=False, allow_unicode=True)
+        return scenario_file_path
 
-        """
-        return scenario_summary(self, project_detail, outfile, mode)
+    @property
+    def summary(self) -> dict:
+        """A high level summary of the created scenario and public attributes."""
+        skip = ["road_net", "transit_net", "project_cards", "config"]
+        summary_dict = {
+            k: v for k, v in self.__dict__.items() if not k.startswith("_") and k not in skip
+        }
+        summary_dict["config"] = self.config.to_dict()
+        return summary_dict
 
 
 def create_scenario(
     base_scenario: Union[Scenario, dict] = {},
-    project_card_list=[],
-    project_card_filepath: Optional[Union[Collection[str], str]] = None,
-    filter_tags: Collection[str] = [],
-    validate=True,
+    name: str = datetime.now().strftime("%Y%m%d%H%M%S"),
+    project_card_list=None,
+    project_card_filepath: Optional[Union[list[Path], Path]] = None,
+    filter_tags: list[str] = [],
+    config: Optional[Union[dict, Path, list[Path], WranglerConfig]] = None,
 ) -> Scenario:
     """Creates scenario from a base scenario and adds project cards.
 
@@ -618,17 +850,21 @@ def create_scenario(
 
     Args:
         base_scenario: base Scenario scenario instances of dictionary of attributes.
+        name: Optional name for the scenario. Defaults to current datetime.
         project_card_list: List of ProjectCard instances to create Scenario from. Defaults
             to [].
         project_card_filepath: where the project card is.  A single path, list of paths,
         a directory, or a glob pattern. Defaults to None.
-        filter_tags (Collection[str], optional): If used, will only add the project card if
+        filter_tags: If used, will only add the project card if
             its tags match one or more of these filter_tags. Defaults to []
             which means no tag-filtering will occur.
-        validate (bool, optional): If True, will validate the projectcard before
-            being adding it to the scenario. Defaults to True.
+        config: Optional wrangler configuration file or dictionary or instance. Defaults to
+            default config.
     """
-    scenario = Scenario(base_scenario)
+    if project_card_list is None:
+        project_card_list = []
+
+    scenario = Scenario(base_scenario, config=config, name=name)
 
     if project_card_filepath:
         project_card_list += list(
@@ -636,168 +872,181 @@ def create_scenario(
         )
 
     if project_card_list:
-        scenario.add_project_cards(project_card_list, filter_tags=filter_tags, validate=validate)
+        scenario.add_project_cards(project_card_list, filter_tags=filter_tags)
 
     return scenario
 
 
-def scenario_summary(
-    scenario: Scenario, project_detail: bool = True, outfile: str = "", mode: str = "a"
-) -> str:
-    """A high level summary of the created scenario.
+def write_applied_projects(scenario: Scenario, out_dir: Path, overwrite: bool = True) -> None:
+    """Summarizes all projects in a scenario to folder.
 
     Args:
         scenario: Scenario instance to summarize.
-        project_detail: If True (default), will write out project card summaries.
-        outfile: If specified, will write scenario summary to text file.
-        mode: Outfile open mode. 'a' to append 'w' to overwrite.
-
-    Returns:
-        string of summary
+        out_dir: Path to write the project cards.
+        overwrite: If True, will overwrite the files if they already exist.
     """
-    WranglerLogger.info(f"Summarizing Scenario {scenario.name}")
-    report_str = "------------------------------\n"
-    report_str += f"Scenario created on {datetime.now()}\n"
+    outdir = Path(out_dir)
+    prep_dir(out_dir, overwrite=overwrite)
 
-    report_str += "Base Scenario:\n"
-    report_str += "--Road Network:\n"
-    report_str += f"----Link File: {scenario.base_scenario['road_net']._links_file}\n"
-    report_str += f"----Node File: {scenario.base_scenario['road_net']._nodes_file}\n"
-    report_str += f"----Shape File: {scenario.base_scenario['road_net']._shapes_file}\n"
-    report_str += "--Transit Network:\n"
-    report_str += f"----Feed Path: {scenario.base_scenario['transit_net'].feed.feed_path}\n"
+    for p in scenario.applied_projects:
+        card = scenario.project_cards[p]
+        filename = Path(card.__dict__.get("file", f"{p}.yml")).name
+        outpath = outdir / filename
+        write_card(card, outpath)
 
-    report_str += "\nProject Cards:\n -"
-    report_str += "\n-".join([str(pc.file) for p, pc in scenario.project_cards.items()])
 
-    report_str += "\nApplied Projects:\n-"
-    report_str += "\n-".join(scenario.applied_projects)
+def load_scenario(
+    scenario_data: Union[dict, Path],
+    name: str = datetime.now().strftime("%Y%m%d%H%M%S"),
+) -> Scenario:
+    """Loads a scenario from a file written by Scenario.write() as the base scenario.
 
-    if project_detail:
-        report_str += "\n---Project Card Details---\n"
-        for p in scenario.project_cards:
-            report_str += "\n{}".format(
-                pprint.pformat(
-                    [scenario.project_cards[p].__dict__ for p in scenario.applied_projects]
-                )
-            )
+    Args:
+        scenario_data: Scenario data as a dict or path to scenario data file
+        name: Optional name for the scenario. Defaults to current datetime.
+    """
+    if not isinstance(scenario_data, dict):
+        WranglerLogger.debug(f"Loading Scenario from file: {scenario_data}")
+        scenario_data = load_dict(scenario_data)
+    else:
+        WranglerLogger.debug("Loading Scenario from dict.")
 
-    if outfile:
-        with open(outfile, mode) as f:
-            f.write(report_str)
-        WranglerLogger.info(f"Wrote Scenario Report to: {outfile}")
-
-    return report_str
+    base_scenario = _load_base_scenario_from_config(scenario_data, config=scenario_data["config"])
+    my_scenario = create_scenario(
+        base_scenario=base_scenario, name=name, config=scenario_data["config"]
+    )
+    return my_scenario
 
 
 def create_base_scenario(
-    base_shape_name: str,
-    base_link_name: str,
-    base_node_name: str,
-    roadway_dir: str = "",
-    transit_dir: str = "",
+    roadway: Optional[dict] = None,
+    transit: Optional[dict] = None,
+    applied_projects: Optional[list] = [],
+    conflicts: Optional[list] = [],
+    config: WranglerConfig = DefaultConfig,
 ) -> dict:
     """Creates a base scenario dictionary from roadway and transit network files.
 
     Args:
-        base_shape_name: filename of the base network shape
-        base_link_name: filename of the base network link
-        base_node_name: filename of the base network node
-        roadway_dir: optional path to the base scenario roadway network files
-        transit_dir: optional path to base scenario transit files
+        roadway: kwargs for load_roadway_from_dir
+        transit: kwargs for load_transit from dir
+        applied_projects: list of projects that have been applied to the base scenario.
+        conflicts: list of conflicts that have been identified in the base scenario.
+        config: WranglerConfig instance.
     """
-    if roadway_dir:
-        base_network_shape_file = os.path.join(roadway_dir, base_shape_name)
-        base_network_link_file = os.path.join(roadway_dir, base_link_name)
-        base_network_node_file = os.path.join(roadway_dir, base_node_name)
+    if roadway:
+        road_net = load_roadway_from_dir(**roadway, config=config)
     else:
-        base_network_shape_file = base_shape_name
-        base_network_link_file = base_link_name
-        base_network_node_file = base_node_name
+        road_net = None
+        WranglerLogger.info(
+            "No roadway directory specified, base scenario will have empty roadway network."
+        )
 
-    road_net = load_roadway(
-        links_file=base_network_link_file,
-        nodes_file=base_network_node_file,
-        shapes_file=base_network_shape_file,
-    )
-
-    if transit_dir:
-        transit_net = load_transit(transit_dir)
-        transit_net.road_net = road_net
+    if transit:
+        transit_net = load_transit(**transit, config=config)
+        if roadway:
+            transit_net.road_net = road_net
     else:
         transit_net = None
         WranglerLogger.info(
             "No transit directory specified, base scenario will have empty transit network."
         )
 
-    base_scenario = {"road_net": road_net, "transit_net": transit_net}
+    base_scenario = {
+        "road_net": road_net,
+        "transit_net": transit_net,
+        "applied_projects": applied_projects,
+        "conflicts": conflicts,
+    }
 
     return base_scenario
 
 
-def build_scenario_from_config_file(config_file: Path) -> None:
-    """Builds a scenario from a yaml configuration file.
+def _load_base_scenario_from_config(
+    base_scenario_data: Union[dict, ScenarioInputConfig], config: WranglerConfig = DefaultConfig
+) -> dict:
+    """Loads a scenario from a file written by Scenario.write() as the base scenario.
 
     Args:
-        config_file: Path to the yaml configuration file.
+        base_scenario_data: Scenario data that conforms to ScenarioInputConfig or is
+            ScenarioInputConfig instance.
+        config: WranglerConfig instance. Defaults to DefaultConfig.
     """
-    config_path = Path(config_file)
-    if not config_path.exists():
-        raise FileNotFoundError(f"Specified config file does not exist - {config_path}")
+    if not isinstance(base_scenario_data, ScenarioInputConfig):
+        base_scenario_data = ScenarioInputConfig(**base_scenario_data)
 
-    with open(config_file, "r") as config:
-        config_dict = yaml.safe_load(config)
-    WranglerLogger.info(f"Building Scenario from {config_file}")
-    build_scenario_from_config(config_dict)
+    base_scenario = create_base_scenario(**base_scenario_data.to_dict(), config=config)
+
+    return base_scenario
 
 
-def build_scenario_from_config(config_dict: dict):
+def extract_base_scenario_metadata(base_scenario: dict) -> dict:
+    """Extract metadata from base scenario rather than keeping all of big files.
+
+    Useful for summarizing a scenario.
+    """
+    _skip_copy = ["road_net", "transit_net", "config"]
+    out_dict = {k: v for k, v in base_scenario.items() if k not in _skip_copy}
+    if isinstance(base_scenario.get("road_net"), RoadwayNetwork):
+        nodes_file_path = base_scenario["road_net"].nodes_df.attrs["source_file"]
+        if nodes_file_path is not None:
+            out_dict["roadway"] = {
+                "dir": str(Path(nodes_file_path).parent),
+                "file_format": str(nodes_file_path.suffix),
+            }
+    if isinstance(base_scenario.get("transit_net"), TransitNetwork):
+        feed_path = base_scenario["transit_net"].feed.feed_path
+        if feed_path is not None:
+            out_dict["transit"] = {"dir": str(feed_path)}
+    return out_dict
+
+
+def build_scenario_from_config(
+    scenario_config: Union[Path, list[Path], ScenarioConfig, dict],
+) -> Scenario:
     """Builds a scenario from a dictionary configuration.
 
     Args:
-        config_dict: dictionary configuration of scenario.
+        scenario_config: Path to a configuration file, list of paths, or a dictionary of
+            configuration.
     """
-    WranglerLogger.info("Building Scenario from Configuration")
-    WranglerLogger.debug("{pprint.pformat(config_dict)}")
+    WranglerLogger.info(f"Building Scenario from Configuration: {scenario_config}")
+    scenario_config = load_scenario_config(scenario_config)
+    WranglerLogger.debug(f"{pprint.pformat(scenario_config)}")
 
-    base_network_dir = config_dict.get("base_network").get("input_dir")
-    base_shape_name = config_dict.get("base_network").get("shape_file_name")
-    base_link_name = config_dict.get("base_network").get("link_file_name")
-    base_node_name = config_dict.get("base_network").get("node_file_name")
-
-    project_card_filepath = config_dict.get("scenario").get("project_card_filepath")
-    project_tags = config_dict.get("scenario").get("tags")
-
-    write_out = config_dict.get("scenario").get("write_out")
-    out_dir = config_dict.get("scenario").get("output_dir")
-    out_prefix = config_dict.get("scenario").get("out_prefix")
-
-    if project_tags is None:
-        project_tags = []
-
-    if project_card_filepath is None:
-        project_card_filepath = []
-
-    # Create Base Network
     base_scenario = create_base_scenario(
-        roadway_dir=base_network_dir,
-        base_shape_name=base_shape_name,
-        base_link_name=base_link_name,
-        base_node_name=base_node_name,
-        transit_dir=base_network_dir,
-    )
+        **scenario_config.base_scenario.to_dict(), config=scenario_config.wrangler_config
+    )  # type: ignore
 
-    my_scenario = Scenario.create_scenario(
+    my_scenario = create_scenario(
         base_scenario=base_scenario,
-        project_card_filepath=project_card_filepath,
-        filter_tags=project_tags,
+        config=scenario_config.wrangler_config,
+        **scenario_config.projects.to_dict(),  # type: ignore
     )
-
-    WranglerLogger.info("Applying these projects to the base scenario ...")
-    WranglerLogger.info("\n".join(my_scenario.projects.keys()))
 
     my_scenario.apply_all_projects()
 
-    if write_out:
-        write_roadway(my_scenario.road_net, prefix=out_prefix, out_dir=out_dir)
-        my_scenario.transit_net.write(filename=out_prefix, path=out_dir)
+    write_args = _scenario_output_config_to_scenario_write(scenario_config.output_scenario)
+    my_scenario.write(**write_args, name=scenario_config.name)  # type: ignore
+    return my_scenario
+
+
+def _scenario_output_config_to_scenario_write(
+    scenario_output_config: ScenarioOutputConfig,
+) -> dict:
+    """Converts a ScenarioOutputConfig to a dictionary for use in write method."""
+    _exc = ["roadway", "transit", "project_cards"]
+    scenario_write_args = {k: v for k, v in scenario_output_config.items() if k not in _exc}
+    roadway_args = {f"roadway_{k}": v for k, v in scenario_output_config.roadway.items()}
+    transit_args = {f"transit_{k}": v for k, v in scenario_output_config.transit.items()}
+
+    scenario_write_args.update(roadway_args)
+    scenario_write_args.update(transit_args)
+
+    if scenario_output_config.project_cards is not None:
+        project_args = {
+            f"projects_{k}": v for k, v in scenario_output_config.project_cards.items()
+        }
+        scenario_write_args.update(project_args)
+
+    return scenario_write_args

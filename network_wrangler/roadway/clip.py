@@ -31,6 +31,7 @@ import geopandas as gpd
 from .links.links import node_ids_in_links
 from ..utils.geo import get_bounding_polygon
 from ..logger import WranglerLogger
+from ..params import LAT_LON_CRS
 
 if TYPE_CHECKING:
     from .network import RoadwayNetwork
@@ -67,12 +68,12 @@ def clip_roadway_to_dfs(
         boundary_file=boundary_file,
     )
 
-    # make sure boundary_gdf.crs == network.crs
-    if boundary_gdf.crs != network.crs:
-        WranglerLogger.debug(f"Making boundary CRS consistent with network CRS: {network.crs}")
-        boundary_gdf = boundary_gdf.to_crs(network.crs)
+    # make sure boundary_gdf.crs == LAT_LON_CRS
+    if boundary_gdf.crs != LAT_LON_CRS:
+        WranglerLogger.debug(f"Making boundary CRS consistent with network CRS: {LAT_LON_CRS}")
+        boundary_gdf = boundary_gdf.to_crs(LAT_LON_CRS)
     # get the boundary as a single polygon
-    boundary = boundary_gdf.geometry.unary_union
+    boundary = boundary_gdf.geometry.union_all()
     # get the links that intersect the boundary
     WranglerLogger.debug("Finding roadway links that intersect boundary (spatial join).")
     filtered_links_df = network.links_df[network.links_df.geometry.intersects(boundary)]
@@ -128,6 +129,6 @@ def clip_roadway(
     trimmed_net = RoadwayNetwork(
         links_df=trimmed_links_df,
         nodes_df=trimmed_nodes_df,
-        shapes_df=trimmed_shapes_df,
+        _shapes_df=trimmed_shapes_df,
     )
     return trimmed_net

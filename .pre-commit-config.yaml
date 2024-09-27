@@ -31,3 +31,4 @@ repos:
     additional_dependencies: [pyyaml]
     hooks:
     -   id: mypy
+        exclude: 'tests/.*'

@@ -1,28 +1,52 @@
+/* Define CSS variables based on theme colors */
+
+.md-header {
+    overflow: visible; /* Allow overflow */
+}
+
+.md-tabs {
+    position: relative; /* Make sure .md-tabs is positioned */
+    overflow: visible; /* Allow overflow */
+    margin-bottom: 60px;
+}
+
+.md-tabs::after {
+    content: '';
+    display: block;
+    width: 100%; /* Fill the width of the page */
+    position: absolute;
+    bottom: 5;
+    left: 0;
+    z-index: -1; /* Optional: place behind content */
+}
+
+
+/* Body and Link Styling for Readability */
 body {
-    font: 16px/1.5em "Overpass", "Open Sans", Helvetica, sans-serif;
-    font-weight: 300;
-    padding: 40px;
-  }
-
-a {
-    color: #7c4dff;
+    font-family: 'Roboto', sans-serif;
 }
 
-@media screen and (max-width: 76.1875em) {
-    li > a {
-        color: #0f4c92;
-    };
+
+/* Code Block Styling */
+code {
+    border-radius: 3px;
+    padding: 2px 5px;
 }
 
-nav a {
-    color: #fff;
+
+/* Table Styling */
+table {
+border-collapse: collapse;
+width: 100%;
 }
 
-nav path {
-    color: #fff;
+th, td {
+border: 1px solid var(--md-primary-fg-color);
+padding: 8px;
+text-align: left;
 }
 
-.btn-primary {
-    background-color: #546d78;
-    border-color: #546d78;
+th {
+background-color: var(--md-primary-fg-color);
+color: var(--md-default-bg-color);
 }

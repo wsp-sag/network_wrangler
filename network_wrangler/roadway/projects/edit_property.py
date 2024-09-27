@@ -1,19 +1,18 @@
 """Functions for applying roadway property change project cards to the roadway network."""
 
 from __future__ import annotations
+
+
 from typing import Union, TYPE_CHECKING, Optional
 
 import pandas as pd
 
+from network_wrangler.models.projects.roadway_changes import RoadPropertyChange
+
 from ...logger import WranglerLogger
 
-from ...models.projects.roadway_property_change import (
-    RoadPropertyChange,
-    NodeGeometryChange,
-    NodeGeometryChangeTable,
-)
 from ..links.edit import edit_link_properties
-from ..nodes.edit import edit_node_property
+from ..nodes.edit import edit_node_property, NodeGeometryChangeTable, NodeGeometryChange
 from ..selection import RoadwayNodeSelection, RoadwayLinkSelection
 
 if TYPE_CHECKING:
@@ -85,7 +84,7 @@ def apply_roadway_property_change(
     """
     WranglerLogger.debug("Applying roadway property change project.")
 
-    if "links" in selection.feature_types:
+    if isinstance(selection, RoadwayLinkSelection):
         roadway_net.links_df = edit_link_properties(
             roadway_net.links_df,
             selection.selected_links,
@@ -94,7 +93,7 @@ def apply_roadway_property_change(
             overwrite_conflicting_scoped=overwrite_conflicting_scoped,
         )
 
-    elif "nodes" in selection.feature_types:
+    elif isinstance(selection, RoadwayNodeSelection):
         non_geo_changes = {
             k: v for k, v in property_changes.items() if k not in NodeGeometryChange.model_fields
         }

@@ -1,6 +1,8 @@
 import copy
 import os
 
+import pytest
+
 import pandas as pd
 
 from projectcard import read_card

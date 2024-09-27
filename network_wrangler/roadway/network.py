@@ -21,7 +21,7 @@ import copy
 import hashlib
 
 from collections import defaultdict
-from typing import List, Union, Literal, TYPE_CHECKING, Optional, Any
+from typing import List, Union, TYPE_CHECKING, Optional, Any
 from pathlib import Path
 
 import geopandas as gpd
@@ -31,6 +31,7 @@ import pandas as pd
 from pandera.typing import DataFrame
 from pydantic import BaseModel, field_validator
 
+
 from projectcard import ProjectCard, SubProject
 
 from .projects import (
@@ -39,19 +40,13 @@ from .projects import (
     apply_roadway_deletion,
     apply_roadway_property_change,
 )
-
+from .projects.delete import RoadwayDeletionError, deletion_breaks_transit_shapes
 from ..logger import WranglerLogger
-from ..params import (
-    ShapesParams,
-    LAT_LON_CRS,
-    DEFAULT_CATEGORY,
-    DEFAULT_TIMESPAN,
-    OVERWRITE_CONFLICTING_SCOPED,
-)
+from ..configs import load_wrangler_config, WranglerConfig
 from ..models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
-from ..models.projects.roadway_selection import SelectLinksDict, SelectNodesDict, SelectFacility
-from ..models.projects.roadway_property_change import NodeGeometryChangeTable
-from ..utils.models import empty_df_from_datamodel
+from ..models.projects.roadway_selection import SelectFacility, SelectLinksDict, SelectNodesDict
+from ..utils.models import empty_df_from_datamodel, validate_df_to_model
+from ..utils.data import concat_with_attr
 from .selection import (
     RoadwayLinkSelection,
     RoadwayNodeSelection,
@@ -59,27 +54,37 @@ from .selection import (
     SelectionError,
 )
 from .model_roadway import ModelRoadwayNetwork
-from .nodes.create import data_to_nodes_df
-from .links.create import data_to_links_df
+from .links.create import data_to_links_df, LinkAddError
 from .links.links import shape_ids_unique_to_link_ids, node_ids_unique_to_link_ids
 from .links.filters import filter_links_to_ids, filter_links_to_node_ids
 from .links.delete import delete_links_by_ids
 from .links.edit import edit_link_geometry_from_nodes
-from .nodes.nodes import node_ids_without_links
+from .nodes.create import data_to_nodes_df, NodeAddError
+from .nodes.nodes import node_ids_without_links, NodeNotFoundError
 from .nodes.filters import filter_nodes_to_links
 from .nodes.delete import delete_nodes_by_ids
-from .nodes.edit import edit_node_geometry
+from .nodes.edit import edit_node_geometry, NodeGeometryChangeTable
 from .shapes.delete import delete_shapes_by_ids
 from .shapes.edit import edit_shape_geometry_from_nodes
 from .shapes.io import read_shapes
-from .shapes.create import df_to_shapes_df
+from .shapes.create import df_to_shapes_df, ShapeAddError
+from ..params import LAT_LON_CRS, DEFAULT_CATEGORY, DEFAULT_TIMESPAN
+from ..configs import DefaultConfig
+
 
 if TYPE_CHECKING:
     from networkx import MultiDiGraph
     from ..models._base.types import TimespanString
+    from ..transit.network import TransitNetwork
 
 
 Selections = Union[RoadwayLinkSelection, RoadwayNodeSelection]
+
+
+class InvalidProjectCardError(Exception):
+    """Raised when there is an issue with a project card."""
+
+    pass
 
 
 class RoadwayNetwork(BaseModel):
@@ -136,16 +141,14 @@ class RoadwayNetwork(BaseModel):
         selections (dict): dictionary of stored roadway selection objects, mapped by
             `RoadwayLinkSelection.sel_key` or `RoadwayNodeSelection.sel_key` in case they are
                 made repeatedly.
-        crs (str): coordinate reference system in ESPG number format. Defaults to DEFAULT_CRS
-            which is set to 4326, WGS 84 Lat/Long
         network_hash: dynamic property of the hashed value of links_df and nodes_df. Used for
             quickly identifying if a network has changed since various expensive operations have
             taken place (i.e. generating a ModelRoadwayNetwork or a network graph)
         model_net (ModelRoadwayNetwork): referenced `ModelRoadwayNetwork` object which will be
             lazily created if None or if the `network_hash` has changed.
+        config (WranglerConfig): wrangler configuration object
     """
 
-    crs: Literal[LAT_LON_CRS] = LAT_LON_CRS
     nodes_df: DataFrame[RoadNodesTable]
     links_df: DataFrame[RoadLinksTable]
     _shapes_df: Optional[DataFrame[RoadShapesTable]] = None
@@ -154,21 +157,26 @@ class RoadwayNetwork(BaseModel):
     _nodes_file: Optional[Path] = None
     _shapes_file: Optional[Path] = None
 
-    _shapes_params: ShapesParams = ShapesParams()
+    config: WranglerConfig = DefaultConfig
+
     _model_net: Optional[ModelRoadwayNetwork] = None
     _selections: dict[str, Selections] = {}
     _modal_graphs: dict[str, dict] = defaultdict(lambda: {"graph": None, "hash": None})
 
+    @field_validator("config")
+    def validate_config(cls, v):
+        """Validate config."""
+        return load_wrangler_config(v)
+
     @field_validator("nodes_df", "links_df")
     def coerce_crs(cls, v, info):
-        """Coerce crs of nodes_df and links_df to network crs."""
-        net_crs = info.data["crs"]
-        if v.crs != net_crs:
+        """Coerce crs of nodes_df and links_df to LAT_LON_CRS."""
+        if v.crs != LAT_LON_CRS:
             WranglerLogger.warning(
-                f"CRS of links_df ({v.crs}) doesn't match network crs {net_crs}. \
+                f"CRS of links_df ({v.crs}) doesn't match network crs {LAT_LON_CRS}. \
                     Changing to network crs."
             )
-            v.to_crs(net_crs)
+            v.to_crs(LAT_LON_CRS)
         return v
 
     @property
@@ -182,20 +190,19 @@ class RoadwayNetwork(BaseModel):
         if (self._shapes_df is None or self._shapes_df.empty) and self._shapes_file is not None:
             self._shapes_df = read_shapes(
                 self._shapes_file,
-                in_crs=self.crs,
-                shapes_params=self._shapes_params,
                 filter_to_shape_ids=self.links_df.shape_id.to_list(),
+                config=self.config,
             )
         # if there is NONE, then at least create an empty dataframe with right schema
         elif self._shapes_df is None:
-            self._shapes_df = empty_df_from_datamodel(RoadShapesTable, crs=self.crs)
+            self._shapes_df = empty_df_from_datamodel(RoadShapesTable)
             self._shapes_df.set_index("shape_id_idx", inplace=True)
 
         return self._shapes_df
 
     @shapes_df.setter
     def shapes_df(self, value):
-        self._shapes_df = df_to_shapes_df(value, shapes_params=self._shapes_params)
+        self._shapes_df = df_to_shapes_df(value, config=self.config)
 
     @property
     def network_hash(self) -> str:
@@ -230,8 +237,8 @@ class RoadwayNetwork(BaseModel):
         _links_df = copy.deepcopy(self.links_df)
         link_shapes_df = _links_df.merge(
             self.shapes_df,
-            left_on=self.links_df.params.fk_to_shape,
-            right_on=self.shapes_df.params.primary_key,
+            left_on="shape_id",
+            right_on="shape_id",
             how="left",
         )
         return link_shapes_df
@@ -239,8 +246,8 @@ class RoadwayNetwork(BaseModel):
     def get_property_by_timespan_and_group(
         self,
         link_property: str,
-        category: Union[str, int] = DEFAULT_CATEGORY,
-        timespan: TimespanString = DEFAULT_TIMESPAN,
+        category: Optional[Union[str, int]] = DEFAULT_CATEGORY,
+        timespan: Optional[TimespanString] = DEFAULT_TIMESPAN,
         strict_timespan_match: bool = False,
         min_overlap_minutes: int = 60,
     ) -> Any:
@@ -330,32 +337,38 @@ class RoadwayNetwork(BaseModel):
     def apply(
         self,
         project_card: Union[ProjectCard, dict],
-        overwrite_conflicting_scoped: bool = OVERWRITE_CONFLICTING_SCOPED,
+        transit_net: Optional[TransitNetwork] = None,
+        **kwargs,
     ) -> RoadwayNetwork:
         """Wrapper method to apply a roadway project, returning a new RoadwayNetwork instance.
 
         Args:
             project_card: either a dictionary of the project card object or ProjectCard instance
-            overwrite_conflicting_scoped: Tf True, then for roadway property changes, existing
-                values that conflict with scoped values will be overwritten – overriding
-                projectcard-level settings to error on conflicts. Defaults to
-                OVERWRITE_CONFLICTING_SCOPED.
+            transit_net: optional transit network which will be used to if project requires as
+                noted in `SECONDARY_TRANSIT_CARD_TYPES`.  If no transit network is provided, will
+                skip anything related to transit network.
+            **kwargs: keyword arguments to pass to project application
         """
         if not (isinstance(project_card, ProjectCard) or isinstance(project_card, SubProject)):
             project_card = ProjectCard(project_card)
 
-        project_card.validate()
+        # project_card.validate()
+        if not project_card.valid:
+            WranglerLogger.error("Invalid Project Card: {project_card}")
+            raise InvalidProjectCardError(f"Project card {project_card.project} not valid.")
 
         if project_card._sub_projects:
             for sp in project_card._sub_projects:
                 WranglerLogger.debug(f"- applying subproject: {sp.change_type}")
-                self._apply_change(sp, overwrite_conflicting_scoped=overwrite_conflicting_scoped)
+                self._apply_change(sp, **kwargs)
             return self
         else:
-            return self._apply_change(project_card)
+            return self._apply_change(project_card, **kwargs)
 
     def _apply_change(
-        self, change: Union[ProjectCard, SubProject], overwrite_conflicting_scoped: bool = False
+        self,
+        change: Union[ProjectCard, SubProject],
+        transit_net=None,
     ) -> RoadwayNetwork:
         """Apply a single change: a single-project project or a sub-project."""
         if not isinstance(change, SubProject):
@@ -367,7 +380,6 @@ class RoadwayNetwork(BaseModel):
                 self.get_selection(change.facility),
                 change.roadway_property_change["property_changes"],
                 project_name=change.project,
-                overwrite_conflicting_scoped=overwrite_conflicting_scoped,
             )
 
         elif change.change_type == "roadway_addition":
@@ -378,6 +390,11 @@ class RoadwayNetwork(BaseModel):
             )
 
         elif change.change_type == "roadway_deletion":
+            if transit_net is not None:
+                if deletion_breaks_transit_shapes(self, change.roadway_deletion, transit_net):
+                    raise RoadwayDeletionError(
+                        "Roadway deletion would break transit shapes. Aborting."
+                    )
             return apply_roadway_deletion(
                 self,
                 change.roadway_deletion,
@@ -401,43 +418,100 @@ class RoadwayNetwork(BaseModel):
         """Returns subset of self.nodes_df that are in self.links_df."""
         return filter_nodes_to_links(self.links_df, self.nodes_df)
 
-    def add_links(self, add_links_df: Union[pd.DataFrame, DataFrame[RoadLinksTable]]):
+    def node_coords(self, model_node_id: int) -> tuple:
+        """Return coordinates (x, y) of a node based on model_node_id."""
+        try:
+            node = self.nodes_df[self.nodes_df.model_node_id == model_node_id]
+        except ValueError:
+            WranglerLogger.error(f"Node with model_node_id {model_node_id} not found.")
+            raise NodeNotFoundError(f"Node with model_node_id {model_node_id} not found.")
+        return node.geometry.x.values[0], node.geometry.y.values[0]
+
+    def add_links(
+        self,
+        add_links_df: Union[pd.DataFrame, DataFrame[RoadLinksTable]],
+        in_crs: int = LAT_LON_CRS,
+    ):
         """Validate combined links_df with LinksSchema before adding to self.links_df.
 
         Args:
             add_links_df: Dataframe of additional links to add.
+            in_crs: crs of input data. Defaults to LAT_LON_CRS.
         """
-        if not isinstance(add_links_df, RoadLinksTable):
-            add_links_df = data_to_links_df(add_links_df, nodes_df=self.nodes_df)
-        self.links_df = RoadLinksTable(pd.concat([self.links_df, add_links_df], axis=0))
+        dupe_recs = self.links_df.model_link_id.isin(add_links_df.model_link_id)
 
-    def add_nodes(self, add_nodes_df: Union[pd.DataFrame, DataFrame[RoadNodesTable]]):
+        if dupe_recs.any():
+            dupe_ids = self.links_df.loc[dupe_recs, "model_link_id"]
+            WranglerLogger.error(
+                f"Cannot add links with model_link_id already in network: {dupe_ids}"
+            )
+            raise LinkAddError("Cannot add links with model_link_id already in network.")
+
+        if not add_links_df.attrs.get("name") == "road_links":
+            add_links_df = data_to_links_df(
+                add_links_df, nodes_df=self.nodes_df, in_crs=in_crs, config=self.config
+            )
+        self.links_df = validate_df_to_model(
+            concat_with_attr([self.links_df, add_links_df], axis=0), RoadLinksTable
+        )
+
+    def add_nodes(
+        self,
+        add_nodes_df: Union[pd.DataFrame, DataFrame[RoadNodesTable]],
+        in_crs: int = LAT_LON_CRS,
+    ):
         """Validate combined nodes_df with NodesSchema before adding to self.nodes_df.
 
         Args:
             add_nodes_df: Dataframe of additional nodes to add.
+            in_crs: crs of input data. Defaults to LAT_LON_CRS.
         """
-        if not isinstance(add_nodes_df, RoadNodesTable):
-            add_nodes_df = data_to_nodes_df(add_nodes_df)
-        self.nodes_df = RoadNodesTable(pd.concat([self.nodes_df, add_nodes_df], axis=0))
+        dupe_ids = self.nodes_df.model_node_id.isin(add_nodes_df.model_node_id)
+        if dupe_ids.any():
+            WranglerLogger.error(
+                f"Cannot add nodes with model_node_id already in network: {dupe_ids}"
+            )
+            raise NodeAddError("Cannot add nodes with model_node_id already in network.")
 
-    def add_shapes(self, add_shapes_df: Union[pd.DataFrame, DataFrame[RoadShapesTable]]):
+        if not add_nodes_df.attrs.get("name") == "road_nodes":
+            add_nodes_df = data_to_nodes_df(add_nodes_df, in_crs=in_crs, config=self.config)
+        self.nodes_df = validate_df_to_model(
+            concat_with_attr([self.nodes_df, add_nodes_df], axis=0), RoadNodesTable
+        )
+        if not self.nodes_df.attrs.get("name") == "road_nodes":
+            raise ValueError(
+                f"Expected nodes_df to have name 'road_nodes', got {self.nodes_df.attrs.get('name')}"
+            )
+
+    def add_shapes(
+        self,
+        add_shapes_df: Union[pd.DataFrame, DataFrame[RoadShapesTable]],
+        in_crs: int = LAT_LON_CRS,
+    ):
         """Validate combined shapes_df with RoadShapesTable efore adding to self.shapes_df.
 
         Args:
             add_shapes_df: Dataframe of additional shapes to add.
+            in_crs: crs of input data. Defaults to LAT_LON_CRS.
         """
-        if not isinstance(add_shapes_df, RoadShapesTable):
-            add_shapes_df = df_to_shapes_df(add_shapes_df)
+        dupe_ids = self.shapes_df.shape_id.isin(add_shapes_df.shape_id)
+        if dupe_ids.any():
+            WranglerLogger.error(f"Cannot add shapes with shape_id already in network: {dupe_ids}")
+            raise ShapeAddError("Cannot add shapes with shape_id already in network.")
+
+        if not add_shapes_df.attrs.get("name") == "road_shapes":
+            add_shapes_df = df_to_shapes_df(add_shapes_df, in_crs=in_crs, config=self.config)
+
         WranglerLogger.debug(f"add_shapes_df: \n{add_shapes_df}")
         WranglerLogger.debug(f"self.shapes_df: \n{self.shapes_df}")
-        together_df = pd.concat([self.shapes_df, add_shapes_df])
-        WranglerLogger.debug(f"together_df: \n{together_df}")
-        self.shapes_df = RoadShapesTable(pd.concat([self.shapes_df, add_shapes_df], axis=0))
+
+        self.shapes_df = validate_df_to_model(
+            concat_with_attr([self.shapes_df, add_shapes_df], axis=0), RoadShapesTable
+        )
 
     def delete_links(
         self,
-        selection_dict: SelectLinksDict,
+        selection_dict: Union[dict, SelectLinksDict],
         clean_nodes: bool = False,
         clean_shapes: bool = False,
     ):
@@ -458,11 +532,12 @@ class RoadwayNetwork(BaseModel):
             clean_shapes (bool, optional): If True, will clean nodes uniquely associated with
                 deleted links. Defaults to False.
         """
-        selection_dict = SelectLinksDict(**selection_dict).model_dump(
-            exclude_none=True, by_alias=True
-        )
+        if not isinstance(selection_dict, SelectLinksDict):
+            selection_dict = SelectLinksDict(**selection_dict)
+        selection_dict = selection_dict.model_dump(exclude_none=True, by_alias=True)
         selection = self.get_selection({"links": selection_dict})
-
+        if isinstance(selection, RoadwayNodeSelection):
+            raise SelectionError("Selection should be for links, but got nodes.")
         if clean_nodes:
             node_ids_to_delete = node_ids_unique_to_link_ids(
                 selection.selected_links, selection.selected_links_df, self.nodes_df
@@ -510,7 +585,7 @@ class RoadwayNetwork(BaseModel):
         selection_dict = selection_dict.model_dump(exclude_none=True, by_alias=True)
         selection: RoadwayNodeSelection = self.get_selection(
             {"nodes": selection_dict},
-        )
+        )  # type: ignore
         if remove_links:
             del_node_ids = selection.selected_nodes
             link_ids = self.links_with_nodes(selection.selected_nodes).model_link_id.to_list()
@@ -591,46 +666,44 @@ class RoadwayNetwork(BaseModel):
 
         return is_connected
 
-    @staticmethod
-    def add_incident_link_data_to_nodes(
-        links_df: Optional[DataFrame[RoadLinksTable]] = None,
-        nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
-        link_variables: list = [],
-    ) -> DataFrame[RoadNodesTable]:
-        """Add data from links going to/from nodes to node.
 
-        Args:
-            links_df: if specified, will assess connectivity of this
-                links list rather than self.links_df
-            nodes_df: if specified, will assess connectivity of this
-                nodes list rather than self.nodes_df
-            link_variables: list of columns in links dataframe to add to incident nodes
+def add_incident_link_data_to_nodes(
+    links_df: DataFrame[RoadLinksTable],
+    nodes_df: DataFrame[RoadNodesTable],
+    link_variables: list = [],
+) -> DataFrame[RoadNodesTable]:
+    """Add data from links going to/from nodes to node.
 
-        Returns:
-            nodes DataFrame with link data where length is N*number of links going in/out
-        """
-        WranglerLogger.debug("Adding following link data to nodes: ".format())
+    Args:
+        links_df: Will assess connectivity of this links list
+        nodes_df: Will assess connectivity of this nodes list
+        link_variables: list of columns in links dataframe to add to incident nodes
 
-        _link_vals_to_nodes = [x for x in link_variables if x in links_df.columns]
-        if link_variables not in _link_vals_to_nodes:
-            WranglerLogger.warning(
-                "Following columns not in links_df and wont be added to nodes: {} ".format(
-                    list(set(link_variables) - set(_link_vals_to_nodes))
-                )
+    Returns:
+        nodes DataFrame with link data where length is N*number of links going in/out
+    """
+    WranglerLogger.debug("Adding following link data to nodes: ".format())
+
+    _link_vals_to_nodes = [x for x in link_variables if x in links_df.columns]
+    if link_variables not in _link_vals_to_nodes:
+        WranglerLogger.warning(
+            "Following columns not in links_df and wont be added to nodes: {} ".format(
+                list(set(link_variables) - set(_link_vals_to_nodes))
             )
-
-        _nodes_from_links_A = nodes_df.merge(
-            links_df[[links_df.params.from_node] + _link_vals_to_nodes],
-            how="outer",
-            left_on=nodes_df.params.primary_key,
-            right_on=links_df.params.from_node,
         )
-        _nodes_from_links_B = nodes_df.merge(
-            links_df[[links_df.params.to_node] + _link_vals_to_nodes],
-            how="outer",
-            left_on=nodes_df.params.primary_key,
-            right_on=links_df.params.to_node,
-        )
-        _nodes_from_links_ab = pd.concat([_nodes_from_links_A, _nodes_from_links_B])
 
-        return _nodes_from_links_ab
+    _nodes_from_links_A = nodes_df.merge(
+        links_df[[links_df.A] + _link_vals_to_nodes],
+        how="outer",
+        left_on=nodes_df.model_node_id,
+        right_on=links_df.A,
+    )
+    _nodes_from_links_B = nodes_df.merge(
+        links_df[[links_df.B] + _link_vals_to_nodes],
+        how="outer",
+        left_on=nodes_df.model_node_id,
+        right_on=links_df.B,
+    )
+    _nodes_from_links_ab = concat_with_attr([_nodes_from_links_A, _nodes_from_links_B])
+
+    return _nodes_from_links_ab

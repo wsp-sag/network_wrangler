@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - uses: actions/checkout@v4
@@ -34,9 +34,9 @@ jobs:
         pip install -e .[test]
     - name: Run Ruff
       run: ruff check --output-format=github .
-    - name: Run tests with coverage
+    - name: Run tests with coverage and benchmarking
       run: |
-          pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=network_wrangler tests/ | tee pytest-coverage.txt
+          pytest --junitxml=pytest.xml --benchmark-save=pr_benchmark --benchmark-json=pr_benchmark.json --cov-report=term-missing:skip-covered --cov=network_wrangler tests/ | tee pytest-coverage.txt
     - name: Pytest coverage comment
       if: github.event_name == 'pull_request'
       uses: MishaKav/pytest-coverage-comment@main
@@ -46,3 +46,35 @@ jobs:
     - name: If a pull request, add a comment about coverage
       if: github.event_name == 'pull_request'
       uses: coroo/pytest-coverage-commentator@v1.0.2
+    - name: Retrieve benchmark results from base branch
+      if: github.event_name == 'pull_request'
+      id: compare
+      run: |
+        git checkout ${{ github.event.pull_request.base.ref }}
+        if [ -f "tests/.benchmarks/benchmark_results.json" ]; then
+          cp tests/.benchmarks/benchmark_results.json base_benchmark.json
+          echo "::set-output name=benchmark_exists::true"
+        else
+          echo "::set-output name=benchmark_exists::false"
+        fi
+    - name: Compare benchmarks
+      if: steps.compare.outputs.benchmark_exists == 'true'
+      run: |
+        pytest-benchmark compare base_benchmark.json pr_benchmark.json --csv=comparison.csv --json=comparison.json --histogram=histogram.png
+
+    - name: Post comparison comment on pull request
+      if: steps.compare.outputs.benchmark_exists == 'true'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: 'Benchmark Comparison'
+        message: |
+          ## Benchmark Results
+          ![Benchmark Comparison](./histogram.png)
+
+          | Test name | PR Benchmark | Base Benchmark | Difference |
+          | --------- | ------------ | -------------- | ---------- |
+          ```bash
+          pytest-benchmark compare base_benchmark.json pr_benchmark.json --csv --diff
+          ```
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

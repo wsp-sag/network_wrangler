@@ -1,19 +1,21 @@
 """Logging utilities for Network Wrangler."""
 
-# Utility functions for logging
-from datetime import datetime
 import os
 import sys
 import logging
+
+from typing import Optional
+from pathlib import Path
+from datetime import datetime
 
 
 WranglerLogger = logging.getLogger("WranglerLogger")
 
 
 def setup_logging(
-    info_log_filename: str = None,
-    debug_log_filename: str = "wrangler_{}.debug.log".format(
-        datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
+    info_log_filename: Optional[Path] = None,
+    debug_log_filename: Optional[Path] = Path(
+        "wrangler_{}.debug.log".format(datetime.now().strftime("%Y_%m_%d__%H_%M_%S"))
     ),
     std_out_level: str = "info",
 ):
@@ -45,9 +47,9 @@ def setup_logging(
         "%(asctime)-15s %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S,"
     )
     if not info_log_filename:
-        info_log_filename = os.path.join(
-            os.getcwd(),
-            "network_wrangler_{}.info.log".format(datetime.now().strftime("%Y_%m_%d__%H_%M_%S")),
+        info_log_filename = (
+            Path.cwd()
+            / f"network_wrangler_{datetime.now().strftime('%Y_%m_%d__%H_%M_%S')}.info.log"
         )
 
     info_file_handler = logging.StreamHandler(open(info_log_filename, "w"))

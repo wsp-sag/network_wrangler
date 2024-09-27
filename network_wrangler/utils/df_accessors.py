@@ -49,7 +49,7 @@ class DictQueryAccessor:
             raise ValueError(f"Relevant part of selection dictionary is empty: {selection_dict}")
 
         _sel_query = dict_to_query(_selection_dict)
-        WranglerLogger.debug(f"_sel_query: \n   {_sel_query}")
+        # WranglerLogger.debug(f"_sel_query: \n   {_sel_query}")
         _df = self._obj.query(_sel_query, engine="python")
 
         if len(_df) == 0:

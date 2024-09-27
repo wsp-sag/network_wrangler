@@ -2,9 +2,9 @@ project: 365 Bus Reroute
 transit_routing_change:
   service:
     trip_properties:
-      route_id: [53-111]
+      route_id: [417-111]
     timespans:
-    - ['09:00', '15:00']
+    - ['06:00', '09:00']
   routing:
     existing:
       - 62145 #N Robert St

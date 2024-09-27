@@ -3,7 +3,7 @@
 import pandas as pd
 
 from pandera.typing import DataFrame
-from network_wrangler.models.gtfs.tables import WranglerShapesTable
+from ...models.gtfs.tables import WranglerShapesTable
 
 
 def shape_links_to_segments(shape_links) -> pd.DataFrame:
