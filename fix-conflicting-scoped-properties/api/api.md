@@ -8,9 +8,15 @@
 ::: network_wrangler.roadway.network
 ::: network_wrangler.transit.network
 
-## Parameters
+## Config
 
-::: network_wrangler.params
+### Wrangler
+
+::: network_wrangler.configs.wrangler
+
+### Scenario Config
+
+::: network_wrangler.configs.scenario
 
 ## Projects
 
@@ -67,7 +73,8 @@ Submodules which define and extend the links, nodes, and shapes dataframe object
 ## Utils and Functions
 
 ::: network_wrangler.utils.utils
-::: network_wrangler.utils.io
+::: network_wrangler.utils.io_table
+::: network_wrangler.utils.io_dict
 ::: network_wrangler.utils.models
 ::: network_wrangler.utils.net
 ::: network_wrangler.utils.time
