@@ -8,5 +8,6 @@ mkdocs-awesome-pages-plugin
 mkdocs-jupyter
 mkdocs-macros-plugin
 mkdocs-material
+mkdocs-mermaid2-plugin
 mkdocstrings
 mkdocstrings-python
