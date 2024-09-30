@@ -197,6 +197,7 @@ ROADWAY_CARD_TYPES: list[str] = [
     "roadway_property_change",
     "roadway_deletion",
     "roadway_addition",
+    "pycode"
 ]
 
 
@@ -955,7 +956,7 @@ def extract_base_scenario_metadata(base_scenario: dict) -> dict:
     _skip_copy = ["road_net", "transit_net", "config"]
     out_dict = {k: v for k, v in base_scenario.items() if k not in _skip_copy}
     if isinstance(base_scenario.get("road_net"), RoadwayNetwork):
-        nodes_file_path = base_scenario["road_net"].nodes_df.attrs["source_file"]
+        nodes_file_path = base_scenario["road_net"].nodes_df.attrs.get("source_file", None)
         if nodes_file_path is not None:
             out_dict["roadway"] = {
                 "dir": str(Path(nodes_file_path).parent),

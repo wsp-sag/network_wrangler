@@ -27,4 +27,6 @@ def node_ids_without_links(
         nodes_df (DataFrame[RoadNodesTable]): nodes table
         links_df (DataFrame[RoadLinksTable]): links table
     """
-    return list(set(nodes_df.index) - set(node_ids_in_links(links_df)))
+    _node_ids_in_links = node_ids_in_links(links_df)
+    _node_idx_in_links = nodes_df[nodes_df["model_node_id"].isin(_node_ids_in_links)].index
+    return list(set(nodes_df.index) - set(_node_idx_in_links))

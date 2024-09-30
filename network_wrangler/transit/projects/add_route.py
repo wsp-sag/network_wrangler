@@ -98,26 +98,18 @@ def _add_route_to_feed(
 
         for i, trip in enumerate(route["trips"]):
             shape_id = fill_str_ids(pd.Series([None]), feed.shapes["shape_id"]).iloc[0]
-            add_shape_df = _create_new_shape(trip["routing"], shape_id, road_net)
-            if route["agency_raw_name"]:
-                add_shape_df["agency_raw_name"] = route["agency_raw_name"]
+            add_shape_df = _create_new_shape(trip["routing"], shape_id, road_net, route)
             feed.shapes = pd.concat([feed.shapes, add_shape_df], ignore_index=True, sort=False)
 
             for j, headway in enumerate(trip["headway_secs"]):
                 trip_id = f"trip{j}_shp{shape_id}"
                 stop_dicts = _get_stops_from_routing(trip["routing"])
-                add_trips_df = _create_new_trips(trip, route["route_id"], trip_id, shape_id)
-                add_freqs_df = _create_new_frequencies(headway, trip_id)
-                add_stop_times_df = _create_new_stop_times(stop_dicts, trip_id)
+                add_trips_df = _create_new_trips(trip, route, trip_id, shape_id)
+                add_freqs_df = _create_new_frequencies(headway, trip_id, route)
+                add_stop_times_df = _create_new_stop_times(stop_dicts, trip_id, route)
                 add_stops_df = _create_new_stops(
                     add_stop_times_df["stop_id"], feed.stops["stop_id"], road_net
                 )
-
-                if route["agency_raw_name"]:
-                    add_trips_df["agency_raw_name"] = route["agency_raw_name"]
-                    add_shape_df["agency_raw_name"] = route["agency_raw_name"]
-                    add_freqs_df["agency_raw_name"] = route["agency_raw_name"]
-                    add_stop_times_df["agency_raw_name"] = route["agency_raw_name"]
 
                 # Add new data to existing dataframes
                 feed.trips = pd.concat([feed.trips, add_trips_df], ignore_index=True, sort=False)
@@ -132,32 +124,52 @@ def _add_route_to_feed(
     return feed
 
 
+def _add_extra_route_attributes(
+    route: dict, target_df: pd.DataFrame, attributes: list[str] = None
+) -> pd.DataFrame:
+    """Add attributes from route dictionary to target dataframe.
+    
+    Args:
+        route: The route dictionary to copy attributes from.
+        target_df: The DataFrame to copy attributes to.
+        attributes: List of attributes to check and add.
+    """
+    if attributes is None:
+        attributes = ["agency_raw_name"]
+
+    for attr in attributes:
+        if attr in route and route[attr]:
+            target_df[attr] = route[attr]
+    return target_df
+
+
 def _create_new_trips(
-    trip: dict, route_id: str, trip_id: str, shape_id: str
+    trip: dict, route: dict, trip_id: str, shape_id: str,
 ) -> paDataFrame[TripsTable]:
     """Create new trips for a route.
 
     Args:
         trip: Trip dictionaries with trip_id, shape_id, and other trip information.
-        route_id: Route ID for the trips.
+        route: Route dictionaries.
         trip_id: Trip ID for the trips.
         shape_id: Shape ID for the trips.
     """
     add_trips_df = pd.DataFrame(
         [
             {
-                "route_id": route_id,
+                "route_id": route["route_id"],
                 "direction_id": trip["direction_id"],
                 "trip_id": trip_id,
                 "shape_id": shape_id,
             }
         ]
     )
+    add_trips_df = _add_extra_route_attributes(route, add_trips_df)
     return add_trips_df
 
 
 def _create_new_shape(
-    routing: list[Union[dict, int]], shape_id: str, road_net: RoadwayNetwork
+    routing: list[Union[dict, int]], shape_id: str, road_net: RoadwayNetwork, route: dict
 ) -> paDataFrame[WranglerShapesTable]:
     """Create new shape for a trip.
 
@@ -166,6 +178,7 @@ def _create_new_shape(
             e.g. [{1: {"stop": True}}, 2, 3, {"4": {"stop": True, "alight": False}}, 5, {"6": {"stop": True}}]
         shape_id: Shape ID for the shape.
         road_net: Roadway network to get node coordinates.
+        route: Route dictionaries.
     """
     shape_model_node_id_list = [
         int(list(item.keys())[0]) if isinstance(item, dict) else int(item) for item in routing
@@ -181,6 +194,7 @@ def _create_new_shape(
         }
     )
     add_shapes_df["shape_id"] = shape_id
+    add_shapes_df = _add_extra_route_attributes(route, add_shapes_df)
     return add_shapes_df
 
 
@@ -223,7 +237,7 @@ def _get_stops_from_routing(routing: list[Union[dict, int]]) -> list[dict]:
 
 
 def _create_new_stop_times(
-    stop_dicts: list[dict], trip_id: str
+    stop_dicts: list[dict], trip_id: str, route: dict
 ) -> paDataFrame[WranglerStopTimesTable]:
     """Create new stop times for a trip.
 
@@ -239,6 +253,7 @@ def _create_new_stop_times(
             ]
             ```
         trip_id: Trip ID for the stop times.
+        route: Route dictionaries.
 
     Returns:
         Dataframe with new stop times.
@@ -246,6 +261,7 @@ def _create_new_stop_times(
     add_stop_times_df = pd.DataFrame(stop_dicts)
     add_stop_times_df["trip_id"] = trip_id
     add_stop_times_df["stop_sequence"] = list(range(1, len(add_stop_times_df) + 1))
+    add_stop_times_df = _add_extra_route_attributes(route, add_stop_times_df)
     return add_stop_times_df
 
 
@@ -269,7 +285,7 @@ def _create_new_stops(
 
 
 def _create_new_frequencies(
-    headway: dict[tuple[TimeString], int], trip_id: str
+    headway: dict[tuple[TimeString], int], trip_id: str, route: dict
 ) -> paDataFrame[FrequenciesTable]:
     """Create new frequencies entries for a trip.
 
@@ -280,12 +296,14 @@ def _create_new_frequencies(
             {('6:00', '12:00'): 600}
             ```
         trip_id: Trip ID for the frequencies.
+        route: Route dictionaries.
     """
     add_freqs_df = pd.DataFrame(
         [_parse_headway_record(headway)],
         columns=["start_time", "end_time", "headway_secs"],
     )
     add_freqs_df["trip_id"] = trip_id
+    add_freqs_df = _add_extra_route_attributes(route, add_freqs_df)
     return add_freqs_df
 
 
@@ -297,6 +315,6 @@ def _parse_headway_record(headway: dict[tuple[TimeString], int]) -> tuple[dateti
             e.g. {('6:00', '12:00'): 600}
     """
     ((timespan, headway_secs),) = headway.items()
-    timespan_clean = [time.strip().strip("'") for time in timespan.strip("()").split(",")]
+    timespan_clean = [time.strip().strip("'") for time in timespan]
     start_time, end_time = str_to_time_list(timespan_clean)
     return start_time, end_time, headway_secs

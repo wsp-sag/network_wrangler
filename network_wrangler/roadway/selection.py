@@ -261,7 +261,7 @@ class RoadwayLinkSelection:
         WranglerLogger.info(f"Final selected links: {len(_selected_links_df)}")
         if len(_selected_links_df) < 10:
             WranglerLogger.debug(
-                f"\n{_selected_links_df[_selected_links_df.attrs['display_cols']]}"
+                f"\n{_selected_links_df}"
             )
 
         return _selected_links_df
