@@ -617,6 +617,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#network_wrangler.configs.wrangler.EditsConfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      EditsConfig
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#network_wrangler.configs.wrangler.IdGenerationConfig" class="md-nav__link">
     <span class="md-ellipsis">
       IdGenerationConfig
@@ -983,6 +992,9 @@ RoadwayNetwork.</p>
 <span class="w">    </span><span class="nt">ML_NODE_ID_METHOD</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">range</span>
 <span class="w">    </span><span class="nt">ML_NODE_ID_RANGE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">(950000, 999999)</span>
 <span class="w">    </span><span class="nt">ML_NODE_ID_SCALAR</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15000</span>
+<span class="nt">EDITS</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">EXISTING_VALUE_CONFLIC</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warn</span>
+<span class="w">    </span><span class="nt">OVERWRITE_SCOPED</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">conflicting</span>
 <span class="nt">MODEL_ROADWAY</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">ML_OFFSET_METERS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">int = -10</span>
 <span class="w">    </span><span class="nt">ADDITIONAL_COPY_FROM_GP_TO_ML</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
@@ -1076,23 +1088,23 @@ RoadwayNetwork.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/configs/wrangler.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">CpuConfig</span><span class="p">(</span><span class="n">ConfigItem</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;CPU Configuration -  Will not change any outcomes.</span>
 
@@ -1109,6 +1121,138 @@ RoadwayNetwork.</p>
             <span class="s2">&quot;txt&quot;</span><span class="p">:</span> <span class="mf">0.04</span><span class="p">,</span>
         <span class="p">}</span>
     <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="network_wrangler.configs.wrangler.EditsConfig" class="doc doc-heading">
+            <code>EditsConfig</code>
+
+
+<a href="#network_wrangler.configs.wrangler.EditsConfig" class="headerlink" title="Permanent link"> ¶</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="network_wrangler.configs.utils.ConfigItem">ConfigItem</span></code></p>
+
+
+      <p>Configuration for Edits.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.EditsConfig.EXISTING_VALUE_CONFLICT">EXISTING_VALUE_CONFLICT</span></code></td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;warn&#39;, &#39;error&#39;, &#39;skip&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Only used if &lsquo;existing&rsquo; provided in project card and
+<code>existing</code> doesn&rsquo;t match the existing network value. One of <code>error</code>, <code>warn</code>, or <code>skip</code>.
+<code>error</code> will raise an error, <code>warn</code> will warn the user, and <code>skip</code> will skip the change
+for that property (note it will still apply any remaining property changes).
+Defaults to <code>warn</code>. Can be overridden by setting <code>existing_value_conflict</code> in
+a <code>roadway_property_change</code> project card.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.EditsConfig.OVERWRITE_SCOPED">OVERWRITE_SCOPED</span></code></td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;conflicting&#39;, &#39;all&#39;, &#39;error&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>How to handle conflicts with existing values.
+Should be one of &ldquo;conflicting&rdquo;, &ldquo;all&rdquo;, or False.
+&ldquo;conflicting&rdquo; will only overwrite values where the scope only partially overlaps with
+the existing value. &ldquo;all&rdquo; will overwrite all the scoped values. &ldquo;error&rdquo; will error if
+there is any overlap. Default is &ldquo;conflicting&rdquo;. Can be changed at the project-level
+by setting <code>overwrite_scoped</code> in a <code>roadway_property_change</code> project card.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+              <details class="quote">
+                <summary>Source code in <code>network_wrangler/configs/wrangler.py</code></summary>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">EditsConfig</span><span class="p">(</span><span class="n">ConfigItem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for Edits.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        EXISTING_VALUE_CONFLICT: Only used if &#39;existing&#39; provided in project card and</span>
+<span class="sd">            `existing` doesn&#39;t match the existing network value. One of `error`, `warn`, or `skip`.</span>
+<span class="sd">            `error` will raise an error, `warn` will warn the user, and `skip` will skip the change</span>
+<span class="sd">            for that property (note it will still apply any remaining property changes).</span>
+<span class="sd">            Defaults to `warn`. Can be overridden by setting `existing_value_conflict` in</span>
+<span class="sd">            a `roadway_property_change` project card.</span>
+
+<span class="sd">        OVERWRITE_SCOPED: How to handle conflicts with existing values.</span>
+<span class="sd">            Should be one of &quot;conflicting&quot;, &quot;all&quot;, or False.</span>
+<span class="sd">            &quot;conflicting&quot; will only overwrite values where the scope only partially overlaps with</span>
+<span class="sd">            the existing value. &quot;all&quot; will overwrite all the scoped values. &quot;error&quot; will error if</span>
+<span class="sd">            there is any overlap. Default is &quot;conflicting&quot;. Can be changed at the project-level</span>
+<span class="sd">            by setting `overwrite_scoped` in a `roadway_property_change` project card.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">EXISTING_VALUE_CONFLICT</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;warn&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;skip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;warn&quot;</span>
+    <span class="n">OVERWRITE_SCOPED</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;conflicting&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;conflicting&quot;</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -1286,34 +1430,7 @@ a model_node_id when creating an associated nodes for parallel managed lane.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/configs/wrangler.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
 <span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
@@ -1322,7 +1439,34 @@ a model_node_id when creating an associated nodes for parallel managed lane.</p>
 <span class="normal">140</span>
 <span class="normal">141</span>
 <span class="normal">142</span>
-<span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">IdGenerationConfig</span><span class="p">(</span><span class="n">ConfigItem</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Model Roadway Configuration.</span>
 
@@ -1450,20 +1594,20 @@ lanes.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/configs/wrangler.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">ModelRoadwayConfig</span><span class="p">(</span><span class="n">ConfigItem</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Model Roadway Configuration.</span>
 
@@ -1562,25 +1706,37 @@ lanes.</p>
               </div>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.configs.wrangler.WranglerConfig.EDITS">EDITS</span></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="network_wrangler.configs.wrangler.EditsConfig" href="../api/#network_wrangler.configs.wrangler.EditsConfig">EditsConfig</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Parameters governing how edits are handled.</p>
+              </div>
+            </td>
+          </tr>
       </tbody>
     </table>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/configs/wrangler.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">WranglerConfig</span><span class="p">(</span><span class="n">ConfigItem</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for Network Wrangler.</span>
 
@@ -1588,12 +1744,13 @@ lanes.</p>
 <span class="sd">        IDS: Parameteters governing how new ids are generated.</span>
 <span class="sd">        MODEL_ROADWAY: Parameters governing how the model roadway is created.</span>
 <span class="sd">        CPU: Parameters for accessing CPU information. Will not change any outcomes.</span>
-
+<span class="sd">        EDITS: Parameters governing how edits are handled.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">IDS</span><span class="p">:</span> <span class="n">IdGenerationConfig</span> <span class="o">=</span> <span class="n">IdGenerationConfig</span><span class="p">()</span>
     <span class="n">MODEL_ROADWAY</span><span class="p">:</span> <span class="n">ModelRoadwayConfig</span> <span class="o">=</span> <span class="n">ModelRoadwayConfig</span><span class="p">()</span>
     <span class="n">CPU</span><span class="p">:</span> <span class="n">CpuConfig</span> <span class="o">=</span> <span class="n">CpuConfig</span><span class="p">()</span>
+    <span class="n">EDITS</span><span class="p">:</span> <span class="n">EditsConfig</span> <span class="o">=</span> <span class="n">EditsConfig</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
