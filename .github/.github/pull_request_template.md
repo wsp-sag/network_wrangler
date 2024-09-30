@@ -11,9 +11,9 @@
 
 ## Code formatting
 
-*Code should be PEP8 compliant before merging by running a package like [`black`](https://pypi.org/project/black/)*
+*Code should pre-commit requirements including PEP8 formatting and MyPy type evaluation.*
 
-- [ ] Code linted
+- [ ] Passes `pre-commit run --all-files`
 
 ## Applicable Issues
 

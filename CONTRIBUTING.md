@@ -1,20 +1,56 @@
 # Contributing to Network Wrangler
 
-## Roles
+## Setup
 
-## How to Contribute
+### Recommended Tools
 
-### Setup
+- [GitHub desktop](https://desktop.github.com/) to manage access to the main repository.
+- [Git](https://git-scm.com/downloads) to conduct required version control.
+- [MiniConda](https://docs.anaconda.com/miniconda/miniconda-install/) to manage your Python environments.
+- [VSCode](https://code.visualstudio.com/download) to edit and test code.
+- Some type of terminal application (note, this comes with Mac/Ubuntu).
 
-1. Make sure you have a [GitHub](https://github.com/) account.  
-2. Make sure you have [git](https://git-scm.com/downloads), a terminal (e.g. Mac Terminal, CygWin, etc.), and a text editor installed on your local machine.  Optionally, you will likely find it easier to use [GitHub Desktop](https://desktop.github.com/), an IDE instead of a simple text editor like [VSCode](https://code.visualstudio.com/), [Eclipse](https://www.eclipse.org/), [Sublime Text](https://www.sublimetext.com/), etc.  
-3. [Fork the repository](https://github.com/wsp-sag/network_wrangler/fork) into your own GitHub account and [clone it locally](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).  
-4. Install your `network_wrangler` clone in development mode: `pip install . -e`
-5. Install documentation requirements: `pip install -r requirements.docs.txt`
-6. Install development requirements: `pip install -r requirements.tests.txt`
-7. \[Optional\] [Install act](https://github.com/nektos/act) to run github actions locally.  
+### Setup Virtual Environment
 
-### Development Workflow
+Create and/or activate the virtual environment where you want to install Network Wrangler.
+
+!!! example "Creating and activating a virtual environment using conda"
+    ```bash
+    conda config --add channels conda-forge
+    conda create python=3.11 -n wrangler-dev #if you don't already have a virtual environment
+    conda activate wrangler-dev
+    ```
+
+### Clone
+
+To effectively work on Network Wrangler locally, install it from a clone by either:
+
+1. Use the GitHub user interface by clicking on the green button "clone or download" in the [main network wrangler repository page](https://github.com/wsp-sag/network_wrangler).
+2. Use the command prompt in a terminal to navigate to the directory that you would like to store your network wrangler clone and then using a [git command](https://git-scm.com/downloads) to clone it.
+
+!!! example "Clone network wrangler"
+    ```bash
+    cd path to where you want to put wrangler
+    git clone https://github.com/wsp-sag/network_wrangler
+    ```
+
+### Install in Develop Mode
+
+Install Network Wrangler in ["develop" mode](https://pip.pypa.io/en/stable/reference/pip_install/?highlight=editable#editable-installs) using the `-e` flag so that changes to your code will be reflected when you are using and testing network wrangler:
+
+!!! example "Install Network Wrangler from Clone"
+    ```bash
+    cd network_wrangler
+    pip install -e .
+    ```
+
+!!! example "Install development dependencies"
+    ```bash
+    pip install -r requirements.tests.txt
+    pip install -r requirements.docs.txt
+    ```
+
+## Development Workflow
 
 1. Create [an issue](https://github.com/wsp-sag/network_wrangler/issues) for any features/bugs that you are working on.
 2. [Create a branch](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-and-deleting-branches-within-your-repository) to work on a new issue (or checkout an existing one where the issue is being worked on).  
@@ -26,24 +62,70 @@
 8. Core developer will review your pull request and suggest changes.
 9. After requested changes are complete, core developer will sign off on pull-request merge.
 
-!tip: Keep pull requests small and focused. One issue is best.
+!!! tip
+    Keep pull requests small and focused. One issue is best.
 
-!tip: Don't forget to update any associated #documentation as well!
+!!! tip
+    Don't forget to update any associated [documentation](#documentation) as well!
 
 ## Documentation
 
-Documentation is produced by mkdocs:
+Documentation is stored in the `/docs` folder and created by [`mkdocs`](https://www.mkdocs.org/) using the [`material-for-mkdocs`](https://squidfunk.github.io/mkdocs-material/) theme.
 
-- `mkdocs build`: builds documentation
-- `mkdocs serve`: builds and serves documentation to review locally in browswer
+!!! example "Build and locally serve documentation"
+    ```bash
+    mkdocs serve
+    ```
 
-Documentation is built and deployed using the [`mike`](https://github.com/jimporter/mike) package and Github Actions configured in `.github/workflows/` for each "ref" (i.e. branch) in the network_wrangler repository.
+Documentation is deployed using the [`mike`](https://github.com/jimporter/mike) package and Github Actions configured in `.github/workflows/` for each "ref" (i.e. branch) in the network_wrangler repository.
 
-## Testing and Continuous Integration
+## Making sure your code works
+
+### Linting and Type Checking
+
+Before even running the tests, its a good idea to lint and check the types of the code using pre-commit:
+
+!!! example Run pre-commit
+    ```bash
+    pre-commit run --all-files
+    ```
+
+Your code **must** pass the pre-commit tests as a part of continuous integration, so you might as well fix anything now if it arises.
+
+### Adding Tests
+
+
+### Running Tests
 
 Tests and test data reside in the `/tests` directory:
 
-- `pytest`: runs all tests
+!!! example Run all tests
+    ```bash
+    pytest
+    ```
+
+Your code **must** pass the these tests as a part of continuous integration, so you might as well fix anything now if it arises.
+
+### Profiling Performance
+
+When you run the tests, their performance is profiled using `pytest-profiling` and profiles for tests are stored in `.prof` directory. If you want to explore what is taking time in a particular test, you can do so using products like [`snakviz`](https://jiffyclub.github.io/snakeviz/)
+
+!!! example "Explore performance of a test"
+    ```bash
+    snakeviz .prof/<test_name>.prof
+    ```
+
+We also benchmark some specific tests (`test_benchmarks.py`) that we want to compare when reviewing pull requests. If you want to review how you are doing on these benchmarks you can save the benchmarks when you run pytestand compare these numbers to another branch.
+
+!!! example "Compare benchmarks between branches"
+    ```
+    pytest --benchmark-save=branch_1
+    git checkout branch_2
+    pytest --benchmark-save=branch_2
+    pytest-benchmark compare branch_1 branch_2
+    ```
+
+## Continuous Integration
 
 Continuous Integration is managed by Github Actions in `.github/workflows`.  
 All tests other than those with the decorator `@pytest.mark.skipci` will be run.
