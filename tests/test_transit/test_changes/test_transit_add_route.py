@@ -28,8 +28,8 @@ add_route_change = {
                     {
                         "direction_id": 0,
                         "headway_secs": [
-                            {("6:00", "12:00"): 600},
-                            {("12:00", "13:00"): 900},
+                            {"('6:00', '12:00')": 600},
+                            {"('12:00', '13:00')": 900},
                         ],
                         "routing": [
                             {"1": {"stop": True}},
@@ -67,7 +67,7 @@ def test_add_route_to_feed_dict(
     # check trips
     new_trips = updated_feed.trips.loc[updated_feed.trips.route_id.isin(["abc"])]
     new_trip_ids = new_trips.trip_id.to_list()
-    assert len(new_trip_ids) == 1
+    assert len(new_trip_ids) == 2
 
     # check stops
     existing_stops = [1, 2, 3, 4]
