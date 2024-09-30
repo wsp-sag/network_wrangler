@@ -458,7 +458,7 @@ def _create_dummy_connector_links(
     access_df.set_index("model_link_id_idx", inplace=True)
 
     # egress link should go from B_ML to B_GP
-    egress_df["A"] = egress_df["A"].map(ml_node_id_lookup)
+    egress_df["A"] = egress_df["B"].map(ml_node_id_lookup)
     egress_df["GP_model_link_id"] = egress_df["model_link_id"]
     egress_df["model_link_id"] = 2 + egress_df["GP_model_link_id"].map(ml_link_id_lookup)
     egress_df["name"] = "Egress Dummy " + egress_df["name"]
