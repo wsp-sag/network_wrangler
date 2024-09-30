@@ -2227,14 +2227,14 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span>
-<span class="normal">86</span>
-<span class="normal">87</span>
-<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LocationReference</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LocationReference</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;SharedStreets-defined object for location reference.&quot;&quot;&quot;</span>
 
     <span class="n">sequence</span><span class="p">:</span> <span class="n">PositiveInt</span>
@@ -2315,7 +2315,65 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
               Bases: <code><span title="network_wrangler.models._base.records.RecordModel">RecordModel</span></code></p>
 
 
-      <p>Define a link property scoped by timespan or category.</p>
+      <p>Define the value of a link property for a particular timespan or category.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.models.roadway.types.ScopedLinkValueItem.`category`">`category`</span></code></td>
+            <td>
+                  <code>str</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Category or link user that this scoped value applies to, ex: <code>HOV2</code>,
+<code>truck</code>, etc.  Categories are user-defined with the exception of <code>any</code> which is
+reserved as the default category. Default is <code>DEFAULT_CATEGORY</code>, which is <code>all</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.models.roadway.types.ScopedLinkValueItem.`timespan`">`timespan`</span></code></td>
+            <td>
+                  <code>list[<span title="network_wrangler.models._base.types.TimeString">TimeString</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>timespan of the link property as defined as a list of
+two HH:MM(:SS) strings. Default is <code>DEFAULT_TIMESPAN</code>, which is <code>["00:00", "24:00"]</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="network_wrangler.models.roadway.types.ScopedLinkValueItem.`value`">`value`</span></code></td>
+            <td>
+                  <code><span title="typing.Union">Union</span>[float, int, str]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Value of the link property for the given category and
+timespan.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+      <p>Conflicting or matching scopes are not allowed in a list of ScopedLinkValueItems:</p>
+<ul>
+<li><code>matching</code>: a scope that could be applied for a given category/timespan combination. This includes the default scopes as well as scopes that are contained within the given category AND timespan combination.</li>
+<li><code>overlapping</code>: a scope that fully or partially overlaps a given category OR timespan combination.  This includes the default scopes, all <code>matching</code> scopes and all scopes where at least one minute of timespan or one category overlap.</li>
+<li><code>conflicting</code>: a scope that is overlapping but not matching for a given category/timespan. </li>
+</ul>
+<p>NOTE: Default scope values of <code>category: any</code> and <code>timespan:["00:00", "24:00"]</code> are <strong>not</strong> considered conflicting, but are applied to residual scopes.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
@@ -2331,8 +2389,44 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 <span class="normal">45</span>
 <span class="normal">46</span>
 <span class="normal">47</span>
-<span class="normal">48</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ScopedLinkValueItem</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Define a link property scoped by timespan or category.&quot;&quot;&quot;</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ScopedLinkValueItem</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Define the value of a link property for a particular timespan or category.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        `category` (str): Category or link user that this scoped value applies to, ex: `HOV2`,</span>
+<span class="sd">            `truck`, etc.  Categories are user-defined with the exception of `any` which is</span>
+<span class="sd">            reserved as the default category. Default is `DEFAULT_CATEGORY`, which is `all`.</span>
+<span class="sd">        `timespan` (list[TimeString]): timespan of the link property as defined as a list of</span>
+<span class="sd">            two HH:MM(:SS) strings. Default is `DEFAULT_TIMESPAN`, which is `[&quot;00:00&quot;, &quot;24:00&quot;]`.</span>
+<span class="sd">        `value` (Union[float, int, str]): Value of the link property for the given category and</span>
+<span class="sd">            timespan.</span>
+
+<span class="sd">    Conflicting or matching scopes are not allowed in a list of ScopedLinkValueItems:</span>
+
+<span class="sd">    - `matching`: a scope that could be applied for a given category/timespan combination. This includes the default scopes as well as scopes that are contained within the given category AND timespan combination.</span>
+<span class="sd">    - `overlapping`: a scope that fully or partially overlaps a given category OR timespan combination.  This includes the default scopes, all `matching` scopes and all scopes where at least one minute of timespan or one category overlap.</span>
+<span class="sd">    - `conflicting`: a scope that is overlapping but not matching for a given category/timespan. </span>
+
+<span class="sd">    NOTE: Default scope values of `category: any` and `timespan:[&quot;00:00&quot;, &quot;24:00&quot;]` are **not** considered conflicting, but are applied to residual scopes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">require_any_of</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">AnyOf</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="s2">&quot;timespan&quot;</span><span class="p">]]</span>
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
@@ -2408,25 +2502,7 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">69</span>
 <span class="normal">70</span>
 <span class="normal">71</span>
 <span class="normal">72</span>
@@ -2435,7 +2511,25 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 <span class="normal">75</span>
 <span class="normal">76</span>
 <span class="normal">77</span>
-<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ScopedLinkValueList</span><span class="p">(</span><span class="n">RootListMixin</span><span class="p">,</span> <span class="n">RootModel</span><span class="p">):</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ScopedLinkValueList</span><span class="p">(</span><span class="n">RootListMixin</span><span class="p">,</span> <span class="n">RootModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List of non-conflicting ScopedLinkValueItems.&quot;&quot;&quot;</span>
 
     <span class="n">root</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ScopedLinkValueItem</span><span class="p">]</span>
@@ -2493,24 +2587,24 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
-<span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">check_conflicting_scopes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check for conflicting scopes in the list.&quot;&quot;&quot;</span>
     <span class="n">conflicts</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2549,10 +2643,10 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">overlapping_timespans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timespan</span><span class="p">:</span> <span class="n">Timespan</span><span class="p">):</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">overlapping_timespans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timespan</span><span class="p">:</span> <span class="n">Timespan</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Identify overlapping timespans in the list.&quot;&quot;&quot;</span>
     <span class="n">timespan_dt</span> <span class="o">=</span> <span class="n">str_to_time_list</span><span class="p">(</span><span class="n">timespan</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">if</span> <span class="n">dt_overlaps</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">timespan_dt</span><span class="p">,</span> <span class="n">timespan_dt</span><span class="p">)]</span>
@@ -5956,8 +6050,6 @@ all properties.</p>
     
     
       <script src="../assets/javascripts/bundle.3220b9d7.min.js"></script>
-      
-        <script src="https://unpkg.com/mermaid@8.5.0/dist/mermaid.min.js"></script>
       
     
   </body>
