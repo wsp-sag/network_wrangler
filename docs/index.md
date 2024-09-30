@@ -9,7 +9,7 @@ Network Wrangler is a Python library for managing travel model network scenarios
 
 Network Wrangler should be operating system agonistic and has been tested on Ubuntu and Mac OS.
 
-Network Wrangler does require Python 3.7+.  If you have a different version of Python installed (e.g. from ArcGIS), `conda` or a similar virtual environment manager can care of installing it for you in the installation instructions below.
+Network Wrangler does require Python 3.9+.  If you have a different version of Python installed (e.g. from ArcGIS), `conda` or a similar virtual environment manager can care of installing it for you in the installation instructions below.
 
 !!! tip "installing conda"
 
@@ -21,15 +21,35 @@ Network Wrangler does require Python 3.7+.  If you have a different version of P
 
 ## Installation
 
-Requirements for basic network_wranglerare functionality as well as enhanced *development/testing*, *visualization* and *documentation* functionalities are stored in `requirements*.txt` and `pyproject.toml` but are automatically installed when using `pip`.
+### Activate Virtual Environment
 
-!!! example "create a new conda environment for wrangler"
+Create and/or activate the virtual environment where you want to install Network Wrangler.
+
+!!! example "create a new conda environment for wrangler using conda"
 
     ```bash
     conda config --add channels conda-forge
-    conda create python=3.7 -n wrangler
+    conda create python=3.11 -n wrangler #if you don't already have a virtual environment
     conda activate wrangler
     ```
+
+### Dependencies
+
+The core requirements for network wrangler are specified in `pyproject.toml` and will be automatically checked and installed when you install network wrangler.
+
+Additional, optional libraries are specified in separate requirements files to reduce the bloat of the minimum installation.
+
+| **File**                  | **Purpose**                               |
+|---------------------------|-------------------------------------------|
+| `requirements.viz.txt`     | Requirements for running visualizations.  |
+| `requirements.docs.txt`    | Requirements for building documentation.  |
+| `requirements.tests.txt`   | Requirements for running tests.           |
+
+If you want to view your networks, will likely want to install at least the visualization dependencies:
+
+```bash
+pip install -r requirements.viz.txt
+```
 
 !!! warning "tricky dependencies"
 
@@ -39,9 +59,9 @@ Requirements for basic network_wranglerare functionality as well as enhanced *de
     conda install rtree geopandas osmnx
     ```
 
-Ready to install network wrangler?
+### Install Wrangler
 
-=== "Latest Official Version"
+=== "Latest Release"
 
     ```bash
     pip install network-wrangler
@@ -49,47 +69,15 @@ Ready to install network wrangler?
 
 === "From GitHub"
 
+    Only necessary if you want to test features before they have released as official versions.
+
     ```bash
-    pip install git+https://github.com/wsp-sag/network_wrangler.git@master#egg=network_wrangler
+    pip install git+https://github.com/wsp-sag/network_wrangler.git@develop#egg=network_wrangler
     ```
 
     !!! tip
 
-        If you wanted to install from a specific tag/version number or branch, replace `@master` with `@<branchname>`  or `@tag`
-
-=== "From Clone"
-
-    If you are going to be working on Network Wrangler locally, you might want to clone it to your local machine and install it from the clone.  The -e will install it in [editable mode](https://pip.pypa.io/en/stable/reference/pip_install/?highlight=editable#editable-installs).
-
-    If you have [GitHub desktop](https://desktop.github.com/) installed, you can either do this by using the GitHub user interface by clicking on the green button "clone or download" in the [main network wrangler repository page](https://github.com/wsp-sag/network_wrangler).
-
-    Otherwise, you can use the command prompt to navigate to the directory that you would like to store your network wrangler clone and then using a [git command](https://git-scm.com/downloads) to clone it.
-
-    ```bash
-    cd path to where you want to put wrangler
-    git clone https://github.com/wsp-sag/network_wrangler
-    ```
-
-    Expected output:
-
-    ```bash
-    cloning into network_wrangler...
-    remote: Enumerating objects: 53, done.
-    remote: Counting objects: 100% (53/53), done.
-    remote: Compressing objects: 100% (34/34), done.
-    remote: Total 307 (delta 28), reused 29 (delta 19), pack-reused 254
-    Receiving objects: 100% (307/307), 15.94 MiB | 10.49 MiB/s, done.
-    Resolving deltas: 100% (140/140), done.
-    ```
-
-    Then you should be able to install Network Wrangler in "develop" mode.
-
-    Navigate your command prompt into the network wrangler folder and then install network wrangler in editable mode. This will take a few minutes because it is also installing all the prerequisites.
-
-    ```bash
-    cd network_wrangler
-    pip install -e .
-    ```
+        If you wanted to install from a specific tag/version number or branch, replace `@develop` with `@<branchname>`  or `@tag`
 
 ### Common Installation Issues
 
@@ -134,10 +122,6 @@ To start the notebook, open a command line in the network_wrangler top-level dir
 
 `jupyter notebook`
 
-## Documentation
-
-Documentation can be built from the `/docs` folder using the command: `make html`
-
 ## Usage
 
 ```python
@@ -171,14 +155,27 @@ my_scenario.write("my_project/build", "baseline")
 
 ## Attribution
 
+NetworkWrangler was developed using resources from the [Metropolitan Transportation Commission](bayareametro.gov), [Metropolitan Council MN](https://metrocouncil.org/), and in-kind time from [UrbanLabs LLC](https://urbanlabs.io) and [WSP](www.wsp.com).  It is currently maintained using in-kind time...so please be patient.
+
 This project is built upon the ideas and concepts implemented in the [network wrangler project](https://github.com/sfcta/networkwrangler) by the [San Francisco County Transportation Authority](http://github.com/sfcta) and expanded upon by the [Metropolitan Transportation Commission](https://github.com/BayAreaMetro/NetworkWrangler).
 
 While Network Wrangler as written here is based on these concepts, the code is distinct and builds upon other packages such as `geopandas` and `pydantic` which hadn't been implemented when networkwrangler 1.0 was developed.
 
 ## Contributing
 
-Pull requests are welcome. Please open an issue first to discuss what you would like to change.
-Please make sure to update tests as appropriate.
+Contributions are welcome. Please review [contributing guidelines and instructions](development.md).
+
+## Companion Software
+
+[ProjectCard](https://network-wrnagler.github.io/projectcard): Initially part of NetworkWrangler, the functionality for reading, writing and validating ProjectCard objects was pulled out into a separate project so that it could be used by other entities without necessitating NetworkWrangler.
+
+## Having an issue?
+
+🪲 NetworkWrangler may contain bugs.
+
+🤔 Also, since it has primarily been used by its developers, the documentation may contain some omissions or not be entirely clear.
+
+But we'd love to make it better! Please report bugs or incorrect/unclear/missing documentation with a [GitHub Issue](https://github.com/wsp-sag/network-wrangler/issues) -  or [fix them yourself with a pull request](development.md)!
 
 ## License
 

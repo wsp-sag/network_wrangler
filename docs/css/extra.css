@@ -7,7 +7,7 @@
 .md-tabs {
     position: relative; /* Make sure .md-tabs is positioned */
     overflow: visible; /* Allow overflow */
-    margin-bottom: 60px;
+    margin-bottom: 15px;
 }
 
 .md-tabs::after {

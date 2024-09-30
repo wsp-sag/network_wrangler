@@ -494,8 +494,7 @@ class Scenario(object):
         if _missing_ps:
             raise ValueError(
                 f"Projects are not in planned projects: \n {_missing_ps}. Add them by \
-                using add_project_cards(), add_projects_from_files(), or \
-                add_projects_from_directory()."
+                using add_project_cards()."
             )
 
     def _check_projects_have_project_cards(self, project_list: list[str]) -> bool:
@@ -676,7 +675,7 @@ class Scenario(object):
 
         Will order the list of projects based on pre-requisites.
 
-        NOTE: does not check co-requisites b/c that isn't possible when applying a sin
+        NOTE: does not check co-requisites b/c that isn't possible when applying a single project.
 
         Args:
             project_list: List of projects to be applied. All need to be in the planned project

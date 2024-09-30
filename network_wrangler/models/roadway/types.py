@@ -34,7 +34,25 @@ class ScopeLinkValueError(Exception):
 
 
 class ScopedLinkValueItem(RecordModel):
-    """Define a link property scoped by timespan or category."""
+    """Define the value of a link property for a particular timespan or category.
+
+    Attributes:
+        `category` (str): Category or link user that this scoped value applies to, ex: `HOV2`,
+            `truck`, etc.  Categories are user-defined with the exception of `any` which is
+            reserved as the default category. Default is `DEFAULT_CATEGORY`, which is `all`.
+        `timespan` (list[TimeString]): timespan of the link property as defined as a list of
+            two HH:MM(:SS) strings. Default is `DEFAULT_TIMESPAN`, which is `["00:00", "24:00"]`.
+        `value` (Union[float, int, str]): Value of the link property for the given category and
+            timespan.
+
+    Conflicting or matching scopes are not allowed in a list of ScopedLinkValueItems:
+
+    - `matching`: a scope that could be applied for a given category/timespan combination. This includes the default scopes as well as scopes that are contained within the given category AND timespan combination.
+    - `overlapping`: a scope that fully or partially overlaps a given category OR timespan combination.  This includes the default scopes, all `matching` scopes and all scopes where at least one minute of timespan or one category overlap.
+    - `conflicting`: a scope that is overlapping but not matching for a given category/timespan. 
+
+    NOTE: Default scope values of `category: any` and `timespan:["00:00", "24:00"]` are **not** considered conflicting, but are applied to residual scopes.
+    """
 
     require_any_of: ClassVar[AnyOf] = [["category", "timespan"]]
     model_config = ConfigDict(extra="forbid")
