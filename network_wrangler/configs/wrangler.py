@@ -135,9 +135,9 @@ class IdGenerationConfig(ConfigItem):
     TRANSIT_SHAPE_ID_SCALAR: int = 1000000
     ROAD_SHAPE_ID_METHOD: Literal["scalar"] = "scalar"
     ROAD_SHAPE_ID_SCALAR: int = 1000
-    ML_LINK_ID_METHOD: Literal["range", "scalar"] = "range"
+    ML_LINK_ID_METHOD: Literal["range", "scalar"] = "scalar"
     ML_LINK_ID_RANGE: tuple[int, int] = (950000, 999999)
-    ML_LINK_ID_SCALAR: int = 15000
+    ML_LINK_ID_SCALAR: int = 2000000
     ML_NODE_ID_METHOD: Literal["range", "scalar"] = "range"
     ML_NODE_ID_RANGE: tuple[int, int] = (950000, 999999)
     ML_NODE_ID_SCALAR: int = 15000

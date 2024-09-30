@@ -60,19 +60,19 @@ class LinkOfTypeAccessor:
     def __init__(self, links_df: DataFrame[RoadLinksTable]):
         """LinkOfTypeAccessor for RoadLinksTable."""
         self._links_df = links_df
-        try:
-            links_df.attrs["name"] == "road_links"
-        except AttributeError:
-            WranglerLogger.warning(
-                "`of_type` should only be used on 'road_links' dataframes. \
-                No attr['name'] not found."
-            )
-        except AssertionError:
-            WranglerLogger.warning(
-                f"`of_type` should only be used on 'road_links' dataframes. \
-                Found type: {links_df.attr['name']}"
-            )
-            raise NotLinksError("`of_type` is only available to network_links dataframes.")
+        # try:
+        #     links_df.attrs["name"] == "road_links"
+        # except AttributeError:
+        #     WranglerLogger.warning(
+        #         "`of_type` should only be used on 'road_links' dataframes. \
+        #         No attr['name'] not found."
+        #     )
+        # except AssertionError:
+        #     WranglerLogger.warning(
+        #         f"`of_type` should only be used on 'road_links' dataframes. \
+        #         Found type: {links_df.attr['name']}"
+        #     )
+        #     raise NotLinksError("`of_type` is only available to network_links dataframes.")
 
     @property
     def managed(self):
