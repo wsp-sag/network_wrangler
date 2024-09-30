@@ -197,6 +197,7 @@ ROADWAY_CARD_TYPES: list[str] = [
     "roadway_property_change",
     "roadway_deletion",
     "roadway_addition",
+    "pycode"
 ]
 
 
