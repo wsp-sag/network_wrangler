@@ -106,23 +106,23 @@ def _filter_to_matching_scope(
     scoped_values: list[ScopedLinkValueItem],
     category: Union[str, list] = DEFAULT_CATEGORY,
     timespan: list[TimeString] = DEFAULT_TIMESPAN,
-) -> list[ScopedLinkValueItem]:
+) -> tuple[list[ScopedLinkValueItem], list[ScopedLinkValueItem]]:
     """Filters scoped values to only include those that match category and timespan.
 
     `matching` scope value: a scope that could be applied for a given category/timespan
         combination. This includes the default scopes as well as scopes that are contained within
         the given category AND timespan combination.
     """
-    scoped_values = _filter_to_matching_category_scopes(scoped_values, category)
-    scoped_values = _filter_to_matching_timespan_scopes(scoped_values, timespan)
-    return scoped_values
+    potential_match = _filter_to_matching_category_scopes(scoped_values, category)
+    match_values = _filter_to_matching_timespan_scopes(potential_match, timespan)
+    return match_values, [s for s in scoped_values if s not in match_values]
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True), validate_return=True)
 def _filter_to_overlapping_timespan_scopes(
     scoped_values: list[ScopedLinkValueItem], timespan: list[TimeString]
 ) -> list[ScopedLinkValueItem]:
-    """Filters scoped values to only include those that overlap with the timespan.
+    """Filters list of ScopedLinkValueItems to list of those that overlap.
 
     `overlapping` scope value: a scope that fully or partially overlaps a given category OR
         timespan combination.  This includes the default scopes, all `matching` scopes and
@@ -219,7 +219,8 @@ def _filter_to_conflicting_scopes(
     if category == DEFAULT_CATEGORY and timespan == DEFAULT_TIMESPAN:
         return scoped_values
 
-    return _filter_to_conflicting_timespan_scopes(scoped_values, timespan)
+    conflicting_scopes = _filter_to_conflicting_timespan_scopes(scoped_values, timespan)
+    return conflicting_scopes
 
 
 def _create_exploded_df_for_scoped_prop(

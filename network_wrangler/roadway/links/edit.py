@@ -12,7 +12,6 @@ Usage:
     links_df = edit_link_properties(
         links_df, link_idx, "price",
         {"existing": 100,"change":-50},
-        "existing_value_conflict_error": True
     )
 
     # Returns copy of links_df with geometry of links with node_ids updated based on nodes_df
@@ -23,7 +22,7 @@ from __future__ import annotations
 
 import copy
 
-from typing import Union, Any, Optional
+from typing import Union, Any, Optional, Literal
 
 import numpy as np
 import geopandas as gpd
@@ -83,33 +82,31 @@ def _initialize_links_as_managed_lanes(
 def _resolve_conflicting_scopes(
     scoped_values: list[ScopedLinkValueItem],
     scoped_item: IndivScopedPropertySetItem,
-    delete_conflicting: bool = True,
+    overwrite_conflicting: bool = True,
 ) -> list[ScopedLinkValueItem]:
     conflicting_existing = _filter_to_conflicting_scopes(
         scoped_values,
         timespan=scoped_item.timespan,
         category=scoped_item.category,
     )
-    if not conflicting_existing:
-        return scoped_values
-
-    if delete_conflicting:
-        return [i for i in scoped_values not in conflicting_existing]
-    else:
-        WranglerLogger.error(
-            f"""Existing link value conflicts with change.  Either update to
-            set overwrite_conflicting = True to overwrite with set value
-            or update the scoped value to not conflict.\n
-            Conflicting existing value(s): {conflicting_existing}\n
-            Set value: {scoped_item} """
-        )
-        raise InvalidScopedLinkValue("Existing link value conflicts with change.")
+    if conflicting_existing:
+        if overwrite_conflicting:
+            return [i for i in scoped_values not in conflicting_existing]
+        else:
+            WranglerLogger.error(
+                f"""Existing link value conflicts with change.  Either update to
+                set overwrite_conflicting = True to overwrite with set value
+                or update the scoped value to not conflict.\n
+                Conflicting existing value(s): {conflicting_existing}\n
+                Set value: {scoped_item} """
+            )
+    return scoped_values
 
 
 def _valid_default_value_for_change(value: Any) -> bool:
     if isinstance(value, (int, np.integer)):
         return True
-    if isinstance(value, (float, np.float)):
+    if isinstance(value, float):
         return True
     return False
 
@@ -120,11 +117,12 @@ def _update_property_for_scope(
 ) -> ScopedLinkValueItem:
     """Update property for a single scope."""
     if scoped_prop_set.set is not None:
-        return ScopedLinkValueItem(
+        scoped_item = ScopedLinkValueItem(
             category=scoped_prop_set.category,
             timespan=scoped_prop_set.timespan,
             value=scoped_prop_set.set,
         )
+        return scoped_item
     elif scoped_prop_set.change is not None:
         if not _valid_default_value_for_change(existing_value):
             WranglerLogger.error(
@@ -134,11 +132,12 @@ def _update_property_for_scope(
             raise InvalidScopedLinkValue(
                 f"Cannot implement change from default_value of type {type(existing_value)}."
             )
-        return ScopedLinkValueItem(
+        scoped_item = ScopedLinkValueItem(
             category=scoped_prop_set.category,
             timespan=scoped_prop_set.timespan,
             value=existing_value + scoped_prop_set.change,
         )
+        return scoped_item
     else:
         WranglerLogger.error(
             f"Scoped property change must have set or change. Found: {scoped_prop_set}"
@@ -151,8 +150,7 @@ def _edit_scoped_link_property(
     scoped_prop_value_list: Union[None, list[ScopedLinkValueItem]],
     scoped_prop_set: ScopedPropertySetList,
     default_value: Any = None,
-    overwrite_all: bool = False,
-    overwrite_conflicting: bool = True,
+    overwrite_scoped: Optional[Literal["conflicting", "all", False]] = False,
 ) -> list[ScopedLinkValueItem]:
     """Edit scoped property on a single link.
 
@@ -160,20 +158,18 @@ def _edit_scoped_link_property(
         scoped_prop_value_list: List of scoped property values for the link.
         scoped_prop_set: ScopedPropertySetList of changes to make.
         default_value: Default value for the property if not set.
-        overwrite_all: If True, will overwrite all scoped values for link property with
-            scoped_prop_value_set. Defaults to False.
-        overwrite_conflicting: If True will overwrite any conflicting scopes.  Otherwise, will
-            raise an Exception on conflicting, but not matching, scopes.
+        overwrite_scoped: If 'all', will overwrite all scoped properties. If 'conflicting',
+            will overwrite conflicting scoped properties. If False, will raise an error on
+            conflicting scoped properties. Defaults to False.
     """
     msg = f"Setting scoped link property.\n\
             - Current value:{scoped_prop_value_list}\n\
             - Set value: {scoped_prop_set}\n\
             - Default value: {default_value}\n\
-            - Overwrite all? {overwrite_all}\n\
-            - Overwrite conflicting? {overwrite_conflicting}"
+            - Overwrite scoped: {overwrite_scoped}"
     # WranglerLogger.debug(msg)
     # If None, or asked to overwrite all scopes, and return all set items
-    if overwrite_all or not scoped_prop_value_list:
+    if overwrite_scoped == "all" or not scoped_prop_value_list:
         scoped_prop_value_list = [
             _update_property_for_scope(i, default_value) for i in scoped_prop_set
         ]
@@ -189,12 +185,12 @@ def _edit_scoped_link_property(
         # delete or error on conflicting scopes
         updated_scoped_prop_value_list = _resolve_conflicting_scopes(
             updated_scoped_prop_value_list,
-            scoped_prop_set,
-            delete_conflicting=overwrite_conflicting,
+            set_item,
+            overwrite_conflicting=overwrite_scoped == "conflicting",
         )
 
-        # find matching scopes
-        matching_existing = _filter_to_matching_scope(
+        # filter matching scopes from updated scopes
+        matching_existing, updated_scoped_prop_value_list = _filter_to_matching_scope(
             updated_scoped_prop_value_list,
             timespan=set_item.timespan,
             category=set_item.category,
@@ -251,9 +247,6 @@ def _edit_link_property(
     link_idx: list,
     prop_name: str,
     prop_change: RoadPropertyChange,
-    existing_value_conflict_error: bool = False,
-    overwrite_all_scoped: bool = False,
-    overwrite_conflicting_scoped: bool = True,
     project_name: Optional[str] = None,
     config: WranglerConfig = DefaultConfig,
 ) -> DataFrame[RoadLinksTable]:
@@ -270,29 +263,39 @@ def _edit_link_property(
         link_idx: list of link indices to change
         prop_name: property name to change
         prop_change: RoadPropertyChange instance
-        existing_value_conflict_error: If True, will trigger an error if the existing
-            specified value in the project card doesn't match the value in links_df.
-            Otherwise, will only trigger a warning. Defaults to False.
-        overwrite_all_scoped: If True, will overwrite all scoped values for link property with
-            scoped_prop_value_set. Defaults to False.
-        overwrite_conflicting_scoped: If True will overwrite any conflicting scopes.
-            Otherwise, will raise an Exception on conflicting, but not matching, scopes.
         project_name: optional name of the project to be applied
         config: WranglerConfig instance. Defaults to DefaultConfig.
-
     """
     WranglerLogger.debug(f"Editing {prop_name} on links {link_idx}")
-    # TODO write wrapper on validate call so don't have to do this
-    links_df.attrs.update(RoadLinksAttrs)
+
+    # Allow the project card to override the default behavior of raising an error
+    if prop_change.existing_value_conflict is not None:
+        existing_value_conflict = prop_change.existing_value_conflict
+    else:
+        existing_value_conflict = config.EDITS.EXISTING_VALUE_CONFLICT
+
+    # Allow the project card to override the default behavior of overwriting conflicting scoped
+    if prop_change.overwrite_scoped is not None:
+        overwrite_scoped = prop_change.overwrite_scoped
+    else:
+        overwrite_scoped = config.EDITS.OVERWRITE_SCOPED
+
     # WranglerLogger.debug(f"links_df | link_idx:\n {links_df.loc[link_idx].head()}")
     if prop_change.existing is not None:
         exist_ok = validate_existing_value_in_df(
             links_df, link_idx, prop_name, prop_change.existing
         )
-        if not exist_ok and existing_value_conflict_error:
-            raise LinkChangeError(
-                f"Existing value doesn't match specified value in project card for {prop_name}"
-            )
+        if not exist_ok:
+            if existing_value_conflict == "error":
+                raise LinkChangeError(
+                    f"Existing value doesn't match specified value in project card for {prop_name}"
+                )
+            if existing_value_conflict == "skip":
+                WranglerLogger.warning(
+                    f"Skipping change for {prop_name} because of conflict with existing value."
+                )
+                return links_df
+            WranglerLogger.warning(f"Changing {prop_name} despite conflict with existing value.")
 
     # if it is a managed lane field, initialize managed lane attributes if haven't already
     if prop_name.startswith("ML_"):
@@ -343,65 +346,16 @@ def _edit_link_property(
                 links_df.at[idx, sc_prop_name],
                 prop_change.scoped,
                 links_df.at[idx, prop_name],
-                overwrite_all=overwrite_all_scoped,
-                overwrite_conflicting=overwrite_conflicting_scoped,
+                overwrite_scoped=overwrite_scoped,
             )
             msg = f"idx:\n   {idx}\n\
                     type: \n   {type(links_df.at[idx, sc_prop_name])}\n\
                     value:\n   {links_df.at[idx, sc_prop_name]}"
             # WranglerLogger.debug(msg)
 
-    msg = f"links_df.loc[link_idx,prop_name] \
-          After:\n {links_df.loc[link_idx, prop_name]}"
+    msg = f"links_df.loc[link_idx,prop_name] After:\n {links_df.loc[link_idx, prop_name]}"
     # WranglerLogger.debug(msg)
-
-    return links_df
-
-
-@validate_call_pyd
-def edit_link_property(
-    links_df: DataFrame[RoadLinksTable],
-    link_idx: list,
-    prop_name: str,
-    prop_dict: RoadPropertyChange,
-    existing_value_conflict_error: bool = False,
-) -> DataFrame[RoadLinksTable]:
-    """Return copy of RoadLinksTable with edited link property for a list of links IDS.
-
-    Args:
-        links_df: links to edit
-        link_idx: list of link indices to change
-        prop_name: property name to change
-        prop_dict: dictionary of value from project_card
-        existing_value_conflict_error: If True, will trigger an error if the existing
-            specified value in the project card doesn't match the value in links_df.
-            Otherwise, will only trigger a warning. Defaults to False.
-        overwrite_all_scoped: If True, will overwrite all scoped values for link property with
-            scoped_prop_value_set. Defaults to False.
-        overwrite_conflicting_scoped: If True will overwrite any conflicting scopes.
-            Otherwise, will raise an Exception on conflicting, but not matching, scopes
-            Defaults to True.
-
-    """
-    WranglerLogger.info(f"Editing Link Property {prop_name} for {len(link_idx)} links.")
-    WranglerLogger.debug(f"prop_dict: /n{prop_dict}")
-    prop_change = RoadPropertyChange(prop_dict)
-
-    links_df = copy.deepcopy(links_df)
-    links_df = _edit_link_property(
-        links_df,
-        link_idx,
-        prop_name,
-        prop_change,
-        existing_value_conflict_error,
-        overwrite_all_scoped=prop_change.overwrite_all_scoped,
-        overwrite_conflicting_scoped=prop_change.overwrite_conflicting_scoped,
-    )
     links_df = validate_df_to_model(links_df, RoadLinksTable)
-    WranglerLogger.debug(
-        f"Edited links_df.loc[link_idx, property]: \
-                         \n {links_df.loc[link_idx, property]}"
-    )
     return links_df
 
 
@@ -410,7 +364,6 @@ def edit_link_properties(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
     property_changes: dict[str, RoadPropertyChange],
-    existing_value_conflict_error: bool = False,
     project_name: Optional[str] = None,
     config: WranglerConfig = DefaultConfig,
 ) -> DataFrame[RoadLinksTable]:
@@ -420,9 +373,6 @@ def edit_link_properties(
         links_df: links to edit
         link_idx: list of link indices to change
         property_changes: dictionary of property changes
-        existing_value_conflict_error: If True, will trigger an error if the existing
-            specified value in the project card doesn't match the value in links_df.
-            Otherwise, will only trigger a warning. Defaults to False.
         project_name: optional name of the project to be applied
         config: WranglerConfig instance. Defaults to DefaultConfig.
     """
@@ -441,7 +391,6 @@ def edit_link_properties(
             link_idx,
             property,
             prop_change,
-            existing_value_conflict_error=existing_value_conflict_error,
             config=config,
         )
 

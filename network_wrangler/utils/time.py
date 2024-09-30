@@ -91,6 +91,7 @@ def _all_str_to_time_series(
         + pd.to_timedelta(minutes, unit="m")
         + pd.to_timedelta(seconds, unit="s")
     )
+
     return combined_datetimes
 
 

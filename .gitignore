@@ -2,6 +2,8 @@
 *.pyc
 
 # Temp and test cache
+.benchmarks
+prof/
 scratch/*
 tests/temp/*
 scratch/*

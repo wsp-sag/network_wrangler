@@ -98,7 +98,7 @@ def test_filter_to_matching_scope():
     expected_result = [
         {"value": 1, "category": "A", "timespan": ["6:00", "9:00"]},
     ]
-    result = _filter_to_matching_scope(scoped_values, category, timespan)
+    result, _ = _filter_to_matching_scope(scoped_values, category, timespan)
     assert [
         i.model_dump(exclude_none=True, exclude_defaults=True) for i in result
     ] == expected_result
