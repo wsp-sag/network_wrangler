@@ -59,16 +59,15 @@ def test_add_route_to_feed_dict(
     )
     updated_feed = updated_transit_net.feed
 
+    # check routes
+    new_routes = updated_feed.routes.loc[updated_feed.routes.route_id.isin(["abc"])]
+    assert len(new_routes) == 1
+    assert new_routes.route_long_name.loc[new_routes.route_long_name == "green_line"].all()
+
     # check trips
     new_trips = updated_feed.trips.loc[updated_feed.trips.route_id.isin(["abc"])]
     new_trip_ids = new_trips.trip_id.to_list()
     assert len(new_trip_ids) == 1
-
-    # check routes
-    new_routes = updated_feed.routes.loc[updated_feed.routes.route_id.isin(["abc"])]
-    assert len(new_routes) == 1
-
-    assert new_routes.route_long_name.loc[new_routes.route_long_name == "green_line"].all()
 
     # check stops
     existing_stops = [1, 2, 3, 4]

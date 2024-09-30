@@ -315,6 +315,6 @@ def _parse_headway_record(headway: dict[tuple[TimeString], int]) -> tuple[dateti
             e.g. {('6:00', '12:00'): 600}
     """
     ((timespan, headway_secs),) = headway.items()
-    timespan_clean = [time.strip().strip("'") for time in timespan.strip("()").split(",")]
+    timespan_clean = [time.strip().strip("'") for time in timespan]
     start_time, end_time = str_to_time_list(timespan_clean)
     return start_time, end_time, headway_secs
