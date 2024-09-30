@@ -22940,7 +22940,7 @@ Defaults to None.</p>
         <span class="k">return</span> <span class="n">geo_s</span>
     <span class="n">og_crs</span> <span class="o">=</span> <span class="n">geo_s</span><span class="o">.</span><span class="n">crs</span>
     <span class="n">meters_crs</span> <span class="o">=</span> <span class="n">_id_utm_crs</span><span class="p">(</span><span class="n">geo_s</span><span class="p">)</span>
-    <span class="n">geo_s</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">meters_crs</span><span class="p">)</span>
+    <span class="n">geo_s</span> <span class="o">=</span> <span class="n">geo_s</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">meters_crs</span><span class="p">)</span>
     <span class="n">offset_geo</span> <span class="o">=</span> <span class="n">geo_s</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">offset_curve</span><span class="p">(</span><span class="n">offset_distance_meters</span><span class="p">))</span>
     <span class="n">offset_geo</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoSeries</span><span class="p">(</span><span class="n">offset_geo</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">offset_geo</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">og_crs</span><span class="p">)</span>
