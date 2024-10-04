@@ -170,6 +170,7 @@ def _v1_to_v0_scoped_link_property(v1_row: Series, prop: str) -> dict:
                 v0_item["time"] = tuple([str_to_seconds_from_midnight(t) for t in v1_item.timespan])
             if hasattr(v1_item, "category") and v1_item.category != DEFAULT_CATEGORY:
                 v0_item["category"] = [v1_item.category]
+        v0_item_list.append(v0_item)
     default_prop = prop[3:]
     v0_prop = {"default": v1_row[default_prop], "timeofday": v0_item_list}
     return v0_prop
