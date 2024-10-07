@@ -83,7 +83,6 @@ def apply_new_roadway(
             raise NewRoadwayError(msg)
         _new_links_df = data_to_links_df(
             add_links,
-            config=roadway_net.config,
             nodes_df=roadway_net.nodes_df,
         )
         if project_name:

@@ -147,10 +147,14 @@ def _filter_to_overlapping_timespan_scopes(
 def _islist(s: Any) -> TypeGuard[list]:
     """Typeguard for list to make mypy not complain."""
     if s is list:
-        return True
+        return s
     if isinstance(s, list):
-        return True
-    return bool(issubclass(type(s), list))
+        return s
+    is_list = bool(issubclass(type(s), list))
+    if is_list:
+        return s
+    msg = f"{s} is not a list but is required to be one."
+    raise TypeError(msg)
 
 
 @validate_call(config={"arbitrary_types_allowed": True}, validate_return=True)

@@ -18,7 +18,7 @@ slug_test_list = [
 
 @pytest.mark.parametrize("slug_test", slug_test_list)
 def test_get_slug(request, slug_test):
-    WrnaglerLogger.info("\n--Starting:", request.node.name)
+    WranglerLogger.info("\n--Starting:", request.node.name)
 
     from network_wrangler.utils.utils import make_slug
 

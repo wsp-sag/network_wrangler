@@ -39,19 +39,19 @@ def test_id_roadway_file_paths_in_dir(request, tmpdir):
     assert shapes_path == shapes_file
 
     # Test Case 2: Links file is missing
-    links_file.unlink()
+    links_file.remove()
     with pytest.raises(FileNotFoundError):
         id_roadway_file_paths_in_dir(tmpdir, file_format="geojson")
 
     # Test Case 3: Nodes file is missing
     links_file.write("")
-    nodes_file.unlink()
+    nodes_file.remove()
     with pytest.raises(FileNotFoundError):
         id_roadway_file_paths_in_dir(tmpdir, file_format="geojson")
 
     # Test Case 4: Shapes file is missing (optional)
     nodes_file.write("")
-    shapes_file.unlink()
+    shapes_file.remove()
     links_path, nodes_path, shapes_path = id_roadway_file_paths_in_dir(
         tmpdir, file_format="geojson"
     )

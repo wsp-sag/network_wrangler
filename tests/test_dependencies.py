@@ -3,7 +3,6 @@ import pytest
 from network_wrangler import WranglerLogger
 
 
-@pytest.mark.dependencies
 def test_dependencies_api(request):
     WranglerLogger.info("\n--Starting:", request.node.name)
     import pandera

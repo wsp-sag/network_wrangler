@@ -446,7 +446,7 @@ class RoadwayNetwork(BaseModel):
 
         if add_links_df.attrs.get("name") != "road_links":
             add_links_df = data_to_links_df(
-                add_links_df, nodes_df=self.nodes_df, in_crs=in_crs, config=self.config
+                add_links_df, nodes_df=self.nodes_df, in_crs=in_crs
             )
         self.links_df = validate_df_to_model(
             concat_with_attr([self.links_df, add_links_df], axis=0), RoadLinksTable

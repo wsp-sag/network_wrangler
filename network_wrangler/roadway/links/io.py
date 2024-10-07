@@ -58,7 +58,7 @@ def read_links(
         ]
 
     WranglerLogger.debug(f"Read {len(links_df)} links in {round(time.time() - start_t, 2)}.")
-    links_df = data_to_links_df(links_df, in_crs=in_crs, config=config, nodes_df=nodes_df)
+    links_df = data_to_links_df(links_df, in_crs=in_crs, nodes_df=nodes_df)
     links_df.attrs["source_file"] = filename
     WranglerLogger.info(
         f"Read + transformed {len(links_df)} links from \
