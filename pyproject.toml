@@ -8,6 +8,7 @@ version = "1.0-alpha.1"
 description = ""
 license =  {file = "LICENSE"}
 readme = "README.md"
+requires-python = ">=3.8"
 authors = [
     { name = "Elizabeth Sall", email = "elizabeth@urbanlabs.io" },
     { name = "Sijia Wang", email = "Sijia.Wang@wsp.com"},
@@ -48,12 +49,12 @@ docs = [
     "fontawesome_markdown",
     "jupyter",
     "markdown == 3.3.1",
-    "mike < 2.0",
+    "mike",
     "mkdocs",
     "mkdocs-autorefs",
     "mkdocs-awesome-pages-plugin",
+    "mkdocs-include-markdown-plugin",
     "mkdocs-jupyter",
-    "mkdocs-macros-plugin",
     "mkdocs-material",
     "mkdocs-mermaid2-plugin",
     "mkdocstrings",
@@ -80,18 +81,84 @@ script-files = [
     "network_wrangler/bin/build_scenario_from_config.py",
 ]
 
+[tool.pytest.ini_options]
+addopts = "--profile --benchmark-min-rounds=1 --benchmark-save=benchmark_results --benchmark-save-data"
+markers = [
+    "skipci: mark a test as a test that should be skipped in CI",
+    "failing: tests that are known to be failing and need to be fixed"
+]
+log_cli = true
+log_cli_level = "INFO"
+
+[tool.radon]
+exclude = ["tests/", "docs/"]  # Use a list for multiple paths
+cc_min = "B"  # Keep the minimum cyclomatic complexity threshold
+
+[tool.coverage.run]
+relative_files = true
+source = ["network_wrangler"]
+
+[tool.mypy]
+files = "network_wrangler"
+python_version = "3.9"
+follow_imports = "skip"
+show_error_codes = true
+show_error_context = true
+ignore_missing_imports = true
+disable_error_code = ["attr-defined", "import-untyped"]
+warn_unused_ignores = true
+
 [tool.ruff]
 line-length = 99
 exclude = ["notebook/*.ipynb"]
 
+
 [tool.ruff.lint]
 select = ["D"]
-
+ignore = [
+    "RET504",  # Unnecessary assignment  before `return` statement
+    "UP007", # non pep-604 annotations.
+    "C416", # non pep-604 annotations.
+    "UP007", # non pep-604 annotations.
+    "PLR0913" # too many args
+]
+extend-select = [
+  "B",           # flake8-bugbear
+  "I",           # isort
+  "ARG",         # flake8-unused-arguments
+  "C4",          # flake8-comprehensions
+  "EM",          # flake8-errmsg
+  "ICN",         # flake8-import-conventions
+  "G",           # flake8-logging-format
+  "PGH",         # pygrep-hooks
+  "PIE",         # flake8-pie
+  "PL",          # pylint
+  "PTH",         # flake8-use-pathlib
+  "PT",          # flake8-pytest-style
+  "RET",         # flake8-return
+  "RUF",         # Ruff-specific
+  "SIM",         # flake8-simplify
+  "T20",         # flake8-print
+  "UP",          # pyupgrade
+  "YTT",         # flake8-2020
+  "EXE",         # flake8-executable
+  "PYI",         # flake8-pyi
+]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.ruff.format]
+docstring-code-format = true
+
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["D103", "D106", "D101", "D104", "D100"]
+"tests/**" = [
+    "D103",
+    "D106",
+    "D101",
+    "D104",
+    "D100",
+    "PLR2004" # magic # comparisons
+]
 "**/__init__.py" = ["F401", "F403"]
 "test_dependencies.py" = ["F401"]
 "bin/*.py" = ["E501"]

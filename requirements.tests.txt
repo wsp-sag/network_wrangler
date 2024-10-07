@@ -1,8 +1,10 @@
 coverage
 mypy
+mypy_extensions
 pytest
 pytest-benchmark
 pytest-cov
 pytest-profiling
 ruff
+snakeviz
 vulture
