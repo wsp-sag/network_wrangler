@@ -1472,7 +1472,8 @@ Roadway Network tables.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">201</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">200</span>
+<span class="normal">201</span>
 <span class="normal">202</span>
 <span class="normal">203</span>
 <span class="normal">204</span>
@@ -1485,8 +1486,7 @@ Roadway Network tables.</p>
 <span class="normal">211</span>
 <span class="normal">212</span>
 <span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ExplodedScopedLinkPropertyTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
+<span class="normal">214</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ExplodedScopedLinkPropertyTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Datamodel used to validate an exploded links_df by scope.&quot;&quot;&quot;</span>
 
     <span class="n">model_link_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
@@ -1533,11 +1533,11 @@ Roadway Network tables.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">211</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">210</span>
+<span class="normal">211</span>
 <span class="normal">212</span>
 <span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<span class="normal">214</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for ExplodedScopedLinkPropertySchema.&quot;&quot;&quot;</span>
 
     <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;ExplodedScopedLinkPropertySchema&quot;</span>
@@ -1594,7 +1594,8 @@ Roadway Network tables.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 43</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 42</span>
+<span class="normal"> 43</span>
 <span class="normal"> 44</span>
 <span class="normal"> 45</span>
 <span class="normal"> 46</span>
@@ -1683,8 +1684,7 @@ Roadway Network tables.</p>
 <span class="normal">129</span>
 <span class="normal">130</span>
 <span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadLinksTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
+<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadLinksTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Datamodel used to validate if links_df is of correct format and types.&quot;&quot;&quot;</span>
 
     <span class="n">model_link_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1763,7 +1763,7 @@ Roadway Network tables.</p>
 
         <span class="n">add_missing_columns</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">coerce</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">unique</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]</span>
+        <span class="n">unique</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]</span>
 
     <span class="nd">@pa</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">&quot;sc_*&quot;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">check_scoped_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">scoped_value</span><span class="p">:</span> <span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Series</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
@@ -1807,17 +1807,17 @@ Roadway Network tables.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">117</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
+<span class="normal">117</span>
 <span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for RoadLinksTable.&quot;&quot;&quot;</span>
 
     <span class="n">add_missing_columns</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">coerce</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">unique</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]</span>
+    <span class="n">unique</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -1859,7 +1859,8 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">124</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">123</span>
+<span class="normal">124</span>
 <span class="normal">125</span>
 <span class="normal">126</span>
 <span class="normal">127</span>
@@ -1867,8 +1868,7 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 <span class="normal">129</span>
 <span class="normal">130</span>
 <span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pa</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">&quot;sc_*&quot;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pa</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">&quot;sc_*&quot;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">element_wise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">check_scoped_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">scoped_value</span><span class="p">:</span> <span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Series</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks that all fields starting with &#39;sc_&#39; or &#39;sc_ML_&#39; are valid ScopedLinkValueList.</span>
 
@@ -1912,7 +1912,8 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">147</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">146</span>
+<span class="normal">147</span>
 <span class="normal">148</span>
 <span class="normal">149</span>
 <span class="normal">150</span>
@@ -1935,8 +1936,7 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 <span class="normal">167</span>
 <span class="normal">168</span>
 <span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadNodesTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
+<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadNodesTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Datamodel used to validate if links_df is of correct format and types.&quot;&quot;&quot;</span>
 
     <span class="n">model_node_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">coerce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -1960,7 +1960,7 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
         <span class="n">add_missing_columns</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">coerce</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">_pk</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;model_node_id&quot;</span><span class="p">]</span>
+        <span class="n">_pk</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">TablePrimaryKeys</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;model_node_id&quot;</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -1993,17 +1993,17 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">166</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">165</span>
+<span class="normal">166</span>
 <span class="normal">167</span>
 <span class="normal">168</span>
 <span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for RoadNodesTable.&quot;&quot;&quot;</span>
 
     <span class="n">add_missing_columns</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">coerce</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">_pk</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;model_node_id&quot;</span><span class="p">]</span>
+    <span class="n">_pk</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">TablePrimaryKeys</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;model_node_id&quot;</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2056,7 +2056,8 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">185</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">184</span>
+<span class="normal">185</span>
 <span class="normal">186</span>
 <span class="normal">187</span>
 <span class="normal">188</span>
@@ -2068,8 +2069,7 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 <span class="normal">194</span>
 <span class="normal">195</span>
 <span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadShapesTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
+<span class="normal">197</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadShapesTable</span><span class="p">(</span><span class="n">DataFrameModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Datamodel used to validate if links_df is of correct format and types.&quot;&quot;&quot;</span>
 
     <span class="n">shape_id</span><span class="p">:</span> <span class="n">Series</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -2082,7 +2082,7 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Config for RoadShapesTable.&quot;&quot;&quot;</span>
 
         <span class="n">coerce</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">_pk</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]</span>
+        <span class="n">_pk</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">TablePrimaryKeys</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2115,15 +2115,15 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/tables.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">194</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">193</span>
+<span class="normal">194</span>
 <span class="normal">195</span>
 <span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<span class="normal">197</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for RoadShapesTable.&quot;&quot;&quot;</span>
 
     <span class="n">coerce</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">_pk</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]</span>
+    <span class="n">_pk</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">TablePrimaryKeys</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;shape_id&quot;</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2227,14 +2227,14 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 99</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
 <span class="normal">100</span>
 <span class="normal">101</span>
 <span class="normal">102</span>
 <span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LocationReference</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LocationReference</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;SharedStreets-defined object for location reference.&quot;&quot;&quot;</span>
 
     <span class="n">sequence</span><span class="p">:</span> <span class="n">PositiveInt</span>
@@ -2285,13 +2285,9 @@ against a ScopedLinkValueItem model, handling both mandatory and optional fields
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ScopeLinkValueError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">29</span>
+<span class="normal">30</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ScopeLinkValueError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when there is an issue with ScopedLinkValueList.&quot;&quot;&quot;</span>
-
-    <span class="k">pass</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2371,13 +2367,16 @@ timespan.</p>
 <ul>
 <li><code>matching</code>: a scope that could be applied for a given category/timespan combination. This includes the default scopes as well as scopes that are contained within the given category AND timespan combination.</li>
 <li><code>overlapping</code>: a scope that fully or partially overlaps a given category OR timespan combination.  This includes the default scopes, all <code>matching</code> scopes and all scopes where at least one minute of timespan or one category overlap.</li>
-<li><code>conflicting</code>: a scope that is overlapping but not matching for a given category/timespan. </li>
+<li><code>conflicting</code>: a scope that is overlapping but not matching for a given category/timespan.</li>
 </ul>
 <p>NOTE: Default scope values of <code>category: any</code> and <code>timespan:["00:00", "24:00"]</code> are <strong>not</strong> considered conflicting, but are applied to residual scopes.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">36</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
 <span class="normal">37</span>
 <span class="normal">38</span>
 <span class="normal">39</span>
@@ -2404,10 +2403,7 @@ timespan.</p>
 <span class="normal">60</span>
 <span class="normal">61</span>
 <span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ScopedLinkValueItem</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ScopedLinkValueItem</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Define the value of a link property for a particular timespan or category.</span>
 
 <span class="sd">    Attributes:</span>
@@ -2423,7 +2419,7 @@ timespan.</p>
 
 <span class="sd">    - `matching`: a scope that could be applied for a given category/timespan combination. This includes the default scopes as well as scopes that are contained within the given category AND timespan combination.</span>
 <span class="sd">    - `overlapping`: a scope that fully or partially overlaps a given category OR timespan combination.  This includes the default scopes, all `matching` scopes and all scopes where at least one minute of timespan or one category overlap.</span>
-<span class="sd">    - `conflicting`: a scope that is overlapping but not matching for a given category/timespan. </span>
+<span class="sd">    - `conflicting`: a scope that is overlapping but not matching for a given category/timespan.</span>
 
 <span class="sd">    NOTE: Default scope values of `category: any` and `timespan:[&quot;00:00&quot;, &quot;24:00&quot;]` are **not** considered conflicting, but are applied to residual scopes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2502,7 +2498,10 @@ timespan.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">69</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
 <span class="normal">70</span>
 <span class="normal">71</span>
 <span class="normal">72</span>
@@ -2527,9 +2526,7 @@ timespan.</p>
 <span class="normal">91</span>
 <span class="normal">92</span>
 <span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ScopedLinkValueList</span><span class="p">(</span><span class="n">RootListMixin</span><span class="p">,</span> <span class="n">RootModel</span><span class="p">):</span>
+<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ScopedLinkValueList</span><span class="p">(</span><span class="n">RootListMixin</span><span class="p">,</span> <span class="n">RootModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List of non-conflicting ScopedLinkValueItems.&quot;&quot;&quot;</span>
 
     <span class="n">root</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ScopedLinkValueItem</span><span class="p">]</span>
@@ -2553,8 +2550,9 @@ timespan.</p>
                 <span class="k">if</span> <span class="n">j</span><span class="o">.</span><span class="n">category</span> <span class="o">==</span> <span class="n">i</span><span class="o">.</span><span class="n">category</span><span class="p">:</span>
                     <span class="n">conflicts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">conflicts</span><span class="p">:</span>
-            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Found conflicting scopes in ScopedPropertySetList:</span><span class="se">\n</span><span class="si">{conflicts}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">ScopeLinkValueError</span><span class="p">(</span><span class="s2">&quot;Conflicting scopes in ScopedPropertySetList&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Conflicting scopes in ScopedLinkValueList:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; Conflicts: </span><span class="se">\n</span><span class="si">{</span><span class="n">conflicts</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ScopeLinkValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span>
 </code></pre></div></td></tr></table></div>
@@ -2587,7 +2585,10 @@ timespan.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">79</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
 <span class="normal">80</span>
 <span class="normal">81</span>
 <span class="normal">82</span>
@@ -2602,9 +2603,7 @@ timespan.</p>
 <span class="normal">91</span>
 <span class="normal">92</span>
 <span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">check_conflicting_scopes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check for conflicting scopes in the list.&quot;&quot;&quot;</span>
     <span class="n">conflicts</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2618,8 +2617,9 @@ timespan.</p>
             <span class="k">if</span> <span class="n">j</span><span class="o">.</span><span class="n">category</span> <span class="o">==</span> <span class="n">i</span><span class="o">.</span><span class="n">category</span><span class="p">:</span>
                 <span class="n">conflicts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">conflicts</span><span class="p">:</span>
-        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Found conflicting scopes in ScopedPropertySetList:</span><span class="se">\n</span><span class="si">{conflicts}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">ScopeLinkValueError</span><span class="p">(</span><span class="s2">&quot;Conflicting scopes in ScopedPropertySetList&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Conflicting scopes in ScopedLinkValueList:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; Conflicts: </span><span class="se">\n</span><span class="si">{</span><span class="n">conflicts</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ScopeLinkValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="bp">self</span>
 </code></pre></div></td></tr></table></div>
@@ -2643,10 +2643,10 @@ timespan.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/models/roadway/types.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">overlapping_timespans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timespan</span><span class="p">:</span> <span class="n">Timespan</span><span class="p">):</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">overlapping_timespans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timespan</span><span class="p">:</span> <span class="n">Timespan</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Identify overlapping timespans in the list.&quot;&quot;&quot;</span>
     <span class="n">timespan_dt</span> <span class="o">=</span> <span class="n">str_to_time_list</span><span class="p">(</span><span class="n">timespan</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">if</span> <span class="n">dt_overlaps</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">timespan_dt</span><span class="p">,</span> <span class="n">timespan_dt</span><span class="p">)]</span>
@@ -2732,6 +2732,7 @@ timespan.</p>
           <tr class="doc-section-item">
             <td><code><span title="network_wrangler.transit.feed.feed.Feed.table_names">table_names</span></code></td>
             <td>
+                  <code>list[str]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2742,6 +2743,7 @@ timespan.</p>
           <tr class="doc-section-item">
             <td><code><span title="network_wrangler.transit.feed.feed.Feed.tables">tables</span></code></td>
             <td>
+                  <code>list[str]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2752,6 +2754,7 @@ timespan.</p>
           <tr class="doc-section-item">
             <td><code><span title="network_wrangler.transit.feed.feed.Feed.stop_times">stop_times</span></code></td>
             <td>
+                  <code>list[str]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2762,6 +2765,7 @@ timespan.</p>
           <tr class="doc-section-item">
             <td><code><span title="network_wrangler.transit.feed.feed.Feed.stops">stops</span></code></td>
             <td>
+                  <code>list[str]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2772,6 +2776,7 @@ timespan.</p>
           <tr class="doc-section-item">
             <td><code><span title="network_wrangler.transit.feed.feed.Feed.shapes">shapes</span></code></td>
             <td>
+                  <code>list[str]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2782,6 +2787,7 @@ timespan.</p>
           <tr class="doc-section-item">
             <td><code><span title="network_wrangler.transit.feed.feed.Feed.trips">trips</span></code></td>
             <td>
+                  <code>list[str]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2792,6 +2798,7 @@ timespan.</p>
           <tr class="doc-section-item">
             <td><code><span title="network_wrangler.transit.feed.feed.Feed.frequencies">frequencies</span></code></td>
             <td>
+                  <code>list[str]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2802,6 +2809,7 @@ timespan.</p>
           <tr class="doc-section-item">
             <td><code><span title="network_wrangler.transit.feed.feed.Feed.routes">routes</span></code></td>
             <td>
+                  <code>list[str]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2812,6 +2820,7 @@ timespan.</p>
           <tr class="doc-section-item">
             <td><code><span title="network_wrangler.transit.feed.feed.Feed.net">net</span></code></td>
             <td>
+                  <code>list[str]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2824,7 +2833,10 @@ timespan.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/transit/feed/feed.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 33</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
 <span class="normal"> 34</span>
 <span class="normal"> 35</span>
 <span class="normal"> 36</span>
@@ -2912,8 +2924,7 @@ timespan.</p>
 <span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Feed</span><span class="p">(</span><span class="n">DBModelMixin</span><span class="p">):</span>
+<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Feed</span><span class="p">(</span><span class="n">DBModelMixin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper class around Wrangler flavored GTFS feed.</span>
 
 <span class="sd">    Most functionality derives from mixin class DBModelMixin which provides:</span>
@@ -2937,7 +2948,7 @@ timespan.</p>
 
     <span class="c1"># the ordering here matters because the stops need to be added before stop_times if</span>
     <span class="c1"># stop times needs to be converted</span>
-    <span class="n">_table_models</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">_table_models</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;agencies&quot;</span><span class="p">:</span> <span class="n">AgenciesTable</span><span class="p">,</span>
         <span class="s2">&quot;frequencies&quot;</span><span class="p">:</span> <span class="n">WranglerFrequenciesTable</span><span class="p">,</span>
         <span class="s2">&quot;routes&quot;</span><span class="p">:</span> <span class="n">RoutesTable</span><span class="p">,</span>
@@ -2949,9 +2960,9 @@ timespan.</p>
 
     <span class="c1"># Define the converters if the table needs to be converted to a Wrangler table.</span>
     <span class="c1"># Format: &quot;table_name&quot;: converter_function</span>
-    <span class="n">_converters</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">_converters</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="n">table_names</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">table_names</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;frequencies&quot;</span><span class="p">,</span>
         <span class="s2">&quot;routes&quot;</span><span class="p">,</span>
         <span class="s2">&quot;shapes&quot;</span><span class="p">,</span>
@@ -2960,7 +2971,7 @@ timespan.</p>
         <span class="s2">&quot;stop_times&quot;</span><span class="p">,</span>
     <span class="p">]</span>
 
-    <span class="n">optional_table_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;agencies&quot;</span><span class="p">]</span>
+    <span class="n">optional_table_names</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;agencies&quot;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a Feed object from a dictionary of DataFrames representing a GTFS feed.</span>
@@ -2997,9 +3008,11 @@ timespan.</p>
 <span class="sd">                all properties.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">]</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
-            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_property</span><span class="si">}</span><span class="s2"> must be unique in set_df. </span><span class="se">\</span>
-<span class="s2">                                 Found duplicates: </span><span class="si">{</span><span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">]</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_property</span><span class="si">}</span><span class="s2"> must be unique in set_df.&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_property</span><span class="si">}</span><span class="s2"> must be unique in set_df.&quot;</span>
+            <span class="n">_dupes</span> <span class="o">=</span> <span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">][</span><span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">]</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()]</span>
+            <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Found duplicates: </span><span class="si">{</span><span class="n">_dupes</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">table_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
         <span class="n">updated_df</span> <span class="o">=</span> <span class="n">update_df_by_col_value</span><span class="p">(</span><span class="n">table_df</span><span class="p">,</span> <span class="n">set_df</span><span class="p">,</span> <span class="n">id_property</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated_df</span>
@@ -3061,7 +3074,10 @@ timespan.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/transit/feed/feed.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">82</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
 <span class="normal">83</span>
 <span class="normal">84</span>
 <span class="normal">85</span>
@@ -3073,10 +3089,7 @@ timespan.</p>
 <span class="normal">91</span>
 <span class="normal">92</span>
 <span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span>
-<span class="normal">97</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a Feed object from a dictionary of DataFrames representing a GTFS feed.</span>
 
 <span class="sd">    Args:</span>
@@ -3186,7 +3199,10 @@ all properties.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/transit/feed/feed.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 99</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
 <span class="normal">100</span>
 <span class="normal">101</span>
 <span class="normal">102</span>
@@ -3208,8 +3224,7 @@ all properties.</p>
 <span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">set_by_id</span><span class="p">(</span>
+<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">set_by_id</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">set_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
@@ -3227,9 +3242,11 @@ all properties.</p>
 <span class="sd">            all properties.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">]</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
-        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_property</span><span class="si">}</span><span class="s2"> must be unique in set_df. </span><span class="se">\</span>
-<span class="s2">                             Found duplicates: </span><span class="si">{</span><span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">]</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_property</span><span class="si">}</span><span class="s2"> must be unique in set_df.&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">id_property</span><span class="si">}</span><span class="s2"> must be unique in set_df.&quot;</span>
+        <span class="n">_dupes</span> <span class="o">=</span> <span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">][</span><span class="n">set_df</span><span class="p">[</span><span class="n">id_property</span><span class="p">]</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()]</span>
+        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Found duplicates: </span><span class="si">{</span><span class="n">_dupes</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="n">table_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
     <span class="n">updated_df</span> <span class="o">=</span> <span class="n">update_df_by_col_value</span><span class="p">(</span><span class="n">table_df</span><span class="p">,</span> <span class="n">set_df</span><span class="p">,</span> <span class="n">id_property</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated_df</span>
@@ -3267,13 +3284,9 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/transit/feed/feed.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">FeedValidationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">26</span>
+<span class="normal">27</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">FeedValidationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when there is an issue with the validation of the GTFS data.&quot;&quot;&quot;</span>
-
-    <span class="k">pass</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -3377,7 +3390,14 @@ all properties.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/transit/feed/feed.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
 <span class="normal">145</span>
@@ -3396,14 +3416,7 @@ all properties.</p>
 <span class="normal">158</span>
 <span class="normal">159</span>
 <span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">merge_shapes_to_stop_times</span><span class="p">(</span>
+<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">merge_shapes_to_stop_times</span><span class="p">(</span>
     <span class="n">stop_times</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">WranglerStopTimesTable</span><span class="p">],</span>
     <span class="n">shapes</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">WranglerShapesTable</span><span class="p">],</span>
     <span class="n">trips</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">WranglerTripsTable</span><span class="p">],</span>
@@ -3451,12 +3464,12 @@ all properties.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/transit/feed/feed.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">stop_count_by_trip</span><span class="p">(</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">stop_count_by_trip</span><span class="p">(</span>
     <span class="n">stop_times</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">WranglerStopTimesTable</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns dataframe with trip_id and stop_count from stop_times.&quot;&quot;&quot;</span>
@@ -4033,25 +4046,24 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/roadway_changes.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">274</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
 <span class="normal">275</span>
 <span class="normal">276</span>
 <span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span>
-<span class="normal">292</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwayDeletion</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">278</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwayDeletion</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Requirements for describing roadway deletion project card (e.g. to delete).&quot;&quot;&quot;</span>
 
     <span class="n">require_any_of</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">AnyOf</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;links&quot;</span><span class="p">,</span> <span class="s2">&quot;nodes&quot;</span><span class="p">]]</span>
@@ -4066,9 +4078,8 @@ all properties.</p>
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">set_to_all_modes</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">links</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectLinksDict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the search mode to &#39;any&#39; if not specified explicitly.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">==</span> <span class="n">DEFAULT_SEARCH_MODES</span><span class="p">:</span>
-                <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">=</span> <span class="n">DEFAULT_DELETE_MODES</span>
+        <span class="k">if</span> <span class="n">links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">==</span> <span class="n">DEFAULT_SEARCH_MODES</span><span class="p">:</span>
+            <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">=</span> <span class="n">DEFAULT_DELETE_MODES</span>
         <span class="k">return</span> <span class="n">links</span>
 </code></pre></div></td></tr></table></div>
               </details>
@@ -4104,20 +4115,18 @@ all properties.</p>
 
             <details class="quote">
               <summary>Source code in <code>network_wrangler/models/projects/roadway_changes.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span>
-<span class="normal">292</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;links&quot;</span><span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;links&quot;</span><span class="p">)</span>
 <span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">set_to_all_modes</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">links</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectLinksDict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the search mode to &#39;any&#39; if not specified explicitly.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">==</span> <span class="n">DEFAULT_SEARCH_MODES</span><span class="p">:</span>
-            <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">=</span> <span class="n">DEFAULT_DELETE_MODES</span>
+    <span class="k">if</span> <span class="n">links</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">==</span> <span class="n">DEFAULT_SEARCH_MODES</span><span class="p">:</span>
+        <span class="n">links</span><span class="o">.</span><span class="n">modes</span> <span class="o">=</span> <span class="n">DEFAULT_DELETE_MODES</span>
     <span class="k">return</span> <span class="n">links</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -4147,7 +4156,20 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/roadway_changes.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">227</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
 <span class="normal">228</span>
 <span class="normal">229</span>
 <span class="normal">230</span>
@@ -4178,20 +4200,7 @@ all properties.</p>
 <span class="normal">255</span>
 <span class="normal">256</span>
 <span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadPropertyChange</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">258</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadPropertyChange</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Value for setting property value for a time of day and category.&quot;&quot;&quot;</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -4300,13 +4309,9 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/roadway_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwaySelectionFormatError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">15</span>
+<span class="normal">16</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">RoadwaySelectionFormatError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when there is an issue with the format of a selection.&quot;&quot;&quot;</span>
-
-    <span class="k">pass</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -4334,7 +4339,14 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/roadway_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">257</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
 <span class="normal">258</span>
 <span class="normal">259</span>
 <span class="normal">260</span>
@@ -4379,10 +4391,7 @@ all properties.</p>
 <span class="normal">299</span>
 <span class="normal">300</span>
 <span class="normal">301</span>
-<span class="normal">302</span>
-<span class="normal">303</span>
-<span class="normal">304</span>
-<span class="normal">305</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectFacility</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">302</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectFacility</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Roadway Facility Selection.&quot;&quot;&quot;</span>
 
     <span class="n">require_one_of</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">OneOf</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
@@ -4415,7 +4424,8 @@ all properties.</p>
             <span class="k">return</span> <span class="s2">&quot;links&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;nodes&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SelectFacility must have either links or nodes defined.&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;SelectFacility must have either links or nodes defined.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">selection_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -4424,13 +4434,16 @@ all properties.</p>
             <span class="k">return</span> <span class="s2">&quot;segment&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_types</span> <span class="o">==</span> <span class="s2">&quot;links&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">links</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SelectFacility with feature_types &#39;links&#39; must have links.&quot;</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;SelectFacility with feature_types &#39;links&#39; must have links.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">links</span><span class="o">.</span><span class="n">selection_type</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_types</span> <span class="o">==</span> <span class="s2">&quot;nodes&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SelectFacility with feature_types &#39;nodes&#39; must have nodes.&quot;</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;SelectFacility with feature_types &#39;nodes&#39; must have nodes.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">selection_type</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SelectFacility must have either links or nodes defined.&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;SelectFacility must have either links or nodes defined.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -4525,7 +4538,12 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/roadway_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">130</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
 <span class="normal">131</span>
 <span class="normal">132</span>
 <span class="normal">133</span>
@@ -4642,14 +4660,7 @@ all properties.</p>
 <span class="normal">244</span>
 <span class="normal">245</span>
 <span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectLinksDict</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">247</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectLinksDict</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;requirements for describing links in the `facility` section of a project card.</span>
 
 <span class="sd">    Examples:</span>
@@ -4755,10 +4766,8 @@ all properties.</p>
             <span class="k">return</span> <span class="s2">&quot;explicit_ids&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">segment_id_fields</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;segment&quot;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">RoadwaySelectionFormatError</span><span class="p">(</span>
-                <span class="s2">&quot;If not a segment, Select Links should have either `all` or an explicit id.&quot;</span>
-            <span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;If not a segment, Select Links should have either `all` or an explicit id.&quot;</span>
+        <span class="k">raise</span> <span class="n">RoadwaySelectionFormatError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">explicit_id_selection_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -5029,7 +5038,10 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/roadway_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">22</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
 <span class="normal">23</span>
 <span class="normal">24</span>
 <span class="normal">25</span>
@@ -5075,12 +5087,7 @@ all properties.</p>
 <span class="normal">65</span>
 <span class="normal">66</span>
 <span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectNodeDict</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectNodeDict</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Selection of a single roadway node in the `facility` section of a project card.&quot;&quot;&quot;</span>
 
     <span class="n">require_one_of</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">OneOf</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;osm_node_id&quot;</span><span class="p">,</span> <span class="s2">&quot;model_node_id&quot;</span><span class="p">]]</span>
@@ -5099,13 +5106,11 @@ all properties.</p>
         <span class="n">_explicit_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">explicit_id_fields</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span>
         <span class="k">if</span> <span class="n">_explicit_ids</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;explicit_ids&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Select Node should have either `all` or an explicit id.&quot;</span>
         <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;SelectNode should have an explicit id: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">explicit_id_fields</span><span class="si">}</span><span class="s2"> </span><span class="se">\</span>
-<span class="s2">                Found none in selection dict: </span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">by_alias</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">msg</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; Found none in selection dict: </span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">by_alias</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
-        <span class="k">raise</span> <span class="n">RoadwaySelectionFormatError</span><span class="p">(</span>
-            <span class="s2">&quot;Select Node should have either `all` or an explicit id.&quot;</span>
-        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">RoadwaySelectionFormatError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">explicit_id_selection_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -5259,7 +5264,12 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/roadway_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 76</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
 <span class="normal"> 77</span>
 <span class="normal"> 78</span>
 <span class="normal"> 79</span>
@@ -5305,12 +5315,7 @@ all properties.</p>
 <span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectNodesDict</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectNodesDict</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Requirements for describing multiple nodes of a project card (e.g. to delete).&quot;&quot;&quot;</span>
 
     <span class="n">require_any_of</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">AnyOf</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;osm_node_id&quot;</span><span class="p">,</span> <span class="s2">&quot;model_node_id&quot;</span><span class="p">]]</span>
@@ -5345,13 +5350,13 @@ all properties.</p>
             <span class="k">return</span> <span class="s2">&quot;all&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explicit_id_fields</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;explicit_ids&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Select Nodes should have either `all` or an explicit id.&quot;</span>
         <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;SelectNodes should have either `all` or an explicit id: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">explicit_id_fields</span><span class="si">}</span><span class="s2">. </span><span class="se">\</span>
-<span class="s2">                Found neither in nodes selection: </span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">by_alias</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">msg</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">explicit_id_fields</span><span class="si">}</span><span class="s2">. </span><span class="se">\</span>
+<span class="s2">            Found neither in nodes selection: </span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">by_alias</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
-        <span class="k">raise</span> <span class="n">RoadwaySelectionFormatError</span><span class="p">(</span>
-            <span class="s2">&quot;Select Node should have either `all` or an explicit id.&quot;</span>
-        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">RoadwaySelectionFormatError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">explicit_id_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -5540,8 +5545,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/transit_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">102</span>
-<span class="normal">103</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">103</span>
 <span class="normal">104</span>
 <span class="normal">105</span>
 <span class="normal">106</span>
@@ -5553,13 +5557,14 @@ all properties.</p>
 <span class="normal">112</span>
 <span class="normal">113</span>
 <span class="normal">114</span>
-<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectRouteProperties</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">115</span>
+<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectRouteProperties</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Selection properties for transit routes.&quot;&quot;&quot;</span>
 
-    <span class="n">route_short_name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
-    <span class="n">route_long_name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
-    <span class="n">agency_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
-    <span class="n">route_type</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">route_short_name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">route_long_name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">agency_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">route_type</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span>
         <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">,</span>
@@ -5610,8 +5615,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/transit_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">46</span>
-<span class="normal">47</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">47</span>
 <span class="normal">48</span>
 <span class="normal">49</span>
 <span class="normal">50</span>
@@ -5636,15 +5640,16 @@ all properties.</p>
 <span class="normal">69</span>
 <span class="normal">70</span>
 <span class="normal">71</span>
-<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectTransitLinks</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">72</span>
+<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectTransitLinks</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Requirements for describing multiple transit links of a project card.&quot;&quot;&quot;</span>
 
     <span class="n">require_one_of</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">OneOf</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">[</span><span class="s2">&quot;ab_nodes&quot;</span><span class="p">,</span> <span class="s2">&quot;model_link_id&quot;</span><span class="p">],</span>
     <span class="p">]</span>
 
-    <span class="n">model_link_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">ab_nodes</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">TransitABNodesModel</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">model_link_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">ab_nodes</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">TransitABNodesModel</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">require</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectionRequire</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;any&quot;</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span>
@@ -5706,31 +5711,31 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/transit_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
-<span class="normal">85</span>
-<span class="normal">86</span>
-<span class="normal">87</span>
-<span class="normal">88</span>
-<span class="normal">89</span>
-<span class="normal">90</span>
-<span class="normal">91</span>
-<span class="normal">92</span>
-<span class="normal">93</span>
-<span class="normal">94</span>
-<span class="normal">95</span>
-<span class="normal">96</span>
-<span class="normal">97</span>
-<span class="normal">98</span>
-<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectTransitNodes</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectTransitNodes</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Requirements for describing multiple transit nodes of a project card (e.g. to delete).&quot;&quot;&quot;</span>
 
     <span class="n">require_any_of</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">AnyOf</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
@@ -5741,7 +5746,7 @@ all properties.</p>
     <span class="p">]</span>
 
     <span class="c1"># gtfs_stop_id: Annotated[Optional[List[ForcedStr]], Field(None, min_length=1)] TODO Not implemented</span>
-    <span class="n">model_node_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">model_node_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Field</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
     <span class="n">require</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectionRequire</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;any&quot;</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span>
@@ -5798,8 +5803,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/transit_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">118</span>
-<span class="normal">119</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
@@ -5812,12 +5816,13 @@ all properties.</p>
 <span class="normal">129</span>
 <span class="normal">130</span>
 <span class="normal">131</span>
-<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectTransitTrips</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">132</span>
+<span class="normal">133</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectTransitTrips</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Selection properties for transit trips.&quot;&quot;&quot;</span>
 
     <span class="n">trip_properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectTripProperties</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">route_properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectRouteProperties</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">timespans</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">timespans</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">TimespanString</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
     <span class="n">nodes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectTransitNodes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">links</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SelectTransitLinks</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -5870,8 +5875,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/transit_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">14</span>
-<span class="normal">15</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">15</span>
 <span class="normal">16</span>
 <span class="normal">17</span>
 <span class="normal">18</span>
@@ -5885,15 +5889,16 @@ all properties.</p>
 <span class="normal">26</span>
 <span class="normal">27</span>
 <span class="normal">28</span>
-<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectTripProperties</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">29</span>
+<span class="normal">30</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SelectTripProperties</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Selection properties for transit trips.&quot;&quot;&quot;</span>
 
-    <span class="n">trip_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
-    <span class="n">shape_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">trip_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">shape_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
     <span class="n">direction_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span>
-    <span class="n">service_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
-    <span class="n">route_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
-    <span class="n">trip_short_name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">service_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">route_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">trip_short_name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ForcedStr</span><span class="p">]],</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span>
         <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">,</span>
@@ -5944,8 +5949,7 @@ all properties.</p>
 
               <details class="quote">
                 <summary>Source code in <code>network_wrangler/models/projects/transit_selection.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">32</span>
-<span class="normal">33</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">33</span>
 <span class="normal">34</span>
 <span class="normal">35</span>
 <span class="normal">36</span>
@@ -5955,7 +5959,8 @@ all properties.</p>
 <span class="normal">40</span>
 <span class="normal">41</span>
 <span class="normal">42</span>
-<span class="normal">43</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TransitABNodesModel</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
+<span class="normal">43</span>
+<span class="normal">44</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TransitABNodesModel</span><span class="p">(</span><span class="n">RecordModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Single transit link model.&quot;&quot;&quot;</span>
 
     <span class="n">A</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># model_node_id</span>

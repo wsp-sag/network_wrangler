@@ -134,7 +134,7 @@ roadway_property_change:
     property_changes:
         sc_myproperty:
             set: 1
-            scoped: 
+            scoped:
                 timespan: [[12:00, 15:00]]
                 set: 2
             overwrite_scoped: all # will overwrite all scopes in a link/property. Useful if you are completely defining something rather than amending.

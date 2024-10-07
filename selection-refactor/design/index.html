@@ -463,7 +463,7 @@ timespan.</p>
 <ul>
 <li><code>matching</code>: a scope that could be applied for a given category/timespan combination. This includes the default scopes as well as scopes that are contained within the given category AND timespan combination.</li>
 <li><code>overlapping</code>: a scope that fully or partially overlaps a given category OR timespan combination.  This includes the default scopes, all <code>matching</code> scopes and all scopes where at least one minute of timespan or one category overlap.</li>
-<li><code>conflicting</code>: a scope that is overlapping but not matching for a given category/timespan. </li>
+<li><code>conflicting</code>: a scope that is overlapping but not matching for a given category/timespan.</li>
 </ul>
 <p>NOTE: Default scope values of <code>category: any</code> and <code>timespan:["00:00", "24:00"]</code> are <strong>not</strong> considered conflicting, but are applied to residual scopes.</p>
 <div class="doc doc-children">
@@ -484,7 +484,7 @@ timespan.</p>
 <span class="w">    </span><span class="nt">property_changes</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">sc_myproperty</span><span class="p">:</span>
 <span class="w">            </span><span class="nt">set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-<span class="w">            </span><span class="nt">scoped</span><span class="p">:</span><span class="w"> </span>
+<span class="w">            </span><span class="nt">scoped</span><span class="p">:</span>
 <span class="w">                </span><span class="nt">timespan</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[[</span><span class="nv">12</span><span class="p p-Indicator">:</span><span class="nv">00</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">15</span><span class="p p-Indicator">:</span><span class="nv">00</span><span class="p p-Indicator">]]</span>
 <span class="w">                </span><span class="nt">set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 <span class="w">            </span><span class="nt">overwrite_scoped</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">all</span><span class="w"> </span><span class="c1"># will overwrite all scopes in a link/property. Useful if you are completely defining something rather than amending.</span>
