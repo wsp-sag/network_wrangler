@@ -18,7 +18,7 @@ slug_test_list = [
 
 @pytest.mark.parametrize("slug_test", slug_test_list)
 def test_get_slug(request, slug_test):
-    WranglerLogger.info("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
 
     from network_wrangler.utils.utils import make_slug
 
@@ -27,10 +27,11 @@ def test_get_slug(request, slug_test):
     WranglerLogger.debug("From: {} \nTo: {}".format(slug_test["text"], slug))
     WranglerLogger.debug("Expected: {}".format(slug_test["answer"]))
     assert slug == slug_test["answer"]
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_get_unique_shape_id(request):
-    WranglerLogger.info("\n--Starting:", request.node.name)
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     from network_wrangler.roadway.utils import create_unique_shape_id
 
     geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
@@ -39,7 +40,7 @@ def test_get_unique_shape_id(request):
 
     assert shape_id == "72ceb24e2c632c02f7eae5e33ed12702"
 
-    WranglerLogger.info("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_point_from_xy(request):
@@ -84,7 +85,7 @@ def test_get_overlapping_range(request):
 
 def test_all_list_elements_subset_of_single_element(request):
     from network_wrangler.utils.utils import list_elements_subset_of_single_element
-
+    WranglerLogger.info(f"--Started: {request.node.name}")
     mixed_list = ["a", "b", ["a", "b", "c"]]
     assert list_elements_subset_of_single_element(mixed_list) is True
 
@@ -106,7 +107,7 @@ def test_all_list_elements_subset_of_single_element(request):
     mixed_list = []
     assert list_elements_subset_of_single_element(mixed_list) is False
 
-    WranglerLogger.info("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_check_one_or_one_superset_present(request):
@@ -147,3 +148,4 @@ def test_check_one_or_one_superset_present(request):
     field_list = ["a", "e"]
     mixed_list = ["b", "c", "d"]
     assert check_one_or_one_superset_present(mixed_list, field_list) is False
+    WranglerLogger.info(f"--Finished: {request.node.name}")
