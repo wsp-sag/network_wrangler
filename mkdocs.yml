@@ -26,6 +26,7 @@ theme:
 plugins:
   - autorefs
   - awesome-pages
+  - include-markdown
   - mermaid2
   - mike
   - mkdocs-jupyter:
@@ -43,7 +44,6 @@ plugins:
             show_source: true
             heading_level: 3
   - search
-  - macros
 
 watch:
  - network_wrangler

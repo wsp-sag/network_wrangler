@@ -5,6 +5,10 @@ hide:
 
 # Development
 
-{{ include_file('CONTRIBUTING.md') }}
+{%
+    include-markdown('CONTRIBUTING.md')
+%}
 
-{{ include_file('contributors.md') }}
+{%
+    include-markdown('contributors.md')
+%}
