@@ -1,23 +1,21 @@
 """Wrapper function for applying roadway deletion project card to RoadwayNetwork."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Union
 
-from ...models.projects.roadway_changes import RoadwayDeletion
+from typing import TYPE_CHECKING, Union
 
 import pandas as pd
 
 from ...logger import WranglerLogger
+from ...models.projects.roadway_changes import RoadwayDeletion
 
 if TYPE_CHECKING:
-    from ..network import RoadwayNetwork
     from ...transit.network import TransitNetwork
+    from ..network import RoadwayNetwork
 
 
 class RoadwayDeletionError(Exception):
     """Raised when there is an issue with applying a roadway deletion."""
-
-    pass
 
 
 def apply_roadway_deletion(

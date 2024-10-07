@@ -4,11 +4,9 @@ Run just these tests using `pytest tests/test_utils/test_utils.py`
 """
 
 import pytest
-
 from shapely.geometry import LineString
 
 from network_wrangler import WranglerLogger
-
 
 slug_test_list = [
     {"text": "I am a roadway", "delim": "_", "answer": "i_am_a_roadway"},
@@ -20,19 +18,19 @@ slug_test_list = [
 
 @pytest.mark.parametrize("slug_test", slug_test_list)
 def test_get_slug(request, slug_test):
-    print("\n--Starting:", request.node.name)
+    WrnaglerLogger.info("\n--Starting:", request.node.name)
 
     from network_wrangler.utils.utils import make_slug
 
     slug = make_slug(slug_test["text"], delimiter=slug_test["delim"])
 
-    print("From: {} \nTo: {}".format(slug_test["text"], slug))
-    print("Expected: {}".format(slug_test["answer"]))
+    WranglerLogger.debug("From: {} \nTo: {}".format(slug_test["text"], slug))
+    WranglerLogger.debug("Expected: {}".format(slug_test["answer"]))
     assert slug == slug_test["answer"]
 
 
 def test_get_unique_shape_id(request):
-    print("\n--Starting:", request.node.name)
+    WranglerLogger.info("\n--Starting:", request.node.name)
     from network_wrangler.roadway.utils import create_unique_shape_id
 
     geometry = LineString([[-93.0855338, 44.9662078], [-93.0843092, 44.9656997]])
@@ -41,12 +39,13 @@ def test_get_unique_shape_id(request):
 
     assert shape_id == "72ceb24e2c632c02f7eae5e33ed12702"
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info("--Finished:", request.node.name)
 
 
 def test_point_from_xy(request):
-    from network_wrangler.utils.geo import point_from_xy
     from numpy.testing import assert_almost_equal
+
+    from network_wrangler.utils.geo import point_from_xy
 
     WranglerLogger.info(f"--Starting: {request.node.name}")
     in_xy = (871106.53, 316284.46)  # Minnesota Science Museum
@@ -66,7 +65,7 @@ def test_get_overlapping_range(request):
 
     from network_wrangler.utils.utils import get_overlapping_range
 
-    a = range(0, 5)
+    a = range(5)
     b = range(5, 10)
     assert get_overlapping_range([a, b]) is None
 
@@ -107,12 +106,13 @@ def test_all_list_elements_subset_of_single_element(request):
     mixed_list = []
     assert list_elements_subset_of_single_element(mixed_list) is False
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info("--Finished:", request.node.name)
 
 
 def test_check_one_or_one_superset_present(request):
     from network_wrangler.utils.utils import check_one_or_one_superset_present
 
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     mixed_list = ["a", "b", ["a", "b", "c"]]
     field_list = ["a", "b", "c"]
     assert check_one_or_one_superset_present(mixed_list, field_list) is True

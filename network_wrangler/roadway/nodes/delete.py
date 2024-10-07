@@ -9,8 +9,6 @@ from ...models.roadway.tables import RoadNodesTable
 class NodeDeletionError(Exception):
     """Raised when there is an issue with deleting nodes."""
 
-    pass
-
 
 def delete_nodes_by_ids(
     nodes_df: DataFrame[RoadNodesTable], del_node_ids: list[int], ignore_missing: bool = False
@@ -27,7 +25,8 @@ def delete_nodes_by_ids(
 
     _missing = set(del_node_ids) - set(nodes_df.index)
     if _missing:
-        WranglerLogger.warning(f"Nodes in network not there to delete: \n{_missing}")
+        msg = "Nodes to delete are not in the network."
+        WranglerLogger.warning(msg + f"\n{_missing}")
         if not ignore_missing:
-            raise NodeDeletionError("Links to delete are not in the network.")
+            raise NodeDeletionError(msg)
     return nodes_df.drop(labels=del_node_ids, errors="ignore")

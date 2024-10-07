@@ -18,8 +18,8 @@ class DictQueryAccessor:
 
     ```
     selection_dict = {
-        "lanes":[1,2,3],
-        "name":['6th','Sixth','sixth'],
+        "lanes": [1, 2, 3],
+        "name": ["6th", "Sixth", "sixth"],
         "drive_access": 1,
     }
     selected_links_df = links_df.dict_query(selection_dict)
@@ -46,7 +46,8 @@ class DictQueryAccessor:
         if not _selection_dict:
             if return_all_if_none:
                 return self._obj
-            raise ValueError(f"Relevant part of selection dictionary is empty: {selection_dict}")
+            msg = f"Relevant part of selection dictionary is empty: {selection_dict}"
+            raise ValueError(msg)
 
         _sel_query = dict_to_query(_selection_dict)
         # WranglerLogger.debug(f"_sel_query: \n   {_sel_query}")

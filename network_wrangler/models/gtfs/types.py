@@ -2,8 +2,8 @@
 
 from enum import IntEnum
 from typing import Annotated
-from pydantic import Field, HttpUrl
 
+from pydantic import Field, HttpUrl
 
 from .._base.types import TimeString
 

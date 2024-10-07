@@ -14,15 +14,15 @@ class MockPaModel:
 
 try:
     from .tables import (
-        StopsTable,
-        RoutesTable,
-        WranglerTripsTable,
-        StopTimesTable,
-        ShapesTable,
         FrequenciesTable,
+        RoutesTable,
+        ShapesTable,
+        StopsTable,
+        StopTimesTable,
         WranglerShapesTable,
         WranglerStopsTable,
         WranglerStopTimesTable,
+        WranglerTripsTable,
     )
 except ImportError:
     # Mock the data models

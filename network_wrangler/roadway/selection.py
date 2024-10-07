@@ -4,36 +4,34 @@ from __future__ import annotations
 
 import copy
 import hashlib
-
 from typing import TYPE_CHECKING, Union
 
 import pandas as pd
 
 from ..logger import WranglerLogger
-
-from ..utils.models import (
-    coerce_extra_fields_to_type_in_df,
-    DatamodelDataframeIncompatableError,
-)
-from .segment import Segment
-from .links.filters import filter_links_to_modes
 from ..models.projects import (
-    SelectNodesDict,
-    SelectLinksDict,
-    SelectFacility,
     RoadwaySelectionFormatError,
+    SelectFacility,
+    SelectLinksDict,
+    SelectNodesDict,
 )
+from ..params import SMALL_RECS
+from ..utils.models import (
+    DatamodelDataframeIncompatableError,
+    coerce_extra_fields_to_type_in_df,
+)
+from .links.filters import filter_links_to_modes
+from .segment import Segment
 
 if TYPE_CHECKING:
     from pandera.typing import DataFrame
-    from .network import RoadwayNetwork
+
     from ..models.roadway.tables import RoadwayLinksTable, RoadwayNodeTable
+    from .network import RoadwayNetwork
 
 
 class SelectionError(Exception):
     """Raised when there is an issue with a selection."""
-
-    pass
 
 
 class RoadwayLinkSelection:
@@ -212,7 +210,8 @@ class RoadwayLinkSelection:
     def validate_selection(self, sel_data: SelectFacility) -> SelectFacility:
         """Validates that selection_dict is compatible with the network."""
         if sel_data.links is None:
-            raise RoadwaySelectionFormatError("Link Selection does not contain links field.")
+            msg = "Link Selection does not contain links field."
+            raise RoadwaySelectionFormatError(msg)
         try:
             sel_data.links = coerce_extra_fields_to_type_in_df(
                 sel_data.links, SelectLinksDict, self.net.links_df
@@ -238,7 +237,8 @@ class RoadwayLinkSelection:
             _selected_links_df = self.net.links_df
 
         else:
-            raise RoadwaySelectionFormatError("Doesn't have known link selection type")
+            msg = f"Didn't understand selection type: {self.selection_type}"
+            raise RoadwaySelectionFormatError(msg)
 
         # 2. Mode selection
         _selected_links_df = filter_links_to_modes(
@@ -248,9 +248,9 @@ class RoadwayLinkSelection:
         # 3. Additional attributes within initial selection
         if self.additional_sel_dict:
             WranglerLogger.debug(f"Initially selected links: {len(_selected_links_df)}")
-            if len(_selected_links_df) < 10:
+            if len(_selected_links_df) < SMALL_RECS:
                 WranglerLogger.debug(
-                    f"\n{_selected_links_df[_selected_links_df.attrs['display_cols']]}"
+                    f"Selected Links:\n{_selected_links_df[_selected_links_df.attrs['display_cols']]}"
                 )
             WranglerLogger.debug(f"Selecting from selection based on: {self.additional_sel_dict}")
             _selected_links_df = _selected_links_df.dict_query(self.additional_sel_dict)
@@ -259,10 +259,8 @@ class RoadwayLinkSelection:
             WranglerLogger.warning("No links found matching criteria.")
 
         WranglerLogger.info(f"Final selected links: {len(_selected_links_df)}")
-        if len(_selected_links_df) < 10:
-            WranglerLogger.debug(
-                f"\n{_selected_links_df}"
-            )
+        if len(_selected_links_df) < SMALL_RECS:
+            WranglerLogger.debug(f"\n{_selected_links_df}")
 
         return _selected_links_df
 
@@ -278,7 +276,8 @@ class RoadwayLinkSelection:
         if len(missing_df) > 0:
             WranglerLogger.warning(f"Missing explicit link selections: \n{missing_df}")
             if not self.ignore_missing:
-                raise SelectionError("Missing explicit link selections.")
+                msg = "Missing explicit link selections."
+                raise SelectionError(msg)
 
         _sel_links_mask = self.net.links_df.isin(self.explicit_id_sel_dict).any(axis=1)
         _sel_links_df = self.net.links_df.loc[_sel_links_mask]
@@ -426,7 +425,8 @@ class RoadwayNodeSelection:
     def validate_selection(self, selection_data: SelectFacility) -> SelectFacility:
         """Validate that selection_dict is compatible with the network."""
         if selection_data.nodes is None:
-            raise RoadwaySelectionFormatError("Node Selection does not contain nodes field.")
+            msg = "Node Selection does not contain nodes field."
+            raise RoadwaySelectionFormatError(msg)
 
         try:
             selection_data.nodes = coerce_extra_fields_to_type_in_df(
@@ -444,13 +444,14 @@ class RoadwayNodeSelection:
         elif self.selection_type == "all":
             _selected_nodes_df = self.net.nodes_df
         else:
-            WranglerLogger.error(f"Didn't understand selection type: {self.selection_type}")
-            raise RoadwaySelectionFormatError("Doesn't have known node selection type")
+            msg = f"Didn't understand selection type: {self.selection_type}"
+            WranglerLogger.error(msg)
+            raise RoadwaySelectionFormatError(msg)
 
         WranglerLogger.info(f"Final selected nodes: {len(_selected_nodes_df)}")
-        if len(_selected_nodes_df) < 10:
+        if len(_selected_nodes_df) < SMALL_RECS:
             WranglerLogger.debug(
-                f"\n{_selected_nodes_df[_selected_nodes_df.attrs['display_cols']]}"
+                f"Selected Nodes:\n{_selected_nodes_df[_selected_nodes_df.attrs['display_cols']]}"
             )
 
         return _selected_nodes_df
@@ -469,7 +470,8 @@ class RoadwayNodeSelection:
         if len(missing_df) > 0:
             WranglerLogger.warning("Missing explicit node selections:\n{missing_df}")
             if not self.ignore_missing:
-                raise SelectionError("Missing explicit node selections.")
+                msg = "Missing explicit node selections."
+                raise SelectionError(msg)
 
         _sel_nodes_mask = self.net.nodes_df.isin(self.explicit_id_sel_dict).any(axis=1)
         _selected_nodes_df = self.net.nodes_df.loc[_sel_nodes_mask]
@@ -497,5 +499,6 @@ def _create_selection_key(
     elif not isinstance(selection_dict, dict):
         WranglerLogger.error(f"`selection_dict` arg must be a dictionary or SelectFacility model.\
                              Received: {selection_dict} of type {type(selection_dict)}")
-        raise SelectionError("selection_dict arg must be a dictionary or SelectFacility model")
+        msg = "Selection dictionary must be a dictionary or SelectFacility model."
+        raise SelectionError(msg)
     return hashlib.sha1(str(selection_dict).encode()).hexdigest()

@@ -4,18 +4,17 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Union, Optional
+from typing import Optional, Union
 
 from geopandas import GeoDataFrame
-
 from pandera.typing import DataFrame
 
+from ...configs import DefaultConfig, WranglerConfig
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadShapesTable
-from ...utils.io_table import read_table, write_table
-from ...utils.models import empty_df_from_datamodel, validate_df_to_model, validate_call_pyd
-from ...configs import DefaultConfig, WranglerConfig
 from ...params import LAT_LON_CRS
+from ...utils.io_table import read_table, write_table
+from ...utils.models import empty_df_from_datamodel, validate_call_pyd, validate_df_to_model
 from .create import df_to_shapes_df
 
 

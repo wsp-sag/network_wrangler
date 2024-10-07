@@ -1,25 +1,23 @@
 """Helper functions for data models."""
 
 import copy
-
-from typing import Union, get_type_hints, Optional, _GenericAlias, get_origin, get_args, Type
 from functools import wraps
 from pathlib import Path
+from typing import Optional, Type, Union, _GenericAlias, get_args, get_origin, get_type_hints
 
-import pandas as pd
 import geopandas as gpd
-from pandas import DataFrame
-from pandera.typing import DataFrame as PanderaDataFrame
+import pandas as pd
 import pandera as pa
-
+from pandas import DataFrame
 from pandera import DataFrameModel
-from pydantic import ValidationError, BaseModel, validate_call
+from pandera.errors import SchemaError, SchemaErrors
+from pandera.typing import DataFrame as PanderaDataFrame
+from pydantic import BaseModel, ValidationError, validate_call
 from pydantic._internal._model_construction import ModelMetaclass
-from pandera.errors import SchemaErrors, SchemaError
 
-from .data import coerce_val_to_df_types
-from ..params import LAT_LON_CRS
 from ..logger import WranglerLogger
+from ..params import LAT_LON_CRS, SMALL_RECS
+from .data import coerce_val_to_df_types
 
 
 def empty_df_from_datamodel(
@@ -34,7 +32,7 @@ def empty_df_from_datamodel(
         An empty [Geo]DataFrame that validates to the specified model.
     """
     schema = model.to_schema()
-    data: dict[str, list] = {col: [] for col in schema.columns.keys()}
+    data: dict[str, list] = {col: [] for col in schema.columns}
 
     if "geometry" in data:
         return model(gpd.GeoDataFrame(data, crs=crs))
@@ -44,16 +42,13 @@ def empty_df_from_datamodel(
 
 def default_from_datamodel(data_model: pa.DataFrameModel, field: str):
     """Returns default value from pandera data model for a given field name."""
-    if field in data_model.__fields__:
-        if hasattr(data_model.__fields__[field][1], "default"):
-            return data_model.__fields__[field][1].default
+    if field in data_model.__fields__ and hasattr(data_model.__fields__[field][1], "default"):
+        return data_model.__fields__[field][1].default
     return None
 
 
 class TableValidationError(Exception):
     """Raised when a table validation fails."""
-
-    pass
 
 
 def fill_df_with_defaults_from_model(df, model):
@@ -72,7 +67,7 @@ def fill_df_with_defaults_from_model(df, model):
     return df
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def validate_df_to_model(
     df: DataFrame, model: Type, output_file: Path = Path("validation_failure_cases.csv")
 ) -> DataFrame:
@@ -87,6 +82,7 @@ def validate_df_to_model(
             validation_failure_cases.csv.
     """
     attrs = copy.deepcopy(df.attrs)
+    err_msg = f"Validation to {model.__name__} failed."
     try:
         model_df = model.validate(df, lazy=True)
         model_df = fill_df_with_defaults_from_model(model_df, model)
@@ -94,7 +90,7 @@ def validate_df_to_model(
         return model_df
     except (TypeError, ValueError) as e:
         WranglerLogger.error(f"Validation to {model.__name__} failed.\n{e}")
-        raise TableValidationError(f"Validation to {model.__name__} failed.")
+        raise TableValidationError(err_msg) from e
     except SchemaErrors as e:
         # Log the summary of errors
         WranglerLogger.error(
@@ -103,18 +99,18 @@ def validate_df_to_model(
         )
 
         # If there are many errors, save them to a file
-        if len(e.failure_cases) > 5:
+        if len(e.failure_cases) > SMALL_RECS:
             error_file = output_file
             e.failure_cases.to_csv(error_file)
             WranglerLogger.info(f"Detailed error cases written to {error_file}")
         else:
             # Otherwise log the errors directly
             WranglerLogger.error("Detailed failure cases:\n%s", e.failure_cases)
-        raise TableValidationError(f"Validation to {model.__name__} failed.")
+        raise TableValidationError(err_msg) from e
     except SchemaError as e:
         WranglerLogger.error(f"Validation to {model.__name__} failed with error: {e}")
         WranglerLogger.error(f"Failure Cases:\n{e.failure_cases}")
-        raise TableValidationError(f"Validation to {model.__name__} failed.")
+        raise TableValidationError(err_msg) from e
 
 
 def identify_model(
@@ -144,13 +140,12 @@ def identify_model(
                          \nInput data: {data}\
                          \nData Models: {models}"
     )
-    raise ValueError("The input dictionary does not conform to any of the provided models.")
+    msg = "The input data isn't consistant with any provided data model."
+    raise ValueError(msg)
 
 
 class DatamodelDataframeIncompatableError(Exception):
     """Raised when a data model and a dataframe are not compatable."""
-
-    pass
 
 
 def extra_attributes_undefined_in_model(instance: BaseModel, model: BaseModel) -> list:
@@ -164,8 +159,8 @@ def extra_attributes_undefined_in_model(instance: BaseModel, model: BaseModel) -
 def submodel_fields_in_model(model: Type, instance: Optional[BaseModel] = None) -> list:
     """Find the fields in a pydantic model that are submodels."""
     types = get_type_hints(model)
-    model_type = Union[ModelMetaclass, BaseModel]
-    submodels = [f for f in model.model_fields if isinstance(types.get(f), model_type)]  # type: ignore
+    model_type = (ModelMetaclass, BaseModel)
+    submodels = [f for f in model.model_fields if isinstance(types.get(f), model_type)]
     if instance is not None:
         defined = list(instance.model_dump(exclude_none=True, by_alias=True).keys())
         return [f for f in submodels if f in defined]
@@ -195,8 +190,8 @@ def coerce_extra_fields_to_type_in_df(
     for field in extra_attributes_undefined_in_model(data, model):
         try:
             v = coerce_val_to_df_types(field, data.model_extra[field], df)
-        except ValueError as e:
-            raise DatamodelDataframeIncompatableError(e)
+        except ValueError as err:
+            raise DatamodelDataframeIncompatableError() from err
         out_data.model_extra[field] = v
     return out_data
 
@@ -220,9 +215,8 @@ def _is_type_from_type_hint(type_hint_value, type_to_check):
         for arg in args:
             if check_type_hint(arg):
                 return True
-    else:
-        if check_type_hint(type_hint_value):
-            return True
+    elif check_type_hint(type_hint_value):
+        return True
 
     return False
 

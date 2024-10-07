@@ -2,28 +2,24 @@
 
 import copy
 import time
-
 from typing import Union
 
 import geopandas as gpd
 import pandas as pd
-
-from pydantic import validate_call
 from pandera.typing import DataFrame
+from pydantic import validate_call
 
-from ...logger import WranglerLogger
-from ...models.roadway.tables import RoadNodesTable, RoadLinksTable, RoadNodesAttrs
-from ...utils.models import validate_df_to_model
-from ...utils.geo import point_from_xy, get_point_geometry_from_linestring
-from ...params import LAT_LON_CRS
-from ..utils import set_df_index_to_pk
 from ...configs import DefaultConfig, WranglerConfig
+from ...logger import WranglerLogger
+from ...models.roadway.tables import RoadLinksTable, RoadNodesAttrs, RoadNodesTable
+from ...params import LAT_LON_CRS, SMALL_RECS
+from ...utils.geo import get_point_geometry_from_linestring, point_from_xy
+from ...utils.models import validate_df_to_model
+from ..utils import set_df_index_to_pk
 
 
 class NodeAddError(Exception):
     """Raised when there is an issue with adding nodes."""
-
-    pass
 
 
 def _create_node_geometries_from_xy(
@@ -45,7 +41,8 @@ def _create_node_geometries_from_xy(
     if not isinstance(nodes_df, pd.DataFrame):
         nodes_df = pd.DataFrame(nodes_df)
     if "X" not in nodes_df.columns or "Y" not in nodes_df.columns:
-        raise NodeAddError("Must have X and Y properties to create geometries from.")
+        msg = "Must have X and Y properties to create geometries from."
+        raise NodeAddError(msg)
 
     geo_start_time = time.time()
     if "geometry" in nodes_df:
@@ -68,10 +65,10 @@ def _create_node_geometries_from_xy(
     return nodes_gdf
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def data_to_nodes_df(
     nodes_df: Union[pd.DataFrame, gpd.GeoDataFrame, list[dict]],
-    config: WranglerConfig = DefaultConfig,
+    config: WranglerConfig = DefaultConfig,  # noqa: ARG001
     in_crs: int = LAT_LON_CRS,
 ) -> DataFrame[RoadNodesTable]:
     """Turn nodes data into official nodes dataframe.
@@ -105,7 +102,7 @@ def data_to_nodes_df(
     nodes_df["X"] = nodes_df["geometry"].apply(lambda g: g.x)
     nodes_df["Y"] = nodes_df["geometry"].apply(lambda g: g.y)
 
-    if len(nodes_df) < 5:
+    if len(nodes_df) < SMALL_RECS:
         WranglerLogger.debug(f"nodes_df: \n{nodes_df[['model_node_id', 'geometry', 'X', 'Y']]}")
 
     # Validate and coerce to schema
@@ -166,6 +163,7 @@ def generate_node_ids(nodes_df: DataFrame[RoadNodesTable], range: tuple[int], n:
     existing_ids = set(nodes_df["model_node_id"].unique())
     new_ids = set(range) - existing_ids
     if len(new_ids) < n:
-        raise NodeAddError(f"Only {len(new_ids)} new ids available, need {n}.")
+        msg = f"Only {len(new_ids)} new ids available, need {n}."
+        raise NodeAddError(msg)
 
     return list(new_ids)[:n]

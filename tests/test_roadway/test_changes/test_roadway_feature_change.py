@@ -1,11 +1,10 @@
 import copy
-import os
 
-import pytest
 import pandas as pd
+import pytest
+from projectcard import read_card
 
 from network_wrangler import WranglerLogger
-from projectcard import read_card
 
 
 def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
@@ -33,7 +32,7 @@ def test_change_roadway_existing_and_change_single_link(request, stpaul_net):
     }
 
     _selected_link_idx = net.get_selection(_facility).selected_links
-    _p_to_track = ["name", "projects"] + list(_properties.keys())
+    _p_to_track = ["name", "projects", *list(_properties.keys())]
 
     WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
 
@@ -86,7 +85,7 @@ def test_change_multiple_properties_multiple_links(request, stpaul_net):
         },
     }
     _selected_link_idx = net.get_selection(_facility).selected_links
-    _p_to_track = ["name", "projects"] + list(_properties.keys())
+    _p_to_track = ["name", "projects", *list(_properties.keys())]
 
     WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
 
@@ -143,7 +142,7 @@ def test_change_multiple_properties_multiple_links_existing_set(request, stpaul_
         },
     }
     _selection = net.get_selection(_facility)
-    _p_to_track = ["name"] + list(_properties.keys())
+    _p_to_track = ["name", *list(_properties.keys())]
 
     WranglerLogger.debug(f"_p_to_track: {_p_to_track}")
 
@@ -178,7 +177,7 @@ def test_add_adhoc_field(request, small_net):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_add_default_value(request, stpaul_net, stpaul_ex_dir):
+def test_add_default_value(request, stpaul_net):
     """Makes sure we can add a new field with a default value."""
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = copy.deepcopy(stpaul_net)
@@ -228,7 +227,7 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     net = copy.deepcopy(stpaul_net)
     project_card_name = "road.prop_change.new_fields.yml"
 
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
+    project_card_path = stpaul_ex_dir / "project_cards" / project_card_name
     project_card = read_card(project_card_path)
 
     selected_link_indices = net.get_selection(project_card.facility).selected_links
@@ -290,8 +289,8 @@ def test_change_node_xy(request, small_net):
     )
     assert _updated_node.geometry.x == _expected_X
     assert _updated_node.geometry.y == _expected_Y
-    assert _updated_node.X == _expected_X
-    assert _updated_node.Y == _expected_Y
+    assert _expected_X == _updated_node.X
+    assert _expected_Y == _updated_node.Y
 
     # Make sure geometry also updated in link e
     _updated_link = net.links_df.loc[_test_link_idx]

@@ -2,11 +2,9 @@
 
 import hashlib
 import re
-
 from typing import Union
 
 import pandas as pd
-
 from pydantic import validate_call
 
 from ..logger import WranglerLogger
@@ -50,7 +48,7 @@ def topological_sort(adjacency_list, visited_list):
 def make_slug(text: str, delimiter: str = "_") -> str:
     """Makes a slug from text."""
     text = re.sub("[,.;@#?!&$']+", "", text.lower())
-    return re.sub("[\ ]+", delimiter, text)  # noqa: W605
+    return re.sub("[\ ]+", delimiter, text)
 
 
 def delete_keys_from_dict(dictionary: dict, keys: list) -> dict:
@@ -94,8 +92,10 @@ def get_overlapping_range(ranges: list[Union[tuple[int, int], range]]) -> Union[
 
     """
     # check that any tuples have two values
-    if any(isinstance(r, tuple) and len(r) != 2 for r in ranges):
-        raise ValueError("Tuple ranges must have two values.")
+    if any(isinstance(r, tuple) and len(r) != 2 for r in ranges):  # noqa: PLR2004
+        msg = "Tuple ranges must have two values."
+        WranglerLogger.error(msg)
+        raise ValueError(msg)
 
     _ranges = [r if isinstance(r, range) else range(r[0], r[1]) for r in ranges]
 
@@ -104,8 +104,7 @@ def get_overlapping_range(ranges: list[Union[tuple[int, int], range]]) -> Union[
 
     if _overlap_start < _overlap_end:
         return range(_overlap_start, _overlap_end)
-    else:
-        return None
+    return None
 
 
 def findkeys(node, kv):
@@ -166,6 +165,10 @@ def split_string_prefix_suffix_from_num(input_string: str):
     return input_string, 0, ""
 
 
+class IdCreationError(Exception):
+    """Error raised when an ID cannot be created."""
+
+
 def generate_new_id_from_existing(
     input_id: str,
     existing_ids: pd.Series,
@@ -194,7 +197,7 @@ def generate_new_id_from_existing(
             return new_id
 
     WranglerLogger.error(f"Cannot generate new id within max iters of {max_iter}.")
-    raise ValueError("Cannot create unique new id.")
+    raise IdCreationError()
 
 
 def generate_list_of_new_ids_from_existing(
@@ -247,7 +250,27 @@ def _get_max_int_id_within_string_ids(id_s: pd.Series, prefix: str, suffix: str)
     return extracted_ids.max()
 
 
-def fill_str_ids(
+def create_str_int_combo_ids(
+    n_ids: int, taken_ids_s: pd.Series, str_prefix: str = "", str_suffix: str = ""
+) -> list:
+    """Create a list of string IDs that are not in taken_ids_s.
+
+    Args:
+        n_ids (int): Number of IDs to create.
+        taken_ids_s (pd.Series): Series of IDs that are already taken.
+        str_prefix (str, optional): Prefix to add to the new ID. Defaults to "".
+        str_suffix (str, optional): Suffix to add to the new ID. Defaults to "".
+    """
+    if not isinstance(taken_ids_s.iloc[0], str):
+        msg = "taken_ids_s must be a series of strings."
+        WranglerLogger.error(msg)
+        raise IdCreationError(msg)
+
+    start_id = _get_max_int_id_within_string_ids(taken_ids_s, str_prefix, str_suffix) + 1
+    return [f"{str_prefix}{i}{str_suffix}" for i in range(start_id, start_id + n_ids)]
+
+
+def fill_str_int_combo_ids(
     id_s: pd.Series, taken_ids_s: pd.Series, str_prefix: str = "", str_suffix: str = ""
 ) -> pd.Series:
     """Fill NaN values in id_s for string type surrounding a number.
@@ -258,12 +281,8 @@ def fill_str_ids(
         str_prefix (str, optional): Prefix to add to the new ID. Defaults to "".
         str_suffix (str, optional): Suffix to add to the new ID. Defaults to "".
     """
-    if not isinstance(taken_ids_s.iloc[0], str):
-        raise ValueError("taken_ids_s must be a series of strings.")
-
     n_ids = id_s.isna().sum()
-    start_id = _get_max_int_id_within_string_ids(taken_ids_s, str_prefix, str_suffix) + 1
-    new_ids = [f"{str_prefix}{i}{str_suffix}" for i in range(start_id, start_id + n_ids)]
+    new_ids = create_str_int_combo_ids(n_ids, taken_ids_s, str_prefix, str_suffix)
     id_s.loc[id_s.isna()] = new_ids
     return id_s
 
@@ -276,7 +295,10 @@ def fill_int_ids(id_s: pd.Series, taken_ids_s: pd.Series) -> pd.Series:
         taken_ids_s (pd.Series): Series of IDs that are already taken.
     """
     if not isinstance(taken_ids_s.iloc[0], int):
-        raise ValueError("id_s must be a series of integers.")
+        WranglerLogger.error(
+            f"taken_ids_s must be a series of integers, found: {taken_ids_s.iloc[0]}"
+        )
+        raise ValueError()
     n_ids = id_s.isna().sum()
     start_id = max(set(taken_ids_s.dropna())) + 1
 
@@ -364,6 +386,10 @@ def check_one_or_one_superset_present(
     return list_elements_subset_of_single_element(list_items_present)
 
 
+class DictionaryMergeError(Exception):
+    """Error raised when there is a conflict in merging two dictionaries."""
+
+
 def merge_dicts(right, left, path=None):
     """Merges the contents of nested dict left into nested dict right.
 
@@ -380,9 +406,10 @@ def merge_dicts(right, left, path=None):
     for key in left:
         if key in right:
             if isinstance(right[key], dict) and isinstance(left[key], dict):
-                merge_dicts(right[key], left[key], path + [str(key)])
+                merge_dicts(right[key], left[key], [*path, str(key)])
             else:
-                path = ".".join(path + [str(key)])
-                raise Exception(f"duplicate keys in source dict files: {path}")
+                path = ".".join([*path, str(key)])
+                WranglerLogger.error(f"duplicate keys in source dict files: {path}")
+                raise DictionaryMergeError()
         else:
             right[key] = left[key]

@@ -25,3 +25,6 @@ MODES_TO_NETWORK_LINK_VARIABLES: dict[str, list[str]] = {
     "walk": ["walk_access"],
     "bike": ["bike_access"],
 }
+
+SMALL_RECS: int = 5
+"""Number of records to display in a dataframe summary."""

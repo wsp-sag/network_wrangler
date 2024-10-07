@@ -65,6 +65,7 @@ Extended Usage:
 
     ```python
     from network_wrangler.configs import load_scenario_config
+
     my_scenario_config = load_scenario_config("path/to/config.yaml")
     ```
 
@@ -80,10 +81,34 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
+from projectcard.io import ProjectCardFilepaths, _resolve_rel_paths
 
 from ..models._base.types import RoadwayFileTypes, TransitFileTypes
 from .utils import ConfigItem
-from .wrangler import WranglerConfig
+from .wrangler import DefaultConfig, WranglerConfig
+
+DEFAULT_SCENARIO_NAME: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+DEFAULT_BASE_DIR: Path = Path.cwd()
+DEFAULT_OUTPUT_DIR: Path = Path("./output")
+
+DEFAULT_PROJECT_IN_PATHS: ProjectCardFilepaths = []
+DEFAULT_PROJECT_TAGS: list[str] = []
+DEFAULT_PROJECT_WRITE: bool = True
+DEFAULT_PROJECT_OUT_DIR: Path = Path("./projects")
+
+DEFAULT_ROADWAY_IN_DIR: Path = Path()
+DEFAULT_ROADWAY_IN_FORMAT: RoadwayFileTypes = "geojson"
+DEFAULT_ROADWAY_SHAPE_READ: bool = False
+DEFAULT_ROADWAY_WRITE: bool = True
+DEFAULT_ROADWAY_OUT_DIR: Path = Path("./roadway")
+DEFAULT_ROADWAY_OUT_FORMAT: RoadwayFileTypes = "geojson"
+
+DEFAULT_TRANSIT_IN_DIR = Path()
+DEFAULT_TRANSIT_IN_FORMAT: TransitFileTypes = "txt"
+DEFAULT_TRANSIT_WRITE: bool = True
+DEFAULT_TRANSIT_OUT_DIR = Path("./transit")
+DEFAULT_TRANSIT_OUT_FORMAT: TransitFileTypes = "txt"
 
 
 class ProjectsConfig(ConfigItem):
@@ -97,23 +122,12 @@ class ProjectsConfig(ConfigItem):
 
     def __init__(
         self,
-        base_path: Path = Path.cwd(),
-        project_card_filepath: Union[Path, list[Path], str, list[str]] = [],
-        filter_tags: list[str] = [],
+        base_path: Path = DEFAULT_BASE_DIR,
+        project_card_filepath: ProjectCardFilepaths = DEFAULT_PROJECT_IN_PATHS,
+        filter_tags: list[str] = DEFAULT_PROJECT_TAGS,
     ):
         """Constructor for ProjectsConfig."""
-        if isinstance(project_card_filepath, list):
-            self.project_card_filepath = []
-            for p in project_card_filepath:
-                p = Path(p)
-                if not p.is_absolute():
-                    self.project_card_filepath.append((base_path / p).resolve())
-                else:
-                    self.project_card_filepath.append(p)
-        elif not Path(project_card_filepath).is_absolute():
-            self.project_card_filepath = (base_path / Path(project_card_filepath)).resolve()  # type: ignore
-        else:
-            self.project_card_filepath = Path(project_card_filepath)  # type: ignore
+        self.project_card_filepath = _resolve_rel_paths(project_card_filepath, base_path=base_path)
         self.filter_tags = filter_tags
 
 
@@ -132,10 +146,10 @@ class RoadwayNetworkInputConfig(ConfigItem):
 
     def __init__(
         self,
-        base_path: Path = Path.cwd(),
-        dir: Path = Path("."),
-        file_format: RoadwayFileTypes = "geojson",
-        read_in_shapes: bool = False,
+        base_path: Path = DEFAULT_BASE_DIR,
+        dir: Path = DEFAULT_ROADWAY_IN_DIR,
+        file_format: RoadwayFileTypes = DEFAULT_ROADWAY_IN_FORMAT,
+        read_in_shapes: bool = DEFAULT_ROADWAY_SHAPE_READ,
         boundary_geocode: Optional[str] = None,
         boundary_file: Optional[Path] = None,
     ):
@@ -164,13 +178,13 @@ class RoadwayNetworkOutputConfig(ConfigItem):
 
     def __init__(
         self,
-        out_dir: Path = Path("./roadway"),
-        base_path: Path = Path.cwd(),
+        out_dir: Path = DEFAULT_ROADWAY_OUT_DIR,
+        base_path: Path = DEFAULT_BASE_DIR,
         convert_complex_link_properties_to_single_field: bool = False,
         prefix: Optional[str] = None,
-        file_format: RoadwayFileTypes = "geojson",
+        file_format: RoadwayFileTypes = DEFAULT_ROADWAY_OUT_FORMAT,
         true_shape: bool = False,
-        write: bool = True,
+        write: bool = DEFAULT_ROADWAY_WRITE,
     ):
         """Constructor for RoadwayNetworkOutputConfig."""
         if out_dir is not None and not Path(out_dir).is_absolute():
@@ -198,9 +212,9 @@ class TransitNetworkInputConfig(ConfigItem):
 
     def __init__(
         self,
-        base_path: Path = Path.cwd(),
-        dir: Path = Path("."),
-        file_format: TransitFileTypes = "txt",
+        base_path: Path = DEFAULT_BASE_DIR,
+        dir: Path = DEFAULT_TRANSIT_IN_DIR,
+        file_format: TransitFileTypes = DEFAULT_TRANSIT_IN_FORMAT,
     ):
         """Constructor for TransitNetworkInputConfig."""
         if dir is not None and not Path(dir).is_absolute():
@@ -223,11 +237,11 @@ class TransitNetworkOutputConfig(ConfigItem):
 
     def __init__(
         self,
-        base_path: Path = Path.cwd(),
-        out_dir: Path = Path("./transit"),
+        base_path: Path = DEFAULT_BASE_DIR,
+        out_dir: Path = DEFAULT_TRANSIT_OUT_DIR,
         prefix: Optional[str] = None,
-        file_format: TransitFileTypes = "txt",
-        write: bool = True,
+        file_format: TransitFileTypes = DEFAULT_TRANSIT_OUT_FORMAT,
+        write: bool = DEFAULT_TRANSIT_WRITE,
     ):
         """Constructor for TransitNetworkOutputCOnfig."""
         if out_dir is not None and not Path(out_dir).is_absolute():
@@ -248,7 +262,10 @@ class ProjectCardOutputConfig(ConfigItem):
     """
 
     def __init__(
-        self, base_path: Path = Path.cwd(), out_dir: Path = Path("./projects"), write: bool = True
+        self,
+        base_path: Path = DEFAULT_BASE_DIR,
+        out_dir: Path = DEFAULT_PROJECT_OUT_DIR,
+        write: bool = DEFAULT_PROJECT_WRITE,
     ):
         """Constructor for ProjectCardOutputConfig."""
         if out_dir is not None and not Path(out_dir).is_absolute():
@@ -270,12 +287,11 @@ class ScenarioInputConfig(ConfigItem):
 
     def __init__(
         self,
-        base_path: Path = Path.cwd(),
+        base_path: Path = DEFAULT_BASE_DIR,
         roadway: Optional[dict] = None,
         transit: Optional[dict] = None,
-        applied_projects: list[str] = [],
-        conflicts: dict = {},
-        **kwargs,
+        applied_projects: Optional[list[str]] = None,
+        conflicts: Optional[dict] = None,
     ):
         """Constructor for ScenarioInputConfig."""
         if roadway is not None:
@@ -292,8 +308,8 @@ class ScenarioInputConfig(ConfigItem):
         else:
             self.transit = None
 
-        self.applied_projects = applied_projects
-        self.conflicts = conflicts
+        self.applied_projects = applied_projects if applied_projects is not None else []
+        self.conflicts = conflicts if conflicts is not None else {}
 
 
 class ScenarioOutputConfig(ConfigItem):
@@ -308,10 +324,10 @@ class ScenarioOutputConfig(ConfigItem):
 
     def __init__(
         self,
-        path: Path = Path("./output"),
-        base_path: Path = Path.cwd(),
-        roadway: dict = RoadwayNetworkOutputConfig().to_dict(),
-        transit: dict = TransitNetworkOutputConfig().to_dict(),
+        path: Path = DEFAULT_OUTPUT_DIR,
+        base_path: Path = DEFAULT_BASE_DIR,
+        roadway: Optional[dict] = None,
+        transit: Optional[dict] = None,
         project_cards: Optional[dict] = None,
         overwrite: bool = True,
     ):
@@ -321,6 +337,8 @@ class ScenarioOutputConfig(ConfigItem):
         else:
             self.path = Path(path)
 
+        roadway = roadway if roadway else RoadwayNetworkOutputConfig().to_dict()
+        transit = transit if transit else TransitNetworkOutputConfig().to_dict()
         self.roadway = RoadwayNetworkOutputConfig(**roadway, base_path=self.path)
         self.transit = TransitNetworkOutputConfig(**transit, base_path=self.path)
 
@@ -351,12 +369,12 @@ class ScenarioConfig(ConfigItem):
         base_scenario: dict,
         projects: dict,
         output_scenario: dict,
-        base_path: Path = Path.cwd(),
-        name: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        wrangler_config=WranglerConfig(),
+        base_path: Path = DEFAULT_BASE_DIR,
+        name: str = DEFAULT_SCENARIO_NAME,
+        wrangler_config=DefaultConfig,
     ):
         """Constructor for ScenarioConfig."""
-        self.base_path = Path(base_path)
+        self.base_path = Path(base_path) if base_path is not None else Path.cwd()
         self.name = name
         self.base_scenario = ScenarioInputConfig(**base_scenario, base_path=base_path)
         self.projects = ProjectsConfig(**projects, base_path=base_path)

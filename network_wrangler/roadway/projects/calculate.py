@@ -1,6 +1,7 @@
 """Wrapper function for applying code to change roadway network."""
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from ...logger import WranglerLogger

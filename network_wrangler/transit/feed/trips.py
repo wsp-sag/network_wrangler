@@ -3,7 +3,7 @@
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...models.gtfs.tables import WranglerTripsTable, WranglerStopTimesTable
+from ...models.gtfs.tables import WranglerStopTimesTable, WranglerTripsTable
 
 
 def trips_for_shape_id(

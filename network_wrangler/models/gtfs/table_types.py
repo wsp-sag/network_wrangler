@@ -1,12 +1,10 @@
 """Type definitions for GTFS tables."""
 
 import re
+from typing import Iterable, Optional, Union
 
-from typing import Optional, Union, Iterable
-
-import pandera as pa
 import pandas as pd
-
+import pandera as pa
 from pandera.engines import pandas_engine
 
 

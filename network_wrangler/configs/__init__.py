@@ -1,15 +1,12 @@
 """Configuration module for network_wrangler."""
 
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 from ..logger import WranglerLogger
-
-from .utils import _config_data_from_files
-from .wrangler import WranglerConfig
 from .scenario import ScenarioConfig
-
-DefaultConfig = WranglerConfig()
+from .utils import _config_data_from_files
+from .wrangler import DefaultConfig, WranglerConfig
 
 ConfigInputTypes = Union[dict, Path, list[Path], WranglerConfig]
 
@@ -22,13 +19,13 @@ def load_wrangler_config(data: Optional[ConfigInputTypes] = None) -> WranglerCon
         return WranglerConfig()
     if isinstance(data, dict):
         return WranglerConfig(**data)
-    elif isinstance(data, Path) or (
+    if isinstance(data, Path) or (
         isinstance(data, list) and all(isinstance(d, Path) for d in data)
     ):
         return load_wrangler_config(_config_data_from_files(data))
-    else:
-        WranglerLogger.error("No valid configuration data found. Found {data}.")
-        raise ValueError("No valid configuration data found.")
+    msg = "No valid configuration data found."
+    WranglerLogger.error(msg + f"\n   Found: {data}.")
+    raise ValueError(msg)
 
 
 def load_scenario_config(
@@ -42,8 +39,9 @@ def load_scenario_config(
 
     combined_data = _config_data_from_files(data)
     if combined_data is None:
-        WranglerLogger.error("No scenario configuration data found in: {data}.")
-        raise ValueError("No scenario configuration data found.")
+        msg = "No scenario configuration data found."
+        WranglerLogger.error(msg + f"\n  Data: {data}.")
+        raise ValueError(msg)
 
     if isinstance(data, list):
         ex_path = data[0]

@@ -1,10 +1,7 @@
 import copy
-import os
-
-import pytest
 
 import pandas as pd
-
+import pytest
 from projectcard import read_card
 
 from network_wrangler import WranglerLogger
@@ -43,7 +40,7 @@ SIMPLE_MANAGED_LANE_PROPERTIES = {
 }
 
 
-def test_add_managed_lane(request, stpaul_net, stpaul_ex_dir, scratch_dir):
+def test_add_managed_lane(request, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     # Set facility selection
@@ -141,7 +138,7 @@ def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir):
     }
 
     project_card_name = "road.prop_change.managed_lanes.yml"
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
+    project_card_path = stpaul_ex_dir / "project_cards" / project_card_name
     project_card = read_card(project_card_path)
 
     WranglerLogger.info("      start: select_roadway_features")

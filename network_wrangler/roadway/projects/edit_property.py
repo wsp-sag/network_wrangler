@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-
-from typing import Union, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 import pandas as pd
 
 from network_wrangler.models.projects.roadway_changes import RoadPropertyChange
 
 from ...logger import WranglerLogger
-
 from ..links.edit import edit_link_properties
-from ..nodes.edit import edit_node_property, NodeGeometryChangeTable, NodeGeometryChange
-from ..selection import RoadwayNodeSelection, RoadwayLinkSelection
+from ..nodes.edit import NodeGeometryChange, NodeGeometryChangeTable, edit_node_property
+from ..selection import RoadwayLinkSelection, RoadwayNodeSelection
 
 if TYPE_CHECKING:
     from ..network import RoadwayNetwork
@@ -21,8 +19,6 @@ if TYPE_CHECKING:
 
 class RoadwayPropertyChangeError(Exception):
     """Raised when there is an issue with applying a roadway property change."""
-
-    pass
 
 
 def _node_geo_change_from_property_changes(
@@ -34,16 +30,14 @@ def _node_geo_change_from_property_changes(
     if not geo_change_present:
         return None
     if len(node_idx) > 1:
-        WranglerLogger.error(
-            f"! Shouldn't move >1 node to the same geography. Selected {len(node_idx)}"
-        )
-        raise RoadwayPropertyChangeError("Shouldn't move >1 node to the same geography.")
+        msg = "Shouldn't move >1 node to the same geography."
+        WranglerLogger.error(msg + f" Selected {len(node_idx)}")
+        raise RoadwayPropertyChangeError(msg)
 
     if not all(f in property_changes for f in ["X", "Y"]):
-        WranglerLogger.error(
-            f"! Must provide both X and Y to move node to new location. Got {property_changes}"
-        )
-        raise RoadwayPropertyChangeError("Must provide both X and Y to move node to new location.")
+        msg = "Must provide both X and Y to move node to new location."
+        WranglerLogger.error(msg + f" Got {property_changes}")
+        raise RoadwayPropertyChangeError(msg)
 
     geo_changes = {
         k: v["set"] for k, v in property_changes.items() if k in NodeGeometryChange.model_fields
@@ -110,6 +104,7 @@ def apply_roadway_property_change(
             roadway_net.move_nodes(geo_changes_df)
 
     else:
-        raise RoadwayPropertyChangeError("geometry_type must be either 'links' or 'nodes'")
+        msg = "geometry_type must be either 'links' or 'nodes'"
+        raise RoadwayPropertyChangeError(msg)
 
     return roadway_net

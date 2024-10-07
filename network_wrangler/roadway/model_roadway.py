@@ -2,32 +2,30 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import copy
-from typing import Tuple, Union, Optional, TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Optional
 
 import geopandas as gpd
 import pandas as pd
-
 from pandera.typing import DataFrame
 
-from ..logger import WranglerLogger
 from ..configs import DefaultConfig
-
-from ..models.roadway.tables import RoadNodesTable, RoadLinksTable, RoadShapesTable
+from ..logger import WranglerLogger
 from ..models._base.types import RoadwayFileTypes
+from ..models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
+from ..utils.data import concat_with_attr
+from .io import write_roadway
+from .links.create import copy_links, data_to_links_df
 from .links.edit import _initialize_links_as_managed_lanes
-from .links.create import data_to_links_df, copy_links
-from .links.links import node_ids_in_links
 from .links.filters import (
+    filter_link_properties_managed_lanes,
     filter_links_to_ml_access_points,
     filter_links_to_ml_egress_points,
-    filter_link_properties_managed_lanes,
 )
+from .links.links import node_ids_in_links
 from .nodes.create import _create_nodes_from_link
-from .io import write_roadway
-from .utils import compare_networks, compare_links
-from ..utils.data import concat_with_attr
+from .utils import compare_links, compare_networks
 
 if TYPE_CHECKING:
     from .network import RoadwayNetwork
@@ -71,8 +69,6 @@ MANAGED_LANES_REQUIRED_ATTRIBUTES: list[str] = [
 
 class ManagedLaneAccessEgressError(Exception):
     """Raised when there is an issue with access/egress points to managed lanes."""
-
-    pass
 
 
 class ModelRoadwayNetwork:
@@ -126,9 +122,9 @@ class ModelRoadwayNetwork:
                     self.net.links_df, self.net.config.IDS.ML_LINK_ID_SCALAR
                 )
             else:
-                WranglerLogger.error(f"ml_link_id_method must be 'range' or 'scalar'.\
-                                      Got {self.net.config.IDS.ML_LINK_ID_METHOD}")
-                raise ValueError("ml_link_id_method must be 'range' or 'scalar'")
+                msg = "ml_link_id_method must be 'range' or 'scalar'."
+                WranglerLogger.error(msg + f" Got {self.net.config.IDS.ML_LINK_ID_METHOD}")
+                raise ValueError(msg)
         else:
             self.ml_link_id_lookup = ml_link_id_lookup
 
@@ -142,9 +138,9 @@ class ModelRoadwayNetwork:
                     self.net.nodes_df, self.net.links_df, self.net.config.IDS.ML_NODE_ID_SCALAR
                 )
             else:
-                WranglerLogger.error(f"ml_node_id_method must be 'range' or 'scalar'.\
-                                      Got {self.net.config.IDS.ML_NODE_ID_METHOD}")
-                raise ValueError("ml_node_id_method must be 'range' or 'scalar'")
+                msg = "ml_node_id_method must be 'range' or 'scalar'."
+                WranglerLogger.error(msg + f" Got {self.net.config.IDS.ML_NODE_ID_METHOD}")
+                raise ValueError(msg)
         else:
             self.ml_node_id_lookup = ml_node_id_lookup
 
@@ -199,7 +195,7 @@ class ModelRoadwayNetwork:
 
     def write(
         self,
-        out_dir: Path = Path("."),
+        out_dir: Path = Path(),
         convert_complex_link_properties_to_single_field: bool = False,
         prefix: str = "",
         file_format: RoadwayFileTypes = "geojson",
@@ -240,8 +236,9 @@ def _generate_ml_link_id_lookup_from_range(links_df, link_id_range: tuple[int]):
     link_id_list = [i for i in range(*link_id_range) if i % LINK_IDS_DIVISIBLE_BY == 0]
     avail_ml_link_ids = set(link_id_list) - set(links_df.model_link_id.unique().tolist())
     if len(avail_ml_link_ids) < len(og_ml_link_ids):
-        raise ValueError(f"{len(avail_ml_link_ids)} of {len(og_ml_link_ids )} new link ids\
-                         available for provided range: {link_id_range}.")
+        msg = f"{len(avail_ml_link_ids)} of {len(og_ml_link_ids )} new link ids\
+                         available for provided range: {link_id_range}."
+        raise ValueError(msg)
     new_link_ids = list(avail_ml_link_ids)[: len(og_ml_link_ids)]
     return dict(zip(og_ml_link_ids, new_link_ids))
 
@@ -251,8 +248,9 @@ def _generate_ml_node_id_from_range(nodes_df, links_df, node_id_range: tuple[int
     og_ml_node_ids = node_ids_in_links(links_df.of_type.managed, nodes_df)
     avail_ml_node_ids = set(range(*node_id_range)) - set(nodes_df.model_node_id.unique().tolist())
     if len(avail_ml_node_ids) < len(og_ml_node_ids):
-        raise ValueError(f"{len(avail_ml_node_ids)} of {len(og_ml_node_ids )} new nodes ids\
-                         available for provided range: {node_id_range}.")
+        msg = f"{len(avail_ml_node_ids)} of {len(og_ml_node_ids )} new nodes ids\
+               available for provided range: {node_id_range}."
+        raise ValueError(msg)
     new_ml_node_ids = list(avail_ml_node_ids)[: len(og_ml_node_ids)]
     return dict(zip(og_ml_node_ids, new_ml_node_ids))
 
@@ -262,8 +260,8 @@ def _generate_ml_link_id_lookup_from_scalar(links_df: DataFrame[RoadLinksTable],
     og_ml_link_ids = links_df.of_type.managed.model_link_id
     link_id_list = [i + scalar for i in og_ml_link_ids]
     if links_df.model_link_id.isin(link_id_list).any():
-        raise ValueError(f"New link ids generated by scalar {scalar} already exist.\
-                         Try a different scalar.")
+        msg = f"New link ids generated by scalar {scalar} already exist. Try a different scalar."
+        raise ValueError(msg)
     return dict(zip(og_ml_link_ids, link_id_list))
 
 
@@ -272,13 +270,13 @@ def _generate_ml_node_id_lookup_from_scalar(nodes_df, links_df, scalar: int):
     og_ml_node_ids = node_ids_in_links(links_df.of_type.managed, nodes_df)
     node_id_list = [i + scalar for i in og_ml_node_ids]
     if nodes_df.model_node_id.isin(node_id_list).any():
-        raise ValueError(f"New node ids generated by scalar {scalar} already exist.\
-                         Try a different scalar.")
+        msg = f"New node ids generated by scalar {scalar} already exist. Try a different scalar."
+        raise ValueError(msg)
     return dict(zip(og_ml_node_ids, node_id_list))
 
 
 def model_links_nodes_from_net(
-    net: "RoadwayNetwork", ml_link_id_lookup: dict[int, int], ml_node_id_lookup: dict[int, int]
+    net: RoadwayNetwork, ml_link_id_lookup: dict[int, int], ml_node_id_lookup: dict[int, int]
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Create a roadway network with managed lanes links separated out.
 
@@ -367,7 +365,7 @@ def _create_separate_managed_lane_links(
     node_id_lookup: dict[int, int],
     offset_meters: float = DefaultConfig.MODEL_ROADWAY.ML_OFFSET_METERS,
     copy_from_gp_to_ml: list[str] = COPY_FROM_GP_TO_ML,
-) -> Tuple[gpd.GeoDataFrame]:
+) -> tuple[gpd.GeoDataFrame]:
     """Creates df with separate links for managed lanes."""
     # make sure there are correct fields even if managed = 1 was set outside of wrangler
     links_df = _initialize_links_as_managed_lanes(
@@ -444,9 +442,11 @@ def _create_dummy_connector_links(
     egress_df = copy.deepcopy(filter_links_to_ml_egress_points(links_df)[keep_cols])
 
     if len(access_df) == 0:
-        raise ManagedLaneAccessEgressError("No access points to managed lanes found.")
+        msg = "No access points to managed lanes found."
+        raise ManagedLaneAccessEgressError(msg)
     if len(egress_df) == 0:
-        raise ManagedLaneAccessEgressError("No egress points to managed lanes found.")
+        msg = "No egress points to managed lanes found."
+        raise ManagedLaneAccessEgressError(msg)
 
     # access link should go from A_GP to A_ML
     access_df["B"] = access_df["A"].map(ml_node_id_lookup)

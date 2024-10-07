@@ -3,21 +3,19 @@
 Run just these tests using `pytest tests/test_transit/test_feed.py`
 """
 
+import pandas as pd
 import pytest
 
-import pandas as pd
 from network_wrangler import WranglerLogger
-
 from network_wrangler.transit.feed.shapes import (
     shape_id_for_trip_id,
+    shapes_for_trip_id,
 )
-from network_wrangler.transit.feed.stops import stop_id_pattern_for_trip
-from network_wrangler.transit.feed.shapes import shapes_for_trip_id
 from network_wrangler.transit.feed.stop_times import (
     stop_times_for_pickup_dropoff_trip_id,
     stop_times_for_trip_id,
 )
-
+from network_wrangler.transit.feed.stops import stop_id_pattern_for_trip
 
 TEST_TABLES_W_PROP = [
     ("route_short_name", ["routes"]),
@@ -26,7 +24,7 @@ TEST_TABLES_W_PROP = [
 ]
 
 
-@pytest.mark.parametrize("prop, expected_tables", TEST_TABLES_W_PROP)
+@pytest.mark.parametrize(("prop", "expected_tables"), TEST_TABLES_W_PROP)
 def test_table_names_with_field(request, small_transit_net, prop, expected_tables):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -280,7 +278,7 @@ def test_filter_shapes_to_links(request):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     from network_wrangler.transit.feed.shapes import shapes_for_road_links
 
-    links_df = links_df = pd.DataFrame({"A": [1, 2, 3], "B": [2, 3, 4]})
+    links_df = pd.DataFrame({"A": [1, 2, 3], "B": [2, 3, 4]})
     shapes_df = pd.DataFrame(
         {
             "shape_id": [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2],

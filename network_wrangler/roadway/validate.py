@@ -4,11 +4,11 @@ from pathlib import Path
 from typing import Optional
 
 from ..logger import WranglerLogger
-from ..utils.io_table import read_table
 from ..models._base.types import RoadwayFileTypes
+from ..utils.io_table import read_table
 from .io import id_roadway_file_paths_in_dir
-from .network import RoadwayNetwork
 from .links.validate import validate_links_df
+from .network import RoadwayNetwork
 from .nodes.validate import validate_nodes_df
 from .shapes.validate import validate_shapes_df
 
@@ -17,7 +17,7 @@ def validate_roadway_in_dir(
     directory: Path,
     file_format: RoadwayFileTypes = "geojson",
     strict: bool = False,
-    output_dir: Path = Path("."),
+    output_dir: Path = Path(),
 ):
     """Validates a roadway network in a directory to the wrangler data model specifications.
 
@@ -39,7 +39,7 @@ def validate_roadway_files(
     nodes_file: Path,
     shapes_file: Optional[Path] = None,
     strict: bool = False,
-    output_dir: Path = Path("."),
+    output_dir: Path = Path(),
 ):
     """Validates the roadway network files strictly to the wrangler data model specifications.
 

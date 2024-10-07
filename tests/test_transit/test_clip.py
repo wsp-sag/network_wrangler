@@ -5,13 +5,13 @@ Run just these tests using `pytest tests/test_transit/tet_clip.py`
 
 import geopandas as gpd
 
+from network_wrangler import WranglerLogger
 from network_wrangler.transit.clip import clip_transit
 from network_wrangler.transit.io import write_feed_geo
 
-from network_wrangler import WranglerLogger
 
-
-def test_clip_transit_node_ids(small_transit_net, test_dir):
+def test_clip_transit_node_ids(request, small_transit_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     node_ids = [1, 2]
     clipped_network = clip_transit(small_transit_net, node_ids=node_ids)
 
@@ -32,7 +32,8 @@ def test_clip_transit_node_ids(small_transit_net, test_dir):
     assert 4 not in clipped_network.feed.shapes.shape_model_node_id.values
 
 
-def test_clip_transit_min_stops(small_transit_net, test_dir):
+def test_clip_transit_min_stops(request, small_transit_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     node_ids = [1, 3, 4]
     clipped_network = clip_transit(small_transit_net, node_ids=node_ids, min_stops=3)
 
@@ -51,7 +52,8 @@ def test_clip_transit_min_stops(small_transit_net, test_dir):
     assert "blue-2" in clipped_network.feed.trips.trip_id.values
 
 
-def test_clip_transit_boundary_geocode(stpaul_transit_net, test_dir, stpaul_net):
+def test_clip_transit_boundary_geocode(request, stpaul_transit_net, test_dir, stpaul_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     boundary_geocode = "Downtown, St Paul, MN"
     clipped_network = clip_transit(
         stpaul_transit_net, boundary_geocode=boundary_geocode, roadway_net=stpaul_net
@@ -77,7 +79,8 @@ def test_clip_transit_boundary_geocode(stpaul_transit_net, test_dir, stpaul_net)
     )
 
 
-def test_clip_transit_to_roadway(stpaul_transit_net, test_dir, stpaul_net):
+def test_clip_transit_to_roadway(request, stpaul_transit_net, test_dir, stpaul_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     from network_wrangler.roadway.clip import clip_roadway
 
     boundary_file = test_dir / "data" / "unionstation.geojson"

@@ -12,22 +12,21 @@ Includes:
 
 from __future__ import annotations
 
-from typing import Any, Optional
 import datetime as dt
+from typing import Any, ClassVar, Optional
 
+import numpy as np
 import pandas as pd
 import pandera as pa
-import numpy as np
-
 from pandas import Int64Dtype as Int64
 from pandera import DataFrameModel
 from pandera.typing import Series
 from pandera.typing.geopandas import GeoSeries
 
+from ...logger import WranglerLogger
+from .._base.db import TableForeignKeys, TablePrimaryKeys
 from .._base.tables import validate_pyd
 from .types import ScopedLinkValueList
-from ...logger import WranglerLogger
-
 
 RoadLinksAttrs = {
     "name": "road_links",
@@ -119,7 +118,7 @@ class RoadLinksTable(DataFrameModel):
 
         add_missing_columns = True
         coerce = True
-        unique = ["A", "B"]
+        unique: ClassVar[list[str]] = ["A", "B"]
 
     @pa.check("sc_*", regex=True, element_wise=True)
     def check_scoped_fields(cls, scoped_value: Series) -> Series[bool]:
@@ -168,7 +167,7 @@ class RoadNodesTable(DataFrameModel):
 
         add_missing_columns = True
         coerce = True
-        _pk = ["model_node_id"]
+        _pk: ClassVar[TablePrimaryKeys] = ["model_node_id"]
 
 
 RoadShapesAttrs = {
@@ -195,7 +194,7 @@ class RoadShapesTable(DataFrameModel):
         """Config for RoadShapesTable."""
 
         coerce = True
-        _pk = ["shape_id"]
+        _pk: ClassVar[TablePrimaryKeys] = ["shape_id"]
 
 
 class ExplodedScopedLinkPropertyTable(DataFrameModel):

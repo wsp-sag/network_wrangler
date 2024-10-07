@@ -1,8 +1,8 @@
 """Functions to create segments from shapes and shape_links."""
 
 import pandas as pd
-
 from pandera.typing import DataFrame
+
 from ...models.gtfs.tables import WranglerShapesTable
 
 

@@ -1,9 +1,10 @@
-from typing import ClassVar, List, Union, Any
+from typing import Any, ClassVar, List, Union
 
 from pydantic import BaseModel, ConfigDict, model_validator
-from .types import AnyOf, OneOf, ConflictsWith
+
 from ...logger import WranglerLogger
 from ...utils.utils import check_one_or_one_superset_present
+from .types import AnyOf, ConflictsWith, OneOf
 
 
 class OneOfError(ValueError):
@@ -67,7 +68,8 @@ class RecordModel(BaseModel):
                     f"{cls} cannot have both: {'or both of: '.join(_err_str)}. \
                     \nFields present: \n{_fields_present}."
                 )
-                raise ConflictsError(f"{cls} failed conflicts_with validation.")
+                msg = f"{cls} failed `conflicts_with` validation."
+                raise ConflictsError(msg)
         return values
 
     @model_validator(mode="before")
@@ -96,7 +98,8 @@ class RecordModel(BaseModel):
                 f"{cls} should have exactly one of: {'and one of: '.join(_err_str)}. \
                 Fields present: \n{_fields_present}."
             )
-            raise OneOfError(f"{cls} failed one_of validation.")
+            msg = f"{cls} failed `one_of` validation."
+            raise OneOfError(msg)
         return values
 
     @classmethod
@@ -135,8 +138,6 @@ class RecordModel(BaseModel):
         _values = {k: v for k, v in values.items() if v is not None}
         if all(cls._check_each_any_of(fields, _values) for fields in _require_any_of):
             return values
-
-        raise AnyOfError(
-            f"{cls.__name__} requires at least one of the following fields: \
+        msg = f"{cls.__name__} requires at least one of the following fields: \
                         {cls.require_any_of}. None were provided."
-        )
+        raise AnyOfError(msg)

@@ -2,8 +2,8 @@ from typing import Union
 
 from pydantic import (
     RootModel,
-    conlist,
     confloat,
+    conlist,
     field_validator,
 )
 
@@ -18,6 +18,6 @@ class LatLongCoordinates(RootModel):
     @field_validator("root")
     @classmethod
     def check_lat_long(cls, v):
-        assert len(v) == 2, f"Expected two values for latitude and longitude, got {len(v)}"
+        assert len(v) == 2, f"Expected two values for latitude and longitude, got {len(v)}"  # noqa: PLR2004
         latitude, longitude = v
         return [Latitude(latitude), Longitude(longitude)]

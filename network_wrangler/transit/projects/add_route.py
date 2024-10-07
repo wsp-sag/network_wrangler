@@ -1,38 +1,36 @@
 """Functions for adding a transit route to a TransitNetwork."""
+
 from __future__ import annotations
 
+import copy
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Union
-import copy
-
-from ...logger import WranglerLogger
 
 import pandas as pd
 from pandera.typing import DataFrame as paDataFrame
 
-from ...utils.time import str_to_time_list
-from ...utils.utils import fill_str_ids
-from ...utils.data import concat_with_attr
-from ...utils.models import fill_df_with_defaults_from_model
+from ...logger import WranglerLogger
 from ...models._base.types import TimeString
 from ...models.gtfs.tables import (
+    FrequenciesTable,
     TripsTable,
     WranglerShapesTable,
-    WranglerStopTimesTable,
     WranglerStopsTable,
-    FrequenciesTable,
+    WranglerStopTimesTable,
 )
+from ...utils.data import concat_with_attr
+from ...utils.models import fill_df_with_defaults_from_model
+from ...utils.time import str_to_time_list
+from ...utils.utils import create_str_int_combo_ids
 
 if TYPE_CHECKING:
     from ...roadway.network import RoadwayNetwork
-    from ..network import TransitNetwork
     from ..feed.feed import Feed
+    from ..network import TransitNetwork
 
 
 class TransitRouteAddError(Exception):
     """Error raised when applying add transit route."""
-
-    pass
 
 
 def apply_transit_route_addition(
@@ -61,10 +59,8 @@ def apply_transit_route_addition(
                          routin.  Either provide as an input to this function or set it for the \
                          transit network: >> transit_net.road_net = ..."
         )
-        raise ValueError(
-            "Must have a reference road network set in order to update transit \
-                         routing."
-        )
+        msg = "Must have a reference road network set in order to update transit routing."
+        raise ValueError(msg)
 
     net.feed = _add_route_to_feed(net.feed, add_routes, road_net)
 
@@ -78,6 +74,10 @@ def _add_route_to_feed(
 ) -> Feed:
     """Adds routes to a transit feed, updating routes, shapes, trips, stops, stop times, and freqs.
 
+    Note: In the current implementation, a new trip is added for each shape and headway time
+    period combination such that each trip should only have a single headway entry in frequencies
+    table.
+
     Args:
         feed: Input transit feed.
         add_routes: List of route dictionaries to add to the feed.
@@ -87,10 +87,6 @@ def _add_route_to_feed(
         Feed: transit feed.
     """
     WranglerLogger.debug(f"Adding route {len(add_routes)} to feed.")
-    add_routes_df = pd.DataFrame(
-        [{k: v for k, v in r.items() if k != "trips"} for r in add_routes]
-    )
-    feed.routes = concat_with_attr([feed.routes, add_routes_df], ignore_index=True, sort=False)
 
     shapes_df = copy.deepcopy(feed.shapes)
     trips_df = copy.deepcopy(feed.trips)
@@ -98,36 +94,42 @@ def _add_route_to_feed(
     stops_df = copy.deepcopy(feed.stops)
     frequencies_df = copy.deepcopy(feed.frequencies)
 
+    add_routes_df = pd.DataFrame(
+        [{k: v for k, v in r.items() if k != "trips"} for r in add_routes]
+    )
+    routes_df = concat_with_attr([feed.routes, add_routes_df], ignore_index=True, sort=False)
     for route in add_routes:
-        WranglerLogger.debug(
-            f"Adding {len(route['trips'])} trips for route {route['route_id']} to feed."
-        )
+        WranglerLogger.debug(f"Adding {len(route['trips'])} trips for route {route['route_id']}.")
 
-        for i, trip in enumerate(route["trips"]):
-            shape_id = fill_str_ids(pd.Series([None]), shapes_df["shape_id"]).iloc[0]
+        shape_ids = create_str_int_combo_ids(len(route["trips"]), shapes_df["shape_id"])
+        for trip, shape_id in zip(route["trips"], shape_ids):
             add_shape_df = _create_new_shape(trip["routing"], shape_id, road_net)
             shapes_df = concat_with_attr([shapes_df, add_shape_df], ignore_index=True, sort=False)
 
             for j, headway in enumerate(trip["headway_secs"]):
                 trip_id = f"trip{j}_shp{shape_id}"
-                stop_dicts = _get_stops_from_routing(trip["routing"])
                 add_trips_df = _create_new_trips(trip, route, trip_id, shape_id)
                 add_freqs_df = _create_new_frequencies(headway, trip_id)
-                add_stop_times_df = _create_new_stop_times(stop_dicts, trip_id)
+                add_stop_times_df = _create_new_stop_times(trip["routing"], trip_id)
                 add_stops_df = _create_new_stops(
                     add_stop_times_df["stop_id"], stops_df["stop_id"], road_net
                 )
 
                 # Add new data to existing dataframes
-                trips_df = concat_with_attr([trips_df, add_trips_df], ignore_index=True, sort=False)
+                trips_df = concat_with_attr(
+                    [trips_df, add_trips_df], ignore_index=True, sort=False
+                )
                 frequencies_df = concat_with_attr(
                     [frequencies_df, add_freqs_df], ignore_index=True, sort=False
                 )
-                stops_df = concat_with_attr([stops_df, add_stops_df], ignore_index=True, sort=False)
+                stops_df = concat_with_attr(
+                    [stops_df, add_stops_df], ignore_index=True, sort=False
+                )
                 stop_times_df = concat_with_attr(
                     [stop_times_df, add_stop_times_df], ignore_index=True, sort=False
                 )
-    
+
+    feed.routes = routes_df
     feed.shapes = shapes_df
     feed.trips = trips_df
     feed.stops = stops_df
@@ -138,7 +140,10 @@ def _add_route_to_feed(
 
 
 def _create_new_trips(
-    trip: dict, route: dict, trip_id: str, shape_id: str,
+    trip: dict,
+    route: dict,
+    trip_id: str,
+    shape_id: str,
 ) -> paDataFrame[TripsTable]:
     """Create new trips for a route.
 
@@ -173,7 +178,7 @@ def _create_new_shape(
         road_net: Roadway network to get node coordinates.
     """
     shape_model_node_id_list = [
-        int(list(item.keys())[0]) if isinstance(item, dict) else int(item) for item in routing
+        int(next(iter(item.keys()))) if isinstance(item, dict) else int(item) for item in routing
     ]
     coords = [road_net.node_coords(n) for n in shape_model_node_id_list]
     lon, lat = zip(*coords)
@@ -215,10 +220,10 @@ def _get_stops_from_routing(routing: list[Union[dict, int]]) -> list[dict]:
     for i in routing:
         if isinstance(i, dict):
             stop_d = {}
-            stop_info = list(i.values())[0]  # dict with stop, board, alight
+            stop_info = next(iter(i.values()))  # dict with stop, board, alight
             if not stop_info.get("stop", False):
                 continue
-            stop_d["stop_id"] = int(list(i.keys())[0])
+            stop_d["stop_id"] = int(next(iter(i.keys())))
             # Default for board and alight is True unless specified to be False
             stop_d["pickup_type"] = 0 if stop_info.get("board", True) else 1
             stop_d["drop_off_type"] = 0 if stop_info.get("alight", True) else 1
@@ -228,12 +233,20 @@ def _get_stops_from_routing(routing: list[Union[dict, int]]) -> list[dict]:
 
 
 def _create_new_stop_times(
-    stop_dicts: list[dict], trip_id: str
+    trip_routing: list[Union[dict, int]], trip_id: str
 ) -> paDataFrame[WranglerStopTimesTable]:
     """Create new stop times for a trip.
 
     Args:
-        stop_dicts: List of dictionaries for stops with stop_id and other values in stop dictionary
+        trip_routing: Routing list from project card with stop and board/alight information
+            for each stop.
+        trip_id: Trip ID for the stop times.
+
+    Returns:
+        Dataframe with new stop times.
+    """
+    stop_dicts = _get_stops_from_routing(trip_routing)
+    """List of dictionaries for stops with stop_id and other values in stop dictionary
             such as board and alight. Example:
 
             ```python
@@ -243,10 +256,6 @@ def _create_new_stop_times(
                 {"stop_id": 6, "pickup_type": 0, "drop_off_type": 0}}
             ]
             ```
-        trip_id: Trip ID for the stop times.
-
-    Returns:
-        Dataframe with new stop times.
     """
     add_stop_times_df = pd.DataFrame(stop_dicts)
     add_stop_times_df["trip_id"] = trip_id
@@ -282,7 +291,7 @@ def _create_new_frequencies(
         headway: Headway dictionaries with time range as key and headway in seconds as
             value. e.g.:
             ```python
-            {('6:00', '12:00'): 600}
+            {("6:00", "12:00"): 600}
             ```
         trip_id: Trip ID for the frequencies.
     """

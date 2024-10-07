@@ -9,8 +9,6 @@ from ...models.roadway.tables import RoadShapesTable
 class ShapeDeletionError(Exception):
     """Raised when there is an issue with deleting shapes from a network."""
 
-    pass
-
 
 def delete_shapes_by_ids(
     shapes_df: DataFrame[RoadShapesTable], del_shape_ids: list[int], ignore_missing: bool = False
@@ -31,5 +29,6 @@ def delete_shapes_by_ids(
     if _missing:
         WranglerLogger.warning(f"Shapes in network not there to delete: \n{_missing}")
         if not ignore_missing:
-            raise ShapeDeletionError("Shapes to delete are not in the network.")
+            msg = "Shapes to delete are not in the network."
+            raise ShapeDeletionError(msg)
     return shapes_df.drop(labels=del_shape_ids, errors="ignore")

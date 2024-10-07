@@ -1,33 +1,30 @@
 """Main functionality for GTFS tables including Feed object."""
 
 from __future__ import annotations
-from typing import Union, Literal, Optional
+
 from pathlib import Path
+from typing import Callable, ClassVar, Literal, Optional
 
 import pandas as pd
-
 from pandera.typing import DataFrame
 
+from ...logger import WranglerLogger
 from ...models._base.db import DBModelMixin
 from ...models.gtfs.tables import (
     AgenciesTable,
-    WranglerStopsTable,
     RoutesTable,
-    WranglerTripsTable,
-    WranglerStopTimesTable,
-    WranglerShapesTable,
     WranglerFrequenciesTable,
+    WranglerShapesTable,
+    WranglerStopsTable,
+    WranglerStopTimesTable,
+    WranglerTripsTable,
 )
-
 from ...utils.data import update_df_by_col_value
-from ...logger import WranglerLogger
 
 
 # Raised when there is an issue with the validation of the GTFS data.
 class FeedValidationError(Exception):
     """Raised when there is an issue with the validation of the GTFS data."""
-
-    pass
 
 
 class Feed(DBModelMixin):
@@ -54,7 +51,7 @@ class Feed(DBModelMixin):
 
     # the ordering here matters because the stops need to be added before stop_times if
     # stop times needs to be converted
-    _table_models = {
+    _table_models: ClassVar[dict] = {
         "agencies": AgenciesTable,
         "frequencies": WranglerFrequenciesTable,
         "routes": RoutesTable,
@@ -66,9 +63,9 @@ class Feed(DBModelMixin):
 
     # Define the converters if the table needs to be converted to a Wrangler table.
     # Format: "table_name": converter_function
-    _converters = {}
+    _converters: ClassVar[dict[str, Callable]] = {}
 
-    table_names = [
+    table_names: ClassVar[list[str]] = [
         "frequencies",
         "routes",
         "shapes",
@@ -77,7 +74,7 @@ class Feed(DBModelMixin):
         "stop_times",
     ]
 
-    optional_table_names = ["agencies"]
+    optional_table_names: ClassVar[list[str]] = ["agencies"]
 
     def __init__(self, **kwargs):
         """Create a Feed object from a dictionary of DataFrames representing a GTFS feed.
@@ -114,21 +111,17 @@ class Feed(DBModelMixin):
                 all properties.
         """
         if not set_df[id_property].is_unique:
-            WranglerLogger.error(f"{id_property} must be unique in set_df. \
-                                 Found duplicates: {set_df[id_property].duplicated().sum()}")
-            raise ValueError(f"{id_property} must be unique in set_df.")
+            msg = f"{id_property} must be unique in set_df."
+            _dupes = set_df[id_property][set_df[id_property].duplicated()]
+            WranglerLogger.error(msg + f"Found duplicates: {_dupes.sum()}")
+
+            raise ValueError(msg)
         table_df = self.get_table(table_name)
         updated_df = update_df_by_col_value(table_df, set_df, id_property, properties=properties)
         self.__dict__[table_name] = updated_df
 
 
-PickupDropoffAvailability = Union[
-    Literal["either"],
-    Literal["both"],
-    Literal["pickup_only"],
-    Literal["dropoff_only"],
-    Literal["any"],
-]
+PickupDropoffAvailability = Literal["either", "both", "pickup_only", "dropoff_only", "any"]
 
 
 def stop_count_by_trip(
@@ -166,3 +159,19 @@ def merge_shapes_to_stop_times(
     )
     stop_times_w_shapes = stop_times_w_shapes.drop(columns=["shape_model_node_id"])
     return stop_times_w_shapes
+
+
+def _get_applied_projects_from_tables(feed: Feed) -> list[str]:
+    """Return a list of applied projects from the feed tables.
+
+    Note: This may or may not return a full accurate account of all the applied projects.
+    For better project accounting, please leverage the scenario object.
+    """
+    applied_projects = set()
+    for table_name in feed.table_names:
+        table = feed.get_table(table_name)
+        if "projects" in table.columns:
+            exploded_projects = table.projects.str.split(",").explode().dropna()
+            exploded_projects = exploded_projects[exploded_projects != ""]
+            applied_projects.update(exploded_projects)
+    return list(applied_projects)

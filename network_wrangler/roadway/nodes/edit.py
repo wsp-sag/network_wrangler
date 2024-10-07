@@ -5,29 +5,25 @@ Private methods may return mutated originals.
 """
 
 import copy
-
-from typing import Union, Optional
+from typing import Optional, Union
 
 import geopandas as gpd
-
 from pandera import DataFrameModel, Field
-from pydantic import ConfigDict
 from pandera.typing import DataFrame, Series
+from pydantic import ConfigDict
 
+from ...configs import DefaultConfig, WranglerConfig
 from ...logger import WranglerLogger
 from ...models._base.records import RecordModel
-from ...models.roadway.tables import RoadNodesTable, RoadNodesAttrs
-from ...utils.models import validate_df_to_model, validate_call_pyd
-from ...utils.data import update_df_by_col_value, validate_existing_value_in_df
-from ...params import LAT_LON_CRS
 from ...models.projects.roadway_changes import RoadPropertyChange
-from ...configs import WranglerConfig, DefaultConfig
+from ...models.roadway.tables import RoadNodesAttrs, RoadNodesTable
+from ...params import LAT_LON_CRS
+from ...utils.data import update_df_by_col_value, validate_existing_value_in_df
+from ...utils.models import validate_call_pyd, validate_df_to_model
 
 
 class NodeChangeError(Exception):
     """Raised when there is an issue with applying a node change."""
-
-    pass
 
 
 class NodeGeometryChangeTable(DataFrameModel):
@@ -72,11 +68,9 @@ def edit_node_geometry(
     WranglerLogger.debug(f"Original nodes_df: \n{nodes_df.head()}")
     # for now, require in_crs is the same for whole column
     if node_geometry_change_table.in_crs.nunique() != 1:
-        WranglerLogger.error(
-            "in_crs must be the same for all nodes. \
-                             Got: {node_geometry_change_table.in_crs}"
-        )
-        raise (NodeChangeError("in_crs must be the same for all nodes."))
+        msg = f"in_crs must be the same for all nodes. Got: {node_geometry_change_table.in_crs}"
+        WranglerLogger.error(msg)
+        raise NodeChangeError(msg)
 
     in_crs = node_geometry_change_table.loc[0, "in_crs"]
 
@@ -125,31 +119,20 @@ def edit_node_property(
     prop_dict = prop_change.model_dump(exclude_none=True, by_alias=True)
 
     # Allow the project card to override the default behavior of raising an error
-    if prop_change.existing_value_conflict is not None:
-        existing_value_conflict = prop_change.existing_value_conflict
-    else:
-        existing_value_conflict = config.EDITS.EXISTING_VALUE_CONFLICT
+    existing_value_conflict = prop_change.get(
+        "existing_value_conflict", config.EDITS.EXISTING_VALUE_CONFLICT
+    )
 
     # Should not be used to update node geometry fields unless explicity set to OK:
     if prop_name in nodes_df.attrs["geometry_props"] and not _geometry_ok:
-        raise NodeChangeError("Cannot unilaterally change geometry property.")
+        msg = f"Cannot unilaterally change geometry property."
+        raise NodeChangeError(msg)
 
     # check existing if necessary
-    if "existing" in prop_dict:
-        exist_ok = validate_existing_value_in_df(
-            nodes_df, node_idx, prop_name, prop_dict["existing"]
-        )
-        if not exist_ok:
-            if existing_value_conflict == "error":
-                raise NodeChangeError(
-                    "Conflict between specified existing and actual existing values"
-                )
-            if existing_value_conflict == "skip":
-                WranglerLogger.warning(
-                    f"Skipping change for {prop_name} because of conflict with existing value."
-                )
-                return nodes_df
-            WranglerLogger.warning(f"Changing {prop_name} despite conflict with existing value.")
+    if not _check_existing_value_conflict(
+        nodes_df, node_idx, prop_name, prop_dict, existing_value_conflict
+    ):
+        return nodes_df
 
     nodes_df = copy.deepcopy(nodes_df)
 
@@ -157,20 +140,46 @@ def edit_node_property(
     if prop_name not in nodes_df:
         nodes_df[prop_name] = None
 
-    sel_nodes_df = nodes_df.loc[node_idx]
-
     # `set` and `change` just affect the simple property
     if "set" in prop_dict:
-        sel_nodes_df[prop_name] = prop_dict["set"]
+        nodes_df.loc[node_idx, prop_name] = prop_dict["set"]
     elif "change" in prop_dict:
-        sel_nodes_df[prop_name] = sel_nodes_df.loc[prop_name].apply(
+        nodes_df.loc[node_idx, prop_name] = nodes_df.loc[prop_name].apply(
             lambda x: x + prop_dict["change"]
         )
     else:
-        raise NodeChangeError("Couldn't find correct node change spec in: {prop_dict}")
+        msg = f"Couldn't find correct node change spec in: {prop_dict}"
+        raise NodeChangeError(msg)
 
     if project_name is not None:
-        sel_nodes_df["projects"] += f"{project_name},"
+        nodes_df.loc[node_idx, "projects"] += f"{project_name},"
 
     nodes_df = validate_df_to_model(nodes_df, RoadNodesTable)
     return nodes_df
+
+
+def _check_existing_value_conflict(
+    nodes_df: DataFrame[RoadNodesTable],
+    node_idx: list[int],
+    prop_name: str,
+    prop_dict: dict,
+    existing_value_conflict: str,
+) -> bool:
+    """Check if existing value conflict is OK."""
+    if "existing" not in prop_dict:
+        return True
+
+    if validate_existing_value_in_df(nodes_df, node_idx, prop_name, prop_dict["existing"]):
+        return True
+
+    WranglerLogger.warning(f"Existing {prop_name} != prop_dict['existing'].")
+    if existing_value_conflict == "error":
+        msg = f"Conflict between specified existing and actual existing values."
+        raise NodeChangeError(msg)
+    if existing_value_conflict == "skip":
+        WranglerLogger.warning(
+            f"Skipping change for {prop_name} because of conflict with existing value."
+        )
+        return False
+    WranglerLogger.warning(f"Changing {prop_name} despite conflict with existing value.")
+    return True

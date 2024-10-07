@@ -10,7 +10,7 @@ Create a TransitSelection object by providing a TransitNetwork object and a sele
         "nodes": {...},
         "route_properties": {...},
         "trip_properties": {...},
-        "timespans": {...}
+        "timespans": {...},
     }
     transit_selection = TransitSelection(transit_network, selection_dict)
     ```
@@ -27,52 +27,46 @@ the models.projects.transit_selection module.
 """
 
 from __future__ import annotations
-import copy
 
-from typing import Union, TYPE_CHECKING
+import copy
+from typing import TYPE_CHECKING, Union
 
 from pandera.typing import DataFrame
 
+from ..logger import WranglerLogger
+from ..models._base.types import TimeString
 from ..models.projects import (
+    SelectRouteProperties,
+    SelectTransitLinks,
+    SelectTransitNodes,
     SelectTransitTrips,
     SelectTripProperties,
-    SelectRouteProperties,
-    SelectTransitNodes,
-    SelectTransitLinks,
 )
-from ..models._base.types import TimeString
-from ..utils.utils import dict_to_hexkey
+from ..params import SMALL_RECS
 from ..utils.time import filter_df_to_overlapping_timespans
-from ..logger import WranglerLogger
-
+from ..utils.utils import dict_to_hexkey
 
 if TYPE_CHECKING:
+    from ..models.gtfs.tables import (
+        RoutesTable,
+        WranglerFrequenciesTable,
+        WranglerShapesTable,
+        WranglerTripsTable,
+    )
     from .feed.feed import Feed
     from .network import TransitNetwork
-    from ..models.gtfs.tables import (
-        WranglerTripsTable,
-        WranglerShapesTable,
-        WranglerFrequenciesTable,
-        RoutesTable,
-    )
 
 
 class TransitSelectionError(Exception):
     """Base error for transit selection errors."""
 
-    pass
-
 
 class TransitSelectionEmptyError(Exception):
     """Error for when no transit trips are selected."""
 
-    pass
-
 
 class TransitSelectionNetworkConsistencyError(TransitSelectionError):
     """Error for when transit selection dictionary is not consistent with transit network."""
-
-    pass
 
 
 class TransitSelection:
@@ -109,9 +103,7 @@ class TransitSelection:
 
     def __nonzero__(self):
         """Return True if there are selected trips."""
-        if len(self.selected_trips_df) > 0:
-            return True
-        return False
+        return len(self.selected_trips_df) > 0
 
     @property
     def selection_dict(self):
@@ -142,17 +134,17 @@ class TransitSelection:
         _missing_trip_fields = set(_trip_selection_fields) - set(self.net.feed.trips.columns)
 
         if _missing_trip_fields:
-            raise TransitSelectionNetworkConsistencyError(
-                f"Fields in trip selection dictionary but not trips.txt: {_missing_trip_fields}"
-            )
+            msg = f"Fields in trip selection dictionary but not trips.txt: {_missing_trip_fields}"
+            raise TransitSelectionNetworkConsistencyError(msg)
 
         _route_selection_fields = list((selection_dict.get("route_properties", {}) or {}).keys())
         _missing_route_fields = set(_route_selection_fields) - set(self.net.feed.routes.columns)
 
         if _missing_route_fields:
-            raise TransitSelectionNetworkConsistencyError(
+            msg = (
                 f"Fields in route selection dictionary but not routes.txt: {_missing_route_fields}"
             )
+            raise TransitSelectionNetworkConsistencyError(msg)
         return selection_dict
 
     @property
@@ -199,7 +191,7 @@ class TransitSelection:
         Can visualize the selected shapes quickly using the following code:
 
         ```python
-        all_routes = net.feed.shapes.plot(color='gray')
+        all_routes = net.feed.shapes.plot(color="gray")
         selection.selected_shapes_df.plot(ax=all_routes, color="red")
         ```
 
@@ -255,19 +247,21 @@ def _filter_trips_by_selection_dict(
     WranglerLogger.debug(f"Selected {_num_sel_trips}/{_tot_trips} trips.")
 
     if not _num_sel_trips:
-        WranglerLogger.error(f"No transit trips Found with selection: \n{sel}")
-        raise TransitSelectionEmptyError("No transit trips satisfying selection.")
+        msg = f"No transit trips found with selection: \n{sel}"
+        WranglerLogger.error(msg)
+        raise TransitSelectionEmptyError(msg)
     return trips_df
 
 
 def _filter_trips_by_links(
     trips_df: DataFrame[WranglerTripsTable],
-    shapes_df: DataFrame[WranglerShapesTable],
+    shapes_df: DataFrame[WranglerShapesTable],  # noqa: ARG001
     select_links: Union[SelectTransitLinks, None],
 ) -> DataFrame[WranglerTripsTable]:
     if select_links is None:
         return trips_df
-    raise NotImplementedError("Filtering transit by links not implemented yet.")
+    msg = "Filtering transit by links not implemented yet."
+    raise NotImplementedError(msg)
 
 
 def _filter_trips_by_nodes(
@@ -293,7 +287,8 @@ def _filter_trips_by_nodes(
     require = select_nodes.get("require", "any")
     model_node_ids = select_nodes.get("model_node_id", [])
     if select_nodes.get("gtfs_stop_id"):
-        raise NotImplementedError("GTFS Stop ID transit selection not implemented yet.")
+        msg = "GTFS Stop ID transit selection not implemented yet."
+        raise NotImplementedError(msg)
 
     if require == "all":
         shape_ids = (
@@ -306,14 +301,15 @@ def _filter_trips_by_nodes(
             shapes_df["shape_model_node_id"].isin(model_node_ids)
         ].shape_id.drop_duplicates()
     else:
-        raise ValueError("Require must be 'any' or 'all'")
+        msg = f"Require must be 'any' or 'all', not {require}"
+        raise ValueError(msg)
 
     trips_df = copy.deepcopy(trips_df.loc[trips_df.shape_id.isin(shape_ids)])
 
     _sel_trips = len(trips_df)
     WranglerLogger.debug(f"Selected {_sel_trips}/{_tot_trips} trips.")
-    if _sel_trips < 10:
-        WranglerLogger.debug(f"{trips_df.trip_id}")
+    if _sel_trips < SMALL_RECS:
+        WranglerLogger.debug(f"Selected Trips:\n{trips_df.trip_id}")
 
     return trips_df
 
@@ -332,9 +328,8 @@ def _filter_trips_by_trip(
     """
     _missing = set(select_trip_properties.keys()) - set(trips_df.columns)
     if _missing:
-        raise TransitSelectionNetworkConsistencyError(
-            f"Route selection properties missing from trips.txt: {_missing}"
-        )
+        msg = f"Trip selection properties missing from trips.txt: {_missing}"
+        raise TransitSelectionNetworkConsistencyError(msg)
 
     # Select
     _num_unfiltered_trips = len(trips_df)
@@ -347,8 +342,8 @@ def _filter_trips_by_trip(
         f"{_num_filtered_trips}/{_num_unfiltered_trips} trips remain after \
         filtering to trip selection {select_trip_properties}"
     )
-    if _num_filtered_trips < 10:
-        WranglerLogger.debug(f"{trips_df.trip_id}")
+    if _num_filtered_trips < SMALL_RECS:
+        WranglerLogger.debug(f"Filtered Trips:\n{trips_df.trip_id}")
 
     return trips_df
 
@@ -370,9 +365,8 @@ def _filter_trips_by_route(
     """
     _missing = set(select_route_properties.keys()) - set(routes_df.columns)
     if _missing:
-        raise TransitSelectionNetworkConsistencyError(
-            f"Route selection properties missing from routes.txt: {_missing}"
-        )
+        msg = f"Route selection properties missing from routes.txt: {_missing}"
+        raise TransitSelectionNetworkConsistencyError(msg)
 
     # selection
     _unfiltered_trips = len(trips_df)
@@ -386,8 +380,8 @@ def _filter_trips_by_route(
         f"{_num_filtered_trips}/{_unfiltered_trips} trips remain after \
         filtering to route selection {select_route_properties}"
     )
-    if _num_filtered_trips < 10:
-        WranglerLogger.debug(f"{trips_df.trip_id}")
+    if _num_filtered_trips < SMALL_RECS:
+        WranglerLogger.debug(f"Filtered Trips:\n{trips_df.trip_id}")
 
     return trips_df
 
@@ -419,6 +413,6 @@ def _filter_trips_by_timespans(
     # Filter trips table to those still in freq table
     filtered_trips_df = trips_df.loc[trips_df.trip_id.isin(filtered_trip_ids)]
 
-    if _filtered_trips < 10:
+    if _filtered_trips < SMALL_RECS:
         WranglerLogger.debug(f"{filtered_trips_df.trip_id}")
     return filtered_trips_df

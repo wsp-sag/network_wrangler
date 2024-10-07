@@ -7,7 +7,7 @@ from typing import Union
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...models.gtfs.tables import WranglerStopTimesTable, WranglerStopsTable
+from ...models.gtfs.tables import WranglerStopsTable, WranglerStopTimesTable
 from ...utils.models import validate_call_pyd
 from .feed import PickupDropoffAvailability
 

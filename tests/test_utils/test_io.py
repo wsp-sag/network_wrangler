@@ -1,10 +1,11 @@
 """Module for testing the utils.io module."""
 
 import pytest
-from network_wrangler.utils.io_table import convert_file_serialization
-from network_wrangler.utils.data import diff_dfs
-from network_wrangler.utils.time import str_to_seconds_from_midnight
+
 from network_wrangler import WranglerLogger
+from network_wrangler.utils.data import diff_dfs
+from network_wrangler.utils.io_table import convert_file_serialization
+from network_wrangler.utils.time import str_to_seconds_from_midnight
 
 
 @pytest.mark.skip(reason="Not implemented")
@@ -110,10 +111,11 @@ def test_read_in_v0_links():
 
 
 def test_convert_v1_v0_links():
+    from pandas import DataFrame
+
+    from network_wrangler.models.roadway.converters import translate_links_df_v1_to_v0
     from network_wrangler.roadway.links.create import data_to_links_df
     from network_wrangler.roadway.nodes.create import data_to_nodes_df
-    from network_wrangler.models.roadway.converters import translate_links_df_v1_to_v0
-    from pandas import DataFrame
 
     nodes_df = data_to_nodes_df(nodes_json)
     links_v0_df = DataFrame(v0_links_json)

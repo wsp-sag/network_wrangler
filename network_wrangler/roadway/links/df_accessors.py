@@ -8,23 +8,23 @@ from pandera.typing import DataFrame
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadLinksTable, RoadShapesTable
 from .filters import (
+    filter_link_properties_managed_lanes,
+    filter_links_access_dummy,
+    filter_links_drive_access,
+    filter_links_dummy,
+    filter_links_egress_dummy,
+    filter_links_general_purpose,
+    filter_links_general_purpose_no_parallel_managed,
     filter_links_managed_lanes,
     filter_links_parallel_general_purpose,
-    filter_links_general_purpose,
-    filter_links_access_dummy,
-    filter_links_egress_dummy,
-    filter_links_dummy,
     filter_links_pedbike_only,
-    filter_links_transit_only,
-    filter_links_transit_access,
-    filter_links_drive_access,
     filter_links_to_modes,
-    filter_link_properties_managed_lanes,
-    filter_links_general_purpose_no_parallel_managed,
+    filter_links_transit_access,
+    filter_links_transit_only,
 )
+from .geo import true_shape
 from .links import NotLinksError
 from .summary import link_summary
-from .geo import true_shape
 
 
 @pd.api.extensions.register_dataframe_accessor("of_type")
@@ -153,18 +153,16 @@ class ModeLinkAccessor:
         """ModeLinkAccessor for RoadLinksTable."""
         self._links_df = links_df
         try:
-            links_df.attrs["name"] == "road_links"
+            assert links_df.attrs["name"] == "road_links"
         except AttributeError:
             WranglerLogger.warning(
                 "`mode_query` should only be used on 'road_links' dataframes. \
                 No attr['name'] not found."
             )
-        except AssertionError:
-            WranglerLogger.warning(
-                f"`mode_query` should only be used on 'road_links' dataframes. \
-                Found type: {links_df.attr['name']}"
-            )
-            raise NotLinksError("`mode_query` is only available to network_links dataframes.")
+        except AssertionError as err:
+            msg = "`mode_query` is only available to network_links dataframes."
+            WranglerLogger.warning(msg + f" Found type: {links_df.attr['name']}")
+            raise NotLinksError(msg) from err
 
     def __call__(self, modes: List[str]):
         """Filters links dataframe to  links that are accessible by the modes in the list."""
@@ -179,18 +177,16 @@ class TrueShapeAccessor:
         """TrueShapeAccessor for RoadLinksTable."""
         self._links_df = links_df
         try:
-            links_df.attrs["name"] == "road_links"
+            assert links_df.attrs["name"] == "road_links"
         except AttributeError:
             WranglerLogger.warning(
                 "`true_shape` should only be used on 'road_links' dataframes. \
                 No attr['name'] not found."
             )
-        except AssertionError:
-            WranglerLogger.warning(
-                f"`true_shape` should only be used on 'road_links' dataframes. \
-                Found type: {links_df.attr['name']}"
-            )
-            raise NotLinksError("`true_shape` is only available to network_links dataframes.")
+        except AssertionError as err:
+            msg = "`true_shape` is only available to network_links dataframes."
+            WranglerLogger.warning(msg + f" Found type: {links_df.attr['name']}")
+            raise NotLinksError(msg) from err
 
     def __call__(self, shapes_df: DataFrame[RoadShapesTable]):
         """Updates geometry to have shape of shapes_df where available."""

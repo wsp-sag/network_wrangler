@@ -1,6 +1,7 @@
 """Functions for updating roadway links with geometry from shapes."""
 
 from pandera.typing import DataFrame
+
 from ...models.roadway.tables import RoadLinksTable, RoadShapesTable
 from ...utils.data import update_df_by_col_value
 

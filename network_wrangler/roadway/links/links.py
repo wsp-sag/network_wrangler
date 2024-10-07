@@ -3,26 +3,21 @@
 from typing import Optional
 
 import pandas as pd
-
 from pandera.typing import DataFrame
 
+from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
 from ...utils.data import fk_in_pk
-from ...logger import WranglerLogger
-from .filters import filter_links_to_ids, filter_links_not_in_ids
+from .filters import filter_links_not_in_ids, filter_links_to_ids
 from .validate import validate_links_have_nodes
 
 
 class NotLinksError(Exception):
     """Raised when a dataframe is not a RoadLinksTable."""
 
-    pass
-
 
 class LinkNotFoundError(Exception):
     """Raised when a link is not found in the links table."""
-
-    pass
 
 
 def node_ids_in_links(

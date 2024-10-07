@@ -1,15 +1,14 @@
 """Tests roadway network editing functions."""
 
 import copy
-import pytest
 
 import pandas as pd
+import pytest
 
-
-from network_wrangler.utils.models import TableValidationError
+from network_wrangler.logger import WranglerLogger
 from network_wrangler.roadway.links.create import LinkAddError
 from network_wrangler.roadway.nodes.create import NodeAddError
-from network_wrangler.logger import WranglerLogger
+from network_wrangler.utils.models import TableValidationError
 
 
 def test_add_nodes(request, small_net):
@@ -130,11 +129,11 @@ def test_delete_links_by_id_with_associated_nodes(request, small_net):
     WranglerLogger.debug(f"net.nodes_df: \n{net.nodes_df}")
     WranglerLogger.debug(f"net.links_df: \n{net.links_df}")
     # Check if the links are deleted from the links dataframe
-    assert not any([link_id in net.links_df.model_link_id for link_id in del_link_ids])
+    assert not any(link_id in net.links_df.model_link_id for link_id in del_link_ids)
 
     WranglerLogger.debug(f"net.nodes_df: \n{net.nodes_df}")
     # Check if the nodes associated with the deleted links are also deleted
-    assert not any([node_id in net.nodes_df.model_node_id for node_id in del_node_ids])
+    assert not any(node_id in net.nodes_df.model_node_id for node_id in del_node_ids)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
@@ -160,7 +159,7 @@ def test_delete_nodes(request, small_net):
     net.delete_nodes(selection_dict)
 
     # Check if the nodes were deleted
-    assert not any([node_id in net.nodes_df.model_node_id for node_id in del_node_ids])
+    assert not any(node_id in net.nodes_df.model_node_id for node_id in del_node_ids)
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 

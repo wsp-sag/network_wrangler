@@ -1,11 +1,10 @@
 import copy
-import os
 
 import pytest
+from projectcard import read_card
 
 from network_wrangler import WranglerLogger
 from network_wrangler.roadway.network import InvalidProjectCardError
-from projectcard import read_card
 
 """
 Usage:   `pytest tests/test_roadway/test_changes/test_pycode.py`
@@ -16,7 +15,7 @@ def test_read_dot_wrangler_roadway(request, stpaul_ex_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     project_card_name = "road.prop_change.wrangler"
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
+    project_card_path = stpaul_ex_dir / "project_cards" / project_card_name
     project_card = read_card(project_card_path, validate=False)
     WranglerLogger.debug(f"project_card: \n{project_card}")
     assert (

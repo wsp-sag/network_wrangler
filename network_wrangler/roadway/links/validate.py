@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Optional
+
 import pandas as pd
 
 from ...logger import WranglerLogger
@@ -10,8 +11,6 @@ from ...utils.data import fk_in_pk
 
 class NodesInLinksMissingError(Exception):
     """Raised when there is an issue with validating links and nodes."""
-
-    pass
 
 
 def validate_links_have_nodes(links_df: pd.DataFrame, nodes_df: pd.DataFrame) -> bool:
@@ -23,8 +22,9 @@ def validate_links_have_nodes(links_df: pd.DataFrame, nodes_df: pd.DataFrame) ->
 
     fk_valid, fk_missing = fk_in_pk(nodes_df.index, nodes_in_links)
     if not fk_valid:
-        WranglerLogger.error(f"Nodes missing from links: {fk_missing}")
-        raise NodesInLinksMissingError(f"Links are missing these nodes: {fk_missing}")
+        msg = "Links are missing len{fk_missing} nodes."
+        WranglerLogger.error(msg + f"\n  Missing: {fk_missing}")
+        raise NodesInLinksMissingError(msg)
     return True
 
 
@@ -70,8 +70,8 @@ def validate_links_df(
     Returns:
         bool: True if the links dataframe is valid.
     """
-    from ...utils.models import validate_df_to_model, TableValidationError
     from ...models.roadway.tables import RoadLinksTable
+    from ...utils.models import TableValidationError, validate_df_to_model
 
     is_valid = True
 

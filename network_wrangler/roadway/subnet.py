@@ -1,34 +1,31 @@
 """Subnet class for RoadwayNetwork object."""
 
 from __future__ import annotations
+
 import hashlib
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
-
 from pandera.typing import DataFrame
 
+from ..logger import WranglerLogger
 from ..utils.data import concat_with_attr
 from .graph import links_nodes_to_ox_graph
 from .links.links import node_ids_in_links
-from ..logger import WranglerLogger
 
 if TYPE_CHECKING:
-    from .network import RoadwayNetwork
-    from ..models.roadway.tables import RoadLinksTable, RoadNodesTable
     from networkx import MultiDiGraph
+
+    from ..models.roadway.tables import RoadLinksTable, RoadNodesTable
+    from .network import RoadwayNetwork
 
 
 class SubnetExpansionError(Exception):
     """Raised when a subnet can't be expanded to include a node or set of nodes."""
 
-    pass
-
 
 class SubnetCreationError(Exception):
     """Raised when a subnet can't be created."""
-
-    pass
 
 
 DEFAULT_SUBNET_MAX_SEARCH_BREADTH: int = 10
@@ -51,14 +48,14 @@ class Subnet:
 
     ```
     selection_dict = {
-        "links": {"name":['6th','Sixth','sixth']},
-        "from": {"osm_node_id": '187899923'},
-        "to": {"osm_node_id": '187865924'}
+        "links": {"name": ["6th", "Sixth", "sixth"]},
+        "from": {"osm_node_id": "187899923"},
+        "to": {"osm_node_id": "187865924"},
     }
 
-    segment = Segment(net = RoadwayNetwork(...), selection_dict = selection_dict)
+    segment = Segment(net=RoadwayNetwork(...), selection_dict=selection_dict)
     # used to store graph
-    self._segment_route_nodes = shortest_path(segment.subnet.graph,start_node_pk,end_node_pk)
+    self._segment_route_nodes = shortest_path(segment.subnet.graph, start_node_pk, end_node_pk)
     ```
 
     attr:
@@ -79,7 +76,7 @@ class Subnet:
     def __init__(
         self,
         net: RoadwayNetwork,
-        modes: list = ["drive"],
+        modes: Optional[list] = None,
         subnet_links_df: pd.DataFrame = None,
         i: int = 0,
         sp_weight_factor: float = DEFAULT_SUBNET_SP_WEIGHT_FACTOR,
@@ -107,7 +104,7 @@ class Subnet:
                 Defaults to DEFAULT_MAX_SEARCH_BREADTH.
         """
         self.net = net
-        self.modes = modes
+        self.modes = modes if modes is not None else ["drive"]
         self._subnet_links_df = subnet_links_df
         self._i = i
         self._sp_weight_col = sp_weight_col
@@ -125,7 +122,8 @@ class Subnet:
             return False
         if len(self.subnet_links_df) > 0:
             return True
-        raise SubnetCreationError("Something's not right.")
+        msg = "Something's not right."
+        raise SubnetCreationError(msg)
 
     @property
     def subnet_links_df(self) -> DataFrame[RoadLinksTable]:
@@ -165,7 +163,8 @@ class Subnet:
     def subnet_nodes(self) -> list[int]:
         """List of node_ids in the subnet."""
         if self.subnet_links_df is None:
-            raise ValueError("Must set self.subnet_links_df before accessing subnet_nodes.")
+            msg = "Must set self.subnet_links_df before accessing subnet_nodes."
+            raise ValueError(msg)
         return node_ids_in_links(self.subnet_links_df, self.net.nodes_df)
 
     @property
@@ -190,10 +189,9 @@ class Subnet:
             self._expand_subnet_breadth()
 
         if not set(nodes_list).issubset(self.subnet_nodes):
-            raise SubnetExpansionError(
-                f"Can't find nodes {nodes_list} before achieving maximum\
+            msg = f"Can't find nodes {nodes_list} before achieving maximum\
                 network expansion iterations of {max_search_breadth}"
-            )
+            raise SubnetExpansionError(msg)
 
     def _expand_subnet_breadth(self) -> None:
         """Add one degree of breadth to self.subnet_links_df and add property."""

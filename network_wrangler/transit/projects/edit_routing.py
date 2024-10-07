@@ -3,61 +3,55 @@
 from __future__ import annotations
 
 import copy
-
-from typing import Union, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 import pandas as pd
-
 from pandera.typing import DataFrame
 
-from ..feed.trips import trip_ids_for_shape_id
-from ..feed.stops import node_is_stop
-from ..feed.stop_times import stop_times_for_trip_id
+from ...configs import DefaultConfig
+from ...logger import WranglerLogger
+from ...models.gtfs.tables import (
+    WranglerShapesTable,
+    WranglerStopsTable,
+    WranglerStopTimesTable,
+    WranglerTripsTable,
+)
+from ...utils.data import concat_with_attr, segment_data_by_selection_min_overlap
+from ...utils.models import validate_df_to_model
+from ...utils.utils import generate_list_of_new_ids_from_existing, generate_new_id_from_existing
 from ..feed.shapes import (
+    find_nearest_stops,
     node_pattern_for_shape_id,
     shape_ids_for_trip_ids,
     shapes_for_shape_id,
-    find_nearest_stops,
 )
-from ...utils.data import concat_with_attr
-from ...utils.models import validate_df_to_model
-from ...models.gtfs.tables import (
-    WranglerShapesTable,
-    WranglerStopTimesTable,
-    WranglerStopsTable,
-    WranglerTripsTable,
-)
+from ..feed.stop_times import stop_times_for_trip_id
+from ..feed.stops import node_is_stop
+from ..feed.trips import trip_ids_for_shape_id
 from ..validate import (
     shape_links_without_road_links,
 )
-from ...logger import WranglerLogger
-from ...utils.utils import generate_list_of_new_ids_from_existing, generate_new_id_from_existing
-from ...utils.data import segment_data_by_selection_min_overlap
-from ...configs import DefaultConfig
 
 if TYPE_CHECKING:
     from ...roadway.network import RoadwayNetwork
-    from ..network import TransitNetwork
     from ..feed.feed import Feed
+    from ..network import TransitNetwork
     from ..selection import TransitSelection
 
 
 class TransitRoutingChangeError(Exception):
     """Raised when there is an error in the transit routing change."""
 
-    pass
-
 
 def _create_stop_times(
-    set_stops_node_ids: list[int], trip_id: str, feed: Feed, project_name: Optional[str] = None
+    set_stops_node_ids: list[int], trip_id: str, project_name: Optional[str] = None
 ) -> DataFrame[WranglerStopTimesTable]:
     """Modifies a list of nodes from project card routing key to a shape dataframe.
 
     Args:
         set_stops_node_ids: List of roadway node ids from project card to stop at.
         trip_id: trip_id to associate with the new shape
-        feed: transit feed
         project_name: Name of the project. Defaults to None.
 
     """
@@ -122,9 +116,7 @@ def _create_shapes(
     if project_name is not None:
         new_shape_rows_df["projects"] = f"{project_name},"
     new_shape_rows_df = new_shape_rows_df.drop(columns=["model_node_id"])
-    if len(new_shape_rows_df) < 10:
-        # WranglerLogger.debug(f"New Shape Rows: \n{new_shape_rows_df}")
-        pass
+    # WranglerLogger.debug(f"New Shape Rows: \n{new_shape_rows_df.iloc[DISP_RECS]}")
 
     return new_shape_rows_df
 
@@ -264,11 +256,11 @@ def _replace_stop_times_segment_for_trip(
     if start_n != 0 and not node_is_stop(feed.stops, feed.stop_times, start_n, trip_id):
         start_n, _ = find_nearest_stops(feed.shapes, feed.trips, feed.stop_times, trip_id, start_n)
         if start_n != 0:
-            set_stops_nodes = [start_n] + set_stops_nodes
+            set_stops_nodes = [start_n, *set_stops_nodes]
     if end_n != 0 and not node_is_stop(feed.stops, feed.stop_times, end_n, trip_id):
         _, end_n = find_nearest_stops(feed.shapes, feed.trips, feed.stop_times, trip_id, end_n)
         if end_n != 0:
-            set_stops_nodes = set_stops_nodes + [end_n]
+            set_stops_nodes = [*set_stops_nodes, end_n]
 
     WranglerLogger.debug(f"Start/End nodes w/stops: {start_n}/{end_n}")
     WranglerLogger.debug(f"Set stop nodes: {set_stops_nodes}")
@@ -288,9 +280,7 @@ def _replace_stop_times_segment_for_trip(
     )
 
     # Create new segment
-    segment_stoptime_rows = _create_stop_times(
-        set_stops_nodes, trip_id, feed, project_name=project_name
-    )
+    segment_stoptime_rows = _create_stop_times(set_stops_nodes, trip_id, project_name=project_name)
     # WranglerLogger.debug(f"Before Segment: \n{before_segment[_disp_col]}")
     # WranglerLogger.debug(f"Segment: \n{segment_stoptime_rows[_disp_col]}")
     # WranglerLogger.debug(f"After Segment: \n{after_segment[_disp_col]}")
@@ -333,9 +323,7 @@ def _consistent_routing(
     if not same_extents:
         return False
     same_route = "|".join(map(str, set_routing)) in "|".join(map(str, existing_pattern))
-    if not same_route:
-        return False
-    return True
+    return bool(same_route)
 
 
 def _update_shapes_and_trips(
@@ -345,7 +333,7 @@ def _update_shapes_and_trips(
     routing_set: list[int],
     shape_id_scalar: int,
     road_net: RoadwayNetwork,
-    routing_existing: list[int] = [],
+    routing_existing: Optional[list[int]] = None,
     project_name: Optional[str] = None,
 ) -> tuple[DataFrame[WranglerShapesTable], DataFrame[WranglerTripsTable]]:
     """Update shapes and trips for transit routing change.
@@ -364,6 +352,8 @@ def _update_shapes_and_trips(
         Updated shapes and trips dataframes
     """
     WranglerLogger.debug(f"Updating shapes and trips for shape_id: {shape_id}")
+    if routing_existing is None:
+        routing_existing = []
     set_routing = [int(abs(int(i))) for i in routing_set]
     existing_routing = [int(abs(int(i))) for i in routing_existing]
 
@@ -531,7 +521,7 @@ def _update_stop_times_for_trip(
 
     if not existing_stops_nodes:
         this_trip_stop_times = _create_stop_times(
-            set_stops_nodes, trip_id, feed, project_name=project_name
+            set_stops_nodes, trip_id, project_name=project_name
         )
 
     # --------------- Replace stop_times for this trip with updated stop times ---------------
@@ -569,8 +559,8 @@ def apply_transit_routing_change(
         routing_change (dict): Routing Change dictionary, e.g.
             ```python
             {
-                "existing":[46665,150855],
-                "set":[-46665,150855,46665,150855],
+                "existing": [46665, 150855],
+                "set": [-46665, 150855, 46665, 150855],
             }
             ```
         shape_id_scalar (int, optional): Initial scalar value to add to duplicated shape_ids to
@@ -598,10 +588,8 @@ def apply_transit_routing_change(
                          routin.  Either provide as an input to this function or set it for the \
                          transit network: >> transit_net.road_net = ..."
         )
-        raise ValueError(
-            "Must have a reference road network set in order to update transit \
-                         routing."
-        )
+        msg = "Must have a reference road network set in order to update transit routing."
+        raise ValueError(msg)
 
     # ---- update each shape that is used by selected trips to use new routing -------
     shape_ids = shape_ids_for_trip_ids(updated_feed.trips, trip_ids)

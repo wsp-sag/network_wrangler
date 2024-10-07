@@ -23,13 +23,11 @@ python clip_transit.py /path/to/network_dir /path/to/boundary.shp /path/to/outpu
 
 import argparse
 import sys
-
 from pathlib import Path
 
-from network_wrangler.transit.io import write_transit, load_transit
-from network_wrangler.transit.clip import clip_transit
 from network_wrangler import WranglerLogger
-
+from network_wrangler.transit.clip import clip_transit
+from network_wrangler.transit.io import load_transit, write_transit
 
 if __name__ == "__main__":
     try:

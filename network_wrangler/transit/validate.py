@@ -2,28 +2,26 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
 from pathlib import Path
+from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
-
-from pandera.typing import DataFrame
 from pandera.errors import SchemaErrors
+from pandera.typing import DataFrame
 
 from ..logger import WranglerLogger
-
-from ..utils.data import concat_with_attr
 from ..models.gtfs.tables import (
     WranglerShapesTable,
     WranglerStopTimesTable,
 )
 from ..transit.feed.feed import Feed
-from ..transit.feed.transit_links import unique_stop_time_links, unique_shape_links
+from ..transit.feed.transit_links import unique_shape_links, unique_stop_time_links
+from ..utils.data import concat_with_attr
 
 if TYPE_CHECKING:
-    from ..roadway.network import RoadwayNetwork
-    from ..models.roadway.tables import RoadLinksTable, RoadNodesTable
     from ..models._base.types import RoadwayFileTypes, TransitFileTypes
+    from ..models.roadway.tables import RoadLinksTable, RoadNodesTable
+    from ..roadway.network import RoadwayNetwork
 
 
 def transit_nodes_without_road_nodes(

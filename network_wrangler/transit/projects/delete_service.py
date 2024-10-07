@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import copy
-
 from typing import TYPE_CHECKING, Optional
 
-from ..feed.shapes import shape_ids_for_trip_ids
-from ..feed.routes import route_ids_for_trip_ids
 from ...logger import WranglerLogger
+from ..feed.routes import route_ids_for_trip_ids
+from ..feed.shapes import shape_ids_for_trip_ids
 
 if TYPE_CHECKING:
-    from ..network import TransitNetwork
     from ..feed.feed import Feed
+    from ..network import TransitNetwork
     from ..selection import TransitSelection
 
 

@@ -26,9 +26,8 @@ def test_example_project_cards_valid(request, stpaul_card_dir):
     WranglerLogger.debug(f"Valid Cards: {_delim}{_delim.join(ok)}")
     if errors:
         WranglerLogger.error(f"Card Validation Errors: {_delim}{_delim.join(errors)}")
-        raise ProjectCardValidationError(
-            f"Errors in {len(errors)} of {len(cards)} example project cards"
-        )
+        msg = f"Errors in {len(errors)} of {len(cards)} example project cards"
+        raise ProjectCardValidationError(msg)
 
     WranglerLogger.info(f"Evaluated {len(cards)} card files")
     WranglerLogger.info(f"--Finished: {request.node.name}")
@@ -44,7 +43,6 @@ def test_bad_project_cards_fail(request, bad_project_cards):
             pass
         else:
             WranglerLogger.error(f"Schema should not be valid: {s}")
-            raise ValueError(
-                "Schema shouldn't be valid but is not raising an error in validate_schema_file"
-            )
+            msg = "Schema shouldn't be valid but is not raising an error in validate_schema_file"
+            raise ValueError(msg)
     WranglerLogger.info(f"--Finished: {request.node.name}")

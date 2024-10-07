@@ -2,35 +2,32 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+from typing import ClassVar, Optional, Union
+
 from pydantic import (
     BaseModel,
+    ConfigDict,
     Field,
     NonNegativeFloat,
     PositiveInt,
     RootModel,
     conlist,
-    ConfigDict,
     model_validator,
 )
-from datetime import datetime
-
-from typing import Optional, Union, ClassVar
-
-from ...time import Timespan
-from .._base.records import RecordModel
-from .._base.root import RootListMixin
-from .._base.geo import LatLongCoordinates
-from .._base.types import TimeString, AnyOf
-from ...utils.time import str_to_time_list, dt_overlaps
-from ...params import DEFAULT_CATEGORY, DEFAULT_TIMESPAN
 
 from ...logger import WranglerLogger
+from ...params import DEFAULT_CATEGORY, DEFAULT_TIMESPAN
+from ...time import Timespan
+from ...utils.time import dt_overlaps, str_to_time_list
+from .._base.geo import LatLongCoordinates
+from .._base.records import RecordModel
+from .._base.root import RootListMixin
+from .._base.types import AnyOf, TimeString
 
 
 class ScopeLinkValueError(Exception):
     """Raised when there is an issue with ScopedLinkValueList."""
-
-    pass
 
 
 class ScopedLinkValueItem(RecordModel):
@@ -49,7 +46,7 @@ class ScopedLinkValueItem(RecordModel):
 
     - `matching`: a scope that could be applied for a given category/timespan combination. This includes the default scopes as well as scopes that are contained within the given category AND timespan combination.
     - `overlapping`: a scope that fully or partially overlaps a given category OR timespan combination.  This includes the default scopes, all `matching` scopes and all scopes where at least one minute of timespan or one category overlap.
-    - `conflicting`: a scope that is overlapping but not matching for a given category/timespan. 
+    - `conflicting`: a scope that is overlapping but not matching for a given category/timespan.
 
     NOTE: Default scope values of `category: any` and `timespan:["00:00", "24:00"]` are **not** considered conflicting, but are applied to residual scopes.
     """
@@ -90,8 +87,9 @@ class ScopedLinkValueList(RootListMixin, RootModel):
                 if j.category == i.category:
                     conflicts.append((i, j))
         if conflicts:
-            WranglerLogger.error("Found conflicting scopes in ScopedPropertySetList:\n{conflicts}")
-            raise ScopeLinkValueError("Conflicting scopes in ScopedPropertySetList")
+            msg = "Conflicting scopes in ScopedLinkValueList:\n"
+            WranglerLogger.error(msg + f" Conflicts: \n{conflicts}")
+            raise ScopeLinkValueError(msg)
 
         return self
 

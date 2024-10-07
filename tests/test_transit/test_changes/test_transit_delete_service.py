@@ -3,12 +3,10 @@
 import copy
 
 from pandas.testing import assert_frame_equal
-
 from projectcard import ProjectCard
 
 from network_wrangler import WranglerLogger
 from network_wrangler.transit.network import TransitNetwork
-
 
 delete_service_change_small_net = {
     "project": "Delete Transit",

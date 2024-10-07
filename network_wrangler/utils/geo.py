@@ -4,23 +4,21 @@ from __future__ import annotations
 
 import copy
 import math
-
-from typing import List, Union, TYPE_CHECKING, Optional
 from pathlib import Path
+from typing import TYPE_CHECKING, Optional, Union
 
-import pandas as pd
 import geopandas as gpd
-from pyproj import Proj, Transformer, CRS
+import pandas as pd
+from geographiclib.geodesic import Geodesic
+from pyproj import CRS, Proj, Transformer
 from shapely.geometry import LineString, Point
 from shapely.ops import transform
-from geographiclib.geodesic import Geodesic
 
-from .data import update_df_by_col_value
-
-from ..params import LAT_LON_CRS
 from ..logger import WranglerLogger
 from ..models._base.geo import LatLongCoordinates
 from ..models.roadway.types import LocationReference
+from ..params import LAT_LON_CRS
+from .data import update_df_by_col_value
 
 if TYPE_CHECKING:
     from ..roadway.network import RoadwayNetwork
@@ -45,7 +43,7 @@ def get_bearing(lat1, lon1, lat2, lon2):
 
 def offset_point_with_distance_and_bearing(
     lon: float, lat: float, distance: float, bearing: float
-) -> List[float]:
+) -> list[float]:
     """Get the new lon-lat (in degrees) given current point (lon-lat), distance and bearing.
 
     Args:
@@ -103,8 +101,6 @@ def length_of_linestring_miles(gdf: Union[gpd.GeoSeries, gpd.GeoDataFrame]) -> p
 class MissingNodesError(Exception):
     """Raised when referenced nodes are missing from the network."""
 
-    pass
-
 
 def linestring_from_nodes(
     links_df: pd.DataFrame,
@@ -128,15 +124,14 @@ def linestring_from_nodes(
     # WranglerLogger.debug(f"Index name: {idx_name}")
     required_link_cols = [from_node, to_node]
 
-    if not all([col in links_df.columns for col in required_link_cols]):
+    if not all(col in links_df.columns for col in required_link_cols):
         WranglerLogger.error(
             f"links_df.columns missing required columns.\n\
                             links_df.columns: {links_df.columns}\n\
                             required_link_cols: {required_link_cols}"
         )
-        raise ValueError(
-            f"links_df must have columns {required_link_cols} to create linestring from nodes"
-        )
+        msg = "links_df must have columns {required_link_cols} to create linestring from nodes"
+        raise ValueError(msg)
 
     links_geo_df = copy.deepcopy(links_df[required_link_cols])
     # need to continuously reset the index to make sure the index is the same as the link index
@@ -176,7 +171,8 @@ def linestring_from_nodes(
             f"Cannot create link geometry from nodes because the nodes are\
                              missing from the network. Missing nodes: {missing_nodes}"
         )
-        raise MissingNodesError("Specified from/to nodes are missing in nodes_df")
+        msg = "Cannot create link geometry from nodes because the nodes are missing from the network."
+        raise MissingNodesError(msg)
 
     # create geometry from points
     links_geo_df["geometry"] = links_geo_df.apply(
@@ -197,7 +193,8 @@ def linestring_from_lats_lons(df, lat_fields, lon_fields) -> gpd.GeoSeries:
         lon_fields: list of column names for the lon fields.
     """
     if len(lon_fields) != len(lat_fields):
-        raise ValueError("lon_fields and lat_fields lists must have the same length")
+        msg = "lon_fields and lat_fields lists must have the same length"
+        raise ValueError(msg)
 
     line_geometries = gpd.GeoSeries(
         [
@@ -211,8 +208,6 @@ def linestring_from_lats_lons(df, lat_fields, lon_fields) -> gpd.GeoSeries:
 
 class InvalidCRSError(Exception):
     """Raised when a point is not valid for a given coordinate reference system."""
-
-    pass
 
 
 def check_point_valid_for_crs(point: Point, crs: int):
@@ -235,7 +230,8 @@ def check_point_valid_for_crs(point: Point, crs: int):
         ok_bounds = False
 
     if not ok_bounds:
-        raise InvalidCRSError(f"Invalid coordinate for CRS {crs}: {point.x}, {point.y}")
+        msg = f"Invalid coordinate for CRS {crs}: {point.x}, {point.y}"
+        raise InvalidCRSError(msg)
 
 
 def point_from_xy(x, y, xy_crs: int = LAT_LON_CRS, point_crs: int = LAT_LON_CRS):
@@ -268,7 +264,7 @@ def point_from_xy(x, y, xy_crs: int = LAT_LON_CRS, point_crs: int = LAT_LON_CRS)
 
 
 def update_points_in_linestring(
-    linestring: LineString, updated_coords: List[float], position: int
+    linestring: LineString, updated_coords: list[float], position: int
 ):
     """Replaces a point in a linestring with a new point.
 
@@ -363,7 +359,7 @@ def location_ref_from_point(
     return LocationReference(**lr)
 
 
-def location_refs_from_linestring(geometry: LineString) -> List[LocationReference]:
+def location_refs_from_linestring(geometry: LineString) -> list[LocationReference]:
     """Generates a shared street location reference from linestring.
 
     Args:
@@ -415,10 +411,8 @@ def get_bounding_polygon(
     if nargs == 0:
         return None
     if nargs != 1:
-        raise ValueError(
-            "Exacly one of boundary_gdf, boundary_geocode, or boundary_shp must \
-                         be provided"
-        )
+        msg = "Exactly one of boundary_gdf, boundary_geocode, or boundary_file must be provided."
+        raise ValueError(msg)
 
     OK_BOUNDARY_SUFF = [".shp", ".geojson", ".parquet"]
 
@@ -427,11 +421,11 @@ def get_bounding_polygon(
     elif boundary_file is not None:
         boundary_file = Path(boundary_file)
         if boundary_file.suffix not in OK_BOUNDARY_SUFF:
-            raise ValueError(
-                f"Boundary file must have one of the following suffixes: {OK_BOUNDARY_SUFF}"
-            )
+            msg = "Boundary file must have one of the following suffixes: {OK_BOUNDARY_SUFF}"
+            raise ValueError(msg)
         if not boundary_file.exists():
-            raise FileNotFoundError(f"Boundary file {boundary_file} does not exist")
+            msg = f"Boundary file {boundary_file} does not exist"
+            raise FileNotFoundError(msg)
         if boundary_file.suffix == ".parquet":
             boundary_gdf = gpd.read_parquet(boundary_file)
         else:
@@ -440,15 +434,15 @@ def get_bounding_polygon(
                 boundary_gdf.crs = crs
 
     if boundary_gdf is None:
-        raise ValueError(
-            "One of boundary_gdf, boundary_geocode or boundary_file must be provided."
-        )
+        msg = "One of boundary_gdf, boundary_geocode or boundary_file must be provided."
+        raise ValueError(msg)
 
     if boundary_gdf.crs is not None:
         boundary_gdf = boundary_gdf.to_crs(crs)
     # make sure boundary_gdf is a polygon
     if len(boundary_gdf.geom_type[boundary_gdf.geom_type != "Polygon"]) > 0:
-        raise ValueError("boundary_gdf must all be Polygons")
+        msg = "boundary_gdf must all be Polygons"
+        raise ValueError(msg)
     # get the boundary as a single polygon
     boundary_gs = gpd.GeoSeries([boundary_gdf.geometry.union_all()], crs=crs)
 
@@ -535,10 +529,9 @@ def to_points_gdf(
             WranglerLogger.error("No lat/long cols found.")
         if not model_node_id_cols:
             WranglerLogger.error("No *model_node_id cols found.")
-        raise ValueError(
-            "Could not find lat/long, geometry columns or *model_node_id column in \
+        msg = "Could not find lat/long, geometry columns or *model_node_id column in \
                          table necessary to convert to GeoDataFrame"
-        )
+        raise ValueError(msg)
 
     if lat_cols and lon_cols:
         # using first found lat and lon columns
@@ -553,10 +546,9 @@ def to_points_gdf(
 
         if ref_nodes_df is None:
             if ref_road_net is None:
-                raise ValueError(
-                    "Must provide either nodes_df or road_net to convert \
+                msg = "Must provide either nodes_df or road_net to convert \
                                  model_node_id to geometry"
-                )
+                raise ValueError(msg)
             ref_nodes_df = ref_road_net.nodes_df
 
         WranglerLogger.debug("Converting table to GeoDataFrame using model_node_id")
@@ -567,11 +559,9 @@ def to_points_gdf(
             right_on="model_node_id",
         )
         return gpd.GeoDataFrame(_table, geometry="geometry")
-
-    raise ValueError(
-        "Could not find lat/long, geometry columns or *model_node_id column in table \
-                     necessary to convert to GeoDataFrame"
-    )
+    msg = "Could not find lat/long, geometry columns or *model_node_id column in table \
+                        necessary to convert to GeoDataFrame"
+    raise ValueError(msg)
 
 
 def update_point_geometry(

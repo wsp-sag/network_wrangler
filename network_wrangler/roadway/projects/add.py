@@ -1,13 +1,14 @@
 """Functions for applying roadway link or node addition project cards to the roadway network."""
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
 
-from ..nodes.create import data_to_nodes_df
-from ..links.create import data_to_links_df
 from ...logger import WranglerLogger
+from ..links.create import data_to_links_df
+from ..nodes.create import data_to_nodes_df
 
 if TYPE_CHECKING:
     from ..network import RoadwayNetwork
@@ -15,8 +16,6 @@ if TYPE_CHECKING:
 
 class NewRoadwayError(Exception):
     """Raised when there is an issue with applying a new roadway."""
-
-    pass
 
 
 def apply_new_roadway(
@@ -63,7 +62,8 @@ def apply_new_roadway(
     """
     add_links, add_nodes = roadway_addition.get("links", []), roadway_addition.get("nodes", [])
     if not add_links and not add_nodes:
-        raise NewRoadwayError("No links or nodes given to add.")
+        msg = "No links or nodes given to add."
+        raise NewRoadwayError(msg)
 
     WranglerLogger.debug(
         f"Adding New Roadway Features: \n-Links: \n{add_links}\n-Nodes: \n{add_nodes}"
@@ -78,8 +78,9 @@ def apply_new_roadway(
         # make sure links refer to nodes in network
         _missing_nodes = _node_ids_from_set_links(add_links) - set(roadway_net.nodes_df.index)
         if _missing_nodes:
-            WranglerLogger.error(f"Missing nodes for new links: {_missing_nodes}")
-            raise NewRoadwayError("Link additions use nodes not found in network.")
+            msg = "Link additions use nodes not found in network."
+            WranglerLogger.error(msg + f" Missing nodes for new links: {_missing_nodes}")
+            raise NewRoadwayError(msg)
         _new_links_df = data_to_links_df(
             add_links,
             config=roadway_net.config,

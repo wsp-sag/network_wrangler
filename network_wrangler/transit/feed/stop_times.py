@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import pandas as pd
-
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
 from ...models.gtfs.tables import (
-    WranglerTripsTable,
     WranglerShapesTable,
-    WranglerStopTimesTable,
     WranglerStopsTable,
+    WranglerStopTimesTable,
+    WranglerTripsTable,
 )
 from ...utils.models import validate_call_pyd
 from .feed import (
@@ -43,7 +42,8 @@ def stop_times_for_min_stops(
     # Filter to obtain DataFrame of trips with stop counts >= min_stops
     min_stop_ct_trip_df = stop_ct_by_trip_df[stop_ct_by_trip_df.stop_count >= min_stops]
     if len(min_stop_ct_trip_df) == 0:
-        raise ValueError(f"No trips meet threshold of minimum stops: {min_stops}")
+        msg = f"No trips meet threshold of minimum stops: {min_stops}"
+        raise ValueError(msg)
     WranglerLogger.debug(
         f"Found {len(min_stop_ct_trip_df)} trips with a minimum of {min_stops} stops."
     )

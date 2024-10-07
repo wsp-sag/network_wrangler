@@ -1,21 +1,21 @@
 """Data Model for Pure GTFS Feed (not wrangler-flavored)."""
 
+from typing import ClassVar
+
 from ...models._base.db import DBModelMixin
 from .tables import (
     AgenciesTable,
-    StopsTable,
-    RoutesTable,
-    TripsTable,
-    StopTimesTable,
-    ShapesTable,
     FrequenciesTable,
+    RoutesTable,
+    ShapesTable,
+    StopsTable,
+    StopTimesTable,
+    TripsTable,
 )
 
 
 class GtfsValidationError(Exception):
     """Exception raised for errors in the GTFS feed."""
-
-    pass
 
 
 class GtfsModel(DBModelMixin):
@@ -41,7 +41,7 @@ class GtfsModel(DBModelMixin):
 
     # the ordering here matters because the stops need to be added before stop_times if
     # stop times needs to be converted
-    _table_models = {
+    _table_models: ClassVar[dict] = {
         "agencies": AgenciesTable,
         "frequencies": FrequenciesTable,
         "routes": RoutesTable,
@@ -51,7 +51,7 @@ class GtfsModel(DBModelMixin):
         "stop_times": StopTimesTable,
     }
 
-    table_names = [
+    table_names: ClassVar[list[str]] = [
         "frequencies",
         "routes",
         "shapes",
@@ -60,7 +60,7 @@ class GtfsModel(DBModelMixin):
         "stop_times",
     ]
 
-    optional_table_names = ["agencies"]
+    optional_table_names: ClassVar[list[str]] = ["agencies"]
 
     def __init__(self, **kwargs):
         """Initialize GTFS model."""

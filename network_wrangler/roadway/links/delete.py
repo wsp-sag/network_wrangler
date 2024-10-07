@@ -3,14 +3,12 @@
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...models.roadway.tables import RoadLinksTable, RoadLinksAttrs
+from ...models.roadway.tables import RoadLinksAttrs, RoadLinksTable
 from ...utils.models import validate_call_pyd
 
 
 class LinkDeletionError(Exception):
     """Raised when there is an issue with deleting links."""
-
-    pass
 
 
 @validate_call_pyd
@@ -34,5 +32,6 @@ def delete_links_by_ids(
     if _missing:
         WranglerLogger.warning(f"Links in network not there to delete: \n{_missing}")
         if not ignore_missing:
-            raise LinkDeletionError("Links to delete are not in the network.")
+            msg = "Links to delete are not in the network."
+            raise LinkDeletionError(msg)
     return links_df.drop(labels=del_link_ids, errors="ignore")

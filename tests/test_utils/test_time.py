@@ -1,15 +1,14 @@
 import datetime
-import pytest
 
 import pandas as pd
+import pytest
 
+from network_wrangler.logger import WranglerLogger
 from network_wrangler.utils.time import (
+    filter_df_to_overlapping_timespans,
     str_to_time,
     timespans_overlap,
-    filter_df_to_overlapping_timespans,
 )
-from network_wrangler.logger import WranglerLogger
-
 
 str_to_time_cases = [
     # Test case format: (time_str, base_date, expected_datetime)

@@ -21,17 +21,17 @@ write_roadway(clipped_network, out_dir, prefix="ecolab", format="geojson", true_
 """
 
 from __future__ import annotations
-import copy
 
-from typing import Union, Optional, TYPE_CHECKING
+import copy
 from pathlib import Path
+from typing import TYPE_CHECKING, Optional, Union
 
 import geopandas as gpd
 
-from .links.links import node_ids_in_links
-from ..utils.geo import get_bounding_polygon
 from ..logger import WranglerLogger
 from ..params import LAT_LON_CRS
+from ..utils.geo import get_bounding_polygon
+from .links.links import node_ids_in_links
 
 if TYPE_CHECKING:
     from .network import RoadwayNetwork

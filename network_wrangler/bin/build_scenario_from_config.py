@@ -27,11 +27,9 @@ the base scenario. The modified network can be written out to files if specified
 """
 
 import argparse
-
 from pathlib import Path
 
 from network_wrangler.scenario import build_scenario_from_config
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build a scenario from a configuration file.")

@@ -1,11 +1,13 @@
 """Tests db mixin class for network_wrangler.models._base.db module."""
 
+from typing import ClassVar
+
 import pandas as pd
 import pytest
 from pandera import DataFrameModel
 
-from network_wrangler.utils.models import TableValidationError
 from network_wrangler.models._base.db import DBModelMixin, ForeignKeyValueError
+from network_wrangler.utils.models import TableValidationError
 
 
 class MockTableModel_A(DataFrameModel):
@@ -20,13 +22,13 @@ class MockTableModel_B(DataFrameModel):
     class Config:
         coerce = True
         add_missing_columns = True
-        _pk = ["B_ID"]
-        _fk = {"a_value": ["table_a", "A_ID"]}
+        _pk: ClassVar = ["B_ID"]
+        _fk: ClassVar = {"a_value": ["table_a", "A_ID"]}
 
 
 class MockDBModel(DBModelMixin):
-    table_names = ["table_a", "table_b"]
-    _table_models = {
+    table_names: ClassVar = ["table_a", "table_b"]
+    _table_models: ClassVar = {
         "table_a": MockTableModel_A,
         "table_b": MockTableModel_B,
     }

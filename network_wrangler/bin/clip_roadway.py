@@ -25,13 +25,11 @@ python clip_roadway.py /path/to/network_dir /path/to/boundary.shp /path/to/outpu
 import argparse
 import datetime
 import logging
-
 from pathlib import Path
 
-from network_wrangler.roadway.io import write_roadway, load_roadway_from_dir
-from network_wrangler.roadway.clip import clip_roadway
 from network_wrangler.logger import WranglerLogger
-
+from network_wrangler.roadway.clip import clip_roadway
+from network_wrangler.roadway.io import load_roadway_from_dir, write_roadway
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -109,6 +107,6 @@ if __name__ == "__main__":
     readme_txt = f"{args.out_prefix} Network was clipped using clip_roadway.py.\n\
         Date: {datetime.datetime.now().strftime('%Y_%m_%d__%H_%M_%S')}\
         Args: {args}"
-    with open(args.out_dir / f"{args.out_prefix}README.txt", "w") as f:
+    with Path(args.out_dir / f"{args.out_prefix}README.txt").open("w") as f:
         f.write(readme_txt)
     WranglerLogger.info(f"Clipped network saved to {args.out_dir}")

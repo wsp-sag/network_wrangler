@@ -1,6 +1,10 @@
+#! /usr/bin/env python
+"""Benchmark tests for network_wrangler."""
+
+from projectcard import read_cards
+
 from network_wrangler.roadway import load_roadway_from_dir, write_roadway
 from network_wrangler.transit import load_transit, write_transit
-from projectcard import read_cards
 
 
 def roadway_io(stpaul_ex_dir, test_out_dir):
@@ -16,8 +20,8 @@ def roadway_property_change(stpaul_ex_dir):
     net = load_roadway_from_dir(stpaul_ex_dir)
     c = stpaul_ex_dir / "project_cards" / "road.prop_change.multiple.yml"
     p = read_cards(c)
-    for p in p.values():
-        net.apply(p)
+    for proj in p.values():
+        net.apply(proj)
 
 
 def test_roadway_property_change(benchmark, stpaul_ex_dir):
@@ -90,8 +94,8 @@ def apply_transit_routing_change(stpaul_ex_dir):
     net.road_net = road_net
     c = stpaul_ex_dir / "project_cards" / "transit.routing_change.yml"
     p = read_cards(c)
-    for p in p.values():
-        net.apply(p)
+    for proj in p.values():
+        net.apply(proj)
 
 
 def test_transit_routing_change(benchmark, stpaul_ex_dir):

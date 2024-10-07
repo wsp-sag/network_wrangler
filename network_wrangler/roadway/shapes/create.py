@@ -1,36 +1,32 @@
 """Functions to create RoadShapesTable from various data."""
 
 from __future__ import annotations
+
 import copy
 
-import pandas as pd
 import geopandas as gpd
-
+import pandas as pd
 from pandera.typing import DataFrame
 
-from ...configs import DefaultConfig
-from ...models.roadway.tables import RoadShapesTable, RoadShapesAttrs
-from ...utils.models import validate_df_to_model
-from ...utils.data import coerce_gdf
-from ...utils.utils import generate_list_of_new_ids_from_existing
-from ...utils.geo import offset_geometry_meters
+from ...configs import DefaultConfig, WranglerConfig
 from ...logger import WranglerLogger
+from ...models.roadway.tables import RoadShapesAttrs, RoadShapesTable
 from ...params import LAT_LON_CRS
+from ...utils.data import coerce_gdf, concat_with_attr
+from ...utils.geo import offset_geometry_meters
+from ...utils.models import validate_df_to_model
+from ...utils.utils import generate_list_of_new_ids_from_existing
 from ..utils import set_df_index_to_pk
-from ...utils.data import concat_with_attr
-from ...configs import WranglerConfig, DefaultConfig
 
 
 class ShapeAddError(Exception):
     """Raised when there is an issue with adding shapes."""
 
-    pass
-
 
 def df_to_shapes_df(
     shapes_df: gpd.GeoDataFrame,
     in_crs: int = LAT_LON_CRS,
-    config: WranglerConfig = DefaultConfig,
+    config: WranglerConfig = DefaultConfig,  # noqa: ARG001
 ) -> DataFrame[RoadShapesTable]:
     """Sets index to be a copy of the primary key, validates to RoadShapesTable and aligns CRS.
 
@@ -65,9 +61,8 @@ def _check_rename_old_column_aliases(shapes_df):
         return shapes_df
     ALT_SHAPE_ID = "id"
     if ALT_SHAPE_ID not in shapes_df.columns:
-        raise ValueError(
-            "shapes_df must have a column named 'shape_id' or 'id' to use as the shape_id."
-        )
+        msg = "shapes_df must have a column named 'shape_id' or 'id' to use as the shape_id."
+        raise ValueError(msg)
     return shapes_df.rename(columns={ALT_SHAPE_ID: "shape_id"})
 
 

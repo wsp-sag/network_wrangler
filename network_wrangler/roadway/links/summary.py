@@ -2,6 +2,7 @@
 
 import pandas as pd
 from pandera.typing import DataFrame
+
 from ...models.roadway.tables import RoadLinksTable
 from .filters import (
     filter_links_access_dummy,
@@ -14,7 +15,6 @@ from .filters import (
     filter_links_transit_only,
 )
 from .links import calc_lane_miles
-
 
 link_summary_cats = {
     "managed": filter_links_managed_lanes,

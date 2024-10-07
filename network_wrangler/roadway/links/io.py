@@ -1,24 +1,23 @@
 """Functions to read in and write out a RoadLinksTable."""
 
 from __future__ import annotations
+
 import time
-from typing import Union
 from pathlib import Path
+from typing import Union
 
 import pandas as pd
-
 from pandera.typing import DataFrame
 
+from ...configs import DefaultConfig, WranglerConfig
 from ...logger import WranglerLogger
-from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadNodesAttrs, RoadLinksAttrs
-from ...models.roadway.converters import translate_links_df_v1_to_v0
 from ...models._base.types import GeoFileTypes
+from ...models.roadway.converters import translate_links_df_v1_to_v0
+from ...models.roadway.tables import RoadLinksAttrs, RoadLinksTable, RoadNodesAttrs, RoadNodesTable
+from ...params import LAT_LON_CRS
 from ...utils.io_table import read_table, write_table
 from ...utils.models import validate_call_pyd
 from .create import data_to_links_df
-from ...params import LAT_LON_CRS
-
-from ...configs import DefaultConfig, WranglerConfig
 
 
 @validate_call_pyd
@@ -47,7 +46,8 @@ def read_links(
     WranglerLogger.info(f"Reading links from {filename}.")
     start_t = time.time()
     if filter_to_nodes is True and nodes_df is None:
-        raise ValueError("If filter_to_nodes is True, nodes_df must be provided.")
+        msg = "If filter_to_nodes is True, nodes_df must be provided."
+        raise ValueError(msg)
 
     links_df = read_table(filename, read_speed=config.CPU.EST_PD_READ_SPEED)
 

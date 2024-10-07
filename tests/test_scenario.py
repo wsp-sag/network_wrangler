@@ -4,19 +4,18 @@ Run just the tests labeled scenario using `pytest tests/test_scenario.py`
 To run with print statments, use `pytest -s tests/test_scenario.py`
 """
 
-import os
 import copy
 
 import pytest
+from projectcard import ProjectCard, read_card, write_card
 
-from projectcard import read_card, write_card, ProjectCard
-from network_wrangler.scenario import create_scenario
+from network_wrangler.logger import WranglerLogger
 from network_wrangler.scenario import (
     ScenarioConflictError,
     ScenarioCorequisiteError,
     ScenarioPrerequisiteError,
+    create_scenario,
 )
-from network_wrangler.logger import WranglerLogger
 
 
 def test_default_config(request):
@@ -34,7 +33,7 @@ def test_default_config(request):
 def test_project_card_read(request, stpaul_card_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    in_file = os.path.join(stpaul_card_dir, "road.prop_change.simple.yml")
+    in_file = stpaul_card_dir / "road.prop_change.simple.yml"
     project_card = read_card(in_file)
     WranglerLogger.debug(project_card)
     assert project_card.change_type == "roadway_property_change"
@@ -44,8 +43,8 @@ def test_project_card_read(request, stpaul_card_dir):
 def test_project_card_write(request, stpaul_card_dir, scratch_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    in_file = os.path.join(stpaul_card_dir, "road.prop_change.simple.yml")
-    outfile = os.path.join(scratch_dir, "t_simple_roadway_attribute_change.yml")
+    in_file = stpaul_card_dir / "road.prop_change.simple.yml"
+    outfile = scratch_dir / "t_simple_roadway_attribute_change.yml"
     project_card = read_card(in_file)
     write_card(project_card, outfile)
     test_card = read_card(in_file)
@@ -55,7 +54,7 @@ def test_project_card_write(request, stpaul_card_dir, scratch_dir):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_scenario_conflicts(request, stpaul_card_dir):
+def test_scenario_conflicts(request):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     project_a = ProjectCard(

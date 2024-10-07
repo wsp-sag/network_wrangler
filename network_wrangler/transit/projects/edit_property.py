@@ -1,14 +1,16 @@
 """Functions for editing transit properties in a TransitNetwork."""
 
 from __future__ import annotations
-import copy
 
+import copy
 from typing import TYPE_CHECKING, Optional
 
 from ...logger import WranglerLogger
+from ...utils.data import validate_existing_value_in_df
 
 if TYPE_CHECKING:
     from pandas import Series
+
     from ...transit.network import TransitNetwork
     from ...transit.selection import TransitSelection
 
@@ -21,8 +23,6 @@ IMPLEMENTED_TABLES = ["trips", "frequencies", "stop_times"]
 
 class TransitPropertyChangeError(Exception):
     """Error raised when applying transit property changes."""
-
-    pass
 
 
 def apply_transit_property_change(
@@ -56,45 +56,32 @@ def apply_transit_property_change(
 
 def _get_table_name_for_property(net: TransitNetwork, property: str) -> str:
     table_name = TABLE_TO_APPLY_BY_PROPERTY.get(property)
-    if not table_name:
+    if table_name is None:
         possible_table_names = net.feed.table_names_with_field(property)
-        if not len(possible_table_names == 1):
-            raise NotImplementedError("Found property {property} in multiple tables: {table}")
+        if len(possible_table_names) != 1:
+            msg = f"Found property {property} in multiple tables: {possible_table_names}"
+            raise NotImplementedError(msg)
         table_name = possible_table_names[0]
     if table_name not in IMPLEMENTED_TABLES:
-        raise NotImplementedError(f"{table_name} table changes not currently implemented.")
+        msg = f"{table_name} table changes not currently implemented."
+        raise NotImplementedError(msg)
     return table_name
-
-
-def _check_existing_value(existing_s: Series, expected_existing_val) -> bool:
-    # Check all `existing` properties if given
-
-    if not all(existing_s == expected_existing_val):
-        WranglerLogger.warning(
-            f"Existing do not all match expected value of {expected_existing_val}."
-        )
-        WranglerLogger.debug(
-            f"Conflicting values values: {existing_s[existing_s != expected_existing_val]}"
-        )
-        return False
-    return True
 
 
 def _apply_transit_property_change_to_table(
     net: TransitNetwork,
     selection: TransitSelection,
-    property: str,
+    prop_name: str,
     prop_change: dict,
     project_name: Optional[str] = None,
 ) -> TransitNetwork:
-    table_name = _get_table_name_for_property(net, property)
-    WranglerLogger.debug(f"...modifying {property} in {table_name}.")
+    table_name = _get_table_name_for_property(net, prop_name)
+    WranglerLogger.debug(f"...modifying {prop_name} in {table_name}.")
 
     # Allow the project card to override the default behavior of raising an error
-    if "existing_value_conflict" in prop_change:
-        existing_value_conflict = prop_change["existing_value_conflict"]
-    else:
-        existing_value_conflict = net.config.EDITS.EXISTING_VALUE_CONFLICT
+    existing_value_conflict = prop_change.get(
+        "existing_value_conflict", net.config.EDITS.EXISTING_VALUE_CONFLICT
+    )
 
     table_df = net.feed.get_table(table_name)
 
@@ -104,31 +91,24 @@ def _apply_transit_property_change_to_table(
     elif table_name == "frequencies":
         update_idx = selection.selected_frequencies_df.index
     else:
-        raise NotImplementedError(f"{table_name} table changes not currently implemented.")
+        msg = f"Changes in table {table_name} not implemented."
+        raise NotImplementedError(msg)
 
-    if "existing" in prop_change:
-        existing_ok = _check_existing_value(
-            table_df.loc[update_idx, property], prop_change["existing"]
-        )
-        if not existing_ok:
-            WranglerLogger.warning(f"Existing {property} != {prop_change['existing']}.")
-            if existing_value_conflict == "error":
-                raise TransitPropertyChangeError("Existing {property} does not match.")
-            if existing_value_conflict == "skip":
-                WranglerLogger.warning(
-                    f"Skipping {property} change due to existing value conflict."
-                )
-                return net
-
+    _check_existing_value_conflict(
+        table_df, update_idx, prop_name, prop_change, existing_value_conflict
+    )
     set_df = copy.deepcopy(table_df)
 
     # Calculate build value
     if "set" in prop_change:
-        set_df.loc[update_idx, property] = prop_change["set"]
+        set_df.loc[update_idx, prop_name] = prop_change["set"]
     elif "change" in prop_change:
-        set_df.loc[update_idx, property] = set_df.loc[update_idx, property] + prop_change["change"]
+        set_df.loc[update_idx, prop_name] = (
+            set_df.loc[update_idx, prop_name] + prop_change["change"]
+        )
     else:
-        raise ValueError("Property change must include 'set' or 'change'.")
+        msg = "Property change must include 'set' or 'change'."
+        raise ValueError(msg)
 
     if project_name is not None:
         set_df.loc[update_idx, "projects"] += f"{project_name},"
@@ -137,3 +117,23 @@ def _apply_transit_property_change_to_table(
     net.feed.__dict__[table_name] = set_df
 
     return net
+
+
+def _check_existing_value_conflict(
+    table_df, update_idx, prop_name, prop_change, existing_value_conflict
+) -> bool:
+    if "existing" not in prop_change:
+        return True
+
+    if validate_existing_value_in_df(table_df, update_idx, prop_name, prop_change["existing"]):
+        return True
+
+    WranglerLogger.warning(f"Existing {property} != {prop_change['existing']}.")
+    if existing_value_conflict == "error":
+        msg = f"Existing {property} does not match {prop_change['existing']}."
+        raise TransitPropertyChangeError(msg)
+    if existing_value_conflict == "skip":
+        WranglerLogger.warning(f"Skipping {property} change due to existing value conflict.")
+        return False
+    WranglerLogger.warning(f"Changing {prop_name} despite conflict with existing value.")
+    return True

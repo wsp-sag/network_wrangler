@@ -81,6 +81,7 @@ Extended usage:
 
     ```python
     from network_wrangler.configs import DefaultConfig
+
     DefaultConfig.MODEL_ROADWAY.ML_OFFSET_METERS = 20
     ```
 
@@ -88,6 +89,7 @@ Extended usage:
 
     ```python
     from network_wrangler.configs import load_wrangler_config
+
     config = load_wrangler_config("path/to/config.yaml")
     ```
 
@@ -101,8 +103,8 @@ Extended usage:
 
 from typing import Literal
 
-from pydantic.dataclasses import dataclass
 from pydantic import Field
+from pydantic.dataclasses import dataclass
 
 from .utils import ConfigItem
 
@@ -115,7 +117,7 @@ class EditsConfig(ConfigItem):
         EXISTING_VALUE_CONFLICT: Only used if 'existing' provided in project card and
             `existing` doesn't match the existing network value. One of `error`, `warn`, or `skip`.
             `error` will raise an error, `warn` will warn the user, and `skip` will skip the change
-            for that property (note it will still apply any remaining property changes).
+            for that specific property (note it will still apply any remaining property changes).
             Defaults to `warn`. Can be overridden by setting `existing_value_conflict` in
             a `roadway_property_change` project card.
 
@@ -220,3 +222,6 @@ class WranglerConfig(ConfigItem):
     MODEL_ROADWAY: ModelRoadwayConfig = ModelRoadwayConfig()
     CPU: CpuConfig = CpuConfig()
     EDITS: EditsConfig = EditsConfig()
+
+
+DefaultConfig = WranglerConfig()

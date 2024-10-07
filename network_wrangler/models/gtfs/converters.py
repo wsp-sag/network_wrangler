@@ -39,6 +39,7 @@ def convert_stops_to_wrangler_stops(stops_df: pd.DataFrame) -> pd.DataFrame:
     ```python
     import pandas as pd
     from network_wrangler.models.gtfs.converters import convert_stops_to_wrangler_stops
+
     in_f = "network_wrangler/examples/stpaul/gtfs/stops.txt"
     stops_df = pd.read_csv(in_f)
     wr_stops_df = convert_stops_to_wrangler_stops(stops_df)

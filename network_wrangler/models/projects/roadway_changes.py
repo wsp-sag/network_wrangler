@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import itertools
-
-from typing import Optional, ClassVar, Any, Union, Literal
 from datetime import datetime
+from typing import Any, ClassVar, Literal, Optional, Union
 
 from pydantic import (
     BaseModel,
@@ -17,26 +16,22 @@ from pydantic import (
     validate_call,
 )
 
-from .roadway_selection import SelectLinksDict, SelectNodesDict
-
 from ...logger import WranglerLogger
-from .._base.records import RecordModel
-from .._base.root import RootListMixin
-from .._base.types import OneOf, TimespanString, AnyOf
-
 from ...params import (
     DEFAULT_CATEGORY,
-    DEFAULT_TIMESPAN,
     DEFAULT_DELETE_MODES,
     DEFAULT_SEARCH_MODES,
+    DEFAULT_TIMESPAN,
 )
 from ...utils.time import dt_overlaps, str_to_time_list
+from .._base.records import RecordModel
+from .._base.root import RootListMixin
+from .._base.types import AnyOf, OneOf, TimespanString
+from .roadway_selection import SelectLinksDict, SelectNodesDict
 
 
 class ScopeConflictError(Exception):
     """Raised when there is a scope conflict in a list of ScopedPropertySetItems."""
-
-    pass
 
 
 class IndivScopedPropertySetItem(BaseModel):
@@ -72,12 +67,10 @@ class IndivScopedPropertySetItem(BaseModel):
             data["change"] = None
 
         WranglerLogger.debug(f"Data: {data}")
-        if data.get("set", None) is None and data.get("change", None) is None:
-            WranglerLogger.debug(
-                f"Must have `set` or `change` in IndivScopedPropertySetItem. \
-                           Found: {data}"
-            )
-            raise ValueError("Must have `set` or `change` in IndivScopedPropertySetItem")
+        if data.get("set") is None and data.get("change") is None:
+            msg = f"Require at least one of 'set' or'change' in IndivScopedPropertySetItem"
+            WranglerLogger.debug(msg=f"   Found: {data}")
+            raise ValueError(msg)
         return data
 
     @model_validator(mode="before")
@@ -87,8 +80,9 @@ class IndivScopedPropertySetItem(BaseModel):
         if not isinstance(data, dict):
             return data
         require_any_of = ["category", "timespan"]
-        if not any([attr in data for attr in require_any_of]):
-            raise ValidationError(f"Require at least one of {require_any_of}")
+        if not any(attr in data for attr in require_any_of):
+            msg = f"Require at least one of {require_any_of}"
+            raise ValidationError(msg)
         return data
 
 
@@ -129,8 +123,9 @@ class GroupedScopedPropertySetItem(BaseModel):
         if not isinstance(data, dict):
             return data
         require_any_of = ["category", "timespan", "categories", "timespans"]
-        if not any([attr in data for attr in require_any_of]):
-            raise ValidationError(f"Require at least one of {require_any_of}")
+        if not any(attr in data for attr in require_any_of):
+            msg = f"Require at least one of {require_any_of}"
+            raise ValidationError(msg)
         return data
 
 
@@ -155,17 +150,8 @@ def _grouped_to_indiv_list_of_scopedpropsetitem(
             continue
 
         # Create full lists of all categories and timespans
-        categories = item.categories
-        if item.category is not None:
-            categories.append(item.category)  # type: ignore
-        if not categories:
-            categories = [DEFAULT_CATEGORY]
-
-        timespans = item.timespans
-        if item.timespan:
-            timespans.append(item.timespan)  # type: ignore
-        if not timespans:
-            timespans = [DEFAULT_TIMESPAN]
+        categories = item.categories if item.categories else [DEFAULT_CATEGORY]
+        timespans = item.timespans if item.timespans else [DEFAULT_TIMESPAN]
 
         for c, t in itertools.product(categories, timespans):
             indiv_item = IndivScopedPropertySetItem(
@@ -202,8 +188,9 @@ class ScopedPropertySetList(RootListMixin, RootModel):
                 if j.category == i.category:
                     conflicts.append((i, j))
         if conflicts:
-            WranglerLogger.error("Found conflicting scopes in ScopedPropertySetList:\n{conflicts}")
-            raise ScopeConflictError("Conflicting scopes in ScopedPropertySetList")
+            msg = "Conflicting scopes in ScopedPropertySetList"
+            WranglerLogger.error(msg + f"\n    Conflicts: {conflicts}")
+            raise ScopeConflictError(msg)
 
         return self
 
@@ -286,7 +273,6 @@ class RoadwayDeletion(RecordModel):
     @classmethod
     def set_to_all_modes(cls, links: Optional[SelectLinksDict] = None):
         """Set the search mode to 'any' if not specified explicitly."""
-        if links is not None:
-            if links.modes == DEFAULT_SEARCH_MODES:
-                links.modes = DEFAULT_DELETE_MODES
+        if links is not None and links.modes == DEFAULT_SEARCH_MODES:
+            links.modes = DEFAULT_DELETE_MODES
         return links

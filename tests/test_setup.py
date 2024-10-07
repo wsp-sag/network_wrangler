@@ -5,8 +5,8 @@ from network_wrangler import WranglerLogger
 
 def test_setup():
     """Create virtual environment and test that network wranlger can be installed and imported."""
-    import subprocess
     import shutil
+    import subprocess
 
     WranglerLogger.debug("Creating virtual environment...")
     subprocess.run(["python", "-m", "venv", "wranglertest"], check=True)
@@ -14,7 +14,7 @@ def test_setup():
     install_process = subprocess.run(["wranglertest/bin/pip", "install", "-e", "."], check=True)
     WranglerLogger.debug(f"Installed Wrangler.\n{install_process.stdout}")
     pip_list_process = subprocess.run(
-        ["wranglertest/bin/pip", "list"], capture_output=True, text=True
+        ["wranglertest/bin/pip", "list"], capture_output=True, text=True, check=False
     )
     WranglerLogger.debug(f"Venv contents:\n{pip_list_process.stdout}")
     WranglerLogger.debug("Testing import...")

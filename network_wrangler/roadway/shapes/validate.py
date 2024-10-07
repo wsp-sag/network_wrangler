@@ -8,7 +8,7 @@ import pandas as pd
 
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadShapesTable
-from ...utils.models import validate_df_to_model, TableValidationError
+from ...utils.models import TableValidationError, validate_df_to_model
 
 
 def validate_shapes_file(

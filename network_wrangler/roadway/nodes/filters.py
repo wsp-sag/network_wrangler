@@ -1,12 +1,12 @@
 """Functions to filter nodes dataframe."""
 
 from __future__ import annotations
-from typing import List, TYPE_CHECKING, Optional
+
+from typing import TYPE_CHECKING, Optional
 
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-
 from ..links.links import node_ids_in_link_ids, node_ids_in_links
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 def filter_nodes_to_ids(
-    nodes_df: DataFrame[RoadNodesTable], node_ids: List[int]
+    nodes_df: DataFrame[RoadNodesTable], node_ids: list[int]
 ) -> DataFrame[RoadNodesTable]:
     """Filters nodes dataframe by node_ids.
 
@@ -29,7 +29,7 @@ def filter_nodes_to_ids(
 
 
 def filter_nodes_to_link_ids(
-    link_ids: List[int],
+    link_ids: list[int],
     links_df: DataFrame[RoadLinksTable],
     nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
 ) -> DataFrame[RoadNodesTable]:

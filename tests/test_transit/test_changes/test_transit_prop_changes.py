@@ -4,9 +4,11 @@ Run just these tests using `pytest tests/test_transit/test_transit_prop_changes.
 """
 
 import copy
+
 import pandas as pd
 import pytest
 from pandera.errors import SchemaError
+
 from network_wrangler import WranglerLogger
 
 
@@ -122,7 +124,7 @@ def test_transit_property_change(request, small_transit_net):
     if not (target_df["headway_secs"] == new_headway).all():
         WranglerLogger.error("Headway not changed as expected:")
         WranglerLogger.debug(f"Targeted Frequencies: \n{target_df}")
-        assert False
+        raise AssertionError()
 
     unchanged_result_df = net.feed.frequencies.loc[
         ~net.feed.frequencies.index.isin(target_df.index)
@@ -140,4 +142,4 @@ def test_transit_property_change(request, small_transit_net):
     if not (target_df["projects"] == f"{project_card['project']},").all():
         WranglerLogger.error(f"Projects not updated as expected with {project_card['project']}:")
         WranglerLogger.debug(f"Targeted Frequencies: \n{target_df}")
-        assert False
+        raise AssertionError()

@@ -1,17 +1,16 @@
 import copy
 import hashlib
-
 from collections import defaultdict
-from typing import ClassVar, Callable, Optional
+from typing import Callable, ClassVar, DefaultDict, Optional
 
 import pandas as pd
 from pandera import DataFrameModel
 from pandera.errors import SchemaErrors
 
+from ...logger import WranglerLogger
+from ...params import SMALL_RECS
 from ...utils.data import fk_in_pk
 from ...utils.models import validate_df_to_model
-
-from ...logger import WranglerLogger
 
 
 class RequiredTableError(Exception):
@@ -36,21 +35,6 @@ Example:
 TableForeignKeys = dict[str, tuple[str, str]]
 
 
-"""Mapping of tables that have fields that other tables use as fks.
-
-`{ <table>:{<field>:[(<table using FK>,<field using fk>)]} }`
-
-Example:
-    {"stops":
-        {"stop_id": [
-            ("stops", "parent_station"),
-            ("stop_times", "stop_id")
-            ]}
-    }
-"""
-DbForeignKeyUsage = dict[str, dict[str, list[tuple[str, str]]]]
-
-
 """Dict of each table's foreign keys.
 
 `{ <table>:{<field>:[<fk_table>,<fk_field>]} }`
@@ -64,6 +48,21 @@ Example:
     }
 """
 DbForeignKeys = dict[str, TableForeignKeys]
+
+
+"""Mapping of tables that have fields that other tables use as fks.
+
+`{ <table>:{<field>:[(<table using FK>,<field using fk>)]} }`
+
+Example:
+    {"stops":
+        {"stop_id": [
+            ("stops", "parent_station"),
+            ("stop_times", "stop_id")
+            ]}
+    }
+"""
+DbForeignKeyUsage = dict[str, dict[str, list[tuple[str, str]]]]
 
 
 class DBModelMixin:
@@ -165,10 +164,8 @@ class DBModelMixin:
         # Flag missing required tables
         _missing_tables = [t for t in self.table_names if t not in kwargs]
         if _missing_tables:
-            raise RequiredTableError(
-                f"{_missing_tables} is/are required \
-                                        but not in initialization."
-            )
+            msg = f"Missing required tables: {_missing_tables}"
+            raise RequiredTableError(msg)
 
         # Add provided optional tables
         _opt_tables = [k for k in kwargs if k in self.optional_table_names]
@@ -198,7 +195,7 @@ class DBModelMixin:
 
         Useful for knowing if you should check FK validation when changing a field value.
         """
-        pks_as_fks = defaultdict(lambda: defaultdict(list))  # type: ignore
+        pks_as_fks: DefaultDict = defaultdict(lambda: defaultdict(list))
         for t, field_fk in cls.fks().items():
             for f, fk in field_fk.items():
                 fk_table, fk_field = fk
@@ -278,7 +275,7 @@ class DBModelMixin:
         if table is None:
             table = self.get_table(table_name)
         all_valid = True
-        for field in self.fields_as_fks().get(table_name, {}).keys():
+        for field in self.fields_as_fks().get(table_name, {}):
             valid = self.check_referenced_fk(table_name, field, pk_table=table)
             all_valid = valid and all_valid
         return all_valid
@@ -330,7 +327,7 @@ class DBModelMixin:
                 )
                 all_valid = False
                 continue
-            if len(pkref_table) < 10:
+            if len(pkref_table) < SMALL_RECS:
                 pass
                 # WranglerLogger.debug(f"PK values:\n{pkref_table[pkref_field]}.")
             # WranglerLogger.debug(f"Checking {table_name}.{field} foreign key")
@@ -344,7 +341,8 @@ class DBModelMixin:
 
         if not all_valid:
             if raise_error:
-                raise ForeignKeyValueError("FK fields/ values referenced in {table_name} missing.")
+                msg = f"FK fields/ values referenced in {table_name} missing."
+                raise ForeignKeyValueError(msg)
             return False
         return True
 
@@ -374,9 +372,11 @@ class DBModelMixin:
     def get_table(self, table_name: str) -> pd.DataFrame:
         """Get table by name."""
         if table_name not in self.table_names:
-            raise ValueError(f"{table_name} table not in db.")
+            msg = f"{table_name} table not in db."
+            raise ValueError(msg)
         if table_name not in self.__dict__:
-            raise RequiredTableError("Required table not set yet: {table_name}")
+            msg = f"Required table not set yet: {table_name}"
+            raise RequiredTableError(msg)
         return self.__dict__[table_name]
 
     def table_names_with_field(self, field: str) -> list[str]:

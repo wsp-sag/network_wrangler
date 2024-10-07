@@ -19,13 +19,12 @@ Options:
 """
 
 import argparse
+import sys
 from pathlib import Path
 
-import sys
-
+from network_wrangler import WranglerLogger
 from network_wrangler.roadway.io import convert_roadway_file_serialization
 from network_wrangler.transit.io import convert_transit_serialization
-from network_wrangler import WranglerLogger
 
 
 def convert(
@@ -57,7 +56,8 @@ def convert(
             overwrite,
         )
     else:
-        raise ValueError("Network type unrecognized. Please use 'transit' or 'roadway'")
+        msg = "Network type unrecognized. Please use 'transit' or 'roadway'"
+        raise ValueError(msg)
 
 
 if __name__ == "__main__":

@@ -3,24 +3,23 @@
 Run just these tests using `pytest tests/test_utils/test_data.py`
 """
 
-import pytest
-
-import pandas as pd
 import numpy as np
-
+import pandas as pd
+import pytest
 from pandas import testing as tm
 
 from network_wrangler.logger import WranglerLogger
 from network_wrangler.utils.data import (
-    update_df_by_col_value,
-    segment_data_by_selection_min_overlap,
-    dict_to_query,
-    list_like_columns,
-    diff_dfs,
-    segment_data_by_selection,
-    validate_existing_value_in_df,
-    MissingPropertiesError,
+    DataSegmentationError,
     InvalidJoinFieldError,
+    MissingPropertiesError,
+    dict_to_query,
+    diff_dfs,
+    list_like_columns,
+    segment_data_by_selection,
+    segment_data_by_selection_min_overlap,
+    update_df_by_col_value,
+    validate_existing_value_in_df,
 )
 
 
@@ -333,7 +332,7 @@ def test_segment_data_by_selection_missing_start_item():
     item_list = [10, 4]
 
     # Call the function and expect a ValueError
-    with pytest.raises(ValueError):
+    with pytest.raises(DataSegmentationError):
         segment_data_by_selection(item_list, df, field="id")
 
 
@@ -345,7 +344,7 @@ def test_segment_data_by_selection_missing_end_item():
     item_list = [2, 60]
 
     # Call the function and expect a ValueError
-    with pytest.raises(ValueError):
+    with pytest.raises(DataSegmentationError):
         segment_data_by_selection(item_list, df, field="id")
 
 
@@ -462,6 +461,7 @@ def test_validate_existing_value_in_df_mismatched_value():
 def test_segment_series_by_list(request):
     from network_wrangler.utils.data import segment_data_by_selection
 
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     s = pd.Series([1, 2, 3, 4, 5], dtype="int64")
     item_list = [1, 2]
     exp_answer = (
@@ -480,6 +480,7 @@ def test_segment_series_by_list(request):
 def test_segment_df_by_list(request):
     from network_wrangler.utils.data import segment_data_by_selection
 
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     s = pd.DataFrame({"mynodes": [1, 2, 3, 4, 3, 2, 5]})
     item_list = [2, 3]
     exp_answer = ([1], [2, 3, 4, 3], [2, 5])
@@ -502,11 +503,7 @@ SPLT_DF_TEST_PARAMS = [
         [0, 2],
         ([], [1, 2], [3, 4, 5]),
     ),
-    (
-        [1, 2, 3, 4, 5],
-        [1, 6],
-        ValueError,
-    ),
+    ([1, 2, 3, 4, 5], [1, 6], DataSegmentationError),
     (
         [1, 2, 3, 4, 5, 6, 7],
         [2, 5],
@@ -522,18 +519,19 @@ SPLT_DF_TEST_PARAMS = [
         [3, 2],
         ([1, 2], [3, 2], []),
     ),
-    ([1, 2, 3, 2], [2, 1], ValueError),
+    ([1, 2, 3, 2], [2, 1], DataSegmentationError),
 ]
 
 
 @pytest.mark.parametrize(
-    "ref_list, item_list, expected_result",
+    ("ref_list", "item_list", "expected_result"),
     SPLT_DF_TEST_PARAMS,
 )
 def test_segment_list_by_list(request, ref_list, item_list, expected_result):
     from network_wrangler.utils.data import segment_data_by_selection
 
-    if expected_result in [ValueError]:
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    if expected_result in [DataSegmentationError]:
         with pytest.raises(expected_result):
             segment_data_by_selection(ref_list, item_list)
     else:

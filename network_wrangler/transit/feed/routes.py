@@ -1,6 +1,7 @@
 """Filters and queries of a gtfs routes table and route_ids."""
 
 from __future__ import annotations
+
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger

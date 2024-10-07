@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import pandas as pd
-
 from pandera.typing import DataFrame
 
 from ...logger import WranglerLogger
-from ...utils.data import concat_with_attr
 from ...models.gtfs.tables import (
-    WranglerTripsTable,
     WranglerShapesTable,
     WranglerStopTimesTable,
+    WranglerTripsTable,
 )
+from ...utils.data import concat_with_attr
 from ..feed.transit_links import shapes_to_shape_links
 from ..feed.transit_segments import (
     filter_shapes_to_segments,
@@ -298,23 +297,18 @@ def find_nearest_stops(
     )
     WranglerLogger.debug(f"Looking for stops near node_id: {node_id}")
     if node_id not in shapes["shape_model_node_id"].values:
-        raise ValueError(f"Node ID {node_id} not in shapes for trip {trip_id}")
+        msg = f"Node ID {node_id} not in shapes for trip {trip_id}"
+        raise ValueError(msg)
     # Find index of node_id in shapes
     node_idx = shapes[shapes["shape_model_node_id"] == node_id].index[0]
 
     # Find stops before and after new stop in shapes sequence
     nodes_before = shapes.loc[: node_idx - 1]
     stops_before = nodes_before.loc[nodes_before["stop_id"].notna()]
-    if stops_before.empty:
-        stop_node_before = 0
-    else:
-        stop_node_before = stops_before.iloc[-1]["shape_model_node_id"]
+    stop_node_before = 0 if stops_before.empty else stops_before.iloc[-1]["shape_model_node_id"]
 
-    nodes_after = shapes.loc[node_idx + 1 :]  # noqa: E203
+    nodes_after = shapes.loc[node_idx + 1 :]
     stops_after = nodes_after.loc[nodes_after["stop_id"].notna()]
-    if stops_after.empty:
-        stop_node_after = 0
-    else:
-        stop_node_after = stops_after.iloc[0]["shape_model_node_id"]
+    stop_node_after = 0 if stops_after.empty else stops_after.iloc[0]["shape_model_node_id"]
 
     return stop_node_before, stop_node_after

@@ -9,10 +9,11 @@ Instantiate a scenario by seeding it with a base scenario and optionally some pr
 
 ```python
 from network_wrangler import create_scenario
+
 my_scenario = create_scenario(
     base_scenario=my_base_year_scenario,
     card_search_dir=project_card_directory,
-    filter_tags = [ "baseline2050" ]
+    filter_tags=["baseline2050"],
 )
 ```
 
@@ -40,6 +41,7 @@ scenario using the `add_project_cards` method.
 
 ```python
 from projectcard import read_cards
+
 project_card_dict = read_cards(card_location, filter_tags=["Baseline2030"], recursive=True)
 my_scenario.add_project_cards(project_card_dict.values())
 ```
@@ -133,39 +135,40 @@ And if you want to reload scenario that you "wrote", you can use the `load_scena
 
 ```python
 from network_wrangler import load_scenario
+
 my_scenario = load_scenario("output_dir/scenario_name_to_use_scenario.yml")
 ```
 
 """
 
 from __future__ import annotations
+
 import copy
 import pprint
-import yaml
-
+from collections import defaultdict, deque
 from datetime import datetime
-from collections import deque, defaultdict
 from pathlib import Path
-from typing import Union, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
-from projectcard import read_cards, ProjectCard, SubProject, write_card
+import yaml
+from projectcard import ProjectCard, SubProject, read_cards, write_card
 
-from .logger import WranglerLogger
-from .roadway.io import load_roadway_from_dir, write_roadway
-from .transit.io import load_transit, write_transit
-from .utils.io_table import prep_dir
-from .utils.io_dict import load_dict
-from .utils.utils import topological_sort
 from .configs import (
-    load_wrangler_config,
+    DefaultConfig,
+    ScenarioConfig,
     WranglerConfig,
     load_scenario_config,
-    ScenarioConfig,
-    DefaultConfig,
+    load_wrangler_config,
 )
-from .configs.scenario import ScenarioOutputConfig, ScenarioInputConfig
+from .configs.scenario import ScenarioInputConfig, ScenarioOutputConfig
+from .logger import WranglerLogger
+from .roadway.io import load_roadway_from_dir, write_roadway
 from .roadway.network import RoadwayNetwork
+from .transit.io import load_transit, write_transit
 from .transit.network import TransitNetwork
+from .utils.io_dict import load_dict
+from .utils.io_table import prep_dir
+from .utils.utils import topological_sort
 
 if TYPE_CHECKING:
     from .models._base.types import RoadwayFileTypes, TransitFileTypes
@@ -197,7 +200,7 @@ ROADWAY_CARD_TYPES: list[str] = [
     "roadway_property_change",
     "roadway_deletion",
     "roadway_addition",
-    "pycode"
+    "pycode",
 ]
 
 
@@ -213,28 +216,20 @@ SECONDARY_TRANSIT_CARD_TYPES: list[str] = [
 class ScenarioConflictError(Exception):
     """Raised when a conflict is detected."""
 
-    pass
-
 
 class ScenarioCorequisiteError(Exception):
     """Raised when a co-requisite is not satisfied."""
-
-    pass
 
 
 class ScenarioPrerequisiteError(Exception):
     """Raised when a pre-requisite is not satisfied."""
 
-    pass
-
 
 class ProjectCardError(Exception):
     """Raised when a project card is not valid."""
 
-    pass
 
-
-class Scenario(object):
+class Scenario:
     """Holds information about a scenario.
 
     Typical usage example:
@@ -250,11 +245,11 @@ class Scenario(object):
     }
 
     # create a future baseline scenario from base by searching for all cards in dir w/ baseline tag
-    project_card_directory = os.path.join(STPAUL_DIR, "project_cards")
+    project_card_directory = Path(STPAUL_DIR) / "project_cards"
     my_scenario = create_scenario(
         base_scenario=my_base_year_scenario,
         card_search_dir=project_card_directory,
-        filter_tags = [ "baseline2050" ]
+        filter_tags=["baseline2050"],
     )
 
     # check project card queue and then apply the projects
@@ -264,7 +259,7 @@ class Scenario(object):
     # check applied projects, write it out, and create a summary report.
     my_scenario.applied_projects
     my_scenario.write("baseline")
-    my_scenario.summarize(outfile = "baseline2050summary.txt")
+    my_scenario.summarize(outfile="baseline2050summary.txt")
 
     # Add some projects to create a build scenario based on a list of files.
     build_card_filenames = [
@@ -274,7 +269,7 @@ class Scenario(object):
     ]
     my_scenario.add_projects_from_files(build_card_filenames)
     my_scenario.write("build2050")
-    my_scenario.summarize(outfile = "build2050summary.txt")
+    my_scenario.summarize(outfile="build2050summary.txt")
     ```
 
     Attributes:
@@ -378,7 +373,7 @@ class Scenario(object):
 
     def __str__(self):
         """String representation of the Scenario object."""
-        s = ["{}: {}".format(key, value) for key, value in self.__dict__.items()]
+        s = [f"{key}: {value}" for key, value in self.__dict__.items()]
         return "\n".join(s)
 
     def _add_dependencies(self, project_name, dependencies: dict) -> None:
@@ -403,7 +398,7 @@ class Scenario(object):
         self,
         project_card: ProjectCard,
         validate: bool = True,
-        filter_tags: list[str] = [],
+        filter_tags: Optional[list[str]] = None,
     ) -> None:
         """Adds a single ProjectCard instances to the Scenario.
 
@@ -422,13 +417,13 @@ class Scenario(object):
                 which means no tag-filtering will occur.
 
         """
+        filter_tags = filter_tags or []
         project_name = project_card.project.lower()
         filter_tags = list(map(str.lower, filter_tags))
 
         if project_name in self.projects:
-            raise ProjectCardError(
-                f"Names not unique from existing scenario projects: {project_card.project}"
-            )
+            msg = f"Names not unique from existing scenario projects: {project_card.project}"
+            raise ProjectCardError(msg)
 
         if filter_tags and set(project_card.tags).isdisjoint(set(filter_tags)):
             WranglerLogger.debug(
@@ -449,7 +444,7 @@ class Scenario(object):
         self,
         project_card_list: list[ProjectCard],
         validate: bool = True,
-        filter_tags: list[str] = [],
+        filter_tags: Optional[list[str]] = None,
     ) -> None:
         """Adds a list of ProjectCard instances to the Scenario.
 
@@ -466,6 +461,7 @@ class Scenario(object):
                 and only add those whose tags match one or more of these filter_tags.
                 Defaults to [] - which means no tag-filtering will occur.
         """
+        filter_tags = filter_tags or []
         for p in project_card_list:
             self._add_project(p, validate=validate, filter_tags=filter_tags)
 
@@ -490,12 +486,12 @@ class Scenario(object):
 
     def _check_projects_planned(self, project_names: list[str]) -> None:
         """Checks that a list of projects are in the scenario's planned projects."""
-        _missing_ps = [p for p in self._planned_projects if p not in self._planned_projects]
+        _missing_ps = [p for p in project_names if p not in self._planned_projects]
         if _missing_ps:
-            raise ValueError(
-                f"Projects are not in planned projects: \n {_missing_ps}. Add them by \
-                using add_project_cards()."
-            )
+            msg = f"Projects are not in planned projects: \n {_missing_ps}. \
+                Add them by using add_project_cards()."
+            WranglerLogger.debug(msg)
+            raise ValueError(msg)
 
     def _check_projects_have_project_cards(self, project_list: list[str]) -> bool:
         """Checks that a list of projects has an associated project card in the scenario."""
@@ -521,7 +517,8 @@ class Scenario(object):
                 f"project_names: {project_names}\nprojects_have_or_will_be_applied: \
                     {_projects_applied}\nmissing: {_missing}"
             )
-            raise ScenarioPrerequisiteError(f"Missing {len(_missing)} pre-requisites: {_missing}")
+            msg = f"Missing {len(_missing)} pre-requisites."
+            raise ScenarioPrerequisiteError(msg)
 
     def _check_projects_corequisites(self, project_names: list[str]) -> None:
         """Check a list of projects' co-requisites have been or will be applied to scenario."""
@@ -537,7 +534,8 @@ class Scenario(object):
                 f"project_names: {project_names}\nprojects_have_or_will_be_applied: \
                     {_projects_applied}\nmissing: {_missing}"
             )
-            raise ScenarioCorequisiteError(f"Missing {len(_missing)} corequisites: {_missing}")
+            msg = f"Missing {len(_missing)} corequisites."
+            raise ScenarioCorequisiteError(msg)
 
     def _check_projects_conflicts(self, project_names: list[str]) -> None:
         """Checks that list of projects' conflicts have not been or will be applied to scenario."""
@@ -559,7 +557,8 @@ class Scenario(object):
                 if k in projects_to_check and not set(v).isdisjoint(set(_conflict_problems))
             }
             WranglerLogger.debug(f"Problematic Conflicts: \n{_conf_dict}")
-            raise ScenarioConflictError(f"Found {len(_conflicts)} conflicts: {_conflict_problems}")
+            msg = f"Found {len(_conflict_problems)} conflicts: {_conflict_problems}"
+            raise ScenarioConflictError(msg)
 
     def order_projects(self, project_list: list[str]) -> deque:
         """Orders a list of projects based on moving up pre-requisites into a deque.
@@ -594,9 +593,10 @@ class Scenario(object):
             adjacency_list=adjacency_list, visited_list=visited_list
         )
 
-        if not set(_ordered_projects) == set(project_list):
+        if set(_ordered_projects) != set(project_list):
             _missing = list(set(project_list) - set(_ordered_projects))
-            raise ValueError(f"Project sort resulted in missing projects: {_missing}")
+            msg = f"Project sort resulted in missing projects: {_missing}"
+            raise ValueError(msg)
 
         project_deque = deque(_ordered_projects)
 
@@ -607,7 +607,7 @@ class Scenario(object):
     def apply_all_projects(self):
         """Applies all planned projects in the queue."""
         # Call this to make sure projects are appropriately queued in hidden variable.
-        self.queued_projects
+        self.queued_projects  # noqa: B018
 
         # Use hidden variable.
         while self._queued_projects:
@@ -628,20 +628,21 @@ class Scenario(object):
         """
         if change.change_type in ROADWAY_CARD_TYPES:
             if not self.road_net:
-                raise ValueError("Missing Roadway Network")
+                msg = "Missing Roadway Network"
+                raise ValueError(msg)
             if change.change_type in SECONDARY_TRANSIT_CARD_TYPES and self.transit_net:
                 self.road_net.apply(change, transit_net=self.transit_net)
             else:
                 self.road_net.apply(change)
         if change.change_type in TRANSIT_CARD_TYPES:
             if not self.transit_net:
-                raise ValueError("Missing Transit Network")
+                msg = "Missing Transit Network"
+                raise ValueError(msg)
             self.transit_net.apply(change)
 
         if change.change_type not in ROADWAY_CARD_TYPES + TRANSIT_CARD_TYPES:
-            raise ProjectCardError(
-                f"Project {change.project}: Don't understand project cat: {change.change_type}"
-            )
+            msg = f"Project {change.project}: Don't understand project cat: {change.change_type}"
+            raise ProjectCardError(msg)
 
     def _apply_project(self, project_name: str) -> None:
         """Applies project card to scenario.
@@ -781,7 +782,7 @@ class Scenario(object):
         if projects_write:
             scenario_data["project_cards"] = ({"dir": str(projects_out_dir)},)
         scenario_file_path = Path(path) / f"{name}_scenario.yml"
-        with open(scenario_file_path, "w") as f:
+        with scenario_file_path.open("w") as f:
             yaml.dump(scenario_data, f, default_flow_style=False, allow_unicode=True)
         return scenario_file_path
 
@@ -797,11 +798,11 @@ class Scenario(object):
 
 
 def create_scenario(
-    base_scenario: Union[Scenario, dict] = {},
+    base_scenario: Optional[Union[Scenario, dict]] = None,
     name: str = datetime.now().strftime("%Y%m%d%H%M%S"),
     project_card_list=None,
     project_card_filepath: Optional[Union[list[Path], Path]] = None,
-    filter_tags: list[str] = [],
+    filter_tags: Optional[list[str]] = None,
     config: Optional[Union[dict, Path, list[Path], WranglerConfig]] = None,
 ) -> Scenario:
     """Creates scenario from a base scenario and adds project cards.
@@ -828,8 +829,9 @@ def create_scenario(
         config: Optional wrangler configuration file or dictionary or instance. Defaults to
             default config.
     """
-    if project_card_list is None:
-        project_card_list = []
+    base_scenario = base_scenario or {}
+    project_card_list = project_card_list or []
+    filter_tags = filter_tags or []
 
     scenario = Scenario(base_scenario, config=config, name=name)
 
@@ -888,8 +890,8 @@ def load_scenario(
 def create_base_scenario(
     roadway: Optional[dict] = None,
     transit: Optional[dict] = None,
-    applied_projects: Optional[list] = [],
-    conflicts: Optional[list] = [],
+    applied_projects: Optional[list] = None,
+    conflicts: Optional[list] = None,
     config: WranglerConfig = DefaultConfig,
 ) -> dict:
     """Creates a base scenario dictionary from roadway and transit network files.
@@ -901,6 +903,8 @@ def create_base_scenario(
         conflicts: list of conflicts that have been identified in the base scenario.
         config: WranglerConfig instance.
     """
+    applied_projects = applied_projects or []
+    conflicts = conflicts or []
     if roadway:
         road_net = load_roadway_from_dir(**roadway, config=config)
     else:
@@ -983,18 +987,18 @@ def build_scenario_from_config(
 
     base_scenario = create_base_scenario(
         **scenario_config.base_scenario.to_dict(), config=scenario_config.wrangler_config
-    )  # type: ignore
+    )
 
     my_scenario = create_scenario(
         base_scenario=base_scenario,
         config=scenario_config.wrangler_config,
-        **scenario_config.projects.to_dict(),  # type: ignore
+        **scenario_config.projects.to_dict(),
     )
 
     my_scenario.apply_all_projects()
 
     write_args = _scenario_output_config_to_scenario_write(scenario_config.output_scenario)
-    my_scenario.write(**write_args, name=scenario_config.name)  # type: ignore
+    my_scenario.write(**write_args, name=scenario_config.name)
     return my_scenario
 
 

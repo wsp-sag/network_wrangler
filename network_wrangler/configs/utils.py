@@ -1,18 +1,17 @@
 """Configuration utilities."""
 
-from abc import ABC
-
 from pathlib import Path
-from typing import List, Union, Optional
+from typing import List, Optional, Union
+
 from pydantic import ValidationError
 
-from ..utils.io_dict import load_merge_dict, load_dict
 from ..logger import WranglerLogger
+from ..utils.io_dict import load_dict, load_merge_dict
 
 SUPPORTED_CONFIG_EXTENSIONS = [".yml", ".yaml", ".json", ".toml"]
 
 
-class ConfigItem(ABC):
+class ConfigItem:
     """Base class to add partial dict-like interface to  configuration.
 
     Allow use of .items() ["X"] and .get("X") .to_dict() from configuration.
@@ -105,8 +104,9 @@ def _config_data_from_files(path: Optional[Union[Path, List[Path]]] = None) -> U
     elif all(p.is_file() for p in path):
         config_files = path
     else:
-        WranglerLogger.error(f"All paths must be directories or files, not mixed. Found: {path}")
-        raise ValueError("All paths must be directories or files, not mixed.")
+        msg = "All paths must be directories or files, not mixed."
+        WranglerLogger.error(msg + f"\n   Found: {path}")
+        raise ValueError(msg)
 
     if len(config_files) == 0:
         WranglerLogger.info(

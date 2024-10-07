@@ -1,27 +1,25 @@
 """Helper functions for reading and writing files to reduce boilerplate."""
 
 import json
-import tempfile
 import shutil
+import tempfile
 import weakref
-
 from datetime import datetime
 from pathlib import Path
-from typing import Union, Optional
+from typing import Optional, Union
 
 import geopandas as gpd
 import pandas as pd
 
-
-from .geo import get_bounding_polygon
-from .data import convert_numpy_to_list
-from ..logger import WranglerLogger
-from .time import format_seconds_to_legible_str
 from ..configs import DefaultConfig
+from ..logger import WranglerLogger
+from .data import convert_numpy_to_list
+from .geo import get_bounding_polygon
+from .time import format_seconds_to_legible_str
 
 try:
     gpd.options.io_engine = "pyogrio"
-except:  # noqa: E722
+except:
     if gpd.__version__ < "0.12.0":
         WranglerLogger.warning(
             f"Installed Geopandas version {gpd.__version__} isn't recent enough to support\
@@ -38,13 +36,9 @@ except:  # noqa: E722
 class FileReadError(Exception):
     """Raised when there is an error reading a file."""
 
-    pass
-
 
 class FileWriteError(Exception):
     """Raised when there is an error writing a file."""
-
-    pass
 
 
 def write_table(
@@ -64,7 +58,8 @@ def write_table(
     """
     filename = Path(filename)
     if filename.exists() and not overwrite:
-        raise FileExistsError(f"File {filename} already exists and overwrite is False.")
+        msg = f"File {filename} already exists and overwrite is False."
+        raise FileExistsError(msg)
 
     if filename.parent.is_dir() and not filename.parent.exists():
         filename.parent.mkdir(parents=True)
@@ -75,9 +70,7 @@ def write_table(
         df.to_file(filename, index=False, **kwargs)
     elif "parquet" in filename.suffix:
         df.to_parquet(filename, index=False, **kwargs)
-    elif "csv" in filename.suffix:
-        df.to_csv(filename, index=False, date_format="%H:%M:%S", **kwargs)
-    elif "txt" in filename.suffix:
+    elif "csv" in filename.suffix or "txt" in filename.suffix:
         df.to_csv(filename, index=False, date_format="%H:%M:%S", **kwargs)
     elif "geojson" in filename.suffix:
         # required due to issues with list-like columns
@@ -85,13 +78,14 @@ def write_table(
             data = df.to_json(drop_id=True)
         else:
             data = df.to_json(orient="records", index=False)
-        with open(filename, "w", encoding="utf-8") as file:
+        with filename.open("w", encoding="utf-8") as file:
             file.write(data)
     elif "json" in filename.suffix:
-        with open(filename, "w") as f:
+        with filename.open("w") as f:
             f.write(df.to_json(orient="records"))
     else:
-        raise NotImplementedError(f"Filetype {filename.suffix} not implemented.")
+        msg = f"Filetype {filename.suffix} not implemented."
+        raise NotImplementedError(msg)
 
 
 def _estimate_read_time_of_file(
@@ -109,8 +103,7 @@ def _estimate_read_time_of_file(
     filetype = filepath.suffix[1:]
     if filetype in read_speed:
         return format_seconds_to_legible_str(file_size_mb * read_speed[filetype])
-    else:
-        return "unknown"
+    return "unknown"
 
 
 def read_table(
@@ -150,12 +143,15 @@ def read_table(
     """
     filename = Path(filename)
     if not filename.exists():
-        raise FileNotFoundError(f"Input file {filename} does not exist.")
+        msg = f"Input file {filename} does not exist."
+        raise FileNotFoundError(msg)
     if filename.stat().st_size == 0:
-        raise FileExistsError(f"File {filename} is empty.")
+        msg = f"File {filename} is empty."
+        raise FileExistsError(msg)
     if filename.suffix == ".zip":
         if not sub_filename:
-            raise ValueError("sub_filename must be provided for zip files.")
+            msg = "sub_filename must be provided for zip files."
+            raise ValueError(msg)
         filename = unzip_file(filename) / sub_filename
     WranglerLogger.debug(
         f"Estimated read time: {_estimate_read_time_of_file(filename, read_speed)}."
@@ -168,23 +164,23 @@ def read_table(
         boundary_file=boundary_file,
     )
 
-    if any([x in filename.suffix for x in ["geojson", "shp", "csv"]]):
+    if any(x in filename.suffix for x in ["geojson", "shp", "csv"]):
         try:
             # masking only supported by fiona engine, which is slower.
             if mask_gdf is None:
                 return gpd.read_file(filename, engine="pyogrio")
-            else:
-                return gpd.read_file(filename, mask=mask_gdf, engine="fiona")
-        except:  # noqa: E722
+            return gpd.read_file(filename, mask=mask_gdf, engine="fiona")
+        except Exception as err:
             if "csv" in filename.suffix:
                 return pd.read_csv(filename)
-            raise FileReadError
+            raise FileReadError from err
     elif "parquet" in filename.suffix:
         return _read_parquet_table(filename, mask_gdf)
     elif "json" in filename.suffix:
-        with open(filename) as f:
+        with filename.open() as f:
             return pd.read_json(f, orient="records")
-    raise NotImplementedError(f"Filetype {filename.suffix} not implemented.")
+    msg = f"Filetype {filename.suffix} not implemented."
+    raise NotImplementedError(msg)
 
 
 def _read_parquet_table(filename, mask_gdf) -> Union[gpd.GeoDataFrame, pd.DataFrame]:
@@ -208,7 +204,7 @@ def _read_parquet_table(filename, mask_gdf) -> Union[gpd.GeoDataFrame, pd.DataFr
                                         Try upgrading to geopandas > 1.0.\
                                         Returning unfiltered data.")
                 df = gpd.read_parquet(filename)
-    except:  # noqa: E722
+    except:
         df = pd.read_parquet(filename)
 
     _cols = [col for col in df.columns if col.startswith("sc_")]
@@ -253,7 +249,8 @@ def convert_file_serialization(
     WranglerLogger.debug(f"Converting {input_file} to {output_file}.")
 
     if output_file.exists() and not overwrite:
-        raise FileExistsError(f"File {output_file} already exists and overwrite is False.")
+        msg = f"File {output_file} already exists and overwrite is False."
+        raise FileExistsError(msg)
 
     if Path(input_file).suffix == ".json" and Path(output_file).suffix == ".parquet":
         if chunk_size is None:
@@ -287,7 +284,7 @@ def _available_memory():
 def _estimate_bytes_per_json_object(json_path: Path) -> float:
     """Estimate the size of a JSON object in bytes based on sample."""
     SAMPLE_SIZE = 50
-    with open(json_path, "r") as f:
+    with json_path.open() as f:
         json_objects = []
         for _ in range(SAMPLE_SIZE):
             line = f.readline()
@@ -369,8 +366,9 @@ def _json_to_parquet_in_chunks(input_file: Path, output_file: Path, chunk_size: 
     """
     try:
         import ijson
-    except ModuleNotFoundError:
-        raise ModuleNotFoundError("ijson is required for chunked JSON processing.")
+    except ModuleNotFoundError as err:
+        msg = "ijson is required for chunked JSON processing."
+        raise ModuleNotFoundError(msg) from err
 
     import pyarrow.parquet as pq
 
@@ -379,7 +377,7 @@ def _json_to_parquet_in_chunks(input_file: Path, output_file: Path, chunk_size: 
     file_counter = 0
 
     buffer = []
-    with open(input_file, "r") as f:
+    with input_file.open() as f:
         parser = ijson.items(f, "item")
         for item in parser:
             buffer.append(item)
@@ -425,7 +423,8 @@ def unzip_file(path: Path) -> Path:
 def prep_dir(outdir: Path, overwrite: bool = True):
     """Prepare a directory for writing files."""
     if not overwrite and outdir.exists() and len(list(outdir.iterdir())) > 0:
-        raise FileExistsError(f"Directory {outdir} is not empty and overwrite is False.")
+        msg = f"Directory {outdir} is not empty and overwrite is False."
+        raise FileExistsError(msg)
     outdir.mkdir(parents=True, exist_ok=True)
 
     # clean out existing files

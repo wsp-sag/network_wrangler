@@ -1,12 +1,12 @@
 """Visualization functions for RoadwayNetwork and RoadwayLinkSelection."""
 
 from __future__ import annotations
-import randint
 
 from typing import TYPE_CHECKING
 
 import folium
 import osmnx as ox
+import randint
 
 from .logger import WranglerLogger
 
@@ -86,8 +86,8 @@ def network_connection_plot(G, disconnected_subgraph_nodes: list):
     """
     WranglerLogger.debug("Creating network connection plot.")
     colors = []
-    for i in range(len(disconnected_subgraph_nodes)):
-        colors.append("#%06X" % randint(0, 0xFFFFFF))
+    for _ in range(len(disconnected_subgraph_nodes)):
+        colors.append(f"#{randint(0, 0xFFFFFF):06X}")
 
     fig, ax = ox.plot_graph(
         G,

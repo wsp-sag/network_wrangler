@@ -8,18 +8,22 @@ Example usage:
 
 import os
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import geopandas as gpd
 
+from .logger import WranglerLogger
 from .roadway.network import RoadwayNetwork
 from .transit.network import TransitNetwork
-from .logger import WranglerLogger
+
+
+class MissingMapboxTokenError(Exception):
+    """Raised when MAPBOX_ACCESS_TOKEN is not found in environment variables."""
 
 
 def net_to_mapbox(
-    roadway: Union[RoadwayNetwork, gpd.GeoDataFrame, str, Path] = gpd.GeoDataFrame(),
-    transit: Union[TransitNetwork, gpd.GeoDataFrame] = gpd.GeoDataFrame(),
+    roadway: Optional[Union[RoadwayNetwork, gpd.GeoDataFrame, str, Path]] = None,
+    transit: Optional[Union[TransitNetwork, gpd.GeoDataFrame]] = None,
     roadway_geojson_out: Path = Path("roadway_shapes.geojson"),
     transit_geojson_out: Path = Path("transit_shapes.geojson"),
     mbtiles_out: Path = Path("network.mbtiles"),
@@ -44,20 +48,20 @@ def net_to_mapbox(
     """
     import subprocess
 
+    if roadway is None:
+        roadway = gpd.GeoDataFrame()
+    if transit is None:
+        transit = gpd.GeoDataFrame()
     # test for mapbox token
     try:
         os.getenv("MAPBOX_ACCESS_TOKEN")
-    except:  # noqa: E722
+    except Exception as err:
         WranglerLogger.error(
             "NEED TO SET MAPBOX ACCESS TOKEN IN ENVIRONMENT VARIABLES/n \
                 In command line: >>export MAPBOX_ACCESS_TOKEN='pk.0000.1111' # \
                 replace value with your mapbox public access token"
         )
-        raise Exception(
-            "NEED TO SET MAPBOX ACCESS TOKEN IN ENVIRONMENT VARIABLES/n \
-                In command line: >>export MAPBOX_ACCESS_TOKEN='pk.0000.1111' # \
-                replace value with your mapbox public access token"
-        )
+        raise MissingMapboxTokenError() from err
 
     if isinstance(transit, TransitNetwork):
         transit = transit.shape_links_gdf
@@ -65,7 +69,8 @@ def net_to_mapbox(
     elif Path(transit).exists():
         transit_geojson_out = transit
     else:
-        raise ValueError(f"Don't understand transit input: {transit}")
+        msg = f"Don't understand transit input: {transit}"
+        raise ValueError(msg)
 
     if isinstance(roadway, RoadwayNetwork):
         roadway = roadway.link_shapes_df
@@ -73,7 +78,8 @@ def net_to_mapbox(
     elif Path(roadway).exists():
         roadway_geojson_out = Path(roadway)
     else:
-        raise ValueError(f"Don't understand roadway input: {roadway}")
+        msg = "Don't understand roadway input: {roadway}"
+        raise ValueError(msg)
 
     tippe_options_list: list[str] = ["-zg", "-o", str(mbtiles_out)]
     if overwrite:
@@ -86,28 +92,22 @@ def net_to_mapbox(
         WranglerLogger.info(
             f"Running tippecanoe with following options: {' '.join(tippe_options_list)}"
         )
-        subprocess.run(["tippecanoe"] + tippe_options_list)
-    except:  # noqa: E722
+        subprocess.run(["tippecanoe", *tippe_options_list], check=False)
+    except Exception as err:
         WranglerLogger.error(
             "If tippecanoe isn't installed, try `brew install tippecanoe` or \
                 visit https://github.com/mapbox/tippecanoe"
         )
-        raise ValueError(
-            "If tippecanoe isn't installed, try `brew install tippecanoe` or \
-                visit https://github.com/mapbox/tippecanoe"
-        )
+        raise ImportError() from err
 
     try:
         WranglerLogger.info(
             "Running mbview with following options: {}".format(" ".join(tippe_options_list))
         )
-        subprocess.run(["mbview", "--port", port, f", /{mbtiles_out}"])
-    except:  # noqa: E722
+        subprocess.run(["mbview", "--port", port, f", /{mbtiles_out}"], check=False)
+    except Exception as err:
         WranglerLogger.error(
             "If mbview isn't installed, try `npm install -g @mapbox/mbview` or \
                 visit https://github.com/mapbox/mbview"
         )
-        raise Exception(
-            "If mbview isn't installed, try `npm install -g @mapbox/mbview` or \
-                visit https://github.com/mapbox/mbview"
-        )
+        raise ImportError(msg) from err

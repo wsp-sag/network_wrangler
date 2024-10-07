@@ -6,13 +6,11 @@ Run just these tests using `pytest tests/test_transit/test_feed.py`
 from pathlib import Path
 
 import pytest
-
 from pandera.errors import SchemaErrors
 
-from network_wrangler import load_transit, write_transit
+from network_wrangler import WranglerLogger, load_transit, write_transit
+from network_wrangler.models._base.db import ForeignKeyValueError, RequiredTableError
 from network_wrangler.transit.network import TransitNetwork
-from network_wrangler import WranglerLogger
-from network_wrangler.models._base.db import RequiredTableError, ForeignKeyValueError
 from network_wrangler.utils.models import TableValidationError
 
 """
@@ -49,29 +47,34 @@ def test_transit_read_write(request, stpaul_transit_net, scratch_dir):
 
 
 def test_bad_dir(request):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     with pytest.raises(FileExistsError):
         load_transit("I don't exist")
 
 
 def test_missing_files(request, test_dir):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     missing_files_dir = test_dir / "data" / "transit_input_fail" / "missing_files"
     with pytest.raises(RequiredTableError):
         load_transit(missing_files_dir)
 
 
 def test_bad_fk(request, test_dir):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     bad_fk_dir = test_dir / "data" / "transit_input_fail" / "bad_fks"
     with pytest.raises(ForeignKeyValueError):
         load_transit(bad_fk_dir)
 
 
 def test_bad_prop_vals(request, test_dir):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     bad_prop_vals_dir = test_dir / "data" / "transit_input_fail" / "bad_prop_values"
     with pytest.raises(TableValidationError):
         load_transit(bad_prop_vals_dir)
 
 
 def test_missing_props(request, test_dir):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     missing_props_dir = test_dir / "data" / "transit_input_fail" / "missing_props"
     with pytest.raises(TableValidationError):
         load_transit(missing_props_dir)
@@ -80,6 +83,7 @@ def test_missing_props(request, test_dir):
 def test_write_feed_geo(request, small_transit_net, small_net, test_out_dir):
     from network_wrangler.transit.io import write_feed_geo
 
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     write_feed_geo(
         small_transit_net.feed,
         ref_nodes_df=small_net.nodes_df,
@@ -93,6 +97,7 @@ def test_write_feed_geo(request, small_transit_net, small_net, test_out_dir):
 def test_write_feed_geo_w_shapes(request, stpaul_transit_net, stpaul_net, test_out_dir):
     from network_wrangler.transit.io import write_feed_geo
 
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     write_feed_geo(
         stpaul_transit_net.feed,
         ref_nodes_df=stpaul_net.nodes_df,

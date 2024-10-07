@@ -1,33 +1,32 @@
 """Functions for reading and writing transit feeds and networks."""
 
 from pathlib import Path
-from typing import Union, Literal, Optional
+from typing import Literal, Optional, Union
 
-import pandas as pd
 import geopandas as gpd
+import pandas as pd
 
-from .feed.feed import Feed
-from .network import TransitNetwork
-from ..models.gtfs.gtfs import GtfsModel
+from ..configs import DefaultConfig, WranglerConfig
+from ..logger import WranglerLogger
 from ..models._base.db import RequiredTableError
 from ..models._base.types import TransitFileTypes
-from ..logger import WranglerLogger
-from ..utils.io_table import unzip_file, write_table
+from ..models.gtfs.gtfs import GtfsModel
 from ..utils.geo import to_points_gdf
-from ..configs import WranglerConfig, DefaultConfig
+from ..utils.io_table import unzip_file, write_table
+from .feed.feed import Feed
+from .network import TransitNetwork
 
 
 class FeedReadError(Exception):
     """Raised when there is an error reading a transit feed."""
-
-    pass
 
 
 def _feed_path_ref(path: Path) -> Path:
     if path.suffix == ".zip":
         path = unzip_file(path)
     if not path.exists():
-        raise FileExistsError(f"Feed cannot be found at: {path}")
+        msg = f"Feed path does not exist: {path}"
+        raise FileExistsError(msg)
 
     return path
 
@@ -47,7 +46,8 @@ def load_feed_from_path(
     feed_path = _feed_path_ref(Path(feed_path))  # unzips if needs to be unzipped
 
     if not feed_path.is_dir():
-        raise NotADirectoryError(f"Feed path not a directory: {feed_path}")
+        msg = f"Feed path not a directory: {feed_path}"
+        raise NotADirectoryError(msg)
 
     WranglerLogger.info(f"Reading GTFS feed tables from {feed_path}")
 
@@ -60,10 +60,8 @@ def load_feed_from_path(
 
     if _missing_files:
         WranglerLogger.debug(f"!!! Missing transit files: {_missing_files}")
-        raise RequiredTableError(
-            f"Required GTFS Feed table(s) not in {feed_path}: \n \
-                                {_missing_files}"
-        )
+        msg = f"Required GTFS Feed table(s) not in {feed_path}: \n  {_missing_files}"
+        raise RequiredTableError(msg)
 
     # but don't want to have more than one file per search
     _ambiguous_files = [t for t, v in feed_possible_files.items() if len(v) > 1]
@@ -84,11 +82,12 @@ def _read_table_from_file(table: str, file: Path) -> pd.DataFrame:
     try:
         if file.suffix in [".csv", ".txt"]:
             return pd.read_csv(file)
-        elif file.suffix == ".parquet":
+        if file.suffix == ".parquet":
             return pd.read_parquet(file)
     except Exception as e:
-        WranglerLogger.error(f"!!! Error reading table {table} from file: {file}.\n{e}")
-        raise FeedReadError(f"Error reading table {table}")
+        msg = f"Error reading table {table} from file: {file}.\n{e}"
+        WranglerLogger.error(msg)
+        raise FeedReadError(msg) from e
 
 
 def load_feed_from_dfs(feed_dfs: dict) -> Feed:
@@ -105,16 +104,17 @@ def load_feed_from_dfs(feed_dfs: dict) -> Feed:
 
     Example:
         >>> feed_dfs = {
-        ...     'agency': agency_df,
-        ...     'routes': routes_df,
-        ...     'stops': stops_df,
-        ...     'trips': trips_df,
-        ...     'stop_times': stop_times_df
+        ...     "agency": agency_df,
+        ...     "routes": routes_df,
+        ...     "stops": stops_df,
+        ...     "trips": trips_df,
+        ...     "stop_times": stop_times_df,
         ... }
         >>> feed = load_feed_from_dfs(feed_dfs)
     """
-    if not all([table in feed_dfs for table in Feed.table_names]):
-        raise ValueError(f"feed_dfs must contain the following tables: {Feed.table_names}")
+    if not all(table in feed_dfs for table in Feed.table_names):
+        msg = f"feed_dfs must contain the following tables: {Feed.table_names}"
+        raise ValueError(msg)
 
     feed = Feed(**feed_dfs)
 
@@ -157,7 +157,7 @@ def load_transit(
     ```
 
     """
-    if isinstance(feed, str) or isinstance(feed, Path):
+    if isinstance(feed, (Path, str)):
         feed = Path(feed)
         feed_obj = load_feed_from_path(feed, file_format=file_format)
         feed_obj.feed_path = feed
@@ -167,10 +167,8 @@ def load_transit(
         feed_obj = Feed(**feed.__dict__)
     else:
         if not isinstance(feed, Feed):
-            raise ValueError(
-                f"TransitNetwork must be seeded with a Feed, dict of dfs or Path. \
-                    Found {type(feed)}"
-            )
+            msg = f"TransitNetwork must be seeded with a Feed, dict of dfs or Path. Found {type(feed)}"
+            raise ValueError(msg)
         feed_obj = feed
 
     return TransitNetwork(feed_obj, config=config)
@@ -180,7 +178,7 @@ def write_transit(
     transit_net,
     out_dir: Union[Path, str] = ".",
     prefix: Optional[Union[Path, str]] = None,
-    file_format: Union[Literal["txt"], Literal["csv"], Literal["parquet"]] = "txt",
+    file_format: Literal["txt", "csv", "parquet"] = "txt",
     overwrite: bool = True,
 ) -> None:
     """Writes a network in the transit network standard.
@@ -239,7 +237,7 @@ def write_feed_geo(
     feed: Feed,
     ref_nodes_df: gpd.GeoDataFrame,
     out_dir: Union[str, Path],
-    file_format: Union[Literal["geojson"], Literal["shp"], Literal["parquet"]] = "geojson",
+    file_format: Literal["geojson", "shp", "parquet"] = "geojson",
     out_prefix=None,
     overwrite: bool = True,
 ) -> None:
@@ -260,9 +258,8 @@ def write_feed_geo(
         if out_dir.parent.is_dir():
             out_dir.mkdir()
         else:
-            raise FileNotFoundError(
-                f"Output directory {out_dir} ands its parent path does not exist"
-            )
+            msg = f"Output directory {out_dir} ands its parent path does not exist"
+            raise FileNotFoundError(msg)
 
     prefix = f"{out_prefix}_" if out_prefix else ""
     shapes_outpath = out_dir / f"{prefix}trn_shapes.{file_format}"

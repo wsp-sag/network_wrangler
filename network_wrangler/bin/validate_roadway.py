@@ -12,7 +12,6 @@ Usage:
 
 import argparse
 from datetime import datetime
-
 from pathlib import Path
 
 from network_wrangler import WranglerLogger, setup_logging
@@ -47,7 +46,7 @@ if __name__ == "__main__":
     dt_str = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
     report_path = Path(args.output_dir) / f"{dt_str}_roadway_validation_report.txt"
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    print(f"Writing report to {report_path}")
+    WranglerLogger.info(f"Writing report to {report_path}")
 
     setup_logging(debug_log_filename=report_path, std_out_level="info")
 

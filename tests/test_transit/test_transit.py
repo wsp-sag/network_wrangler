@@ -3,13 +3,12 @@
 Run just the tests here by running pytest tests/test_transit/test_transit.py`
 """
 
-import os
+import copy
 
 import pytest
-
 from projectcard import read_card
-from network_wrangler import WranglerLogger
 
+from network_wrangler import WranglerLogger
 
 TEST_PROJECT_CARDS = [
     {
@@ -66,7 +65,7 @@ def test_apply_transit_feature_change_from_projectcard(
 
     WranglerLogger.debug("   File:  test_project['file']")
 
-    project_card_path = os.path.join(stpaul_card_dir, test_project["file"])
+    project_card_path = stpaul_card_dir / test_project["file"]
     project_card = read_card(project_card_path)
     stpaul_transit_net = stpaul_transit_net.apply(project_card)
 
@@ -76,29 +75,78 @@ def test_apply_transit_feature_change_from_projectcard(
     for i, answer in enumerate(answers):
         match = freq.trip_id == test_project["answer"]["trip_ids"][i]
         result = freq[match]["headway_secs"]
-        assert set(result) == set([answer])
+        assert set(result) == set(answer)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_wrong_existing(request, stpaul_transit_net):
+def test_wrong_existing(request, small_transit_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
-
-    selection = stpaul_transit_net.get_selection(
-        {
-            "trip_properties": {
-                "trip_id": [
-                    "14944018-JUN19-MVS-BUS-Weekday-01",
-                    "14944012-JUN19-MVS-BUS-Weekday-01",
-                ]
-            }
-        }
+    my_project_name = "my_wrong_existing_project"
+    tpc = {
+        "project": my_project_name,
+        "transit_property_change": {
+            "service": {
+                "trip_properties": {
+                    "trip_id": [
+                        "blue-2",
+                    ]
+                }
+            },
+            "property_changes": {
+                "wheelchair_accessible": {"set": 0},
+                "headway_secs": {
+                    "existing": 553,
+                    "set": 321,
+                },
+            },
+        },
+    }
+    # Default behavior is warn, so it should still aply the project.
+    net = copy.deepcopy(small_transit_net)
+    net.apply(tpc)
+    assert my_project_name in net.applied_projects
+    assert (
+        net.feed.frequencies.loc[net.feed.frequencies.trip_id == "blue-2", "headway_secs"].values[
+            0
+        ]
+        == 321
+    )
+    assert (
+        net.feed.trips.loc[net.feed.trips.trip_id == "blue-2", "wheelchair_accessible"].values[0]
+        == 0
     )
 
-    property_change = {"headway_secs": {"existing": 553, "set": 900}}
+    # Now we will set the behavior to error, so it should raise an error.
+    from network_wrangler.transit.projects.edit_property import TransitPropertyChangeError
 
-    with pytest.raises(Exception):
-        stpaul_transit_net.apply(selection, property_change)
+    tpc["transit_property_change"]["property_changes"]["headway_secs"][
+        "existing_value_conflict"
+    ] = "error"
+    net = copy.deepcopy(small_transit_net)
+    with pytest.raises(TransitPropertyChangeError):
+        net.apply(tpc)
+
+    # Now we will set the behavior to skip, so it should not apply that change.
+    tpc["transit_property_change"]["property_changes"]["headway_secs"][
+        "existing_value_conflict"
+    ] = "skip"
+    net = copy.deepcopy(small_transit_net)
+    existing_wheelchair = net.feed.trips.loc[
+        net.feed.trips.trip_id == "blue-2", "wheelchair_accessible"
+    ].values[0]
+    net.apply(tpc)
+    assert my_project_name in net.applied_projects
+    assert (
+        net.feed.trips.loc[net.feed.trips.trip_id == "blue-2", "wheelchair_accessible"].values[0]
+        == 0
+    )
+    assert (
+        net.feed.frequencies.loc[net.feed.frequencies.trip_id == "blue-2", "headway_secs"].values[
+            0
+        ]
+        == 900
+    )
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 

@@ -8,15 +8,12 @@ from pydantic import ConfigDict, Field
 
 from ...logger import WranglerLogger
 from ...params import DEFAULT_SEARCH_MODES
-
 from .._base.records import RecordModel
 from .._base.types import AnyOf, ConflictsWith, OneOf
 
 
 class RoadwaySelectionFormatError(Exception):
     """Raised when there is an issue with the format of a selection."""
-
-    pass
 
 
 class SelectNodeDict(RecordModel):
@@ -38,13 +35,11 @@ class SelectNodeDict(RecordModel):
         _explicit_ids = [k for k in self.explicit_id_fields if getattr(self, k)]
         if _explicit_ids:
             return "explicit_ids"
+        msg = "Select Node should have either `all` or an explicit id."
         WranglerLogger.debug(
-            f"SelectNode should have an explicit id: {self.explicit_id_fields} \
-                Found none in selection dict: \n{self.model_dump(by_alias=True)}"
+            msg + f" Found none in selection dict: \n{self.model_dump(by_alias=True)}"
         )
-        raise RoadwaySelectionFormatError(
-            "Select Node should have either `all` or an explicit id."
-        )
+        raise RoadwaySelectionFormatError(msg)
 
     @property
     def explicit_id_selection_dict(self) -> dict:
@@ -108,13 +103,13 @@ class SelectNodesDict(RecordModel):
             return "all"
         if self.explicit_id_fields:
             return "explicit_ids"
+        msg = "Select Nodes should have either `all` or an explicit id."
         WranglerLogger.debug(
-            f"SelectNodes should have either `all` or an explicit id: {self.explicit_id_fields}. \
-                Found neither in nodes selection: \n{self.model_dump(by_alias=True)}"
+            msg
+            + f" {self.explicit_id_fields}. \
+            Found neither in nodes selection: \n{self.model_dump(by_alias=True)}"
         )
-        raise RoadwaySelectionFormatError(
-            "Select Node should have either `all` or an explicit id."
-        )
+        raise RoadwaySelectionFormatError(msg)
 
     @property
     def explicit_id_fields(self) -> list[str]:
@@ -233,10 +228,8 @@ class SelectLinksDict(RecordModel):
             return "explicit_ids"
         if self.segment_id_fields:
             return "segment"
-        else:
-            raise RoadwaySelectionFormatError(
-                "If not a segment, Select Links should have either `all` or an explicit id."
-            )
+        msg = "If not a segment, Select Links should have either `all` or an explicit id."
+        raise RoadwaySelectionFormatError(msg)
 
     @property
     def explicit_id_selection_dict(self):
@@ -287,7 +280,8 @@ class SelectFacility(RecordModel):
             return "links"
         if self.nodes:
             return "nodes"
-        raise ValueError("SelectFacility must have either links or nodes defined.")
+        msg = "SelectFacility must have either links or nodes defined."
+        raise ValueError(msg)
 
     @property
     def selection_type(self) -> str:
@@ -296,10 +290,13 @@ class SelectFacility(RecordModel):
             return "segment"
         if self.feature_types == "links":
             if self.links is None:
-                raise ValueError("SelectFacility with feature_types 'links' must have links.")
+                msg = "SelectFacility with feature_types 'links' must have links."
+                raise ValueError(msg)
             return self.links.selection_type
         if self.feature_types == "nodes":
             if self.nodes is None:
-                raise ValueError("SelectFacility with feature_types 'nodes' must have nodes.")
+                msg = "SelectFacility with feature_types 'nodes' must have nodes."
+                raise ValueError(msg)
             return self.nodes.selection_type
-        raise ValueError("SelectFacility must have either links or nodes defined.")
+        msg = "SelectFacility must have either links or nodes defined."
+        raise ValueError(msg)

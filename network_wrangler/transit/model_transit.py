@@ -4,8 +4,8 @@ NOTE: this is not thoroughly tested and may not be fully functional.
 """
 
 from __future__ import annotations
-import copy
 
+import copy
 from typing import TYPE_CHECKING
 
 from ..roadway.network import RoadwayNetwork
@@ -38,18 +38,17 @@ class ModelTransit:
     @property
     def consistent_nets(self) -> bool:
         """Indicate if roadway and transit networks have changed since self.m_feed updated."""
-        if (self.roadway_net.network_hash == self._roadway_net_hash) and (
-            self.transit_net.feed_hash == self._transit_feed_hash
-        ):
-            return True
-        return False
+        return bool(
+            self.roadway_net.network_hash == self._roadway_net_hash
+            and self.transit_net.feed_hash == self._transit_feed_hash
+        )
 
     @property
     def m_feed(self):
         """TransitNetwork.feed with updates for consistency with associated ModelRoadwayNetwork."""
         if self.consistent_nets:
             return self._m_feed
-        # NOTE: look at thi
+        # NOTE: look at this
         # If netoworks have changed, updated model transit and update reference hash
         self._roadway_net_hash = copy.deepcopy(self.roadway_net.network_hash)
         self._transit_feed_hash = copy.deepcopy(self.transit_net.feed_hash)
@@ -57,3 +56,4 @@ class ModelTransit:
         if not self._transit_shifted_to_ML:
             self._m_feed = copy.deepcopy(self.transit_net.feed)
             return self._m_feed
+        return None

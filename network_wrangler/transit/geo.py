@@ -2,23 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import geopandas as gpd
-
-from shapely import LineString
 from pandera.typing import DataFrame
-
-from .feed import unique_shape_links, unique_stop_time_links
-
-from ..params import LAT_LON_CRS
-from ..utils.geo import linestring_from_lats_lons, update_point_geometry
+from shapely import LineString
 
 from ..models.gtfs.tables import (
     WranglerShapesTable,
-    WranglerStopTimesTable,
     WranglerStopsTable,
+    WranglerStopTimesTable,
 )
+from ..params import LAT_LON_CRS
+from ..utils.geo import linestring_from_lats_lons, update_point_geometry
+from .feed import unique_shape_links, unique_stop_time_links
 
 if TYPE_CHECKING:
     from ..models.roadway.tables import RoadNodesTable

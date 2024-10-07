@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 from typing import Union
-import pandas as pd
 
+import pandas as pd
 from pandera.typing import DataFrame
 
 from ...models.gtfs.tables import (
     WranglerShapesTable,
     WranglerStopTimesTable,
 )
-
 from ...utils.net import point_seq_to_links
 
 

@@ -1,11 +1,8 @@
 import copy
-import os
 
 import pytest
-
-from pandera.errors import SchemaError
-
 from projectcard import read_card
+
 from network_wrangler import WranglerLogger
 
 """
@@ -64,7 +61,7 @@ def test_add_roadway_link_project_card(request, small_net):
     WranglerLogger.debug(f"New Links: \n{_new_links}")
     assert len(_new_links) == len(_links)
     assert _new_links.at[_new_link_idxs[0], "projects"] == f"{_project},"
-    assert set(list(zip(_new_links.A, _new_links.B))) == set(_expected_new_link_fks)
+    assert set(zip(_new_links.A, _new_links.B)) == set(_expected_new_link_fks)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
@@ -77,7 +74,7 @@ def test_add_roadway_project_card(request, stpaul_net, stpaul_ex_dir):
     expected_net_links = 2
     expected_net_nodes = 0
 
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", card_name)
+    project_card_path = stpaul_ex_dir / "project_cards" / card_name
     project_card = read_card(project_card_path, validate=False)
 
     orig_links_count = len(net.links_df)
@@ -124,7 +121,7 @@ def test_delete_roadway(request, stpaul_net, stpaul_ex_dir):
 
     assert 477533 not in net.links_df.model_link_id.tolist()
 
-    print("--Finished:", request.node.name)
+    WranglerLogger.info("--Finished:", request.node.name)
 
 
 def test_add_nodes(request, small_net):

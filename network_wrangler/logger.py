@@ -1,22 +1,18 @@
 """Logging utilities for Network Wrangler."""
 
+import logging
 import os
 import sys
-import logging
-
-from typing import Optional
-from pathlib import Path
 from datetime import datetime
-
+from pathlib import Path
+from typing import Optional
 
 WranglerLogger = logging.getLogger("WranglerLogger")
 
 
 def setup_logging(
     info_log_filename: Optional[Path] = None,
-    debug_log_filename: Optional[Path] = Path(
-        "wrangler_{}.debug.log".format(datetime.now().strftime("%Y_%m_%d__%H_%M_%S"))
-    ),
+    debug_log_filename: Optional[Path] = None,
     std_out_level: str = "info",
 ):
     """Sets up the WranglerLogger w.r.t. the debug file location and if logging to console.
@@ -38,6 +34,9 @@ def setup_logging(
     # add function variable so that we know if logging has been called
     setup_logging.called = True
 
+    DEFAULT_LOG_PATH = Path(f"wrangler_{datetime.now().strftime('%Y_%m_%d__%H_%M_%S')}.debug.log")
+    debug_log_filename = debug_log_filename if debug_log_filename else DEFAULT_LOG_PATH
+
     # Clear handles if any exist already
     WranglerLogger.handlers = []
 
@@ -46,20 +45,17 @@ def setup_logging(
     FORMAT = logging.Formatter(
         "%(asctime)-15s %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S,"
     )
-    if not info_log_filename:
-        info_log_filename = (
-            Path.cwd()
-            / f"network_wrangler_{datetime.now().strftime('%Y_%m_%d__%H_%M_%S')}.info.log"
-        )
+    default_info_f =  f"network_wrangler_{datetime.now().strftime('%Y_%m_%d__%H_%M_%S')}.info.log"
+    info_log_filename =  info_log_filename or Path.cwd() / default_info_f
 
-    info_file_handler = logging.StreamHandler(open(info_log_filename, "w"))
+    info_file_handler = logging.FileHandler(Path(info_log_filename))
     info_file_handler.setLevel(logging.INFO)
     info_file_handler.setFormatter(FORMAT)
     WranglerLogger.addHandler(info_file_handler)
 
     # create debug file only when debug_log_filename is provided
     if debug_log_filename:
-        debug_log_handler = logging.StreamHandler(open(debug_log_filename, "w"))
+        debug_log_handler = logging.FileHandler(Path(debug_log_filename))
         debug_log_handler.setLevel(logging.DEBUG)
         debug_log_handler.setFormatter(FORMAT)
         WranglerLogger.addHandler(debug_log_handler)
@@ -68,9 +64,7 @@ def setup_logging(
     console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(FORMAT)
     WranglerLogger.addHandler(console_handler)
-    if std_out_level == "debug":
-        console_handler.setLevel(logging.DEBUG)
-    elif std_out_level == "info":
+    if std_out_level in ("debug", "info"):
         console_handler.setLevel(logging.DEBUG)
     elif std_out_level == "warning":
         console_handler.setLevel(logging.WARNING)

@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, List, Union
 
 import pandas as pd
 
-from ...params import MODES_TO_NETWORK_LINK_VARIABLES
 from ...logger import WranglerLogger
+from ...params import MODES_TO_NETWORK_LINK_VARIABLES
 
 if TYPE_CHECKING:
     from pandera.typing import DataFrame
+
     from ...models.roadway.tables import RoadLinksTable
 
 
@@ -114,7 +115,7 @@ def filter_links_transit_only(
 
 
 def filter_links_to_modes(
-    links_df: DataFrame[RoadLinksTable], modes: Union[str, List[str]]
+    links_df: DataFrame[RoadLinksTable], modes: Union[str, list[str]]
 ) -> DataFrame[RoadLinksTable]:
     """Filters links dataframe to only include links that are accessible by the modes in the list.
 
@@ -129,7 +130,7 @@ def filter_links_to_modes(
         return links_df
     if isinstance(modes, str):
         modes = [modes]
-    _mode_link_props = list(set([m for m in modes for m in MODES_TO_NETWORK_LINK_VARIABLES[m]]))
+    _mode_link_props = list({m for m in modes for m in MODES_TO_NETWORK_LINK_VARIABLES[m]})
     return links_df.loc[links_df[_mode_link_props].any(axis=1)]
 
 
@@ -155,14 +156,14 @@ def filter_links_to_node_ids(
 
 
 def filter_links_to_ids(
-    links_df: DataFrame[RoadLinksTable], link_ids: List[int]
+    links_df: DataFrame[RoadLinksTable], link_ids: list[int]
 ) -> DataFrame[RoadLinksTable]:
     """Filters links dataframe by link_ids."""
     return links_df.loc[links_df["model_link_id"].isin(link_ids)]
 
 
 def filter_links_not_in_ids(
-    links_df: DataFrame[RoadLinksTable], link_ids: List[int]
+    links_df: DataFrame[RoadLinksTable], link_ids: list[int]
 ) -> DataFrame[RoadLinksTable]:
     """Filters links dataframe to NOT have link_ids."""
     return links_df.loc[~links_df["model_link_id"].isin(link_ids)]
@@ -181,10 +182,7 @@ def filter_links_to_path(
         ignore_missing: if True, will ignore if links noted by path node sequence don't exist in
             links_df and will just return what does exist. Defaults to False.
     """
-    ab_pairs = [
-        node_id_path_list[i : i + 2]  # noqa: E203
-        for i, _ in enumerate(node_id_path_list)
-    ][:-1]
+    ab_pairs = [node_id_path_list[i : i + 2] for i, _ in enumerate(node_id_path_list)][:-1]
     path_links_df = pd.DataFrame(ab_pairs, columns=["A", "B"])
 
     selected_links_df = path_links_df.merge(
@@ -201,7 +199,8 @@ def filter_links_to_path(
         ]
         if len(missing_links_df):
             WranglerLogger.error(f"! Path links missing in links_df \n {missing_links_df}")
-            raise ValueError("Path links missing in links_df.")
+            msg = "Path links missing in links_df."
+            raise ValueError(msg)
 
     return filter_links_to_ids(links_df, selected_link_ds)
 

@@ -1,16 +1,16 @@
 """Tests roadway input output."""
 
-import time
 import os
+import time
 
 import pytest
-
 from geopandas import GeoDataFrame
 from shapely.geometry import Polygon
+
 from network_wrangler import (
-    write_roadway,
-    load_roadway_from_dir,
     WranglerLogger,
+    load_roadway_from_dir,
+    write_roadway,
 )
 from network_wrangler.roadway import diff_nets
 from network_wrangler.roadway.io import (
@@ -20,7 +20,8 @@ from network_wrangler.roadway.io import (
 from network_wrangler.roadway.network import RoadwayNetwork
 
 
-def test_id_roadway_file_paths_in_dir(tmpdir):
+def test_id_roadway_file_paths_in_dir(request, tmpdir):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     # Create mock files in the temporary directory
     links_file = tmpdir / "test_links.json"
     nodes_file = tmpdir / "test_nodes.geojson"
@@ -38,19 +39,19 @@ def test_id_roadway_file_paths_in_dir(tmpdir):
     assert shapes_path == shapes_file
 
     # Test Case 2: Links file is missing
-    os.remove(links_file)
+    links_file.unlink()
     with pytest.raises(FileNotFoundError):
         id_roadway_file_paths_in_dir(tmpdir, file_format="geojson")
 
     # Test Case 3: Nodes file is missing
     links_file.write("")
-    os.remove(nodes_file)
+    nodes_file.unlink()
     with pytest.raises(FileNotFoundError):
         id_roadway_file_paths_in_dir(tmpdir, file_format="geojson")
 
     # Test Case 4: Shapes file is missing (optional)
     nodes_file.write("")
-    os.remove(shapes_file)
+    shapes_file.unlink()
     links_path, nodes_path, shapes_path = id_roadway_file_paths_in_dir(
         tmpdir, file_format="geojson"
     )
@@ -59,13 +60,14 @@ def test_id_roadway_file_paths_in_dir(tmpdir):
     assert shapes_path is None
 
 
-def test_convert(example_dir, tmpdir):
+def test_convert(request, example_dir, tmpdir):
     """Test that the convert function works for both geojson and parquet.
 
     Also makes sure that the converted network is the same as the original when the original
     is geographically complete (it will have added information when it is not geographically
     complete).
     """
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     out_dir = tmpdir
 
     # convert EX from geojson to parquet
@@ -86,7 +88,8 @@ def test_convert(example_dir, tmpdir):
     missing_parq = [i for i in output_files_parq if not i.exists()]
     if missing_parq:
         WranglerLogger.error(f"Missing {len(missing_parq)} parquet output files: {missing_parq})")
-        raise FileNotFoundError("Missing converted parquet files.")
+        msg = "Missing converted parquet files."
+        raise FileNotFoundError(msg)
 
     # convert parquet to geojson
     convert_roadway_file_serialization(
@@ -108,7 +111,8 @@ def test_convert(example_dir, tmpdir):
         WranglerLogger.error(
             f"Missing {len(missing_geojson)} geojson output files: {missing_geojson})"
         )
-        raise FileNotFoundError("Missing converted geojson files.")
+        msg = "Missing converted geojson files."
+        raise FileNotFoundError(msg)
 
     WranglerLogger.debug("Reading in og network to test that it is equal.")
     in_net = load_roadway_from_dir(example_dir / "small", file_format="geojson")
@@ -123,7 +127,8 @@ def test_convert(example_dir, tmpdir):
     assert not diff_nets(out_net_parq, out_net_geojson), "The parquet and geojson networks differ."
 
 
-def test_roadway_model_coerce(small_net):
+def test_roadway_model_coerce(request, small_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     assert isinstance(small_net, RoadwayNetwork)
     WranglerLogger.debug(f"small_net.nodes_df.cols: \n{small_net.nodes_df.columns}")
     assert "osm_node_id" in small_net.nodes_df.columns
@@ -133,7 +138,8 @@ def test_roadway_model_coerce(small_net):
 
 @pytest.mark.parametrize("io_format", ["geojson", "parquet"])
 @pytest.mark.parametrize("ex", ["stpaul", "small"])
-def test_roadway_geojson_read_write_read(example_dir, test_out_dir, ex, io_format):
+def test_roadway_geojson_read_write_read(request, example_dir, test_out_dir, ex, io_format):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     read_dir = example_dir / ex
     net = load_roadway_from_dir(read_dir)
     test_io_dir = test_out_dir / ex
@@ -141,18 +147,19 @@ def test_roadway_geojson_read_write_read(example_dir, test_out_dir, ex, io_forma
     write_roadway(net, file_format=io_format, out_dir=test_io_dir, overwrite=True)
     t_write = time.time() - t_0
     WranglerLogger.info(
-        f"{int(t_write // 60): 02d}:{int(t_write % 60): 02d} – {ex} write to {io_format}"  # noqa: E231, E501
+        f"{int(t_write // 60): 02d}:{int(t_write % 60): 02d} ... {ex} write to {io_format}"
     )
     t_0 = time.time()
     net = load_roadway_from_dir(test_io_dir, file_format=io_format)
     t_read = time.time() - t_0
     WranglerLogger.info(
-        f"{int(t_read // 60): 02d}:{int(t_read % 60): 02d} – {ex} read from {io_format}"  # noqa: E231, E501
+        f"{int(t_read // 60): 02d}:{int(t_read % 60): 02d} ... {ex} read from {io_format}"
     )
     assert isinstance(net, RoadwayNetwork)
 
 
-def test_load_roadway_no_shapes(tmpdir, example_dir):
+def test_load_roadway_no_shapes(request, example_dir):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     # Test Case 2: Without Shapes File
     roadway_network = load_roadway_from_dir(example_dir / "small")
     assert isinstance(roadway_network, RoadwayNetwork)
@@ -161,7 +168,8 @@ def test_load_roadway_no_shapes(tmpdir, example_dir):
     assert roadway_network._shapes_df is None
 
 
-def test_load_roadway_within_boundary(tmpdir, example_dir):
+def test_load_roadway_within_boundary(request, example_dir):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     one_block = Polygon(
         [
             [-93.09424891687992, 44.950667556032386],

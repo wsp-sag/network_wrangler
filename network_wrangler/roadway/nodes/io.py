@@ -4,21 +4,19 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Union, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from geopandas import GeoDataFrame
-
-from pydantic import validate_call
 from pandera.typing import DataFrame
+from pydantic import validate_call
 
-from ...logger import WranglerLogger
-from ...utils.io_table import read_table, write_table
-from ...params import LAT_LON_CRS
-from ...models.roadway.tables import RoadNodesTable, RoadNodesAttrs
-from ...utils.models import validate_call_pyd
-from ...models._base.types import GeoFileTypes
-from ...utils.models import validate_df_to_model
 from ...configs import DefaultConfig, WranglerConfig
+from ...logger import WranglerLogger
+from ...models._base.types import GeoFileTypes
+from ...models.roadway.tables import RoadNodesAttrs, RoadNodesTable
+from ...params import LAT_LON_CRS
+from ...utils.io_table import read_table, write_table
+from ...utils.models import validate_call_pyd, validate_df_to_model
 from .create import data_to_nodes_df
 
 if TYPE_CHECKING:
@@ -26,7 +24,7 @@ if TYPE_CHECKING:
     from ..network import RoadwayNetwork
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def read_nodes(
     filename: Path,
     in_crs: int = LAT_LON_CRS,
@@ -86,15 +84,15 @@ def nodes_df_to_geojson(nodes_df: DataFrame[RoadNodesTable], properties: list[st
     nodes_df.attrs.update(RoadNodesAttrs)
     geojson = {"type": "FeatureCollection", "features": []}
     for _, row in nodes_df.iterrows():
-        feature = {
+        feature: dict[str, Any] = {
             "type": "Feature",
             "properties": {},
             "geometry": {"type": "Point", "coordinates": []},
         }
-        feature["geometry"]["coordinates"] = [row["geometry"].x, row["geometry"].y]  # type: ignore
-        feature["properties"][nodes_df.model_node_id] = row.name  # type: ignore
+        feature["geometry"]["coordinates"] = [row["geometry"].x, row["geometry"].y]
+        feature["properties"][nodes_df.model_node_id] = row.name
         for prop in properties:
-            feature["properties"][prop] = row[prop]  # type: ignore
+            feature["properties"][prop] = row[prop]
         geojson["features"].append(feature)
     return geojson
 
@@ -141,13 +139,10 @@ def get_nodes(
         return transit_net.road_net.nodes_df
     if roadway_net is not None:
         return roadway_net.nodes_df
-    elif roadway_path is not None:
+    if roadway_path is not None:
         nodes_path = Path(roadway_path)
         if nodes_path.is_dir():
             nodes_path = next(nodes_path.glob("*node*."))
         return read_nodes(nodes_path, config=config)
-    else:
-        raise ValueError(
-            "nodes_df must either be given or provided via an associated \
-                            road_net or by providing a roadway_net path or instance."
-        )
+    msg = "nodes_df must either be given or provided via an associated road_net or by providing a roadway_net path or instance."
+    raise ValueError(msg)

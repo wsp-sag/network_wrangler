@@ -26,6 +26,8 @@ Usage examples:
 
     ``` python
     import pandera as pa
+
+
     @pa.check_types
     def process_table(table: pa.DataFrameModel):
         # Perform operations on the table
@@ -50,29 +52,28 @@ Usage examples:
     is_unique = uniqueness(df, cols=["column1", "column2"])
 """
 
-from typing import Optional
+from typing import ClassVar, Optional
 
-import pandera as pa
 import pandas as pd
-
+import pandera as pa
 from pandas import Timestamp
-from pandera.typing import Series, Category
+from pandera.typing import Category, Series
 
-from .types import (
-    LocationType,
-    WheelchairAccessible,
-    RouteType,
-    DirectionID,
-    PickupDropoffType,
-    BikesAllowed,
-    TimepointType,
-)
-from .table_types import HttpURL
-from .._base.types import TimeString
-from .._base.db import TableForeignKeys, TablePrimaryKeys
-from ...utils.time import str_to_time_series, str_to_time
-from ...params import DEFAULT_TIMESPAN
 from ...logger import WranglerLogger
+from ...params import DEFAULT_TIMESPAN
+from ...utils.time import str_to_time, str_to_time_series
+from .._base.db import TableForeignKeys, TablePrimaryKeys
+from .._base.types import TimeString
+from .table_types import HttpURL
+from .types import (
+    BikesAllowed,
+    DirectionID,
+    LocationType,
+    PickupDropoffType,
+    RouteType,
+    TimepointType,
+    WheelchairAccessible,
+)
 
 
 class AgenciesTable(pa.DataFrameModel):
@@ -97,7 +98,7 @@ class AgenciesTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk: TablePrimaryKeys = ["agency_id"]
+        _pk: ClassVar[TablePrimaryKeys] = ["agency_id"]
 
 
 class StopsTable(pa.DataFrameModel):
@@ -131,8 +132,8 @@ class StopsTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk: TablePrimaryKeys = ["stop_id"]
-        _fk: TableForeignKeys = {"parent_station": ("stops", "stop_id")}
+        _pk: ClassVar[TablePrimaryKeys] = ["stop_id"]
+        _fk: ClassVar[TableForeignKeys] = {"parent_station": ("stops", "stop_id")}
 
 
 class WranglerStopsTable(StopsTable):
@@ -178,8 +179,8 @@ class RoutesTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk: TablePrimaryKeys = ["route_id"]
-        _fk: TableForeignKeys = {"agency_id": ("agencies", "agency_id")}
+        _pk: ClassVar[TablePrimaryKeys] = ["route_id"]
+        _fk: ClassVar[TableForeignKeys] = {"agency_id": ("agencies", "agency_id")}
 
 
 class ShapesTable(pa.DataFrameModel):
@@ -203,9 +204,9 @@ class ShapesTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk: TablePrimaryKeys = ["shape_id", "shape_pt_sequence"]
-        _fk: TableForeignKeys = {}
-        unique = ["shape_id", "shape_pt_sequence"]
+        _pk: ClassVar[TablePrimaryKeys] = ["shape_id", "shape_pt_sequence"]
+        _fk: ClassVar[TableForeignKeys] = {}
+        unique: ClassVar[list[str]] = ["shape_id", "shape_pt_sequence"]
 
 
 class WranglerShapesTable(ShapesTable):
@@ -248,8 +249,8 @@ class TripsTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk: TablePrimaryKeys = ["trip_id"]
-        _fk: TableForeignKeys = {"route_id": ("routes", "route_id")}
+        _pk: ClassVar[TablePrimaryKeys] = ["trip_id"]
+        _fk: ClassVar[TableForeignKeys] = {"route_id": ("routes", "route_id")}
 
 
 class WranglerTripsTable(TripsTable):
@@ -262,8 +263,8 @@ class WranglerTripsTable(TripsTable):
 
         coerce = True
         add_missing_columns = True
-        _pk: TablePrimaryKeys = ["trip_id"]
-        _fk: TableForeignKeys = {"route_id": ("routes", "route_id")}
+        _pk: ClassVar[TablePrimaryKeys] = ["trip_id"]
+        _fk: ClassVar[TableForeignKeys] = {"route_id": ("routes", "route_id")}
 
 
 class FrequenciesTable(pa.DataFrameModel):
@@ -292,9 +293,9 @@ class FrequenciesTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        unique = ["trip_id", "start_time"]
-        _pk: TablePrimaryKeys = ["trip_id", "start_time"]
-        _fk: TableForeignKeys = {"trip_id": ("trips", "trip_id")}
+        unique: ClassVar[list[str]] = ["trip_id", "start_time"]
+        _pk: ClassVar[TablePrimaryKeys] = ["trip_id", "start_time"]
+        _fk: ClassVar[TableForeignKeys] = {"trip_id": ("trips", "trip_id")}
 
 
 class WranglerFrequenciesTable(FrequenciesTable):
@@ -313,9 +314,9 @@ class WranglerFrequenciesTable(FrequenciesTable):
 
         coerce = True
         add_missing_columns = True
-        unique = ["trip_id", "start_time"]
-        _pk: TablePrimaryKeys = ["trip_id", "start_time"]
-        _fk: TableForeignKeys = {"trip_id": ("trips", "trip_id")}
+        unique: ClassVar[list[str]] = ["trip_id", "start_time"]
+        _pk: ClassVar[TablePrimaryKeys] = ["trip_id", "start_time"]
+        _fk: ClassVar[TableForeignKeys] = {"trip_id": ("trips", "trip_id")}
 
     @pa.parser("start_time")
     def st_to_timestamp(cls, series: Series) -> Series[Timestamp]:
@@ -370,12 +371,13 @@ class StopTimesTable(pa.DataFrameModel):
 
         coerce = True
         add_missing_columns = True
-        _pk: TablePrimaryKeys = ["trip_id", "stop_sequence"]
-        _fk: TableForeignKeys = {
+        _pk: ClassVar[TablePrimaryKeys] = ["trip_id", "stop_sequence"]
+        _fk: ClassVar[TableForeignKeys] = {
             "trip_id": ("trips", "trip_id"),
             "stop_id": ("stops", "stop_id"),
         }
-        unique = ["trip_id", "stop_sequence"]
+
+        unique: ClassVar[list[str]] = ["trip_id", "stop_sequence"]
 
 
 class WranglerStopTimesTable(StopTimesTable):
@@ -421,9 +423,10 @@ class WranglerStopTimesTable(StopTimesTable):
 
         coerce = True
         add_missing_columns = True
-        _pk: TablePrimaryKeys = ["trip_id", "stop_sequence"]
-        _fk: TableForeignKeys = {
+        _pk: ClassVar[TablePrimaryKeys] = ["trip_id", "stop_sequence"]
+        _fk: ClassVar[TableForeignKeys] = {
             "trip_id": ("trips", "trip_id"),
             "stop_id": ("stops", "stop_id"),
         }
-        unique = ["trip_id", "stop_sequence"]
+
+        unique: ClassVar[list[str]] = ["trip_id", "stop_sequence"]

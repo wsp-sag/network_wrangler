@@ -11,7 +11,7 @@ def _load_yaml(path: Path) -> dict:
     import yaml
     # Add the custom constructor to the YAML loader
 
-    with open(path, "r") as yaml_file:
+    with path.open() as yaml_file:
         data = yaml.load(yaml_file, Loader=yaml.FullLoader)
     return data
 
@@ -20,7 +20,7 @@ def _load_json(path: Path) -> dict:
     """Load json file at path."""
     import json
 
-    with open(path, "r") as json_file:
+    with path.open() as json_file:
         data = json.load(json_file)
     return data
 
@@ -29,7 +29,7 @@ def _load_toml(path: Path) -> dict:
     """Load toml file at path."""
     import toml
 
-    with open(path, "r", encoding="utf-8") as toml_file:
+    with path.open(encoding="utf-8") as toml_file:
         data = toml.load(toml_file)
     return data
 
@@ -38,15 +38,17 @@ def load_dict(path: Path) -> dict:
     """Load a dictionary from a file."""
     path = Path(path)
     if not path.is_file():
-        raise FileNotFoundError(f"Specified dict file {path} not found.")
+        msg = f"Specified dict file {path} not found."
+        raise FileNotFoundError(msg)
 
     if path.suffix.lower() == ".toml":
         return _load_toml(path)
-    elif path.suffix.lower() == ".json":
+    if path.suffix.lower() == ".json":
         return _load_json(path)
-    elif path.suffix.lower() == ".yaml" or path.suffix.lower() == ".yml":
+    if path.suffix.lower() == ".yaml" or path.suffix.lower() == ".yml":
         return _load_yaml(path)
-    raise NotImplementedError(f"Filetype {path.suffix} not implemented.")
+    msg = f"Filetype {path.suffix} not implemented."
+    raise NotImplementedError(msg)
 
 
 def load_merge_dict(path: Union[Path, list[Path]]) -> dict:

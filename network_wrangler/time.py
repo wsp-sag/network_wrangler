@@ -1,10 +1,11 @@
 """Module for time and timespan objects."""
 
 from __future__ import annotations
-from datetime import datetime, time
-from typing import Any, TYPE_CHECKING
 
-from .utils.time import str_to_time, duration_dt
+from datetime import datetime, time
+from typing import TYPE_CHECKING, Any
+
+from .utils.time import duration_dt, str_to_time
 
 if TYPE_CHECKING:
     from .models._base.types import TimeType
@@ -12,8 +13,6 @@ if TYPE_CHECKING:
 
 class TimeFormatError(Exception):
     """Time format error exception."""
-
-    pass
 
 
 class Time:
@@ -50,7 +49,8 @@ class Time:
         elif isinstance(value, int):
             self.datetime = datetime.datetime.fromtimestamp(value).time()
         else:
-            raise TimeFormatError("time must be a string, int, or time object")
+            msg = "time must be a string, int, or time object"
+            raise TimeFormatError(msg)
 
         self._raw_time_in = value
 
@@ -103,8 +103,6 @@ class Time:
 class TimespanFormatError(Exception):
     """Timespan format error exception."""
 
-    pass
-
 
 class Timespan:
     """Timespan object.
@@ -137,23 +135,17 @@ class Timespan:
             value (time): a list of two time strings, datetime objects, Time, or seconds from
               midnight.
         """
-        if len(value) != 2:
-            raise TimespanFormatError(
-                "timespan must be a list of 2 time strings, datetime objs, Time, or sec\
-                      from midnight."
-            )
+        if len(value) != 2:  # noqa: PLR2004
+            msg = "timespan must be a list of 2 time strings, datetime objs, Time, or sec from midnight."
+            raise TimespanFormatError(msg)
 
-        self.start_time, self.end_time = [Time(t) for t in value]
+        self.start_time, self.end_time = (Time(t) for t in value)
         self._raw_timespan_in = value
 
     @property
     def timespan_str_list(self):
         """Get the timespan string representation."""
         return [self.start_time.time_str, self.end_time.time_str]
-
-    def __get__(self) -> str:
-        """Get the timespan string representation."""
-        return self.timespan_str_list
 
     @property
     def start_time_sec(self):
@@ -179,8 +171,7 @@ class Timespan:
         """
         if self.end_time_sec < self.start_time_sec:
             return (24 * 3600) - self.start_time_sec + self.end_time_sec
-        else:
-            return self.end_time_sec - self.start_time_sec
+        return self.end_time_sec - self.start_time_sec
 
     def __str__(self) -> str:
         """String representation of the Timespan object."""

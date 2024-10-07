@@ -4,15 +4,12 @@ To run with print statments, use `pytest -s tests/test_roadway/test_selections.p
 """
 
 import copy
-import os
 
 import pandas as pd
-
 import pytest
-
 from projectcard import read_card
-from network_wrangler import WranglerLogger
 
+from network_wrangler import WranglerLogger
 from network_wrangler.utils.data import dict_to_query
 
 
@@ -110,7 +107,7 @@ answer_selected_links = [
 ]
 
 
-@pytest.mark.parametrize("selection,answer", zip(TEST_SELECTIONS, answer_selected_links))
+@pytest.mark.parametrize(("selection", "answer"), zip(TEST_SELECTIONS, answer_selected_links))
 def test_select_roadway_features(request, selection, answer, stpaul_net):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     net = stpaul_net
@@ -143,7 +140,7 @@ def test_select_roadway_features_from_projectcard(request, stpaul_net, stpaul_ex
     project_card_name = "road.prop_change.multiple.yml"
     _expected_answer = [134543, 85185, 154004]
 
-    project_card_path = os.path.join(stpaul_ex_dir, "project_cards", project_card_name)
+    project_card_path = stpaul_ex_dir / "project_cards" / project_card_name
     project_card = read_card(project_card_path)
 
     _facility = project_card.roadway_property_change["facility"]
@@ -179,9 +176,8 @@ def test_query_roadway_property_by_time_group(request, variable_query, stpaul_ne
 
     _query, _answer = variable_query
 
-    project_card_path = os.path.join(
-        stpaul_ex_dir, "project_cards", "road.managed_lanes.whole_facility.yml"
-    )
+    project_card_path = stpaul_ex_dir / "project_cards" / "road.managed_lanes.whole_facility.yml"
+
     project_card = read_card(project_card_path)
     net = net.apply(project_card)
 
@@ -311,7 +307,7 @@ query_tests = [
 
 
 @pytest.mark.parametrize("test_spec", query_tests)
-def test_query_builder(request, test_spec, stpaul_net):
+def test_query_builder(request, test_spec):
     WranglerLogger.info(f"--Starting: {request.node.name}")
     selection, answer = test_spec
     WranglerLogger.debug(f"Getting selection: \n{selection}")

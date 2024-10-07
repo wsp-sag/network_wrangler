@@ -2,25 +2,20 @@
 
 import copy
 import time
-
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 import geopandas as gpd
 import pandas as pd
-
 from pandera.typing import DataFrame
 
-from ..utils import set_df_index_to_pk
-
+from ...configs import DefaultConfig, WranglerConfig
 from ...logger import WranglerLogger
-from ...utils.models import validate_df_to_model, validate_call_pyd
-from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadLinksAttrs, RoadNodesAttrs
 from ...models.roadway.converters import (
     detect_v0_scoped_link_properties,
     translate_links_df_v0_to_v1,
 )
-from ...params import LAT_LON_CRS
-from ..utils import create_unique_shape_id
+from ...models.roadway.tables import RoadLinksAttrs, RoadLinksTable, RoadNodesAttrs, RoadNodesTable
+from ...params import LAT_LON_CRS, SMALL_RECS
 from ...utils.data import coerce_gdf
 from ...utils.geo import (
     _harmonize_crs,
@@ -28,19 +23,16 @@ from ...utils.geo import (
     linestring_from_nodes,
     offset_geometry_meters,
 )
-from ...configs import DefaultConfig, WranglerConfig
+from ...utils.models import validate_call_pyd, validate_df_to_model
+from ..utils import create_unique_shape_id, set_df_index_to_pk
 
 
 class LinkAddError(Exception):
     """Raised when there is an issue with adding links."""
 
-    pass
-
 
 class LinkCreationError(Exception):
     """Raised when there is an issue with creating links."""
-
-    pass
 
 
 def shape_id_from_link_geometry(
@@ -63,7 +55,8 @@ def _fill_missing_link_geometries_from_nodes(
     if links_df.geometry.isna().values.any():
         geo_start_t = time.time()
         if nodes_df is None:
-            raise LinkCreationError("Must give nodes_df argument if don't have Geometry")
+            msg = "Must give nodes_df argument if don't have Geometry"
+            raise LinkCreationError(msg)
         updated_links_df = linestring_from_nodes(links_df.loc[links_df.geometry.isna()], nodes_df)
         links_df.update(updated_links_df)
         # WranglerLogger.debug(f"links with updated geometries:\n{links_df}")
@@ -88,7 +81,6 @@ def data_to_links_df(
     links_df: Union[pd.DataFrame, List[dict]],
     in_crs: int = LAT_LON_CRS,
     nodes_df: Union[None, DataFrame[RoadNodesTable]] = None,
-    config: WranglerConfig = DefaultConfig,
 ) -> DataFrame[RoadLinksTable]:
     """Create a links dataframe from list of link properties + link geometries or associated nodes.
 
@@ -99,7 +91,6 @@ def data_to_links_df(
         links_df (pd.DataFrame): df or list of dictionaries of link properties
         in_crs: coordinate reference system id for incoming links if geometry already exists.
             Defaults to LAT_LON_CRS. Will convert everything to LAT_LON_CRSif it doesn't match.
-        config: WranglerConfig instance. Defaults to DefaultConfig. NOTE: not currently used.
         nodes_df: Associated notes geodataframe to use if geometries or location references not
             present. Defaults to None.
 
@@ -109,8 +100,7 @@ def data_to_links_df(
     WranglerLogger.debug(f"Creating {len(links_df)} links.")
     if not isinstance(links_df, pd.DataFrame):
         links_df = pd.DataFrame(links_df)
-    if len(links_df) < 5:
-        WranglerLogger.debug(f"data_to_links_df.links_df input: \n{links_df}.")
+    WranglerLogger.debug(f"data_to_links_df.links_df input: \n{links_df.head}.")
 
     v0_link_properties = detect_v0_scoped_link_properties(links_df)
     if v0_link_properties:
@@ -130,7 +120,7 @@ def data_to_links_df(
     links_df.gdf_name = links_df.attrs["name"]
     links_df = validate_df_to_model(links_df, RoadLinksTable)
 
-    if len(links_df) < 10:
+    if len(links_df) < SMALL_RECS:
         WranglerLogger.debug(
             f"New Links: \n{links_df[links_df.attrs['display_cols'] + ['geometry']]}"
         )
@@ -147,8 +137,8 @@ def copy_links(
     updated_geometry_col: Optional[str] = None,
     nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
     offset_meters: float = -5,
-    copy_properties: list[str] = [],
-    rename_properties: dict[str, str] = {},
+    copy_properties: Optional[list[str]] = None,
+    rename_properties: Optional[dict[str, str]] = None,
     name_prefix: str = "copy of",
     validate: bool = True,
 ) -> DataFrame[RoadLinksTable]:
@@ -178,6 +168,9 @@ def copy_links(
     Returns:
         DataFrame[RoadLinksTable]: offset links dataframe
     """
+    copy_properties = copy_properties or []
+    rename_properties = rename_properties or {}
+
     REQUIRED_KEEP = ["A", "B", "name", "distance", "geometry", "model_link_id"]
 
     # Should rename these columns to these columns - unless overriden by rename_properties

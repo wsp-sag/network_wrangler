@@ -1,8 +1,9 @@
 """Tests roadway network clipping functions."""
 
+import geopandas as gpd
+
 from network_wrangler.roadway.clip import clip_roadway
 from network_wrangler.roadway.io import write_roadway
-import geopandas as gpd
 
 
 def test_clip_roadway_geojson(stpaul_net, test_dir):

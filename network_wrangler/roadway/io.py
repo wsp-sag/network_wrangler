@@ -3,23 +3,22 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Union, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from geopandas import GeoDataFrame
 
+from ..configs import ConfigInputTypes, DefaultConfig, WranglerConfig, load_wrangler_config
 from ..logger import WranglerLogger
-from ..configs import load_wrangler_config, WranglerConfig, DefaultConfig, ConfigInputTypes
-from ..utils.io_table import read_table
-from .nodes.io import read_nodes, write_nodes
-from .links.io import read_links, write_links
-from .shapes.io import read_shapes, write_shapes
 from ..params import LAT_LON_CRS
-
+from ..utils.io_table import read_table
+from .links.io import read_links, write_links
+from .nodes.io import read_nodes, write_nodes
+from .shapes.io import read_shapes, write_shapes
 
 if TYPE_CHECKING:
-    from .network import RoadwayNetwork
-    from .model_roadway import ModelRoadwayNetwork
     from ..models._base.types import RoadwayFileTypes
+    from .model_roadway import ModelRoadwayNetwork
+    from .network import RoadwayNetwork
 
 
 def load_roadway(
@@ -125,7 +124,8 @@ def id_roadway_file_paths_in_dir(
     """Identifies the paths to the links, nodes, and shapes files in a directory."""
     network_path = Path(dir)
     if not network_path.is_dir():
-        raise FileNotFoundError(f"Directory {network_path} does not exist")
+        msg = f"Directory {network_path} does not exist"
+        raise FileNotFoundError(msg)
 
     _link_file_format = file_format
     if file_format == "geojson":
@@ -133,17 +133,15 @@ def id_roadway_file_paths_in_dir(
 
     try:
         links_file = next(network_path.glob(f"*link*.{_link_file_format}"))
-    except StopIteration:
-        raise FileNotFoundError(
-            f"No links file with {_link_file_format} file format found in {network_path}"
-        )
+    except StopIteration as err:
+        msg = f"No links file with {_link_file_format} file format found in {network_path}"
+        raise FileNotFoundError(msg) from err
 
     try:
         nodes_file = next(network_path.glob(f"*node*.{file_format}"))
-    except StopIteration:
-        raise FileNotFoundError(
-            f"No nodes file with {file_format} file format found in {network_path}"
-        )
+    except StopIteration as err:
+        msg = f"No nodes file with {file_format} file format found in {network_path}"
+        raise FileNotFoundError(msg) from err
 
     try:
         shapes_file = next(network_path.glob(f"*shape*.{file_format}"))
@@ -253,7 +251,7 @@ def write_roadway(
 def convert_roadway_file_serialization(
     in_path: Path,
     in_format: RoadwayFileTypes = "geojson",
-    out_dir: Path = Path("."),
+    out_dir: Path = Path(),
     out_format: RoadwayFileTypes = "parquet",
     out_prefix: str = "",
     overwrite: bool = True,

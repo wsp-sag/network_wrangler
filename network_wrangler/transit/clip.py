@@ -17,40 +17,33 @@ write_transit(clipped_network, out_dir, prefix="ecolab", format="geojson", true_
 """
 
 from __future__ import annotations
-from typing import Union, Optional
+
 from pathlib import Path
+from typing import Optional, Union
 
-import pandas as pd
 import geopandas as gpd
+import pandas as pd
 
-from .feed.stops import stops_for_stop_times
-
+from ..logger import WranglerLogger
+from ..roadway.network import RoadwayNetwork
+from ..roadway.nodes.io import get_nodes
+from ..transit.io import load_transit
+from ..utils.geo import get_bounding_polygon
+from .feed.feed import (
+    Feed,
+)
+from .feed.frequencies import frequencies_for_trips
+from .feed.routes import routes_for_trips
+from .feed.shapes import shapes_for_road_links, shapes_for_trips
 from .feed.stop_times import (
     stop_times_for_min_stops,
     stop_times_for_shapes,
     stop_times_for_stops,
 )
-
-from .feed.shapes import shapes_for_trips
-
-from .feed.routes import routes_for_trips
-
-from .feed.frequencies import frequencies_for_trips
-
-from .feed.shapes import shapes_for_road_links
-
+from .feed.stops import stops_for_stop_times
 from .feed.trips import trips_for_stop_times
-
-from .network import TransitNetwork
-from ..roadway.network import RoadwayNetwork
-from ..roadway.nodes.io import get_nodes
-from ..transit.io import load_transit
-from .feed.feed import (
-    Feed,
-)
 from .geo import shapes_to_shape_links_gdf
-from ..utils.geo import get_bounding_polygon
-from ..logger import WranglerLogger
+from .network import TransitNetwork
 
 # minimum number of stops needed to retain a transit trip within clipped area
 DEFAULT_MIN_STOPS: int = 2
@@ -188,7 +181,8 @@ def clip_feed_to_boundary(
     node_ids = list(set(clipped_shape_links.A.to_list() + clipped_shape_links.B.to_list()))
     WranglerLogger.debug(f"Clipping network to {len(node_ids)} nodes.")
     if not node_ids:
-        raise ValueError("No nodes found within the boundary.")
+        msg = "No nodes found within the boundary."
+        raise ValueError(msg)
     return _clip_feed_to_nodes(feed, node_ids, min_stops=min_stops)
 
 
@@ -248,7 +242,7 @@ def clip_transit(
     ref_nodes_df: Optional[Union[None, gpd.GeoDataFrame]] = None,
     roadway_net: Optional[Union[None, RoadwayNetwork]] = None,
     min_stops: int = DEFAULT_MIN_STOPS,
-) -> "TransitNetwork":
+) -> TransitNetwork:
     """Returns a new TransitNetwork clipped to a boundary as determined by arguments.
 
     Will clip based on which arguments are provided as prioritized below:
@@ -301,7 +295,8 @@ def clip_transit(
         clipped_feed = clip_feed_to_roadway(feed, roadway_net=roadway_net)
         set_roadway_network = True
     else:
-        raise ValueError("Missing required arguments from clip_transit")
+        msg = "Missing required arguments from clip_transit"
+        raise ValueError(msg)
 
     # create a new TransitNetwork object with the clipped feed dataframes
     clipped_net = TransitNetwork(clipped_feed)

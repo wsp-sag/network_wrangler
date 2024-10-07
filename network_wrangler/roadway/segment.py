@@ -9,9 +9,9 @@ Usage:
 
 ```
 selection_dict = {
-    "links": {"name":['6th','Sixth','sixth']},
-    "from": {"osm_node_id": '187899923'},
-    "to": {"osm_node_id": '187865924'}
+    "links": {"name": ["6th", "Sixth", "sixth"]},
+    "from": {"osm_node_id": "187899923"},
+    "to": {"osm_node_id": "187865924"},
 }
 
 segment = Segment(net, selection)
@@ -23,49 +23,38 @@ segment.segment_nodes
 from __future__ import annotations
 
 import copy
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 import pandas as pd
-
 from pandera.typing import DataFrame
 
-from ..models.projects.roadway_selection import SelectNodeDict
-
 from ..logger import WranglerLogger
-from .subnet import Subnet
+from ..models.projects.roadway_selection import SelectLinksDict, SelectNodeDict
 from .graph import shortest_path
 from .links.filters import filter_links_to_path
-from ..models.projects.roadway_selection import SelectLinksDict
+from .subnet import Subnet
 
 if TYPE_CHECKING:
+    from ..models.roadway.tables import RoadLinksTable, RoadNodesTable
     from .network import RoadwayNetwork
     from .selection import RoadwayLinkSelection
-    from ..models.roadway.tables import RoadNodesTable, RoadLinksTable
 
 
 class SegmentFormatError(Exception):
     """Error in segment format."""
 
-    pass
-
 
 class SegmentSelectionError(Exception):
     """Error in segment selection."""
-
-    pass
 
 
 class SubnetExpansionError(Exception):
     """Raised when a subnet can't be expanded to include a node or set of nodes."""
 
-    pass
-
 
 class SubnetCreationError(Exception):
     """Raised when a subnet can't be created."""
-
-    pass
 
 
 DEFAULT_MAX_SEARCH_BREADTH: int = 10
@@ -141,10 +130,8 @@ class Segment:
         self.net = net
         self.max_search_breadth = max_search_breadth
         if selection.selection_type != "segment":
-            raise SegmentFormatError(
-                "Selection object passed to Segment must be of type\
-                                      `segment`"
-            )
+            msg = "Selection object passed to Segment must be of type `segment`"
+            raise SegmentFormatError(msg)
         self.selection = selection
 
         # segment members are identified by storing nodes along a route
@@ -191,7 +178,8 @@ class Segment:
             WranglerLogger.debug("Segment not found yet so conducting connected_path_search.")
             self.connected_path_search()
         if self._segment_nodes is None:
-            raise SegmentSelectionError("No segment nodes found.")
+            msg = "No segment nodes found."
+            raise SegmentSelectionError(msg)
         return self._segment_nodes
 
     @property
@@ -232,7 +220,8 @@ class Segment:
         _sel_node_mask = self.net.nodes_df.isin(sel_d).any(axis=1)
         node_df = self.net.nodes_df.loc[_sel_node_mask]
         if len(node_df) != 1:
-            raise SegmentSelectionError(f"Node selection not unique. Found {len(node_df)} nodes.")
+            msg = f"Node selection not unique. Found {len(node_df)} nodes."
+            raise SegmentSelectionError(msg)
         return node_df
 
     def connected_path_search(
@@ -248,13 +237,9 @@ class Segment:
             _found = self._find_subnet_shortest_path()
 
         if not _found:
-            WranglerLogger.debug(
-                f"No connected path found from {self.O.pk} and {self.D_pk}\n\
-                self.subnet_links_df: \n{self.subnet_links_df}"
-            )
-            raise SegmentSelectionError(
-                f"No connected path found from {self.O.pk} and {self.D_pk}"
-            )
+            msg = f"No connected path found from {self.O.pk} and {self.D_pk}"
+            WranglerLogger.debug(msg)
+            raise SegmentSelectionError(msg)
 
     def _generate_subnet(self, selection_dict: dict) -> Subnet:
         """Generate a subnet of the roadway network on which to search for connected segment.
@@ -263,7 +248,8 @@ class Segment:
             selection_dict: selection dictionary to use for generating subnet
         """
         if not selection_dict:
-            raise SegmentFormatError("No selection provided to generate subnet from.")
+            msg = "No selection provided to generate subnet from."
+            raise SegmentFormatError(msg)
 
         WranglerLogger.info(f"Creating subnet from dictionary: {selection_dict}")
         subnet = generate_subnet_from_link_selection_dict(
@@ -371,7 +357,8 @@ def generate_subnet_from_link_selection_dict(
             break
     if len(subnet_links_df) == 0:
         WranglerLogger.error(f"Selection didn't return subnet links: {link_selection_dict}")
-        raise SubnetCreationError("No links found with selection.")
+        msg = "No links found with selection."
+        raise SubnetCreationError(msg)
 
     subnet_links_df["i"] = 0
     subnet = Subnet(
@@ -407,7 +394,8 @@ def identify_segment_endpoints(
             considered a segment. Defaults to 2.
 
     """
-    raise NotImplementedError("This function has not been revisited or refactored to work.")
+    msg = "This function has not been revisited or refactored to work."
+    raise NotImplementedError(msg)
     SEGMENT_IDENTIFIERS = ["name", "ref"]
 
     NAME_PER_NODE = 4
@@ -426,7 +414,7 @@ def identify_segment_endpoints(
     _nodes_df = add_incident_link_data_to_nodes(
         links_df=_links_df,
         nodes_df=_nodes_df,
-        link_variables=SEGMENT_IDENTIFIERS + ["distance"],
+        link_variables=[*SEGMENT_IDENTIFIERS, "distance"],
     )
 
     # WranglerLogger.debug(f"Node/Link table elements: {len(_nodes_df)}"")

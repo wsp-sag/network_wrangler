@@ -1,9 +1,10 @@
 """Utility functions for RoadwayNetwork and ModelRoadwayNetwork classes."""
 
 from __future__ import annotations
-import hashlib
 
-from typing import List, Union, TYPE_CHECKING, Optional
+import hashlib
+from typing import TYPE_CHECKING, Optional, Union
+
 import pandas as pd
 
 from ..logger import WranglerLogger
@@ -11,13 +12,14 @@ from ..utils.data import diff_dfs
 
 if TYPE_CHECKING:
     from shapely import LineString
-    from .network import RoadwayNetwork
+
     from .model_roadway import ModelRoadwayNetwork
+    from .network import RoadwayNetwork
 
 
 def compare_networks(
-    nets: List[Union["RoadwayNetwork", "ModelRoadwayNetwork"]],
-    names: Optional[List[str]] = None,
+    nets: list[Union[RoadwayNetwork, ModelRoadwayNetwork]],
+    names: Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """Compare the summary of networks in a list of networks.
 
@@ -32,8 +34,8 @@ def compare_networks(
 
 
 def compare_links(
-    links: List[pd.DataFrame],
-    names: Optional[List[str]] = None,
+    links: list[pd.DataFrame],
+    names: Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """Compare the summary of links in a list of dataframes.
 
@@ -55,10 +57,10 @@ def create_unique_shape_id(line_string: LineString):
 
     Returns: string
     """
-    x1, y1 = list(line_string.coords)[0]  # first coordinate (A node)
-    x2, y2 = list(line_string.coords)[-1]  # last coordinate (B node)
+    x1, y1 = line_string.coords[0]  # first coordinate (A node)
+    x2, y2 = line_string.coords[-1]  # last coordinate (B node)
 
-    message = "Geometry {} {} {} {}".format(x1, y1, x2, y2)
+    message = f"Geometry {x1} {y1} {x2} {y2}"
     unhashed = message.encode("utf-8")
     hash = hashlib.md5(unhashed).hexdigest()
 

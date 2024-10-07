@@ -9,13 +9,9 @@ from ..links.links import node_ids_in_links
 class NotNodesError(Exception):
     """Raised when the input data is not a nodes table."""
 
-    pass
-
 
 class NodeNotFoundError(Exception):
     """Raised when a node is not found in the nodes table."""
-
-    pass
 
 
 def node_ids_without_links(

@@ -13,19 +13,23 @@ Internal function terminology for timespan scopes:
 """
 
 from __future__ import annotations
-from datetime import datetime, timedelta, date
+
+from datetime import date, datetime, timedelta
 from typing import Optional, Union
 
 import pandas as pd
 from pydantic import validate_call
 
 from ..logger import WranglerLogger
-
-from ..models._base.types import TimespanString, TimeString
 from ..models._base.series import TimeStrSeriesSchema
+from ..models._base.types import TimespanString, TimeString
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+class TimespanDfQueryError(Exception):
+    """Error for timespan query errors."""
+
+
+@validate_call(config={"arbitrary_types_allowed": True})
 def str_to_time(time_str: TimeString, base_date: Optional[date] = None) -> datetime:
     """Convert TimeString (HH:MM<:SS>) to datetime object.
 
@@ -44,9 +48,9 @@ def str_to_time(time_str: TimeString, base_date: Optional[date] = None) -> datet
     parts = time_str.split(":")
     hours = int(parts[0])
     minutes = int(parts[1])
-    seconds = int(parts[2]) if len(parts) == 3 else 0
+    seconds = int(parts[2]) if len(parts) == 3 else 0  # noqa: PLR2004
 
-    if hours >= 24:
+    if hours >= 24:  # noqa: PLR2004
         add_days = hours // 24
         base_date += timedelta(days=add_days)
         hours -= 24 * add_days
@@ -73,16 +77,18 @@ def _all_str_to_time_series(
     elif isinstance(base_date, date):
         base_date = pd.Series([base_date] * len(time_str_s), index=time_str_s.index)
     elif len(base_date) != len(time_str_s):
-        raise ValueError("base_date must be the same length as time_str_s")
+        msg = "base_date must be the same length as time_str_s"
+        WranglerLogger.error(msg)
+        raise ValueError(msg)
 
     # Split the time string to extract hours, minutes, and seconds
     time_parts = time_str_s.str.split(":", expand=True).astype(int)
     hours = time_parts[0]
     minutes = time_parts[1]
-    seconds = time_parts[2] if time_parts.shape[1] == 3 else 0
+    seconds = time_parts[2] if time_parts.shape[1] == 3 else 0  # noqa: PLR2004
 
-    if (hours >= 24).any():
-        hours[hours >= 24] -= 24
+    if (hours >= 24).any():  # noqa: PLR2004
+        hours[hours >= 24] -= 24  # noqa: PLR2004
 
     # Combine the base date with the adjusted time and add the extra days if needed
     combined_datetimes = (
@@ -118,7 +124,7 @@ def str_to_time_series(
     return result
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def str_to_time_list(timespan: list[TimeString]) -> list[datetime]:
     """Convert list of TimeStrings (HH:MM<:SS>) to list of datetime.time objects."""
     timespan_dt: list[datetime] = list(map(str_to_time, timespan))
@@ -129,32 +135,32 @@ def str_to_time_list(timespan: list[TimeString]) -> list[datetime]:
     return timespan_dt
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def timespan_str_list_to_dt(timespans: list[TimespanString]) -> list[list[datetime]]:
     """Convert list of TimespanStrings to list of datetime.time objects."""
     return [str_to_time_list(ts) for ts in timespans]
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def dt_to_seconds_from_midnight(dt: datetime) -> int:
     """Convert a datetime object to the number of seconds since midnight."""
     return round((dt - dt.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds())
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def str_to_seconds_from_midnight(time_str: TimeString) -> int:
     """Convert a TimeString (HH:MM<:SS>) to the number of seconds since midnight."""
     dt = str_to_time(time_str)
     return dt_to_seconds_from_midnight(dt)
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def seconds_from_midnight_to_str(seconds: int) -> TimeString:
     """Convert the number of seconds since midnight to a TimeString (HH:MM)."""
     return str(timedelta(seconds=seconds))
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def filter_df_to_overlapping_timespans(
     orig_df: pd.DataFrame,
     query_timespans: list[TimespanString],
@@ -169,7 +175,9 @@ def filter_df_to_overlapping_timespans(
             for overlapping records.
     """
     if "start_time" not in orig_df.columns or "end_time" not in orig_df.columns:
-        raise ValueError("DataFrame must have 'start_time' and 'end_time' columns")
+        msg = "DataFrame must have 'start_time' and 'end_time' columns"
+        WranglerLogger.error(msg)
+        raise TimespanDfQueryError(msg)
 
     mask = pd.Series([False] * len(orig_df), index=orig_df.index)
     for query_timespan in query_timespans:
@@ -202,13 +210,13 @@ def calc_overlap_duration_with_query(
     return overlap_duration_s
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def filter_df_to_max_overlapping_timespans(
     orig_df: pd.DataFrame,
     query_timespan: list[TimeString],
     strict_match: bool = False,
     min_overlap_minutes: int = 1,
-    keep_max_of_cols: list[str] = ["model_link_id"],
+    keep_max_of_cols: Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """Filters dataframe for entries that have maximum overlap with the given query timespan.
 
@@ -226,8 +234,12 @@ def filter_df_to_max_overlapping_timespans(
         keep_max_of_cols: list of fields to return the maximum value of overlap for.  If None,
             will return all overlapping time periods. Defaults to `['model_link_id']`
     """
+    if keep_max_of_cols is None:
+        keep_max_of_cols = ["model_link_id"]
     if "start_time" not in orig_df.columns or "end_time" not in orig_df.columns:
-        raise ValueError("DataFrame must have 'start_time' and 'end_time' columns")
+        msg = "DataFrame must have 'start_time' and 'end_time' columns"
+        WranglerLogger.error(msg)
+        raise TimespanDfQueryError(msg)
     q_start, q_end = str_to_time_list(query_timespan)
 
     real_end = orig_df["end_time"]
@@ -302,7 +314,7 @@ def dt_contains(timespan1: list[datetime], timespan2: list[datetime]) -> bool:
     return (start_time_dt <= start_time_dt2) and (end_time_dt >= end_time_dt2)
 
 
-@validate_call(config=dict(arbitrary_types_allowed=True))
+@validate_call(config={"arbitrary_types_allowed": True})
 def dt_overlaps(timespan1: list[datetime], timespan2: list[datetime]) -> bool:
     """Check if two timespans overlap.
 
@@ -347,8 +359,7 @@ def filter_dt_list_to_overlaps(timespans: list[list[datetime]]) -> list[list[dat
                 overlaps += [timespans[i], timespans[j]]
 
     # remove dupes
-    overlaps = list(map(list, set(map(tuple, overlaps))))
-    return overlaps
+    return list(map(list, set(map(tuple, overlaps))))
 
 
 def dt_list_overlaps(timespans: list[list[datetime]]) -> bool:
@@ -357,9 +368,7 @@ def dt_list_overlaps(timespans: list[list[datetime]]) -> bool:
     `overlapping`: a timespan that fully or partially overlaps a given timespan.
     This includes and all timespans where at least one minute overlap.
     """
-    if filter_dt_list_to_overlaps(timespans):
-        return True
-    return False
+    return bool(filter_dt_list_to_overlaps(timespans))
 
 
 def duration_dt(start_time_dt: datetime, end_time_dt: datetime) -> timedelta:
@@ -374,25 +383,20 @@ def duration_dt(start_time_dt: datetime, end_time_dt: datetime) -> timedelta:
             minutes=end_time_dt.minute - start_time_dt.minute,
             seconds=end_time_dt.second - start_time_dt.second,
         )
-    else:
-        return end_time_dt - start_time_dt
+    return end_time_dt - start_time_dt
 
 
 def format_seconds_to_legible_str(seconds: int) -> str:
     """Formats seconds into a human-friendly string for log files."""
-    if seconds < 60:
+    if seconds < 60:  # noqa: PLR2004
         return f"{int(seconds)} seconds"
-    elif seconds < 3600:
+    if seconds < 3600:  # noqa: PLR2004
         return f"{int(seconds // 60)} minutes"
-    else:
-        hours = int(seconds // 3600)
-        minutes = int((seconds % 3600) // 60)
-        return f"{hours} hours and {minutes} minutes"
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    return f"{hours} hours and {minutes} minutes"
 
 
 def is_increasing(datetimes: list[datetime]) -> bool:
     """Check if a list of datetime objects is increasing in time."""
-    for i in range(len(datetimes) - 1):
-        if datetimes[i] > datetimes[i + 1]:
-            return False
-    return True
+    return all(datetimes[i] <= datetimes[i + 1] for i in range(len(datetimes) - 1))

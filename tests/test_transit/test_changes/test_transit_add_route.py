@@ -1,8 +1,8 @@
 """Run just the tests using `pytest tests/test_transit/test_changes/test_transit_add_route.py`."""
 
 import copy
-import pytest
 
+import pytest
 from projectcard import read_card
 
 from network_wrangler import WranglerLogger
@@ -12,7 +12,6 @@ from network_wrangler.transit.projects.add_route import (
     apply_transit_route_addition,
 )
 from network_wrangler.utils.time import str_to_time
-
 
 add_route_change = {
     "project": "New Green Transit",

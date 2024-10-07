@@ -1,17 +1,15 @@
 """Run just the tests using `pytest tests/test_transit/test_changes/test_transit_route_changes.py`."""
 
 import copy
-import os
 
 import pytest
-
-
-from network_wrangler.transit.feed.stop_times import stop_times_for_trip_id
 from projectcard import read_card
-from network_wrangler.roadway.network import RoadwayNetwork
-from network_wrangler.transit.network import TransitNetwork
+
 from network_wrangler import WranglerLogger
+from network_wrangler.roadway.network import RoadwayNetwork
 from network_wrangler.transit.feed.shapes import shapes_for_trip_id
+from network_wrangler.transit.feed.stop_times import stop_times_for_trip_id
+from network_wrangler.transit.network import TransitNetwork
 
 TEST_ROUTING_REPLACEMENT = [
     {
@@ -235,7 +233,7 @@ def test_route_changes_project_card(
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     transit_net = copy.deepcopy(stpaul_transit_net)
-    project_card = read_card(os.path.join(stpaul_card_dir, "transit.routing_change.yml"))
+    project_card = read_card(stpaul_card_dir / "transit.routing_change.yml")
 
     WranglerLogger.debug(f"Project Card: {project_card.__dict__}")
     WranglerLogger.debug(f"Types: {project_card.change_types}")

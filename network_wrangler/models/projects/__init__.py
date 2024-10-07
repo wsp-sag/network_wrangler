@@ -1,16 +1,16 @@
 """Data Models for Project Cards."""
 
+from .roadway_changes import RoadPropertyChange, RoadwayDeletion
 from .roadway_selection import (
-    SelectNodesDict,
+    RoadwaySelectionFormatError,
     SelectFacility,
     SelectLinksDict,
-    RoadwaySelectionFormatError,
+    SelectNodesDict,
 )
 from .transit_selection import (
+    SelectRouteProperties,
+    SelectTransitLinks,
+    SelectTransitNodes,
     SelectTransitTrips,
     SelectTripProperties,
-    SelectRouteProperties,
-    SelectTransitNodes,
-    SelectTransitLinks,
 )
-from .roadway_changes import RoadPropertyChange, RoadwayDeletion

@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import copy
-
 from typing import TYPE_CHECKING, Optional, Union
 
 import networkx as nx
 import osmnx as ox
-
-from pandas import DataFrame
 from geopandas import GeoDataFrame
+from pandas import DataFrame
 
 from ..logger import WranglerLogger
 
@@ -209,7 +207,7 @@ def shortest_path(
         sp_route = nx.shortest_path(G, O_id, D_id, weight=sp_weight_property)
         WranglerLogger.debug("Shortest path successfully routed")
     except nx.NetworkXNoPath:
-        WranglerLogger.debug("No SP from {} to {} Found.".format(O_id, D_id))
+        WranglerLogger.debug(f"No SP from {O_id} to {D_id} Found.")
         return None
     except Exception as e:
         raise e

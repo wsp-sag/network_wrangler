@@ -5,12 +5,13 @@ Private methods may return mutated originals.
 """
 
 from __future__ import annotations
+
 import copy
 
 from pandera.typing import DataFrame
 
+from ...models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
 from ...utils.geo import update_nodes_in_linestring_geometry
-from ...models.roadway.tables import RoadShapesTable, RoadLinksTable, RoadNodesTable
 
 
 def edit_shape_geometry_from_nodes(

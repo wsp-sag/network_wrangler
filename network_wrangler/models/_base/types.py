@@ -1,31 +1,20 @@
 from __future__ import annotations
 
 from datetime import time
-from typing import Annotated, Any, List, TypeVar, Union, Literal
+from typing import Annotated, Any, List, Literal, TypeVar, Union
+
 import pandas as pd
 from pydantic import (
     BeforeValidator,
     Field,
 )
 
-GeoFileTypes = Union[
-    Literal["json"],
-    Literal["geojson"],
-    Literal["shp"],
-    Literal["parquet"],
-    Literal["csv"],
-    Literal["txt"],
-]
+GeoFileTypes = Literal["json", "geojson", "shp", "parquet", "csv", "txt"]
 
-TransitFileTypes = Union[Literal["txt"], Literal["csv"], Literal["parquet"]]
+TransitFileTypes = Literal["txt", "csv", "parquet"]
 
 
-RoadwayFileTypes = Union[
-    Literal["geojson"],
-    Literal["shp"],
-    Literal["parquet"],
-    Literal["json"],
-]
+RoadwayFileTypes = Literal["geojson", "shp", "parquet", "json"]
 
 
 PandasDataFrame = TypeVar("PandasDataFrame", bound=pd.DataFrame)
