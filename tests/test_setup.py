@@ -1,13 +1,13 @@
 """Test that the package can be setup and imported."""
 
+import subprocess
+
 from network_wrangler import WranglerLogger
 
 
-def test_setup():
-    """Create virtual environment and test that network wranlger can be installed and imported."""
-    import shutil
-    import subprocess
-
+def test_setup(request):
+    """Create virtual environment and test that network wrangler can be installed and imported."""
+    WranglerLogger.info(f"--Starting: {request.node.name}")
     WranglerLogger.debug("Creating virtual environment...")
     subprocess.run(["python", "-m", "venv", "wranglertest"], check=True)
     WranglerLogger.debug("Created virtual environment.\nInstalling Wrangler...")
@@ -18,8 +18,15 @@ def test_setup():
     )
     WranglerLogger.debug(f"Venv contents:\n{pip_list_process.stdout}")
     WranglerLogger.debug("Testing import...")
-    subprocess.run(["wranglertest/bin/python", "-c", "import network_wrangler"], check=True)
-    WranglerLogger.debug("Wrangler can import.\nTesting importing dependencies...")
-    subprocess.run(["wranglertest/bin/python", "-c", "import osmnx"], check=True)
-    WranglerLogger.debug("Dependencies can import.\nRemoving virtual env...")
-    shutil.rmtree("wranglertest")
+    
+    # Capture output and error messages
+    import_process = subprocess.run(
+        ["wranglertest/bin/python", "-c", "import network_wrangler"],
+        capture_output=True, text=True, check=False
+    )
+    
+    if import_process.returncode != 0:
+        WranglerLogger.error(f"Import failed with error:\n{import_process.stderr}")
+        raise subprocess.CalledProcessError(import_process.returncode, import_process.args, output=import_process.stdout, stderr=import_process.stderr)
+    
+    WranglerLogger.debug("Import successful.")

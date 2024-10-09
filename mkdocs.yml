@@ -26,7 +26,9 @@ theme:
 plugins:
   - autorefs
   - awesome-pages
-  - include-markdown
+  - include-markdown:
+      opening_tag: "{!"
+      closing_tag: "!}"
   - mermaid2
   - mike
   - mkdocs-jupyter:
@@ -65,8 +67,13 @@ markdown_extensions:
   - codehilite:
       linenums: true
   - meta
-  - pymdownx.inlinehilite
   - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+  - pymdownx.inlinehilite
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tabbed:
@@ -77,9 +84,6 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_div_format
   - pymdownx.smartsymbols
-  - pymdownx.highlight:
-      use_pygments: true
-      pygments_lang_class: true
   - smarty
   - toc:
       # insert a blank space before the character

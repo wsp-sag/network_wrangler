@@ -178,7 +178,7 @@ def test_zero_valid_facilities(request, stpaul_transit_net):
             }
         ).selected_trips
 
-    WranglerLogger.info("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_invalid_selection_key(request, stpaul_transit_net):
@@ -190,7 +190,7 @@ def test_invalid_selection_key(request, stpaul_transit_net):
             {"trump_properties": {"trip_ids": ["14941433-JUN19-MVS-BUS-Weekday-01"]}}
         )
 
-    WranglerLogger.info("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_invalid_selection_property_format(request, stpaul_transit_net):
@@ -205,7 +205,7 @@ def test_invalid_selection_property_format(request, stpaul_transit_net):
             }
         )
 
-    WranglerLogger.info("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_invalid_selection_property(request, stpaul_transit_net):
@@ -217,7 +217,7 @@ def test_invalid_selection_property(request, stpaul_transit_net):
             {"trip_properties": {"trip_ids": ["14941433-JUN19-MVS-BUS-Weekday-01"]}}
         )
 
-    WranglerLogger.info("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_invalid_optional_selection_variable(request, stpaul_transit_net):
@@ -233,7 +233,7 @@ def test_invalid_optional_selection_variable(request, stpaul_transit_net):
                 }
             }
         )
-    WranglerLogger.info("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_correct_optional_selection_variable(request, stpaul_transit_net):
@@ -247,13 +247,13 @@ def test_correct_optional_selection_variable(request, stpaul_transit_net):
             }
         }
     ).selected_trips
-    assert set(sel) == set("14940701-JUN19-MVS-BUS-Weekday-01")
+    assert set(sel) == {"14940701-JUN19-MVS-BUS-Weekday-01"}
 
     # Correct route variable
     sel = stpaul_transit_net.get_selection(
         {"route_properties": {"route_long_name": ["Express"], "agency_id": ["2"]}}
     ).selected_trips
-    assert set(sel) == set("14978409-JUN19-MVS-BUS-Weekday-01")
+    assert set(sel) == {"14978409-JUN19-MVS-BUS-Weekday-01"}
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
@@ -363,13 +363,5 @@ def test_select_transit_features_by_links(
 
     with pytest.raises(NotImplementedError):
         selected_trips = set(stpaul_transit_net.get_selection(sel).selected_trips)
-
-    answer = set(selection["answer"])
-    if selected_trips - answer:
-        WranglerLogger.error(f"!!! Trips overselected: \n   {selected_trips - answer}")
-    if answer - selected_trips:
-        WranglerLogger.error(f"!!! Trips missing in selection: \n   {answer - selected_trips}")
-
-        # assert selected_trips == answer
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

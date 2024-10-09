@@ -93,10 +93,12 @@ def _apply_transit_property_change_to_table(
     else:
         msg = f"Changes in table {table_name} not implemented."
         raise NotImplementedError(msg)
-
-    _check_existing_value_conflict(
+    
+    if not _check_existing_value_conflict(
         table_df, update_idx, prop_name, prop_change, existing_value_conflict
-    )
+    ):
+        return net
+
     set_df = copy.deepcopy(table_df)
 
     # Calculate build value
@@ -128,12 +130,12 @@ def _check_existing_value_conflict(
     if validate_existing_value_in_df(table_df, update_idx, prop_name, prop_change["existing"]):
         return True
 
-    WranglerLogger.warning(f"Existing {property} != {prop_change['existing']}.")
+    WranglerLogger.warning(f"Existing {prop_name} != {prop_change['existing']}.")
     if existing_value_conflict == "error":
-        msg = f"Existing {property} does not match {prop_change['existing']}."
+        msg = f"Existing {prop_name} does not match {prop_change['existing']}."
         raise TransitPropertyChangeError(msg)
     if existing_value_conflict == "skip":
-        WranglerLogger.warning(f"Skipping {property} change due to existing value conflict.")
+        WranglerLogger.warning(f"Skipping {prop_name} change due to existing value conflict.")
         return False
     WranglerLogger.warning(f"Changing {prop_name} despite conflict with existing value.")
     return True

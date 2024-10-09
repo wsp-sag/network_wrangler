@@ -74,8 +74,8 @@ def test_apply_transit_feature_change_from_projectcard(
 
     for i, answer in enumerate(answers):
         match = freq.trip_id == test_project["answer"]["trip_ids"][i]
-        result = freq[match]["headway_secs"]
-        assert set(result) == set(answer)
+        result = freq[match]["headway_secs"].values[0]
+        assert result == answer
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 

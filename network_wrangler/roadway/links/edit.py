@@ -245,10 +245,8 @@ def _edit_link_property(
     """
     WranglerLogger.debug(f"Editing {prop_name} on links {link_idx}")
 
-    existing_value_conflict = prop_change.get(
-        "existing_value_conflict", config.EDITS.EXISTING_VALUE_CONFLICT
-    )
-    overwrite_scoped = prop_change.get("overwrite_scoped", config.EDITS.OVERWRITE_SCOPED)
+    existing_value_conflict = prop_change.existing_value_conflict or config.EDITS.EXISTING_VALUE_CONFLICT
+    overwrite_scoped = prop_change.overwrite_scoped or config.EDITS.OVERWRITE_SCOPED
 
     if not _check_existing_value_conflict(
         links_df, link_idx, prop_name, prop_change, existing_value_conflict
