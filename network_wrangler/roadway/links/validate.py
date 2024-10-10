@@ -19,8 +19,9 @@ def validate_links_have_nodes(links_df: pd.DataFrame, nodes_df: pd.DataFrame) ->
     raises: NodesInLinksMissingError if nodes_df is missing and A or B node
     """
     nodes_in_links = list(set(links_df["A"]).union(set(links_df["B"])))
+    node_idx_in_links = nodes_df[nodes_df["model_node_id"].isin(nodes_in_links)].index
 
-    fk_valid, fk_missing = fk_in_pk(nodes_df.index, nodes_in_links)
+    fk_valid, fk_missing = fk_in_pk(nodes_df.index, node_idx_in_links)
     if not fk_valid:
         msg = "Links are missing len{fk_missing} nodes."
         WranglerLogger.error(msg + f"\n  Missing: {fk_missing}")
