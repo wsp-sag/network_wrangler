@@ -252,13 +252,16 @@ def _create_exploded_df_for_scoped_prop(
 
     # 3. normalize dictionary to columns for each dictionary key: category, timespan, value
     #       convert to dictionary from data model
-    exp_df[f"sc_{prop_name}"] = exp_df[f"sc_{prop_name}"].apply(lambda x: x.model_dump())
+    exp_df[f"sc_{prop_name}"] = exp_df[f"sc_{prop_name}"].apply(lambda x: x.model_dump() if hasattr(x, 'model_dump') else x)
     normalized_scope_df = pd.json_normalize(exp_df.pop(f"sc_{prop_name}")).set_index(exp_df.index)
     exp_df = scoped_values_df[["model_link_id"]].join(normalized_scope_df)
     WranglerLogger.debug(f"Exploded columns: \n{exp_df}")
 
     # 4. Fill default category (timespan query should take care of this itself)
-    exp_df.loc[exp_df["category"].isna(), "category"] = default_category
+    if "category" not in exp_df.columns:
+        exp_df["category"] = default_category
+    else:
+        exp_df.loc[exp_df["category"].isna(), "category"] = default_category
 
     # 5. Separate timespan to start_time and end_time of dt type to facilitate queries
     exp_df[["start_time", "end_time"]] = convert_timespan_to_start_end_dt(exp_df.timespan)
