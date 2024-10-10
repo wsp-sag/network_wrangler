@@ -225,7 +225,7 @@ class RoadwayNetwork(BaseModel):
     def link_shapes_df(self) -> gpd.GeoDataFrame:
         """Add shape geometry to links if available.
 
-        returns: shapes merged to nodes dataframe
+        returns: shapes merged to links dataframe
         """
         _links_df = copy.deepcopy(self.links_df)
         link_shapes_df = _links_df.merge(
@@ -234,6 +234,9 @@ class RoadwayNetwork(BaseModel):
             right_on="shape_id",
             how="left",
         )
+        link_shapes_df['geometry'] = link_shapes_df['geometry_y'].combine_first(link_shapes_df['geometry_x'])
+        link_shapes_df = link_shapes_df.drop(columns=['geometry_x', 'geometry_y'])
+        link_shapes_df = link_shapes_df.set_geometry('geometry')
         return link_shapes_df
 
     def get_property_by_timespan_and_group(
