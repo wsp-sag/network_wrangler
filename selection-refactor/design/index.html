@@ -352,24 +352,24 @@
 <p><strong>4.<a href="https://network-wrangler.github.io/projectcard/main/api/#projectcard.projectcard.ProjectCard"><code>ProjectCard</code></a></strong> objects store information (including  metadata) about changes to the network.  Network Wrangler uses the <a href="https://network-wrangler.github.io/projectcard"><code>projectcard</code></a> package to read project cards from .yaml-like files and validate them.</p>
 <h2 id="applying-projects">Applying Projects<a class="headerlink" href="#applying-projects" title="Permanent link"> ¶</a></h2>
 <p>The basic functionality of NetworkWrangler is to apply a set of projects to a scenario.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">project_card</span> <span class="kn">import</span> <span class="n">read_cards</span>
-<span class="n">cards</span> <span class="o">=</span> <span class="n">read_cards</span><span class="p">([</span>
-    <span class="s2">"projects/project_a.yml"</span><span class="p">,</span>
-    <span class="s2">"projects/project_b.yml"</span><span class="p">,</span>
-    <span class="s2">"projects/project_c.yml"</span><span class="p">,</span>
-<span class="p">])</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">add_project_cards</span><span class="p">(</span><span class="n">cards</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">queued_projects</span>
-<span class="o">&gt;&gt;</span>  <span class="p">[</span><span class="s2">"project_a"</span><span class="p">,</span> <span class="s2">"project_b"</span><span class="p">,</span> <span class="s2">"project_c"</span><span class="p">]</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_projects</span><span class="p">([</span><span class="s2">"project_a"</span><span class="p">])</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">applied_projects</span>
-<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"project_a"</span><span class="p">]</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">queued_projects</span>
-<span class="o">&gt;&gt;</span>  <span class="p">[</span><span class="s2">"project_b"</span><span class="p">,</span> <span class="s2">"project_c"</span><span class="p">]</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_all_projects</span><span class="p">()</span>
-<span class="n">my_scenario</span><span class="o">.</span><span class="n">applied_projects</span>
-<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"project_a"</span><span class="p">,</span> <span class="s2">"project_b"</span><span class="p">,</span> <span class="s2">"project_c"</span><span class="p">]</span>
-</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a href="#__codelineno-0-1" id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">project_card</span> <span class="kn">import</span> <span class="n">read_cards</span>
+</span><span id="__span-0-2"><a href="#__codelineno-0-2" id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="n">cards</span> <span class="o">=</span> <span class="n">read_cards</span><span class="p">([</span>
+</span><span id="__span-0-3"><a href="#__codelineno-0-3" id="__codelineno-0-3" name="__codelineno-0-3"></a>    <span class="s2">"projects/project_a.yml"</span><span class="p">,</span>
+</span><span id="__span-0-4"><a href="#__codelineno-0-4" id="__codelineno-0-4" name="__codelineno-0-4"></a>    <span class="s2">"projects/project_b.yml"</span><span class="p">,</span>
+</span><span id="__span-0-5"><a href="#__codelineno-0-5" id="__codelineno-0-5" name="__codelineno-0-5"></a>    <span class="s2">"projects/project_c.yml"</span><span class="p">,</span>
+</span><span id="__span-0-6"><a href="#__codelineno-0-6" id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="p">])</span>
+</span><span id="__span-0-7"><a href="#__codelineno-0-7" id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">add_project_cards</span><span class="p">(</span><span class="n">cards</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</span><span id="__span-0-8"><a href="#__codelineno-0-8" id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">queued_projects</span>
+</span><span id="__span-0-9"><a href="#__codelineno-0-9" id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="o">&gt;&gt;</span>  <span class="p">[</span><span class="s2">"project_a"</span><span class="p">,</span> <span class="s2">"project_b"</span><span class="p">,</span> <span class="s2">"project_c"</span><span class="p">]</span>
+</span><span id="__span-0-10"><a href="#__codelineno-0-10" id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_projects</span><span class="p">([</span><span class="s2">"project_a"</span><span class="p">])</span>
+</span><span id="__span-0-11"><a href="#__codelineno-0-11" id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">applied_projects</span>
+</span><span id="__span-0-12"><a href="#__codelineno-0-12" id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"project_a"</span><span class="p">]</span>
+</span><span id="__span-0-13"><a href="#__codelineno-0-13" id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">queued_projects</span>
+</span><span id="__span-0-14"><a href="#__codelineno-0-14" id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="o">&gt;&gt;</span>  <span class="p">[</span><span class="s2">"project_b"</span><span class="p">,</span> <span class="s2">"project_c"</span><span class="p">]</span>
+</span><span id="__span-0-15"><a href="#__codelineno-0-15" id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_all_projects</span><span class="p">()</span>
+</span><span id="__span-0-16"><a href="#__codelineno-0-16" id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">applied_projects</span>
+</span><span id="__span-0-17"><a href="#__codelineno-0-17" id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"project_a"</span><span class="p">,</span> <span class="s2">"project_b"</span><span class="p">,</span> <span class="s2">"project_c"</span><span class="p">]</span>
+</span></code></pre></div>
 <h3 id="project-dependencies">Project Dependencies<a class="headerlink" href="#project-dependencies" title="Permanent link"> ¶</a></h3>
 <p>Each project can specify any number of other projects (by project name) as a:</p>
 <ul>
@@ -393,17 +393,17 @@
 <li><code>warn</code>: Writes a warning about conflicting values. This is the global default.</li>
 </ul>
 <p>These options can be set at the <strong>global</strong> configuration level by using WranglerConfig.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span class="nt">EDITS</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">EXISTING_VALUE_CONFLIC</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warn</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a href="#__codelineno-1-1" id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="nt">EDITS</span><span class="p">:</span>
+</span><span id="__span-1-2"><a href="#__codelineno-1-2" id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="w">    </span><span class="nt">EXISTING_VALUE_CONFLIC</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warn</span>
+</span></code></pre></div>
 <p>This behavior can be overridden within a project card for a <code>roadway_property_change</code> or <code>transit_property_change</code> project for any individual <code>property_changes</code> item.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span class="nt">transit_property_change</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">property_changes</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">headway_secs</span><span class="p">:</span>
-<span class="w">            </span><span class="nt">existing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">360</span>
-<span class="w">            </span><span class="nt">change</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-180</span>
-<span class="w">            </span><span class="nt">existing_value_conflict</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">error</span><span class="w"> </span><span class="c1"># this overrides the setting in WranglerConfig to error if the existing value is not 360.</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a href="#__codelineno-2-1" id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="nt">transit_property_change</span><span class="p">:</span>
+</span><span id="__span-2-2"><a href="#__codelineno-2-2" id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="w">    </span><span class="nt">property_changes</span><span class="p">:</span>
+</span><span id="__span-2-3"><a href="#__codelineno-2-3" id="__codelineno-2-3" name="__codelineno-2-3"></a><span class="w">        </span><span class="nt">headway_secs</span><span class="p">:</span>
+</span><span id="__span-2-4"><a href="#__codelineno-2-4" id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="w">            </span><span class="nt">existing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">360</span>
+</span><span id="__span-2-5"><a href="#__codelineno-2-5" id="__codelineno-2-5" name="__codelineno-2-5"></a><span class="w">            </span><span class="nt">change</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-180</span>
+</span><span id="__span-2-6"><a href="#__codelineno-2-6" id="__codelineno-2-6" name="__codelineno-2-6"></a><span class="w">            </span><span class="nt">existing_value_conflict</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">error</span><span class="w"> </span><span class="c1"># this overrides the setting in WranglerConfig to error if the existing value is not 360.</span>
+</span></code></pre></div>
 <h3 id="scoped-roadway-property-changes">Scoped Roadway Property Changes<a class="headerlink" href="#scoped-roadway-property-changes" title="Permanent link"> ¶</a></h3>
 <p>In some cases, properties of a roadway network may apply only during certain times of the day or for certain categories of users (e.g. trucks, HOV2, etc).  The Network Wrangler data model provides the ability to scope each property using the syntax described in the <a href="../networks/#scoped_properties">network documentation</a>.</p>
 <p>The value for a scoped property for a given link record is a list of <a href="../networks/#scoped_properties">ScopedLinkValueItem</a> objects.</p>
@@ -476,19 +476,19 @@ timespan.</p>
 <li><code>error</code>: raise an error when a conflict is detected.</li>
 </ul>
 <p>These options can be set at the <strong>global</strong> configuration level by using WranglerConfig.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span class="nt">EDITS</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">OVERWRITE_SCOPED</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">error</span><span class="w"> </span><span class="c1"># will default to raising an error if any scoped value in this specific property change conflicts with this scope.</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a href="#__codelineno-3-1" id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="nt">EDITS</span><span class="p">:</span>
+</span><span id="__span-3-2"><a href="#__codelineno-3-2" id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="w">    </span><span class="nt">OVERWRITE_SCOPED</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">error</span><span class="w"> </span><span class="c1"># will default to raising an error if any scoped value in this specific property change conflicts with this scope.</span>
+</span></code></pre></div>
 <p>This behavior can be overridden within a project card for a <code>roadway_property_change</code> project for any individual <code>property_changes</code> item.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span class="nt">roadway_property_change</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">property_changes</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">sc_myproperty</span><span class="p">:</span>
-<span class="w">            </span><span class="nt">set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-<span class="w">            </span><span class="nt">scoped</span><span class="p">:</span>
-<span class="w">                </span><span class="nt">timespan</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[[</span><span class="nv">12</span><span class="p p-Indicator">:</span><span class="nv">00</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">15</span><span class="p p-Indicator">:</span><span class="nv">00</span><span class="p p-Indicator">]]</span>
-<span class="w">                </span><span class="nt">set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-<span class="w">            </span><span class="nt">overwrite_scoped</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">all</span><span class="w"> </span><span class="c1"># will overwrite all scopes in a link/property. Useful if you are completely defining something rather than amending.</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a href="#__codelineno-4-1" id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="nt">roadway_property_change</span><span class="p">:</span>
+</span><span id="__span-4-2"><a href="#__codelineno-4-2" id="__codelineno-4-2" name="__codelineno-4-2"></a><span class="w">    </span><span class="nt">property_changes</span><span class="p">:</span>
+</span><span id="__span-4-3"><a href="#__codelineno-4-3" id="__codelineno-4-3" name="__codelineno-4-3"></a><span class="w">        </span><span class="nt">sc_myproperty</span><span class="p">:</span>
+</span><span id="__span-4-4"><a href="#__codelineno-4-4" id="__codelineno-4-4" name="__codelineno-4-4"></a><span class="w">            </span><span class="nt">set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-4-5"><a href="#__codelineno-4-5" id="__codelineno-4-5" name="__codelineno-4-5"></a><span class="w">            </span><span class="nt">scoped</span><span class="p">:</span>
+</span><span id="__span-4-6"><a href="#__codelineno-4-6" id="__codelineno-4-6" name="__codelineno-4-6"></a><span class="w">                </span><span class="nt">timespan</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[[</span><span class="nv">12</span><span class="p p-Indicator">:</span><span class="nv">00</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">15</span><span class="p p-Indicator">:</span><span class="nv">00</span><span class="p p-Indicator">]]</span>
+</span><span id="__span-4-7"><a href="#__codelineno-4-7" id="__codelineno-4-7" name="__codelineno-4-7"></a><span class="w">                </span><span class="nt">set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-4-8"><a href="#__codelineno-4-8" id="__codelineno-4-8" name="__codelineno-4-8"></a><span class="w">            </span><span class="nt">overwrite_scoped</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">all</span><span class="w"> </span><span class="c1"># will overwrite all scopes in a link/property. Useful if you are completely defining something rather than amending.</span>
+</span></code></pre></div>
 </article>
 </div>
 <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
