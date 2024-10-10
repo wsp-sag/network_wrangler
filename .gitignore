@@ -4,9 +4,7 @@
 # Temp and test cache
 .benchmarks
 prof/
-scratch/*
 tests/temp/*
-scratch/*
 *.mbtiles
 *.geojson
 .temp

@@ -40,11 +40,11 @@ def test_project_card_read(request, stpaul_card_dir):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_project_card_write(request, stpaul_card_dir, scratch_dir):
+def test_project_card_write(request, stpaul_card_dir, test_out_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     in_file = stpaul_card_dir / "road.prop_change.simple.yml"
-    outfile = scratch_dir / "t_simple_roadway_attribute_change.yml"
+    outfile = test_out_dir / "t_simple_roadway_attribute_change.yml"
     project_card = read_card(in_file)
     write_card(project_card, outfile)
     test_card = read_card(in_file)
@@ -274,5 +274,61 @@ def test_scenario_building_from_config(request, example_dir, test_out_dir):
     assert (test_out_dir / "myscenario" / "projects" / "road.add.simple.yml").is_file()
     assert (test_out_dir / "myscenario" / "transit" / "my_scenario_shapes.txt").is_file()
     assert (test_out_dir / "myscenario" / "my_scenario_scenario.yml").is_file()
+
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+def test_apply_all_projects(
+    request, stpaul_card_dir, stpaul_net, stpaul_transit_net, test_out_dir
+):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+
+    stpaul_base_scenario = {
+        "road_net": stpaul_net,
+        "transit_net": stpaul_transit_net,
+    }
+
+    # create 00 scenario and apply project cards
+    card_files_00 = [
+        "road.prop_change.multiple.yml",
+        "road.managed_lane.simple.yml",
+    ]
+
+    project_card_path_list_00 = [stpaul_card_dir / filename for filename in card_files_00]
+
+    my_scenario_00 = create_scenario(
+        base_scenario=stpaul_base_scenario,
+        project_card_filepath=project_card_path_list_00,
+    )
+
+    my_scenario_00.apply_all_projects()
+
+    # create 01 scenario and apply project cards
+    card_files_01 = [
+        "road.prop_change.simple.yml",
+        "road.prop_change.widen.yml",
+    ]
+
+    project_card_path_list_01 = [stpaul_card_dir / filename for filename in card_files_01]
+
+    my_scenario_01 = create_scenario(
+        base_scenario=my_scenario_00,
+        project_card_filepath=project_card_path_list_01,
+    )
+
+    my_scenario_01.apply_all_projects()
+
+    # write out 01 scenario
+    my_scenario_01.write(
+        test_out_dir,
+        name="v01",
+        roadway_file_format="geojson",
+        transit_file_format="txt",
+        roadway_write=True,
+        transit_write=True,
+        projects_write=True,
+        overwrite=True,
+        roadway_convert_complex_link_properties_to_single_field=True,
+    )
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

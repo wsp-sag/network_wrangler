@@ -129,7 +129,6 @@ class GroupedScopedPropertySetItem(BaseModel):
         return data
 
 
-@validate_call
 def _grouped_to_indiv_list_of_scopedpropsetitem(
     scoped_prop_set_list: list[Union[GroupedScopedPropertySetItem, IndivScopedPropertySetItem]],
 ) -> list[IndivScopedPropertySetItem]:
@@ -144,7 +143,12 @@ def _grouped_to_indiv_list_of_scopedpropsetitem(
     stored at the link-level variables.
     """
     indiv_items = []
-    for item in scoped_prop_set_list:
+    for i in scoped_prop_set_list:
+        try:
+            item = IndivScopedPropertySetItem(**i)
+        except Exception:
+            item = GroupedScopedPropertySetItem(**i)
+
         if isinstance(item, IndivScopedPropertySetItem):
             indiv_items.append(item)
             continue

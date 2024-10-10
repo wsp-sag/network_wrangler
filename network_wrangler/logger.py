@@ -45,8 +45,8 @@ def setup_logging(
     FORMAT = logging.Formatter(
         "%(asctime)-15s %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S,"
     )
-    default_info_f =  f"network_wrangler_{datetime.now().strftime('%Y_%m_%d__%H_%M_%S')}.info.log"
-    info_log_filename =  info_log_filename or Path.cwd() / default_info_f
+    default_info_f = f"network_wrangler_{datetime.now().strftime('%Y_%m_%d__%H_%M_%S')}.info.log"
+    info_log_filename = info_log_filename or Path.cwd() / default_info_f
 
     info_file_handler = logging.FileHandler(Path(info_log_filename))
     info_file_handler.setLevel(logging.INFO)

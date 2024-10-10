@@ -136,7 +136,7 @@ def _edit_scoped_link_property(
     scoped_prop_value_list: Union[None, list[ScopedLinkValueItem]],
     scoped_prop_set: ScopedPropertySetList,
     default_value: Any = None,
-    overwrite_scoped: Optional[Literal["conflicting", "all", False]] = False,
+    overwrite_scoped: Literal["conflicting", "all", "error"] = "error",
 ) -> list[ScopedLinkValueItem]:
     """Edit scoped property on a single link.
 
@@ -145,8 +145,8 @@ def _edit_scoped_link_property(
         scoped_prop_set: ScopedPropertySetList of changes to make.
         default_value: Default value for the property if not set.
         overwrite_scoped: If 'all', will overwrite all scoped properties. If 'conflicting',
-            will overwrite conflicting scoped properties. If False, will raise an error on
-            conflicting scoped properties. Defaults to False.
+            will overwrite conflicting scoped properties. If 'error', will raise an error on
+            conflicting scoped properties. Defaults to 'error'.
     """
     msg = f"Setting scoped link property.\n\
             - Current value:{scoped_prop_value_list}\n\
@@ -229,7 +229,7 @@ def _edit_link_property(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list[int],
     prop_name: str,
-    prop_change: RoadPropertyChange,
+    prop_change: dict,
     project_name: Optional[str] = None,
     config: WranglerConfig = DefaultConfig,
 ) -> DataFrame[RoadLinksTable]:
@@ -239,13 +239,16 @@ def _edit_link_property(
         links_df: links to edit
         link_idx: list of link indices to change
         prop_name: name of the property to change
-        prop_change: RoadPropertyChange instance with changes to make
+        prop_change: dict conforming to RoadPropertyChange instance with changes to make
         project_name: optional name of the project to be applied
         config: WranglerConfig instance. Defaults to DefaultConfig.
     """
     WranglerLogger.debug(f"Editing {prop_name} on links {link_idx}")
+    prop_change = RoadPropertyChange(**prop_change)
 
-    existing_value_conflict = prop_change.existing_value_conflict or config.EDITS.EXISTING_VALUE_CONFLICT
+    existing_value_conflict = (
+        prop_change.existing_value_conflict or config.EDITS.EXISTING_VALUE_CONFLICT
+    )
     overwrite_scoped = prop_change.overwrite_scoped or config.EDITS.OVERWRITE_SCOPED
 
     if not _check_existing_value_conflict(
@@ -322,7 +325,7 @@ def _edit_scoped_property(
     link_idx: list[int],
     prop_name: str,
     prop_change: RoadPropertyChange,
-    overwrite_scoped: bool,
+    overwrite_scoped: Literal["conflicting", "all", "error"],
 ) -> DataFrame[RoadLinksTable]:
     """Handle scoped property change."""
     sc_prop_name = f"sc_{prop_name}"
@@ -347,7 +350,7 @@ def _edit_scoped_property(
 def edit_link_properties(
     links_df: DataFrame[RoadLinksTable],
     link_idx: list,
-    property_changes: dict[str, RoadPropertyChange],
+    property_changes: dict[str, dict],
     project_name: Optional[str] = None,
     config: WranglerConfig = DefaultConfig,
 ) -> DataFrame[RoadLinksTable]:

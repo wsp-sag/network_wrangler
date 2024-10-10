@@ -9,7 +9,7 @@ dependencies:
   - ijson=3.3.0
   - osmnx=1.9.3
   - pandas=2.2.3
-  - projectcard
+  - projectcard>=0.3.1"
   - psutil=6.0.0
   - pyarrow=17.0.0
   - pydantic=2.9.2

@@ -31,7 +31,7 @@ dependencies = [
     "osmnx >= 0.12",
     "pandas >= 1.6",
     "pandera[geopandas] >= 0.19.0",
-    "projectcard",
+    "projectcard >= 0.3.1",
     "psutil",
     "pyarrow",
     "pydantic >= 2",

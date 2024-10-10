@@ -87,11 +87,6 @@ def small_ex_dir(example_dir):
     return Path(example_dir) / "small"
 
 
-@pytest.fixture(scope="session")
-def scratch_dir(base_dir):
-    return Path(base_dir) / "scratch"
-
-
 @pytest.fixture(scope="module")
 def stpaul_net(stpaul_ex_dir):
     shape_filename = stpaul_ex_dir / "shape.geojson"

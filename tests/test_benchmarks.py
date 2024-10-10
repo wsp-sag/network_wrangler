@@ -1,5 +1,30 @@
 #! /usr/bin/env python
-"""Benchmark tests for network_wrangler."""
+"""Benchmark tests for network_wrangler.
+
+Note: To run these tests, you need to have installed the `pytest-benchmark` package.
+
+The output will be saved in json files in the `benchmarks` directory, which in order to not change
+when switching branches is put in the `.gitignore` file. The output will be saved in a file with the
+name of the test function and the extension `.json`.
+
+!!! example "Comparing benchmarks across branches."
+    ```bash
+    # Run benchmarks on the current branch and save results
+    pytest --benchmark-only --benchmark-save=my_branch
+
+    # Checkout the target branch or commit and run benchmarks on them
+    git checkout <target-commit-or-branch>
+    pytest --benchmark-only --benchmark-save=comparison_branch
+
+    # Compare the benchmark results
+    pytest-benchmark compare my_branch comparison_branch
+    ```
+
+!!! example "Running benchmarks on a specific function."
+    ```bash
+    pytest --benchmark-only tests/test_benchmarks.py::test_roadway_io
+    ```
+"""
 
 from projectcard import read_cards
 

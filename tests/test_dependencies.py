@@ -22,4 +22,5 @@ def test_dependencies_api(request):
     from osmnx.folium import _make_folium_polyline
     from pandas.core.frame import DataFrame
     from shapely.geometry import LineString, Point
+
     WranglerLogger.info(f"--Finished: {request.node.name}")

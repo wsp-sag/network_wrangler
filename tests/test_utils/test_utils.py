@@ -85,6 +85,7 @@ def test_get_overlapping_range(request):
 
 def test_all_list_elements_subset_of_single_element(request):
     from network_wrangler.utils.utils import list_elements_subset_of_single_element
+
     WranglerLogger.info(f"--Started: {request.node.name}")
     mixed_list = ["a", "b", ["a", "b", "c"]]
     assert list_elements_subset_of_single_element(mixed_list) is True

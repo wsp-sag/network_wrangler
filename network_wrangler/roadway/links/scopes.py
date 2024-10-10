@@ -367,6 +367,7 @@ def prop_for_scope(
     # Find scopes that apply
     scoped_prop_df = _filter_exploded_df_to_scope(
         candidate_scoped_prop_df,
+        timespan=timespan,
         category=category,
         strict_timespan_match=strict_timespan_match,
         min_overlap_minutes=min_overlap_minutes,

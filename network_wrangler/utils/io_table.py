@@ -64,7 +64,6 @@ def write_table(
     if filename.parent.is_dir() and not filename.parent.exists():
         filename.parent.mkdir(parents=True)
 
-
     WranglerLogger.debug(f"Writing to {filename}.")
 
     if "shp" in filename.suffix:

@@ -128,23 +128,23 @@ def id_roadway_file_paths_in_dir(
         raise FileNotFoundError(msg)
 
     _link_file_format = file_format
-    if file_format == "geojson":
+    if "geojson" in file_format:
         _link_file_format = "json"
 
     try:
-        links_file = next(network_path.glob(f"*link*.{_link_file_format}"))
+        links_file = next(network_path.glob(f"*link*{_link_file_format}"))
     except StopIteration as err:
         msg = f"No links file with {_link_file_format} file format found in {network_path}"
         raise FileNotFoundError(msg) from err
 
     try:
-        nodes_file = next(network_path.glob(f"*node*.{file_format}"))
+        nodes_file = next(network_path.glob(f"*node*{file_format}"))
     except StopIteration as err:
         msg = f"No nodes file with {file_format} file format found in {network_path}"
         raise FileNotFoundError(msg) from err
 
     try:
-        shapes_file = next(network_path.glob(f"*shape*.{file_format}"))
+        shapes_file = next(network_path.glob(f"*shape*{file_format}"))
     except StopIteration:
         # Shape file is optional so if not found, its ok.
         shapes_file = None

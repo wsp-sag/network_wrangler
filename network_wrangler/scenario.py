@@ -91,7 +91,7 @@ my_scenario.write(
     applied_projects: *id001
     roadway:
         dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/examples/small
-        file_format: .geojson
+        file_format: geojson
     transit:
         dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/examples/small
     config:
@@ -282,9 +282,9 @@ class Scenario:
             recognized in this collecton once they are moved to applied.
         applied_projects: list of project names that have been applied
         projects: list of all projects either planned, queued, or applied
-        prerequisites:  dictionary storing prerequiste information
-        corequisites:  dictionary storing corequisite information
-        conflicts: dictionary storing conflict information
+        prerequisites:  dictionary storing prerequiste info as `projectA: [prereqs-for-projectA]`
+        corequisites:  dictionary storing corequisite info as`projectA: [coreqs-for-projectA]`
+        conflicts: dictionary storing conflict info as `projectA: [conflicts-for-projectA]`
         config: WranglerConfig instance.
     """
 
@@ -342,11 +342,11 @@ class Scenario:
         self.project_cards: dict[str, ProjectCard] = {}
         self._planned_projects: list[str] = []
         self._queued_projects = None
-        self.applied_projects = base_scenario.pop("applied_projects", [])
+        self.applied_projects: list[str] = base_scenario.pop("applied_projects", [])
 
-        self.prerequisites = base_scenario.pop("prerequisites", {})
-        self.corequisites = base_scenario.pop("corequisites", {})
-        self.conflicts = base_scenario.pop("conflicts", {})
+        self.prerequisites: dict[str, list[str]] = base_scenario.pop("prerequisites", {})
+        self.corequisites: dict[str, list[str]] = base_scenario.pop("corequisites", {})
+        self.conflicts: dict[str, list[str]] = base_scenario.pop("conflicts", {})
 
         for p in project_card_list:
             self._add_project(p)
@@ -858,6 +858,9 @@ def write_applied_projects(scenario: Scenario, out_dir: Path, overwrite: bool = 
     prep_dir(out_dir, overwrite=overwrite)
 
     for p in scenario.applied_projects:
+        if p not in scenario.project_cards:
+            # project cards applied in base scenario will not be in project cards
+            continue
         card = scenario.project_cards[p]
         filename = Path(card.__dict__.get("file", f"{p}.yml")).name
         outpath = outdir / filename
@@ -880,7 +883,9 @@ def load_scenario(
     else:
         WranglerLogger.debug("Loading Scenario from dict.")
 
-    base_scenario = _load_base_scenario_from_config(scenario_data, config=scenario_data["config"])
+    base_scenario = _load_base_scenario_from_config(
+        scenario_data["base_scenario"], config=scenario_data["config"]
+    )
     my_scenario = create_scenario(
         base_scenario=base_scenario, name=name, config=scenario_data["config"]
     )
@@ -891,7 +896,7 @@ def create_base_scenario(
     roadway: Optional[dict] = None,
     transit: Optional[dict] = None,
     applied_projects: Optional[list] = None,
-    conflicts: Optional[list] = None,
+    conflicts: Optional[dict] = None,
     config: WranglerConfig = DefaultConfig,
 ) -> dict:
     """Creates a base scenario dictionary from roadway and transit network files.
@@ -900,11 +905,14 @@ def create_base_scenario(
         roadway: kwargs for load_roadway_from_dir
         transit: kwargs for load_transit from dir
         applied_projects: list of projects that have been applied to the base scenario.
-        conflicts: list of conflicts that have been identified in the base scenario.
+        conflicts: dictionary of conflicts that have been identified in the base scenario.
+            Takes the format of `{"projectA": ["projectB", "projectC"]}` showing that projectA,
+            which has been applied, conflicts with projectB and projectC and so they shouldn't be
+            applied in the future.
         config: WranglerConfig instance.
     """
     applied_projects = applied_projects or []
-    conflicts = conflicts or []
+    conflicts = conflicts or {}
     if roadway:
         road_net = load_roadway_from_dir(**roadway, config=config)
     else:
@@ -963,7 +971,7 @@ def extract_base_scenario_metadata(base_scenario: dict) -> dict:
         if nodes_file_path is not None:
             out_dict["roadway"] = {
                 "dir": str(Path(nodes_file_path).parent),
-                "file_format": str(nodes_file_path.suffix),
+                "file_format": str(nodes_file_path.suffix).lstrip("."),
             }
     if isinstance(base_scenario.get("transit_net"), TransitNetwork):
         feed_path = base_scenario["transit_net"].feed.feed_path

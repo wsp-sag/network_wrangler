@@ -93,7 +93,7 @@ def _apply_transit_property_change_to_table(
     else:
         msg = f"Changes in table {table_name} not implemented."
         raise NotImplementedError(msg)
-    
+
     if not _check_existing_value_conflict(
         table_df, update_idx, prop_name, prop_change, existing_value_conflict
     ):

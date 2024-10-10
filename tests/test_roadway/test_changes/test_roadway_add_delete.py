@@ -121,7 +121,7 @@ def test_delete_roadway(request, stpaul_net, stpaul_ex_dir):
 
     assert 477533 not in net.links_df.model_link_id.tolist()
 
-    WranglerLogger.info("--Finished:", request.node.name)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
 def test_add_nodes(request, small_net):

@@ -163,12 +163,16 @@ def _v1_to_v0_scoped_link_property(v1_row: Series, prop: str) -> dict:
         if isinstance(v1_item, dict):
             if "timespan" in v1_item:
                 # time is a tuple of seconds from midnight from a tuple of "HH:MM"
-                v0_item["time"] = tuple([str_to_seconds_from_midnight(t) for t in v1_item["timespan"]])
+                v0_item["time"] = tuple(
+                    [str_to_seconds_from_midnight(t) for t in v1_item["timespan"]]
+                )
             if "category" in v1_item and v1_item["category"] != DEFAULT_CATEGORY:
                 v0_item["category"] = [v1_item["category"]]
         else:  # v1_item is a class instance
             if hasattr(v1_item, "timespan"):
-                v0_item["time"] = tuple([str_to_seconds_from_midnight(t) for t in v1_item.timespan])
+                v0_item["time"] = tuple(
+                    [str_to_seconds_from_midnight(t) for t in v1_item.timespan]
+                )
             if hasattr(v1_item, "category") and v1_item.category != DEFAULT_CATEGORY:
                 v0_item["category"] = [v1_item.category]
         v0_item_list.append(v0_item)

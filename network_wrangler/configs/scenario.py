@@ -35,8 +35,8 @@ Usage:
             - "project1"
             - "project2"
         conflicts:
-            - "project3"
-            - "project4"
+            "project3": ["project1", "project2"]
+            "project4": ["project1"]
     projects:
         project_card_filepath:
             - "path/to/projectA.yaml"
@@ -81,11 +81,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
-from projectcard.io import ProjectCardFilepaths, _resolve_rel_paths
+from projectcard.io import _resolve_rel_paths
 
 from ..models._base.types import RoadwayFileTypes, TransitFileTypes
 from .utils import ConfigItem
 from .wrangler import DefaultConfig, WranglerConfig
+
+ProjectCardFilepath = Union[Path, str]
+ProjectCardFilepaths = Union[Path, list[Path], str, list[str]]
 
 DEFAULT_SCENARIO_NAME: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -282,7 +285,7 @@ class ScenarioInputConfig(ConfigItem):
         roadway: Configuration for writing out the roadway network.
         transit: Configuration for writing out the transit network.
         applied_projects: List of projects to apply to the base scenario.
-        conflicts: List of projects that conflict with the applied_projects.
+        conflicts: Dict of projects that conflict with the applied_projects.
     """
 
     def __init__(

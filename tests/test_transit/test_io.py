@@ -18,29 +18,29 @@ Run just the tests using `pytest tests/test_transit/test_io.py`
 """
 
 
-def test_transit_read_write_small(request, small_transit_net, scratch_dir):
+def test_transit_read_write_small(request, small_transit_net, test_out_dir):
     """Check read-write-read consistency for small transit network.
 
     Checks that reading a network, writing it to a file and then reading it again
     results in a valid TransitNetwork.
     """
-    write_transit(small_transit_net, out_dir=scratch_dir)
-    WranglerLogger.debug(f"Transit Write Directory: {scratch_dir}")
-    small_transit_net_read_write = load_transit(scratch_dir)
+    write_transit(small_transit_net, out_dir=test_out_dir)
+    WranglerLogger.debug(f"Transit Write Directory: {test_out_dir}")
+    small_transit_net_read_write = load_transit(test_out_dir)
     assert isinstance(small_transit_net_read_write, TransitNetwork)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_transit_read_write(request, stpaul_transit_net, scratch_dir):
+def test_transit_read_write(request, stpaul_transit_net, test_out_dir):
     """Check read-write-read consistency for larger transit network.
 
     Checks that reading a network, writing it to a file and then reading it again
     results in a valid TransitNetwork.
     """
-    write_transit(stpaul_transit_net, out_dir=scratch_dir)
-    WranglerLogger.debug(f"Transit Write Directory: {scratch_dir}")
-    stpaul_transit_net_read_write = load_transit(scratch_dir)
+    write_transit(stpaul_transit_net, out_dir=test_out_dir)
+    WranglerLogger.debug(f"Transit Write Directory: {test_out_dir}")
+    stpaul_transit_net_read_write = load_transit(test_out_dir)
     assert isinstance(stpaul_transit_net_read_write, TransitNetwork)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

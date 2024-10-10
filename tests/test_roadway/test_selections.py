@@ -169,31 +169,38 @@ variable_queries = [
 ]
 
 
-@pytest.mark.parametrize("variable_query", variable_queries)
-def test_query_roadway_property_by_time_group(request, variable_query, stpaul_net, stpaul_ex_dir):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
+@pytest.fixture(scope="module")
+def ml_card(stpaul_ex_dir):
+    project_card_path = stpaul_ex_dir / "project_cards" / "road.managed_lanes.whole_facility.yml"
+    return read_card(project_card_path)
+
+
+@pytest.fixture(scope="module")
+def ml_net(stpaul_net, ml_card):
     net = copy.deepcopy(stpaul_net)
+    net = net.apply(ml_card)
+    return net
+
+
+@pytest.mark.parametrize("variable_query", variable_queries)
+def test_query_roadway_property_by_time_group(request, variable_query, ml_net, ml_card):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
 
     _query, _answer = variable_query
 
-    project_card_path = stpaul_ex_dir / "project_cards" / "road.managed_lanes.whole_facility.yml"
-
-    project_card = read_card(project_card_path)
-    net = net.apply(project_card)
-
-    v_series = net.get_property_by_timespan_and_group(
+    v_series = ml_net.get_property_by_timespan_and_group(
         _query["v"],
         category=_query.get("category"),
         timespan=_query.get("timespan"),
     )
 
-    _selected_links = net.get_selection(
-        project_card.roadway_property_change["facility"]
+    _selected_links = ml_net.get_selection(
+        ml_card.roadway_property_change["facility"]
     ).selected_links
     WranglerLogger.debug(f"QUERY: \n{_query}")
     WranglerLogger.debug(f"EXPECTED ANSWER: {_answer}")
     WranglerLogger.debug(f"QUERY RESULT: \n{v_series.loc[_selected_links]}")
-    WranglerLogger.debug(f"NET: \n{net.links_df.loc[_selected_links[0]][_query['v']]}")
+    WranglerLogger.debug(f"NET: \n{ml_net.links_df.loc[_selected_links[0]][_query['v']]}")
 
     assert (v_series.loc[_selected_links, _query["v"]] == _answer).all()
 
