@@ -8,13 +8,13 @@ import geopandas as gpd
 import pandas as pd
 from pandera.typing import DataFrame
 
-from ...configs import DefaultConfig, WranglerConfig
+from ...errors import LinkCreationError
 from ...logger import WranglerLogger
 from ...models.roadway.converters import (
     detect_v0_scoped_link_properties,
     translate_links_df_v0_to_v1,
 )
-from ...models.roadway.tables import RoadLinksAttrs, RoadLinksTable, RoadNodesAttrs, RoadNodesTable
+from ...models.roadway.tables import RoadLinksAttrs, RoadLinksTable, RoadNodesTable
 from ...params import LAT_LON_CRS, SMALL_RECS
 from ...utils.data import coerce_gdf
 from ...utils.geo import (
@@ -25,14 +25,6 @@ from ...utils.geo import (
 )
 from ...utils.models import validate_call_pyd, validate_df_to_model
 from ..utils import create_unique_shape_id, set_df_index_to_pk
-
-
-class LinkAddError(Exception):
-    """Raised when there is an issue with adding links."""
-
-
-class LinkCreationError(Exception):
-    """Raised when there is an issue with creating links."""
 
 
 def shape_id_from_link_geometry(

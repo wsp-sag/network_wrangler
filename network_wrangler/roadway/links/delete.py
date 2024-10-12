@@ -2,13 +2,10 @@
 
 from pandera.typing import DataFrame
 
+from ...errors import LinkDeletionError
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadLinksAttrs, RoadLinksTable
 from ...utils.models import validate_call_pyd
-
-
-class LinkDeletionError(Exception):
-    """Raised when there is an issue with deleting links."""
 
 
 @validate_call_pyd

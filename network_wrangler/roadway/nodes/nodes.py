@@ -6,14 +6,6 @@ from ...models.roadway.tables import RoadLinksTable, RoadNodesTable
 from ..links.links import node_ids_in_links
 
 
-class NotNodesError(Exception):
-    """Raised when the input data is not a nodes table."""
-
-
-class NodeNotFoundError(Exception):
-    """Raised when a node is not found in the nodes table."""
-
-
 def node_ids_without_links(
     nodes_df: DataFrame[RoadNodesTable], links_df: DataFrame[RoadLinksTable]
 ) -> list[int]:

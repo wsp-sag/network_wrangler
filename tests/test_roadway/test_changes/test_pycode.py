@@ -4,7 +4,7 @@ import pytest
 from projectcard import read_card
 
 from network_wrangler import WranglerLogger
-from network_wrangler.roadway.network import InvalidProjectCardError
+from network_wrangler.errors import ProjectCardError
 
 """
 Usage:   `pytest tests/test_roadway/test_changes/test_pycode.py`
@@ -59,7 +59,7 @@ def test_apply_bad_pycode_roadway(request, small_net):
     net = copy.deepcopy(small_net)
     _pycode = "roadway_net.links_df.loc[[roadway_net.links_df['lanes'] == 5, 'lanes'] = 12"
 
-    with pytest.raises(InvalidProjectCardError):
+    with pytest.raises(ProjectCardError):
         net.apply(
             {
                 "project": "megaroads",

@@ -10,16 +10,13 @@ from pandera.typing import DataFrame
 from pydantic import validate_call
 
 from ...configs import DefaultConfig, WranglerConfig
+from ...errors import NodeAddError
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadLinksTable, RoadNodesAttrs, RoadNodesTable
 from ...params import LAT_LON_CRS, SMALL_RECS
 from ...utils.geo import get_point_geometry_from_linestring, point_from_xy
 from ...utils.models import validate_df_to_model
 from ..utils import set_df_index_to_pk
-
-
-class NodeAddError(Exception):
-    """Raised when there is an issue with adding nodes."""
 
 
 def _create_node_geometries_from_xy(

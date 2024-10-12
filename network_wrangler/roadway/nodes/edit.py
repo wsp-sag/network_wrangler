@@ -13,6 +13,7 @@ from pandera.typing import DataFrame, Series
 from pydantic import ConfigDict
 
 from ...configs import DefaultConfig, WranglerConfig
+from ...errors import NodeChangeError
 from ...logger import WranglerLogger
 from ...models._base.records import RecordModel
 from ...models.projects.roadway_changes import RoadPropertyChange
@@ -20,10 +21,6 @@ from ...models.roadway.tables import RoadNodesAttrs, RoadNodesTable
 from ...params import LAT_LON_CRS
 from ...utils.data import update_df_by_col_value, validate_existing_value_in_df
 from ...utils.models import validate_call_pyd, validate_df_to_model
-
-
-class NodeChangeError(Exception):
-    """Raised when there is an issue with applying a node change."""
 
 
 class NodeGeometryChangeTable(DataFrameModel):

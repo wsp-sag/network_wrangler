@@ -242,7 +242,7 @@ class DBModelMixin:
             try:
                 ref_table = self.get_table(ref_table_name)
             except RequiredTableError:
-                WranglerLogger.warning(
+                WranglerLogger.debug(
                     f"Referencing table {ref_table_name} not yet set in \
                      {type(self)} - skipping fk validation."
                 )
@@ -306,7 +306,7 @@ class DBModelMixin:
                 continue
 
             if pkref_table_name not in self.table_names:
-                WranglerLogger.warning(
+                WranglerLogger.debug(
                     f"PK table {pkref_table_name} for specified FK \
                     {table_name}.{field} not in table list - skipping validation."
                 )
@@ -314,7 +314,7 @@ class DBModelMixin:
             try:
                 pkref_table = self.get_table(pkref_table_name)
             except RequiredTableError:
-                WranglerLogger.warning(
+                WranglerLogger.debug(
                     f"PK table {pkref_table_name} for specified FK \
                     {table_name}.{field} not in {type(self)}-  \
                     skipping validation."

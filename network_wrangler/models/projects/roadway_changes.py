@@ -16,6 +16,7 @@ from pydantic import (
     validate_call,
 )
 
+from ...errors import ScopeConflictError
 from ...logger import WranglerLogger
 from ...params import (
     DEFAULT_CATEGORY,
@@ -28,10 +29,6 @@ from .._base.records import RecordModel
 from .._base.root import RootListMixin
 from .._base.types import AnyOf, OneOf, TimespanString
 from .roadway_selection import SelectLinksDict, SelectNodesDict
-
-
-class ScopeConflictError(Exception):
-    """Raised when there is a scope conflict in a list of ScopedPropertySetItems."""
 
 
 class IndivScopedPropertySetItem(BaseModel):

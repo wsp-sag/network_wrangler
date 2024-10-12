@@ -5,14 +5,11 @@ from __future__ import annotations
 from datetime import datetime, time
 from typing import TYPE_CHECKING, Any
 
+from .errors import TimeFormatError, TimespanFormatError
 from .utils.time import duration_dt, str_to_time
 
 if TYPE_CHECKING:
     from .models._base.types import TimeType
-
-
-class TimeFormatError(Exception):
-    """Time format error exception."""
 
 
 class Time:
@@ -98,10 +95,6 @@ class Time:
             int: The hash value of the Time object.
         """
         return hash(str(self))
-
-
-class TimespanFormatError(Exception):
-    """Timespan format error exception."""
 
 
 class Timespan:

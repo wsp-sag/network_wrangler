@@ -126,6 +126,22 @@ We also benchmark some specific tests (`test_benchmarks.py`) that we want to com
     pytest-benchmark compare branch_1 branch_2
     ```
 
+## Evaluate Code Maintainability
+
+Using [Radon](https://radon.readthedocs.io/)
+
+> Maintainability Index is a software metric which measures how maintainable (easy to support and change) the source code is. The maintainability index is calculated as a factored formula consisting of SLOC (Source Lines Of Code), Cyclomatic Complexity and Halstead volume.
+
+```bash
+radon mi ../network_wrangler -s
+```
+
+> Cyclomatic Complexity corresponds to the number of decisions a block of code contains plus 1. This number (also called McCabe number) is equal to the number of linearly independent paths through the code. This number can be used as a guide when testing conditional logic in blocks.
+
+```bash
+radon cc ../network_wrangler --average
+```
+
 ## Continuous Integration
 
 Continuous Integration is managed by Github Actions in `.github/workflows`.  

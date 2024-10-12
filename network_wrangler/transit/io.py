@@ -7,6 +7,7 @@ import geopandas as gpd
 import pandas as pd
 
 from ..configs import DefaultConfig, WranglerConfig
+from ..errors import FeedReadError
 from ..logger import WranglerLogger
 from ..models._base.db import RequiredTableError
 from ..models._base.types import TransitFileTypes
@@ -15,10 +16,6 @@ from ..utils.geo import to_points_gdf
 from ..utils.io_table import unzip_file, write_table
 from .feed.feed import Feed
 from .network import TransitNetwork
-
-
-class FeedReadError(Exception):
-    """Raised when there is an error reading a transit feed."""
 
 
 def _feed_path_ref(path: Path) -> Path:

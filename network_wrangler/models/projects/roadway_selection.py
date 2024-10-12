@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, ClassVar, Optional
+from typing import Annotated, ClassVar, Literal, Optional
 
 from pydantic import ConfigDict, Field
 
@@ -217,6 +217,8 @@ class SelectLinksDict(RecordModel):
         _potential = list(
             set(self.fields) - set(self.initial_selection_fields) - set(self._special_fields)
         )
+        if self.selection_type == "all":
+            _potential += ["name","ref"]
         return [f for f in _potential if getattr(self, f)]
 
     @property
@@ -272,7 +274,7 @@ class SelectFacility(RecordModel):
     ]
 
     @property
-    def feature_types(self) -> str:
+    def feature_types(self) -> Literal['segment','links','nodes']:
         """One of `segment`, `links`, or `nodes`."""
         if self.links and self.from_ and self.to:
             return "segment"
@@ -281,22 +283,25 @@ class SelectFacility(RecordModel):
         if self.nodes:
             return "nodes"
         msg = "SelectFacility must have either links or nodes defined."
-        raise ValueError(msg)
+        raise RoadwaySelectionFormatError(msg)
 
     @property
-    def selection_type(self) -> str:
+    def selection_type(self) -> Literal['segment','links','nodes']:
         """One of `segment`, `links`, or `nodes`."""
         if self.feature_types == "segment":
             return "segment"
         if self.feature_types == "links":
             if self.links is None:
                 msg = "SelectFacility with feature_types 'links' must have links."
-                raise ValueError(msg)
+                raise RoadwaySelectionFormatError(msg)
+            if self.links.selection_type == "segment" and not (self.from_ and self.to):
+                msg = "SelectFacility with segment selection link variables must also have `from` and `to` nodes specified."
+                raise RoadwaySelectionFormatError(msg)
             return self.links.selection_type
         if self.feature_types == "nodes":
             if self.nodes is None:
                 msg = "SelectFacility with feature_types 'nodes' must have nodes."
-                raise ValueError(msg)
+                raise RoadwaySelectionFormatError(msg)
             return self.nodes.selection_type
         msg = "SelectFacility must have either links or nodes defined."
-        raise ValueError(msg)
+        raise RoadwaySelectionFormatError(msg)

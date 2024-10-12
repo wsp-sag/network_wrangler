@@ -2,12 +2,9 @@
 
 from pandera.typing import DataFrame
 
+from ...errors import ShapeDeletionError
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadShapesTable
-
-
-class ShapeDeletionError(Exception):
-    """Raised when there is an issue with deleting shapes from a network."""
 
 
 def delete_shapes_by_ids(

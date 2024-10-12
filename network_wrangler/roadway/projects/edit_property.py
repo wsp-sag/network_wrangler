@@ -8,6 +8,7 @@ import pandas as pd
 
 from network_wrangler.models.projects.roadway_changes import RoadPropertyChange
 
+from ...errors import RoadwayPropertyChangeError
 from ...logger import WranglerLogger
 from ..links.edit import edit_link_properties
 from ..nodes.edit import NodeGeometryChange, NodeGeometryChangeTable, edit_node_property
@@ -15,10 +16,6 @@ from ..selection import RoadwayLinkSelection, RoadwayNodeSelection
 
 if TYPE_CHECKING:
     from ..network import RoadwayNetwork
-
-
-class RoadwayPropertyChangeError(Exception):
-    """Raised when there is an issue with applying a roadway property change."""
 
 
 def _node_geo_change_from_property_changes(

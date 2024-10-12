@@ -31,37 +31,46 @@ from projectcard import ProjectCard, SubProject
 from pydantic import BaseModel, field_validator
 
 from ..configs import DefaultConfig, WranglerConfig, load_wrangler_config
+from ..errors import (
+    LinkAddError,
+    NodeAddError,
+    NodeNotFoundError,
+    NotNodesError,
+    ProjectCardError,
+    RoadwayDeletionError,
+    SelectionError,
+    ShapeAddError,
+)
 from ..logger import WranglerLogger
 from ..models.projects.roadway_selection import SelectFacility, SelectLinksDict, SelectNodesDict
 from ..models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
 from ..params import DEFAULT_CATEGORY, DEFAULT_TIMESPAN, LAT_LON_CRS
 from ..utils.data import concat_with_attr
 from ..utils.models import empty_df_from_datamodel, validate_df_to_model
-from .links.create import LinkAddError, data_to_links_df
+from .links.create import data_to_links_df
 from .links.delete import delete_links_by_ids
 from .links.edit import edit_link_geometry_from_nodes
 from .links.filters import filter_links_to_ids, filter_links_to_node_ids
 from .links.links import node_ids_unique_to_link_ids, shape_ids_unique_to_link_ids
 from .model_roadway import ModelRoadwayNetwork
-from .nodes.create import NodeAddError, data_to_nodes_df
+from .nodes.create import data_to_nodes_df
 from .nodes.delete import delete_nodes_by_ids
 from .nodes.edit import NodeGeometryChangeTable, edit_node_geometry
 from .nodes.filters import filter_nodes_to_links
-from .nodes.nodes import NodeNotFoundError, node_ids_without_links
+from .nodes.nodes import node_ids_without_links
 from .projects import (
     apply_calculated_roadway,
     apply_new_roadway,
     apply_roadway_deletion,
     apply_roadway_property_change,
 )
-from .projects.delete import RoadwayDeletionError, deletion_breaks_transit_shapes
+from .projects.delete import deletion_breaks_transit_shapes
 from .selection import (
     RoadwayLinkSelection,
     RoadwayNodeSelection,
-    SelectionError,
     _create_selection_key,
 )
-from .shapes.create import ShapeAddError, df_to_shapes_df
+from .shapes.create import df_to_shapes_df
 from .shapes.delete import delete_shapes_by_ids
 from .shapes.edit import edit_shape_geometry_from_nodes
 from .shapes.io import read_shapes
@@ -74,10 +83,6 @@ if TYPE_CHECKING:
 
 
 Selections = Union[RoadwayLinkSelection, RoadwayNodeSelection]
-
-
-class InvalidProjectCardError(Exception):
-    """Raised when there is an issue with a project card."""
 
 
 class RoadwayNetwork(BaseModel):
@@ -131,7 +136,7 @@ class RoadwayNetwork(BaseModel):
         links_df (RoadLinksTable): dataframe of link records and associated properties.
         shapes_df (RoadShapestable): data from of detailed shape records  This is lazily
             created iff it is called because shapes files can be expensive to read.
-        selections (dict): dictionary of stored roadway selection objects, mapped by
+        _selections (dict): dictionary of stored roadway selection objects, mapped by
             `RoadwayLinkSelection.sel_key` or `RoadwayNodeSelection.sel_key` in case they are
                 made repeatedly.
         network_hash: dynamic property of the hashed value of links_df and nodes_df. Used for
@@ -234,9 +239,11 @@ class RoadwayNetwork(BaseModel):
             right_on="shape_id",
             how="left",
         )
-        link_shapes_df['geometry'] = link_shapes_df['geometry_y'].combine_first(link_shapes_df['geometry_x'])
-        link_shapes_df = link_shapes_df.drop(columns=['geometry_x', 'geometry_y'])
-        link_shapes_df = link_shapes_df.set_geometry('geometry')
+        link_shapes_df["geometry"] = link_shapes_df["geometry_y"].combine_first(
+            link_shapes_df["geometry_x"]
+        )
+        link_shapes_df = link_shapes_df.drop(columns=["geometry_x", "geometry_y"])
+        link_shapes_df = link_shapes_df.set_geometry("geometry")
         return link_shapes_df
 
     def get_property_by_timespan_and_group(
@@ -354,7 +361,7 @@ class RoadwayNetwork(BaseModel):
         if not project_card.valid:
             msg = f"Project card {project_card.project} not valid."
             WranglerLogger.error(msg)
-            raise InvalidProjectCardError(msg)
+            raise ProjectCardError(msg)
 
         if project_card._sub_projects:
             for sp in project_card._sub_projects:
@@ -402,7 +409,7 @@ class RoadwayNetwork(BaseModel):
             return apply_calculated_roadway(self, change.pycode)
         WranglerLogger.error(f"Couldn't find project in: \n{change.__dict__}")
         msg = f"Invalid Project Card Category: {change.change_type}"
-        raise ValueError(msg)
+        raise ProjectCardError(msg)
 
     def links_with_link_ids(self, link_ids: list[int]) -> DataFrame[RoadLinksTable]:
         """Return subset of links_df based on link_ids list."""
@@ -478,8 +485,8 @@ class RoadwayNetwork(BaseModel):
             concat_with_attr([self.nodes_df, add_nodes_df], axis=0), RoadNodesTable
         )
         if self.nodes_df.attrs.get("name") != "road_nodes":
-            msg = "Expected nodes_df to have name 'road_nodes', got {self.nodes_df.attrs.get('name')}"
-            raise ValueError(msg)
+            msg = f"Expected nodes_df to have name 'road_nodes', got {self.nodes_df.attrs.get('name')}"
+            raise NotNodesError(msg)
 
     def add_shapes(
         self,

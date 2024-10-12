@@ -161,6 +161,12 @@ from .configs import (
     load_wrangler_config,
 )
 from .configs.scenario import ScenarioInputConfig, ScenarioOutputConfig
+from .errors import (
+    ProjectCardError,
+    ScenarioConflictError,
+    ScenarioCorequisiteError,
+    ScenarioPrerequisiteError,
+)
 from .logger import WranglerLogger
 from .roadway.io import load_roadway_from_dir, write_roadway
 from .roadway.network import RoadwayNetwork
@@ -211,22 +217,6 @@ the roadway network.
 SECONDARY_TRANSIT_CARD_TYPES: list[str] = [
     "roadway_deletion",
 ]
-
-
-class ScenarioConflictError(Exception):
-    """Raised when a conflict is detected."""
-
-
-class ScenarioCorequisiteError(Exception):
-    """Raised when a co-requisite is not satisfied."""
-
-
-class ScenarioPrerequisiteError(Exception):
-    """Raised when a pre-requisite is not satisfied."""
-
-
-class ProjectCardError(Exception):
-    """Raised when a project card is not valid."""
 
 
 class Scenario:

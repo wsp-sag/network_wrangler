@@ -10,6 +10,7 @@ import pytest
 from projectcard import read_card
 
 from network_wrangler import WranglerLogger
+from network_wrangler.models.projects.roadway_selection import RoadwaySelectionFormatError
 from network_wrangler.utils.data import dict_to_query
 
 
@@ -91,6 +92,12 @@ TEST_SELECTIONS = [
         "from": {"model_node_id": 174762},
         "to": {"model_node_id": 43041},
     },
+    {  # SELECTION 8
+        "links": {
+            "name": ["Minnehaha"],
+            "all": True,
+        },
+    },
 ]
 
 
@@ -104,6 +111,7 @@ answer_selected_links = [
     None,  # SELECTION 6 - all links
     None,  # SELECTION 7 - all links with some features
     [460228, 481940],  # SELECTION 8 - Valley Street Pedestrian Ways
+    [7194, 7196, 7298, 7300, 8481, 8483, 8495, 8496, 14895, 14896, 86566, 86567, 94717, 94719, 101600, 101601, 107314, 107315, 109422, 109423, 111886, 111890, 111893, 111894, 111896, 111897, 111899, 111900, 111902, 111906, 111908, 111910, 111912, 111915, 111916, 111922, 111923, 111927, 111929, 111931, 111932, 111933, 111935, 111936, 132888, 132889, 155432, 155433, 156611, 156612, 163088, 163089, 163522, 163523, 171952, 171955, 171956, 171962, 171964, 171966, 171967, 171969, 171970, 171974, 171975, 171978, 171979, 275245], # SELECTION 9 - Minnehana
 ]
 
 
@@ -130,6 +138,26 @@ def test_select_roadway_features(request, selection, answer, stpaul_net):
         assert set(selected_link_indices) == set(answer)
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+
+TEST_BAD_SELECTIONS = [
+    {  # SELECTION 1
+        "links": {
+            "name": ["Minnehaha"],
+        },
+    },
+]
+
+
+@pytest.mark.parametrize(("selection"), TEST_BAD_SELECTIONS)
+def test_bad_roadway_selections(request, selection, stpaul_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    net = stpaul_net
+    with pytest.raises(RoadwaySelectionFormatError):
+        net.get_selection(selection)
+    WranglerLogger.info(f"--Finished: {request.node.name}")
+
 
 
 def test_select_roadway_features_from_projectcard(request, stpaul_net, stpaul_ex_dir):

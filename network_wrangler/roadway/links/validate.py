@@ -5,12 +5,9 @@ from typing import Optional
 
 import pandas as pd
 
+from ...errors import NodesInLinksMissingError
 from ...logger import WranglerLogger
 from ...utils.data import fk_in_pk
-
-
-class NodesInLinksMissingError(Exception):
-    """Raised when there is an issue with validating links and nodes."""
 
 
 def validate_links_have_nodes(links_df: pd.DataFrame, nodes_df: pd.DataFrame) -> bool:

@@ -11,6 +11,7 @@ import pandas as pd
 from pandera.typing import DataFrame
 
 from ..configs import DefaultConfig
+from ..errors import ManagedLaneAccessEgressError
 from ..logger import WranglerLogger
 from ..models._base.types import RoadwayFileTypes
 from ..models.roadway.tables import RoadLinksTable, RoadNodesTable, RoadShapesTable
@@ -65,10 +66,6 @@ MANAGED_LANES_REQUIRED_ATTRIBUTES: list[str] = [
     "B",
     "model_link_id",
 ]
-
-
-class ManagedLaneAccessEgressError(Exception):
-    """Raised when there is an issue with access/egress points to managed lanes."""
 
 
 class ModelRoadwayNetwork:

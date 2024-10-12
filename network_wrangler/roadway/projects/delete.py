@@ -14,10 +14,6 @@ if TYPE_CHECKING:
     from ..network import RoadwayNetwork
 
 
-class RoadwayDeletionError(Exception):
-    """Raised when there is an issue with applying a roadway deletion."""
-
-
 def apply_roadway_deletion(
     roadway_net: RoadwayNetwork,
     roadway_deletion: Union[dict, RoadwayDeletion],

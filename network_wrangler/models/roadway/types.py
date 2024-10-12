@@ -16,6 +16,7 @@ from pydantic import (
     model_validator,
 )
 
+from ...errors import ScopeLinkValueError
 from ...logger import WranglerLogger
 from ...params import DEFAULT_CATEGORY, DEFAULT_TIMESPAN
 from ...time import Timespan
@@ -24,10 +25,6 @@ from .._base.geo import LatLongCoordinates
 from .._base.records import RecordModel
 from .._base.root import RootListMixin
 from .._base.types import AnyOf, TimeString
-
-
-class ScopeLinkValueError(Exception):
-    """Raised when there is an issue with ScopedLinkValueList."""
 
 
 class ScopedLinkValueItem(RecordModel):

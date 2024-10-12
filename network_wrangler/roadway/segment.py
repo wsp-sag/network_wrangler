@@ -29,6 +29,7 @@ import numpy as np
 import pandas as pd
 from pandera.typing import DataFrame
 
+from ..errors import SegmentFormatError, SegmentSelectionError, SubnetCreationError
 from ..logger import WranglerLogger
 from ..models.projects.roadway_selection import SelectLinksDict, SelectNodeDict
 from .graph import shortest_path
@@ -39,22 +40,6 @@ if TYPE_CHECKING:
     from ..models.roadway.tables import RoadLinksTable, RoadNodesTable
     from .network import RoadwayNetwork
     from .selection import RoadwayLinkSelection
-
-
-class SegmentFormatError(Exception):
-    """Error in segment format."""
-
-
-class SegmentSelectionError(Exception):
-    """Error in segment selection."""
-
-
-class SubnetExpansionError(Exception):
-    """Raised when a subnet can't be expanded to include a node or set of nodes."""
-
-
-class SubnetCreationError(Exception):
-    """Raised when a subnet can't be created."""
 
 
 DEFAULT_MAX_SEARCH_BREADTH: int = 10
@@ -185,7 +170,7 @@ class Segment:
     @property
     def segment_nodes_df(self) -> DataFrame[RoadNodesTable]:
         """Roadway network nodes filtered to nodes in segment."""
-        return self.net.nodes_df[self.net.nodes_df.loc(self.segment_nodes)]
+        return self.net.nodes_df.loc[self.segment_nodes]
 
     @property
     def segment_from_node_s(self) -> DataFrame[RoadNodesTable]:

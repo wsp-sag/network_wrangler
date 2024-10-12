@@ -2,12 +2,9 @@
 
 from pandera.typing import DataFrame
 
+from ...errors import NodeDeletionError
 from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadNodesTable
-
-
-class NodeDeletionError(Exception):
-    """Raised when there is an issue with deleting nodes."""
 
 
 def delete_nodes_by_ids(

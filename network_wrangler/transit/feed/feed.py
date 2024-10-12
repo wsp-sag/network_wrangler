@@ -22,11 +22,6 @@ from ...models.gtfs.tables import (
 from ...utils.data import update_df_by_col_value
 
 
-# Raised when there is an issue with the validation of the GTFS data.
-class FeedValidationError(Exception):
-    """Raised when there is an issue with the validation of the GTFS data."""
-
-
 class Feed(DBModelMixin):
     """Wrapper class around Wrangler flavored GTFS feed.
 

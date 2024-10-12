@@ -14,6 +14,18 @@ from ..logger import WranglerLogger
 from ..params import LAT_LON_CRS
 
 
+class DataSegmentationError(Exception):
+    """Raised when there is an error segmenting data."""
+
+
+class MissingPropertiesError(Exception):
+    """Raised when properties are missing from the dataframe."""
+
+
+class InvalidJoinFieldError(Exception):
+    """Raised when the join field is not unique."""
+
+
 def dict_to_query(
     selection_dict: Mapping[str, Any],
 ) -> str:
@@ -50,14 +62,6 @@ def _s1_missing_s2_vals(s1, s2):
 
 def _common_df_cols(df1, df2):
     return [col for col in df1.columns if col in df2.columns]
-
-
-class MissingPropertiesError(Exception):
-    """Raised when properties are missing from the dataframe."""
-
-
-class InvalidJoinFieldError(Exception):
-    """Raised when the join field is not unique."""
 
 
 def update_df_by_col_value(
@@ -342,10 +346,6 @@ def diff_list_like_series(s1, s2) -> bool:
         WranglerLogger.info(diff_df)
         return True
     return False
-
-
-class DataSegmentationError(Exception):
-    """Raised when there is an error segmenting data."""
 
 
 def segment_data_by_selection(

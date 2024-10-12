@@ -6,16 +6,13 @@ from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
 
+from ...errors import NewRoadwayError
 from ...logger import WranglerLogger
 from ..links.create import data_to_links_df
 from ..nodes.create import data_to_nodes_df
 
 if TYPE_CHECKING:
     from ..network import RoadwayNetwork
-
-
-class NewRoadwayError(Exception):
-    """Raised when there is an issue with applying a new roadway."""
 
 
 def apply_new_roadway(

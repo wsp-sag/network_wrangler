@@ -29,6 +29,7 @@ from pandera.typing import DataFrame
 from pydantic import validate_call
 
 from ...configs import DefaultConfig, WranglerConfig
+from ...errors import InvalidScopedLinkValue, LinkChangeError
 from ...logger import WranglerLogger
 from ...models.projects.roadway_changes import (
     IndivScopedPropertySetItem,
@@ -41,14 +42,9 @@ from ...utils.data import validate_existing_value_in_df
 from ...utils.geo import offset_geometry_meters, update_nodes_in_linestring_geometry
 from ...utils.models import default_from_datamodel, validate_call_pyd, validate_df_to_model
 from .scopes import (
-    InvalidScopedLinkValue,
     _filter_to_conflicting_scopes,
     _filter_to_matching_scope,
 )
-
-
-class LinkChangeError(Exception):
-    """Raised when there is an error in changing a link property."""
 
 
 def _initialize_links_as_managed_lanes(

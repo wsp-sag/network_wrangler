@@ -5,9 +5,8 @@ import copy
 import pandas as pd
 import pytest
 
+from network_wrangler.errors import LinkAddError, NodeAddError
 from network_wrangler.logger import WranglerLogger
-from network_wrangler.roadway.links.create import LinkAddError
-from network_wrangler.roadway.nodes.create import NodeAddError
 from network_wrangler.utils.models import TableValidationError
 
 

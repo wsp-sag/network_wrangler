@@ -33,6 +33,11 @@ from typing import TYPE_CHECKING, Union
 
 from pandera.typing import DataFrame
 
+from ..errors import (
+    ProjectCardError,
+    TransitSelectionEmptyError,
+    TransitSelectionNetworkConsistencyError,
+)
 from ..logger import WranglerLogger
 from ..models._base.types import TimeString
 from ..models.projects import (
@@ -55,18 +60,6 @@ if TYPE_CHECKING:
     )
     from .feed.feed import Feed
     from .network import TransitNetwork
-
-
-class TransitSelectionError(Exception):
-    """Base error for transit selection errors."""
-
-
-class TransitSelectionEmptyError(Exception):
-    """Error for when no transit trips are selected."""
-
-
-class TransitSelectionNetworkConsistencyError(TransitSelectionError):
-    """Error for when transit selection dictionary is not consistent with transit network."""
 
 
 class TransitSelection:
@@ -302,7 +295,7 @@ def _filter_trips_by_nodes(
         ].shape_id.drop_duplicates()
     else:
         msg = f"Require must be 'any' or 'all', not {require}"
-        raise ValueError(msg)
+        raise ProjectCardError(msg)
 
     trips_df = copy.deepcopy(trips_df.loc[trips_df.shape_id.isin(shape_ids)])
 

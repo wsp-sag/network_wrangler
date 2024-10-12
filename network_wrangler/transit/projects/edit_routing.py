@@ -10,6 +10,7 @@ import pandas as pd
 from pandera.typing import DataFrame
 
 from ...configs import DefaultConfig
+from ...errors import TransitRoutingChangeError
 from ...logger import WranglerLogger
 from ...models.gtfs.tables import (
     WranglerShapesTable,
@@ -18,8 +19,8 @@ from ...models.gtfs.tables import (
     WranglerTripsTable,
 )
 from ...utils.data import concat_with_attr, segment_data_by_selection_min_overlap
+from ...utils.ids import generate_list_of_new_ids_from_existing, generate_new_id_from_existing
 from ...utils.models import validate_df_to_model
-from ...utils.utils import generate_list_of_new_ids_from_existing, generate_new_id_from_existing
 from ..feed.shapes import (
     find_nearest_stops,
     node_pattern_for_shape_id,
@@ -38,10 +39,6 @@ if TYPE_CHECKING:
     from ..feed.feed import Feed
     from ..network import TransitNetwork
     from ..selection import TransitSelection
-
-
-class TransitRoutingChangeError(Exception):
-    """Raised when there is an error in the transit routing change."""
 
 
 def _create_stop_times(
@@ -589,7 +586,7 @@ def apply_transit_routing_change(
                          transit network: >> transit_net.road_net = ..."
         )
         msg = "Must have a reference road network set in order to update transit routing."
-        raise ValueError(msg)
+        raise TransitRoutingChangeError(msg)
 
     # ---- update each shape that is used by selected trips to use new routing -------
     shape_ids = shape_ids_for_trip_ids(updated_feed.trips, trip_ids)

@@ -26,6 +26,12 @@ import networkx as nx
 from projectcard import ProjectCard, SubProject
 
 from ..configs import DefaultConfig, WranglerConfig
+from ..errors import (
+    ProjectCardError,
+    TransitRoadwayConsistencyError,
+    TransitSelectionEmptyError,
+    TransitValidationError,
+)
 from ..logger import WranglerLogger
 from ..roadway.network import RoadwayNetwork
 from ..utils.geo import to_points_gdf
@@ -46,10 +52,6 @@ from .projects import (
 )
 from .selection import TransitSelection
 from .validate import transit_road_net_consistency
-
-
-class TransitRoadwayConsistencyError(Exception):
-    """Error raised when transit network is inconsistent with roadway network."""
 
 
 class TransitNetwork:
@@ -119,7 +121,7 @@ class TransitNetwork:
             msg = f"TransitNetwork's feed value must be a valid Feed instance. \
                              This is a {type(feed)}."
             WranglerLogger.error(msg)
-            raise ValueError(msg)
+            raise TransitValidationError(msg)
         if self._road_net is None or transit_road_net_consistency(feed, self._road_net):
             self._feed = feed
             self._stored_feed_hash = copy.deepcopy(feed.hash)
@@ -139,7 +141,7 @@ class TransitNetwork:
             msg = f"TransitNetwork's road_net: value must be a valid RoadwayNetwork instance. \
                              This is a {type(road_net_in)}."
             WranglerLogger.error(msg)
-            raise ValueError(msg)
+            raise TransitValidationError(msg)
         if transit_road_net_consistency(self.feed, road_net_in):
             self._road_net = road_net_in
             self._stored_road_net_hash = copy.deepcopy(road_net_in.network_hash)
@@ -265,11 +267,9 @@ class TransitNetwork:
             WranglerLogger.debug(f"Using cached selection from key: {key}")
 
         if not self._selections[key]:
-            WranglerLogger.debug(
-                f"No links or nodes found for selection dict: \n {selection_dict}"
-            )
             msg = f"No links or nodes found for selection dict: \n {selection_dict}"
-            raise ValueError(msg)
+            WranglerLogger.error(msg)
+            raise TransitSelectionEmptyError(msg)
         return self._selections[key]
 
     def apply(self, project_card: Union[ProjectCard, dict], **kwargs) -> TransitNetwork:
@@ -285,7 +285,7 @@ class TransitNetwork:
         if not project_card.valid:
             msg = f"Project card {project_card.project} not valid."
             WranglerLogger.error(msg)
-            raise ValueError(msg)
+            raise ProjectCardError(msg)
 
         if project_card._sub_projects:
             for sp in project_card._sub_projects:

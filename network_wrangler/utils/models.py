@@ -20,6 +20,14 @@ from ..params import LAT_LON_CRS, SMALL_RECS
 from .data import coerce_val_to_df_types
 
 
+class DatamodelDataframeIncompatableError(Exception):
+    """Raised when a data model and a dataframe are not compatable."""
+
+
+class TableValidationError(Exception):
+    """Raised when a table validation fails."""
+
+
 def empty_df_from_datamodel(
     model: DataFrameModel, crs: int = LAT_LON_CRS
 ) -> Union[gpd.GeoDataFrame, pd.DataFrame]:
@@ -45,10 +53,6 @@ def default_from_datamodel(data_model: pa.DataFrameModel, field: str):
     if field in data_model.__fields__ and hasattr(data_model.__fields__[field][1], "default"):
         return data_model.__fields__[field][1].default
     return None
-
-
-class TableValidationError(Exception):
-    """Raised when a table validation fails."""
 
 
 def fill_df_with_defaults_from_model(df, model):
@@ -141,11 +145,7 @@ def identify_model(
                          \nData Models: {models}"
     )
     msg = "The input data isn't consistant with any provided data model."
-    raise ValueError(msg)
-
-
-class DatamodelDataframeIncompatableError(Exception):
-    """Raised when a data model and a dataframe are not compatable."""
+    raise TableValidationError(msg)
 
 
 def extra_attributes_undefined_in_model(instance: BaseModel, model: BaseModel) -> list:

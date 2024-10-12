@@ -39,6 +39,7 @@ import pandas as pd
 from pandera.typing import DataFrame
 from pydantic import validate_call
 
+from ...errors import InvalidScopedLinkValue
 from ...logger import WranglerLogger
 from ...models._base.types import TimeString
 from ...models.projects.roadway_changes import IndivScopedPropertySetItem
@@ -57,10 +58,6 @@ from ...utils.time import (
     filter_df_to_max_overlapping_timespans,
     str_to_time,
 )
-
-
-class InvalidScopedLinkValue(Exception):
-    """Raised when there is an issue with a scoped link value."""
 
 
 @validate_call(config={"arbitrary_types_allowed": True}, validate_return=True)
@@ -252,7 +249,9 @@ def _create_exploded_df_for_scoped_prop(
 
     # 3. normalize dictionary to columns for each dictionary key: category, timespan, value
     #       convert to dictionary from data model
-    exp_df[f"sc_{prop_name}"] = exp_df[f"sc_{prop_name}"].apply(lambda x: x.model_dump() if hasattr(x, 'model_dump') else x)
+    exp_df[f"sc_{prop_name}"] = exp_df[f"sc_{prop_name}"].apply(
+        lambda x: x.model_dump() if hasattr(x, "model_dump") else x
+    )
     normalized_scope_df = pd.json_normalize(exp_df.pop(f"sc_{prop_name}")).set_index(exp_df.index)
     exp_df = scoped_values_df[["model_link_id"]].join(normalized_scope_df)
     WranglerLogger.debug(f"Exploded columns: \n{exp_df}")

@@ -14,6 +14,7 @@ from pyproj import CRS, Proj, Transformer
 from shapely.geometry import LineString, Point
 from shapely.ops import transform
 
+from ..errors import MissingNodesError
 from ..logger import WranglerLogger
 from ..models._base.geo import LatLongCoordinates
 from ..models.roadway.types import LocationReference
@@ -25,6 +26,10 @@ if TYPE_CHECKING:
 
 # key:value (from espg, to espg): pyproj transform object
 transformers = {}
+
+
+class InvalidCRSError(Exception):
+    """Raised when a point is not valid for a given coordinate reference system."""
 
 
 def get_bearing(lat1, lon1, lat2, lon2):
@@ -96,10 +101,6 @@ def length_of_linestring_miles(gdf: Union[gpd.GeoSeries, gpd.GeoDataFrame]) -> p
     length_s = pd.Series(length_miles, index=gdf.index)
 
     return length_s
-
-
-class MissingNodesError(Exception):
-    """Raised when referenced nodes are missing from the network."""
 
 
 def linestring_from_nodes(
@@ -204,10 +205,6 @@ def linestring_from_lats_lons(df, lat_fields, lon_fields) -> gpd.GeoSeries:
     )
 
     return gpd.GeoSeries(line_geometries)
-
-
-class InvalidCRSError(Exception):
-    """Raised when a point is not valid for a given coordinate reference system."""
 
 
 def check_point_valid_for_crs(point: Point, crs: int):

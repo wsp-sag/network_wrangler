@@ -139,3 +139,94 @@ roadway_property_change:
                 set: 2
             overwrite_scoped: all # will overwrite all scopes in a link/property. Useful if you are completely defining something rather than amending.
 ```
+
+## Selections
+
+### Roadway
+
+#### Segment
+
+!!! example "Example Segment Facility Searches"
+
+    ```yaml
+    facility:
+        links:
+            name: ["6th", "Sixth", "sixth"] # find streets that have one of the various forms of 6th
+        from:
+            osm_node_id: "187899923"  # start searching for segments at this ID
+        to: 
+            osm_node_id": "187865924" # end at this ID
+    ```
+
+    ```yaml
+    facility:
+        links:
+            name: ["6th", "Sixth", "sixth"] 
+            lanes: [2, 3]  # from the initial connected segment search, only return links that are either 2 OR 3 lanes
+        from:
+            osm_node_id: "187899923"
+        to: 
+            osm_node_id": "187942339"
+
+    ```
+
+When Network Wrangler conducts a search for a *facility*, it tries to navigate from the `from` node to the `to` node based on a network created from the initial selection values of: `name`, `ref`, `osm_link_id` and `model_link_id`.
+
+If it cannot do so initially, it will expand its search graph several times until it achieves a navigable route – or reaches the maximum number of expansions which defaults to `roadway.segment.DEFAULT_MAX_SEARCH_BREADTH = 10` but can be set higher by running `...selection.create_segment(max_search_breadth=BIGGER_NUMBER` before returning the values form the selection. In production, you will want to set the search breadth as low as possible while also being successful so that you don't get strange routes.
+
+Pertinent relationships:
+
+- `RoadwayNetwork.selections` is a dictionary of stored  `RoadwayLinkSelection` or `RoadwayNodeSelection` objects mapped to a hash of the stringified roadway selection dictionary.
+- A `RoadwayLinkSelection` object which is a `segment` type of selection will have a single associated `Segment` object accessed from `RoadwayLinkSelection.segment` to store relevant functionality.
+- `Segment.subnet` is a single associated `Subnet` representing the subset of nodes and links that Network Wrangler will search to find a connected graph.  This is because creating a connected graph can be very memory and computationally intensive and we want to limit the size of them substantially.
+- `Subnet.graph` is the associated `networkx.MultiDiGraph` connected graph object which is used to conduct the shortest path search.
+
+For an interactive demonstration of what this means: `notebooks.Roadway Network Search.ipynb`
+
+## Organization
+
+| **`../network_wrangler`** |  |
+| ------ | ----- |
+| `__init__.py` | Things that **must** get done every time `network_wrangler` is used.|
+| `bin`| Executable scripts. |
+| `configs` | Structure and default values for user-settable configuration. |
+| `errors.py` | User-facing errors. |
+| `logger.py` | Logging utilities and the WranglerLogger class. |
+| `models`| Pydantic and pandera data models and helper functions for them. |
+| `params.py` | Package-wide constants. |
+| `roadway` | Classes and functions pertaining to read, write, analyzing and editing roadway networks. |
+| `scenario.py`| Scenario object class and helper functions. |
+| `time.py` | Time helper functions. |
+| `transit` | Classes and functions pertaining to read, write, analyzing and editing transit networks. |
+| `utils`| Utility functions. |
+| `viz.py` | Visualization helper functions. |
+
+| **`network_wrangler/roadway`** |  |
+| ------ | ----- |
+| `links` | Module for managing roadway links. |
+| `nodes` | Module for managing roadway nodes. |
+| `projects` | Module with functions to apply various types of roadway projects. |
+| `shapes` | Module for managing roadway shapes. |
+| `clip.py` | Functions to clip a RoadwayNetwork object to a boundary. |
+| `graph.py` | Functions to convert RoadwayNetwork to osmnx graph and perform graph operations. |
+| `io.py` | Functions for reading and writing roadway networks. |
+| `model_roadway.py` | Functions to create a model roadway network from a roadway network. |
+| `network.py` | Roadway Network class and functions for Network Wrangler. |
+| `segment.py` | Segment class and related functions for working with segments of a RoadwayNetwork. |
+| `selection.py` | Roadway selection classes for selecting links and nodes from a roadway network. |
+| `subnet.py` | Subnet class for RoadwayNetwork object. |
+| `utils.py` | Utility functions for RoadwayNetwork and ModelRoadwayNetwork classes. |
+| `validate.py` | Validates a roadway network to the wrangler data model specifications. |
+| `viz.py` | Visualization functions for RoadwayNetwork and RoadwayLinkSelection. |
+
+| **`network_wrangler/transit`** |  |
+| ------ | ----- |
+| `feed` | Relational tables representing transit service.  |
+| `projects` | Module with functions to apply various types of transit projects. |
+| `clip.py` | Functions to clip a TransitNetwork object to a boundary. |
+| `geo.py` | Geographic functions for GTFS tables. |
+| `io.py` | Functions for reading and writing transit feeds and networks. |
+| `model_transit.py` | ModelTransit class and functions for managing consistency between roadway and transit networks. |
+| `network.py` | TransitNetwork class for representing a transit network consisting of a schedule `Feed` mapped to a `RoadwayNetwork`. |
+| `selection.py` | Classes and functions for selecting transit trips from a transit network. |
+| `validate.py` | Functions to check for transit network validity and consistency with roadway network. |

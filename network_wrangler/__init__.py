@@ -2,6 +2,13 @@
 
 __version__ = "0.0.0"
 
+import warnings
+
+# Suppress the specific FutureWarning from geopandas
+warnings.filterwarnings(
+    "ignore", category=FutureWarning, message=".*convert_dtype parameter is deprecated.*"
+)
+
 from .configs import load_wrangler_config
 from .logger import WranglerLogger, setup_logging
 from .roadway.io import load_roadway, load_roadway_from_dir, write_roadway

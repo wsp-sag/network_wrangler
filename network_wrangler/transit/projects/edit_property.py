@@ -5,12 +5,11 @@ from __future__ import annotations
 import copy
 from typing import TYPE_CHECKING, Optional
 
+from ...errors import ProjectCardError, TransitPropertyChangeError
 from ...logger import WranglerLogger
 from ...utils.data import validate_existing_value_in_df
 
 if TYPE_CHECKING:
-    from pandas import Series
-
     from ...transit.network import TransitNetwork
     from ...transit.selection import TransitSelection
 
@@ -19,10 +18,6 @@ TABLE_TO_APPLY_BY_PROPERTY: dict[str, str] = {
 }
 
 IMPLEMENTED_TABLES = ["trips", "frequencies", "stop_times"]
-
-
-class TransitPropertyChangeError(Exception):
-    """Error raised when applying transit property changes."""
 
 
 def apply_transit_property_change(
@@ -110,7 +105,7 @@ def _apply_transit_property_change_to_table(
         )
     else:
         msg = "Property change must include 'set' or 'change'."
-        raise ValueError(msg)
+        raise ProjectCardError(msg)
 
     if project_name is not None:
         set_df.loc[update_idx, "projects"] += f"{project_name},"

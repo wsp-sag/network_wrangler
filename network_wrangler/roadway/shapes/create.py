@@ -14,13 +14,9 @@ from ...models.roadway.tables import RoadShapesAttrs, RoadShapesTable
 from ...params import LAT_LON_CRS
 from ...utils.data import coerce_gdf, concat_with_attr
 from ...utils.geo import offset_geometry_meters
+from ...utils.ids import generate_list_of_new_ids_from_existing
 from ...utils.models import validate_df_to_model
-from ...utils.utils import generate_list_of_new_ids_from_existing
 from ..utils import set_df_index_to_pk
-
-
-class ShapeAddError(Exception):
-    """Raised when there is an issue with adding shapes."""
 
 
 def df_to_shapes_df(

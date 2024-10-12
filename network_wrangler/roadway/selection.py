@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Union
 
 import pandas as pd
 
+from ..errors import SelectionError
 from ..logger import WranglerLogger
 from ..models.projects import (
     RoadwaySelectionFormatError,
@@ -16,10 +17,7 @@ from ..models.projects import (
     SelectNodesDict,
 )
 from ..params import SMALL_RECS
-from ..utils.models import (
-    DatamodelDataframeIncompatableError,
-    coerce_extra_fields_to_type_in_df,
-)
+from ..utils.models import DatamodelDataframeIncompatableError, coerce_extra_fields_to_type_in_df
 from .links.filters import filter_links_to_modes
 from .segment import Segment
 
@@ -28,10 +26,6 @@ if TYPE_CHECKING:
 
     from ..models.roadway.tables import RoadwayLinksTable, RoadwayNodeTable
     from .network import RoadwayNetwork
-
-
-class SelectionError(Exception):
-    """Raised when there is an issue with a selection."""
 
 
 class RoadwayLinkSelection:
@@ -194,6 +188,11 @@ class RoadwayLinkSelection:
             self._segment = Segment(self.net, self)
         return self._segment
 
+    def create_segment(self, max_search_breadth: int):
+        """For running segment with custom max search breadth."""
+        WranglerLogger.debug(f"Creating new segment with max_search_breadth {max_search_breadth}")
+        self._segment = Segment(self.net, self, max_search_breadth=max_search_breadth)
+
     @property
     def selected_links_df(self) -> DataFrame[RoadwayLinksTable]:
         """Lazily evaluates selection for links or returns stored value in self._selected_links_df.
@@ -217,8 +216,9 @@ class RoadwayLinkSelection:
                 sel_data.links, SelectLinksDict, self.net.links_df
             )
         except DatamodelDataframeIncompatableError as e:
-            WranglerLogger.error(f"Invalid link selection fields: {e}")
-            raise e
+            msg = f"Invalid link selection fields: {e}"
+            WranglerLogger.error(msg)
+            raise RoadwaySelectionFormatError(msg) from e
         return sel_data
 
     def _perform_selection(self):
@@ -433,8 +433,9 @@ class RoadwayNodeSelection:
                 selection_data.nodes, SelectNodesDict, self.net.nodes_df
             )
         except DatamodelDataframeIncompatableError as e:
-            WranglerLogger.error(f"Invalid node selection fields: {e}")
-            raise e
+            msg = f"Invalid node selection fields: {e}"
+            WranglerLogger.error(msg)
+            raise RoadwaySelectionFormatError(msg) from e
 
         return selection_data
 

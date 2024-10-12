@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Optional
 import pandas as pd
 from pandera.typing import DataFrame
 
+from ..errors import SubnetCreationError, SubnetExpansionError
 from ..logger import WranglerLogger
 from ..utils.data import concat_with_attr
 from .graph import links_nodes_to_ox_graph
@@ -18,14 +19,6 @@ if TYPE_CHECKING:
 
     from ..models.roadway.tables import RoadLinksTable, RoadNodesTable
     from .network import RoadwayNetwork
-
-
-class SubnetExpansionError(Exception):
-    """Raised when a subnet can't be expanded to include a node or set of nodes."""
-
-
-class SubnetCreationError(Exception):
-    """Raised when a subnet can't be created."""
 
 
 DEFAULT_SUBNET_MAX_SEARCH_BREADTH: int = 10

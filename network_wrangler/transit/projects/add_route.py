@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Optional, Union
 import pandas as pd
 from pandera.typing import DataFrame as paDataFrame
 
+from ...errors import TransitRouteAddError
 from ...logger import WranglerLogger
 from ...models._base.types import TimeString
 from ...models.gtfs.tables import (
@@ -19,18 +20,14 @@ from ...models.gtfs.tables import (
     WranglerStopTimesTable,
 )
 from ...utils.data import concat_with_attr
+from ...utils.ids import create_str_int_combo_ids
 from ...utils.models import fill_df_with_defaults_from_model
 from ...utils.time import str_to_time_list
-from ...utils.utils import create_str_int_combo_ids
 
 if TYPE_CHECKING:
     from ...roadway.network import RoadwayNetwork
     from ..feed.feed import Feed
     from ..network import TransitNetwork
-
-
-class TransitRouteAddError(Exception):
-    """Error raised when applying add transit route."""
 
 
 def apply_transit_route_addition(
@@ -60,7 +57,7 @@ def apply_transit_route_addition(
                          transit network: >> transit_net.road_net = ..."
         )
         msg = "Must have a reference road network set in order to update transit routing."
-        raise ValueError(msg)
+        raise TransitRouteAddError(msg)
 
     net.feed = _add_route_to_feed(net.feed, add_routes, road_net)
 
