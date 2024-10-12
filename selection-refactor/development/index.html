@@ -653,6 +653,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#evaluate-code-maintainability" class="md-nav__link">
+    <span class="md-ellipsis">
+      Evaluate Code Maintainability
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#continuous-integration" class="md-nav__link">
     <span class="md-ellipsis">
       Continuous Integration
@@ -887,6 +896,18 @@
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>pytest-benchmark compare branch_1 branch_2
 </span></code></pre></div>
 </div>
+<h3 id="evaluate-code-maintainability">Evaluate Code Maintainability<a class="headerlink" href="#evaluate-code-maintainability" title="Permanent link"> ¶</a></h3>
+<p>Using <a href="https://radon.readthedocs.io/">Radon</a></p>
+<blockquote>
+<p>Maintainability Index is a software metric which measures how maintainable (easy to support and change) the source code is. The maintainability index is calculated as a factored formula consisting of SLOC (Source Lines Of Code), Cyclomatic Complexity and Halstead volume.</p>
+</blockquote>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>radon<span class="w"> </span>mi<span class="w"> </span>../network_wrangler<span class="w"> </span>-s
+</span></code></pre></div>
+<blockquote>
+<p>Cyclomatic Complexity corresponds to the number of decisions a block of code contains plus 1. This number (also called McCabe number) is equal to the number of linearly independent paths through the code. This number can be used as a guide when testing conditional logic in blocks.</p>
+</blockquote>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>radon<span class="w"> </span>cc<span class="w"> </span>../network_wrangler<span class="w"> </span>--average
+</span></code></pre></div>
 <h3 id="continuous-integration">Continuous Integration<a class="headerlink" href="#continuous-integration" title="Permanent link"> ¶</a></h3>
 <p>Continuous Integration is managed by Github Actions in <code>.github/workflows</code>.<br />
 All tests other than those with the decorator <code>@pytest.mark.skipci</code> will be run.</p>

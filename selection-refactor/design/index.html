@@ -297,6 +297,42 @@
 </ul>
 </nav>
 </li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#selections">
+<span class="md-ellipsis">
+      Selections
+    </span>
+</a>
+<nav aria-label="Selections" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#roadway">
+<span class="md-ellipsis">
+      Roadway
+    </span>
+</a>
+<nav aria-label="Roadway" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#segment">
+<span class="md-ellipsis">
+      Segment
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#organization">
+<span class="md-ellipsis">
+      Organization
+    </span>
+</a>
+</li>
 </ul>
 </nav>
 </li>
@@ -489,6 +525,218 @@ timespan.</p>
 </span><span id="__span-4-7"><a href="#__codelineno-4-7" id="__codelineno-4-7" name="__codelineno-4-7"></a><span class="w">                </span><span class="nt">set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 </span><span id="__span-4-8"><a href="#__codelineno-4-8" id="__codelineno-4-8" name="__codelineno-4-8"></a><span class="w">            </span><span class="nt">overwrite_scoped</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">all</span><span class="w"> </span><span class="c1"># will overwrite all scopes in a link/property. Useful if you are completely defining something rather than amending.</span>
 </span></code></pre></div>
+<h2 id="selections">Selections<a class="headerlink" href="#selections" title="Permanent link"> ¶</a></h2>
+<h3 id="roadway">Roadway<a class="headerlink" href="#roadway" title="Permanent link"> ¶</a></h3>
+<h4 id="segment">Segment<a class="headerlink" href="#segment" title="Permanent link"> ¶</a></h4>
+<div class="admonition example">
+<p class="admonition-title">Example Segment Facility Searches</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a href="#__codelineno-5-1" id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="nt">facility</span><span class="p">:</span>
+</span><span id="__span-5-2"><a href="#__codelineno-5-2" id="__codelineno-5-2" name="__codelineno-5-2"></a><span class="w">    </span><span class="nt">links</span><span class="p">:</span>
+</span><span id="__span-5-3"><a href="#__codelineno-5-3" id="__codelineno-5-3" name="__codelineno-5-3"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">"6th"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"Sixth"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"sixth"</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># find streets that have one of the various forms of 6th</span>
+</span><span id="__span-5-4"><a href="#__codelineno-5-4" id="__codelineno-5-4" name="__codelineno-5-4"></a><span class="w">    </span><span class="nt">from</span><span class="p">:</span>
+</span><span id="__span-5-5"><a href="#__codelineno-5-5" id="__codelineno-5-5" name="__codelineno-5-5"></a><span class="w">        </span><span class="nt">osm_node_id</span><span class="p">:</span><span class="w"> </span><span class="s">"187899923"</span><span class="w">  </span><span class="c1"># start searching for segments at this ID</span>
+</span><span id="__span-5-6"><a href="#__codelineno-5-6" id="__codelineno-5-6" name="__codelineno-5-6"></a><span class="w">    </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span>
+</span><span id="__span-5-7"><a href="#__codelineno-5-7" id="__codelineno-5-7" name="__codelineno-5-7"></a><span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">osm_node_id"</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="s">"187865924"</span><span class="w"> </span><span class="c1"># end at this ID</span>
+</span></code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a href="#__codelineno-6-1" id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="nt">facility</span><span class="p">:</span>
+</span><span id="__span-6-2"><a href="#__codelineno-6-2" id="__codelineno-6-2" name="__codelineno-6-2"></a><span class="w">    </span><span class="nt">links</span><span class="p">:</span>
+</span><span id="__span-6-3"><a href="#__codelineno-6-3" id="__codelineno-6-3" name="__codelineno-6-3"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">"6th"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"Sixth"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"sixth"</span><span class="p p-Indicator">]</span><span class="w"> </span>
+</span><span id="__span-6-4"><a href="#__codelineno-6-4" id="__codelineno-6-4" name="__codelineno-6-4"></a><span class="w">        </span><span class="nt">lanes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># from the initial connected segment search, only return links that are either 2 OR 3 lanes</span>
+</span><span id="__span-6-5"><a href="#__codelineno-6-5" id="__codelineno-6-5" name="__codelineno-6-5"></a><span class="w">    </span><span class="nt">from</span><span class="p">:</span>
+</span><span id="__span-6-6"><a href="#__codelineno-6-6" id="__codelineno-6-6" name="__codelineno-6-6"></a><span class="w">        </span><span class="nt">osm_node_id</span><span class="p">:</span><span class="w"> </span><span class="s">"187899923"</span>
+</span><span id="__span-6-7"><a href="#__codelineno-6-7" id="__codelineno-6-7" name="__codelineno-6-7"></a><span class="w">    </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span>
+</span><span id="__span-6-8"><a href="#__codelineno-6-8" id="__codelineno-6-8" name="__codelineno-6-8"></a><span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">osm_node_id"</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="s">"187942339"</span>
+</span></code></pre></div>
+</div>
+<p>When Network Wrangler conducts a search for a <em>facility</em>, it tries to navigate from the <code>from</code> node to the <code>to</code> node based on a network created from the initial selection values of: <code>name</code>, <code>ref</code>, <code>osm_link_id</code> and <code>model_link_id</code>.</p>
+<p>If it cannot do so initially, it will expand its search graph several times until it achieves a navigable route – or reaches the maximum number of expansions which defaults to <code>roadway.segment.DEFAULT_MAX_SEARCH_BREADTH = 10</code> but can be set higher by running <code>...selection.create_segment(max_search_breadth=BIGGER_NUMBER</code> before returning the values form the selection. In production, you will want to set the search breadth as low as possible while also being successful so that you don’t get strange routes.</p>
+<p>Pertinent relationships:</p>
+<ul>
+<li><code>RoadwayNetwork.selections</code> is a dictionary of stored  <code>RoadwayLinkSelection</code> or <code>RoadwayNodeSelection</code> objects mapped to a hash of the stringified roadway selection dictionary.</li>
+<li>A <code>RoadwayLinkSelection</code> object which is a <code>segment</code> type of selection will have a single associated <code>Segment</code> object accessed from <code>RoadwayLinkSelection.segment</code> to store relevant functionality.</li>
+<li><code>Segment.subnet</code> is a single associated <code>Subnet</code> representing the subset of nodes and links that Network Wrangler will search to find a connected graph.  This is because creating a connected graph can be very memory and computationally intensive and we want to limit the size of them substantially.</li>
+<li><code>Subnet.graph</code> is the associated <code>networkx.MultiDiGraph</code> connected graph object which is used to conduct the shortest path search.</li>
+</ul>
+<p>For an interactive demonstration of what this means: <code>notebooks.Roadway Network Search.ipynb</code></p>
+<h2 id="organization">Organization<a class="headerlink" href="#organization" title="Permanent link"> ¶</a></h2>
+<table>
+<thead>
+<tr>
+<th><strong><code>../network_wrangler</code></strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>__init__.py</code></td>
+<td>Things that <strong>must</strong> get done every time <code>network_wrangler</code> is used.</td>
+</tr>
+<tr>
+<td><code>bin</code></td>
+<td>Executable scripts.</td>
+</tr>
+<tr>
+<td><code>configs</code></td>
+<td>Structure and default values for user-settable configuration.</td>
+</tr>
+<tr>
+<td><code>errors.py</code></td>
+<td>User-facing errors.</td>
+</tr>
+<tr>
+<td><code>logger.py</code></td>
+<td>Logging utilities and the WranglerLogger class.</td>
+</tr>
+<tr>
+<td><code>models</code></td>
+<td>Pydantic and pandera data models and helper functions for them.</td>
+</tr>
+<tr>
+<td><code>params.py</code></td>
+<td>Package-wide constants.</td>
+</tr>
+<tr>
+<td><code>roadway</code></td>
+<td>Classes and functions pertaining to read, write, analyzing and editing roadway networks.</td>
+</tr>
+<tr>
+<td><code>scenario.py</code></td>
+<td>Scenario object class and helper functions.</td>
+</tr>
+<tr>
+<td><code>time.py</code></td>
+<td>Time helper functions.</td>
+</tr>
+<tr>
+<td><code>transit</code></td>
+<td>Classes and functions pertaining to read, write, analyzing and editing transit networks.</td>
+</tr>
+<tr>
+<td><code>utils</code></td>
+<td>Utility functions.</td>
+</tr>
+<tr>
+<td><code>viz.py</code></td>
+<td>Visualization helper functions.</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th><strong><code>network_wrangler/roadway</code></strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>links</code></td>
+<td>Module for managing roadway links.</td>
+</tr>
+<tr>
+<td><code>nodes</code></td>
+<td>Module for managing roadway nodes.</td>
+</tr>
+<tr>
+<td><code>projects</code></td>
+<td>Module with functions to apply various types of roadway projects.</td>
+</tr>
+<tr>
+<td><code>shapes</code></td>
+<td>Module for managing roadway shapes.</td>
+</tr>
+<tr>
+<td><code>clip.py</code></td>
+<td>Functions to clip a RoadwayNetwork object to a boundary.</td>
+</tr>
+<tr>
+<td><code>graph.py</code></td>
+<td>Functions to convert RoadwayNetwork to osmnx graph and perform graph operations.</td>
+</tr>
+<tr>
+<td><code>io.py</code></td>
+<td>Functions for reading and writing roadway networks.</td>
+</tr>
+<tr>
+<td><code>model_roadway.py</code></td>
+<td>Functions to create a model roadway network from a roadway network.</td>
+</tr>
+<tr>
+<td><code>network.py</code></td>
+<td>Roadway Network class and functions for Network Wrangler.</td>
+</tr>
+<tr>
+<td><code>segment.py</code></td>
+<td>Segment class and related functions for working with segments of a RoadwayNetwork.</td>
+</tr>
+<tr>
+<td><code>selection.py</code></td>
+<td>Roadway selection classes for selecting links and nodes from a roadway network.</td>
+</tr>
+<tr>
+<td><code>subnet.py</code></td>
+<td>Subnet class for RoadwayNetwork object.</td>
+</tr>
+<tr>
+<td><code>utils.py</code></td>
+<td>Utility functions for RoadwayNetwork and ModelRoadwayNetwork classes.</td>
+</tr>
+<tr>
+<td><code>validate.py</code></td>
+<td>Validates a roadway network to the wrangler data model specifications.</td>
+</tr>
+<tr>
+<td><code>viz.py</code></td>
+<td>Visualization functions for RoadwayNetwork and RoadwayLinkSelection.</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th><strong><code>network_wrangler/transit</code></strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>feed</code></td>
+<td>Relational tables representing transit service.</td>
+</tr>
+<tr>
+<td><code>projects</code></td>
+<td>Module with functions to apply various types of transit projects.</td>
+</tr>
+<tr>
+<td><code>clip.py</code></td>
+<td>Functions to clip a TransitNetwork object to a boundary.</td>
+</tr>
+<tr>
+<td><code>geo.py</code></td>
+<td>Geographic functions for GTFS tables.</td>
+</tr>
+<tr>
+<td><code>io.py</code></td>
+<td>Functions for reading and writing transit feeds and networks.</td>
+</tr>
+<tr>
+<td><code>model_transit.py</code></td>
+<td>ModelTransit class and functions for managing consistency between roadway and transit networks.</td>
+</tr>
+<tr>
+<td><code>network.py</code></td>
+<td>TransitNetwork class for representing a transit network consisting of a schedule <code>Feed</code> mapped to a <code>RoadwayNetwork</code>.</td>
+</tr>
+<tr>
+<td><code>selection.py</code></td>
+<td>Classes and functions for selecting transit trips from a transit network.</td>
+</tr>
+<tr>
+<td><code>validate.py</code></td>
+<td>Functions to check for transit network validity and consistency with roadway network.</td>
+</tr>
+</tbody>
+</table>
 </article>
 </div>
 <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
