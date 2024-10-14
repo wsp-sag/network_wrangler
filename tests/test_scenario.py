@@ -334,17 +334,18 @@ def test_apply_all_projects(
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_load_scenario_from_config(request, example_dir, test_out_dir):
+def test_load_scenario_from_config(request, test_out_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     from network_wrangler import load_scenario
-    my_scenario = load_scenario(test_out_dir/ 'v01_scenario.yml')
+
+    my_scenario = load_scenario(test_out_dir / "v01_scenario.yml")
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
-    
+
 def test_scenario_apply_highway_and_transit_changes(
-    request, stpaul_card_dir, stpaul_net, stpaul_transit_net, test_out_dir
+    request, stpaul_card_dir, stpaul_net, stpaul_transit_net
 ):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
@@ -354,11 +355,11 @@ def test_scenario_apply_highway_and_transit_changes(
     }
 
     # add roadway project
-    card_files_roadway = [
-        "road.add_and_delete.transit.yml"
-    ]
+    card_files_roadway = ["road.add_and_delete.transit.yml"]
 
-    project_card_path_list_roadway = [stpaul_card_dir / filename for filename in card_files_roadway]
+    project_card_path_list_roadway = [
+        stpaul_card_dir / filename for filename in card_files_roadway
+    ]
 
     my_scenario_00 = create_scenario(
         base_scenario=stpaul_base_scenario,
@@ -367,18 +368,19 @@ def test_scenario_apply_highway_and_transit_changes(
 
     my_scenario_00.apply_all_projects()
 
-
     # add transit project
     card_files_transit = [
         "transit.route_shape_change.yml",
     ]
 
-    project_card_path_list_transit = [stpaul_card_dir / filename for filename in card_files_transit]
+    project_card_path_list_transit = [
+        stpaul_card_dir / filename for filename in card_files_transit
+    ]
 
     my_scenario_01 = create_scenario(
         base_scenario=my_scenario_00,
         project_card_filepath=project_card_path_list_transit,
-    ) 
+    )
     my_scenario_01.transit_net.road_net = my_scenario_01.road_net
 
     my_scenario_01.apply_all_projects()

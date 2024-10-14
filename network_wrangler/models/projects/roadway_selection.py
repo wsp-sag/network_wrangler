@@ -218,7 +218,7 @@ class SelectLinksDict(RecordModel):
             set(self.fields) - set(self.initial_selection_fields) - set(self._special_fields)
         )
         if self.selection_type == "all":
-            _potential += ["name","ref"]
+            _potential += ["name", "ref"]
         return [f for f in _potential if getattr(self, f)]
 
     @property
@@ -274,7 +274,7 @@ class SelectFacility(RecordModel):
     ]
 
     @property
-    def feature_types(self) -> Literal['segment','links','nodes']:
+    def feature_types(self) -> Literal["segment", "links", "nodes"]:
         """One of `segment`, `links`, or `nodes`."""
         if self.links and self.from_ and self.to:
             return "segment"
@@ -286,7 +286,7 @@ class SelectFacility(RecordModel):
         raise RoadwaySelectionFormatError(msg)
 
     @property
-    def selection_type(self) -> Literal['segment','links','nodes']:
+    def selection_type(self) -> Literal["segment", "links", "nodes"]:
         """One of `segment`, `links`, or `nodes`."""
         if self.feature_types == "segment":
             return "segment"

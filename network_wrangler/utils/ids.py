@@ -1,4 +1,5 @@
 """Utilities for generating ID values."""
+
 import re
 
 import pandas as pd
@@ -38,8 +39,8 @@ def generate_new_id_from_existing(
         if new_id not in existing_ids.values:
             return new_id
     msg = f"Cannot generate new id within max iters of {max_iter}."
-    WranglerLogger.error(msg )
-    raise IdCreationError(msg )
+    WranglerLogger.error(msg)
+    raise IdCreationError(msg)
 
 
 def generate_list_of_new_ids_from_existing(
@@ -139,7 +140,7 @@ def fill_int_ids(id_s: pd.Series, taken_ids_s: pd.Series) -> pd.Series:
     if not isinstance(taken_ids_s.iloc[0], int):
         msg = f"taken_ids_s must be a series of integers, found: {taken_ids_s.iloc[0]}"
         WranglerLogger.error(msg)
-        raise  IdCreationError(msg)
+        raise IdCreationError(msg)
     n_ids = id_s.isna().sum()
     start_id = max(set(taken_ids_s.dropna())) + 1
 

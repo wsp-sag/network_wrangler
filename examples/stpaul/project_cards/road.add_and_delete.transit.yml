@@ -50,7 +50,7 @@ changes:
         bike_access: 1
         bus_only: 0
         rail_only: 0
-        roadway: primary       
+        roadway: primary
       nodes:
       - model_node_id: 354063
         X: -93.1016

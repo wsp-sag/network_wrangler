@@ -24,7 +24,7 @@ def selection_map(
         selection: RoadwayNodeSelection or RoadwayLink seleciton instance
     """
     WranglerLogger.debug("Creating selection map.")
-    if selection.selection_type == "segment":
+    if selection.selection_type == "segment" and selection.segment is not None:
         G = selection.segment.graph
     else:
         raise NotImplementedError()
@@ -58,7 +58,7 @@ def selection_map(
         )
         return node_marker
 
-    if selection.selection_type == "segment":
+    if selection.selection_type == "segment" and selection.segment is not None:
         _folium_node(
             selection.segment.segment_from_node_s,
             color="green",

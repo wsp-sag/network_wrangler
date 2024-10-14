@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import pandas as pd
 
@@ -75,7 +75,7 @@ class RoadwayLinkSelection:
         self.selection_dict = selection_data
 
         self._selected_links_df = None
-        self._segment = None
+        self._segment: Union[None, Segment] = None
 
         WranglerLogger.debug(f"Created LinkSelection of type: {self.selection_type}")
 
@@ -181,7 +181,7 @@ class RoadwayLinkSelection:
         return self.selected_links_df is not None
 
     @property
-    def segment(self):
+    def segment(self) -> Union[None, Segment]:
         """Return the segment object if selection type is segment."""
         if self._segment is None and self.selection_type == "segment":
             WranglerLogger.debug("Creating new segment")
@@ -325,7 +325,7 @@ class RoadwayNodeSelection:
         self.selection_dict = selection_data
 
         self._selected_nodes_df = None
-        self._segment = None
+        self._segment: None = None
 
         WranglerLogger.debug(f"Created NodeSelection of type: {self.selection_type}")
 

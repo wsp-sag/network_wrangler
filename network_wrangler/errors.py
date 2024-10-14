@@ -28,41 +28,54 @@ class LinkCreationError(Exception):
 class LinkDeletionError(Exception):
     """Raised when there is an issue with deleting links."""
 
+
 class LinkNotFoundError(Exception):
     """Raised when a link is not found in the links table."""
+
 
 class ManagedLaneAccessEgressError(Exception):
     """Raised when there is an issue with access/egress points to managed lanes."""
 
+
 class MissingNodesError(Exception):
     """Raised when referenced nodes are missing from the network."""
+
 
 class NewRoadwayError(Exception):
     """Raised when there is an issue with applying a new roadway."""
 
+
 class NodeAddError(Exception):
     """Raised when there is an issue with adding nodes."""
+
 
 class NodeChangeError(Exception):
     """Raised when there is an issue with applying a node change."""
 
+
 class NodeDeletionError(Exception):
     """Raised when there is an issue with deleting nodes."""
+
 
 class NodesInLinksMissingError(Exception):
     """Raised when there is an issue with validating links and nodes."""
 
+
 class NodeNotFoundError(Exception):
     """Raised when a node is not found in the nodes table."""
+
 
 class NotLinksError(Exception):
     """Raised when a dataframe is not a RoadLinksTable."""
 
+
 class NotNodesError(Exception):
     """Raised when a dataframe is not a RoadNodesTable."""
 
+
 class ProjectCardError(Exception):
     """Raised when a project card is not valid."""
+
 
 class RoadwayDeletionError(Exception):
     """Raised when there is an issue with applying a roadway deletion."""
@@ -83,11 +96,14 @@ class ScenarioCorequisiteError(Exception):
 class ScenarioPrerequisiteError(Exception):
     """Raised when a pre-requisite is not satisfied."""
 
+
 class ScopeConflictError(Exception):
     """Raised when there is a scope conflict in a list of ScopedPropertySetItems."""
 
+
 class ScopeLinkValueError(Exception):
     """Raised when there is an issue with ScopedLinkValueList."""
+
 
 class SegmentFormatError(Exception):
     """Error in segment format."""
@@ -96,21 +112,18 @@ class SegmentFormatError(Exception):
 class SegmentSelectionError(Exception):
     """Error in segment selection."""
 
+
 class SelectionError(Exception):
     """Raised when there is an issue with a selection."""
+
 
 class ShapeAddError(Exception):
     """Raised when there is an issue with adding shapes."""
 
+
 class ShapeDeletionError(Exception):
     """Raised when there is an issue with deleting shapes from a network."""
 
-class SubnetExpansionError(Exception):
-    """Raised when a subnet can't be expanded to include a node or set of nodes."""
-
-
-class SubnetCreationError(Exception):
-    """Raised when a subnet can't be created."""
 
 class SubnetExpansionError(Exception):
     """Raised when a subnet can't be expanded to include a node or set of nodes."""
@@ -118,21 +131,27 @@ class SubnetExpansionError(Exception):
 
 class SubnetCreationError(Exception):
     """Raised when a subnet can't be created."""
+
 
 class TimeFormatError(Exception):
     """Time format error exception."""
 
+
 class TimespanFormatError(Exception):
     """Timespan format error exception."""
+
 
 class TransitPropertyChangeError(Exception):
     """Error raised when applying transit property changes."""
 
+
 class TransitRouteAddError(Exception):
     """Error raised when applying add transit route."""
 
+
 class TransitRoutingChangeError(Exception):
     """Raised when there is an error in the transit routing change."""
+
 
 class TransitSelectionError(Exception):
     """Base error for transit selection errors."""

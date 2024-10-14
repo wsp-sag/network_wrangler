@@ -50,6 +50,60 @@ Install Network Wrangler in ["develop" mode](https://pip.pypa.io/en/stable/refer
     pip install -r requirements.docs.txt
     ```
 
+### IDE Settings
+
+### VSCode
+
+Select conda env as Python interpreter:
+
+    - `cmd-shift-P`: Python: Select Interpreter
+
+If you are using VS Code, here are some recommended extensions and settings to leverage the IDE capabilities:
+
+| Extension | Purpose |
+| --------- | ------- |
+| Microsoft Python | Pytest integration, code-completion |
+| Astral Ruff | Linting and formatting |
+| Microsoft Jupyter | Edit and run python notebooks |
+| Microsoft Data Wrangler | Review and edit data in pandas dataframes |
+| David Anson markdownlint | Lint markdown |
+| Github Pull Requests | Manage github issues and PRs |
+| Dvir Yitzchaki parquet-viewer | Review parquet data as json |
+| Random Fractals Inc. Geo Data Viewer | Render geojson data |
+
+Leveraging these extensions to their full potential may take some configuration. Here are some examples. YMMV.
+
+!!! example "`settings.json` for VS Code"
+
+    ```json
+    {
+        "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit"
+        }
+    },
+        "python.testing.pytestArgs": [
+            "tests"
+        ],
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestEnabled": true,
+        "python.testing.cwd": "",
+        "python.testing.autoTestDiscoverOnSaveEnabled": true,
+        "python.defaultInterpreterPath": "/usr/bin/env python",
+        "python.testing.pytestPath": "/opt/miniconda3/envs/wrangler-dev/bin/pytest",
+    }
+
+    ```
+
+!!! example "Code > Settings > Settings"
+
+    For tests to run in conda environment, add path to it. To find it, you can run `conda info --envs`
+
+    `@id:python.condaPath`: `opt/miniconda3/envs/wrangler-dev`
+
 ## Development Workflow
 
 1. Create [an issue](https://github.com/wsp-sag/network_wrangler/issues) for any features/bugs that you are working on.

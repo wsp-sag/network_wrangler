@@ -8,6 +8,9 @@ MD007:
 # Remove line length limit
 MD013: false
 
+# Remove "no bare URLs"
+MD034: false
+
 # Remove "no emphasis as heading"
 MD036: false
 

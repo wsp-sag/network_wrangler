@@ -1,4 +1,4 @@
-"""w"""
+"""Utilities for working with transit geodataframes."""
 
 from __future__ import annotations
 
