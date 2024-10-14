@@ -33,7 +33,7 @@ jobs:
       run: |
         pip install -e .[test]
     - name: Run Ruff
-      run: ruff check --output-format=github .
+      run: ruff check --output-format=github network_wrangler
     - name: Run tests with coverage and benchmarking
       run: |
           pytest --junitxml=pytest.xml --benchmark-save=pr_benchmark --benchmark-json=pr_benchmark.json --cov-report=term-missing:skip-covered --cov=network_wrangler tests/ | tee pytest-coverage.txt
