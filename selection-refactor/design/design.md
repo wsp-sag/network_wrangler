@@ -154,18 +154,18 @@ roadway_property_change:
             name: ["6th", "Sixth", "sixth"] # find streets that have one of the various forms of 6th
         from:
             osm_node_id: "187899923"  # start searching for segments at this ID
-        to: 
+        to:
             osm_node_id": "187865924" # end at this ID
     ```
 
     ```yaml
     facility:
         links:
-            name: ["6th", "Sixth", "sixth"] 
+            name: ["6th", "Sixth", "sixth"]
             lanes: [2, 3]  # from the initial connected segment search, only return links that are either 2 OR 3 lanes
         from:
             osm_node_id: "187899923"
-        to: 
+        to:
             osm_node_id": "187942339"
 
     ```
