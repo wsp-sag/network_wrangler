@@ -282,7 +282,6 @@ def _edit_link_property(
 
     msg = f"links_df.loc[link_idx,prop_name] After:\n {links_df.loc[link_idx, prop_name]}"
     # WranglerLogger.debug(msg)
-    links_df = validate_df_to_model(links_df, RoadLinksTable)
     return links_df
 
 
@@ -396,6 +395,7 @@ def edit_link_properties(
             )
             links_df.loc[link_idx, "ML_egress_point"] = True
 
+    links_df = validate_df_to_model(links_df, RoadLinksTable)
     return links_df
 
 
