@@ -30,7 +30,7 @@ def node_ids_in_links(
 
     if nodes_df is not None:
         validate_links_have_nodes(links_df, nodes_df)
-    return _node_ids
+    return pd.Series(_node_ids)
 
 
 def node_ids_in_link_ids(

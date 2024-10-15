@@ -24,6 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
+    "fiona",
     "geographiclib",
     "geojson",
     "geopandas >= 0.8.0",
