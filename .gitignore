@@ -6,7 +6,6 @@
 prof/
 tests/temp/*
 *.mbtiles
-*.geojson
 .temp
 .pytest_cache
 *.bak
