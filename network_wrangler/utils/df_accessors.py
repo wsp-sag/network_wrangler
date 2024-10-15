@@ -5,7 +5,7 @@ import hashlib
 import pandas as pd
 
 from ..logger import WranglerLogger
-from .data import dict_to_query
+from .data import dict_to_query, isin_dict
 
 
 @pd.api.extensions.register_dataframe_accessor("dict_query")
@@ -77,3 +77,16 @@ class dfHash:
         _value = str(self._obj.values).encode()
         hash = hashlib.sha1(_value).hexdigest()
         return hash
+
+
+@pd.api.extensions.register_dataframe_accessor("isin_dict")
+class Isin_dict:
+    """Faster implimentation of isin for querying dataframes with dictionary."""
+
+    def __init__(self, pandas_obj):
+        """Initialization function for the dataframe hash."""
+        self._obj = pandas_obj
+
+    def __call__(self, d: dict, **kwargs) -> pd.DataFrame:
+        """Function to perform the faster dictionary isin()."""
+        return isin_dict(self._obj, d, **kwargs)

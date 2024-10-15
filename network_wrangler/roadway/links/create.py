@@ -92,7 +92,7 @@ def data_to_links_df(
     WranglerLogger.debug(f"Creating {len(links_df)} links.")
     if not isinstance(links_df, pd.DataFrame):
         links_df = pd.DataFrame(links_df)
-    WranglerLogger.debug(f"data_to_links_df.links_df input: \n{links_df.head}.")
+    # WranglerLogger.debug(f"data_to_links_df.links_df input: \n{links_df.head}.")
 
     v0_link_properties = detect_v0_scoped_link_properties(links_df)
     if v0_link_properties:

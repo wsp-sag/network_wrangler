@@ -10,6 +10,7 @@ from geopandas import GeoDataFrame, GeoSeries
 from numpy import ndarray
 from shapely import wkt
 
+from ..errors import DataframeSelectionError
 from ..logger import WranglerLogger
 from ..params import LAT_LON_CRS
 
@@ -703,3 +704,32 @@ def concat_with_attr(dfs: list[pd.DataFrame], **kwargs) -> pd.DataFrame:
     df = pd.concat(dfs, **kwargs)
     df.attrs = attrs
     return df
+
+
+def isin_dict(df: pd.DataFrame, d: dict, ignore_missing: bool = True) -> pd.DataFrame:
+    """Filter the dataframe using a dictionary - faster than using isin.
+
+    Uses merge to filter the dataframe by the dictionary keys and values.
+    """
+    sel_links_mask = np.zeros(len(df), dtype=bool)
+    missing = {}
+    for col, vals in d.items():
+        if vals is None:
+            continue
+        if col not in df.columns:
+            msg = f"Key {col} not in dataframe columns."
+            raise DataframeSelectionError(msg)
+        vals_s = pd.DataFrame({col: vals})
+        index_name = df.index.name if df.index.name is not None else "index"
+        _df = df[[col]].reset_index(names=index_name)
+        merged_df = _df.merge(vals_s, on=col, how="outer", indicator=True)
+        selected = merged_df[merged_df["_merge"] == "both"].set_index(index_name)
+        sel_links_mask |= df.index.isin(selected.index)
+        missing[col] = merged_df.loc[merged_df["_merge"] == "right_only", col].tolist()
+        if len(missing[col]):
+            WranglerLogger.warning(f"Missing values in selection dict for {col}: {missing}")
+    if not ignore_missing and any(missing):
+        msg = "Missing values in selection dict."
+        raise DataframeSelectionError(msg)
+
+    return df.loc[sel_links_mask]

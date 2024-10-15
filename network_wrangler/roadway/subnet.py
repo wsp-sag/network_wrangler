@@ -153,7 +153,7 @@ class Subnet:
         return len(self.subnet_links_df)
 
     @property
-    def subnet_nodes(self) -> list[int]:
+    def subnet_nodes(self) -> pd.Series:
         """List of node_ids in the subnet."""
         if self.subnet_links_df is None:
             msg = "Must set self.subnet_links_df before accessing subnet_nodes."

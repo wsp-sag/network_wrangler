@@ -658,7 +658,9 @@ class RoadwayNetwork(BaseModel):
             ab: Tuple of values corresponding with A and B.
         """
         sel_a, sel_b = ab
-        has_link = self.links_df[self.links_df[["A", "B"]]].isin({"A": sel_a, "B": sel_b}).any()
+        has_link = (
+            self.links_df[self.links_df[["A", "B"]]].isin_dict({"A": sel_a, "B": sel_b}).any()
+        )
         return has_link
 
     def is_connected(self, mode: str) -> bool:

@@ -231,7 +231,7 @@ def shapes_for_road_links(
     ]
     WranglerLogger.debug(
         f"DEBUG AB: \n\
-        {shape_links_w_links[shape_links_w_links[['A', 'B']].isin(_debug_AB).all(axis=1)]}"
+        {shape_links_w_links[['A', 'B']].isin_dict(_debug_AB)}"
     )
 
     """

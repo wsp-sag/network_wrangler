@@ -223,10 +223,9 @@ class RoadwayLinkSelection:
 
     def _perform_selection(self):
         # 1. Initial selection based on selection type
-        WranglerLogger.debug(
-            f"Initial link selection type: \
-                             {self.feature_types}.{self.selection_data.selection_type}"
-        )
+        msg = f"Initial link selection type: {self.feature_types}.{self.selection_data.selection_type}"
+        WranglerLogger.debug(msg)
+
         if self.selection_type == "explicit_ids":
             _selected_links_df = self._select_explicit_link_id()
 
@@ -267,20 +266,10 @@ class RoadwayLinkSelection:
     def _select_explicit_link_id(self):
         """Select links based on a explicit link id in selection_dict."""
         WranglerLogger.info("Selecting using explicit link identifiers.")
-        WranglerLogger.debug(f"Explicit link selection dictionary: {self.explicit_id_sel_dict}")
-        missing_values = {
-            col: list(set(values) - set(self.net.links_df[col]))
-            for col, values in self.explicit_id_sel_dict.items()
-        }
-        missing_df = pd.DataFrame(missing_values)
-        if len(missing_df) > 0:
-            WranglerLogger.warning(f"Missing explicit link selections: \n{missing_df}")
-            if not self.ignore_missing:
-                msg = "Missing explicit link selections."
-                raise SelectionError(msg)
-
-        _sel_links_mask = self.net.links_df.isin(self.explicit_id_sel_dict).any(axis=1)
-        _sel_links_df = self.net.links_df.loc[_sel_links_mask]
+        # WranglerLogger.debug(f"Explicit link selection dictionary: {self.explicit_id_sel_dict}")
+        _sel_links_df = self.net.links_df.isin_dict(
+            self.explicit_id_sel_dict, ignore_missing=self.ignore_missing
+        )
 
         return _sel_links_df
 

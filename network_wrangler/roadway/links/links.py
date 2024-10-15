@@ -15,7 +15,7 @@ from .validate import validate_links_have_nodes
 
 def node_ids_in_links(
     links_df: DataFrame[RoadLinksTable], nodes_df: Optional[DataFrame[RoadNodesTable]] = None
-) -> list[int]:
+) -> pd.Series:
     """Returns the unique node_ids in a links dataframe.
 
     Args:
@@ -26,7 +26,7 @@ def node_ids_in_links(
     Returns:
         List[int]: list of unique node_ids
     """
-    _node_ids = list(set(links_df["A"]).union(set(links_df["B"])))
+    _node_ids = pd.concat([links_df["A"], links_df["B"]]).unique()
 
     if nodes_df is not None:
         validate_links_have_nodes(links_df, nodes_df)
@@ -37,7 +37,7 @@ def node_ids_in_link_ids(
     link_ids: list[int],
     links_df: DataFrame[RoadLinksTable],
     nodes_df: Optional[DataFrame[RoadNodesTable]] = None,
-) -> list[int]:
+) -> pd.Series:
     """Returns the unique node_ids in a list of link_ids.
 
     Args:
@@ -61,7 +61,7 @@ def node_ids_unique_to_link_ids(
     _unselected_links_df = filter_links_not_in_ids(links_df, link_ids)
     unselected_link_node_ids = node_ids_in_links(_unselected_links_df, nodes_df=nodes_df)
 
-    return list(set(selected_link_node_ids) - set(unselected_link_node_ids))
+    return selected_link_node_ids[~selected_link_node_ids.isin(unselected_link_node_ids)].tolist()
 
 
 def shape_ids_in_links(

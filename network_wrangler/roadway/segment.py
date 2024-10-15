@@ -201,9 +201,7 @@ class Segment:
 
     def get_node(self, node_selection_data: SelectNodeDict):
         """Get single node based on the selection data."""
-        sel_d = node_selection_data.explicit_id_selection_dict
-        _sel_node_mask = self.net.nodes_df.isin(sel_d).any(axis=1)
-        node_df = self.net.nodes_df.loc[_sel_node_mask]
+        node_df = self.net.nodes_df.isin_dict(node_selection_data.explicit_id_selection_dict)
         if len(node_df) != 1:
             msg = f"Node selection not unique. Found {len(node_df)} nodes."
             raise SegmentSelectionError(msg)

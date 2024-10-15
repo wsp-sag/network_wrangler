@@ -163,7 +163,7 @@ def filter_links_to_ids(
 
 
 def filter_links_not_in_ids(
-    links_df: DataFrame[RoadLinksTable], link_ids: list[int]
+    links_df: DataFrame[RoadLinksTable], link_ids: Union[list[int], pd.Series]
 ) -> DataFrame[RoadLinksTable]:
     """Filters links dataframe to NOT have link_ids."""
     return links_df.loc[~links_df["model_link_id"].isin(link_ids)]

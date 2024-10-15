@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 from pandas import testing as tm
 
+from network_wrangler.errors import DataframeSelectionError
 from network_wrangler.logger import WranglerLogger
 from network_wrangler.utils.data import (
     DataSegmentationError,
@@ -15,6 +16,7 @@ from network_wrangler.utils.data import (
     MissingPropertiesError,
     dict_to_query,
     diff_dfs,
+    isin_dict,
     list_like_columns,
     segment_data_by_selection,
     segment_data_by_selection_min_overlap,
@@ -568,3 +570,41 @@ def test_update_props_from_one_to_many():
     )
     # Check if the updated_df matches the expected_df
     pd.testing.assert_frame_equal(updated_df, expected_df)
+
+
+def test_isin_dict_basic():
+    df = pd.DataFrame({"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]})
+    d = {"col1": [2, 4], "col2": ["c", "d"]}
+    expected_df = pd.DataFrame({"col1": [2, 3, 4], "col2": ["b", "c", "d"]})
+    result_df = isin_dict(df, d)
+    pd.testing.assert_frame_equal(result_df.reset_index(drop=True), expected_df)
+
+
+def test_isin_dict_missing_values():
+    df = pd.DataFrame({"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]})
+    d = {"col1": [2, 6], "col2": ["b", "e"]}
+    expected_df = pd.DataFrame({"col1": [2, 5], "col2": ["b", "e"]})
+    result_df = isin_dict(df, d)
+    pd.testing.assert_frame_equal(result_df.reset_index(drop=True), expected_df)
+
+
+def test_isin_dict_ignore_missing_false():
+    df = pd.DataFrame({"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]})
+    d = {"col1": [2, 6], "col2": ["b", "f"]}
+    with pytest.raises(DataframeSelectionError):
+        isin_dict(df, d, ignore_missing=False)
+
+
+def test_isin_dict_non_existing_column():
+    df = pd.DataFrame({"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]})
+    d = {"col1": [2, 4], "col3": ["x", "y"]}
+    with pytest.raises(DataframeSelectionError):
+        isin_dict(df, d)
+
+
+def test_isin_dict_empty_dataframe():
+    df = pd.DataFrame(columns=["col1", "col2"])
+    d = {"col1": [2, 4], "col2": ["b", "d"]}
+    expected_df = pd.DataFrame(columns=["col1", "col2"])
+    result_df = isin_dict(df, d)
+    pd.testing.assert_frame_equal(result_df, expected_df)

@@ -117,6 +117,10 @@ class SelectionError(Exception):
     """Raised when there is an issue with a selection."""
 
 
+class DataframeSelectionError(Exception):
+    """Raised when there is an issue with a selection from a dataframe."""
+
+
 class ShapeAddError(Exception):
     """Raised when there is an issue with adding shapes."""
 
