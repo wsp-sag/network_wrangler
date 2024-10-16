@@ -12,3 +12,4 @@ pyarrow
 pydantic >= 2
 pyogrio
 pyyaml
+typing-extensions
