@@ -1,7 +1,7 @@
 """Configuration utilities."""
 
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from pydantic import ValidationError
 
@@ -88,7 +88,7 @@ def find_configs_in_dir(dir: Union[Path, list[Path]], config_type) -> list[Path]
     return []
 
 
-def _config_data_from_files(path: Optional[Union[Path, List[Path]]] = None) -> Union[None, dict]:
+def _config_data_from_files(path: Optional[Union[Path, list[Path]]] = None) -> Union[None, dict]:
     """Load and combine configuration data from file(s).
 
     Args:

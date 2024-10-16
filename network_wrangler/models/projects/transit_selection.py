@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, ClassVar, List, Literal, Optional, Union
+from typing import Annotated, ClassVar, Literal, Optional
 
 from pydantic import ConfigDict, Field
 

@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "network-wrangler"
-version = "1.0-alpha.1"
+dynamic = ["version"]
 description = ""
 license =  {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [
     { name = "Elizabeth Sall", email = "elizabeth@urbanlabs.io" },
     { name = "Sijia Wang", email = "Sijia.Wang@wsp.com"},
@@ -86,6 +86,9 @@ script-files = [
     "network_wrangler/bin/validate_transit.py",
     "network_wrangler/bin/build_scenario_from_config.py",
 ]
+
+[tool.setuptools.dynamic]
+version = {attr = "network_wrangler.__version__"}
 
 [tool.pytest.ini_options]
 addopts = "--profile --benchmark-min-rounds=1 --benchmark-save=benchmark_results --benchmark-save-data"

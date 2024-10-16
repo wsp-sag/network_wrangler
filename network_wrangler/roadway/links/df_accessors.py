@@ -1,7 +1,5 @@
 """Dataframe accessor shortcuts for RoadLinksTables allowing for easy filtering and editing."""
 
-from typing import List
-
 import pandas as pd
 from pandera.typing import DataFrame
 
@@ -147,7 +145,7 @@ class ModeLinkAccessor:
     """Wrapper for filtering RoadLinksTable by modal ability: : links_df.mode_query(modes_list).
 
     Args:
-        modes (List[str]): list of modes to filter by.
+        modes (list[str]): list of modes to filter by.
     """
 
     def __init__(self, links_df: DataFrame[RoadLinksTable]):
@@ -165,7 +163,7 @@ class ModeLinkAccessor:
             WranglerLogger.warning(msg + f" Found type: {links_df.attr['name']}")
             raise NotLinksError(msg) from err
 
-    def __call__(self, modes: List[str]):
+    def __call__(self, modes: list[str]):
         """Filters links dataframe to  links that are accessible by the modes in the list."""
         return filter_links_to_modes(self._links_df, modes)
 

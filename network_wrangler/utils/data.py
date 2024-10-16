@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Optional, Union
+from collections.abc import Mapping
+from typing import Any, Optional, Union
 
 import numpy as np
 import pandas as pd

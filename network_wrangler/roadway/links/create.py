@@ -2,7 +2,7 @@
 
 import copy
 import time
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -70,7 +70,7 @@ def _fill_missing_distance_from_geometry(df: gpd.GeoDataFrame) -> gpd.GeoDataFra
 
 @validate_call_pyd
 def data_to_links_df(
-    links_df: Union[pd.DataFrame, List[dict]],
+    links_df: Union[pd.DataFrame, list[dict]],
     in_crs: int = LAT_LON_CRS,
     nodes_df: Union[None, DataFrame[RoadNodesTable]] = None,
 ) -> DataFrame[RoadLinksTable]:

@@ -1,7 +1,7 @@
 import copy
 import hashlib
 from collections import defaultdict
-from typing import Callable, ClassVar, DefaultDict, Optional
+from typing import Callable, ClassVar, Optional
 
 import pandas as pd
 from pandera import DataFrameModel
@@ -195,7 +195,7 @@ class DBModelMixin:
 
         Useful for knowing if you should check FK validation when changing a field value.
         """
-        pks_as_fks: DefaultDict = defaultdict(lambda: defaultdict(list))
+        pks_as_fks: defaultdict = defaultdict(lambda: defaultdict(list))
         for t, field_fk in cls.fks().items():
             for f, fk in field_fk.items():
                 fk_table, fk_field = fk

@@ -1,7 +1,8 @@
 """Type definitions for GTFS tables."""
 
 import re
-from typing import Iterable, Optional, Union
+from collections.abc import Iterable
+from typing import Optional, Union
 
 import pandas as pd
 import pandera as pa

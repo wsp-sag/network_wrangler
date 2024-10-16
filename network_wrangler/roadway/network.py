@@ -21,7 +21,7 @@ import copy
 import hashlib
 from collections import defaultdict
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import geopandas as gpd
 import networkx as nx

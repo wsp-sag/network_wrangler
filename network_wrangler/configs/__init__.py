@@ -1,7 +1,7 @@
 """Configuration module for network_wrangler."""
 
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from ..logger import WranglerLogger
 from .scenario import ScenarioConfig
@@ -29,7 +29,7 @@ def load_wrangler_config(data: Optional[ConfigInputTypes] = None) -> WranglerCon
 
 
 def load_scenario_config(
-    data: Optional[Union[ScenarioConfig, Path, List[Path], dict]] = None,
+    data: Optional[Union[ScenarioConfig, Path, list[Path], dict]] = None,
 ) -> ScenarioConfig:
     """Load the WranglerConfiguration."""
     if isinstance(data, ScenarioConfig):

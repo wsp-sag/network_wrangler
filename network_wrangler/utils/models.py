@@ -3,7 +3,7 @@
 import copy
 from functools import wraps
 from pathlib import Path
-from typing import Optional, Type, Union, _GenericAlias, get_args, get_origin, get_type_hints
+from typing import Optional, Union, _GenericAlias, get_args, get_origin, get_type_hints
 
 import geopandas as gpd
 import pandas as pd
@@ -73,7 +73,7 @@ def fill_df_with_defaults_from_model(df, model):
 
 @validate_call(config={"arbitrary_types_allowed": True})
 def validate_df_to_model(
-    df: DataFrame, model: Type, output_file: Path = Path("validation_failure_cases.csv")
+    df: DataFrame, model: type, output_file: Path = Path("validation_failure_cases.csv")
 ) -> DataFrame:
     """Wrapper to validate a DataFrame against a Pandera DataFrameModel with better logging.
 
@@ -156,7 +156,7 @@ def extra_attributes_undefined_in_model(instance: BaseModel, model: BaseModel) -
     return extra_attributes
 
 
-def submodel_fields_in_model(model: Type, instance: Optional[BaseModel] = None) -> list:
+def submodel_fields_in_model(model: type, instance: Optional[BaseModel] = None) -> list:
     """Find the fields in a pydantic model that are submodels."""
     types = get_type_hints(model)
     model_type = (ModelMetaclass, BaseModel)
