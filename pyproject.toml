@@ -27,7 +27,7 @@ dependencies = [
     "fiona",
     "geographiclib",
     "geojson",
-    "geopandas >= 0.8.0",
+    "geopandas >= 1.0.1",
     "ijson",
     "osmnx >= 0.12",
     "pandas >= 1.6",

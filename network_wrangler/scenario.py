@@ -893,7 +893,7 @@ def load_scenario(
 
     base_scenario_data = {
         "roadway": scenario_data.get("roadway"),
-        "transit": scenario_data.get("road_net"),
+        "transit": scenario_data.get("transit"),
         "applied_projects": scenario_data.get("applied_projects", []),
         "conflicts": scenario_data.get("conflicts", {}),
     }
