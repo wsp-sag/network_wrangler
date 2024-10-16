@@ -32,7 +32,7 @@ dependencies = [
     "osmnx >= 0.12",
     "pandas >= 1.6",
     "pandera[geopandas] >= 0.19.0",
-    "projectcard >= 0.3.1",
+    "projectcard >= 0.3.3",
     "psutil",
     "pyarrow",
     "pydantic >= 2",
@@ -43,7 +43,6 @@ dependencies = [
 [project.optional-dependencies]
 viz = [
     "folium",
-    "jupyter",
     "notebook",
 ]
 docs = [
@@ -64,12 +63,18 @@ docs = [
 tests = [
     "coverage",
     "mypy",
+    "mypy_extensions",
+    "pre-commit",
     "pytest",
     "pytest-benchmark",
     "pytest-cov",
+    "pytest-profiling",
+    "radon",
     "ruff",
+    "snakeviz",
     "vulture",
 ]
+
 
 [tool.setuptools]
 packages = ["network_wrangler"]

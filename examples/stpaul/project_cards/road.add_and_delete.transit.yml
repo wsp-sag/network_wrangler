@@ -1,5 +1,7 @@
-project: test add and delete roadway for transit
+project: add and delete roadway for transit
 tags:
+dependencies:
+  corequisites: ["route transit on new roadway"]
 changes:
   - roadway_addition:
       links:

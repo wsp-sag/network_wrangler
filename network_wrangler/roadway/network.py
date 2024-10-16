@@ -37,7 +37,6 @@ from ..errors import (
     NodeNotFoundError,
     NotNodesError,
     ProjectCardError,
-    RoadwayDeletionError,
     SelectionError,
     ShapeAddError,
 )
@@ -64,7 +63,6 @@ from .projects import (
     apply_roadway_deletion,
     apply_roadway_property_change,
 )
-from .projects.delete import deletion_breaks_transit_shapes
 from .selection import (
     RoadwayLinkSelection,
     RoadwayNodeSelection,
@@ -311,12 +309,12 @@ class RoadwayNetwork(BaseModel):
             raise SelectionError(msg)
 
         WranglerLogger.debug(f"Getting selection from key: {key}")
-        if selection_data.feature_types in ["links", "segment"]:
+        if "links" in selection_data.fields:
             return RoadwayLinkSelection(self, selection_dict)
-        if selection_data.feature_types == "nodes":
+        if "nodes" in selection_data.fields:
             return RoadwayNodeSelection(self, selection_dict)
-        msg = "Selection data should be of type 'segment', 'links' or 'nodes'."
-        WranglerLogger.error(msg + f" Got: {selection_data.feature_types}")
+        msg = "Selection data should have either 'links' or 'nodes'."
+        WranglerLogger.error(msg + f" Received: {selection_dict}")
         raise SelectionError(msg)
 
     def modal_graph_hash(self, mode) -> str:
@@ -382,7 +380,7 @@ class RoadwayNetwork(BaseModel):
         if change.change_type == "roadway_property_change":
             return apply_roadway_property_change(
                 self,
-                self.get_selection(change.facility),
+                self.get_selection(change.roadway_property_change["facility"]),
                 change.roadway_property_change["property_changes"],
                 project_name=change.project,
             )
@@ -395,14 +393,10 @@ class RoadwayNetwork(BaseModel):
             )
 
         if change.change_type == "roadway_deletion":
-            if transit_net is not None and deletion_breaks_transit_shapes(
-                self, change.roadway_deletion, transit_net
-            ):
-                msg = "Roadway deletion would break transit shapes. Aborting."
-                raise RoadwayDeletionError(msg)
             return apply_roadway_deletion(
                 self,
                 change.roadway_deletion,
+                transit_net=transit_net,
             )
 
         if change.change_type == "pycode":
@@ -520,6 +514,7 @@ class RoadwayNetwork(BaseModel):
         selection_dict: Union[dict, SelectLinksDict],
         clean_nodes: bool = False,
         clean_shapes: bool = False,
+        transit_net: Optional[TransitNetwork] = None,
     ):
         """Deletes links based on selection dictionary and optionally associated nodes and shapes.
 
@@ -537,6 +532,8 @@ class RoadwayNetwork(BaseModel):
                 deleted links. Defaults to False.
             clean_shapes (bool, optional): If True, will clean nodes uniquely associated with
                 deleted links. Defaults to False.
+            transit_net (TransitNetwork, optional): If provided, will check TransitNetwork and
+                warn if deletion breaks transit shapes. Defaults to None.
         """
         if not isinstance(selection_dict, SelectLinksDict):
             selection_dict = SelectLinksDict(**selection_dict)
@@ -569,6 +566,7 @@ class RoadwayNetwork(BaseModel):
             self.links_df,
             selection.selected_links,
             ignore_missing=selection.ignore_missing,
+            transit_net=transit_net,
         )
 
     def delete_nodes(

@@ -239,7 +239,7 @@ def test_route_changes_project_card(
     WranglerLogger.debug(f"Types: {project_card.change_types}")
     transit_net = transit_net.apply(project_card, reference_road_net=stpaul_net)
 
-    sel = transit_net.get_selection(project_card.service)
+    sel = transit_net.get_selection(project_card.transit_routing_change["service"])
     sel_trip = sel.selected_trips[0]
     trips_df = transit_net.feed.trips
     shapes_df = transit_net.feed.shapes

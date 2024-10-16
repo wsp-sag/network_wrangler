@@ -422,7 +422,7 @@ class DBModelMixin:
 
         WranglerLogger.warning(
             "Creating a deep copy of db object.\
-            This will NOT update any referneces (e.g. from TransitNetwork)"
+            This will NOT update any references (e.g. from TransitNetwork)"
         )
 
         # Return the newly created deep copy instance of the object

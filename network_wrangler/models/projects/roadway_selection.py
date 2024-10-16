@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, ClassVar, Literal, Optional
+from typing import Annotated, ClassVar, Optional
 
 from pydantic import ConfigDict, Field
 
@@ -20,8 +20,6 @@ class SelectNodeDict(RecordModel):
     """Selection of a single roadway node in the `facility` section of a project card."""
 
     require_one_of: ClassVar[OneOf] = [["osm_node_id", "model_node_id"]]
-    initial_selection_fields: ClassVar[list[str]] = ["osm_node_id", "model_node_id"]
-    explicit_id_fields: ClassVar[list[str]] = ["osm_node_id", "model_node_id"]
     model_config = ConfigDict(extra="allow")
 
     osm_node_id: Optional[str] = None
@@ -29,50 +27,11 @@ class SelectNodeDict(RecordModel):
 
     _examples: ClassVar[list[dict]] = [{"osm_node_id": "12345"}, {"model_node_id": 67890}]
 
-    @property
-    def selection_type(self):
-        """One of `all` or `explicit_ids`."""
-        _explicit_ids = [k for k in self.explicit_id_fields if getattr(self, k)]
-        if _explicit_ids:
-            return "explicit_ids"
-        msg = "Select Node should have either `all` or an explicit id."
-        WranglerLogger.debug(
-            msg + f" Found none in selection dict: \n{self.model_dump(by_alias=True)}"
-        )
-        raise RoadwaySelectionFormatError(msg)
-
-    @property
-    def explicit_id_selection_dict(self) -> dict:
-        """Return a dictionary of field that are explicit ids."""
-        return {
-            k: [v]
-            for k, v in self.model_dump(exclude_none=True, by_alias=True).items()
-            if k in self.explicit_id_fields
-        }
-
-    @property
-    def additional_selection_fields(self) -> list[str]:
-        """Return a list of fields that are not part of the initial selection fields."""
-        return list(
-            set(self.model_dump(exclude_none=True, by_alias=True).keys())
-            - set(self.initial_selection_fields)
-        )
-
-    @property
-    def additional_selection_dict(self) -> dict:
-        """Return a dictionary of fields that are not part of the initial selection fields."""
-        return {
-            k: v
-            for k, v in self.model_dump(exclude_none=True, by_alias=True).items()
-            if k in self.additional_selection_fields
-        }
-
 
 class SelectNodesDict(RecordModel):
     """Requirements for describing multiple nodes of a project card (e.g. to delete)."""
 
     require_any_of: ClassVar[AnyOf] = [["osm_node_id", "model_node_id"]]
-    _explicit_id_fields: ClassVar[list[str]] = ["osm_node_id", "model_node_id"]
     model_config = ConfigDict(extra="forbid")
 
     all: Optional[bool] = False
@@ -86,41 +45,6 @@ class SelectNodesDict(RecordModel):
         {"model_node_id": [12345, 67890]},
     ]
 
-    @property
-    def asdict(self) -> dict:
-        """Model as a dictionary."""
-        return self.model_dump(exclude_none=True, by_alias=True)
-
-    @property
-    def fields(self) -> list[str]:
-        """List of fields in the selection."""
-        return list(self.model_dump(exclude_none=True, by_alias=True).keys())
-
-    @property
-    def selection_type(self):
-        """One of `all` or `explicit_ids`."""
-        if self.all:
-            return "all"
-        if self.explicit_id_fields:
-            return "explicit_ids"
-        msg = "Select Nodes should have either `all` or an explicit id."
-        WranglerLogger.debug(
-            msg
-            + f" {self.explicit_id_fields}. \
-            Found neither in nodes selection: \n{self.model_dump(by_alias=True)}"
-        )
-        raise RoadwaySelectionFormatError(msg)
-
-    @property
-    def explicit_id_fields(self) -> list[str]:
-        """Fields which can be used in a selection on their own."""
-        return [k for k in self._explicit_id_fields if getattr(self, k)]
-
-    @property
-    def explicit_id_selection_dict(self):
-        """Return a dictionary of fields that are explicit ids."""
-        return {k: v for k, v in self.asdict.items() if k in self.explicit_id_fields}
-
 
 class SelectLinksDict(RecordModel):
     """requirements for describing links in the `facility` section of a project card.
@@ -131,6 +55,7 @@ class SelectLinksDict(RecordModel):
         {'osm_link_id': ['123456789']}
         {'model_link_id': [123456789], 'modes': ['walk']}
         {'all': 'True', 'modes': ['transit']}
+        {'all': 'True', name': ['Main St']}
     ```
 
     """
@@ -145,22 +70,7 @@ class SelectLinksDict(RecordModel):
         ["model_link_id", "name"],
     ]
     require_any_of: ClassVar[AnyOf] = [["name", "ref", "osm_link_id", "model_link_id", "all"]]
-    _initial_selection_fields: ClassVar[list[str]] = [
-        "name",
-        "ref",
-        "osm_link_id",
-        "model_link_id",
-        "all",
-    ]
-    _explicit_id_fields: ClassVar[list[str]] = ["osm_link_id", "model_link_id"]
-    _segment_id_fields: ClassVar[list[str]] = [
-        "name",
-        "ref",
-        "osm_link_id",
-        "model_link_id",
-        "modes",
-    ]
-    _special_fields: ClassVar[list[str]] = ["modes", "ignore_missing"]
+
     model_config = ConfigDict(extra="allow")
 
     all: Optional[bool] = False
@@ -177,76 +87,6 @@ class SelectLinksDict(RecordModel):
         {"model_link_id": [123456789], "modes": ["walk"]},
         {"all": "True", "modes": ["transit"]},
     ]
-
-    @property
-    def asdict(self) -> dict:
-        """Model as a dictionary."""
-        return self.model_dump(exclude_none=True, by_alias=True)
-
-    @property
-    def fields(self) -> list[str]:
-        """All fields in the selection."""
-        return list(self.model_dump(exclude_none=True, by_alias=True).keys())
-
-    @property
-    def initial_selection_fields(self) -> list[str]:
-        """Fields used in the initial selection of links."""
-        if self.all:
-            return ["all"]
-        return [f for f in self._initial_selection_fields if getattr(self, f)]
-
-    @property
-    def explicit_id_fields(self) -> list[str]:
-        """Fields that can be used in a slection on their own.
-
-        e.g. `osm_link_id` and `model_link_id`.
-        """
-        return [k for k in self._explicit_id_fields if getattr(self, k)]
-
-    @property
-    def segment_id_fields(self) -> list[str]:
-        """Fields that can be used in an intial segment selection.
-
-        e.g. `name`, `ref`, `osm_link_id`, or `model_link_id`.
-        """
-        return [k for k in self._segment_id_fields if getattr(self, k)]
-
-    @property
-    def additional_selection_fields(self):
-        """Return a list of fields that are not part of the initial selection fields."""
-        _potential = list(
-            set(self.fields) - set(self.initial_selection_fields) - set(self._special_fields)
-        )
-        if self.selection_type == "all":
-            _potential += ["name", "ref"]
-        return [f for f in _potential if getattr(self, f)]
-
-    @property
-    def selection_type(self):
-        """One of `all`, `explicit_ids`, or `segment`."""
-        if self.all:
-            return "all"
-        if self.explicit_id_fields:
-            return "explicit_ids"
-        if self.segment_id_fields:
-            return "segment"
-        msg = "If not a segment, Select Links should have either `all` or an explicit id."
-        raise RoadwaySelectionFormatError(msg)
-
-    @property
-    def explicit_id_selection_dict(self):
-        """Return a dictionary of fields that are explicit ids."""
-        return {k: v for k, v in self.asdict.items() if k in self.explicit_id_fields}
-
-    @property
-    def segment_selection_dict(self):
-        """Return a dictionary of fields that are explicit ids."""
-        return {k: v for k, v in self.asdict.items() if k in self.segment_id_fields}
-
-    @property
-    def additional_selection_dict(self):
-        """Return a dictionary of fields that are not part of the initial selection fields."""
-        return {k: v for k, v in self.asdict.items() if k in self.additional_selection_fields}
 
 
 class SelectFacility(RecordModel):
@@ -272,36 +112,3 @@ class SelectFacility(RecordModel):
         {"nodes": {"model_node_id": [1, 2, 3]}},
         {"links": {"model_link_id": [1, 2, 3]}},
     ]
-
-    @property
-    def feature_types(self) -> Literal["segment", "links", "nodes"]:
-        """One of `segment`, `links`, or `nodes`."""
-        if self.links and self.from_ and self.to:
-            return "segment"
-        if self.links:
-            return "links"
-        if self.nodes:
-            return "nodes"
-        msg = "SelectFacility must have either links or nodes defined."
-        raise RoadwaySelectionFormatError(msg)
-
-    @property
-    def selection_type(self) -> Literal["segment", "links", "nodes"]:
-        """One of `segment`, `links`, or `nodes`."""
-        if self.feature_types == "segment":
-            return "segment"
-        if self.feature_types == "links":
-            if self.links is None:
-                msg = "SelectFacility with feature_types 'links' must have links."
-                raise RoadwaySelectionFormatError(msg)
-            if self.links.selection_type == "segment" and not (self.from_ and self.to):
-                msg = "SelectFacility with segment selection link variables must also have `from` and `to` nodes specified."
-                raise RoadwaySelectionFormatError(msg)
-            return self.links.selection_type
-        if self.feature_types == "nodes":
-            if self.nodes is None:
-                msg = "SelectFacility with feature_types 'nodes' must have nodes."
-                raise RoadwaySelectionFormatError(msg)
-            return self.nodes.selection_type
-        msg = "SelectFacility must have either links or nodes defined."
-        raise RoadwaySelectionFormatError(msg)

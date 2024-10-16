@@ -6,7 +6,7 @@ Example usage:
 
 ```python
 from network_wrangler.transit load_transit, write_transit
-from network_wrangler.trasit.clip import clip_transit
+from network_wrangler.transit.clip import clip_transit
 
 stpaul_transit = load_transit(example_dir / "stpaul")
 boundary_file = test_dir / "data" / "ecolab.geojson"

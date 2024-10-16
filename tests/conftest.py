@@ -109,17 +109,9 @@ def stpaul_transit_net(stpaul_ex_dir):
 
 @pytest.fixture(scope="module")
 def small_net(small_ex_dir):
-    from network_wrangler import load_roadway
+    from network_wrangler import load_roadway_from_dir
 
-    shape_filename = small_ex_dir / "shape.geojson"
-    link_filename = small_ex_dir / "link.json"
-    node_filename = small_ex_dir / "node.geojson"
-
-    return load_roadway(
-        links_file=link_filename,
-        nodes_file=node_filename,
-        shapes_file=shape_filename,
-    )
+    return load_roadway_from_dir(small_ex_dir)
 
 
 @pytest.fixture(scope="module")

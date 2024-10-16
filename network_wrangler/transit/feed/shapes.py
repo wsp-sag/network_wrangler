@@ -223,16 +223,6 @@ def shapes_for_road_links(
         how="inner",
         on=["A", "B"],
     )
-    _debug_AB = [
-        {"A": 45983, "B": 57484},
-        {"A": 45983, "B": 171267},
-        {"A": 171268, "B": 171269},
-        {"A": 171270, "B": 57484},
-    ]
-    WranglerLogger.debug(
-        f"DEBUG AB: \n\
-        {shape_links_w_links[['A', 'B']].isin_dict(_debug_AB)}"
-    )
 
     """
     Find largest segment of each shape_id that is in the links

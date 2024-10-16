@@ -23,4 +23,4 @@ dependencies:
   # Pip-installed dependencies
   - pip:
       - pandera==0.20.4
-      - projectcard>=0.3.1
+      - projectcard>=0.3.3

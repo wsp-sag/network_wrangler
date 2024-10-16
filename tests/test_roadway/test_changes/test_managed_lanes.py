@@ -142,7 +142,9 @@ def test_managed_lane_change_functionality(request, stpaul_net, stpaul_ex_dir):
     project_card = read_card(project_card_path)
 
     WranglerLogger.info("      start: select_roadway_features")
-    _selected_link_idx = net.get_selection(project_card.facility).selected_links
+    _selected_link_idx = net.get_selection(
+        project_card.roadway_property_change["facility"]
+    ).selected_links
 
     attributes_to_update = list(project_card.roadway_property_change["property_changes"].keys())
 

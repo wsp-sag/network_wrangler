@@ -12,7 +12,7 @@ from shapely import wkt
 
 from ..errors import DataframeSelectionError
 from ..logger import WranglerLogger
-from ..params import LAT_LON_CRS
+from ..params import LAT_LON_CRS, STRICT_MATCH_FIELDS
 
 
 class DataSegmentationError(Exception):
@@ -706,10 +706,20 @@ def concat_with_attr(dfs: list[pd.DataFrame], **kwargs) -> pd.DataFrame:
     return df
 
 
-def isin_dict(df: pd.DataFrame, d: dict, ignore_missing: bool = True) -> pd.DataFrame:
+def isin_dict(
+    df: pd.DataFrame, d: dict, ignore_missing: bool = True, strict_str: bool = False
+) -> pd.DataFrame:
     """Filter the dataframe using a dictionary - faster than using isin.
 
     Uses merge to filter the dataframe by the dictionary keys and values.
+
+    Args:
+        df: dataframe to filter
+        d: dictionary with keys as column names and values as values to filter by
+        ignore_missing: if True, will ignore missing values in the selection dict.
+        strict_str: if True, will not allow partial string matches and will force case-matching.
+            Defaults to False. If False, will be overridden if key is in STRICT_MATCH_FIELDS or if
+            ignore_missing is False.
     """
     sel_links_mask = np.zeros(len(df), dtype=bool)
     missing = {}
@@ -719,15 +729,32 @@ def isin_dict(df: pd.DataFrame, d: dict, ignore_missing: bool = True) -> pd.Data
         if col not in df.columns:
             msg = f"Key {col} not in dataframe columns."
             raise DataframeSelectionError(msg)
-        vals_s = pd.DataFrame({col: vals})
+        _strict_str = strict_str or col in STRICT_MATCH_FIELDS or not ignore_missing
+        vals_list = [vals] if not isinstance(vals, list) else vals
+
         index_name = df.index.name if df.index.name is not None else "index"
         _df = df[[col]].reset_index(names=index_name)
-        merged_df = _df.merge(vals_s, on=col, how="outer", indicator=True)
-        selected = merged_df[merged_df["_merge"] == "both"].set_index(index_name)
+
+        if isinstance(vals_list[0], str) and not _strict_str:
+            vals_list = [val.lower() for val in vals_list]
+            _df[col] = _df[col].str.lower()
+
+            # Use str.contains for partial matching
+            mask = np.zeros(len(_df), dtype=bool)
+            for val in vals_list:
+                mask |= _df[col].str.contains(val, case=False, na=False)
+            selected = _df[mask].set_index(index_name)
+        else:
+            vals_df = pd.DataFrame({col: vals_list}, index=range(len(vals_list)))
+            merged_df = _df.merge(vals_df, on=col, how="outer", indicator=True)
+            selected = merged_df[merged_df["_merge"] == "both"].set_index(index_name)
+            _missing_vals = merged_df[merged_df["_merge"] == "right_only"][col].tolist()
+            if _missing_vals:
+                missing[col] = _missing_vals
+                WranglerLogger.warning(f"Missing values in selection dict for {col}: {missing}")
+
         sel_links_mask |= df.index.isin(selected.index)
-        missing[col] = merged_df.loc[merged_df["_merge"] == "right_only", col].tolist()
-        if len(missing[col]):
-            WranglerLogger.warning(f"Missing values in selection dict for {col}: {missing}")
+
     if not ignore_missing and any(missing):
         msg = "Missing values in selection dict."
         raise DataframeSelectionError(msg)

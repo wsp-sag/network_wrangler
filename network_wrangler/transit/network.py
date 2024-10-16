@@ -19,7 +19,7 @@ Usage:
 from __future__ import annotations
 
 import copy
-from typing import ClassVar, Optional, Union
+from typing import TYPE_CHECKING, ClassVar, Optional, Union
 
 import geopandas as gpd
 import networkx as nx
@@ -33,7 +33,6 @@ from ..errors import (
     TransitValidationError,
 )
 from ..logger import WranglerLogger
-from ..roadway.network import RoadwayNetwork
 from ..utils.geo import to_points_gdf
 from ..utils.utils import dict_to_hexkey
 from .feed.feed import Feed, _get_applied_projects_from_tables
@@ -52,6 +51,9 @@ from .projects import (
 )
 from .selection import TransitSelection
 from .validate import transit_road_net_consistency
+
+if TYPE_CHECKING:
+    from ..roadway.network import RoadwayNetwork
 
 
 class TransitNetwork:
@@ -137,7 +139,7 @@ class TransitNetwork:
 
     @road_net.setter
     def road_net(self, road_net_in: RoadwayNetwork):
-        if road_net_in is None or not isinstance(road_net_in, RoadwayNetwork):
+        if road_net_in is None or road_net_in.__class__.__name__ != "RoadwayNetwork":
             msg = f"TransitNetwork's road_net: value must be a valid RoadwayNetwork instance. \
                              This is a {type(road_net_in)}."
             WranglerLogger.error(msg)
@@ -306,16 +308,16 @@ class TransitNetwork:
         if change.change_type == "transit_property_change":
             return apply_transit_property_change(
                 self,
-                self.get_selection(change.service),
-                change.transit_property_change,
+                self.get_selection(change.transit_property_change["service"]),
+                change.transit_property_change["property_changes"],
                 project_name=change.project,
             )
 
         if change.change_type == "transit_routing_change":
             return apply_transit_routing_change(
                 self,
-                self.get_selection(change.service),
-                change.transit_routing_change,
+                self.get_selection(change.transit_routing_change["service"]),
+                change.transit_routing_change["routing"],
                 reference_road_net=reference_road_net,
                 project_name=change.project,
             )
@@ -336,9 +338,9 @@ class TransitNetwork:
         if change.change_type == "transit_service_deletion":
             return apply_transit_service_deletion(
                 self,
-                self.get_selection(change.service),
-                clean_shapes=change.transit_service_deletion.get("clean_shapes", True),
-                clean_routes=change.transit_service_deletion.get("clean_routes", True),
+                self.get_selection(change.transit_service_deletion["service"]),
+                clean_shapes=change.transit_service_deletion.get("clean_shapes"),
+                clean_routes=change.transit_service_deletion.get("clean_routes"),
             )
         msg = f"Not a currently valid transit project: {change}."
         WranglerLogger.error(msg)

@@ -28,3 +28,5 @@ MODES_TO_NETWORK_LINK_VARIABLES: dict[str, list[str]] = {
 
 SMALL_RECS: int = 5
 """Number of records to display in a dataframe summary."""
+
+STRICT_MATCH_FIELDS = ["osm_link_id", "osm_node_id"]

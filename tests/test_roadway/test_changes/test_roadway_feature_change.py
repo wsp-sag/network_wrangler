@@ -230,7 +230,9 @@ def test_add_adhoc_field_from_card(request, stpaul_net, stpaul_ex_dir):
     project_card_path = stpaul_ex_dir / "project_cards" / project_card_name
     project_card = read_card(project_card_path)
 
-    selected_link_indices = net.get_selection(project_card.facility).selected_links
+    selected_link_indices = net.get_selection(
+        project_card.roadway_property_change["facility"]
+    ).selected_links
     attributes_to_update = list(project_card.roadway_property_change["property_changes"].keys())
 
     net = net.apply(project_card)

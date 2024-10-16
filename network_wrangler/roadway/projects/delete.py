@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import pandas as pd
 
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 def apply_roadway_deletion(
     roadway_net: RoadwayNetwork,
     roadway_deletion: Union[dict, RoadwayDeletion],
+    transit_net: Optional[TransitNetwork] = None,
 ) -> RoadwayNetwork:
     """Delete the roadway links or nodes defined in the project card.
 
@@ -26,9 +27,12 @@ def apply_roadway_deletion(
     Args:
         roadway_net: input RoadwayNetwork to apply change to
         roadway_deletion: dictionary conforming to RoadwayDeletion
+        transit_net: input TransitNetwork which will be used to check if deletion breaks transit
+            shapes. If None, will not check for broken shapes.
     """
     if not isinstance(roadway_deletion, RoadwayDeletion):
         roadway_deletion = RoadwayDeletion(**roadway_deletion)
+
     WranglerLogger.debug(f"Deleting Roadway Features: \n{roadway_deletion}")
 
     if roadway_deletion.links:
@@ -36,6 +40,7 @@ def apply_roadway_deletion(
             roadway_deletion.links.model_dump(exclude_none=True, by_alias=True),
             clean_shapes=roadway_deletion.clean_shapes,
             clean_nodes=roadway_deletion.clean_nodes,
+            transit_net=transit_net,
         )
 
     if roadway_deletion.nodes:
@@ -44,52 +49,3 @@ def apply_roadway_deletion(
         )
 
     return roadway_net
-
-
-def deletion_breaks_transit_shapes(
-    roadway_net: RoadwayNetwork, roadway_deletion: RoadwayDeletion, transit_net: TransitNetwork
-) -> bool:
-    """Check if any transit shapes go on the deleted links.
-
-    Args:
-        roadway_net: input RoadwayNetwork to apply change to
-        roadway_deletion: dictionary conforming to RoadwayDeletion model
-        transit_net: input TransitNetwork
-
-    returns: true if there are broken shapes, false otherwise
-    """
-    deleted_link_id_list = roadway_deletion["links"]["model_link_id"]
-    deleted_links_df = roadway_net.links_df[
-        roadway_net.links_df["model_link_id"].isin(deleted_link_id_list)
-    ]
-    shapes_df = transit_net.feed.shapes.copy()
-
-    # sort the shapes_df by agency_raw_name, shape_id and shape_pt_sequence
-    if "agency_raw_name" in shapes_df.columns:
-        shapes_df = shapes_df.sort_values(["agency_raw_name", "shape_id", "shape_pt_sequence"])
-    else:
-        shapes_df = shapes_df.sort_values(["shape_id", "shape_pt_sequence"])
-    # create shape_model_node_id_next column by using the value of the next row's shape_model_node_id
-    shapes_df["shape_model_node_id_next"] = shapes_df["shape_model_node_id"].shift(-1)
-    # create shape_id_next column by using the value of the next row's shape_id
-    shapes_df["shape_id_next"] = shapes_df["shape_id"].shift(-1)
-    # keep rows with the same shape_id_next and the shape_id
-    shapes_df = shapes_df[shapes_df["shape_id_next"] == shapes_df["shape_id"]]
-    # make sure shape_model_node_id_next and shape_model_node_id_next are numeric
-    shapes_df["shape_model_node_id_next"] = pd.to_numeric(shapes_df["shape_model_node_id_next"])
-    shapes_df["shape_model_node_id"] = pd.to_numeric(shapes_df["shape_model_node_id"])
-
-    shapes_df = shapes_df.merge(
-        deleted_links_df[["model_link_id", "A", "B"]],
-        how="left",
-        left_on=["shape_model_node_id", "shape_model_node_id_next"],
-        right_on=["A", "B"],
-    )
-    shapes_df = shapes_df[shapes_df["model_link_id"].notna()]
-    if not shapes_df.empty:
-        msg = f"Roadway deletion would result in broken transit shape_ids: \
-            {shapes_df.shape_id.unique()}"
-        WranglerLogger.error(msg)
-
-        return True
-    return False

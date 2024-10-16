@@ -24,7 +24,7 @@ def selection_map(
         selection: RoadwayNodeSelection or RoadwayLink seleciton instance
     """
     WranglerLogger.debug("Creating selection map.")
-    if selection.selection_type == "segment" and selection.segment is not None:
+    if selection.selection_method == "segment" and selection.segment is not None:
         G = selection.segment.graph
     else:
         raise NotImplementedError()

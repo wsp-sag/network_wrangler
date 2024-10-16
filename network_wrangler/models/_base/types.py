@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import time
-from typing import Annotated, Any, List, Literal, TypeVar, Union
+from typing import Annotated, Any, Literal, TypeVar, Union
 
 import pandas as pd
 from pydantic import (
@@ -25,14 +25,14 @@ ForcedStr = Annotated[Any, BeforeValidator(lambda x: str(x))]
 
 
 OneOf = Annotated[
-    List[List[Union[str, List[str]]]],
+    list[list[Union[str, list[str]]]],
     Field(
         description=["List fields where at least one is required for the data model to be valid."]
     ),
 ]
 
 ConflictsWith = Annotated[
-    List[List[str]],
+    list[list[str]],
     Field(
         description=[
             "List of pairs of fields where if one is present, the other cannot be present."
@@ -41,7 +41,7 @@ ConflictsWith = Annotated[
 ]
 
 AnyOf = Annotated[
-    List[List[Union[str, List[str]]]],
+    list[list[Union[str, list[str]]]],
     Field(description=["List fields where any are required for the data model to be valid."]),
 ]
 
@@ -58,7 +58,7 @@ TimeString = Annotated[
     ),
 ]
 TimespanString = Annotated[
-    List[TimeString],
+    list[TimeString],
     Field(min_length=2, max_length=2),
 ]
 TimeType = Union[time, str, int]

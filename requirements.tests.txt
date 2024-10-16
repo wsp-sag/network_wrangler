@@ -6,6 +6,7 @@ pytest
 pytest-benchmark
 pytest-cov
 pytest-profiling
+radon
 ruff
 snakeviz
 vulture

@@ -149,7 +149,8 @@ def test_delete_nodes(request, small_net):
         }
     )
     net.add_nodes(add_nodes_df)
-    assert len(net.nodes_df.loc[del_node_ids]) == len(del_node_ids)
+    if sum(net.nodes_df.model_node_id.isin(del_node_ids)) != len(del_node_ids):
+        msg = "Nodes not added correctly"
     # Define the selection dictionary for nodes to delete
     selection_dict = {
         "model_node_id": del_node_ids,

@@ -323,6 +323,9 @@ class Scenario:
         self.transit_net: Optional[TransitNetwork] = copy.deepcopy(
             base_scenario.pop("transit_net", None)
         )
+        if self.road_net and self.transit_net:
+            self.transit_net.road_net = self.road_net
+
         # Set configs for networks to be the same as scenario.
         if isinstance(self.road_net, RoadwayNetwork):
             self.road_net.config = self.config
@@ -422,7 +425,7 @@ class Scenario:
             return
 
         if validate:
-            assert project_card.valid
+            project_card.validate()
 
         WranglerLogger.info(f"Adding {project_name} to scenario.")
         self.project_cards[project_name] = project_card
@@ -770,7 +773,7 @@ class Scenario:
                 "file_format": roadway_file_format,
             }
         if projects_write:
-            scenario_data["project_cards"] = ({"dir": str(projects_out_dir)},)
+            scenario_data["project_cards"] = {"dir": str(projects_out_dir)}
         scenario_file_path = Path(path) / f"{name}_scenario.yml"
         with scenario_file_path.open("w") as f:
             yaml.dump(scenario_data, f, default_flow_style=False, allow_unicode=True)
@@ -779,11 +782,24 @@ class Scenario:
     @property
     def summary(self) -> dict:
         """A high level summary of the created scenario and public attributes."""
-        skip = ["road_net", "transit_net", "project_cards", "config"]
+        skip = ["road_net", "base_scenario", "transit_net", "project_cards", "config"]
         summary_dict = {
             k: v for k, v in self.__dict__.items() if not k.startswith("_") and k not in skip
         }
         summary_dict["config"] = self.config.to_dict()
+
+        """
+        # Handle nested dictionary for "base_scenario"
+        skip_base = ["project_cards"]
+        if "base_scenario" in self.__dict__:
+            base_summary_dict = {
+                k: v
+                for k, v in self.base_scenario.items()
+                if not k.startswith("_") and k not in skip_base
+            }
+            summary_dict["base_scenario"] = base_summary_dict
+        """
+
         return summary_dict
 
 
@@ -848,10 +864,12 @@ def write_applied_projects(scenario: Scenario, out_dir: Path, overwrite: bool = 
     prep_dir(out_dir, overwrite=overwrite)
 
     for p in scenario.applied_projects:
-        if p not in scenario.project_cards:
-            # project cards applied in base scenario will not be in project cards
+        if p in scenario.project_cards:
+            card = scenario.project_cards[p]
+        elif p in scenario.base_scenario["project_cards"]:
+            card = scenario.base_scenario["project_cards"][p]
+        else:
             continue
-        card = scenario.project_cards[p]
         filename = Path(card.__dict__.get("file", f"{p}.yml")).name
         outpath = outdir / filename
         write_card(card, outpath)
@@ -873,8 +891,14 @@ def load_scenario(
     else:
         WranglerLogger.debug("Loading Scenario from dict.")
 
+    base_scenario_data = {
+        "roadway": scenario_data.get("roadway"),
+        "transit": scenario_data.get("road_net"),
+        "applied_projects": scenario_data.get("applied_projects", []),
+        "conflicts": scenario_data.get("conflicts", {}),
+    }
     base_scenario = _load_base_scenario_from_config(
-        scenario_data["base_scenario"], config=scenario_data["config"]
+        base_scenario_data, config=scenario_data["config"]
     )
     my_scenario = create_scenario(
         base_scenario=base_scenario, name=name, config=scenario_data["config"]

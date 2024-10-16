@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, List, Union
+from typing import Any, ClassVar, Union
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -45,7 +45,7 @@ class RecordModel(BaseModel):
 
     @staticmethod
     def _check_field_exists(
-        all_of_fields: Union[str, List[str]], fields_present: list[str]
+        all_of_fields: Union[str, list[str]], fields_present: list[str]
     ) -> bool:
         if isinstance(all_of_fields, list):
             return all(f in fields_present for f in all_of_fields)
@@ -103,7 +103,7 @@ class RecordModel(BaseModel):
         return values
 
     @classmethod
-    def _check_each_any_of(cls, fields: List[str], values) -> bool:
+    def _check_each_any_of(cls, fields: list[str], values) -> bool:
         if any(cls._check_field_exists(field, values) for field in fields):
             return True
         WranglerLogger.error(f"{cls} should have at least one of {fields}.")
@@ -141,3 +141,13 @@ class RecordModel(BaseModel):
         msg = f"{cls.__name__} requires at least one of the following fields: \
                         {cls.require_any_of}. None were provided."
         raise AnyOfError(msg)
+
+    @property
+    def asdict(self) -> dict:
+        """Model as a dictionary."""
+        return self.model_dump(exclude_none=True, by_alias=True)
+
+    @property
+    def fields(self) -> list[str]:
+        """All fields in the selection."""
+        return list(self.asdict.keys())

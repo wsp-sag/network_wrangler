@@ -46,4 +46,4 @@ dependencies:
       - mkdocstrings==0.26.1
       - mkdocstrings-python==1.11.1
       - pandera==0.20.4
-      - projectcard>=0.3.1
+      - projectcard>=0.3.3

@@ -1,10 +1,6 @@
 project: 6th St E Road Diet
 tags:
    - 'example'
-dependencies:
-  prerequisites: []
-  corequisites: []
-  conflicts: []
 roadway_property_change:
   facility:
     links:

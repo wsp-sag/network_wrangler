@@ -95,7 +95,7 @@ TEST_SELECTIONS = [
     {  # SELECTION 8
         "links": {
             "name": ["Minnehaha"],
-            "all": True,
+            "modes": ["drive"],
         },
     },
 ]
@@ -180,7 +180,7 @@ answer_selected_links = [
         171978,
         171979,
         275245,
-    ],  # SELECTION 9 - Minnehana
+    ],  # SELECTION 9 - Minnehaha
 ]
 
 
@@ -194,7 +194,7 @@ def test_select_roadway_features(request, selection, answer, stpaul_net):
     _show_f = ["A", "B", "name", "osm_link_id", "model_link_id", "lanes"]
     selected_link_indices = _selection.selected_links
     WranglerLogger.info(f"{len(_selection.selected_links)} links selected")
-    if _selection.selection_type == "segment":
+    if _selection.selection_method == "segment":
         WranglerLogger.info(f"Segment Path: \n{_selection.segment.segment_nodes}")
         WranglerLogger.info(f"Segment Links: \n{_selection.segment.segment_links_df[_show_f]}")
     WranglerLogger.info("Selected Links")
@@ -206,24 +206,6 @@ def test_select_roadway_features(request, selection, answer, stpaul_net):
         WranglerLogger.info(f"Answer Links: {answer}")
         assert set(selected_link_indices) == set(answer)
 
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-TEST_BAD_SELECTIONS = [
-    {  # SELECTION 1
-        "links": {
-            "name": ["Minnehaha"],
-        },
-    },
-]
-
-
-@pytest.mark.parametrize(("selection"), TEST_BAD_SELECTIONS)
-def test_bad_roadway_selections(request, selection, stpaul_net):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-    net = stpaul_net
-    with pytest.raises(RoadwaySelectionFormatError):
-        net.get_selection(selection)
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 

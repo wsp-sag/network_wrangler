@@ -365,7 +365,7 @@ clipped_road_eco.links_df.explore(m= color="hotpink")
 ```
 
 ```python
-from network_wrangler.transit import clip_transit
+from network_wrangler.transit.clip import clip_transit
 clipped_transit_eco = clip_transit(STPAUL_TRANSIT, roadway_net=clipped_road_eco)
 ```
 

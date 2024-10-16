@@ -580,6 +580,22 @@ def test_isin_dict_basic():
     pd.testing.assert_frame_equal(result_df.reset_index(drop=True), expected_df)
 
 
+def test_isin_dict_caps_diff():
+    df = pd.DataFrame({"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]})
+    d = {"col1": [2, 4], "col2": ["C", "d"]}
+    expected_df = pd.DataFrame({"col1": [2, 3, 4], "col2": ["b", "c", "d"]})
+    result_df = isin_dict(df, d)
+    pd.testing.assert_frame_equal(result_df.reset_index(drop=True), expected_df)
+
+
+def test_isin_dict_str_within():
+    df = pd.DataFrame({"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c ave", "d", "e"]})
+    d = {"col1": [2, 4], "col2": ["c", "d"]}
+    expected_df = pd.DataFrame({"col1": [2, 3, 4], "col2": ["b", "c ave", "d"]})
+    result_df = isin_dict(df, d)
+    pd.testing.assert_frame_equal(result_df.reset_index(drop=True), expected_df)
+
+
 def test_isin_dict_missing_values():
     df = pd.DataFrame({"col1": [1, 2, 3, 4, 5], "col2": ["a", "b", "c", "d", "e"]})
     d = {"col1": [2, 6], "col2": ["b", "e"]}

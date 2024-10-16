@@ -15,6 +15,7 @@ from network_wrangler.scenario import (
     ScenarioCorequisiteError,
     ScenarioPrerequisiteError,
     create_scenario,
+    load_scenario,
 )
 
 
@@ -239,8 +240,6 @@ def test_apply_summary_wrappers(request, stpaul_card_dir, stpaul_net, stpaul_tra
 def test_scenario_write_load(request, small_net, small_transit_net, test_out_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
-    from network_wrangler.scenario import load_scenario
-
     base_scenario = {
         "road_net": small_net,
         "transit_net": small_transit_net,
@@ -278,9 +277,7 @@ def test_scenario_building_from_config(request, example_dir, test_out_dir):
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
-def test_apply_all_projects(
-    request, stpaul_card_dir, stpaul_net, stpaul_transit_net, test_out_dir
-):
+def test_tiered_scenario(request, stpaul_card_dir, stpaul_net, stpaul_transit_net, test_out_dir):
     WranglerLogger.info(f"--Starting: {request.node.name}")
 
     stpaul_base_scenario = {
@@ -290,7 +287,7 @@ def test_apply_all_projects(
 
     # create 00 scenario and apply project cards
     card_files_00 = [
-        "road.prop_change.multiple.yml",
+        "road.add.simple.yml",
         "road.managed_lane.simple.yml",
     ]
 
@@ -319,7 +316,7 @@ def test_apply_all_projects(
     my_scenario_01.apply_all_projects()
 
     # write out 01 scenario
-    my_scenario_01.write(
+    my_scenario_path = my_scenario_01.write(
         test_out_dir,
         name="v01",
         roadway_file_format="geojson",
@@ -331,16 +328,10 @@ def test_apply_all_projects(
         roadway_convert_complex_link_properties_to_single_field=True,
     )
 
-    WranglerLogger.info(f"--Finished: {request.node.name}")
-
-
-def test_load_scenario_from_config(request, test_out_dir):
-    WranglerLogger.info(f"--Starting: {request.node.name}")
-
-    from network_wrangler import load_scenario
-
-    my_scenario = load_scenario(test_out_dir / "v01_scenario.yml")
-
+    # test that it can load
+    my_loaded_scenario = load_scenario(my_scenario_path, "my_loaded_scenario")
+    assert len(my_loaded_scenario.road_net.links_df) == len(my_scenario_01.road_net.links_df)
+    assert "6th St E Road Diet".lower() in my_loaded_scenario.applied_projects
     WranglerLogger.info(f"--Finished: {request.node.name}")
 
 
@@ -355,34 +346,16 @@ def test_scenario_apply_highway_and_transit_changes(
     }
 
     # add roadway project
-    card_files_roadway = ["road.add_and_delete.transit.yml"]
-
-    project_card_path_list_roadway = [
-        stpaul_card_dir / filename for filename in card_files_roadway
+    card_files = [
+        "road.add_and_delete.transit.yml",
+        "transit.route_shape_change.yml",
     ]
 
     my_scenario_00 = create_scenario(
         base_scenario=stpaul_base_scenario,
-        project_card_filepath=project_card_path_list_roadway,
+        project_card_filepath=[stpaul_card_dir / filename for filename in card_files],
     )
 
     my_scenario_00.apply_all_projects()
-
-    # add transit project
-    card_files_transit = [
-        "transit.route_shape_change.yml",
-    ]
-
-    project_card_path_list_transit = [
-        stpaul_card_dir / filename for filename in card_files_transit
-    ]
-
-    my_scenario_01 = create_scenario(
-        base_scenario=my_scenario_00,
-        project_card_filepath=project_card_path_list_transit,
-    )
-    my_scenario_01.transit_net.road_net = my_scenario_01.road_net
-
-    my_scenario_01.apply_all_projects()
 
     WranglerLogger.info(f"--Finished: {request.node.name}")

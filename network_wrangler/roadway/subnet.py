@@ -10,6 +10,7 @@ from pandera.typing import DataFrame
 
 from ..errors import SubnetCreationError, SubnetExpansionError
 from ..logger import WranglerLogger
+from ..params import DEFAULT_SEARCH_MODES
 from ..utils.data import concat_with_attr
 from .graph import links_nodes_to_ox_graph
 from .links.links import node_ids_in_links
@@ -69,7 +70,7 @@ class Subnet:
     def __init__(
         self,
         net: RoadwayNetwork,
-        modes: Optional[list] = None,
+        modes: Optional[list] = DEFAULT_SEARCH_MODES,
         subnet_links_df: pd.DataFrame = None,
         i: int = 0,
         sp_weight_factor: float = DEFAULT_SUBNET_SP_WEIGHT_FACTOR,
@@ -80,7 +81,7 @@ class Subnet:
 
         Args:
             net (RoadwayNetwork): Associated RoadwayNetwork object.
-            modes: List of modes to limit subnet to. Defaults to "drive".
+            modes: List of modes to limit subnet to. Defaults to DEFAULT_SEARCH_MODES.
             subnet_links_df (pd.DataFrame, optional): Initial links to include in subnet.
                 Optional if define a selection_dict and will default to result of
                 self.generate_subnet_from_selection_dict(selection_dict)
@@ -97,7 +98,7 @@ class Subnet:
                 Defaults to DEFAULT_MAX_SEARCH_BREADTH.
         """
         self.net = net
-        self.modes = modes if modes is not None else ["drive"]
+        self.modes = modes
         self._subnet_links_df = subnet_links_df
         self._i = i
         self._sp_weight_col = sp_weight_col

@@ -32,6 +32,7 @@ from pandera.typing import DataFrame
 from ..errors import SegmentFormatError, SegmentSelectionError, SubnetCreationError
 from ..logger import WranglerLogger
 from ..models.projects.roadway_selection import SelectLinksDict, SelectNodeDict
+from ..params import DEFAULT_SEARCH_MODES
 from .graph import shortest_path
 from .links.filters import filter_links_to_path
 from .subnet import Subnet
@@ -114,7 +115,7 @@ class Segment:
         """
         self.net = net
         self.max_search_breadth = max_search_breadth
-        if selection.selection_type != "segment":
+        if selection.selection_method != "segment":
             msg = "Selection object passed to Segment must be of type `segment`"
             raise SegmentFormatError(msg)
         self.selection = selection
@@ -133,12 +134,12 @@ class Segment:
     @property
     def modes(self) -> list[str]:
         """List of modes in the selection."""
-        return self.selection.selection_data.links.modes
+        return self.selection.modes if self.selection.modes else DEFAULT_SEARCH_MODES
 
     @property
     def segment_sel_dict(self) -> dict:
         """Selection dictionary which only has keys related to initial segment link selection."""
-        return self.selection.selection_data.links.segment_selection_dict
+        return self.selection.segment_selection_dict
 
     @property
     def from_node_id(self) -> int:
@@ -201,7 +202,12 @@ class Segment:
 
     def get_node(self, node_selection_data: SelectNodeDict):
         """Get single node based on the selection data."""
-        node_df = self.net.nodes_df.isin_dict(node_selection_data.explicit_id_selection_dict)
+        node_selection_dict = {
+            k: v
+            for k, v in node_selection_data.asdict.items()
+            if k in self.selection.node_query_fields
+        }
+        node_df = self.net.nodes_df.isin_dict(node_selection_dict)
         if len(node_df) != 1:
             msg = f"Node selection not unique. Found {len(node_df)} nodes."
             raise SegmentSelectionError(msg)
@@ -237,6 +243,7 @@ class Segment:
         WranglerLogger.info(f"Creating subnet from dictionary: {selection_dict}")
         subnet = generate_subnet_from_link_selection_dict(
             self.net,
+            modes=self.modes,
             link_selection_dict=selection_dict,
         )
         # expand network to find at least the origin and destination nodes
@@ -304,7 +311,8 @@ def _generate_subnet_link_selection_dict_options(
 
 def generate_subnet_from_link_selection_dict(
     net,
-    link_selection_dict: Union[dict, SelectLinksDict],
+    link_selection_dict: dict,
+    modes: list[str] = DEFAULT_SEARCH_MODES,
     sp_weight_col: str = SUBNET_SP_WEIGHT_COL,
     sp_weight_factor: float = DEFAULT_SUBNET_SP_WEIGHT_FACTOR,
     **kwargs,
@@ -316,7 +324,8 @@ def generate_subnet_from_link_selection_dict(
 
     Args:
         net (RoadwayNetwork): RoadwayNetwork object.
-        link_selection_dict (SelectLinksDict): Link selection dictionary.
+        link_selection_dict: dictionary of attributes to search for.
+        modes: List of modes to limit subnet to. Defaults to DEFAULT_SEARCH_MODES.
         sp_weight_col: Column to use for weights in shortest path.  Defaults to SUBNET_SP_WEIGHT_COL.
         sp_weight_factor: Factor to multiply sp_weight_col by to use for weights in shortest path.
             Defaults to DEFAULT_SUBNET_SP_WEIGHT_FACTOR.
@@ -325,16 +334,10 @@ def generate_subnet_from_link_selection_dict(
     Returns:
         Subnet: Subnet object.
     """
-    if isinstance(link_selection_dict, SelectLinksDict):
-        link_selection_data = link_selection_dict
-    else:
-        link_selection_data = SelectLinksDict(**link_selection_dict)
-
-    link_selection_dict = link_selection_data.segment_selection_dict
     link_sd_options = _generate_subnet_link_selection_dict_options(link_selection_dict)
     for sd in link_sd_options:
         WranglerLogger.debug(f"Trying link selection:\n{sd}")
-        subnet_links_df = copy.deepcopy(net.links_df.mode_query(link_selection_data.modes))
+        subnet_links_df = copy.deepcopy(net.links_df.mode_query(modes))
         subnet_links_df = subnet_links_df.dict_query(sd)
         if len(subnet_links_df) > 0:
             break
@@ -347,7 +350,7 @@ def generate_subnet_from_link_selection_dict(
     subnet = Subnet(
         net=net,
         subnet_links_df=subnet_links_df,
-        modes=link_selection_data.modes,
+        modes=modes,
         sp_weight_col=sp_weight_col,
         sp_weight_factor=sp_weight_factor,
         **kwargs,
