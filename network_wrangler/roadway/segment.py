@@ -129,7 +129,7 @@ class Segment:
 
         self.subnet = self._generate_subnet(self.segment_sel_dict)
 
-        WranglerLogger.info(f"Segment created: {self}")
+        WranglerLogger.debug(f"Segment created: {self}")
 
     @property
     def modes(self) -> list[str]:
@@ -240,7 +240,7 @@ class Segment:
             msg = "No selection provided to generate subnet from."
             raise SegmentFormatError(msg)
 
-        WranglerLogger.info(f"Creating subnet from dictionary: {selection_dict}")
+        WranglerLogger.debug(f"Creating subnet from dictionary: {selection_dict}")
         subnet = generate_subnet_from_link_selection_dict(
             self.net,
             modes=self.modes,
@@ -356,7 +356,7 @@ def generate_subnet_from_link_selection_dict(
         **kwargs,
     )
 
-    WranglerLogger.info(
+    WranglerLogger.debug(
         f"Found subnet from link selection with {len(subnet.subnet_links_df)} links."
     )
     return subnet
