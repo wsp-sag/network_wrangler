@@ -33,11 +33,12 @@ model_links_df["lanes_AM_sov"] = prop_for_scope(links_df, ["6:00":"9:00"], categ
 """
 
 import copy
-from typing import Any, TypeGuard, Union
+from typing import Any, Union
 
 import pandas as pd
 from pandera.typing import DataFrame
 from pydantic import validate_call
+from typing_extensions import TypeGuard
 
 from ...errors import InvalidScopedLinkValue
 from ...logger import WranglerLogger
@@ -146,7 +147,7 @@ def _islist(s: Any) -> TypeGuard[list]:
     if s is list:
         return s
     if isinstance(s, list):
-        return s
+        return s  # type: ignore  # noqa: PGH003
     is_list = bool(issubclass(type(s), list))
     if is_list:
         return s

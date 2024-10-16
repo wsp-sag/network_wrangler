@@ -38,6 +38,7 @@ dependencies = [
     "pydantic >= 2",
     "pyogrio",
     "pyyaml",
+    "typing-extensions"
 ]
 
 [project.optional-dependencies]

@@ -17,6 +17,7 @@ dependencies:
   - pyyaml=6.0.2
   - folium=0.17.0
   - notebook=7.2.2
+  - typing-extensions=4.12.2
   - pip
   - python==3.10.15
 

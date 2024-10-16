@@ -29,6 +29,7 @@ dependencies:
   - ruff=0.6.8
   - snakeviz=2.2
   - markdown=3.3.7
+  - typing-extensions=4.12.2
   - pip
   - python==3.10.15
 
