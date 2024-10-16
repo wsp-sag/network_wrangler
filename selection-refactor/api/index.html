@@ -2930,7 +2930,7 @@ the roadway network.</p>
 </span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="c1"># check applied projects, write it out, and create a summary report.</span>
 </span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">applied_projects</span>
 </span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;baseline&quot;</span><span class="p">)</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="n">outfile</span><span class="o">=</span><span class="s2">&quot;baseline2050summary.txt&quot;</span><span class="p">)</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">summary</span>
 </span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
 </span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="c1"># Add some projects to create a build scenario based on a list of files.</span>
 </span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="n">build_card_filenames</span> <span class="o">=</span> <span class="p">[</span>
@@ -2940,7 +2940,7 @@ the roadway network.</p>
 </span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="p">]</span>
 </span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">add_projects_from_files</span><span class="p">(</span><span class="n">build_card_filenames</span><span class="p">)</span>
 </span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;build2050&quot;</span><span class="p">)</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="n">outfile</span><span class="o">=</span><span class="s2">&quot;build2050summary.txt&quot;</span><span class="p">)</span>
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">summary</span>
 </span></code></pre></div>
 
 
@@ -3690,7 +3690,7 @@ recognized in this collecton once they are moved to applied.</p>
 </span><span id="__span-0-249"><a id="__codelineno-0-249" name="__codelineno-0-249"></a><span class="sd">    # check applied projects, write it out, and create a summary report.</span>
 </span><span id="__span-0-250"><a id="__codelineno-0-250" name="__codelineno-0-250"></a><span class="sd">    my_scenario.applied_projects</span>
 </span><span id="__span-0-251"><a id="__codelineno-0-251" name="__codelineno-0-251"></a><span class="sd">    my_scenario.write(&quot;baseline&quot;)</span>
-</span><span id="__span-0-252"><a id="__codelineno-0-252" name="__codelineno-0-252"></a><span class="sd">    my_scenario.summarize(outfile=&quot;baseline2050summary.txt&quot;)</span>
+</span><span id="__span-0-252"><a id="__codelineno-0-252" name="__codelineno-0-252"></a><span class="sd">    my_scenario.summary</span>
 </span><span id="__span-0-253"><a id="__codelineno-0-253" name="__codelineno-0-253"></a>
 </span><span id="__span-0-254"><a id="__codelineno-0-254" name="__codelineno-0-254"></a><span class="sd">    # Add some projects to create a build scenario based on a list of files.</span>
 </span><span id="__span-0-255"><a id="__codelineno-0-255" name="__codelineno-0-255"></a><span class="sd">    build_card_filenames = [</span>
@@ -3700,7 +3700,7 @@ recognized in this collecton once they are moved to applied.</p>
 </span><span id="__span-0-259"><a id="__codelineno-0-259" name="__codelineno-0-259"></a><span class="sd">    ]</span>
 </span><span id="__span-0-260"><a id="__codelineno-0-260" name="__codelineno-0-260"></a><span class="sd">    my_scenario.add_projects_from_files(build_card_filenames)</span>
 </span><span id="__span-0-261"><a id="__codelineno-0-261" name="__codelineno-0-261"></a><span class="sd">    my_scenario.write(&quot;build2050&quot;)</span>
-</span><span id="__span-0-262"><a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="sd">    my_scenario.summarize(outfile=&quot;build2050summary.txt&quot;)</span>
+</span><span id="__span-0-262"><a id="__codelineno-0-262" name="__codelineno-0-262"></a><span class="sd">    my_scenario.summary</span>
 </span><span id="__span-0-263"><a id="__codelineno-0-263" name="__codelineno-0-263"></a><span class="sd">    ```</span>
 </span><span id="__span-0-264"><a id="__codelineno-0-264" name="__codelineno-0-264"></a>
 </span><span id="__span-0-265"><a id="__codelineno-0-265" name="__codelineno-0-265"></a><span class="sd">    Attributes:</span>
@@ -10208,11 +10208,7 @@ the road network.</p>
 <span class="normal"><a href="#__codelineno-0-340">340</a></span>
 <span class="normal"><a href="#__codelineno-0-341">341</a></span>
 <span class="normal"><a href="#__codelineno-0-342">342</a></span>
-<span class="normal"><a href="#__codelineno-0-343">343</a></span>
-<span class="normal"><a href="#__codelineno-0-344">344</a></span>
-<span class="normal"><a href="#__codelineno-0-345">345</a></span>
-<span class="normal"><a href="#__codelineno-0-346">346</a></span>
-<span class="normal"><a href="#__codelineno-0-347">347</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="k">class</span> <span class="nc">TransitNetwork</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-343">343</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="k">class</span> <span class="nc">TransitNetwork</span><span class="p">:</span>
 </span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Representation of a Transit Network.</span>
 </span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a>
 </span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">    Typical usage example:</span>
@@ -10478,29 +10474,25 @@ the road network.</p>
 </span><span id="__span-0-322"><a id="__codelineno-0-322" name="__codelineno-0-322"></a>                <span class="n">project_name</span><span class="o">=</span><span class="n">change</span><span class="o">.</span><span class="n">project</span><span class="p">,</span>
 </span><span id="__span-0-323"><a id="__codelineno-0-323" name="__codelineno-0-323"></a>            <span class="p">)</span>
 </span><span id="__span-0-324"><a id="__codelineno-0-324" name="__codelineno-0-324"></a>
-</span><span id="__span-0-325"><a id="__codelineno-0-325" name="__codelineno-0-325"></a>        <span class="c1"># elif change.change_type == &quot;roadway_deletion&quot;:</span>
-</span><span id="__span-0-326"><a id="__codelineno-0-326" name="__codelineno-0-326"></a>        <span class="c1">#     # FIXME</span>
-</span><span id="__span-0-327"><a id="__codelineno-0-327" name="__codelineno-0-327"></a>        <span class="c1">#     raise NotImplementedError(&quot;Roadway deletion check not yet implemented.&quot;)</span>
-</span><span id="__span-0-328"><a id="__codelineno-0-328" name="__codelineno-0-328"></a>
-</span><span id="__span-0-329"><a id="__codelineno-0-329" name="__codelineno-0-329"></a>        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;pycode&quot;</span><span class="p">:</span>
-</span><span id="__span-0-330"><a id="__codelineno-0-330" name="__codelineno-0-330"></a>            <span class="k">return</span> <span class="n">apply_calculated_transit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="o">.</span><span class="n">pycode</span><span class="p">)</span>
-</span><span id="__span-0-331"><a id="__codelineno-0-331" name="__codelineno-0-331"></a>
-</span><span id="__span-0-332"><a id="__codelineno-0-332" name="__codelineno-0-332"></a>        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;transit_route_addition&quot;</span><span class="p">:</span>
-</span><span id="__span-0-333"><a id="__codelineno-0-333" name="__codelineno-0-333"></a>            <span class="k">return</span> <span class="n">apply_transit_route_addition</span><span class="p">(</span>
-</span><span id="__span-0-334"><a id="__codelineno-0-334" name="__codelineno-0-334"></a>                <span class="bp">self</span><span class="p">,</span>
-</span><span id="__span-0-335"><a id="__codelineno-0-335" name="__codelineno-0-335"></a>                <span class="n">change</span><span class="o">.</span><span class="n">transit_route_addition</span><span class="p">,</span>
-</span><span id="__span-0-336"><a id="__codelineno-0-336" name="__codelineno-0-336"></a>                <span class="n">reference_road_net</span><span class="o">=</span><span class="n">reference_road_net</span><span class="p">,</span>
-</span><span id="__span-0-337"><a id="__codelineno-0-337" name="__codelineno-0-337"></a>            <span class="p">)</span>
-</span><span id="__span-0-338"><a id="__codelineno-0-338" name="__codelineno-0-338"></a>        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;transit_service_deletion&quot;</span><span class="p">:</span>
-</span><span id="__span-0-339"><a id="__codelineno-0-339" name="__codelineno-0-339"></a>            <span class="k">return</span> <span class="n">apply_transit_service_deletion</span><span class="p">(</span>
-</span><span id="__span-0-340"><a id="__codelineno-0-340" name="__codelineno-0-340"></a>                <span class="bp">self</span><span class="p">,</span>
-</span><span id="__span-0-341"><a id="__codelineno-0-341" name="__codelineno-0-341"></a>                <span class="bp">self</span><span class="o">.</span><span class="n">get_selection</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">transit_service_deletion</span><span class="p">[</span><span class="s2">&quot;service&quot;</span><span class="p">]),</span>
-</span><span id="__span-0-342"><a id="__codelineno-0-342" name="__codelineno-0-342"></a>                <span class="n">clean_shapes</span><span class="o">=</span><span class="n">change</span><span class="o">.</span><span class="n">transit_service_deletion</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;clean_shapes&quot;</span><span class="p">),</span>
-</span><span id="__span-0-343"><a id="__codelineno-0-343" name="__codelineno-0-343"></a>                <span class="n">clean_routes</span><span class="o">=</span><span class="n">change</span><span class="o">.</span><span class="n">transit_service_deletion</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;clean_routes&quot;</span><span class="p">),</span>
-</span><span id="__span-0-344"><a id="__codelineno-0-344" name="__codelineno-0-344"></a>            <span class="p">)</span>
-</span><span id="__span-0-345"><a id="__codelineno-0-345" name="__codelineno-0-345"></a>        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Not a currently valid transit project: </span><span class="si">{</span><span class="n">change</span><span class="si">}</span><span class="s2">.&quot;</span>
-</span><span id="__span-0-346"><a id="__codelineno-0-346" name="__codelineno-0-346"></a>        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-</span><span id="__span-0-347"><a id="__codelineno-0-347" name="__codelineno-0-347"></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+</span><span id="__span-0-325"><a id="__codelineno-0-325" name="__codelineno-0-325"></a>        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;pycode&quot;</span><span class="p">:</span>
+</span><span id="__span-0-326"><a id="__codelineno-0-326" name="__codelineno-0-326"></a>            <span class="k">return</span> <span class="n">apply_calculated_transit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">change</span><span class="o">.</span><span class="n">pycode</span><span class="p">)</span>
+</span><span id="__span-0-327"><a id="__codelineno-0-327" name="__codelineno-0-327"></a>
+</span><span id="__span-0-328"><a id="__codelineno-0-328" name="__codelineno-0-328"></a>        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;transit_route_addition&quot;</span><span class="p">:</span>
+</span><span id="__span-0-329"><a id="__codelineno-0-329" name="__codelineno-0-329"></a>            <span class="k">return</span> <span class="n">apply_transit_route_addition</span><span class="p">(</span>
+</span><span id="__span-0-330"><a id="__codelineno-0-330" name="__codelineno-0-330"></a>                <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-0-331"><a id="__codelineno-0-331" name="__codelineno-0-331"></a>                <span class="n">change</span><span class="o">.</span><span class="n">transit_route_addition</span><span class="p">,</span>
+</span><span id="__span-0-332"><a id="__codelineno-0-332" name="__codelineno-0-332"></a>                <span class="n">reference_road_net</span><span class="o">=</span><span class="n">reference_road_net</span><span class="p">,</span>
+</span><span id="__span-0-333"><a id="__codelineno-0-333" name="__codelineno-0-333"></a>            <span class="p">)</span>
+</span><span id="__span-0-334"><a id="__codelineno-0-334" name="__codelineno-0-334"></a>        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change_type</span> <span class="o">==</span> <span class="s2">&quot;transit_service_deletion&quot;</span><span class="p">:</span>
+</span><span id="__span-0-335"><a id="__codelineno-0-335" name="__codelineno-0-335"></a>            <span class="k">return</span> <span class="n">apply_transit_service_deletion</span><span class="p">(</span>
+</span><span id="__span-0-336"><a id="__codelineno-0-336" name="__codelineno-0-336"></a>                <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-0-337"><a id="__codelineno-0-337" name="__codelineno-0-337"></a>                <span class="bp">self</span><span class="o">.</span><span class="n">get_selection</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">transit_service_deletion</span><span class="p">[</span><span class="s2">&quot;service&quot;</span><span class="p">]),</span>
+</span><span id="__span-0-338"><a id="__codelineno-0-338" name="__codelineno-0-338"></a>                <span class="n">clean_shapes</span><span class="o">=</span><span class="n">change</span><span class="o">.</span><span class="n">transit_service_deletion</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;clean_shapes&quot;</span><span class="p">),</span>
+</span><span id="__span-0-339"><a id="__codelineno-0-339" name="__codelineno-0-339"></a>                <span class="n">clean_routes</span><span class="o">=</span><span class="n">change</span><span class="o">.</span><span class="n">transit_service_deletion</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;clean_routes&quot;</span><span class="p">),</span>
+</span><span id="__span-0-340"><a id="__codelineno-0-340" name="__codelineno-0-340"></a>            <span class="p">)</span>
+</span><span id="__span-0-341"><a id="__codelineno-0-341" name="__codelineno-0-341"></a>        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Not a currently valid transit project: </span><span class="si">{</span><span class="n">change</span><span class="si">}</span><span class="s2">.&quot;</span>
+</span><span id="__span-0-342"><a id="__codelineno-0-342" name="__codelineno-0-342"></a>        <span class="n">WranglerLogger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+</span><span id="__span-0-343"><a id="__codelineno-0-343" name="__codelineno-0-343"></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
 
