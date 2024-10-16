@@ -195,7 +195,7 @@ def test_add_default_value(request, stpaul_net):
     _project_card_dict = {
         "project": "6th Street Ad Hoc Fields",
         "roadway_property_change": {
-            "facility": {"links": {"all": "True", "modes": ["any"]}},
+            "facility": {"links": {"all": True, "modes": ["any"]}},
             "property_changes": _adhoc_props,
         },
     }
