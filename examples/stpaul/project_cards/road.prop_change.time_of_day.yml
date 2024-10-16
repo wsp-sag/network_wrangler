@@ -7,7 +7,7 @@ roadway_property_change:
   property_changes:
     lanes:
       set: 1
-      timeofday:
+      scoped:
         - timespan:
           - '9:00'
           - '16:00'
@@ -26,7 +26,7 @@ roadway_property_change:
           set: 2
     access:
       set: 'no'
-      timeofday:
+      scoped:
         - timespan:
           - '16:00'
           - '19:00'

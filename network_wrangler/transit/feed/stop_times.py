@@ -28,6 +28,24 @@ def stop_times_for_trip_id(
     return stop_times.sort_values(by=["stop_sequence"])
 
 
+def stop_times_for_trip_ids(
+    stop_times: DataFrame[WranglerStopTimesTable], trip_ids: list[str]
+) -> DataFrame[WranglerStopTimesTable]:
+    """Returns a stop_time records for a given list of trip_ids."""
+    stop_times = stop_times.loc[stop_times.trip_id.isin(trip_ids)]
+    return stop_times.sort_values(by=["stop_sequence"])
+
+
+def stop_times_for_route_ids(
+    stop_times: DataFrame[WranglerStopTimesTable],
+    trips: DataFrame[WranglerTripsTable],
+    route_ids: list[str],
+) -> DataFrame[WranglerStopTimesTable]:
+    """Returns a stop_time records for a list of route_ids."""
+    trip_ids = trips.loc[trips.route_id.isin(route_ids)].trip_id.unique()
+    return stop_times_for_trip_ids(stop_times, trip_ids)
+
+
 def stop_times_for_min_stops(
     stop_times: DataFrame[WranglerStopTimesTable], min_stops: int
 ) -> DataFrame[WranglerStopTimesTable]:

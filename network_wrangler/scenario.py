@@ -249,7 +249,7 @@ class Scenario:
     # check applied projects, write it out, and create a summary report.
     my_scenario.applied_projects
     my_scenario.write("baseline")
-    my_scenario.summarize(outfile="baseline2050summary.txt")
+    my_scenario.summary
 
     # Add some projects to create a build scenario based on a list of files.
     build_card_filenames = [
@@ -259,7 +259,7 @@ class Scenario:
     ]
     my_scenario.add_projects_from_files(build_card_filenames)
     my_scenario.write("build2050")
-    my_scenario.summarize(outfile="build2050summary.txt")
+    my_scenario.summary
     ```
 
     Attributes:

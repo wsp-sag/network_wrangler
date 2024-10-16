@@ -48,7 +48,9 @@ def shapes_to_trip_shapes_gdf(
         .apply(lambda x: LineString(zip(x[1], x[0])), axis=1)
     )
 
-    route_shapes_gdf = gpd.GeoDataFrame(data=shape_geom.index, geometry=shape_geom.values, crs=crs)
+    route_shapes_gdf = gpd.GeoDataFrame(
+        data=shape_geom.index, geometry=shape_geom.values, crs=crs
+    ).set_crs(LAT_LON_CRS)
 
     return route_shapes_gdf
 
@@ -60,7 +62,9 @@ def update_stops_geometry(
 
     NOTE: does not update "geometry" field if it exists.
     """
-    return update_point_geometry(stops, ref_nodes_df, lon_field="stop_lon", lat_field="stop_lat")
+    return update_point_geometry(
+        stops, ref_nodes_df, id_field="stop_id", lon_field="stop_lon", lat_field="stop_lat"
+    )
 
 
 def update_shapes_geometry(
@@ -113,7 +117,7 @@ def shapes_to_shape_links_gdf(
         [f"shape_pt_lon_{from_field}", f"shape_pt_lon_{to_field}"],
     )
     # WranglerLogger.debug(f"geometry\n{geometry}")
-    shapes_gdf = gpd.GeoDataFrame(tr_links, geometry=geometry, crs=crs)
+    shapes_gdf = gpd.GeoDataFrame(tr_links, geometry=geometry, crs=crs).set_crs(LAT_LON_CRS)
     return shapes_gdf
 
 
@@ -180,9 +184,9 @@ def stop_times_to_stop_time_links_gdf(
         )
         lon_f = f"{f}_X"
         lat_f = f"{f}_Y"
-        tr_links = tr_links.rename(columns={"stop_lon": "X", "stop_lat": "Y"})
+        tr_links = tr_links.rename(columns={"stop_lon": lon_f, "stop_lat": lat_f})
         lon_fields.append(lon_f)
         lat_fields.append(lat_f)
 
     geometry = linestring_from_lats_lons(tr_links, lat_fields, lon_fields)
-    return gpd.GeoDataFrame(tr_links, geometry=geometry)
+    return gpd.GeoDataFrame(tr_links, geometry=geometry).set_crs(LAT_LON_CRS)

@@ -158,3 +158,15 @@ def test_transit_road_consistencies(request, stpaul_transit_net, stpaul_net):
     assert stpaul_transit_net.consistent_with_road_net
 
     WranglerLogger.info(f"--Finished: {request.node.name}")
+
+
+def test_transit_gdfs(request, stpaul_transit_net, stpaul_net):
+    WranglerLogger.info(f"--Starting: {request.node.name}")
+    transit_net = copy.deepcopy(stpaul_transit_net)
+    transit_net.road_net = stpaul_net
+    assert not transit_net.stop_time_links_gdf.empty
+    assert not transit_net.stop_times_points_gdf.empty
+    assert not transit_net.shapes_gdf.empty
+    assert not transit_net.shape_links_gdf.empty
+    assert not transit_net.stops_gdf.empty
+    WranglerLogger.info(f"--Finished: {request.node.name}")
