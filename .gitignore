@@ -28,7 +28,7 @@ scenario_log.txt
 .ipynb_checkpoints/
 profile_default/
 ipython_config.py
-notebook/
+notebook/*
 !notebook/*.ipynb
 
 # Built Documentation
