@@ -64,7 +64,7 @@ class RoadLinksTable(DataFrameModel):
     price: Series[float] = pa.Field(coerce=True, nullable=False, default=0)
 
     # Optional Fields
-
+    ref: Optional[Series[str]] = pa.Field(coerce=True, nullable=True, default=None)
     access: Optional[Series[Any]] = pa.Field(coerce=True, nullable=True, default=None)
 
     sc_lanes: Optional[Series[object]] = pa.Field(coerce=True, nullable=True, default=None)

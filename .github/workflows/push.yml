@@ -42,8 +42,8 @@ jobs:
                  --benchmark-save=pr_benchmark \
                  --benchmark-json=pr_benchmark.json \
                  --cov-report=term-missing:skip-covered \
-                 --cov=network_wrangler tests/ | \
-          tee pytest-coverage.txt
+                 --cov=network_wrangler tests/ 2>&1 | \
+          tee -a pytest-coverage.txt
     - name: Pytest coverage comment
       if: github.event_name == 'pull_request'
       uses: MishaKav/pytest-coverage-comment@main

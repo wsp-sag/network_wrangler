@@ -4,6 +4,7 @@ import hashlib
 
 import pandas as pd
 
+from ..errors import SelectionError
 from ..logger import WranglerLogger
 from .data import dict_to_query, isin_dict
 
@@ -39,15 +40,22 @@ class DictQueryAccessor:
             return_all_if_none (bool, optional): If True, will return entire df if dict has
                  no values. Defaults to False.
         """
+        _not_selection_keys = ["modes", "all", "ignore_missing"]
         _selection_dict = {
-            k: v for k, v in selection_dict.items() if k in self._obj.columns and v is not None
+            k: v
+            for k, v in selection_dict.items()
+            if k not in _not_selection_keys and v is not None
         }
+        missing_columns = [k for k in _selection_dict if k not in self._obj.columns]
+        if missing_columns:
+            msg = f"Selection fields not found in dataframe: {missing_columns}"
+            raise SelectionError(msg)
 
         if not _selection_dict:
             if return_all_if_none:
                 return self._obj
             msg = f"Relevant part of selection dictionary is empty: {selection_dict}"
-            raise ValueError(msg)
+            raise SelectionError(msg)
 
         _sel_query = dict_to_query(_selection_dict)
         # WranglerLogger.debug(f"_sel_query: \n   {_sel_query}")
