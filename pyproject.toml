@@ -94,7 +94,7 @@ script-files = [
 version = {attr = "network_wrangler.__version__"}
 
 [tool.pytest.ini_options]
-addopts = "--profile --benchmark-min-rounds=1 --benchmark-save=benchmark_results --benchmark-save-data"
+addopts = "--profile"
 markers = [
     "skipci: mark a test as a test that should be skipped in CI",
     "failing: tests that are known to be failing and need to be fixed"
