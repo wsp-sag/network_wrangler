@@ -28,7 +28,7 @@ from pathlib import Path
 import osmnx as ox
 
 from network_wrangler import write_roadway
-from network_wrangler.roadway.links import data_to_links_df
+from network_wrangler.roadway.links.create import data_to_links_df
 from network_wrangler.roadway.network import RoadwayNetwork
 from network_wrangler.utils.utils import make_slug
 
@@ -65,7 +65,11 @@ def get_osm_as_gdf(place_name: str, net_type: str = "drive") -> tuple:
     """Get OSM data as GeoDataFrames."""
     g = ox.graph_from_place(place_name, network_type=net_type)
     points, edges = ox.graph_to_gdfs(g)
-    edges.reset_index().sort_values("geometry").drop_duplicates(subset=["u", "v"], keep="first")
+    edges = (
+        edges.reset_index()
+        .sort_values("geometry")
+        .drop_duplicates(subset=["u", "v"], keep="first")
+    )
     return points, edges
 
 
@@ -88,6 +92,7 @@ link_field_dict = {
 def osm_edges_to_wr_links(edges, access_lookups=ACCESS_LOOKUPS, lanes_lookup=LANES_LOOKUPS):
     """Converts OSM edges to Wrangler links."""
     links_df = edges.reset_index()
+    # remove dupes
     links_df = links_df.loc[:, list(link_field_dict.keys())].rename(columns=link_field_dict)
     for access_field, allow_deny in access_lookups.items():
         if allow_deny.get("allow"):
@@ -107,7 +112,7 @@ def osm_edges_to_wr_links(edges, access_lookups=ACCESS_LOOKUPS, lanes_lookup=LAN
 
 node_field_dict = {
     "model_node_id": "model_node_id",
-    "osm_node_id": "osm_node_id",
+    "osmid": "osm_node_id",
     "x": "X",
     "y": "Y",
     "geometry": "geometry",
