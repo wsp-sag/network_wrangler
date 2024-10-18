@@ -16,7 +16,7 @@ from ...models.roadway.converters import translate_links_df_v1_to_v0
 from ...models.roadway.tables import RoadLinksAttrs, RoadLinksTable, RoadNodesAttrs, RoadNodesTable
 from ...params import LAT_LON_CRS
 from ...utils.io_table import read_table, write_table
-from ...utils.models import validate_call_pyd
+from ...utils.models import order_fields_from_data_model, validate_call_pyd
 from .create import data_to_links_df
 
 
@@ -90,8 +90,6 @@ def write_links(
         overwrite: if True, will overwrite existing files. Defaults to False.
         include_geometry: if True, will include geometry in the output. Defaults to False.
     """
-    # TODO write wrapper on validate call so don't have to do this
-    links_df.attrs.update(RoadLinksAttrs)
     if not include_geometry and file_format == "geojson":
         file_format = "json"
 
@@ -112,4 +110,5 @@ def write_links(
         links_df = pd.DataFrame(links_df)
         links_df = links_df.drop(columns=geo_cols)
 
+    links_df = order_fields_from_data_model(links_df, RoadLinksTable)
     write_table(links_df, links_file, overwrite=overwrite)

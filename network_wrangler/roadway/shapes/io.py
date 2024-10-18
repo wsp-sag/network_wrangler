@@ -14,7 +14,12 @@ from ...logger import WranglerLogger
 from ...models.roadway.tables import RoadShapesTable
 from ...params import LAT_LON_CRS
 from ...utils.io_table import read_table, write_table
-from ...utils.models import empty_df_from_datamodel, validate_call_pyd, validate_df_to_model
+from ...utils.models import (
+    empty_df_from_datamodel,
+    order_fields_from_data_model,
+    validate_call_pyd,
+    validate_df_to_model,
+)
 from .create import df_to_shapes_df
 
 
@@ -98,4 +103,5 @@ def write_shapes(
         overwrite: whether to overwrite file if it exists.
     """
     shapes_file = Path(out_dir) / f"{prefix}shape.{format}"
+    shapes_df = order_fields_from_data_model(shapes_df, RoadShapesTable)
     write_table(shapes_df, shapes_file, overwrite=overwrite)

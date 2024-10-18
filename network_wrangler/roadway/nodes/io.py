@@ -16,7 +16,7 @@ from ...models._base.types import GeoFileTypes
 from ...models.roadway.tables import RoadNodesAttrs, RoadNodesTable
 from ...params import LAT_LON_CRS
 from ...utils.io_table import read_table, write_table
-from ...utils.models import validate_call_pyd, validate_df_to_model
+from ...utils.models import order_fields_from_data_model, validate_call_pyd, validate_df_to_model
 from .create import data_to_nodes_df
 
 if TYPE_CHECKING:
@@ -115,9 +115,8 @@ def write_nodes(
             to "geojson".
         overwrite: whether to overwrite existing nodes file. Defaults to True.
     """
-    # TODO write wrapper on validate call so don't have to do this
-    nodes_df.attrs.update(RoadNodesAttrs)
     nodes_file = Path(out_dir) / f"{prefix}node.{file_format}"
+    nodes_df = order_fields_from_data_model(nodes_df, RoadNodesTable)
     write_table(nodes_df, nodes_file, overwrite=overwrite)
 
 

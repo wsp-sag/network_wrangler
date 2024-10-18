@@ -241,3 +241,19 @@ def validate_call_pyd(func):
         return validated_func(*args, **kwargs)
 
     return wrapper
+
+
+def order_fields_from_data_model(df: pd.DataFrame, model: DataFrameModel) -> pd.DataFrame:
+    """Order the fields in a DataFrame to match the order in a Pandera DataFrameModel.
+
+    Will add any fields that are not in the model to the end of the DataFrame.
+    Will not add any fields that are in the model but not in the DataFrame.
+
+    Args:
+        df: DataFrame to order.
+        model: Pandera DataFrameModel to order the DataFrame to.
+    """
+    model_fields = list(model.__fields__.keys())
+    df_model_fields = [f for f in model_fields if f in df.columns]
+    df_additional_fields = [f for f in df.columns if f not in model_fields]
+    return df[df_model_fields + df_additional_fields]

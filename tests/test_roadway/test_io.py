@@ -12,6 +12,7 @@ from network_wrangler import (
     load_roadway_from_dir,
     write_roadway,
 )
+from network_wrangler.models.roadway.tables import RoadLinksTable
 from network_wrangler.roadway import diff_nets
 from network_wrangler.roadway.io import (
     convert_roadway_file_serialization,
@@ -156,6 +157,15 @@ def test_roadway_geojson_read_write_read(request, example_dir, test_out_dir, ex,
         f"{int(t_read // 60): 02d}:{int(t_read % 60): 02d} ... {ex} read from {io_format}"
     )
     assert isinstance(net, RoadwayNetwork)
+    # make sure field order is as expected.
+    skip_ordered = ["geometry"]
+    _shared_ordered_fields = [
+        c for c in RoadLinksTable.__fields__ if c in net.links_df.columns and c not in skip_ordered
+    ]
+    _output_cols = [c for c in net.links_df.columns if c not in skip_ordered][
+        0 : len(_shared_ordered_fields)
+    ]
+    assert _output_cols == _shared_ordered_fields
 
 
 def test_load_roadway_no_shapes(request, example_dir):
