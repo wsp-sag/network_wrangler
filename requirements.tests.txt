@@ -4,6 +4,7 @@ mypy_extensions
 pre-commit
 pytest
 pytest-benchmark
+pytest-profiling
 radon
 ruff
 snakeviz
