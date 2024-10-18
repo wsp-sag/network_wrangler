@@ -1,0 +1,27 @@
+name: wrangler
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - fiona=1.10.1
+  - geographiclib=2.0
+  - geojson=3.1.0
+  - geopandas=1.0.1
+  - ijson=3.3.0
+  - osmnx=1.9.3
+  - pandas=2.2.3
+  - psutil=6.0.0
+  - pyarrow=17.0.0
+  - pydantic=2.9.2
+  - pyogrio=0.9.0
+  - pyyaml=6.0.2
+  - folium=0.17.0
+  - notebook=7.2.2
+  - typing-extensions=4.12.2
+  - pip
+  - python==3.10.15
+
+  # Pip-installed dependencies
+  - pip:
+      - pandera==0.20.4
+      - projectcard>=0.3.3

@@ -1,0 +1,36 @@
+project: I394 Parallel Lanes Restricted Access
+tags: ['managed lanes']
+roadway_property_change:
+  facility:
+    links:
+      model_link_id:
+        - 390239
+        - 391206
+        - 390344
+        - 401484
+  property_changes:
+    ML_lanes:
+      set: 0
+      scoped:
+      - timespan: ['6:00', '9:00']
+        set: 1
+      - timespan: ['15:00', '18:00']
+        set: 1
+    lanes:
+      change: 0
+      scoped:
+      - timespan: ['6:00', '9:00']
+        change: -1
+      - timespan: ['15:00', '18:00']
+        change: -1
+    segment_id:
+      set: 5
+    ML_HOV:
+      set: 5
+    HOV:
+      set: 5
+    ML_access_point:
+      set: [38765, 87982]
+    ML_egress_point:
+      set: [87993, 37457]
+notes: Need to adjust normal lanes

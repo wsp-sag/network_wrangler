@@ -1,0 +1,31 @@
+project: road diet on one way couplet 5th and 6th
+tags:
+  - multiples
+changes:
+  - roadway_property_change:
+      facility:
+        links:
+          name:
+            - '6th'
+            - 'Sixth'
+            - 'sixth' #finds links where name contains 6th or Sixth...not a regex technically ;-)
+        from:
+          osm_node_id: '187899923'
+        to:
+          osm_node_id: '187865924'
+      property_changes:
+        lanes:
+          set: 1
+  - roadway_property_change:
+      facility:
+        links:
+          name:
+            - '5th'
+        from:
+          osm_node_id: '187899922'
+        to:
+          osm_node_id: '187867603'
+      property_changes:
+        lanes:
+          set: 1
+notes: a simple test for multiple changes in same project card
