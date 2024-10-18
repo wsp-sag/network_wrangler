@@ -26,6 +26,7 @@ class Feed(DBModelMixin):
     """Wrapper class around Wrangler flavored GTFS feed.
 
     Most functionality derives from mixin class DBModelMixin which provides:
+
     - validation of tables to schemas when setting a table attribute (e.g. self.trips = trips_df)
     - validation of fks when setting a table attribute (e.g. self.trips = trips_df)
     - hashing and deep copy functionality
@@ -33,15 +34,16 @@ class Feed(DBModelMixin):
     - convenience methods for accessing tables
 
     Attributes:
-        table_names: list of table names in GTFS feed.
-        tables: list tables as dataframes.
-        stop_times: stop_times dataframe with roadway node_ids
-        stops: stops dataframe
-        shapes: shapes dataframe
-        trips: trips dataframe
-        frequencies: frequencies dataframe
-        routes: route dataframe
-        net: TransitNetwork object
+        table_names (list[str]): list of table names in GTFS feed.
+        tables (list[DataFrame]):: list tables as dataframes.
+        stop_times (DataFrame[WranglerStopTimesTable]):: stop_times dataframe with roadway node_ids
+        stops (DataFrame[WranglerStopsTable]):stops dataframe
+        shapes(DataFrame[WranglerShapesTable]): shapes dataframe
+        trips (DataFrame[WranglerTripsTable]): trips dataframe
+        frequencies (DataFrame[WranglerFrequenciesTable]): frequencies dataframe
+        routes (DataFrame[RoutesTable]): route dataframe
+        agencies (Optional[DataFrame[AgenciesTable]]): agencies dataframe
+        net (Optional[TransitNetwork]): TransitNetwork object
     """
 
     # the ordering here matters because the stops need to be added before stop_times if

@@ -86,7 +86,7 @@ These options can be set at the **global** configuration level by using Wrangler
 
 ```yaml
 EDITS:
-    EXISTING_VALUE_CONFLIC: warn
+    EXISTING_VALUE_CONFLICT: warn
 ```
 
 This behavior can be overridden within a project card for a `roadway_property_change` or `transit_property_change` project for any individual `property_changes` item.
@@ -102,9 +102,9 @@ transit_property_change:
 
 ### Scoped Roadway Property Changes
 
-In some cases, properties of a roadway network may apply only during certain times of the day or for certain categories of users (e.g. trucks, HOV2, etc).  The Network Wrangler data model provides the ability to scope each property using the syntax described in the [network documentation](networks.md#scoped_properties).
+In some cases, properties of a roadway network may apply only during certain times of the day or for certain categories of users (e.g. trucks, HOV2, etc).  The Network Wrangler data model provides the ability to scope each property using the syntax described in the [network documentation](networks.md#links).
 
-The value for a scoped property for a given link record is a list of [ScopedLinkValueItem](networks.md#scoped_properties) objects.
+The value for a scoped property for a given link record is a list of [ScopedLinkValueItem](networks.md#links) objects.
 
 ::: network_wrangler.models.roadway.types.ScopedLinkValueItem
     options:

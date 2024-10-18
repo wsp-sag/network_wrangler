@@ -6,6 +6,10 @@ RoadwayNetworks must be defined in the following format, which leverages [Open S
 
 A network is defined by a set of nodes and links which connect them.  Shapes may be optionally specified for each link in a separate file.
 
+!!! tip "file serialization formats"
+
+    While the default serialiation for roadway networks is `json`/`geojson` and for transit data is `csv`, networks can also be stored – more efficiently – in parquet files with a similar structure. Other workable file serializations include shapefiles, csvs, and anything that can be read by pandas or geopandas. This can be noted in most I/O procedures by including the keyword argument `file_format = <format>`. 
+
 ### Roadway Validation
 
 RoadwayNetworks can be validated using the following tools:
@@ -49,187 +53,142 @@ Network Wrangler is packaged with two examples located in the `/examples` direct
 
 ### Nodes
 
-A  valid `geojson` file with `point` features and the folowing `properties`.
-
-!!! note "alternative file serializations"
-
-    Networks can also be stored – more efficiently – in parquet files with a similar structure.
-    Other workable file serializations include shapefiles, csvs, and anything that can be read
-    by pandas or geopandas.
-
-| **Property** | **Type** |  **Description** |
-| --------- | -------- | ---------------- |
-| model_node_id | Any |  PrimaryKey. Most modeling assignment software requires this be an integer. |
-| osm_node_id | str | Reference to open street map node id. Used for querying. Not guaranteed to be unique. |
+A  valid `geojson`, `shp`, or `parquet` file.
 
 ::: network_wrangler.models.roadway.tables.RoadNodesTable
+    options:
+        members: []
+        heading_level: 3
+        show_bases: false
+    handlers:
+      python:
+        options:
+          show_root_toc_entry: false
 
 ### Links
 
-A  valid `json` file with the following `properties`. Additional properites may be defined and are assumed to have the same definition of OpenStreetMap if they have overlapping property names.
-
-| **Property** | **Type** |  **Description** |
-| --------- | -------- | ---------------- |
-| model_link_id |  Any |  Required. PrimaryKey. |
-| shape_id | Any | Optional foreign key to `shapes`. |
-| A | int | Required. Foreign key to Nodes. From node. |
-| B | int | Required. Foreign key to Nodes. To node. |
-| name | str | Required. Name of link. |
-| roadway | str | Required. Uses [OpenStreetMap.highway](https://wiki.openstreetmap.org/wiki/Key:highway) tag definition. |
-| distance | Positive float | Required, or will be calculated as a crow-fly distance from A to B node. Length in miles. |
-| managed | [ 0,1] | Indicator for managed lane presence.  Does not need to be edited in project cards as any project card applied that adds a value for a property with the prefix "ML_" will automatically set this. |
-| lanes | Positive int | Required. Number of GP lanes. |
-| ML_access_point | bool | Point where managed lane may be accessed from general purpose lanes. |
-| ML_egress_point | bool | Point where managed lane may be exited to general purpose lanes. |
-| ML_lanes | Positive int | Number of managed lanes.|
-| sc_lanes | Positive int | Required. Number of GP lanes scoped by time of day and/or category. |
-| sc_ML_lanes | Positive int | Number of managed lanes scoped by time of day and/or category.|
-| price | Number | Required. Price of GP lanes . |
-| ML_price| Number  | Price of managed lanes. |
-| sc_price | Number | Required. Price of GP lanes scoped by time of day and/or category. |
-| sc_ML_price | Number  | Price of managed lanes scoped by time of day and/or category. |
-| drive_access | bool | Required. Allows driving access. |
-| bus_only | bool | Required. Bus Only facility |
-| rail_only | bool | Required. Bus Only facility |
-| bike_access | bool | Required. Bikes may use facility |
-| walk_access | bool | Required. Pedestrians may use facility |
-| truck_access | bool | Required. Trucks may use this facility |
-| osm_link_id | str | Reference to open street map node id. Used for querying. Not guaranteed to be unique. |
-| shstReferenceId | str | Shared Streets ID reference. Not used currently in network wrangler. |
+A  valid `geojson`, `shp`, `parquet`, or `json` file.
 
 ::: network_wrangler.models.roadway.tables.RoadLinksTable
-
-#### Prefix for Managed Lanes
-
-(Almost) any property, including an ad-hoc one, can be made to apply to a parallel managed lane by applying the prefix `ML_`.  
-
-Example: `ML_lanes`
-
-A handful of properties should **not** be assigned an `ML_` prefix by the user because they are assigned one within networkwrangler:
-
-- `name`
-- `A`
-- `B`
-- `model_link_id`
-
-#### Scoped Properties
-
-The following above properties can be time-dependent, category-dependent, or both by adding `sc_`.
-The "plain" property without the prefix becomes the default when no scoped property applies.
-
-- lanes: default # of lanes for general purpose lanes
-- ML_lanes: default # of lanes for a managed lane
-- sc_lanes: time- and/or category-dependent # of lanes for general purpose lanes
-- sc_ML_lanes: time- and/or category-dependent # of lanes for a managed lane
-- price: default price for general purpose lanes
-- ML_price: default price for a managed lane
-- sc_price: time- and/or category-dependent price for general purpose lanes
-- sc_ML_price: time- and/or category-dependent price for a managed lane
-
-!!! note "previous format for scoped properties"
-
-    Some previous tooling was developed around a previous method for serializing scoped properties.  In order to retain compatability with this format:
-
-    - `load_roadway_from_dir()`, `read_links()`, and associated functions will "sniff" the network for the old format and apply the converter function `translate_links_df_v0_to_v1()`
-    - `write_links()` has an boolean attribute to `convert_complex_properties_to_single_field` which can also be invoked from `write_roadway()` as `convert_complex_link_properties_to_single_field`.
-
-#### Defining time-dependent properties
-
-- Time-dependent properties are defined as a list of dictionaries with timespans and values.
-- Timespans must be defined as a list of HH:MM or HH:MM:SS using a 24-hour clock: `('06:00':'09:00')`.
-- Timespans must not intersect.
-
-!!! example  "Time-dependent property"
-
-    $3 peak-period pricing
-
-    ```python
-    # default price
-    'price' = 0
-    'sc_price':
-    [
-        {
-            'time':['06:00':'09:00'],
-            'value': 3
-        },
-        {
-            'timespan':['16:00':'19:00'],
-            'value': 3,
-        }
-    ]
-    ```
-
-#### Defining time- and category-dependent properties
-
-- Properties co-dependent on time- and category are defined as a list of dictionaries with value, category and time defined.
-
-!!! example "time- and category-dependent property"
-
-    A pricing strategy which only applies in peak period for trucks and sovs:
-
-    ```python
-    # default price
-    "price": 0
-    # price scoped by time of day
-    "sc_price":
-    [
-        {
-            'timespan':['06:00':'09:00'],
-            'category': ('sov','truck'),
-            'value': 3
-        },
-        {
-            'timespan':['16:00':'19:00'],
-            'category': ('sov','truck'),
-            'value': 3,
-        }
-    ]
-    ```
-
-!!! tip
-
-    There is no limit on other, user-defined properties being listed as time-dependent or time- and category-dependent.
-
-!!! example "User-defined variable by time of day"
-
-    Define a variable `access` to represent which categories can access the network and vary it by time of day.
-
-    ```python
-    #access
-    {
-        # default value for access
-        'access': ('any'),
-        # scoped value for access
-        'sc_access': [
-            {
-                'timespan':['06:00':'09:00'],
-                'value': ('no-trucks')
-            },
-            {
-                'timespan':['16:00':'19:00'],
-                'value': ('hov2','hov3','trucks')
-            }
-        ]
-    }
-    ```
+    options:
+        members: []
+        heading_level: 3
+        show_bases: false
+    handlers:
+      python:
+        options:
+          show_root_toc_entry: false
 
 ### Shapes
 
-A  valid `geojson` file with `LineString` features and the folowing `properties`. Additional properties may be defined and if overlapping with [SharedStreets](http://sharedstreets.io) are assumed to be defined in the same manner.
-
-| **Property** | **Type** |  **Description** |
-| --------- | -------- | ---------------- |
-| shape_id |  Any |  Required. PrimaryKey. |
+A  valid `geojson`, `shp`, or `parquet` file with `LineString` geometry features and the folowing `properties`.
 
 ::: network_wrangler.models.roadway.tables.RoadShapesTable
+    options:
+        members: []
+        heading_level: 3
+        show_bases: false
+    handlers:
+        python:
+            options:
+            show_root_toc_entry: false
 
 ## Transit Network Format
+
+::: network_wrangler.models.gtfs.tables
+    options:
+        show_bases: false
+        members: None
 
 Transit Networks must use the the [GTFS](https://www.gtfs.org) Schedule format with the following additional constraints:
 
 1. At this time, only frequency-based schedules are supported.
 2. Each `stop_id` must be a node in the RoadwayNetwork.
 3. `shapes.txt` is *required* (it is optional in GTFS) and must have the added field `model_node_id` associating a specific location with a node on the `RoadwayNetwork`.
+
+### Stops
+
+::: network_wrangler.models.gtfs.tables.WranglerStopsTable
+    options:
+        heading_level: 3
+        show_bases: false
+        members: None
+    handlers:
+        python:
+            options:
+                show_root_toc_entry: false
+
+### Routes
+
+::: network_wrangler.models.gtfs.tables.RoutesTable
+    options:
+        heading_level: 3
+        show_bases: false
+        members: None
+    handlers:
+        python:
+            options:
+                show_root_toc_entry: false
+
+### Trips
+
+::: network_wrangler.models.gtfs.tables.WranglerTripsTable
+    options:
+        members: None
+        heading_level: 3
+        show_bases: false
+    handlers:
+        python:
+            options:
+                show_root_toc_entry: false
+
+### Stop_times
+
+::: network_wrangler.models.gtfs.tables.WranglerStopTimesTable
+    options:
+        members: None
+        heading_level: 3
+        show_bases: false
+    handlers:
+        python:
+            options:
+                show_root_toc_entry: false
+
+### Shapes
+
+::: network_wrangler.models.gtfs.tables.WranglerShapesTable
+    options:
+        members: None
+        heading_level: 3
+        show_bases: false
+    handlers:
+        python:
+            options:
+                show_root_toc_entry: false
+
+### Frequencies
+
+::: network_wrangler.models.gtfs.tables.WranglerFrequenciesTable
+    options:
+        members: None
+        heading_level: 3
+        show_bases: false
+    handlers:
+        python:
+            options:
+                show_root_toc_entry: false
+
+### Agencies
+
+::: network_wrangler.models.gtfs.tables.AgenciesTable
+    options:
+        heading_level: 3
+        show_bases: false
+        members: None
+    handlers:
+        python:
+            options:
+                show_root_toc_entry: false
 
 ### Transit Validation
 
@@ -396,6 +355,6 @@ convert_roadway_file_serialization(
 )
 ```
 
-!!! Note "clip too"
+!!! Note "clip to"
 
     Note you can also pass one of `boundary_geocode`, `boundary_gdf` or `boundary_file` to clip while you are converting the file serialization.
