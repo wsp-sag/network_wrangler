@@ -5,6 +5,8 @@ Scenarios are built from a base scenario and a list of project cards.
 A project card is a YAML file (or similar) that describes a change to the network. The project
 card can contain multiple changes, each of which is applied to the network in sequence.
 
+## Create a Scenario
+
 Instantiate a scenario by seeding it with a base scenario and optionally some project cards.
 
 ```python
@@ -36,6 +38,8 @@ my_base_year_scenario = {
 }
 ```
 
+## Add Projects to a Scenario
+
 In addition to adding projects when you create the scenario, project cards can be **added** to a
 scenario using the `add_project_cards` method.
 
@@ -47,6 +51,8 @@ my_scenario.add_project_cards(project_card_dict.values())
 ```
 
 Where `card_location` can be a single path, list of paths, a directory, or a glob pattern.
+
+## Apply Projects to a Scenario
 
 Projects can be **applied** to a scenario using the `apply_all_projects` method. Before applying
 projects, the scenario will check that all pre-requisites are satisfied, that there are no conflicts,
@@ -68,6 +74,8 @@ my_scenario.road_net.links_gdf.explore()
 my_scenario.transit_net.feed.shapes_gdf.explore()
 ```
 
+## Write a Scenario to Disk
+
 Scenarios (and their networks) can be **written** to disk using the `write` method which
 in addition to writing out roadway and transit networks, will serialize the scenario to
 a yaml-like file and can also write out the project cards that have been applied.
@@ -78,6 +86,7 @@ my_scenario.write(
     "scenario_name_to_use",
     overwrite=True,
     projects_write=True,
+    file_format="parquet",
 )
 ```
 
@@ -130,6 +139,8 @@ my_scenario.write(
     dir: /Users/elizabeth/Documents/urbanlabs/MetCouncil/NetworkWrangler/working/network_wrangler/tests/out/first_scenario/transit
     file_format: txt
     ```
+
+## Load a scenario from disk
 
 And if you want to reload scenario that you "wrote", you can use the `load_scenario` function.
 

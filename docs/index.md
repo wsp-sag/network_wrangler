@@ -21,11 +21,11 @@ Network Wrangler does require Python 3.9+.  If you have a different version of P
 
 ## Installation
 
-### Activate Virtual Environment
+### Create and Activate Virtual Environment
 
 Create and/or activate the virtual environment where you want to install Network Wrangler.
 
-!!! example "create a new conda environment for wrangler using conda"
+!!! example "Option 1. Create a new conda environment for wrangler using conda"
 
     ```bash
     conda config --add channels conda-forge
@@ -33,23 +33,43 @@ Create and/or activate the virtual environment where you want to install Network
     conda activate wrangler
     ```
 
-### Dependencies
+!!! example "Option 2. Use pre-packaged conda-environment with all dependencies"
 
-The core requirements for network wrangler are specified in `pyproject.toml` and will be automatically checked and installed when you install network wrangler.
+    Network wrangler comes packaged with a conda environment that already has all the required dependencies.  This can be helpful if you are having trouble with different versions of requirements since `conda` can be better at sorting through them than `pip`.
+
+    ```bash
+    conda config --add channels conda-forge
+    conda env create -f environments/conda/environment.yml
+    conda activate wrangler
+    ```
+
+### Step 2. Consider which Dependencies you want
+
+The **core requirements** for network wrangler are specified in `pyproject.toml` and **will be automatically checked and installed when you install network wrangler**.
 
 Additional, optional libraries are specified in separate requirements files to reduce the bloat of the minimum installation.
 
-| **File**                  | **Purpose**                               |
-|---------------------------|-------------------------------------------|
-| `requirements.viz.txt`     | Requirements for running visualizations.  |
-| `requirements.docs.txt`    | Requirements for building documentation.  |
-| `requirements.tests.txt`   | Requirements for running tests.           |
+| **File**                   | **pip Option Code** | **Purpose**          |
+|----------------------------|---------------------|----------------------|
+| `requirements.viz.txt`     | `viz` | Requirements for running visualizations.  |
+| `requirements.docs.txt`    | `docs` | Requirements for building documentation.  |
+| `requirements.tests.txt`   | `tests` | Requirements for running tests.           |
 
-If you want to view your networks, will likely want to install at least the visualization dependencies:
+If you want to view your networks or use jupyter notebooks, will likely want to install at least the visualization dependencies, which you can always do later as follows:
 
 ```bash
+conda activate wrangler
 pip install -r requirements.viz.txt
 ```
+
+!!! warning "install additional dependencies using pip"
+
+    You don't have to separately install these dependencies. You can also install them when you install network wrangler itself using command like follows using the respective pip option code or a list of them:
+
+    ```shell
+    conda activate wrangler
+    pip install network-wrangler[viz]
+    ```
 
 !!! warning "tricky dependencies"
 
@@ -59,7 +79,7 @@ pip install -r requirements.viz.txt
     conda install rtree geopandas osmnx
     ```
 
-### Install Wrangler
+### Step 3. Install Wrangler
 
 === "Latest Release"
 

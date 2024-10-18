@@ -2,22 +2,21 @@
 
 """This script builds a basic OpenStreetMap (OSM) road network for a specified place.
 
+This script uses the network_wrangler library to build a roadway network from OSM data. It allows you to specify the place name, network type, output path, and file format for the resulting network.
+
 Usage:
-    python build_basic_osm_roadnet.py <place_name> [--type <type>] [--path <path>] [--file_format <file_format>]
+    `python build_basic_osm_roadnet.py <place_name> [--type <type>] [--path <path>] [--file_format <file_format>]`
 
 Arguments:
-    place_name      Name of the place to build the road network for.
-
-Options:
-    --type          Type of network to build (default: 'drive').
-    --path          Path to write the network (default: current working directory).
-    --file_format   File format for writing the network (default: 'geojson').
+    place_name (str): Name of the place to build the road network for.
+    --type (Optional[str]): Type of network to build Defaults to `drive`.
+    --path (Optional[str]): Path to write the network. Defaults to current working directory.
+    --file_format (Optional[str]):  File format for writing the network. Defaults to `geojson`.
 
 Example:
+    ```bash
     python build_basic_osm_roadnet.py "San Francisco, California" --type "drive" --path "/path/to/output" --file_format "geojson"
-
-Description:
-    This script uses the network_wrangler library to build a roadway network from OSM data. It allows you to specify the place name, network type, output path, and file format for the resulting network.
+    ```
 """
 
 import argparse
