@@ -8,7 +8,7 @@ A network is defined by a set of nodes and links which connect them.  Shapes may
 
 !!! tip "file serialization formats"
 
-    While the default serialiation for roadway networks is `json`/`geojson` and for transit data is `csv`, networks can also be stored – more efficiently – in parquet files with a similar structure. Other workable file serializations include shapefiles, csvs, and anything that can be read by pandas or geopandas. This can be noted in most I/O procedures by including the keyword argument `file_format = <format>`. 
+    While the default serialiation for roadway networks is `json`/`geojson` and for transit data is `csv`, networks can also be stored – more efficiently – in parquet files with a similar structure. Other workable file serializations include shapefiles, csvs, and anything that can be read by pandas or geopandas. This can be noted in most I/O procedures by including the keyword argument `file_format = <format>`.
 
 ### Roadway Validation
 
@@ -51,7 +51,7 @@ Network Wrangler is packaged with two examples located in the `/examples` direct
 - St Paul, MN
 - Small which is a several block exerpt of St Paul and is infinitely easier to trouble-shoot quickly.
 
-### Nodes
+### Road Nodes
 
 A  valid `geojson`, `shp`, or `parquet` file.
 
@@ -65,7 +65,7 @@ A  valid `geojson`, `shp`, or `parquet` file.
         options:
           show_root_toc_entry: false
 
-### Links
+### Road Links
 
 A  valid `geojson`, `shp`, `parquet`, or `json` file.
 
@@ -79,7 +79,7 @@ A  valid `geojson`, `shp`, `parquet`, or `json` file.
         options:
           show_root_toc_entry: false
 
-### Shapes
+### Road Shapes
 
 A  valid `geojson`, `shp`, or `parquet` file with `LineString` geometry features and the folowing `properties`.
 
