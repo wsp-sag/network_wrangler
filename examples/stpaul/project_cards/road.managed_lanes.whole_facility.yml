@@ -1,0 +1,47 @@
+project: another test managed lane project
+tags:
+   - 'example'
+roadway_property_change:
+  facility:
+    links:
+      name:
+        - 'I 35E'
+    from:
+      osm_node_id: '961117623'
+    to:
+      osm_node_id: '2564047368'
+  property_changes:
+    lanes:
+      set: 3
+      scoped:
+        - timespan: ['6:00', '9:00']
+          set: 2
+        - timespan: ['16:00', '19:00']
+          set: 2
+    ML_lanes:
+      set: 0
+      scoped:
+        - timespan: ['6:00', '9:00']
+          set: 1
+        - timespan: ['16:00', '19:00']
+          set: 1
+    ML_price:
+      set: 0
+      scoped:
+        - category: 'sov'
+          timespan: ['6:00', '9:00']
+          set: 1.5
+        - category: 'sov'
+          timespan: ['16:00', '19:00']
+          set: 2.5
+        - category: 'hov2'
+          timespan: ['6:00', '9:00']
+          set: 1.0
+        - category: 'hov2'
+          timespan: ['16:00', '19:00']
+          set: 2.0
+    ML_access_point:
+      set: 'all'
+    ML_egress_point:
+      set: 'all'
+notes: Placeholder for notes

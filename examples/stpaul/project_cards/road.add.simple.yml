@@ -1,0 +1,28 @@
+project: test simple roadway add
+tags:
+  - 'add roadway'
+roadway_addition:
+  links:
+    - A: 269066
+      B: 268932
+      name: new neighborhood st
+      bike_access: 1
+      drive_access: 0
+      bus_only: 0
+      rail_only: 0
+      walk_access: 1
+      roadway: residential
+      lanes: 1
+      model_link_id: 404982
+    - A: 268932
+      B: 269066
+      bike_access: 1
+      name: new neighborhood st
+      drive_access: 0
+      bus_only: 0
+      rail_only: 0
+      walk_access: 1
+      roadway: residential
+      lanes: 1
+      model_link_id: 407042
+notes: Simple project card to add new roadway

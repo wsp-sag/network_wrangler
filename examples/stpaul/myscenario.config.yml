@@ -1,0 +1,23 @@
+name: "my_scenario"
+base_scenario:
+    roadway:
+        dir: "."
+        file_format: "geojson"
+    transit:
+        dir: "."
+        file_format: "txt"
+projects:
+    project_card_filepath:
+        - "project_cards/road.add.simple.yml"
+        - "project_cards/transit.route_change.yml"
+output_scenario:
+    overwrite: True
+    path: "../../tests/out/myscenario"
+    roadway:
+        prefix: "my_scenario"
+        file_format: "geojson"
+    transit:
+        prefix: "my_scenario"
+        file_format: "txt"
+    project_cards:
+        out_dir: "./projects"

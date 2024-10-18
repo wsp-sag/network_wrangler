@@ -1,0 +1,137 @@
+project: mixed roadway transit project
+changes:
+- transit_property_change:
+    service:
+      trip_properties:
+        direction_id: 1
+        route_id: [452-111]
+      timespans: [['06:00:00' , '09:00:00']]
+    property_changes:
+      headway_secs:
+        change: -1800.0
+- transit_property_change:
+    service:
+      trip_properties:
+        direction_id: 1
+        route_id: [134-111]
+      timespans:
+          - - 06:00:00
+            - 09:00:00
+    property_changes:
+      headway_secs:
+        change: 1800.0
+- transit_property_change:
+    service:
+      trip_properties:
+        direction_id: 0
+        route_id: [921-111]
+      timespans:
+        -  - 09:00:00
+           - '15:00:00'
+    property_changes:
+      headway_secs:
+        change: -300.0
+- roadway_deletion:
+    links:
+      model_link_id:
+      - 281
+      - 477533
+- roadway_addition:
+    links:
+    - A: 3230
+      AADT: 0
+      count_AM: 0
+      B: 3262
+      bike_facility: 3
+      distance: 0.10462
+      name: new road
+      roadway: residential
+      count_daily: 0
+      HOV: 0
+      lanes: 1
+      model_link_id: 999998
+      count_MD: 0
+      count_NT: 0
+      count_PM: 0
+      roadway_class: 40
+      ttime_assert: 0.0
+      trn_priority: 0
+      bike_access: 1
+      drive_access: 1
+      rail_only: 0
+      bus_only: 0
+      walk_access: 1
+    - A: 3262
+      AADT: 0
+      count_AM: 0
+      B: 3230
+      name: new road
+      roadway: residential
+      bike_facility: 3
+      distance: 0.10462
+      count_daily: 0
+      access: 0
+      lanes: 1
+      model_link_id: 999997
+      count_MD: 0
+      count_NT: 0
+      count_PM: 0
+      roadway_class: 40
+      ttime_assert: 0.0
+      trn_priority: 0
+      bike_access: 1
+      drive_access: 1
+      rail_only: 0
+      bus_only: 0
+      walk_access: 1
+    nodes:
+      - X: -93.18389
+        Y: 44.96898
+        model_node_id: 354388
+- roadway_property_change:
+    facility:
+      links:
+        model_link_id:
+        - 280
+    property_changes:
+      roadway_class:
+        existing: 20
+        set: 40
+      bike_facility:
+          existing: 0
+          set: 3
+      walk_access:
+        existing: 0
+        set: 1
+      bike_access:
+        set: 1
+      distance:
+        set: 10.0
+- roadway_property_change:
+    facility:
+      links:
+        model_link_id:
+        - 282
+    property_changes:
+      roadway_class:
+        existing: 20
+        set: 40
+      bike_facility:
+        set: 3
+      walk_access:
+        set: 1
+      bike_access:
+        set: 1
+      distance:
+        set: 10.0
+- roadway_property_change:
+    facility:
+      links:
+        model_link_id:
+        - 224
+    property_changes:
+      roadway_class:
+        existing: 30
+        set: 40
+      distance:
+        set: 0.10462

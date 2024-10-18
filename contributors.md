@@ -1,10 +1,12 @@
 # Contributors
 
-1. [Lisa Zorn](@lmz) - initial Network Wrangler implementation at [SFCTA](www.sfcta.org)
-2. [Billy Charlton](@billyc)
-3. [Elizabeh Sall](@e-lo)
-4. [Sijia Wang](@i-am-sijia)
-5. [David Ory](@DavidOry)
+1. [Lisa Z.](@lmz) - initial Network Wrangler implementation at [SFCTA](www.sfcta.org)
+2. [Billy C.](@billyc) - initial Network Wrangler implementation at [SFCTA](www.sfcta.org)
+3. [Elizabeh S.](@e-lo)
+4. [Sijia W.](@i-am-sijia)
+5. [David O.](@DavidOry)
 6. [Ashish K.](@AshishKuls)
+7. [Yue S.](@yueshuaing)
 
-!Note: There are likely more contributors - feel free to add your name if we missed it!
+!!! note
+    There are likely more contributors - feel free to add your name if we missed it!

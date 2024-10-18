@@ -1,0 +1,4 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,wheelchair_boarding,model_node_id
+111,ones,44.95007489999999,-93.1035758,,0,71972
+222,twos,44.952112199999995,-93.0965985,,0,3494
+333,threes,1000,--1000,,0,121739

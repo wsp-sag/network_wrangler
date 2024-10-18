@@ -1,0 +1,21 @@
+project: adfa;dlskfj simple roadway add
+tags:
+  - 'add roadway'
+links:
+  - A: 3230
+    B: 52771
+    bike_access: 1
+    drive_access: 1
+    transit_access: 0
+    walk_access: 0
+    lanes: 1
+    model_link_id: 404982
+  - A: 125892
+    B: 36622
+    bike_access: 1
+    drive_access: 1
+    transit_access: 0
+    walk_access: 0
+    lanes: 1
+    model_link_id: 407042
+notes: Simple project card to add new roadway

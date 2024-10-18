@@ -5,6 +5,19 @@ hide:
 
 # Development
 
-{{ include_file('CONTRIBUTING.md') }}
+{!
+    include-markdown "../CONTRIBUTING.md"
+    heading-offset=1
+!}
 
-{{ include_file('contributors.md') }}
+{!
+    include-markdown "../contributors.md"
+    heading-offset=1
+!}
+
+## Release History
+
+{!
+    include-markdown "../CHANGELOG.md"
+    heading-offset=1
+!}

@@ -1,3 +1,10 @@
-flake8
+coverage
+mypy
+mypy_extensions
+pre-commit
 pytest
-black
+pytest-benchmark
+radon
+ruff
+snakeviz
+vulture
