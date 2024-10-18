@@ -37,7 +37,7 @@ jobs:
       run: ruff check --output-format=github network_wrangler
     - name: Run tests with coverage and benchmarking
       run: |
-          pytest --benchmark-save=pr_benchmark --benchmark-json=pr_benchmark.json 
+          pytest --junitxml=coverage.xml --benchmark-save=pr_benchmark --benchmark-json=pr_benchmark.json 
     - name: Store benchmark result
       uses: benchmark-action/github-action-benchmark@v1
       with:

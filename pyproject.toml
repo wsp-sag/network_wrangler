@@ -94,7 +94,6 @@ script-files = [
 version = {attr = "network_wrangler.__version__"}
 
 [tool.pytest.ini_options]
-addopts = "--profile"
 markers = [
     "skipci: mark a test as a test that should be skipped in CI",
     "failing: tests that are known to be failing and need to be fixed"
