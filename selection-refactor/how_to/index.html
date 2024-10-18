@@ -557,6 +557,57 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="scenario">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network_wrangler.scenario--create-a-scenario" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a Scenario
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network_wrangler.scenario--add-projects-to-a-scenario" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add Projects to a Scenario
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network_wrangler.scenario--apply-projects-to-a-scenario" class="md-nav__link">
+    <span class="md-ellipsis">
+      Apply Projects to a Scenario
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network_wrangler.scenario--write-a-scenario-to-disk" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write a Scenario to Disk
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network_wrangler.scenario--load-a-scenario-from-disk" class="md-nav__link">
+    <span class="md-ellipsis">
+      Load a scenario from disk
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -676,6 +727,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#create-your-own-example-data-from-open-street-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create your own example data from Open Street Map
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#review-separated-model-network-managed-lanes" class="md-nav__link">
     <span class="md-ellipsis">
       Review separated model network managed lanes
@@ -745,6 +805,7 @@
 <p>Scenarios are built from a base scenario and a list of project cards.</p>
 <p>A project card is a YAML file (or similar) that describes a change to the network. The project
 card can contain multiple changes, each of which is applied to the network in sequence.</p>
+<h4 id="network_wrangler.scenario--create-a-scenario">Create a Scenario<a class="headerlink" href="#network_wrangler.scenario--create-a-scenario" title="Permanent link"> ¶</a></h4>
 <p>Instantiate a scenario by seeding it with a base scenario and optionally some project cards.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">network_wrangler</span> <span class="kn">import</span> <span class="n">create_scenario</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -771,6 +832,7 @@ card can contain multiple changes, each of which is applied to the network in se
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="s2">&quot;conflicts&quot;</span><span class="p">:</span> <span class="p">{},</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
 </span></code></pre></div>
+<h4 id="network_wrangler.scenario--add-projects-to-a-scenario">Add Projects to a Scenario<a class="headerlink" href="#network_wrangler.scenario--add-projects-to-a-scenario" title="Permanent link"> ¶</a></h4>
 <p>In addition to adding projects when you create the scenario, project cards can be <strong>added</strong> to a
 scenario using the <code>add_project_cards</code> method.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">projectcard</span> <span class="kn">import</span> <span class="n">read_cards</span>
@@ -779,6 +841,7 @@ scenario using the <code>add_project_cards</code> method.</p>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">add_project_cards</span><span class="p">(</span><span class="n">project_card_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 </span></code></pre></div>
 <p>Where <code>card_location</code> can be a single path, list of paths, a directory, or a glob pattern.</p>
+<h4 id="network_wrangler.scenario--apply-projects-to-a-scenario">Apply Projects to a Scenario<a class="headerlink" href="#network_wrangler.scenario--apply-projects-to-a-scenario" title="Permanent link"> ¶</a></h4>
 <p>Projects can be <strong>applied</strong> to a scenario using the <code>apply_all_projects</code> method. Before applying
 projects, the scenario will check that all pre-requisites are satisfied, that there are no conflicts,
 and that the projects are in the planned projects list.</p>
@@ -792,6 +855,7 @@ prooperty.</p>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">road_net</span><span class="o">.</span><span class="n">links_gdf</span><span class="o">.</span><span class="n">explore</span><span class="p">()</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">transit_net</span><span class="o">.</span><span class="n">feed</span><span class="o">.</span><span class="n">shapes_gdf</span><span class="o">.</span><span class="n">explore</span><span class="p">()</span>
 </span></code></pre></div>
+<h4 id="network_wrangler.scenario--write-a-scenario-to-disk">Write a Scenario to Disk<a class="headerlink" href="#network_wrangler.scenario--write-a-scenario-to-disk" title="Permanent link"> ¶</a></h4>
 <p>Scenarios (and their networks) can be <strong>written</strong> to disk using the <code>write</code> method which
 in addition to writing out roadway and transit networks, will serialize the scenario to
 a yaml-like file and can also write out the project cards that have been applied.</p>
@@ -800,7 +864,8 @@ a yaml-like file and can also write out the project cards that have been applied
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="s2">&quot;scenario_name_to_use&quot;</span><span class="p">,</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">projects_write</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">)</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">)</span>
 </span></code></pre></div>
 <details class="example"><summary>Example Serialized Scenario File</summary><div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">applied_projects</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;id001</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">project a</span>
@@ -849,6 +914,7 @@ a yaml-like file and can also write out the project cards that have been applied
 </span><span id="__span-6-45"><a id="__codelineno-6-45" name="__codelineno-6-45" href="#__codelineno-6-45"></a><span class="nt">file_format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">txt</span>
 </span></code></pre></div>
 </details>
+<h4 id="network_wrangler.scenario--load-a-scenario-from-disk">Load a scenario from disk<a class="headerlink" href="#network_wrangler.scenario--load-a-scenario-from-disk" title="Permanent link"> ¶</a></h4>
 <p>And if you want to reload scenario that you &ldquo;wrote&rdquo;, you can use the <code>load_scenario</code> function.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span> <span class="nn">network_wrangler</span> <span class="kn">import</span> <span class="n">load_scenario</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
@@ -873,7 +939,11 @@ a yaml-like file and can also write out the project cards that have been applied
 
     </div>
 
-</div><h2 id="build-a-scenario-from-a-scenario-configuration-file">Build a Scenario from a Scenario Configuration File<a class="headerlink" href="#build-a-scenario-from-a-scenario-configuration-file" title="Permanent link"> ¶</a></h2>
+</div><div class="admonition tip">
+<p class="admonition-title">additional examples</p>
+<p>You can see additional scenario creating capabilities in the example jupyter notebook <code>Scenario Building Example.ipynb</code>.</p>
+</div>
+<h2 id="build-a-scenario-from-a-scenario-configuration-file">Build a Scenario from a Scenario Configuration File<a class="headerlink" href="#build-a-scenario-from-a-scenario-configuration-file" title="Permanent link"> ¶</a></h2>
 
 
 <div class="doc doc-object doc-module">
@@ -1817,7 +1887,6 @@ lanes.</p>
 </div><h2 id="review-changes-beetween-networks">Review changes beetween networks<a class="headerlink" href="#review-changes-beetween-networks" title="Permanent link"> ¶</a></h2>
 <div class="admonition example">
 <p class="admonition-title">Review Added Managed Lanes</p>
-</div>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">network_wrangler</span> <span class="kn">import</span> <span class="n">load_roadway_from_dir</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">projectcard</span> <span class="kn">import</span> <span class="n">read_card</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
@@ -1846,10 +1915,14 @@ lanes.</p>
 </span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    <span class="n">style_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;opacity&quot;</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">}</span>
 </span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="p">)</span>
 </span></code></pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">additional examples</p>
+<p>You can see additional scenario review capabilities in the example jupyter notebook <code>Visual Checks.ipynb</code>.</p>
+</div>
 <h2 id="review-selected-facilities">Review selected facilities<a class="headerlink" href="#review-selected-facilities" title="Permanent link"> ¶</a></h2>
 <div class="admonition example">
 <p class="admonition-title">Review selected links</p>
-</div>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">network_wrangler</span> <span class="kn">import</span> <span class="n">load_roadway_from_dir</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
@@ -1869,10 +1942,131 @@ lanes.</p>
 </span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>  <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">style_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;opacity&quot;</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">}</span>
 </span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="p">)</span>
 </span></code></pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">additional examples</p>
+<p>You can see additional interactive exploration of how selections work and how to review them in the Jupyter notebook <code>Roadway Network Search.ipynb</code>.</p>
+</div>
+<h2 id="create-your-own-example-data-from-open-street-map">Create your own example data from Open Street Map<a class="headerlink" href="#create-your-own-example-data-from-open-street-map" title="Permanent link"> ¶</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+
+    <div class="doc doc-contents first">
+
+      <p>This script builds a basic OpenStreetMap (OSM) road network for a specified place.</p>
+<p>This script uses the network_wrangler library to build a roadway network from OSM data. It allows you to specify the place name, network type, output path, and file format for the resulting network.</p>
+
+
+<details class="usage" open>
+  <summary>Usage</summary>
+  <p><code>python build_basic_osm_roadnet.py &lt;place_name&gt; [--type &lt;type&gt;] [--path &lt;path&gt;] [--file_format &lt;file_format&gt;]</code></p>
+</details>
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>place_name</code></td>
+            <td>
+                  <code>str</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Name of the place to build the road network for.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>--type</code></td>
+            <td>
+                  <code>Optional[str]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Type of network to build Defaults to <code>drive</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>--path</code></td>
+            <td>
+                  <code>Optional[str]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Path to write the network. Defaults to current working directory.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>--file_format</code></td>
+            <td>
+                  <code>Optional[str]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>File format for writing the network. Defaults to <code>geojson</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>build_basic_osm_roadnet.py<span class="w"> </span><span class="s2">&quot;San Francisco, California&quot;</span><span class="w"> </span>--type<span class="w"> </span><span class="s2">&quot;drive&quot;</span><span class="w"> </span>--path<span class="w"> </span><span class="s2">&quot;/path/to/output&quot;</span><span class="w"> </span>--file_format<span class="w"> </span><span class="s2">&quot;geojson&quot;</span>
+</span></code></pre></div>
+</details>
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div><div class="admonition tip">
+<p class="admonition-title">additional examples</p>
+<p>You can review the process in this script step-wise and interactively create your own networks from OSM with variation in the underlying assumptions in the Jupyter notebook <code>Create Network from OSM.ipynb</code>.</p>
+</div>
 <h2 id="review-separated-model-network-managed-lanes">Review separated model network managed lanes<a class="headerlink" href="#review-separated-model-network-managed-lanes" title="Permanent link"> ¶</a></h2>
 <div class="admonition example">
 <p class="admonition-title">Review model network</p>
-</div>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">m_net</span> <span class="o">=</span> <span class="n">stpaul_build</span><span class="o">.</span><span class="n">model_net</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">model_net_map</span> <span class="o">=</span> <span class="n">m_net</span><span class="o">.</span><span class="n">gp_links_df</span><span class="o">.</span><span class="n">explore</span><span class="p">(</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">tiles</span><span class="o">=</span><span class="s2">&quot;CartoDB positron&quot;</span><span class="p">,</span>
@@ -1882,9 +2076,14 @@ lanes.</p>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">m_net</span><span class="o">.</span><span class="n">ml_links_df</span><span class="o">.</span><span class="n">explore</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">model_net_map</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">style_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;opacity&quot;</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">})</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">m_net</span><span class="o">.</span><span class="n">dummy_links_df</span><span class="o">.</span><span class="n">explore</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">model_net_map</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">style_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;opacity&quot;</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">})</span>
 </span></code></pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">additional examples</p>
+<p>You can learn more about visualization of networks in the Jupyter notebook <code>Network Viewer.ipynb</code>.</p>
+</div>
 <p>{!
-  include-markdown(&ldquo;https://raw.githubusercontent.com/network-wrangler/projectcard/refs/heads/main/docs/how-to.md&rdquo;)</p>
-<p>!}</p>
+  include-markdown(&ldquo;https://raw.githubusercontent.com/network-wrangler/projectcard/refs/heads/main/docs/how-to.md&rdquo;)
+!}</p>
 
 
 

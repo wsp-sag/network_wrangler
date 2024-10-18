@@ -456,27 +456,27 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#activate-virtual-environment" class="md-nav__link">
+  <a href="#create-and-activate-virtual-environment" class="md-nav__link">
     <span class="md-ellipsis">
-      Activate Virtual Environment
+      Create and Activate Virtual Environment
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
+  <a href="#step-2-consider-which-dependencies-you-want" class="md-nav__link">
     <span class="md-ellipsis">
-      Dependencies
+      Step 2. Consider which Dependencies you want
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#install-wrangler" class="md-nav__link">
+  <a href="#step-3-install-wrangler" class="md-nav__link">
     <span class="md-ellipsis">
-      Install Wrangler
+      Step 3. Install Wrangler
     </span>
   </a>
   
@@ -736,59 +736,79 @@
 <details class="warning"><summary>installing conda or Anaconda (the GUI version) for the first time on computer with Cube or ArcGIS?</summary><p>For ArcGIS / Cube users - Recommend Install conda by leaving boxes unchecked for advanced options – system path and register anaconda. On some systems, checking these boxes will break Cube and ArcGis systems.</p>
 </details>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link"> ¶</a></h2>
-<h3 id="activate-virtual-environment">Activate Virtual Environment<a class="headerlink" href="#activate-virtual-environment" title="Permanent link"> ¶</a></h3>
+<h3 id="create-and-activate-virtual-environment">Create and Activate Virtual Environment<a class="headerlink" href="#create-and-activate-virtual-environment" title="Permanent link"> ¶</a></h3>
 <p>Create and/or activate the virtual environment where you want to install Network Wrangler.</p>
 <div class="admonition example">
-<p class="admonition-title">create a new conda environment for wrangler using conda</p>
+<p class="admonition-title">Option 1. Create a new conda environment for wrangler using conda</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>conda<span class="w"> </span>create<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11<span class="w"> </span>-n<span class="w"> </span>wrangler<span class="w"> </span><span class="c1">#if you don&#39;t already have a virtual environment</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>conda<span class="w"> </span>activate<span class="w"> </span>wrangler
 </span></code></pre></div>
 </div>
-<h3 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link"> ¶</a></h3>
-<p>The core requirements for network wrangler are specified in <code>pyproject.toml</code> and will be automatically checked and installed when you install network wrangler.</p>
+<div class="admonition example">
+<p class="admonition-title">Option 2. Use pre-packaged conda-environment with all dependencies</p>
+<p>Network wrangler comes packaged with a conda environment that already has all the required dependencies.  This can be helpful if you are having trouble with different versions of requirements since <code>conda</code> can be better at sorting through them than <code>pip</code>.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environments/conda/environment.yml
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>conda<span class="w"> </span>activate<span class="w"> </span>wrangler
+</span></code></pre></div>
+</div>
+<h3 id="step-2-consider-which-dependencies-you-want">Step 2. Consider which Dependencies you want<a class="headerlink" href="#step-2-consider-which-dependencies-you-want" title="Permanent link"> ¶</a></h3>
+<p>The <strong>core requirements</strong> for network wrangler are specified in <code>pyproject.toml</code> and <strong>will be automatically checked and installed when you install network wrangler</strong>.</p>
 <p>Additional, optional libraries are specified in separate requirements files to reduce the bloat of the minimum installation.</p>
 <table>
 <thead>
 <tr>
 <th><strong>File</strong></th>
+<th><strong>pip Option Code</strong></th>
 <th><strong>Purpose</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>requirements.viz.txt</code></td>
+<td><code>viz</code></td>
 <td>Requirements for running visualizations.</td>
 </tr>
 <tr>
 <td><code>requirements.docs.txt</code></td>
+<td><code>docs</code></td>
 <td>Requirements for building documentation.</td>
 </tr>
 <tr>
 <td><code>requirements.tests.txt</code></td>
+<td><code>tests</code></td>
 <td>Requirements for running tests.</td>
 </tr>
 </tbody>
 </table>
-<p>If you want to view your networks, will likely want to install at least the visualization dependencies:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.viz.txt
+<p>If you want to view your networks or use jupyter notebooks, will likely want to install at least the visualization dependencies, which you can always do later as follows:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>conda<span class="w"> </span>activate<span class="w"> </span>wrangler
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.viz.txt
 </span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">install additional dependencies using pip</p>
+<p>You don&rsquo;t have to separately install these dependencies. You can also install them when you install network wrangler itself using command like follows using the respective pip option code or a list of them:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>conda<span class="w"> </span>activate<span class="w"> </span>wrangler
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>pip<span class="w"> </span>install<span class="w"> </span>network-wrangler<span class="o">[</span>viz<span class="o">]</span>
+</span></code></pre></div>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">tricky dependencies</p>
 <p><code>rtree</code>, <code>geopandas</code> and <code>osmnx</code> can have some tricky co-dependencies.  If don&rsquo;t already have an up-to-date installation of them, we&rsquo;ve had the best success installing them using <a href="https://conda.io/projects/conda/en/latest/user-guide/install/index.html">conda</a> (as opposed to pip).</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>conda<span class="w"> </span>install<span class="w"> </span>rtree<span class="w"> </span>geopandas<span class="w"> </span>osmnx
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>conda<span class="w"> </span>install<span class="w"> </span>rtree<span class="w"> </span>geopandas<span class="w"> </span>osmnx
 </span></code></pre></div>
 </div>
-<h3 id="install-wrangler">Install Wrangler<a class="headerlink" href="#install-wrangler" title="Permanent link"> ¶</a></h3>
+<h3 id="step-3-install-wrangler">Step 3. Install Wrangler<a class="headerlink" href="#step-3-install-wrangler" title="Permanent link"> ¶</a></h3>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Latest Release</label><label for="__tabbed_1_2">From GitHub</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>network-wrangler
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span>network-wrangler
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
 <p>Only necessary if you want to test features before they have released as official versions.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/wsp-sag/network_wrangler.git@develop#egg<span class="o">=</span>network_wrangler
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/wsp-sag/network_wrangler.git@develop#egg<span class="o">=</span>network_wrangler
 </span></code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -811,12 +831,12 @@
 <p>Shapely, a pre-requisite, doesn&rsquo;t install propertly because it is missing GEOS module</p>
 </blockquote>
 <p>Try installing them using conda.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>conda<span class="w"> </span>uninstall<span class="w"> </span>geopandas<span class="w"> </span>rtree<span class="w"> </span>shapely
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>conda<span class="w"> </span>install<span class="w"> </span>rtree<span class="w"> </span>shapely<span class="w"> </span>geopandas
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>conda<span class="w"> </span>uninstall<span class="w"> </span>geopandas<span class="w"> </span>rtree<span class="w"> </span>shapely
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>conda<span class="w"> </span>install<span class="w"> </span>rtree<span class="w"> </span>shapely<span class="w"> </span>geopandas
 </span></code></pre></div>
 </details>
 <details class="question"><summary>Conda is unable to install a library or to update to a specific library version</summary><p>Add libraries from conda-forge</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>*library*
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>*library*
 </span></code></pre></div>
 </details>
 <details class="question"><summary>User does not have permission to install in directories</summary><p>Try <a href="https://techcommunity.microsoft.com/t5/windows-11/how-to-run-app-as-administrator-by-default-in-windows-11/td-p/3033704">running Anaconda as an administrator</a>, even if you are an admin on your machine.</p>
@@ -826,31 +846,31 @@
 <p>To start the notebook, open a command line in the network_wrangler top-level directory and type:</p>
 <p><code>jupyter notebook</code></p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link"> ¶</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span> <span class="nn">network_wrangler</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1">##todo this is just an example for now</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">network_wrangler</span><span class="o">.</span><span class="n">setup_logging</span><span class="p">()</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1">## Network Manipulation</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="n">my_network</span> <span class="o">=</span> <span class="n">network_wrangler</span><span class="o">.</span><span class="n">read_roadway_network</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="c1"># returns</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="n">my_network</span><span class="o">.</span><span class="n">apply_project_card</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="c1"># returns</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">my_network</span><span class="o">.</span><span class="n">write_roadway_network</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="c1"># returns</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="c1">## Scenario Building</span>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="n">my_scenario</span> <span class="o">=</span> <span class="n">network_wrangler</span><span class="o">.</span><span class="n">create_scenario</span><span class="p">(</span>
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>        <span class="n">base_scenario</span><span class="o">=</span><span class="n">my_base_scenario</span><span class="p">,</span>
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>        <span class="n">card_search_dir</span><span class="o">=</span><span class="n">project_card_directory</span><span class="p">,</span>
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>        <span class="n">tags</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;baseline-2050&quot;</span><span class="p">]</span>
-</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>        <span class="p">)</span>
-</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_all_projects</span><span class="p">()</span>
-</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;my_project/baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;baseline-2050&quot;</span><span class="p">)</span>
-</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="n">outfile</span><span class="o">=</span><span class="s2">&quot;scenario_summary_baseline.txt&quot;</span><span class="p">)</span>
-</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>
-</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">add_projects_from_files</span><span class="p">(</span><span class="n">list_of_build_project_card_files</span><span class="p">)</span>
-</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">queued_projects</span>
-</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_all_projects</span><span class="p">()</span>
-</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;my_project/build&quot;</span><span class="p">,</span> <span class="s2">&quot;baseline&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">import</span> <span class="nn">network_wrangler</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1">##todo this is just an example for now</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">network_wrangler</span><span class="o">.</span><span class="n">setup_logging</span><span class="p">()</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1">## Network Manipulation</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">my_network</span> <span class="o">=</span> <span class="n">network_wrangler</span><span class="o">.</span><span class="n">read_roadway_network</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="c1"># returns</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">my_network</span><span class="o">.</span><span class="n">apply_project_card</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="c1"># returns</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">my_network</span><span class="o">.</span><span class="n">write_roadway_network</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="c1"># returns</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="c1">## Scenario Building</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">my_scenario</span> <span class="o">=</span> <span class="n">network_wrangler</span><span class="o">.</span><span class="n">create_scenario</span><span class="p">(</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>        <span class="n">base_scenario</span><span class="o">=</span><span class="n">my_base_scenario</span><span class="p">,</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>        <span class="n">card_search_dir</span><span class="o">=</span><span class="n">project_card_directory</span><span class="p">,</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a>        <span class="n">tags</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;baseline-2050&quot;</span><span class="p">]</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>        <span class="p">)</span>
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_all_projects</span><span class="p">()</span>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;my_project/baseline&quot;</span><span class="p">,</span> <span class="s2">&quot;baseline-2050&quot;</span><span class="p">)</span>
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="n">outfile</span><span class="o">=</span><span class="s2">&quot;scenario_summary_baseline.txt&quot;</span><span class="p">)</span>
+</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>
+</span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">add_projects_from_files</span><span class="p">(</span><span class="n">list_of_build_project_card_files</span><span class="p">)</span>
+</span><span id="__span-9-23"><a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">queued_projects</span>
+</span><span id="__span-9-24"><a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">apply_all_projects</span><span class="p">()</span>
+</span><span id="__span-9-25"><a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a><span class="n">my_scenario</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;my_project/build&quot;</span><span class="p">,</span> <span class="s2">&quot;baseline&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="attribution">Attribution<a class="headerlink" href="#attribution" title="Permanent link"> ¶</a></h2>
 <p>NetworkWrangler was developed using resources from the <a href="bayareametro.gov">Metropolitan Transportation Commission</a>, <a href="https://metrocouncil.org/">Metropolitan Council MN</a>, and in-kind time from <a href="https://urbanlabs.io">UrbanLabs LLC</a> and <a href="www.wsp.com">WSP</a>.  It is currently maintained using in-kind time&hellip;so please be patient.</p>
