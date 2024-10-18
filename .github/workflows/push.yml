@@ -37,7 +37,6 @@ jobs:
       run: ruff check --output-format=github network_wrangler
     - name: Run tests with coverage and benchmarking
       run: |
-          set -o pipefail
           pytest --junitxml=coverage.xml \
                  --benchmark-save=pr_benchmark \
                  --benchmark-json=pr_benchmark.json \
