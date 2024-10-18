@@ -33,11 +33,11 @@ from network_wrangler.roadway.network import RoadwayNetwork
 from network_wrangler.utils.utils import make_slug
 
 ACCESS_LOOKUPS = {
-    "rail_only": ["railway"],
-    "walk_access": ["footway", "path", "steps", "residential"],
-    "bike_access": ["path", "cycleway", "service", "tertiary", "residential"],
-    "drive_access": ~["footway", "path", "steps", "cycleway", None],
-    "truck_access": ~["footway", "path", "steps", "cycleway", None],
+    "rail_only": {"allow": ["railway"]},
+    "walk_access": {"allow": ["footway", "path", "steps", "residential"]},
+    "bike_access": {"allow": ["path", "cycleway", "service", "tertiary", "residential"]},
+    "drive_access": {"deny": ["footway", "path", "steps", "cycleway"]},
+    "truck_access": {"deny": ["footway", "path", "steps", "cycleway"]},
 }
 
 LANES_LOOKUPS = {
@@ -89,8 +89,13 @@ def osm_edges_to_wr_links(edges, access_lookups=ACCESS_LOOKUPS, lanes_lookup=LAN
     """Converts OSM edges to Wrangler links."""
     links_df = edges.reset_index()
     links_df = links_df.loc[:, list(link_field_dict.keys())].rename(columns=link_field_dict)
-    for access_field, access_values in access_lookups.items():
-        links_df[access_field] = links_df.roadway.isin(access_values)
+    for access_field, allow_deny in access_lookups.items():
+        if allow_deny.get("allow"):
+            access_values = allow_deny["allow"]
+            links_df[access_field] = links_df.roadway.isin(access_values)
+        elif allow_deny.get("deny"):
+            noaccess_values = allow_deny["deny"]
+            links_df[access_field] = ~links_df.roadway.isin(noaccess_values)
     links_df["lanes"] = links_df["roadway"].map(lanes_lookup)
     links_df.A = links_df.A.astype(int)
     links_df.B = links_df.B.astype(int)

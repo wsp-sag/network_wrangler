@@ -3,7 +3,7 @@ name: Push Workflow
 on: [push]
 
 jobs:
-  build:
+  tests:
 
     runs-on: ubuntu-latest
     strategy:
@@ -32,56 +32,27 @@ jobs:
         pip install -r requirements.docs.txt
     - name: Install package
       run: |
-        pip install -e .[test]
+        pip install -e .
     - name: Run Ruff
       run: ruff check --output-format=github network_wrangler
     - name: Run tests with coverage and benchmarking
       run: |
           set -o pipefail
-          pytest --junitxml=pytest.xml \
+          pytest --junitxml=coverage.xml \
                  --benchmark-save=pr_benchmark \
                  --benchmark-json=pr_benchmark.json \
                  --cov-report=term-missing:skip-covered \
-                 --cov=network_wrangler tests/ 2>&1 | \
-          tee -a pytest-coverage.txt
+                 --cov=network_wrangler tests
+    - name: Store benchmark result
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        tool: 'pytest'
+        output-file-path: pr_benchmark.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        comment-on-alert: true
+        summary-always: true
     - name: Pytest coverage comment
       if: github.event_name == 'pull_request'
       uses: MishaKav/pytest-coverage-comment@main
       with:
-        pytest-coverage-path: ./pytest-coverage.txt
-        junitxml-path: ./pytest.xml
-    - name: If a pull request, add a comment about coverage
-      if: github.event_name == 'pull_request'
-      uses: coroo/pytest-coverage-commentator@v1.0.2
-    - name: Retrieve benchmark results from base branch
-      if: github.event_name == 'pull_request'
-      id: compare
-      run: |
-        git checkout ${{ github.event.pull_request.base.ref }}
-        if [ -f "tests/.benchmarks/benchmark_results.json" ]; then
-          cp tests/.benchmarks/benchmark_results.json base_benchmark.json
-          echo "::set-output name=benchmark_exists::true"
-        else
-          echo "::set-output name=benchmark_exists::false"
-        fi
-    - name: Compare benchmarks
-      if: steps.compare.outputs.benchmark_exists == 'true'
-      run: |
-        pytest-benchmark compare base_benchmark.json pr_benchmark.json --csv=comparison.csv --json=comparison.json --histogram=histogram.png
-
-    - name: Post comparison comment on pull request
-      if: steps.compare.outputs.benchmark_exists == 'true'
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
-        header: 'Benchmark Comparison'
-        message: |
-          ## Benchmark Results
-          ![Benchmark Comparison](./histogram.png)
-
-          | Test name | PR Benchmark | Base Benchmark | Difference |
-          | --------- | ------------ | -------------- | ---------- |
-          ```bash
-          pytest-benchmark compare base_benchmark.json pr_benchmark.json --csv --diff
-          ```
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        junitxml-path: ./coverage.xml
