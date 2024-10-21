@@ -32,7 +32,7 @@ jobs:
       run: ruff check --output-format=github network_wrangler
     - name: Run tests with coverage and benchmarking
       run: |
-          pytest --junitxml=coverage.xml --benchmark-save=benchmark --benchmark-json=benchmark.json
+          pytest --junitxml=pytest.xml --cov-report "xml:coverage.xml" --benchmark-save=benchmark --benchmark-json=benchmark.json
     - name: Build docs
       run: |
         mike deploy --push ${{ github.ref_name }}
@@ -45,18 +45,21 @@ jobs:
       with:
         tool: 'pytest'
         output-file-path: benchmark.json
+        alert-threshold: '125%'
         github-token: ${{ secrets.GITHUB_TOKEN }}
         comment-on-alert: true
         summary-always: true
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage
+        retention-days: 5
+        path: |
+          coverage.xml
     - name: Pytest coverage comment
       if: github.event_name == 'pull_request'
       uses: MishaKav/pytest-coverage-comment@main
       with:
-        junitxml-path: ./coverage.xml
-    - name: Upload coverage and benchmark artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage-and-benchmark
-        path: |
-          coverage.xml
-          benchmark.json
+        pytest-xml-coverage-path: coverage.xml
+        junitxml-path: pytest.xml
+    
