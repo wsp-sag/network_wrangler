@@ -35,11 +35,6 @@
     "aliases": []
   },
   {
-    "version": "delete-irrelevant-docs",
-    "title": "delete-irrelevant-docs",
-    "aliases": []
-  },
-  {
     "version": "change_project_apply_handling",
     "title": "change_project_apply_handling",
     "aliases": []
