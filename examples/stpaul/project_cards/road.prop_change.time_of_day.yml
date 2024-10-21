@@ -1,0 +1,47 @@
+project: Time of day based properties
+roadway_property_change:
+  facility:
+    links:
+      model_link_id:
+        - 224
+  property_changes:
+    lanes:
+      set: 1
+      scoped:
+        - timespan:
+          - '9:00'
+          - '16:00'
+          set: 0
+        - timespan:
+          - '19:00'
+          - '6:00'
+          set: 0
+        - timespan:
+          - '16:00'
+          - '19:00'
+          set: 0
+        - timespan:
+          - '6:00'
+          - '9:00'
+          set: 2
+    access:
+      set: 'no'
+      scoped:
+        - timespan:
+          - '16:00'
+          - '19:00'
+          set: 'no'
+        - timespan:
+          - '6:00'
+          - '9:00'
+          set: 'no'
+        - timespan:
+          - '19:00'
+          - '6:00'
+          set: 'no'
+        - timespan:
+          - '9:00'
+          - '16:00'
+          set: 'no'
+    roadway:
+      set: motorway

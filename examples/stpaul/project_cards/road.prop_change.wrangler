@@ -1,0 +1,5 @@
+---
+project: mega freeways
+---
+
+roadway_net.links_df.loc[roadway_net.links_df['lanes'] == 4, 'lanes'] = 12
