@@ -15,11 +15,6 @@
     "aliases": []
   },
   {
-    "version": "fix-logging-loc",
-    "title": "fix-logging-loc",
-    "aliases": []
-  },
-  {
     "version": "fix-greaterthan24hrtimes",
     "title": "fix-greaterthan24hrtimes",
     "aliases": []
