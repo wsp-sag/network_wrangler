@@ -1,6 +1,6 @@
 # This workflow will build and upload a Python Package to PyPI
 # https://github.com/marketplace/actions/pypi-publish
-name: Publish Python Package 📦 to PyPI
+name: Build + Publish Python Package 📦 to PyPI
 on:
   release:
       types: [created]

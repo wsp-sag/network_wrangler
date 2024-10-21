@@ -1,6 +1,6 @@
 # This workflow will build and upload a Python Package to TestPyPI
 # https://github.com/marketplace/actions/pypi-publish
-name: Testing Building and Publish Python Package  to TestPyPI
+name: Test Building + Publishing to TestPyPI
 on:
   push:
     branches: [main, develop]
