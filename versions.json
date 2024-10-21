@@ -1,10 +1,5 @@
 [
   {
-    "version": "update_gtfs_data_model",
-    "title": "update_gtfs_data_model",
-    "aliases": []
-  },
-  {
     "version": "selection-refactor",
     "title": "selection-refactor",
     "aliases": []
