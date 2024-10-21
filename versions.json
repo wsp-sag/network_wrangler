@@ -2,7 +2,9 @@
   {
     "version": "selection-refactor",
     "title": "selection-refactor",
-    "aliases": []
+    "aliases": [
+      "v1.0-beta.2"
+    ]
   },
   {
     "version": "develop",
