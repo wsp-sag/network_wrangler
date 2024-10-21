@@ -49,13 +49,6 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         comment-on-alert: true
         summary-always: true
-    - name: Upload coverage artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage
-        retention-days: 5
-        path: |
-          coverage.xml
     - name: Pytest coverage comment
       if: github.event_name == 'pull_request'
       uses: MishaKav/pytest-coverage-comment@main
