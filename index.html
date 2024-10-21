@@ -4,13 +4,15 @@
   <meta charset="utf-8">
   <title>Redirecting</title>
   <noscript>
-    <meta http-equiv="refresh" content="1; url=develop/" />
+    <meta http-equiv="refresh" content="1; url=selection-refactor/" />
   </noscript>
   <script>
-    window.location.replace("develop/" + window.location.hash);
+    window.location.replace(
+      "selection-refactor/" + window.location.search + window.location.hash
+    );
   </script>
 </head>
 <body>
-  Redirecting to <a href="develop/">develop/</a>...
+  Redirecting to <a href="selection-refactor/">selection-refactor/</a>...
 </body>
 </html>
