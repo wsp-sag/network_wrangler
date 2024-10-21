@@ -20,11 +20,6 @@
     "aliases": []
   },
   {
-    "version": "fix-conflicting-scoped-properties",
-    "title": "fix-conflicting-scoped-properties",
-    "aliases": []
-  },
-  {
     "version": "develop",
     "title": "develop",
     "aliases": []
