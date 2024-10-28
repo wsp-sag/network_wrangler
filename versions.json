@@ -3,9 +3,14 @@
     "version": "selection-refactor",
     "title": "selection-refactor",
     "aliases": [
-      "latest",
-      "v1.0-beta.2"
+      "v1.0-beta.2",
+      "latest"
     ]
+  },
+  {
+    "version": "main",
+    "title": "main",
+    "aliases": []
   },
   {
     "version": "develop",
