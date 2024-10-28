@@ -1,0 +1,22 @@
+project: route transit on new roadway
+tags: []
+dependencies:
+  prerequisites: ["add and delete roadway for transit"]
+notes: ''
+changes:
+- transit_routing_change:
+    service:
+      trip_properties:
+        route_id:
+        - 417-111
+        direction_id: 0
+    routing:
+      existing:
+      - -57637
+      - -53282
+      - -57636
+      set:
+      - -57637
+      - -53282
+      - -354063
+      - -57636

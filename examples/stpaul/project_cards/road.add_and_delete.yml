@@ -1,0 +1,56 @@
+project: test multiple add and delete
+tags:
+  - 'add and delete roadway'
+changes:
+  - roadway_addition:
+      nodes:
+      - model_node_id: 314159
+        X: -93.18389
+        Y: 44.96898
+  - roadway_deletion:
+      links:
+        model_link_id:
+          - 281
+          - 477533
+        modes:
+         - "any"
+        ignore_missing: False
+      nodes:
+        model_node_id:
+          - 314159
+        ignore_missing: False
+  - roadway_addition:
+      links:
+      - A: 3230
+        B: 3262
+        model_link_id: 999998
+        trn_priority: 0
+        lanes: 1
+        name: new bike greenway and neighborhood st
+        bike_facility: 3
+        drive_access: 1
+        walk_access: 1
+        bike_access: 1
+        bus_only: 0
+        rail_only: 0
+        roadway: residential
+        distance: 0.10462
+      - A: 3262
+        B: 3230
+        model_link_id: 999997
+        trn_priority: 0
+        lanes: 1
+        name: new bike greenway and neighborhood st
+        bike_facility: 3
+        drive_access: 1
+        walk_access: 1
+        bike_access: 1
+        bus_only: 0
+        rail_only: 0
+        roadway: residential
+        distance: 0.10462
+      nodes:
+      - model_node_id: 354388
+        X: -93.18389
+        Y: 44.96898
+notes: project card with multiple category of add and delete changes

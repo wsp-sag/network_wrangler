@@ -1,0 +1,22 @@
+project: 6th Street Transitway
+tags:
+   - 'example'
+roadway_property_change:
+  facility:
+    links:
+      name:
+        - '6th'
+        - 'Sixth'
+        - 'sixth'
+    from:
+      osm_node_id: '187899923'
+    to:
+      osm_node_id: '187865924'
+  property_changes:
+    lanes:
+      set: 2
+    transit_access:
+      set: 1
+    drive_access:
+      set: 0
+notes: Transitions 6th St E to transitway

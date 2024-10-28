@@ -1,0 +1,90 @@
+site_name: "Network Wrangler"
+site_url: https://wsp-sag.github.io/network_wrangler
+repo_url: https://github.com/wsp-sag/network_wrangler
+
+theme:
+  name: material
+  features:
+    - content.code.annotate
+    - content.code.copy
+    - content.tabs.link
+    - navigation.indexes
+    - navigation.tabs
+    - navigation.expand
+    - toc.integrate
+    - toc.follow
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - autorefs
+  - awesome-pages
+  - include-markdown:
+      opening_tag: "{!"
+      closing_tag: "!}"
+  - mermaid2
+  - mike
+  - mkdocs-jupyter:
+      include_source: True
+  - mkdocstrings:
+      default_handler: python
+      enable_inventory: true
+      handlers:
+        python:
+          paths: [.]
+          selection:
+            new_path_syntax: true
+          rendering:
+            show_root_heading: true
+            show_source: true
+            heading_level: 3
+  - search
+
+watch:
+ - network_wrangler
+
+extra:
+  version:
+    provider: mike
+    default: latest
+
+#extra_javascript:
+
+
+extra_css:
+  - https://use.fontawesome.com/releases/v5.13.0/css/all.css
+  - css/extra.css
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      linenums: true
+  - meta
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_div_format
+  - pymdownx.smartsymbols
+  - smarty
+  - toc:
+      # insert a blank space before the character
+      permalink: " ¶"

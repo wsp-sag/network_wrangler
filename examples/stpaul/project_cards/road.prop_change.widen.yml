@@ -1,0 +1,12 @@
+project: Widen Minnehaha Pkwy
+tags: ["baseline"]
+notes: This facility selection is done with specific model link IDs. It could also be done using from/to nodes and the name.
+changes:
+- roadway_property_change:
+    facility:
+      links:
+        name: ["Minnehaha"]
+    property_changes:
+      lanes:
+        existing: 1
+        set: 3

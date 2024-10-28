@@ -1,0 +1,13 @@
+fontawesome_markdown
+jupyter
+markdown == 3.3.1 # needs to be compatible with mkdocs, which needs > markdown 3.2.1
+mike
+mkdocs
+mkdocs-autorefs
+mkdocs-awesome-pages-plugin
+mkdocs-include-markdown-plugin
+mkdocs-jupyter
+mkdocs-material
+mkdocs-mermaid2-plugin
+mkdocstrings
+mkdocstrings-python

@@ -1,0 +1,21 @@
+# includes/excludes all rules by default
+default: true
+
+# 4-space list indentation works best with MkDocs
+MD007:
+  indent: 4
+
+# Remove line length limit
+MD013: false
+
+# Remove "no bare URLs"
+MD034: false
+
+# Remove "no emphasis as heading"
+MD036: false
+
+# Remove "no first line must by h1" b/c sometimes importing from other sources
+MD041: false
+
+# Code block style - want to be able to use fenced code blocks to apply coloring
+MD046: false

@@ -1,0 +1,10 @@
+coverage
+mypy
+mypy_extensions
+pre-commit
+pytest
+pytest-benchmark
+pytest-cov
+radon
+ruff
+vulture
