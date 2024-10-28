@@ -1,0 +1,13 @@
+project: 6th St E Road Diet
+tags:
+   - 'example'
+roadway_property_change:
+  facility:
+    links:
+      osm_link_id:
+        - '223371529' # 6th St E
+  property_changes:
+    lanes:  #changes number of lanes 3 to 2 (reduction of 1)
+      existing: 3
+      change: -1
+notes: Simple project example to do a road diet on 6th St E in front of MetCouncil

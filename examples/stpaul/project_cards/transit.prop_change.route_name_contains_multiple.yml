@@ -1,0 +1,8 @@
+project: Improve Express Bus Frequency B
+transit_property_change:
+  service:
+    trip_properties:
+      route_long_name: [Express, 'Ltd Stop']
+  property_changes:
+    headway_secs:
+      set: 1800

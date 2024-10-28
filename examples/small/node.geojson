@@ -1,0 +1,107 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 1
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09489405742123,
+            44.94974427235539
+          ],
+          "type": "Point"
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 2
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09383485029893,
+            44.95052589259677
+          ],
+          "type": "Point"
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 3
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09241396269603,
+            44.951229798791985
+          ],
+          "type": "Point"
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 4
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09149038691803,
+            44.95165945268329
+          ],
+          "type": "Point"
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 5
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09054743423603,
+            44.950791002244046
+          ],
+          "type": "Point"
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 6
+        },
+        "geometry": {
+          "coordinates": [
+            -93.0916712271583,
+            44.95046190180227
+          ],
+          "type": "Point"
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "model_node_id": 7
+        },
+        "geometry": {
+          "coordinates": [
+            -93.09311596139162,
+            44.94975132601343
+          ],
+          "type": "Point"
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {"model_node_id": 8},
+        "geometry": {
+          "coordinates": [
+            -93.0942991236113,
+            44.949163007801786
+          ],
+          "type": "Point"
+        }
+      }
+    ]
+  }

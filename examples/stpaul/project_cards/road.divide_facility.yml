@@ -1,0 +1,129 @@
+project: Divide Roadway Facility
+changes:
+- roadway_deletion:
+    links:
+      model_link_id:
+      - 400522
+      - 119588
+      - 119603
+      - 61312
+      - 119601
+      - 61313
+      - 166735
+      - 153591
+      - 182587
+      - 142533
+- roadway_addition:
+    links:
+      - A: 354386
+        B: 354387
+        bike_facility: 3
+        distance: 0.14744
+        lanes: 1
+        model_link_id: 123456
+        roadway_class: 10
+        bike_access: 1
+        drive_access: 1
+        name: newlink
+        roadway: residential
+        rail_only: 0
+        bus_only: 0
+        walk_access: 1
+      - A: 354387
+        B: 354388
+        bike_facility: 3
+        distance: 0.57787
+        lanes: 1
+        model_link_id: 1234567
+        roadway_class: 10
+        bike_access: 1
+        drive_access: 1
+        name: newlink
+        roadway: residential
+        rail_only: 0
+        bus_only: 0
+        walk_access: 1
+      - A: 354388
+        B: 354389
+        bike_facility: 3
+        distance: 0.14667
+        lanes: 1
+        model_link_id: 12345678
+        roadway_class: 10
+        bike_access: 1
+        drive_access: 1
+        name: newlink
+        roadway: residential
+        rail_only: 0
+        bus_only: 0
+        walk_access: 1
+      - A: 354390
+        B: 354391
+        bike_facility: 3
+        distance: 0.13203
+        lanes: 1
+        model_link_id: 123456789
+        roadway_class: 10
+        bike_access: 1
+        drive_access: 1
+        name: newlink
+        roadway: residential
+        rail_only: 0
+        bus_only: 0
+        walk_access: 1
+    nodes:
+      - X: -93.17178
+        Y: 44.96917
+        model_node_id: 354386
+      - X: -93.17424
+        Y: 44.96912
+        model_node_id: 354387
+      - X: -93.18389
+        Y: 44.96898
+        model_node_id: 354388
+      - X: -93.18588
+        Y: 44.96755
+        model_node_id: 354389
+      - X: -93.18562
+        Y: 44.96746
+        model_node_id: 354390
+      - X: -93.18384
+        Y: 44.96876
+        model_node_id: 354391
+- roadway_property_change:
+    facility:
+      links:
+        model_link_id:
+          - 166734
+    property_changes:
+      AADT:
+        set: 0
+      count_AM:
+        set: 0
+      count_MD:
+        set: 0
+      count_PM:
+        set: 0
+      count_NT:
+        set: 0
+      count_daily:
+        set: 0
+      roadway_class:
+        set: 10
+      BIKE:
+        set: 3
+      walk_access:
+        set: 1
+      bike_access:
+        set: 1
+      distance:
+        set: 0.32302
+- roadway_property_change:
+    facility:
+      links:
+        model_link_id:
+          - 182586
+    property_changes:
+      roadway_class:
+        existing: 40
+        set: 10

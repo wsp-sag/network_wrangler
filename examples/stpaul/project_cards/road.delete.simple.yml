@@ -1,0 +1,11 @@
+project: test simple roadway deletion
+tags:
+  - 'delete roadway'
+roadway_deletion:
+  links:
+    model_link_id:
+      - 477533
+    modes:
+      - 'any'
+    ignore_missing: False
+notes: Simple project card to delete roadway
