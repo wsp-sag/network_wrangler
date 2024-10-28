@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: "🪲 [BUG] Description of problem"
+title: "🪲 "
 labels: bug
 assignees: ''
 
@@ -9,20 +9,19 @@ assignees: ''
 
 ## Describe the bug
 
-A clear and concise description of what the bug is or the error code you got. e.g.
+<!-- A clear and concise description of what the bug is or the error code you got. e.g.
 
 ```python
 KeyError: 'Passing list-likes to .loc or [] with any missing labels is no longer supported, see https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#deprecate-loc-reindex-listlike'
 ```
+ -->
+
+### Thoughts on resolution
 
 ## To Reproduce
 
-Steps to reproduce the behavior:
+<!-- What are the steps to reproduce the behavior -->
 
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
 
 ### Failing tests
 
@@ -30,8 +29,6 @@ Steps to reproduce the behavior:
 - [ ]
 
 ### Triggering line of code
-
-### Thoughts on resolution
 
 ### Full stack trace
 

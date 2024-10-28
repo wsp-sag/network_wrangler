@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: "🚀 [FEATURE]"
+title: "🚀 "
 labels: enhancement
 assignees: ''
 
@@ -11,15 +11,23 @@ assignees: ''
 
 *As a ...insert type of user... I'd like to ...insert desired feature or behavior...*
 
-### Priority
-
-### Level of Effort
+### What Happens Now
 
 ### Resolution Ideas
 
+<!-- Describe what you'd like it to look like -->
+
+### Priority
+
+<!-- Use Low/Medium/High -->
+
+### Level of Effort
+
+<!-- Use tee-shirt-sizing: S/M/L/XL -->
+
 ### Project
 
-*Is there a funder or project associated with this feature?*
+<!-- Is there a funder or project associated with this feature?. -->
 
 ### Who should be involved?
 
