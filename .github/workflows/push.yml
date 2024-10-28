@@ -39,7 +39,7 @@ jobs:
     - name: Update latest docs
       if: github.ref == 'refs/heads/main'
       run: |
-        mike alias ${{ github.ref_name }} latest --push
+        mike alias ${{ github.ref_name }} latest --update-aliases --push
     - name: Store benchmark result
       uses: benchmark-action/github-action-benchmark@v1
       with:
