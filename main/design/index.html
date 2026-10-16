@@ -586,33 +586,6 @@
 <p>The value for a scoped property for a given link record is a list of <a href="../networks/#links">ScopedLinkValueItem</a> objects.</p>
 <div class="doc doc-object doc-class">
 <div class="doc doc-contents first">
-<div style="display: none">
-<a class="autorefs autorefs-internal" href="../api_roadway/#network_wrangler.models.roadway.types.ScopedLinkValueItem" id="mermaid-link-network_wrangler.models.roadway.types.ScopedLinkValueItem" title="network_wrangler.models.roadway.types.ScopedLinkValueItem"></a>
-<span title="network_wrangler.models._base.records.RecordModel"></span>
-</div>
-<pre class="mermaid"><code id="mermaid-diagram-network_wrangler.models.roadway.types.ScopedLinkValueItem">
-              flowchart TD
-              network_wrangler.models.roadway.types.ScopedLinkValueItem[ScopedLinkValueItem]
-              network_wrangler.models._base.records.RecordModel[RecordModel]
-
-                              network_wrangler.models._base.records.RecordModel --&gt; network_wrangler.models.roadway.types.ScopedLinkValueItem
-                
-
-
-              click network_wrangler.models.roadway.types.ScopedLinkValueItem href "" "network_wrangler.models.roadway.types.ScopedLinkValueItem"
-              click network_wrangler.models._base.records.RecordModel href "" "network_wrangler.models._base.records.RecordModel"
-            </code></pre>
-<script>
-              var diagram = document.getElementById('mermaid-diagram-network_wrangler.models.roadway.types.ScopedLinkValueItem');
-              diagram.innerHTML = diagram.innerHTML.replace(/click ([\w.]+) href "" "\1"/g, function(match, nodeID, offset) {
-                try {
-                  const link = document.getElementById("mermaid-link-" + nodeID).href;
-                  return `click ${nodeID} href "${link}" "${nodeID}"`
-                } catch (e) {
-                  return '';
-                }
-              });
-            </script>
 <p>Define the value of a link property for a particular timespan or category.</p>
 <p><span class="doc-section-title">Attributes:</span></p>
 <table>
@@ -627,7 +600,7 @@
 <tr class="doc-section-item">
 <td><code><span title="network_wrangler.models.roadway.types.ScopedLinkValueItem.`category`">`category`</span></code></td>
 <td>
-<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>
 </td>
 <td>
 <div class="doc-md-description">
@@ -640,7 +613,7 @@ reserved as the default category. Default is <code>DEFAULT_CATEGORY</code>, whic
 <tr class="doc-section-item">
 <td><code><span title="network_wrangler.models.roadway.types.ScopedLinkValueItem.`timespan`">`timespan`</span></code></td>
 <td>
-<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#list">list</a>[<span title="network_wrangler.models._base.types.TimeString">TimeString</span>]</code>
+<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#list">list</a>[<span title="network_wrangler.models._base.types.TimeString">TimeString</span>]</code>
 </td>
 <td>
 <div class="doc-md-description">
@@ -652,7 +625,7 @@ two HH:MM(:SS) strings. Default is <code>DEFAULT_TIMESPAN</code>, which is <code
 <tr class="doc-section-item">
 <td><code><span title="network_wrangler.models.roadway.types.ScopedLinkValueItem.`value`">`value`</span></code></td>
 <td>
-<code><span title="Union">Union</span>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
+<code><span title="Union">Union</span>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/functions.html#float">float</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/functions.html#int">int</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a>]</code>
 </td>
 <td>
 <div class="doc-md-description">
@@ -812,6 +785,14 @@ timespan.</p>
 <tr>
 <td><a href="../api_roadway/#network_wrangler.roadway.shapes"><code>shapes</code></a></td>
 <td>Module for managing roadway shapes.</td>
+</tr>
+<tr>
+<td><a href="../api_roadway/#network_wrangler.roadway.nodes.centroids"><code>nodes.centroids</code></a></td>
+<td>Module for creating zone centroid nodes.</td>
+</tr>
+<tr>
+<td><a href="../api_roadway/#network_wrangler.roadway.links.connectors"><code>links.connectors</code></a></td>
+<td>Module for creating centroid connector links.</td>
 </tr>
 <tr>
 <td><a href="../api_roadway/#network_wrangler.roadway.clip"><code>clip.py</code></a></td>

@@ -1173,7 +1173,7 @@
 <div class="admonition example">
 <p class="admonition-title">Creating and activating a virtual environment using conda</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>conda<span class="w"> </span>create<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11<span class="w"> </span>-n<span class="w"> </span>wrangler-dev<span class="w"> </span><span class="c1">#if you don&#39;t already have a virtual environment</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>conda<span class="w"> </span>create<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11<span class="w"> </span>-n<span class="w"> </span>wrangler-dev<span class="w"> </span><span class="c1">#if you don't already have a virtual environment</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>conda<span class="w"> </span>activate<span class="w"> </span>wrangler-dev
 </span></code></pre></div>
 </div>
@@ -1256,23 +1256,23 @@
 <div class="admonition example">
 <p class="admonition-title"><code>settings.json</code> for VS Code</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nt">&quot;[python]&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">&quot;editor.formatOnSave&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">&quot;editor.defaultFormatter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;charliermarsh.ruff&quot;</span><span class="p">,</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">&quot;editor.codeActionsOnSave&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="nt">&quot;source.fixAll&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;explicit&quot;</span><span class="p">,</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nt">&quot;source.organizeImports&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;explicit&quot;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nt">"[python]"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">"editor.formatOnSave"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">"editor.defaultFormatter"</span><span class="p">:</span><span class="w"> </span><span class="s2">"charliermarsh.ruff"</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">"editor.codeActionsOnSave"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="nt">"source.fixAll"</span><span class="p">:</span><span class="w"> </span><span class="s2">"explicit"</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nt">"source.organizeImports"</span><span class="p">:</span><span class="w"> </span><span class="s2">"explicit"</span>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="p">},</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="nt">&quot;python.testing.pytestArgs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">        </span><span class="s2">&quot;tests&quot;</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="nt">"python.testing.pytestArgs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">        </span><span class="s2">"tests"</span>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="p">],</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="nt">&quot;python.testing.unittestEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="nt">&quot;python.testing.pytestEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">    </span><span class="nt">&quot;python.testing.cwd&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">    </span><span class="nt">&quot;python.testing.autoTestDiscoverOnSaveEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">    </span><span class="nt">&quot;python.defaultInterpreterPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/bin/env python&quot;</span><span class="p">,</span>
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">    </span><span class="nt">&quot;python.testing.pytestPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/opt/miniconda3/envs/wrangler-dev/bin/pytest&quot;</span><span class="p">,</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="nt">"python.testing.unittestEnabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="nt">"python.testing.pytestEnabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">    </span><span class="nt">"python.testing.cwd"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">    </span><span class="nt">"python.testing.autoTestDiscoverOnSaveEnabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">    </span><span class="nt">"python.defaultInterpreterPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/usr/bin/env python"</span><span class="p">,</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">    </span><span class="nt">"python.testing.pytestPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/opt/miniconda3/envs/wrangler-dev/bin/pytest"</span><span class="p">,</span>
 </span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="p">}</span>
 </span></code></pre></div>
 </div>
@@ -1327,26 +1327,36 @@
 <p>Your code <strong>must</strong> pass the pre-commit tests as a part of continuous integration, so you might as well fix anything now if it arises.</p>
 <h5 id="common-ruff-error-codes">Common Ruff Error Codes<a class="headerlink" href="#common-ruff-error-codes" title="Permanent link"> ¶</a></h5>
 <p>Network Wrangler uses <a href="https://docs.astral.sh/ruff/">Ruff</a> for linting. Here are some common error codes you may encounter:</p>
-<p><strong>Complexity Issues:</strong>
-- <a href="https://docs.astral.sh/ruff/rules/too-many-branches/"><code>PLR0912</code></a>: Too many branches (&gt;12) - Consider refactoring the function or add <code># noqa: PLR0912</code> if complexity is necessary
-- <a href="https://docs.astral.sh/ruff/rules/too-many-statements/"><code>PLR0915</code></a>: Too many statements (&gt;50) - Break down into smaller functions or add <code># noqa: PLR0915</code> if justified</p>
-<p><strong>Code Style:</strong>
-- <a href="https://docs.astral.sh/ruff/rules/magic-value-comparison/"><code>PLR2004</code></a>: Magic value used in comparison - Define constants instead of hardcoding values
-- <a href="https://docs.astral.sh/ruff/rules/import-outside-toplevel/"><code>PLC0415</code></a>: Import should be at top-level - Move imports to file top (use <code># noqa: PLC0415</code> for intentional lazy imports)
-- <a href="https://docs.astral.sh/ruff/rules/collapsible-if/"><code>SIM102</code></a>: Use a single if statement - Combine nested if statements with <code>and</code>
-- <a href="https://docs.astral.sh/ruff/rules/if-else-block-instead-of-if-exp/"><code>SIM108</code></a>: Use ternary operator - Replace if-else blocks with ternary for simple assignments
-- <a href="https://docs.astral.sh/ruff/rules/collection-literal-concatenation/"><code>RUF005</code></a>: Consider unpacking instead of concatenation - Use <code>[*list1, item]</code> instead of <code>list1 + [item]</code></p>
-<p><strong>Exception Handling:</strong>
-- <a href="https://docs.astral.sh/ruff/rules/raw-string-in-exception/"><code>EM101</code></a>: Exception must not use string literal - Assign message to variable first
-- <a href="https://docs.astral.sh/ruff/rules/f-string-in-exception/"><code>EM102</code></a>: Exception must not use f-string literal - Assign f-string to variable first</p>
-<p><strong>Function Arguments:</strong>
-- <a href="https://docs.astral.sh/ruff/rules/unused-function-argument/"><code>ARG001</code></a>: Unused function argument - Prefix with <code>_</code> if intentionally unused
-- <a href="https://docs.astral.sh/ruff/rules/unused-loop-control-variable/"><code>B007</code></a>: Loop control variable not used - Prefix with <code>_</code> (e.g., <code>for _idx, item in ...</code>)
-- <a href="https://docs.astral.sh/ruff/rules/function-uses-loop-variable/"><code>B023</code></a>: Function uses loop variable - Use default arguments to capture values (e.g., <code>lambda x, var=loop_var: ...</code>)</p>
-<p><strong>Other Common Issues:</strong>
-- <a href="https://docs.astral.sh/ruff/rules/unnecessary-list-comprehension-set/"><code>C403</code></a>: Unnecessary list comprehension - Use set comprehension directly <code>{item for ...}</code> instead of <code>set([item for ...])</code>
-- <a href="https://docs.astral.sh/ruff/rules/unnecessary-double-cast-or-process/"><code>C414</code></a>: Unnecessary <code>list()</code> call within <code>sorted()</code> - Remove redundant conversion
-- <a href="https://docs.astral.sh/ruff/rules/os-path-exists/"><code>PTH110</code></a>: Use <code>Path.exists()</code> instead of <code>os.path.exists()</code></p>
+<p><strong>Complexity Issues:</strong></p>
+<ul>
+<li><a href="https://docs.astral.sh/ruff/rules/too-many-branches/"><code>PLR0912</code></a>: Too many branches (&gt;12) - Consider refactoring the function or add <code># noqa: PLR0912</code> if complexity is necessary</li>
+<li><a href="https://docs.astral.sh/ruff/rules/too-many-statements/"><code>PLR0915</code></a>: Too many statements (&gt;50) - Break down into smaller functions or add <code># noqa: PLR0915</code> if justified</li>
+</ul>
+<p><strong>Code Style:</strong></p>
+<ul>
+<li><a href="https://docs.astral.sh/ruff/rules/magic-value-comparison/"><code>PLR2004</code></a>: Magic value used in comparison - Define constants instead of hardcoding values</li>
+<li><a href="https://docs.astral.sh/ruff/rules/import-outside-toplevel/"><code>PLC0415</code></a>: Import should be at top-level - Move imports to file top (use <code># noqa: PLC0415</code> for intentional lazy imports)</li>
+<li><a href="https://docs.astral.sh/ruff/rules/collapsible-if/"><code>SIM102</code></a>: Use a single if statement - Combine nested if statements with <code>and</code></li>
+<li><a href="https://docs.astral.sh/ruff/rules/if-else-block-instead-of-if-exp/"><code>SIM108</code></a>: Use ternary operator - Replace if-else blocks with ternary for simple assignments</li>
+<li><a href="https://docs.astral.sh/ruff/rules/collection-literal-concatenation/"><code>RUF005</code></a>: Consider unpacking instead of concatenation - Use <code>[*list1, item]</code> instead of <code>list1 + [item]</code></li>
+</ul>
+<p><strong>Exception Handling:</strong></p>
+<ul>
+<li><a href="https://docs.astral.sh/ruff/rules/raw-string-in-exception/"><code>EM101</code></a>: Exception must not use string literal - Assign message to variable first</li>
+<li><a href="https://docs.astral.sh/ruff/rules/f-string-in-exception/"><code>EM102</code></a>: Exception must not use f-string literal - Assign f-string to variable first</li>
+</ul>
+<p><strong>Function Arguments:</strong></p>
+<ul>
+<li><a href="https://docs.astral.sh/ruff/rules/unused-function-argument/"><code>ARG001</code></a>: Unused function argument - Prefix with <code>_</code> if intentionally unused</li>
+<li><a href="https://docs.astral.sh/ruff/rules/unused-loop-control-variable/"><code>B007</code></a>: Loop control variable not used - Prefix with <code>_</code> (e.g., <code>for _idx, item in ...</code>)</li>
+<li><a href="https://docs.astral.sh/ruff/rules/function-uses-loop-variable/"><code>B023</code></a>: Function uses loop variable - Use default arguments to capture values (e.g., <code>lambda x, var=loop_var: ...</code>)</li>
+</ul>
+<p><strong>Other Common Issues:</strong></p>
+<ul>
+<li><a href="https://docs.astral.sh/ruff/rules/unnecessary-list-comprehension-set/"><code>C403</code></a>: Unnecessary list comprehension - Use set comprehension directly <code>{item for ...}</code> instead of <code>set([item for ...])</code></li>
+<li><a href="https://docs.astral.sh/ruff/rules/unnecessary-double-cast-or-process/"><code>C414</code></a>: Unnecessary <code>list()</code> call within <code>sorted()</code> - Remove redundant conversion</li>
+<li><a href="https://docs.astral.sh/ruff/rules/os-path-exists/"><code>PTH110</code></a>: Use <code>Path.exists()</code> instead of <code>os.path.exists()</code></li>
+</ul>
 <p>For a complete list of rules, see the <a href="https://docs.astral.sh/ruff/rules/">Ruff Rules Documentation</a>.</p>
 <h4 id="adding-tests">Adding Tests<a class="headerlink" href="#adding-tests" title="Permanent link"> ¶</a></h4>
 <p>..to come</p>

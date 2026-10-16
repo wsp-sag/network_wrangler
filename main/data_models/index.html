@@ -526,6 +526,7 @@ graph TD
     A --&gt; D["RoadShapesTable"]
     A --&gt; E["ExplodedScopedLinkPropertyTable"]
     A --&gt; F["NodeGeometryChangeTable"]
+    A --&gt; G["ZonesTable"]
 
     click A "https://pandera.readthedocs.io/en/stable/reference/generated/pandera.api.pandas.model.DataFrameModel.html"
     click B "../api_roadway/#network_wrangler.models.roadway.tables.RoadLinksTable"
@@ -533,12 +534,13 @@ graph TD
     click D "../api_roadway/#network_wrangler.models.roadway.tables.RoadShapesTable"
     click E "../api_roadway/#network_wrangler.models.roadway.tables.ExplodedScopedLinkPropertyTable"
     click F "../api_roadway/#network_wrangler.roadway.nodes.edit.NodeGeometryChangeTable"
+    click G "../api_roadway/#network_wrangler.models.roadway.tables.ZonesTable"
 
     classDef pandera fill:#e1f5fe,stroke:#01579b,stroke-width:3px
     classDef roadway fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
 
     class A pandera
-    class B,C,D,E,F roadway</div>
+    class B,C,D,E,F,G roadway</div>
 <h3 id="transitgtfs-inheritance-diagrams">Transit/GTFS Inheritance Diagrams<a class="headerlink" href="#transitgtfs-inheritance-diagrams" title="Permanent link"> ¶</a></h3>
 <div class="mermaid">%%{init: {'theme':'base', 'themeVariables': {'fontSize': '12px'}}}%%
 graph TD
