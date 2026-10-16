@@ -8,6 +8,7 @@ Includes:
 - RoadLinksTable
 - RoadNodesTable
 - RoadShapesTable
+- ZonesTable
 - ExplodedScopedLinkPropertyTable
 """
 
@@ -398,6 +399,31 @@ class RoadShapesTable(DataFrameModel):
 
         coerce = True
         _pk: ClassVar[TablePrimaryKeys] = ["shape_id"]
+
+
+class ZonesTable(DataFrameModel):
+    """Datamodel for zone polygons and centroid points used by centroid connectors.
+
+    Attributes:
+        zone_id (int): Zone identifier used as centroid ``model_node_id``.
+        geometry (GeoSeries): Polygon (or multipolygon) zone geometry.
+        geometry_centroid (GeoSeries): Point geometry representing the zone centroid.
+
+    !!! TODO
+        Add an instance of this as an attribute of
+        [`ModelRoadwayNetwork`][network_wrangler.roadway.model_roadway.ModelRoadwayNetwork]
+        so that zone geometry is carried through alongside the model links/nodes rather than
+        managed separately by the caller?
+    """
+
+    zone_id: Series[int] = Field(coerce=True, nullable=False)
+    geometry: GeoSeries = Field(nullable=False)
+    geometry_centroid: GeoSeries = Field(nullable=False)
+
+    class Config:
+        """Config for ZonesTable."""
+
+        coerce = True
 
 
 class ExplodedScopedLinkPropertyTable(DataFrameModel):

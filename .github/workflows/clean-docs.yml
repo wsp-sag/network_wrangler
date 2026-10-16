@@ -51,13 +51,13 @@ jobs:
           BRANCH_NAME="${{ steps.branch.outputs.branch-name }}"
           echo "Event type: ${{ github.event_name }}"
           echo "Deleting documentation version for branch: $BRANCH_NAME"
-          
+
           # Skip deletion for main and develop branches
           if [ "$BRANCH_NAME" = "main" ] || [ "$BRANCH_NAME" = "develop" ]; then
             echo "Skipping deletion for protected branch: $BRANCH_NAME"
             exit 0
           fi
-          
+
           # Check if version exists before trying to delete
           echo "Checking if documentation version exists..."
           if mike list | grep -q "^$BRANCH_NAME$"; then

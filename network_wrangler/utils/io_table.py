@@ -6,6 +6,7 @@ import tempfile
 import weakref
 from datetime import datetime
 from pathlib import Path
+from typing import Union
 
 import geopandas as gpd
 import pandas as pd
@@ -41,7 +42,177 @@ class FileWriteError(Exception):
     """Raised when there is an error writing a file."""
 
 
-def write_table(
+def _convert_pydantic_to_dict(val):
+    """Convert Pydantic models to dictionaries for JSON serialization."""
+    from pydantic import BaseModel
+
+    if isinstance(val, BaseModel):
+        return val.model_dump()
+    if isinstance(val, list):
+        return [_convert_pydantic_to_dict(item) for item in val]
+    return val
+
+
+def _convert_geometry_to_geojson(val):
+    """Convert Shapely geometry to GeoJSON dict for serialization."""
+    from shapely.geometry import mapping
+    from shapely.geometry.base import BaseGeometry
+
+    if isinstance(val, BaseGeometry):
+        return mapping(val)
+    return val
+
+
+def _prepare_df_for_json(
+    df: pd.DataFrame | gpd.GeoDataFrame,
+) -> pd.DataFrame | gpd.GeoDataFrame:
+    """Prepare a dataframe for JSON serialization by converting Pydantic models and geometries to dicts."""
+    from pydantic import BaseModel
+    from shapely.geometry.base import BaseGeometry
+
+    df = df.copy()
+    for col in df.columns:
+        if col == "geometry":
+            continue
+
+        # Check first non-null value to determine column type
+        sample_val = None
+        for val in df[col].dropna():
+            sample_val = val
+            break
+
+        if sample_val is None:
+            continue
+
+        # Check if column contains Shapely geometries (e.g., ML_geometry)
+        if isinstance(sample_val, BaseGeometry):
+            df[col] = df[col].apply(_convert_geometry_to_geojson)
+            continue
+
+        # Check if column contains Pydantic models or list of models
+        needs_pydantic_conversion = False
+        if isinstance(sample_val, BaseModel) or (
+            isinstance(sample_val, list)
+            and len(sample_val) > 0
+            and isinstance(sample_val[0], BaseModel)
+        ):
+            needs_pydantic_conversion = True
+
+        if needs_pydantic_conversion:
+            df[col] = df[col].apply(_convert_pydantic_to_dict)
+
+    return df
+
+
+def _coerce_nested_object_columns_for_parquet(
+    df: pd.DataFrame | gpd.GeoDataFrame,
+) -> tuple[pd.DataFrame | gpd.GeoDataFrame, list[str]]:
+    """Coerce nested object values to JSON strings for parquet compatibility.
+
+    Some object columns can contain Python list/dict/set payloads that Arrow
+    cannot infer reliably from mixed object dtype. This helper only normalizes
+    those nested payloads, preserving scalar objects as-is.
+    """
+    out = df.copy()
+    coerced_cols: list[str] = []
+
+    for col in out.columns:
+        if col == "geometry" or not pd.api.types.is_object_dtype(out[col]):
+            continue
+
+        sample = out[col].dropna().head(50)
+        if sample.empty:
+            continue
+
+        if sample.apply(lambda v: isinstance(v, (list, tuple, dict, set))).any():
+
+            def _to_json_if_nested(v):
+                if isinstance(v, set):
+                    v = list(v)
+                if isinstance(v, (list, tuple, dict)):
+                    return json.dumps(convert_numpy_to_list(v), default=str)
+                return v
+
+            out[col] = out[col].apply(_to_json_if_nested)
+            coerced_cols.append(col)
+
+    return out, coerced_cols
+
+
+def _convert_dict_to_scoped_pydantic(val):
+    """Convert dictionaries back to ScopedLinkValueItem Pydantic models."""
+    from ..models.roadway.types import ScopedLinkValueItem
+
+    # Handle JSON strings that need to be parsed first
+    if isinstance(val, str):
+        try:
+            val = json.loads(val)
+        except (json.JSONDecodeError, TypeError):
+            return val
+
+    if isinstance(val, dict):
+        return ScopedLinkValueItem(**val)
+    if isinstance(val, list):
+        return [_convert_dict_to_scoped_pydantic(item) for item in val]
+    return val
+
+
+def _convert_geojson_to_geometry(val):
+    """Convert GeoJSON dict back to Shapely geometry."""
+    from shapely.geometry import shape
+
+    if isinstance(val, dict) and "type" in val and "coordinates" in val:
+        return shape(val)
+    return val
+
+
+def _restore_scoped_pydantic_models(
+    df: pd.DataFrame | gpd.GeoDataFrame,
+) -> pd.DataFrame | gpd.GeoDataFrame:
+    """Restore Pydantic models from dicts for sc_* columns after reading from JSON."""
+    # Only process columns that start with 'sc_' (scoped columns)
+    scoped_cols = [col for col in df.columns if col.startswith("sc_")]
+
+    for col in scoped_cols:
+        # Check if column has dict, list, or JSON string values that need conversion
+        needs_conversion = False
+        for val in df[col].dropna():
+            if isinstance(val, dict):
+                needs_conversion = True
+                break
+            if isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
+                needs_conversion = True
+                break
+            # Also check for JSON strings (common when reading from GeoJSON)
+            if isinstance(val, str) and val.startswith("[") and val.endswith("]"):
+                needs_conversion = True
+                break
+        if needs_conversion:
+            df[col] = df[col].apply(_convert_dict_to_scoped_pydantic)
+    return df
+
+
+def _restore_geometry_columns(
+    df: pd.DataFrame | gpd.GeoDataFrame,
+) -> pd.DataFrame | gpd.GeoDataFrame:
+    """Restore Shapely geometries from GeoJSON dicts for geometry columns (e.g., ML_geometry)."""
+    # Look for columns that end with '_geometry' (excluding main 'geometry' column)
+    geometry_cols = [col for col in df.columns if col.endswith("_geometry") and col != "geometry"]
+
+    for col in geometry_cols:
+        # Check if column has GeoJSON dict values that need conversion
+        sample_val = None
+        for val in df[col].dropna():
+            sample_val = val
+            break
+
+        if sample_val is not None and isinstance(sample_val, dict) and "type" in sample_val:
+            df[col] = df[col].apply(_convert_geojson_to_geometry)
+
+    return df
+
+
+def write_table(  # noqa: PLR0912
     df: pd.DataFrame | gpd.GeoDataFrame,
     filename: Path,
     overwrite: bool = False,
@@ -69,11 +240,30 @@ def write_table(
     if "shp" in filename.suffix:
         df.to_file(filename, index=False, **kwargs)
     elif "parquet" in filename.suffix:
-        df.to_parquet(filename, index=False, **kwargs)
+        # Convert Pydantic models to dicts before parquet serialization
+        df = _prepare_df_for_json(df)
+        try:
+            df.to_parquet(filename, index=False, **kwargs)
+        except Exception as e:
+            # Fallback for Arrow failures on object columns with nested list/dict payloads.
+            if "Conversion failed for column" in str(
+                e
+            ) or "Expected bytes, got a 'list' object" in str(e):
+                safe_df, coerced_cols = _coerce_nested_object_columns_for_parquet(df)
+                if coerced_cols:
+                    WranglerLogger.warning(
+                        f"Parquet write fallback coerced nested object columns to JSON strings: {coerced_cols}"
+                    )
+                    safe_df.to_parquet(filename, index=False, **kwargs)
+                else:
+                    raise
+            else:
+                raise
     elif "csv" in filename.suffix or "txt" in filename.suffix:
         df.to_csv(filename, index=False, date_format="%H:%M:%S", **kwargs)
     elif "geojson" in filename.suffix:
-        # required due to issues with list-like columns
+        # Convert Pydantic models to dicts for JSON serialization
+        df = _prepare_df_for_json(df)
         if isinstance(df, gpd.GeoDataFrame):
             # Reset index to avoid pandas 3.0/pyarrow compatibility issues with to_json
             # Since drop_id=True, we don't need the original index anyway
@@ -83,6 +273,8 @@ def write_table(
         with filename.open("w", encoding="utf-8") as file:
             file.write(data)
     elif "json" in filename.suffix:
+        # Convert Pydantic models to dicts before JSON serialization
+        df = _prepare_df_for_json(df)
         with filename.open("w") as f:
             f.write(df.to_json(orient="records"))
     else:
@@ -108,7 +300,7 @@ def _estimate_read_time_of_file(
     return "unknown"
 
 
-def read_table(
+def read_table(  # noqa: PLR0912
     filename: Path,
     sub_filename: str | None = None,
     boundary_gdf: gpd.GeoDataFrame | None = None,
@@ -166,23 +358,34 @@ def read_table(
         boundary_file=boundary_file,
     )
 
+    df = None
     if any(x in filename.suffix for x in ["geojson", "shp", "csv"]):
         try:
             # masking only supported by fiona engine, which is slower.
             if mask_gdf is None:
-                return gpd.read_file(filename, engine="pyogrio")
-            return gpd.read_file(filename, mask=mask_gdf, engine="fiona")
+                df = gpd.read_file(filename, engine="pyogrio")
+            else:
+                df = gpd.read_file(filename, mask=mask_gdf, engine="fiona")
         except Exception as err:
             if "csv" in filename.suffix:
-                return pd.read_csv(filename)
-            raise FileReadError from err
+                df = pd.read_csv(filename)
+            else:
+                raise FileReadError from err
     elif "parquet" in filename.suffix:
-        return _read_parquet_table(filename, mask_gdf)
+        df = _read_parquet_table(filename, mask_gdf)
     elif "json" in filename.suffix:
         with filename.open() as f:
-            return pd.read_json(f, orient="records")
-    msg = f"Filetype {filename.suffix} not implemented."
-    raise NotImplementedError(msg)
+            df = pd.read_json(f, orient="records")
+    else:
+        msg = f"Filetype {filename.suffix} not implemented."
+        raise NotImplementedError(msg)
+
+    # Restore Pydantic models and geometry columns after reading from JSON/GeoJSON/parquet
+    if any(x in filename.suffix for x in ["geojson", "json", "parquet"]):
+        df = _restore_scoped_pydantic_models(df)
+        df = _restore_geometry_columns(df)
+
+    return df
 
 
 def _read_parquet_table(filename, mask_gdf) -> gpd.GeoDataFrame | pd.DataFrame:

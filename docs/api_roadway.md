@@ -74,6 +74,30 @@ Submodules which define and extend the links, nodes, and shapes dataframe object
     options:
         heading_level: 3
 
+### Centroid Nodes
+
+::: network_wrangler.roadway.nodes.centroids
+    options:
+        heading_level: 3
+        members:
+          - prepare_zones_table
+          - zones_table_to_gdf
+          - add_centroid_nodes
+        show_attributes: true
+        show_if_no_docstring: true
+
+### Centroid Connectors
+
+::: network_wrangler.roadway.links.connectors
+    options:
+        heading_level: 3
+        members:
+          - FitForCentroidConnection
+          - calculate_bearing_from_centroid
+          - add_centroid_connectors
+        show_attributes: true
+        show_if_no_docstring: true
+
 ### Roadway Shapes
 
 ::: network_wrangler.roadway.shapes.io

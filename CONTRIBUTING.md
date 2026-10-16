@@ -158,10 +158,12 @@ Your code **must** pass the pre-commit tests as a part of continuous integration
 Network Wrangler uses [Ruff](https://docs.astral.sh/ruff/) for linting. Here are some common error codes you may encounter:
 
 **Complexity Issues:**
+
 - [`PLR0912`](https://docs.astral.sh/ruff/rules/too-many-branches/): Too many branches (>12) - Consider refactoring the function or add `# noqa: PLR0912` if complexity is necessary
 - [`PLR0915`](https://docs.astral.sh/ruff/rules/too-many-statements/): Too many statements (>50) - Break down into smaller functions or add `# noqa: PLR0915` if justified
 
 **Code Style:**
+
 - [`PLR2004`](https://docs.astral.sh/ruff/rules/magic-value-comparison/): Magic value used in comparison - Define constants instead of hardcoding values
 - [`PLC0415`](https://docs.astral.sh/ruff/rules/import-outside-toplevel/): Import should be at top-level - Move imports to file top (use `# noqa: PLC0415` for intentional lazy imports)
 - [`SIM102`](https://docs.astral.sh/ruff/rules/collapsible-if/): Use a single if statement - Combine nested if statements with `and`
@@ -169,15 +171,18 @@ Network Wrangler uses [Ruff](https://docs.astral.sh/ruff/) for linting. Here are
 - [`RUF005`](https://docs.astral.sh/ruff/rules/collection-literal-concatenation/): Consider unpacking instead of concatenation - Use `[*list1, item]` instead of `list1 + [item]`
 
 **Exception Handling:**
+
 - [`EM101`](https://docs.astral.sh/ruff/rules/raw-string-in-exception/): Exception must not use string literal - Assign message to variable first
 - [`EM102`](https://docs.astral.sh/ruff/rules/f-string-in-exception/): Exception must not use f-string literal - Assign f-string to variable first
 
 **Function Arguments:**
+
 - [`ARG001`](https://docs.astral.sh/ruff/rules/unused-function-argument/): Unused function argument - Prefix with `_` if intentionally unused
 - [`B007`](https://docs.astral.sh/ruff/rules/unused-loop-control-variable/): Loop control variable not used - Prefix with `_` (e.g., `for _idx, item in ...`)
 - [`B023`](https://docs.astral.sh/ruff/rules/function-uses-loop-variable/): Function uses loop variable - Use default arguments to capture values (e.g., `lambda x, var=loop_var: ...`)
 
 **Other Common Issues:**
+
 - [`C403`](https://docs.astral.sh/ruff/rules/unnecessary-list-comprehension-set/): Unnecessary list comprehension - Use set comprehension directly `{item for ...}` instead of `set([item for ...])`
 - [`C414`](https://docs.astral.sh/ruff/rules/unnecessary-double-cast-or-process/): Unnecessary `list()` call within `sorted()` - Remove redundant conversion
 - [`PTH110`](https://docs.astral.sh/ruff/rules/os-path-exists/): Use `Path.exists()` instead of `os.path.exists()`

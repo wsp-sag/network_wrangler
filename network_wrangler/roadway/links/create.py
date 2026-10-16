@@ -1,11 +1,13 @@
 """Functions for creating RoadLinksTables."""
 
 import copy
+import json
 import time
 
 import geopandas as gpd
 import pandas as pd
 from pandera.typing import DataFrame
+from shapely.geometry import shape as shapely_shape
 
 from ...errors import LinkCreationError
 from ...logger import WranglerLogger
@@ -22,8 +24,55 @@ from ...utils.geo import (
     linestring_from_nodes,
     offset_geometry_meters,
 )
-from ...utils.models import validate_call_pyd, validate_df_to_model
+from ...utils.models import order_fields_from_data_model, validate_call_pyd, validate_df_to_model
 from ..utils import create_unique_shape_id, set_df_index_to_pk
+
+
+def _coerce_to_shapely(x):
+    """Coerce a value to a Shapely geometry, handling JSON strings, dicts, None, and NaN."""
+    if x is None or (isinstance(x, float) and pd.isna(x)):
+        return None
+    if isinstance(x, str):
+        x = json.loads(x)
+    if isinstance(x, dict):
+        return shapely_shape(x)
+    return x  # already a Shapely geometry
+
+
+def _prepare_ml_geometry_for_validation(
+    links_df: gpd.GeoDataFrame,
+) -> gpd.GeoDataFrame:
+    """Normalize ``ML_geometry`` to a GeoSeries suitable for schema validation.
+
+    Handles missing columns and values loaded from JSON-like sources (dict/JSON string)
+    while minimizing expensive row-wise operations.
+    """
+    from shapely.geometry import MultiLineString
+
+    if "ML_geometry" not in links_df.columns:
+        links_df["ML_geometry"] = None
+
+    ml = links_df["ML_geometry"]
+    non_null = ml.notna()
+    if non_null.any():
+        needs_coercion = ml[non_null].map(lambda v: isinstance(v, (dict, str)))
+        if needs_coercion.any():
+            idx = needs_coercion[needs_coercion].index
+            links_df.loc[idx, "ML_geometry"] = links_df.loc[idx, "ML_geometry"].map(
+                _coerce_to_shapely
+            )
+
+        ml_non_null = links_df.loc[non_null, "ML_geometry"]
+        ml_multi_mask = ml_non_null.map(lambda g: isinstance(g, MultiLineString))
+        if ml_multi_mask.any():
+            ml_multi = links_df.loc[ml_multi_mask[ml_multi_mask].index]
+            WranglerLogger.warning(
+                f"Found {len(ml_multi)} links with MultiLineString ML_geometry "
+                "(likely two-way managed lane data issue)."
+            )
+
+    links_df["ML_geometry"] = gpd.GeoSeries(links_df["ML_geometry"], index=links_df.index)
+    return links_df
 
 
 def shape_id_from_link_geometry(
@@ -109,7 +158,14 @@ def data_to_links_df(
     links_df.attrs.update(RoadLinksAttrs)
     links_df = set_df_index_to_pk(links_df)
     links_df.gdf_name = links_df.attrs["name"]
+
+    # Ensure ML_geometry is a proper GeoSeries before validation.
+    # pandera >= 0.26 rejects a plain object column of None as not geometry dtype,
+    # even with nullable=True and coerce=True. Pre-casting to GeoSeries avoids this.
+    links_df = _prepare_ml_geometry_for_validation(links_df)
+
     links_df = validate_df_to_model(links_df, RoadLinksTable)
+    links_df = order_fields_from_data_model(links_df, RoadLinksTable)
 
     if len(links_df) < SMALL_RECS:
         WranglerLogger.debug(

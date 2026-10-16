@@ -141,7 +141,12 @@ class TransitNetwork:
 
     @road_net.setter
     def road_net(self, road_net_in: RoadwayNetwork):
-        if road_net_in is None or road_net_in.__class__.__name__ != "RoadwayNetwork":
+        # Check if road_net_in is a RoadwayNetwork or subclass
+        # Use class names in MRO to avoid circular import issues
+        is_roadway_network = road_net_in is not None and any(
+            cls.__name__ == "RoadwayNetwork" for cls in type(road_net_in).__mro__
+        )
+        if not is_roadway_network:
             msg = (
                 f"TransitNetwork's road_net: value must be a valid RoadwayNetwork instance."
                 + f"This is a {type(road_net_in)}."
@@ -300,6 +305,35 @@ class TransitNetwork:
                 self._apply_change(sp, **kwargs)
             return self
         return self._apply_change(project_card, **kwargs)
+
+    def write(
+        self,
+        out_dir: Path | str = ".",
+        prefix: str | None = None,
+        file_format: str = "txt",
+        overwrite: bool = True,
+    ) -> None:
+        """Writes the transit network to files.
+
+        Calls [network_wrangler.transit.io.write_transit()][] but this is useful as a class
+        method so that subclasses can implement it (to force validation, for example).
+
+        Args:
+            out_dir: the path where the output will be saved. Defaults to ".".
+            prefix: prefix to add to each output file name. Defaults to None.
+            file_format: the format of the output files. Defaults to "txt" (csv with .txt
+                extension, the standard GTFS format).
+            overwrite: if True, will overwrite the files if they already exist. Defaults to True.
+        """
+        from .io import write_transit
+
+        write_transit(
+            self,
+            out_dir=out_dir,
+            prefix=prefix,
+            file_format=file_format,
+            overwrite=overwrite,
+        )
 
     def _apply_change(
         self,

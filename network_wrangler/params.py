@@ -8,6 +8,12 @@ by developers who understand the codebase.
 """
 
 LAT_LON_CRS: int = 4326
+WEB_MERCATOR_CRS: int = 3857
+"""Web Mercator CRS used when code needs globally available planar meter units.
+
+Keeping this as a named constant avoids hard-coded EPSG literals in call sites
+and makes CRS intent explicit during review/maintenance.
+"""
 
 DEFAULT_TIMESPAN: list[str] = ["00:00", "24:00"]
 
@@ -15,7 +21,7 @@ DEFAULT_CATEGORY: str = "any"
 
 DEFAULT_SEARCH_MODES: list = ["drive"]
 """
-This is a logical choice because you typically don't want a segment search from A--> F 
+This is a logical choice because you typically don't want a segment search from A--> F
 that includes b,c,d,e (walk nodes) and B,C,D,E (drive modes) to mix and match.
 """
 

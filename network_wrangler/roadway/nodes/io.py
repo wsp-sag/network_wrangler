@@ -65,7 +65,7 @@ def read_nodes(
     )
 
     nodes_df = data_to_nodes_df(nodes_df, in_crs=in_crs, config=config)
-    nodes_df.attrs["source_file"] = filename
+    nodes_df.attrs["source_file"] = str(filename)
     WranglerLogger.info(
         f"Read {len(nodes_df):,} nodes from {filename} in {round(time.time() - start_time, 2)}."
     )

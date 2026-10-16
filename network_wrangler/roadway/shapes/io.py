@@ -76,7 +76,7 @@ def read_shapes(
         f"Read {len(shapes_df)} shapes from file in {round(time.time() - start_time, 2)}."
     )
     shapes_df = df_to_shapes_df(shapes_df, in_crs=in_crs)
-    shapes_df.attrs["source_file"] = filename
+    shapes_df.attrs["source_file"] = str(filename)
     WranglerLogger.info(
         f"Read {len(shapes_df)} shapes from {filename} in {round(time.time() - start_time, 2)}."
     )

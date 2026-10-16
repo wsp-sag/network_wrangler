@@ -51,4 +51,3 @@ runs:
       run: |
         mike alias ${{ inputs.branch-name }} latest --update-aliases --push
       shell: bash
-

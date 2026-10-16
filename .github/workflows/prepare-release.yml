@@ -85,4 +85,3 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ network-wrangler==${{ steps.version-check.outputs.version }}
           python -c "import network_wrangler; print(f'Successfully installed network-wrangler {network_wrangler.__version__}')"
-

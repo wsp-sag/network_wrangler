@@ -19,3 +19,6 @@ MD041: false
 
 # Code block style - want to be able to use fenced code blocks to apply coloring
 MD046: false
+
+# Allow MkDocs autorefs-style reference links (e.g. [`Foo`][module.Foo])
+MD052: false

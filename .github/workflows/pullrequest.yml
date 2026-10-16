@@ -32,10 +32,10 @@ jobs:
       # (unpinned) grabs the latest release, so a new ruff can start failing
       # unchanged code the moment it's published. Keep both in sync.
       - name: Check formatting
-        run: uvx ruff@0.16.0 format --check network_wrangler
+        run: uvx ruff==0.16.4 format --check network_wrangler
 
       - name: Check linting
-        run: uvx ruff@0.16.0 check --output-format=github network_wrangler
+        run: uvx ruff==0.16.4 check --output-format=github network_wrangler
 
   test:
     name: Test (Python ${{ matrix.python-version }}, pandas ${{ matrix.pandas-version }})
@@ -165,7 +165,7 @@ jobs:
             const branchSlug = '${{ steps.branch.outputs.branch-slug }}';
             const docsUrl = `https://network-wrangler.github.io/network_wrangler/${branchSlug}/`;
             const comment = `📚 Documentation has been built and deployed!\n\nView the docs for this PR: [${docsUrl}](${docsUrl})`;
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,

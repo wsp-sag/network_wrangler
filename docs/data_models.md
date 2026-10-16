@@ -89,6 +89,7 @@ graph TD
     A --> D["RoadShapesTable"]
     A --> E["ExplodedScopedLinkPropertyTable"]
     A --> F["NodeGeometryChangeTable"]
+    A --> G["ZonesTable"]
 
     click A "https://pandera.readthedocs.io/en/stable/reference/generated/pandera.api.pandas.model.DataFrameModel.html"
     click B "../api_roadway/#network_wrangler.models.roadway.tables.RoadLinksTable"
@@ -96,12 +97,13 @@ graph TD
     click D "../api_roadway/#network_wrangler.models.roadway.tables.RoadShapesTable"
     click E "../api_roadway/#network_wrangler.models.roadway.tables.ExplodedScopedLinkPropertyTable"
     click F "../api_roadway/#network_wrangler.roadway.nodes.edit.NodeGeometryChangeTable"
+    click G "../api_roadway/#network_wrangler.models.roadway.tables.ZonesTable"
 
     classDef pandera fill:#e1f5fe,stroke:#01579b,stroke-width:3px
     classDef roadway fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
 
     class A pandera
-    class B,C,D,E,F roadway
+    class B,C,D,E,F,G roadway
 ```
 
 ### Transit/GTFS Inheritance Diagrams

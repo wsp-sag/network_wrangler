@@ -1,10 +1,11 @@
 """Module for testing the utils.io module."""
 
+import pandas as pd
 import pytest
 
 from network_wrangler import WranglerLogger
 from network_wrangler.utils.data import diff_dfs
-from network_wrangler.utils.io_table import convert_file_serialization
+from network_wrangler.utils.io_table import convert_file_serialization, read_table, write_table
 from network_wrangler.utils.time import str_to_seconds_from_midnight
 
 
@@ -125,3 +126,27 @@ def test_convert_v1_v0_links():
     val_converted_v1 = links_converted_v0_df.loc[1, "lanes"]
     assert val_v0["default"] == val_converted_v1["default"]
     assert val_v0["timeofday"] == val_converted_v1["timeofday"]
+
+
+def test_write_table_parquet_fallback_nested_object_columns(tmp_path):
+    """Parquet writing falls back by JSON-encoding nested object columns."""
+    df = pd.DataFrame(
+        {
+            "id": [1, 2, 3],
+            # Mixed scalar + nested object values force Arrow fallback coercion.
+            "mixed_payload": ["plain", ["a", "b"], {"k": 1}],
+            "mixed_set": ["plain", {1, 2}, "tail"],
+        }
+    )
+    out = tmp_path / "nested.parquet"
+
+    write_table(df, out, overwrite=True)
+    reloaded = read_table(out)
+
+    assert out.exists()
+    assert len(reloaded) == 3
+    assert reloaded.loc[0, "mixed_payload"] == "plain"
+    assert reloaded.loc[1, "mixed_payload"] == '["a", "b"]'
+    assert reloaded.loc[2, "mixed_payload"] == '{"k": 1}'
+    assert reloaded.loc[0, "mixed_set"] == "plain"
+    assert reloaded.loc[1, "mixed_set"] in ("[1, 2]", "[2, 1]")

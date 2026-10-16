@@ -125,7 +125,8 @@ my_scenario.write(
         TRANSIT_SHAPE_ID_METHOD: scalar
         TRANSIT_SHAPE_ID_SCALAR: 1000000
     MODEL_ROADWAY:
-        ADDITIONAL_COPY_FROM_GP_TO_ML: []
+        ADDITIONAL_COPY_FROM_GP_LINK_TO_ML: []
+        ADDITIONAL_COPY_FROM_GP_NODE_TO_ML: []
         ADDITIONAL_COPY_TO_ACCESS_EGRESS: []
         ML_OFFSET_METERS: -10
     conflicts: {}
@@ -376,7 +377,7 @@ class Scenario:
     def __str__(self):
         """String representation of the Scenario object."""
         s = [f"{key}: {value}" for key, value in self.__dict__.items()]
-        return "\n".join(s)
+        return f"scenario name=[{self.name}]\n" + "\n".join(s)
 
     def _add_dependencies(self, project_name, dependencies: dict) -> None:
         """Add dependencies from a project card to relevant scenario variables.
@@ -471,7 +472,7 @@ class Scenario:
         """Checks all requirements are satisified to apply this specific set of projects.
 
         Including:
-        1. has an associaed project card
+        1. has an associated project card
         2. is in scenario's planned projects
         3. pre-requisites satisfied
         4. co-requisies satisfied by applied or co-applied projects
@@ -888,31 +889,37 @@ def write_applied_projects(scenario: Scenario, out_dir: Path, overwrite: bool = 
 
 def load_scenario(
     scenario_data: dict | Path,
-    name: str = datetime.now().strftime("%Y%m%d%H%M%S"),
+    name: str | None = None,
 ) -> Scenario:
     """Loads a scenario from a file written by Scenario.write() as the base scenario.
 
     Args:
         scenario_data: Scenario data as a dict or path to scenario data file
-        name: Optional name for the scenario. Defaults to current datetime.
+        name: Optional name for the scenario. If not given, uses the name stored in
+            scenario_data if present, otherwise the current datetime. An explicitly
+            provided name always takes precedence over a name found in scenario_data.
     """
-    if not isinstance(scenario_data, dict):
-        WranglerLogger.debug(f"Loading Scenario from file: {scenario_data}")
-        scenario_data = load_dict(scenario_data)
-    else:
+    if isinstance(scenario_data, dict):
         WranglerLogger.debug("Loading Scenario from dict.")
+        scenario_dict = scenario_data
+    else:
+        WranglerLogger.debug(f"Loading Scenario from file: {scenario_data}")
+        scenario_dict = load_dict(scenario_data)
+
+    # an explicitly passed name wins over the name stored in scenario_data
+    scenario_name = name or scenario_dict.get("name") or datetime.now().strftime("%Y%m%d%H%M%S")
 
     base_scenario_data = {
-        "roadway": scenario_data.get("roadway"),
-        "transit": scenario_data.get("transit"),
-        "applied_projects": scenario_data.get("applied_projects", []),
-        "conflicts": scenario_data.get("conflicts", {}),
+        "roadway": scenario_dict.get("roadway"),
+        "transit": scenario_dict.get("transit"),
+        "applied_projects": scenario_dict.get("applied_projects", []),
+        "conflicts": scenario_dict.get("conflicts", {}),
     }
     base_scenario = _load_base_scenario_from_config(
-        base_scenario_data, config=scenario_data["config"]
+        base_scenario_data, config=scenario_dict["config"]
     )
     my_scenario = create_scenario(
-        base_scenario=base_scenario, name=name, config=scenario_data["config"]
+        base_scenario=base_scenario, name=scenario_name, config=scenario_dict["config"]
     )
     return my_scenario
 
@@ -994,8 +1001,9 @@ def extract_base_scenario_metadata(base_scenario: dict) -> dict:
     if isinstance(base_scenario.get("road_net"), RoadwayNetwork):
         nodes_file_path = base_scenario["road_net"].nodes_df.attrs.get("source_file", None)
         if nodes_file_path is not None:
+            nodes_file_path = Path(nodes_file_path)
             out_dict["roadway"] = {
-                "dir": str(Path(nodes_file_path).parent),
+                "dir": str(nodes_file_path.parent),
                 "file_format": str(nodes_file_path.suffix).lstrip("."),
             }
     if isinstance(base_scenario.get("transit_net"), TransitNetwork):

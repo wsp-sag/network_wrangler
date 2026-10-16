@@ -28,10 +28,10 @@ runs:
         echo "=== Searching for coverage files ==="
         find . -name "coverage.xml" -o -name "pytest.xml" | head -10
         echo ""
-        
+
         # Create coverage directory if it doesn't exist
         mkdir -p coverage
-        
+
         # Find and move coverage.xml
         COV_FILE=$(find . -name "coverage.xml" -type f | head -1)
         if [ -n "$COV_FILE" ] && [ -f "$COV_FILE" ]; then
@@ -46,7 +46,7 @@ runs:
           find . -type f | head -20
           exit 1
         fi
-        
+
         # Find and move pytest.xml
         PYTEST_FILE=$(find . -name "pytest.xml" -type f | head -1)
         if [ -n "$PYTEST_FILE" ] && [ -f "$PYTEST_FILE" ]; then
@@ -58,11 +58,11 @@ runs:
         else
           echo "⚠ WARNING: pytest.xml not found (may be optional)"
         fi
-        
+
         echo ""
         echo "=== Final coverage directory contents ==="
         ls -lah coverage/
-        
+
         # Verify coverage.xml exists before proceeding
         if [ ! -f "coverage/coverage.xml" ]; then
           echo "ERROR: coverage.xml is required but not found after preparation"
@@ -74,4 +74,3 @@ runs:
       with:
         pytest-xml-coverage-path: ${{ inputs.pytest-xml-coverage-path }}
         junitxml-path: ${{ inputs.junitxml-path }}
-
